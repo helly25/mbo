@@ -1,0 +1,33 @@
+package(default_visibility = ["//mbo/types:__pkg__"])
+
+cc_library(
+    name = "cases_cc",
+    hdrs = ["cases.h"],
+)
+
+cc_library(
+    name = "extend_cc",
+    hdrs = [
+        "extend.h",
+        "extender.h",
+    ],
+)
+
+cc_library(
+    name = "traits_cc",
+    hdrs = [
+        "decompose_count.h",
+        "is_braces_constructible.h",
+    ],
+    deps = ["cases_cc"],
+)
+
+cc_library(
+    name = "test_types_cc",
+    testonly = 1,
+    hdrs = ["test_types.h"],
+    deps = [
+        "cases_cc",
+        "@com_google_googletest//:gtest",
+    ],
+)

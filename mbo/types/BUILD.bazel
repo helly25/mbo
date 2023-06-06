@@ -1,0 +1,111 @@
+# Copyright 2023 M.Boerger
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+package(default_visibility = ["//visibility:private"])
+
+cc_library(
+    name = "cases_cc",
+    hdrs = ["cases.h"],
+    visibility = ["//visibility:public"],
+    deps = ["//mbo/types/internal:cases_cc"],
+)
+
+cc_test(
+    name = "cases_test",
+    size = "small",
+    srcs = ["cases_test.cc"],
+    deps = [
+        ":cases_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "extend_cc",
+    hdrs = ["extend.h"],
+    srcs = ["extender.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":tstring_cc",
+        ":tuple_cc",
+        "//mbo/types/internal:extend_cc",
+        "@com_google_absl//absl/hash",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "extend_test",
+    size = "small",
+    srcs = ["extend_test.cc"],
+    deps = [
+        ":extend_cc",
+        "@com_google_absl//absl/hash:hash_testing",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "traits_cc",
+    hdrs = ["traits.h"],
+    visibility = ["//visibility:private"],
+    deps = ["//mbo/types/internal:traits_cc"],
+)
+
+cc_test(
+    name = "traits_test",
+    size = "small",
+    srcs = ["traits_test.cc"],
+    deps = [
+        ":traits_cc",
+        "//mbo/types/internal:test_types_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "tstring_cc",
+    srcs = ["tstring.h"],
+    hdrs = ["tstring.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "tstring_test",
+    size = "small",
+    srcs = ["tstring_test.cc"],
+    deps = [
+        ":tstring_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "tuple_cc",
+    hdrs = ["tuple.h"],
+    visibility = ["//visibility:private"],
+    deps = ["traits_cc"],
+)
+
+cc_test(
+    name = "tuple_test",
+    size = "small",
+    srcs = ["tuple_test.cc"],
+    deps = [
+        ":tuple_cc",
+        "//mbo/types/internal:test_types_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

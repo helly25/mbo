@@ -1,0 +1,12 @@
+# To debug bazel options, uncomment next line.
+# build --announce_rc
+
+# Define the Apple OS
+build --apple_platform_type=macos
+
+# Allow platform specific control and add the missing 'CoreFoundation' lib.
+build --enable_platform_specific_config
+build:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation --linkopt=-Wl,-undefined,error
+
+build --cxxopt=-std=c++20 --host_cxxopt=-std=c++20 --cxxopt=-Werror
+test --test_output=errors

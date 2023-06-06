@@ -1,0 +1,31 @@
+package(default_visibility = ["//visibility:private"])
+
+cc_library(
+    name = "artefact_cc",
+    hdrs = ["artefact.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "file_cc",
+    srcs = ["file.cc"],
+    hdrs = ["file.h"],
+    deps = [
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/time",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "file_test",
+    srcs = ["file_test.cc"],
+    deps = [
+        "file_cc",
+        "//mbo/testing:status_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+    size = "small",
+)

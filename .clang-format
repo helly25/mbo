@@ -1,0 +1,46 @@
+BasedOnStyle: Google
+
+# Function argument formatting: Avoid reformatting:
+# If parameters do not fit on the same line, then use one line per parameter
+# with the same indent (not aligned with the parantesis).
+
+ColumnLimit: 120
+
+AlignAfterOpenBracket: AlwaysBreak
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+BinPackParameters: false
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeConceptDeclarations: Always
+BreakBeforeTernaryOperators: true
+BreakInheritanceList: BeforeComma
+EmptyLineBeforeAccessModifier: Always
+FixNamespaceComments: true
+IndentRequiresClause: false
+InsertBraces: true
+InsertNewlineAtEOF: true
+# InsertTrailingCommas: true <- Would change structs to never bin pack
+IntegerLiteralSeparator:
+  Binary: 0
+  Decimal: 3
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+PackConstructorInitializers: NextLine
+PointerAlignment: Left
+QualifierAlignment: Left
+ReferenceAlignment: Left
+RemoveSemicolon: true
+RequiresClausePosition: OwnLine
+RequiresExpressionIndentation: OuterScope
+SeparateDefinitionBlocks: Always
+SortUsingDeclarations: Lexicographic
+SpaceAfterTemplateKeyword: false
+SpaceAroundPointerQualifiers: After
+Standard: c++20

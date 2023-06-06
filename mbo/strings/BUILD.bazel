@@ -1,0 +1,21 @@
+package(default_visibility = ["//visibility:private"])
+
+cc_library(
+    name = "indent_cc",
+    srcs = ["indent.cc"],
+    hdrs = ["indent.h"],
+    deps = [
+        "@com_google_absl//absl/strings",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "indent_test",
+    srcs = ["indent_test.cc"],
+    deps = [
+        "indent_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+    size = "small",
+)
