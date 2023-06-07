@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <cstddef>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -66,11 +67,15 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
 
 }  // namespace
 
+namespace fs = std::filesystem;
+
 int main(int argc, char* argv[]) {
   const std::vector<char*> args = absl::ParseCommandLine(argc, argv);
   mbo::UpdateAbslLogFlags();
   if (args.size() != 3) {  // [0] = program
-    std::cerr << "Exactly two files are required." << std::endl;
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    std::cerr << "Exactly two files are required. Use: " << fs::path(argv[0]).filename().string() << " --help"
+              << std::endl;
     return 1;
   }
   return Diff(args[1], args[2]);
