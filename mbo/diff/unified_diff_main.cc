@@ -23,11 +23,9 @@
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/time/time.h"
 #include "mbo/diff/unified_diff.h"
 #include "mbo/diff/update_absl_log_flags.h"
 #include "mbo/file/artefact.h"
-#include "mbo/file/file.h"
 
 // NOLINTBEGIN(abseil-no-namespace)
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
@@ -42,35 +40,14 @@ namespace {
 
 using mbo::file::Artefact;
 
-absl::StatusOr<Artefact> GetInput(std::string_view name) {
-  const auto text = mbo::file::GetContents(name);
-  if (!text.ok()) {
-    return text.status();
-  }
-  const auto time = [&]() -> absl::StatusOr<absl::Time> {
-    if (absl::GetFlag(FLAGS_skip_time)) {
-      return absl::UnixEpoch();
-    } else {
-      return mbo::file::GetMTime(name);
-    }
-  }();
-  if (!time.ok()) {
-    return time.status();
-  }
-  return Artefact{
-      .data = *text,
-      .name{name},
-      .time = *time,
-  };
-}
-
 int Diff(std::string_view lhs_name, std::string_view rhs_name) {
-  const auto lhs = GetInput(lhs_name);
+  const Artefact::Options options{.skip_time = absl::GetFlag(FLAGS_skip_time)};
+  const auto lhs = Artefact::Read(lhs_name, options);
   if (!lhs.ok()) {
     LOG(ERROR) << "ERROR: " << lhs.status();
     return 1;
   }
-  const auto rhs = GetInput(rhs_name);
+  const auto rhs = Artefact::Read(rhs_name, options);
   if (!rhs.ok()) {
     LOG(ERROR) << "ERROR: " << rhs.status();
     return 1;

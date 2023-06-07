@@ -14,17 +14,33 @@
 #define MBO_FILE_ARTIFACT_H_
 
 #include <string>
+#include <string_view>
 
+#include "absl/status/statusor.h"
 #include "absl/time/time.h"
 
 namespace mbo::file {
 
 struct Artefact final {
+  struct Options final {
+    static inline Options Default() noexcept;
+
+    bool skip_time = false;
+    absl::TimeZone tz = absl::UTCTimeZone();
+  };
+
+  static absl::StatusOr<Artefact> Read(std::string_view filename, const Options& options = Options::Default());
+
   std::string data;                            // Artefact 'data' (text or binary content).
   std::string name = "-";                      // Atrefact's 'name'.
   absl::Time time = absl::FromUnixSeconds(0);  // Last update/modify 'time'.
   absl::TimeZone tz = absl::UTCTimeZone();
 };
+
+// NOTE: Cannot be `constexpr` because `absl::TimeZone` is not a literal type.
+inline Artefact::Options Artefact::Options::Default() noexcept {
+  return {};
+}
 
 }  // namespace mbo::file
 

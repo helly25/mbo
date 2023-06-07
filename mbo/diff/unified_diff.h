@@ -14,7 +14,7 @@
 #define MBO_FILE_UNIFIED_DIFF_H_
 
 #include <cstddef>
-#include <string_view>
+#include <string>
 
 #include "absl/status/statusor.h"
 #include "mbo/file/artefact.h"
@@ -45,10 +45,10 @@ class UnifiedDiff final {
   UnifiedDiff() = delete;
 
   struct Options final {
-    static constexpr Options Default();
+    static constexpr Options Default() noexcept;
 
     size_t context_size = 3;
-    std::string_view time_format = "%F %H:%M:%E3S %z";
+    std::string time_format = "%F %H:%M:%E3S %z";
   };
 
   static absl::StatusOr<std::string>
@@ -58,7 +58,7 @@ class UnifiedDiff final {
   class Impl;
 };
 
-constexpr UnifiedDiff::Options UnifiedDiff::Options::Default() {
+constexpr UnifiedDiff::Options UnifiedDiff::Options::Default() noexcept {
   return {};
 }
 

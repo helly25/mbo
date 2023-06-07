@@ -47,10 +47,9 @@ cc_binary(
     srcs = ["unified_diff_main.cc"],
     visibility = ["//visibility:public"],
     deps = [
-        "//mbo/file:artefact_cc",
-        ":update_absl_log_flags_cc",
         ":unified_diff_cc",
-        "//mbo/file:file_cc",
+        ":update_absl_log_flags_cc",
+        "//mbo/file:artefact_cc",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/log",
     ],
