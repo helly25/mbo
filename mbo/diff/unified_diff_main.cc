@@ -58,7 +58,7 @@ absl::StatusOr<Artefact> GetInput(std::string_view name) {
     return time.status();
   }
   return Artefact{
-      .text = *text,
+      .data = *text,
       .name{name},
       .time = *time,
   };

@@ -181,7 +181,7 @@ class Chunk {
   ~Chunk() = default;
 
   Chunk(const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options)
-      : lhs_empty_(lhs.text.empty()), rhs_empty_(rhs.text.empty()), context_(options) {
+      : lhs_empty_(lhs.data.empty()), rhs_empty_(rhs.data.empty()), context_(options) {
     absl::StrAppendFormat(
         &output_, "--- %s %s\n", InputName(lhs.name), absl::FormatTime(options.time_format, lhs.time, lhs.tz));
     absl::StrAppendFormat(
@@ -323,7 +323,7 @@ class UnifiedDiff::Impl {
   Impl() = delete;
 
   Impl(const file::Artefact& lhs, const file::Artefact& rhs, const Options& options)
-      : lhs_data_(lhs.text), rhs_data_(rhs.text), chunk_(lhs, rhs, options) {}
+      : lhs_data_(lhs.data), rhs_data_(rhs.data), chunk_(lhs, rhs, options) {}
 
   ~Impl() = default;
   Impl(const Impl&) = delete;
@@ -461,7 +461,7 @@ absl::StatusOr<std::string> UnifiedDiff::Impl::Finalize() {
 
 absl::StatusOr<std::string>
 UnifiedDiff::Diff(const file::Artefact& lhs, const file::Artefact& rhs, const Options& options) {
-  if (lhs.text == rhs.text) {
+  if (lhs.data == rhs.data) {
     return std::string();
   }
   Impl diff(lhs, rhs, options);

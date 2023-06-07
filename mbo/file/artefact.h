@@ -20,9 +20,9 @@
 namespace mbo::file {
 
 struct Artefact final {
-  std::string text;                            // Artefact 'text' or content.
+  std::string data;                            // Artefact 'data' (text or binary content).
   std::string name = "-";                      // Atrefact's 'name'.
-  absl::Time time = absl::FromUnixSeconds(0);  // Last update 'time'.
+  absl::Time time = absl::FromUnixSeconds(0);  // Last update/modify 'time'.
   absl::TimeZone tz = absl::UTCTimeZone();
 };
 

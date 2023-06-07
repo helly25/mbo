@@ -41,8 +41,8 @@ class UnifiedDiffTest : public ::testing::Test {
       file::Artefact rhs,
       UnifiedDiff::Options options = UnifiedDiff::Options::Default()) {
     std::set<std::string> foo;
-    lhs.text = DropIndent(lhs.text);
-    rhs.text = DropIndent(rhs.text);
+    lhs.data = DropIndent(lhs.data);
+    rhs.data = DropIndent(rhs.data);
     absl::StatusOr<std::string> result =
         mbo::diff::UnifiedDiff::Diff(lhs, rhs, options);
     if (!result.ok()) {

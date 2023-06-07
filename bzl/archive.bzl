@@ -76,7 +76,7 @@ def _github_commit_archive(
     Example:
 
     ```
-    github_commit_archive(
+    github_archive(
         name = "com_google_absl",
         repo = "https://github.com/abseil/abseil-cpp",
         commit = "78be63686ba732b25052be15f8d6dee891c05749",
@@ -116,7 +116,7 @@ def _github_tag_archive(
     Example:
 
     ```
-    github_tag_archive(
+    github_archive(
         name = "com_google_absl",
         repo = "https://github.com/abseil/abseil-cpp",
         tag = "20230125.3",

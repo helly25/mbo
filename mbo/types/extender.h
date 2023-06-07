@@ -183,35 +183,37 @@ struct AbslFormatImpl : ExtenderBase {
 struct AbslFormat final : MakeExtender<"AbslFormat"_ts, AbslFormatImpl> {};
 
 template<typename ExtenderBase>
-struct PrintableImpl : ExtenderBase {
-  std::string Print() const {
-    std::ostringstream os;
-    this->OStreamFields(os);
-    return os.str();
+struct AbslHashableImpl : ExtenderBase {
+ private:
+  using T = typename ExtenderBase::ExtenderInfo::Type;
+
+ public:
+  template<typename H>
+  friend H AbslHashValue(H hash, const T& obj) noexcept {
+    return H::combine(std::move(hash), obj.ToTuple());
   }
 };
 
-// Extender that injects functionality to make an `Extend`ed type get a `Print`
-// function which can be used to convert a type into a `std::string`.
+// Extender that injects functionality to make an `Extend`ed type work with
+// abseil hashing (and also `std::hash`).
+//
+// Example:
+// ```c++
+// struct Name : mbo::types::Extend<Name> {
+//   std::string first;
+//   std::string last;
+// };
+//
+// void demo() {
+//   const Name name{.first = "first", .last = "last"};
+//   const size_t hash = absl::HashOf(name);
+//   const size_t std_hash = std::hash<Name>{}(name);
+//   static_assert(hash == std_hash, "Must be the same");
+// }
+// ```
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct Printable final : MakeExtender<"Printable"_ts, PrintableImpl, AbslFormat> {};
-
-template<typename ExtenderBase>
-struct StreamableImpl : ExtenderBase {
-  using Type = typename ExtenderBase::ExtenderInfo::Type;
-
-  friend std::ostream& operator<<(std::ostream& os, const Type& v) {
-    v.OStreamFields(os);
-    return os;
-  }
-};
-
-// Extender that injects functionality to make an `Extend`ed type streamable.
-// This allows the type to be used directly with `std::ostream`s.
-//
-// This default Extender is automatically available through `mb::types::Extend`.
-struct Streamable final : MakeExtender<"Streamable"_ts, StreamableImpl, AbslFormat> {};
+struct AbslHashable final : MakeExtender<"AbslHashable"_ts, AbslHashableImpl> {};
 
 template<typename ExtenderBase>
 struct ComparableImpl : ExtenderBase {
@@ -256,37 +258,35 @@ struct ComparableImpl : ExtenderBase {
 struct Comparable final : MakeExtender<"Comparable"_ts, ComparableImpl> {};
 
 template<typename ExtenderBase>
-struct AbslHashableImpl : ExtenderBase {
- private:
-  using T = typename ExtenderBase::ExtenderInfo::Type;
-
- public:
-  template<typename H>
-  friend H AbslHashValue(H hash, const T& obj) noexcept {
-    return H::combine(std::move(hash), obj.ToTuple());
+struct PrintableImpl : ExtenderBase {
+  std::string Print() const {
+    std::ostringstream os;
+    this->OStreamFields(os);
+    return os.str();
   }
 };
 
-// Extender that injects functionality to make an `Extend`ed type work with
-// abseil hashing (and also `std::hash`).
-//
-// Example:
-// ```c++
-// struct Name : mbo::types::Extend<Name> {
-//   std::string first;
-//   std::string last;
-// };
-//
-// void demo() {
-//   const Name name{.first = "first", .last = "last"};
-//   const size_t hash = absl::HashOf(name);
-//   const size_t std_hash = std::hash<Name>{}(name);
-//   static_assert(hash == std_hash, "Must be the same");
-// }
-// ```
+// Extender that injects functionality to make an `Extend`ed type get a `Print`
+// function which can be used to convert a type into a `std::string`.
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct AbslHashable final : MakeExtender<"AbslHashable"_ts, AbslHashableImpl> {};
+struct Printable final : MakeExtender<"Printable"_ts, PrintableImpl, AbslFormat> {};
+
+template<typename ExtenderBase>
+struct StreamableImpl : ExtenderBase {
+  using Type = typename ExtenderBase::ExtenderInfo::Type;
+
+  friend std::ostream& operator<<(std::ostream& os, const Type& v) {
+    v.OStreamFields(os);
+    return os;
+  }
+};
+
+// Extender that injects functionality to make an `Extend`ed type streamable.
+// This allows the type to be used directly with `std::ostream`s.
+//
+// This default Extender is automatically available through `mb::types::Extend`.
+struct Streamable final : MakeExtender<"Streamable"_ts, StreamableImpl, AbslFormat> {};
 
 }  // namespace mbo::types::extender
 

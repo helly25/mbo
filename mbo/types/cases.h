@@ -19,11 +19,11 @@
 
 namespace mbo::types {
 
-// Helper type to generate if-then cases types.
+// Helper type to generate if-then `Cases` types.
 template<bool If, typename Then>
 using IfThen = types_internal::IfThen<If, Then>;
 
-// Helper type to generate else cases which are always true and must go last.
+// Helper type to generate else `Cases` which are always true and must go last.
 template<typename Else>
 using IfElse = types_internal::IfElse<Else>;
 
@@ -34,7 +34,7 @@ using types_internal::IfTrueThenVoid;
 // Helper type that can be used to skip a case.
 using types_internal::IfFalseThenVoid;
 
-// The meta type `cases` allows to switch types based on conditions:
+// The meta type `Cases` allows to switch types based on conditions:
 //
 // For example:
 //
@@ -62,6 +62,8 @@ using types_internal::IfFalseThenVoid;
 template<typename... IfThenCases>
 using Cases = typename types_internal::CasesImpl<IfThenCases...>::type;
 
+// Evaluates the first non zero case (1-based, 0 if all zero).
+//
 // While `Cases` requires special condition types of the form (condition, type)
 // like `IfThen`, the `CaseIndex` only requires conditions and evaluates to
 // the 1-based index of the first condition that evaluates to true.
