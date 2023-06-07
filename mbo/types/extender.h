@@ -177,7 +177,8 @@ struct AbslFormatImpl : ExtenderBase {
 };
 
 // Extender that injects functionality to make an `Extend`ed type work with
-// abseil format/print functions.
+// abseil format/print functions (see
+// [AbslStringify](https://abseil.io/docs/cpp/guides/format#abslstringify)).
 //
 // This default Extender is automatically available through `mb::types::Extend`.
 struct AbslFormat final : MakeExtender<"AbslFormat"_ts, AbslFormatImpl> {};
@@ -263,7 +264,7 @@ struct PrintableImpl : ExtenderBase {
     std::ostringstream os;
     this->OStreamFields(os);
     return os.str();
-  }
+  }  // namespace mbo::types::extender
 };
 
 // Extender that injects functionality to make an `Extend`ed type get a `Print`
