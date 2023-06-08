@@ -64,19 +64,19 @@ def mbo_workspace_load_modules():
     )
 
     # hedron_compile_commands
-    #github_archive(
-    #    name = "hedron_compile_commands",
-    #    commit = "6f63be6e2ccfdb6a1f248abbb3614107106de4a9",
-    #    repo = "https://github.com/helly25/bazel-compile-commands-extractor",
-    #    sha256 = "22aa86db4c1d7c9b417f19b9a4477017d505df58eaed024e68c3452bd1a26b74",
-    #)
+    github_archive(
+        name = "hedron_compile_commands",
+        commit = "6f63be6e2ccfdb6a1f248abbb3614107106de4a9",
+        repo = "https://github.com/helly25/bazel-compile-commands-extractor",
+        sha256 = "22aa86db4c1d7c9b417f19b9a4477017d505df58eaed024e68c3452bd1a26b74",
+    )
     #github_archive(
     #    name = "hedron_compile_commands",
     #    repo = "https://github.com/hedronvision/bazel-compile-commands-extractor",
     #    commit = "ed994039a951b736091776d677f324b3903ef939",
     #    sha256 = "085bde6c5212c8c1603595341ffe7133108034808d8c819f8978b2b303afc9e7",
     #)
-    native.local_repository(
-        name = "hedron_compile_commands",
-        path = "/Users/marcus/Documents/hedronvision_bazel-compile-commands-extractor/helly25-bcce",
-    )
+    #native.local_repository(
+    #    name = "hedron_compile_commands",
+    #    path = "/Users/marcus/Documents/hedronvision_bazel-compile-commands-extractor/helly25-bcce",
+    #)
