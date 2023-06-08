@@ -76,7 +76,3 @@ def mbo_workspace_load_modules():
     #    commit = "ed994039a951b736091776d677f324b3903ef939",
     #    sha256 = "085bde6c5212c8c1603595341ffe7133108034808d8c819f8978b2b303afc9e7",
     #)
-    #native.local_repository(
-    #    name = "hedron_compile_commands",
-    #    path = "/Users/marcus/Documents/hedronvision_bazel-compile-commands-extractor/helly25-bcce",
-    #)
