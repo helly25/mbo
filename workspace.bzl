@@ -46,6 +46,25 @@ def mbo_workspace_load_modules():
         ],
     )
 
+    # Used for absl/GoogleTest
+    # Note GoogleTest uses "com_googlesource_code_re2" rather than "com_google_re2"
+    if not native.existing_rule("com_googlesource_code_re2"):
+        http_archive(
+            name = "com_googlesource_code_re2",
+            strip_prefix = "re2-2023-06-02",
+            urls = ["https://github.com/google/re2/archive/refs/tags/2023-06-02.tar.gz"],
+            sha256 = "4ccdd5aafaa1bcc24181e6dd3581c3eee0354734bb9f3cb4306273ffa434b94f",
+        )
+
+    # Abseil, LTS 20230125
+    # Used for GoogleTest through .bazelrc "build --define absl=1"
+    github_archive(
+        name = "com_google_absl",
+        repo = "https://github.com/abseil/abseil-cpp",
+        tag = "20230125.3",
+        sha256 = "5366d7e7fa7ba0d915014d387b66d0d002c03236448e1ba9ef98122c13b35c36",
+    )
+
     # GoogleTest
     github_archive(
         name = "com_google_googletest",
@@ -55,13 +74,6 @@ def mbo_workspace_load_modules():
         sha256 = "ad7fdba11ea011c1d925b3289cf4af2c66a352e18d4c7264392fead75e919363",
     )
 
-    # Abseil, LTS 20230125
-    github_archive(
-        name = "com_google_absl",
-        repo = "https://github.com/abseil/abseil-cpp",
-        tag = "20230125.3",
-        sha256 = "5366d7e7fa7ba0d915014d387b66d0d002c03236448e1ba9ef98122c13b35c36",
-    )
 
     # hedron_compile_commands
     github_archive(

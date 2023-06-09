@@ -1,6 +1,2 @@
-CompileFlags:
-    #Compiler: /Library/Developer/CommandLineTools/usr/bin/clang
-    Compiler: /usr/local/opt/llvm/clang
-
 Diagnostics:
     UnusedIncludes: Strict
