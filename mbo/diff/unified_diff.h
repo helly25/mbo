@@ -10,8 +10,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_FILE_UNIFIED_DIFF_H_
-#define MBO_FILE_UNIFIED_DIFF_H_
+#ifndef MBO_DIFF_UNIFIED_DIFF_H_
+#define MBO_DIFF_UNIFIED_DIFF_H_
 
 #include <cstddef>
 #include <string>
@@ -64,4 +64,4 @@ constexpr UnifiedDiff::Options UnifiedDiff::Options::Default() noexcept {
 
 }  // namespace mbo::diff
 
-#endif  // MBO_FILE_UNIFIED_DIFF_H_
+#endif  // MBO_DIFF_UNIFIED_DIFF_H_

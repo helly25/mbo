@@ -49,7 +49,6 @@
 
 // IWYU pragma private, include "mbo/types/extend.h"
 
-#include <functional>
 #include <sstream>
 #include <string>
 #include <string_view>

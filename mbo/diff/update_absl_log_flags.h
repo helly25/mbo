@@ -12,8 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef MBO_DIFF_UPDATE_ABSL_LOG_FLAGS_H_
+#define MBO_DIFF_UPDATE_ABSL_LOG_FLAGS_H_
+
 namespace mbo {
 
 void UpdateAbslLogFlags();
 
 }  // namespace mbo
+
+#endif  // MBO_DIFF_UPDATE_ABSL_LOG_FLAGS_H_
