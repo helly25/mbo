@@ -20,13 +20,23 @@ load("//bzl:archive.bzl", "github_archive", "http_archive")
 def mbo_workspace_load_modules():
     """Loads all modules requred by the workspace."""
 
-    # 2022-05-27
-    github_archive(
+    # 0.0.6, 2022-08-26
+    http_archive(
         name = "platforms",
-        commit = "da5541f26b7de1dc8e04c075c99df5351742a4a2",
-        repo = "https://github.com/bazelbuild/platforms",
-        sha256 = "a879ea428c6d56ab0ec18224f976515948822451473a80d06c2e50af0bbe5121",
-        ext = ".zip",
+        urls = [
+            "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.6/platforms-0.0.6.tar.gz",
+            "https://github.com/bazelbuild/platforms/releases/download/0.0.6/platforms-0.0.6.tar.gz",
+        ],
+        sha256 = "5308fc1d8865406a49427ba24a9ab53087f17f5266a7aabbfc28823f3916e1ca",
+    )
+    # 0.0.7
+    http_archive(
+        name = "rules_license",
+        urls = [
+            "https://mirror.bazel.build/github.com/bazelbuild/rules_license/releases/download/0.0.7/rules_license-0.0.7.tar.gz",
+            "https://github.com/bazelbuild/rules_license/releases/download/0.0.7/rules_license-0.0.7.tar.gz",
+        ],
+        sha256 = "4531deccb913639c30e5c7512a054d5d875698daeb75d8cf90f284375fe7c360",
     )
 
     # Load and configure a LLVM based C/C++ toolchain.
