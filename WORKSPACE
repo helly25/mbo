@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-workspace(name = "diff")
+workspace(name = "com_helly25_mbo")
 
 load(":workspace.bzl", "mbo_workspace_load_modules")
 

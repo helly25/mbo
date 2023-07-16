@@ -63,3 +63,23 @@ In addition some Bazel macros are implemented that are not direct part of the li
 * bzl:archive.bzl
     * `http_archive`: Simple wrapper that tests whether the archive was already loaded.
     * `github_archive`: Specialized archive wrapper that supports github that supports `tagged` releases or commits.
+
+# Installation and requirements
+
+This repository requires a C++20 compiler (in case of MacOS XCode 15 is needed).
+
+This is done so that newer features like `std::source_location` can be used.
+
+The project only comes with a Bazel BUILD.bazel file and can be added to other Bazel projects. Checkout [Releases](https://github.com/helly25/mbo/releases) or use head ref as follows:
+
+```
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+  name = "com_helly25_proto",
+  url = "https://github.com/helly25/mbo/archive/refs/heads/main.tar.gz",
+  # See https://github.com/helly25/mbo/releases for releases.
+)
+```
+
+The project is formatted with specific clang-format settings which require clang 16+ (in case of MacOs LLVM 16+ can be installed using brew).
