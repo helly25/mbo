@@ -215,14 +215,12 @@ class Chunk {
 
   void PushLhs(size_t lhs_idx, size_t rhs_idx, std::string_view lhs) {
     CheckContext(lhs_idx, rhs_idx);
-    LOG(INFO) << "Push L " << lhs_idx << ": <" << lhs << ">";
     lhs_.emplace_back(lhs);
     ++lhs_size_;
   }
 
   void PushRhs(size_t lhs_idx, size_t rhs_idx, std::string_view rhs) {
     CheckContext(lhs_idx, rhs_idx);
-    LOG(INFO) << "Push R " << rhs_idx << ": <" << rhs << ">";
     rhs_.emplace_back(rhs);
     ++rhs_size_;
   }
@@ -255,14 +253,12 @@ class Chunk {
   }
 
   void MoveContext(bool last) {
-    LOG(INFO) << "Move Context: cut half";
     size_t ctx = last ? context_.HalfSsize() : context_.Size();
     while (ctx-- > 0) {
       data_.emplace_back(' ', context_.PopFront());
       ++lhs_size_;
       ++rhs_size_;
     }
-    LOG(INFO) << "Move Context: done";
   }
 
   static std::string ChunkPos(bool empty, size_t idx, size_t size) {
