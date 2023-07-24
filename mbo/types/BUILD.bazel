@@ -58,6 +58,12 @@ cc_test(
 )
 
 cc_library(
+    name = "no_destruct_cc",
+    hdrs = ["no_destruct.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "traits_cc",
     hdrs = ["traits.h"],
     visibility = ["//visibility:private"],

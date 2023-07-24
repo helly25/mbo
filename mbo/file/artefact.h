@@ -31,8 +31,8 @@ struct Artefact final {
 
   static absl::StatusOr<Artefact> Read(std::string_view filename, const Options& options = Options::Default());
 
-  std::string data;                            // Artefact 'data' (text or binary content).
-  std::string name = "-";                      // Atrefact's 'name'.
+  std::string data;                            // Artefact's 'data' (text or binary content).
+  std::string name = "-";                      // Artefact's 'name'.
   absl::Time time = absl::FromUnixSeconds(0);  // Last update/modify 'time'.
   absl::TimeZone tz = absl::UTCTimeZone();
 };

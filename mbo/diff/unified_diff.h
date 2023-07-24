@@ -45,7 +45,7 @@ class UnifiedDiff final {
   UnifiedDiff() = delete;
 
   struct Options final {
-    static constexpr Options Default() noexcept;
+    static const Options& Default() noexcept;
 
     size_t context_size = 3;
     std::string time_format = "%F %H:%M:%E3S %z";
@@ -57,10 +57,6 @@ class UnifiedDiff final {
  private:
   class Impl;
 };
-
-constexpr UnifiedDiff::Options UnifiedDiff::Options::Default() noexcept {
-  return {};
-}
 
 }  // namespace mbo::diff
 

@@ -54,6 +54,9 @@ The C++ library is organized in functional groups each residing in their own dir
             * extender-struct `Comparable`: Extender that injects functionality to make an `Extend`ed type comparable. All comparators will be injected: `<=>`, `==`, `!=`, `<`, `<=`, `>`, `>=`.
             * extender-struct `Printable`: Extender that injects functionality to make an `Extend`ed type get a `Print` function which can be used to convert a type into a `std::string`.
             * extender-struct `Streamable`: Extender that injects functionality to make an `Extend`ed type streamable. This allows the type to be used directly with `std::ostream`s.
+    * mbo/types:no_destruct_cc, mbo/types/no_destruct.h
+        * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
+        * Mainly, this prevents calling the destructor and thus prevents termination issues.
     * mbo/types:tstring_cc, mbo/types/tstring.h
         * struct `tstring`: Implements type `tstring` a compile time string-literal type.
         * operator `operator"" _ts`: String literal support for Clang, GCC and derived compilers.

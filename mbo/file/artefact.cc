@@ -37,7 +37,7 @@ absl::StatusOr<Artefact> Artefact::Read(std::string_view filename, const Artefac
   }
   return Artefact{
       .data = *data,
-      .name{filename},
+      .name = std::string(filename),
       .time = *time,
       .tz = options.tz,
   };

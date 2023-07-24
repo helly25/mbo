@@ -14,6 +14,7 @@
 
 #include <list>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -25,6 +26,7 @@
 #include "absl/strings/strip.h"
 #include "absl/time/time.h"
 #include "mbo/file/artefact.h"
+#include "mbo/types/no_destruct.h"
 
 namespace mbo::diff {
 namespace {
@@ -462,6 +464,11 @@ UnifiedDiff::Diff(const file::Artefact& lhs, const file::Artefact& rhs, const Op
   }
   Impl diff(lhs, rhs, options);
   return diff.Compute();
+}
+
+const UnifiedDiff::Options& UnifiedDiff::Options::Default() noexcept {
+  static const types::NoDestruct<UnifiedDiff::Options> defaults;
+  return *defaults;
 }
 
 }  // namespace mbo::diff
