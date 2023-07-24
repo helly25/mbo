@@ -268,6 +268,101 @@ struct DecomposeCount10<
   };
 };
 
+template<typename T, typename = void>
+struct DecomposeCount11 final : IfFalseThenVoid {};
+
+template<typename T>
+struct DecomposeCount11<
+    T,
+    std::void_t<decltype([]() {
+      const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = T();
+    })>>
+    final : std::true_type {
+  struct type {
+    template<typename U>
+    static constexpr auto ToTuple(U&& v) {
+      const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = v;
+      return std::make_tuple(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    }
+  };
+};
+
+template<typename T, typename = void>
+struct DecomposeCount12 final : IfFalseThenVoid {};
+
+template<typename T>
+struct DecomposeCount12<
+    T,
+    std::void_t<decltype([]() {
+      const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = T();
+    })>>
+    final : std::true_type {
+  struct type {
+    template<typename U>
+    static constexpr auto ToTuple(U&& v) {
+      const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = v;
+      return std::make_tuple(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
+    }
+  };
+};
+
+template<typename T, typename = void>
+struct DecomposeCount13 final : IfFalseThenVoid {};
+
+template<typename T>
+struct DecomposeCount13<
+    T,
+    std::void_t<decltype([]() {
+      const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = T();
+    })>>
+    final : std::true_type {
+  struct type {
+    template<typename U>
+    static constexpr auto ToTuple(U&& v) {
+      const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = v;
+      return std::make_tuple(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
+    }
+  };
+};
+
+template<typename T, typename = void>
+struct DecomposeCount14 final : IfFalseThenVoid {};
+
+template<typename T>
+struct DecomposeCount14<
+    T,
+    std::void_t<decltype([]() {
+      const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = T();
+    })>>
+    final : std::true_type {
+  struct type {
+    template<typename U>
+    static constexpr auto ToTuple(U&& v) {
+      const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = v;
+      return std::make_tuple(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
+    }
+  };
+};
+
+template<typename T, typename = void>
+struct DecomposeCount15 final : IfFalseThenVoid {};
+
+template<typename T>
+struct DecomposeCount15<
+    T,
+    std::void_t<decltype([]() {
+      const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] = T();
+    })>>
+    final : std::true_type {
+  struct type {
+    template<typename U>
+    static constexpr auto ToTuple(U&& v) {
+      const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] = v;
+      return std::make_tuple(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
+    }
+  };
+};
+
 template<typename T>
 struct DecomposeCountnImpl
     : std::integral_constant<
@@ -282,7 +377,12 @@ struct DecomposeCountnImpl
               DecomposeCount7<T>,
               DecomposeCount8<T>,
               DecomposeCount9<T>,
-              DecomposeCount10<T>>::index> {};
+              DecomposeCount10<T>,
+              DecomposeCount11<T>,
+              DecomposeCount12<T>,
+              DecomposeCount13<T>,
+              DecomposeCount14<T>,
+              DecomposeCount15<T>>::index> {};
 
 template<typename T>
 concept DecomposeConditionRaw =
@@ -305,7 +405,12 @@ struct DecomposeHelperRaw
           DecomposeCount7<T>,
           DecomposeCount8<T>,
           DecomposeCount9<T>,
-          DecomposeCount10<T>>::type {};
+          DecomposeCount10<T>,
+          DecomposeCount11<T>,
+          DecomposeCount12<T>,
+          DecomposeCount13<T>,
+          DecomposeCount14<T>,
+          DecomposeCount15<T>>::type {};
 
 template<typename T>
 struct DecomposeHelperRaw<T, false> {};
