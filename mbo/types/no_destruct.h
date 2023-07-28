@@ -52,7 +52,7 @@ struct NoDestruct final {
   constexpr const T& Get() const noexcept { return data_.t; }
 
   constexpr const T& operator*() const noexcept { return Get(); }
-  constexpr const T& operator->() const noexcept { return Get(); }
+  constexpr const T* operator->() const noexcept { return &Get(); }
 
  private:
   union Data {

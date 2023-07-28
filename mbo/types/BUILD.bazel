@@ -63,6 +63,16 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+cc_test(
+    name = "no_destruct_test",
+    srcs = ["no_destruct_test.cc"],
+    deps = [
+        ":extend_cc",
+        ":no_destruct_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "traits_cc",
     hdrs = ["traits.h"],
