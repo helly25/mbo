@@ -196,6 +196,7 @@ class Chunk {
   Chunk& operator=(Chunk&&) = delete;
 
   void PushBoth(size_t lhs_idx, size_t rhs_idx, std::string_view ctx) {
+    //LOG(INFO) << __FUNCTION__ << "(" << lhs_idx << ", " << rhs_idx << ", " << ctx.length() << ")";
     MoveDiffs();
     if (!data_.empty() && context_.Full()) {
       // We have a finished chunk_.
@@ -399,7 +400,7 @@ std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
 }
 
 bool UnifiedDiff::Impl::PastMaxDiffChunkLength(size_t& loop) {
-  static constexpr size_t kMaxDiffChunkLength = 1'337;
+  static constexpr size_t kMaxDiffChunkLength = 1'337'000;
   if (++loop > kMaxDiffChunkLength) {
     static constexpr std::string_view kMsg = "Maximum loop count reached";
     LOG(ERROR) << kMsg;
@@ -414,26 +415,32 @@ bool UnifiedDiff::Impl::FindNext() {
   auto [lhs2, rhs2, eq2] = FindNextLeft();
   if (eq1 && (!eq2 || AbsDiff(lhs1, rhs1) < AbsDiff(lhs2, rhs2))) {
     for (size_t i = 0; i < lhs1; ++i) {
-      chunk_.PushLhs(lhs_data_.Idx(), rhs_data_.Idx(), lhs_data_.Next());
+      const size_t l_idx = lhs_data_.Idx();  // Compiler might execute `Next` first.
+      chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
     }
     for (size_t i = 0; i < rhs1; ++i) {
-      chunk_.PushRhs(lhs_data_.Idx(), rhs_data_.Idx(), rhs_data_.Next());
+      const size_t r_idx = rhs_data_.Idx();
+      chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
     }
     return true;
   } else if (eq2) {
     for (size_t i = 0; i < lhs2; ++i) {
-      chunk_.PushLhs(lhs_data_.Idx(), rhs_data_.Idx(), lhs_data_.Next());
+      const size_t l_idx = lhs_data_.Idx();
+      chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
     }
     for (size_t i = 0; i < rhs2; ++i) {
-      chunk_.PushRhs(lhs_data_.Idx(), rhs_data_.Idx(), rhs_data_.Next());
+      const size_t r_idx = rhs_data_.Idx();
+      chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
     }
     return true;
   } else {
     if (!lhs_data_.Done()) {
-      chunk_.PushLhs(lhs_data_.Idx(), rhs_data_.Idx(), lhs_data_.Next());
+      const size_t l_idx = lhs_data_.Idx();
+      chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
     }
     if (!rhs_data_.Done()) {
-      chunk_.PushRhs(lhs_data_.Idx(), rhs_data_.Idx(), rhs_data_.Next());
+      const size_t r_idx = rhs_data_.Idx();
+      chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
     }
   }
   return false;
@@ -449,10 +456,12 @@ void UnifiedDiff::Impl::Loop() {
 
 absl::StatusOr<std::string> UnifiedDiff::Impl::Finalize() {
   while (!lhs_data_.Done()) {
-    chunk_.PushLhs(lhs_data_.Idx(), rhs_data_.Idx(), lhs_data_.Next());
+    const size_t l_idx = lhs_data_.Idx();
+    chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
   }
   while (!rhs_data_.Done()) {
-    chunk_.PushRhs(lhs_data_.Idx(), rhs_data_.Idx(), rhs_data_.Next());
+      const size_t r_idx = rhs_data_.Idx();
+    chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
   }
   return chunk_.MoveOutput();
 }
@@ -466,9 +475,10 @@ UnifiedDiff::Diff(const file::Artefact& lhs, const file::Artefact& rhs, const Op
   return diff.Compute();
 }
 
+static const types::NoDestruct<UnifiedDiff::Options> kDefaults;
+
 const UnifiedDiff::Options& UnifiedDiff::Options::Default() noexcept {
-  static const types::NoDestruct<UnifiedDiff::Options> defaults;
-  return *defaults;
+  return kDefaults.Get();
 }
 
 }  // namespace mbo::diff

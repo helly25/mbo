@@ -15,8 +15,15 @@
 
 // IWYU pragma private, include "mbo/types/cases.h"
 
+#include <cstddef>
 #include <type_traits>
 #include <utility>
+
+namespace mbo::types {
+
+using size_t = std::size_t;  // NOLINT(readability-identifier-naming)
+
+}  // namespace mbo::types
 
 namespace mbo::types::types_internal {
 
