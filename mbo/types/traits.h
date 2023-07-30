@@ -20,6 +20,10 @@
 
 namespace mbo::types {
 
+// Determines whether `std::is_aggrgate_v<T> == true`.
+template<typename T>
+concept IsAggregate = types_internal::IsAggregate<T>;
+
 // If `T` is a struct and the below conditions are met, return the number of
 // variable fields it decomposes into.
 //
@@ -31,6 +35,14 @@ inline constexpr size_t DecomposeCountV = types_internal::DecomposeCountImpl<T>:
 
 // If a `T` cannot be decomposed, then `decompose_count` returns this value.
 inline constexpr size_t NotDecomposableV = types_internal::NotDecomposableImpl::value;
+
+// Returns whether `T` can be decomposed.
+// This is only true if a non empty structured binding of T is possible:
+//   const auto& [a0....] = T()
+template <typename T>
+concept IsDecomposable = types_internal::IsAggregate<T> &&
+                         (DecomposeCountV<T> != 0) &&
+                         (DecomposeCountV<T> != NotDecomposableV);
 
 // Returns whether `T` can be constructed from `Args...`.
 template<typename T, typename... Args>

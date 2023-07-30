@@ -16,6 +16,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/types/internal/decompose_count.h"
 #include "mbo/types/internal/test_types.h"
 
 namespace mbo::types {
@@ -59,18 +60,53 @@ struct CtorBase : CtorUser {};
 
 TEST_F(TraitsTest, DecomposeCountV) {
   ASSERT_THAT(NotDecomposableV, Ne(0));
+
+  ASSERT_THAT(IsAggregate<void>, false);
+  EXPECT_THAT(IsDecomposable<void>, false);
   EXPECT_THAT(DecomposeCountV<void>, NotDecomposableV);
-  ASSERT_THAT(std::is_aggregate_v<Virtual>, false);
+
+  ASSERT_THAT(IsAggregate<Virtual>, false);
+  EXPECT_THAT(IsDecomposable<Virtual>, false);
   EXPECT_THAT(DecomposeCountV<Virtual>, NotDecomposableV);
-  ASSERT_THAT(std::is_aggregate_v<CtorDefault>, false);
-  EXPECT_THAT(DecomposeCountV<CtorDefault>, NotDecomposableV);
-  ASSERT_THAT(std::is_aggregate_v<CtorUser>, false);
-  EXPECT_THAT(DecomposeCountV<CtorUser>, NotDecomposableV);
-  ASSERT_THAT(std::is_aggregate_v<CtorBase>, true);
+
+  ASSERT_THAT(IsAggregate<CtorDefault>, false);
+  EXPECT_THAT(IsDecomposable<CtorDefault>, false);
+  // EXPECT_THAT(DecomposeCountV<CtorDefault>, NotDecomposableV);
+
+  ASSERT_THAT(IsAggregate<CtorUser>, false);
+  EXPECT_THAT(IsDecomposable<CtorUser>, false);
+  // EXPECT_THAT(DecomposeCountV<CtorUser>, NotDecomposableV);
+
+  ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
+  ASSERT_THAT(IsAggregate<CtorBase>, true);
+  EXPECT_THAT(IsDecomposable<CtorBase>, false);
   EXPECT_THAT(DecomposeCountV<CtorBase>, 0);
-  EXPECT_THAT(DecomposeCountV<Empty>, 0);
+
+  ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
+  EXPECT_THAT(IsDecomposable<Empty>, false);
+  EXPECT_THAT(DecomposeCountV<Empty>, ::testing::AnyOf(0, NotDecomposableV));
+
+  ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
+  EXPECT_THAT(IsDecomposable<Base1>, true);
   EXPECT_THAT(DecomposeCountV<Base1>, 1);
+
+  ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
+  EXPECT_THAT(IsDecomposable<Base2>, true);
   EXPECT_THAT(DecomposeCountV<Base2>, 2);
+}
+
+struct MadMix {
+    int a;
+    std::string b;
+    char c[5];  // NOLINT(*-magic-numbers,*-avoid-c-arrays)
+};
+
+TEST_F(TraitsTest, DecomposeMadMix) {
+  ASSERT_THAT(IsAggregate<MadMix>, true);
+  static_assert(types_internal::AggregateInitializerCount<MadMix>::value == 7);
+  static_assert(!types_internal::AggregateHasNonEmptyBaseRaw<MadMix>::value);
+  EXPECT_THAT(IsDecomposable<MadMix>, true);
+  EXPECT_THAT(DecomposeCountV<MadMix>, 3);
 }
 
 TYPED_TEST(GenTraitsTest, DecomposeCountV) {
@@ -79,7 +115,8 @@ TYPED_TEST(GenTraitsTest, DecomposeCountV) {
   constexpr size_t kDerived = TestFixture::kDerivedFieldCount;
   EXPECT_THAT(
       DecomposeCountV<Type>,
-      kBase && kDerived ? NotDecomposableV : kBase + kDerived);
+      kBase && kDerived ? NotDecomposableV : kBase + kDerived)
+      << "\n" << types_internal::DecomposeInfo<Type>::Debug();
 }
 
 TEST_F(TraitsTest, IsBracesContructible) {

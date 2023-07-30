@@ -26,48 +26,95 @@ namespace mbo::types::types_internal {
 
 struct AnyType {
   template<typename T>
-  constexpr operator T();  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
 };
 
-template<typename Idx>
-using AnyTypeN = types_internal::AnyType;
+template<std::size_t kIndex>
+using AnyTypeN = AnyType;
 
 template<typename D>
 struct AnyBaseType {
   using RawD = std::remove_cvref_t<D>;
-  template<
-      typename T,
-      typename =
-          std::enable_if_t<std::is_base_of_v<std::remove_cvref_t<T>, RawD>>>
-  constexpr operator T();  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+  template<typename T, typename = std::enable_if_t<std::is_base_of_v<std::remove_const_t<T>, RawD>>>
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
 };
 
-template<typename D, bool BaseOrNot, bool RequireNonEmpty>
+template<typename D>
+struct AnyNonBaseType {
+  using RawD = std::remove_cvref_t<D>;
+  template<typename T, typename = std::enable_if_t<!std::is_base_of_v<std::remove_const_t<T>, RawD>>>
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+};
+
+template<std::size_t kIndex, typename D>
+using AnyNonBaseTypeN = AnyNonBaseType<D>;
+
+template<typename D, bool kBaseOrNot, bool kRequireNonEmpty, bool kAllowNonEmpty = kRequireNonEmpty>
 struct AnyTypeIf {
   using RawD = std::remove_cvref_t<D>;
   template<
       typename T,
-      typename = std::enable_if_t<                   //
-          (BaseOrNot == std::is_base_of_v<T, RawD>)  //
-          &&(!BaseOrNot || !RequireNonEmpty
-             || !std::is_empty_v<std::remove_cvref_t<T>>)>>
-  constexpr operator T();  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+      typename = std::enable_if_t<                                         //
+          (kBaseOrNot == std::is_base_of_v<std::remove_cvref_t<T>, RawD>)  //
+          &&(!kBaseOrNot || !kRequireNonEmpty || (!std::is_empty_v<std::remove_cvref_t<T>> && kAllowNonEmpty))>>
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
 };
 
+template<std::size_t kIndex, typename D, bool kBaseOrNot, bool kRequireNonEmpty, bool kAllowNonEmpty = kRequireNonEmpty>
+using AnyTypeIfN = AnyTypeIf<D, kBaseOrNot, kRequireNonEmpty, kAllowNonEmpty>;
+
+template<typename D>
+struct AnyEmptyBase {
+  using RawD = std::remove_cvref_t<D>;
+  template<
+      typename T,
+      typename =
+          std::enable_if_t<std::is_base_of_v<std::remove_cvref_t<T>, RawD> && std::is_empty_v<std::remove_cvref_t<T>>>>
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+};
+
+template<std::size_t kIndex, typename D>
+using AnyEmptyBaseN = AnyEmptyBase<D>;
+
+template<typename D>
+struct AnyEmptyBaseOrNonBase {
+  using RawD = std::remove_cvref_t<D>;
+  template<
+      typename T,
+      typename =
+          std::enable_if_t<!std::is_base_of_v<std::remove_cvref_t<T>, RawD> || std::is_empty_v<std::remove_cvref_t<T>>>>
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+};
+
+template<std::size_t kIndex, typename D>
+using AnyEmptyBaseOrNonBaseN = AnyEmptyBaseOrNonBase<D>;
+
+template<typename D, bool kIsEmpty, bool kAllowNonEmpty = false>
+struct AnyBaseMaybeEmpty {
+  using RawD = std::remove_cvref_t<D>;
+  template<
+      typename T,
+      typename = std::enable_if_t<
+          std::is_base_of_v<std::remove_cvref_t<T>, RawD>
+          && (kIsEmpty == std::is_empty_v<std::remove_cvref_t<T>>
+              || (kAllowNonEmpty && !std::is_empty_v<std::remove_cvref_t<T>>))>>
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+};
+
+template<std::size_t kIndex, typename D, bool kIsEmpty, bool kAllowNonEmpty = false>
+using AnyBaseMaybeEmptyN = AnyBaseMaybeEmpty<D, kIsEmpty, kAllowNonEmpty>;
+
 template<typename T, typename... Args>
-inline decltype(void(T{std::declval<Args>()...}), std::true_type())
-IsBracesConstructibleFunc(int);
+inline decltype(void(T{std::declval<Args>()...}), std::true_type()) IsBracesConstructibleFunc(int);
 
 template<typename T, typename... Args>
 inline std::false_type IsBracesConstructibleFunc(...);
 
 template<typename T, typename... Args>
-struct IsBracesConstructibleImpl
-    : decltype(types_internal::IsBracesConstructibleFunc<T, Args...>(0)) {};
+struct IsBracesConstructibleImpl : decltype(types_internal::IsBracesConstructibleFunc<T, Args...>(0)) {};
 
 template<typename T, typename... Args>
-using IsBracesConstructibleImplT =
-    typename IsBracesConstructibleImpl<T, Args...>::type;
+using IsBracesConstructibleImplT = typename IsBracesConstructibleImpl<T, Args...>::type;
 
 #ifdef __clang__
 #pragma clang diagnostic pop

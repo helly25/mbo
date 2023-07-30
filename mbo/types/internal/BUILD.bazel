@@ -16,6 +16,7 @@ cc_library(
 cc_library(
     name = "traits_cc",
     hdrs = [
+        "binary_search.h",
         "decompose_count.h",
         "is_braces_constructible.h",
     ],

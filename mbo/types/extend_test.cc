@@ -20,6 +20,7 @@
 #include <type_traits>
 
 #include "absl/hash/hash_testing.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -80,7 +81,41 @@ struct Extend4 : public Extend<Extend4> {
   const int* ptr = nullptr;
 };
 
+struct SimpleName {
+  std::string first;
+  std::string last;
+};
+
+struct SimplePerson : Empty {
+  SimpleName name;
+  unsigned int age = 0;
+};
+
+struct Name : Extend<Name> {
+  std::string first;
+  std::string last;
+};
+
+struct Person : Extend<Person> {
+  Name name;
+  unsigned age = 0;
+};
+
 class ExtendTest : public ::testing::Test {};
+
+TEST_F(ExtendTest, TestDecomposeInfo) {
+  using ::mbo::types::types_internal::DecomposeInfo;
+#define DEBUG_AND_TEST(Type, kExpected) \
+  ABSL_LOG(INFO) << #Type << ": " << DecomposeInfo<Type>::Debug(); \
+  EXPECT_THAT(DecomposeInfo<Type>::kDecomposeCount, kExpected)
+
+  DEBUG_AND_TEST(Extend4, 4);
+  DEBUG_AND_TEST(SimpleName, 2);
+  DEBUG_AND_TEST(SimplePerson, 2);
+  DEBUG_AND_TEST(Name, 2);
+  DEBUG_AND_TEST(Person, 2);
+#undef DEBUG_AND_TEST
+}
 
 TEST_F(ExtendTest, Test) {
   ASSERT_THAT(std::is_aggregate_v<Extend2>, true);
@@ -111,16 +146,6 @@ TEST_F(ExtendTest, Print) {
 }
 
 TEST_F(ExtendTest, NestedPrint) {
-  struct Name : Extend<Name> {
-    std::string first;
-    std::string last;
-  };
-
-  struct Person : Extend<Person> {
-    Name name;
-    unsigned age = 0;
-  };
-
   const Person person{.name = {.first = "First", .last = "Last"}, .age = 42};
   static constexpr std::string_view kExpected = R"({{"First", "Last"}, 42})";
   EXPECT_THAT(person.Print(), kExpected);
@@ -253,18 +278,10 @@ struct PlainPerson {
 };
 
 TEST_F(ExtendTest, Hashable) {
-  struct Name : Extend<Name> {
-    std::string first;
-    std::string last;
-  };
-
-  struct Person : Extend<Person> {
-    Name name;
-    size_t age = 0;
-  };
-
   const Person person{.name = {.first = "First", .last = "Last"}, .age = 42};
   const PlainPerson plain_person{.name = {.first = "First", .last = "Last"}, .age = 42};
+
+  static_assert(mbo::types::types_internal::DecomposeInfo<Person>::kDecomposeCount == 2);
 
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({person, Person{}}));
 
