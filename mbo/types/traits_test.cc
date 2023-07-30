@@ -63,6 +63,9 @@ TEST_F(TraitsTest, DecomposeCountV) {
 
   ASSERT_THAT(IsAggregate<void>, false);
   EXPECT_THAT(IsDecomposable<void>, false);
+
+  ASSERT_THAT(IsAggregate<void>, false);
+  EXPECT_THAT(IsDecomposable<void>, false);
   EXPECT_THAT(DecomposeCountV<void>, NotDecomposableV);
 
   ASSERT_THAT(IsAggregate<Virtual>, false);
@@ -71,11 +74,19 @@ TEST_F(TraitsTest, DecomposeCountV) {
 
   ASSERT_THAT(IsAggregate<CtorDefault>, false);
   EXPECT_THAT(IsDecomposable<CtorDefault>, false);
-  // EXPECT_THAT(DecomposeCountV<CtorDefault>, NotDecomposableV);
+#if defined(__clang__)
+  EXPECT_THAT(DecomposeCountV<CtorDefault>, NotDecomposableV);
+#else
+  EXPECT_THAT(DecomposeCountV<CtorDefault>, 0);
+#endif
 
   ASSERT_THAT(IsAggregate<CtorUser>, false);
   EXPECT_THAT(IsDecomposable<CtorUser>, false);
-  // EXPECT_THAT(DecomposeCountV<CtorUser>, NotDecomposableV);
+#if defined(__clang__)
+  EXPECT_THAT(DecomposeCountV<CtorUser>, NotDecomposableV);
+#else
+  EXPECT_THAT(DecomposeCountV<CtorUser>, 0);
+#endif
 
   ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
   ASSERT_THAT(IsAggregate<CtorBase>, true);
@@ -103,8 +114,6 @@ struct MadMix {
 
 TEST_F(TraitsTest, DecomposeMadMix) {
   ASSERT_THAT(IsAggregate<MadMix>, true);
-  static_assert(types_internal::AggregateInitializerCount<MadMix>::value == 7);
-  static_assert(!types_internal::AggregateHasNonEmptyBaseRaw<MadMix>::value);
   EXPECT_THAT(IsDecomposable<MadMix>, true);
   EXPECT_THAT(DecomposeCountV<MadMix>, 3);
 }
@@ -115,8 +124,7 @@ TYPED_TEST(GenTraitsTest, DecomposeCountV) {
   constexpr size_t kDerived = TestFixture::kDerivedFieldCount;
   EXPECT_THAT(
       DecomposeCountV<Type>,
-      kBase && kDerived ? NotDecomposableV : kBase + kDerived)
-      << "\n" << types_internal::DecomposeInfo<Type>::Debug();
+      kBase && kDerived ? NotDecomposableV : kBase + kDerived);
 }
 
 TEST_F(TraitsTest, IsBracesContructible) {

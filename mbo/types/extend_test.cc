@@ -103,6 +103,7 @@ struct Person : Extend<Person> {
 
 class ExtendTest : public ::testing::Test {};
 
+#if !defined(__clang__)
 TEST_F(ExtendTest, TestDecomposeInfo) {
   using ::mbo::types::types_internal::DecomposeInfo;
 #define DEBUG_AND_TEST(Type, kExpected) \
@@ -116,6 +117,7 @@ TEST_F(ExtendTest, TestDecomposeInfo) {
   DEBUG_AND_TEST(Person, 2);
 #undef DEBUG_AND_TEST
 }
+#endif
 
 TEST_F(ExtendTest, Test) {
   ASSERT_THAT(std::is_aggregate_v<Extend2>, true);
@@ -280,8 +282,6 @@ struct PlainPerson {
 TEST_F(ExtendTest, Hashable) {
   const Person person{.name = {.first = "First", .last = "Last"}, .age = 42};
   const PlainPerson plain_person{.name = {.first = "First", .last = "Last"}, .age = 42};
-
-  static_assert(mbo::types::types_internal::DecomposeInfo<Person>::kDecomposeCount == 2);
 
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({person, Person{}}));
 

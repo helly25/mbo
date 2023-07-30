@@ -80,7 +80,7 @@ struct AggregateHasNonEmptyBaseImpl : AggregateHasNonEmptyBaseRaw<std::remove_cv
 template<typename T>
 concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 
-#if defined(__clang__) && 0
+#if defined(__clang__)
 
 template<typename T, bool = IsAggregate<T>&& std::is_empty_v<T>>
 struct DecomposeCount0 final : IfFalseThenVoid {};
