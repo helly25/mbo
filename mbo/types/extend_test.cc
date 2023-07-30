@@ -131,26 +131,26 @@ TEST_F(ExtendTest, Print) {
   {
     const Extend2 ext2{.a = 25, .b = 42};
     ASSERT_THAT(DecomposeCountV<decltype(ext2)>, 2);
-    EXPECT_THAT(ext2.Print(), "{25, 42}");
+    EXPECT_THAT(ext2.ToString(), "{25, 42}");
   }
 
   {
     const Extend4 ext4{.a = 25, .b = 42, .c = "Hello There!"};
     ASSERT_THAT(DecomposeCountV<decltype(ext4)>, 4);
-    EXPECT_THAT(ext4.Print(), R"({25, 42, "Hello There!", <nullptr>})");
+    EXPECT_THAT(ext4.ToString(), R"({25, 42, "Hello There!", <nullptr>})");
   }
   {
     constexpr int kVal = 1'337;
     const Extend4 ext4{.a = 25, .b = 42, .c = "Hello There!", .ptr = &kVal};
     ASSERT_THAT(DecomposeCountV<decltype(ext4)>, 4);
-    EXPECT_THAT(ext4.Print(), R"({25, 42, "Hello There!", *{1337}})");
+    EXPECT_THAT(ext4.ToString(), R"({25, 42, "Hello There!", *{1337}})");
   }
 }
 
 TEST_F(ExtendTest, NestedPrint) {
   const Person person{.name = {.first = "First", .last = "Last"}, .age = 42};
   static constexpr std::string_view kExpected = R"({{"First", "Last"}, 42})";
-  EXPECT_THAT(person.Print(), kExpected);
+  EXPECT_THAT(person.ToString(), kExpected);
   EXPECT_THAT(absl::StrFormat("%v", person), kExpected);
 }
 

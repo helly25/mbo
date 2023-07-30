@@ -46,12 +46,12 @@ TEST_F(NoDestructTest, ClangCheck) {
 #endif  // _LIBCPP_STD_VER
 
 TEST_F(NoDestructTest, Test) {
-    EXPECT_THAT(kTestSimple.Get().Print(), "{25, 42}");
-    EXPECT_THAT((*kTestSimple).Print(), "{25, 42}");
-    EXPECT_THAT(kTestSimple->Print(), "{25, 42}");
-    EXPECT_THAT(kTestString.Get().Print(), R"({"25", "42"})");
-    EXPECT_THAT((*kTestString).Print(), R"({"25", "42"})");
-    EXPECT_THAT(kTestString->Print(), R"({"25", "42"})");
+    EXPECT_THAT(kTestSimple.Get().ToString(), "{25, 42}");
+    EXPECT_THAT((*kTestSimple).ToString(), "{25, 42}");
+    EXPECT_THAT(kTestSimple->ToString(), "{25, 42}");
+    EXPECT_THAT(kTestString.Get().ToString(), R"({"25", "42"})");
+    EXPECT_THAT((*kTestString).ToString(), R"({"25", "42"})");
+    EXPECT_THAT(kTestString->ToString(), R"({"25", "42"})");
 }
 
 }  // namespace

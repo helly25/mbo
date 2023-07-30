@@ -259,15 +259,15 @@ struct Comparable final : MakeExtender<"Comparable"_ts, ComparableImpl> {};
 
 template<typename ExtenderBase>
 struct PrintableImpl : ExtenderBase {
-  std::string Print() const {
+  std::string ToString() const {
     std::ostringstream os;
     this->OStreamFields(os);
     return os.str();
   }  // namespace mbo::types::extender
 };
 
-// Extender that injects functionality to make an `Extend`ed type get a `Print`
-// function which can be used to convert a type into a `std::string`.
+// Extender that injects functionality to make an `Extend`ed type get a
+// `ToString` function which can be used to convert a type into a `std::string`.
 //
 // This default Extender is automatically available through `mb::types::Extend`.
 struct Printable final : MakeExtender<"Printable"_ts, PrintableImpl, AbslFormat> {};
