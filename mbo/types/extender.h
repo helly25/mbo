@@ -16,8 +16,8 @@
 //
 // * Printable (default)
 //
-//   * Provides method `Print` which generates a string represenation of the
-//     fields of the extended class of the form "{value, value}".
+//   * Provides method `std::string ToString()` which generates a string
+//     represenation of the fields of the extended class as `"{value, value}"`.
 //   * This is a default extender.
 //   * Requires `AbslFormat`
 //
