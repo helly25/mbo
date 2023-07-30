@@ -70,10 +70,10 @@ struct GetRequirementImpl<Extender, true> {
 template<typename Extender>
 using GetRequirement = typename GetRequirementImpl<Extender>::type;
 
-template<size_t N, typename... Ts>
+template<std::size_t N, typename... Ts>
 using GetType = typename std::tuple_element<N, std::tuple<Ts...>>::type;
 
-template<size_t N, typename Required, typename... Extenders>
+template<std::size_t N, typename Required, typename... Extenders>
 struct RequiredPresentForIndexImpl
     : std::bool_constant<
           std::is_same_v<Required, GetType<N, Extenders...>>
@@ -82,7 +82,7 @@ struct RequiredPresentForIndexImpl
 template<typename Required, typename... Extenders>
 struct RequiredPresentForIndexImpl<0, Required, Extenders...> : std::is_same<Required, GetType<0, Extenders...>> {};
 
-template<size_t N, typename... Extenders>
+template<std::size_t N, typename... Extenders>
 struct RequiredPresentForIndex
     : std::bool_constant<
           (!HasRequirement<GetType<N, Extenders...>>
@@ -142,7 +142,7 @@ struct ExtendImpl
 template<typename Extended>
 concept IsExtended = requires { typename Extended::RegisteredExtenders; };
 
-template<size_t N, typename Extended, typename Extender>
+template<std::size_t N, typename Extended, typename Extender>
 struct HasExtenderImpl
     : std::bool_constant<
           std::is_same_v<

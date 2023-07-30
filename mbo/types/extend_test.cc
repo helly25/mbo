@@ -271,7 +271,7 @@ struct PlainName {
 
 struct PlainPerson {
   PlainName name;
-  size_t age = 0;
+  std::size_t age = 0;
 
   template<typename H>
   friend H AbslHashValue(H hash, const PlainPerson& obj) noexcept {

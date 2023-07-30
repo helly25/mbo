@@ -29,6 +29,9 @@
 #include "mbo/types/no_destruct.h"
 
 namespace mbo::diff {
+
+using std::size_t;
+
 namespace {
 size_t AbsDiff(size_t lhs, size_t rhs) {
   if (lhs > rhs) {

@@ -37,6 +37,7 @@ using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::SizeIs;
 using ::testing::StrEq;
+using std::size_t;
 
 struct TStringTest : ::testing::Test {
   static constexpr auto kTestA1 = MBO_MAKE_TSTRING("1_test");

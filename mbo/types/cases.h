@@ -77,7 +77,7 @@ using Cases = typename types_internal::CasesImpl<IfThenCases...>::type;
 //   CaseIndex<1, 0> == 1
 //   CaseIndex<1, 1> == 1
 template<bool... Conditions>
-inline constexpr size_t CaseIndex =  // NOLINT(readability-identifier-naming)
+inline constexpr std::size_t CaseIndex =  // NOLINT(readability-identifier-naming)
     types_internal::CaseIndexImpl<IfThen<Conditions, void>...>::index;
 
 }  // namespace mbo::types

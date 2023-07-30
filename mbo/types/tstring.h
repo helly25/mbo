@@ -75,9 +75,9 @@ struct tstring final {
   using reverse_iterator = std::string_view::const_reverse_iterator;
   using const_reverse_iterator = std::string_view::const_reverse_iterator;
   using difference_type = ptrdiff_t;
-  using size_type = size_t;
+  using size_type = std::size_t;
 
-  static constexpr size_t npos = std::string_view::npos;
+  static constexpr size_type npos = std::string_view::npos;
 
   // Access to the underlying data as a `std::string_view`.
   static constexpr std::string_view str() noexcept { return {data.data(), sizeof...(chars)}; }
@@ -95,11 +95,11 @@ struct tstring final {
   // String based comparison (run-time), uses `std::string_view::compare`.
   static constexpr auto compare(const std::string_view other) noexcept { return str().compare(other); }
 
-  static constexpr size_t size() noexcept { return num_chars; }
+  static constexpr size_type size() noexcept { return num_chars; }
 
-  static constexpr size_t max_size() noexcept { return num_chars; }
+  static constexpr size_type max_size() noexcept { return num_chars; }
 
-  static constexpr size_t length() noexcept { return num_chars; }
+  static constexpr size_type length() noexcept { return num_chars; }
 
   static constexpr bool empty() noexcept { return num_chars == 0; }
 
@@ -148,19 +148,19 @@ struct tstring final {
   //
   // If the parameter `pos` or `count` cannot be provided at compile-time, then
   // the run-time alternative `str_substr(pos, count)` has to be used instead.
-  template<size_t pos = 0, size_t count = npos>
+  template<size_type pos = 0, size_type count = npos>
   static constexpr auto substr() noexcept {
     if constexpr (pos == 0 && (count == npos || count >= num_chars)) {
       return tstring{};  // this type
     } else if constexpr (pos >= num_chars || count == 0) {
       return tstring<>{};  // empty
     } else {
-      constexpr const size_t result_len =
+      constexpr const size_type result_len =
           count == npos ? num_chars - pos : (num_chars - pos < count ? num_chars - pos : count);
       if constexpr (result_len == 0) {
         return tstring<>{};  // empty
       } else {
-        return [&]<size_t... Is>(std::index_sequence<Is...>) constexpr noexcept -> tstring<data[Is + pos]...> {
+        return [&]<size_type... Is>(std::index_sequence<Is...>) constexpr noexcept -> tstring<data[Is + pos]...> {
           return {};
         }(std::make_index_sequence<result_len>{});
       }
@@ -173,7 +173,7 @@ struct tstring final {
   // Unlike `std::string_view::substr` but like `substr` this method also does
   // not throw an exception in case `pos >= size` and rather returns an empty
   // string view.
-  static constexpr std::string_view substr(size_t pos, size_t count = npos) noexcept {
+  static constexpr std::string_view substr(size_type pos, size_type count = npos) noexcept {
     return pos >= size() ? "" : str().substr(pos, count);
   }
 
@@ -192,16 +192,16 @@ struct tstring final {
   // Returns (at compile time) the position of `tstring<Other...>` in this
   // `tstring` or `tstring::npos`.
   template<char... Other>
-  static constexpr size_t find(tstring<Other...> /* other */) noexcept {
-    constexpr size_t olen = sizeof...(Other);
+  static constexpr size_type find(tstring<Other...> /* other */) noexcept {
+    constexpr size_type olen = sizeof...(Other);
     if constexpr (olen == 0) {
       return 0;
     } else if constexpr (olen > num_chars) {
       return npos;
     } else {
       using OStr = tstring<Other...>;
-      return [&]<size_t... Is>(std::index_sequence<Is...>) constexpr noexcept {
-        size_t pos = 0;
+      return [&]<size_type... Is>(std::index_sequence<Is...>) constexpr noexcept {
+        size_type pos = 0;
         return ((++pos, OStr::is(substr<Is, olen>())) || ...) ? pos - 1 : npos;
       }(std::make_index_sequence<num_chars - olen + 1>{});
     }
@@ -210,17 +210,17 @@ struct tstring final {
   // Returns (at compile time) the last position of `tstring<Other...>` in this
   // `tstring` or `testing::npos`.
   template<char... Other>
-  static constexpr size_t rfind(tstring<Other...> /* other */) noexcept {
-    constexpr size_t olen = sizeof...(Other);
+  static constexpr size_type rfind(tstring<Other...> /* other */) noexcept {
+    constexpr size_type olen = sizeof...(Other);
     if constexpr (olen == 0) {
       return num_chars;
     } else if constexpr (olen > num_chars) {
       return npos;
     } else {
       using OStr = tstring<Other...>;
-      constexpr size_t len = num_chars - olen;
-      return [&]<size_t... I>(std::index_sequence<I...>) constexpr noexcept {
-        size_t pos = num_chars - olen + 1;
+      constexpr size_type len = num_chars - olen;
+      return [&]<size_type... I>(std::index_sequence<I...>) constexpr noexcept {
+        size_type pos = num_chars - olen + 1;
         return ((--pos, OStr::is(substr<len - I, olen>())) || ...) ? pos : npos;
       }(std::make_index_sequence<len + 1>{});
     }
@@ -230,7 +230,7 @@ struct tstring final {
   // `tstring`.
   template<char... Other>
   static constexpr bool contains(tstring<Other...> /* other */) noexcept {
-    constexpr size_t other_len = sizeof...(Other);
+    constexpr size_type other_len = sizeof...(Other);
     if constexpr (other_len == 0) {
       return true;
     } else if constexpr (other_len > num_chars) {
@@ -238,7 +238,7 @@ struct tstring final {
     } else {
       // This could use `find` but the local implementation highlights that
       // no instance of `tstring<Other...>` is being used.
-      return [&]<size_t... Is>(std::index_sequence<Is...>) constexpr noexcept {
+      return [&]<size_type... Is>(std::index_sequence<Is...>) constexpr noexcept {
         return (tstring<Other...>::is(substr<Is, other_len>()) || ...);
       }(std::make_index_sequence<num_chars - other_len + 1>{});
     }
@@ -249,7 +249,7 @@ struct tstring final {
   // TODO(helly25): Consider implementing a compile-time variant.
   template<typename T>
   requires std::is_convertible_v<T, char> || std::is_convertible_v<T, std::string_view>
-  static constexpr size_t find_first_of(T charset, size_type pos = 0) noexcept {
+  static constexpr size_type find_first_of(T charset, size_type pos = 0) noexcept {
     return str().find_first_of(charset, pos);
   }
 
@@ -259,7 +259,7 @@ struct tstring final {
   // TODO(helly25): Consider implementing a compile-time variant.
   template<typename T>
   requires std::is_convertible_v<T, char> || std::is_convertible_v<T, std::string_view>
-  static constexpr size_t find_last_of(T charset, size_t pos = npos) noexcept {
+  static constexpr size_type find_last_of(T charset, size_type pos = npos) noexcept {
     return str().find_last_of(charset, pos);
   }
 
@@ -319,7 +319,7 @@ struct tstring final {
   }
 
  private:
-  static constexpr size_t num_chars = sizeof...(chars);
+  static constexpr size_type num_chars = sizeof...(chars);
   static constexpr std::array<char, num_chars + 1> data{chars..., 0};
 };
 
@@ -328,8 +328,8 @@ namespace types_internal {
 // NOLINTBEGIN(*-avoid-c-arrays)
 
 // Safely identifies the length of the input to the `MBO_MAKE_TSTRING` macro.
-template<size_t N>
-inline constexpr size_t tstring_input_len(const char (& /* v */)[N]) noexcept {
+template<std::size_t N>
+inline constexpr std::size_t tstring_input_len(const char (& /* v */)[N]) noexcept {
   return N ? N - 1 : 0;  // Not sizeof(str) to exclude the \0 AND check N>0.
 }
 
@@ -350,7 +350,7 @@ class MakeTstringHelper {
   MakeTstringHelper& operator=(MakeTstringHelper&&) = delete;
 
   static constexpr auto tstr() noexcept {
-    return []<size_t... Is>(std::index_sequence<Is...>) constexpr noexcept -> tstring<(str())[Is]...> {
+    return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr noexcept -> tstring<(str())[Is]...> {
       return {};
     }(std::make_index_sequence<size()>{});
   }
@@ -358,7 +358,7 @@ class MakeTstringHelper {
  private:
   static constexpr std::string_view str() noexcept { return Str; }
 
-  static constexpr size_t size() { return str().size(); }
+  static constexpr std::size_t size() { return str().size(); }
 };
 
 #if !defined(__clang__) && !defined(__GNUC__)
@@ -393,7 +393,7 @@ struct MakeTstringLiteralHelper {
   std::array<char, N> data;
 
  private:
-  static constexpr size_t Length(size_t len) noexcept { return len > 0 ? len - 1 : len; }
+  static constexpr std::size_t Length(std::size_t len) noexcept { return len > 0 ? len - 1 : len; }
 
   template<std::size_t... Is>
   constexpr explicit MakeTstringLiteralHelper(
@@ -421,7 +421,7 @@ constexpr tstring<chars...> operator"" _ts() {
 //   constexpr auto my_constexpr_string = "foo"_ts;
 template<types_internal::MakeTstringLiteralHelper Helper>
 constexpr auto operator"" _ts() noexcept {
-  return [&]<size_t... Is>(std::index_sequence<Is...>) {
+  return [&]<std::size_t... Is>(std::index_sequence<Is...>) {
     return tstring<Helper.str()[Is]...>{};
   }(std::make_index_sequence<Helper.str().size()>{});
 }
@@ -433,7 +433,7 @@ constexpr auto operator"" _ts() noexcept {
        // arguments of types 'const char *' and 'unsigned long', and no matching
        // literal operator template
 // For an additional helper the issue is in matching the provided parameters
-// `const char*, size_t` in a way that can be used in a constexpr function.
+// `const char*, std::size_t` in a way that can be used in a constexpr function.
 template<tstring Str>
 constexpr auto operator"" _ts() {
     return Str;
@@ -456,7 +456,7 @@ template<char... c> constexpr tstring<c...> operator ""_ts() {
        // expressionclang(expr_not_cce)
        // Function parameter 'str' with unknown value cannot be used in a
        // constant expression
-constexpr auto operator ""_ts(const char* str, size_t n) {
+constexpr auto operator ""_ts(const char* str, std::size_t n) {
   return types_internal::make_tstring_helper<str>::tstr();
 }
 #endif
@@ -486,12 +486,12 @@ constexpr auto make_tstring() noexcept {
 }
 
 #if 0  // The below follows `std::to_array` but cases clang/gcc to crash.
-template<size_t N>
+template<std::size_t N>
 constexpr auto make_ts(const char(&str)[N]) noexcept {
   if constexpr (N == 0) {
     return tstring<>();
   } else {
-    return [str]<size_t... Is>(std::index_sequence<Is...>) constexpr noexcept
+    return [str]<std::size_t... Is>(std::index_sequence<Is...>) constexpr noexcept
             -> tstring<static_cast<char>(str[Is])...> {
       return {};
     }(std::make_index_sequence<N - 1>{});
@@ -506,7 +506,7 @@ constexpr auto make_ts(const char(&str)[N]) noexcept {
 // zero chars - as long as the compiler correctly handles length detection.
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define MBO_MAKE_TSTRING(str)                                                                \
-  []<size_t... Is>(std::index_sequence<Is...>) constexpr noexcept -> tstring<(str)[Is]...> { \
+  []<std::size_t... Is>(std::index_sequence<Is...>) constexpr noexcept -> tstring<(str)[Is]...> { \
     return {};                                                                               \
   }(std::make_index_sequence<types_internal::tstring_input_len(str)>{})
 

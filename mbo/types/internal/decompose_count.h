@@ -621,11 +621,11 @@ struct DecomposeInfo final {
   static constexpr bool kBadFieldCount = 0;
   static constexpr bool kOneNonEmptyBase = 0;
   static constexpr bool kOneNonEmptyBasePlusFields = 0;
-  static constexpr size_t kCountBases = 0;
-  static constexpr size_t kCountEmptyBases = 0;
+  static constexpr std::size_t kCountBases = 0;
+  static constexpr std::size_t kCountEmptyBases = 0;
   static constexpr bool kOnlyEmptyBases = true;
   static constexpr bool kDecomposable = kIsAggregate || kIsEmpty;
-  static constexpr size_t kDecomposeCount = kDecomposable ? 0 : NotDecomposableImpl::value;
+  static constexpr std::size_t kDecomposeCount = kDecomposable ? 0 : NotDecomposableImpl::value;
 
   static std::string Debug() {
     std::string str;
@@ -660,12 +660,13 @@ struct DecomposeInfo<T, true> final {
       !kIsAggregate || kIsEmpty || kFieldCount == 0 || kFieldCount == NotDecomposableImpl::value;
   static constexpr bool kOneNonEmptyBase = OneNonEmptyBase<Type>;
   static constexpr bool kOneNonEmptyBasePlusFields = OneNonEmptyBasePlusFields<Type>;
-  static constexpr size_t kCountBases = kBadFieldCount ? 0 : CountBases<Type, false>::value;
-  static constexpr size_t kCountEmptyBases = kBadFieldCount ? 0 : CountBases<Type, true>::value;
+  static constexpr std::size_t kCountBases = kBadFieldCount ? 0 : CountBases<Type, false>::value;
+  static constexpr std::size_t kCountEmptyBases = kBadFieldCount ? 0 : CountBases<Type, true>::value;
   static constexpr bool kOnlyEmptyBases = kCountBases <= kCountEmptyBases;
   static constexpr bool kDecomposable =
       kIsAggregate && (kIsEmpty || ((kOneNonEmptyBase || kOnlyEmptyBases) && !kOneNonEmptyBasePlusFields));
-  static constexpr size_t kDecomposeCount = kDecomposable ? kFieldCount - kCountEmptyBases : NotDecomposableImpl::value;
+  static constexpr std::size_t kDecomposeCount =
+      kDecomposable ? kFieldCount - kCountEmptyBases : NotDecomposableImpl::value;
 
   static std::string Debug() {
     std::string str;

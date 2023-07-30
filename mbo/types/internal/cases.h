@@ -19,12 +19,6 @@
 #include <type_traits>
 #include <utility>
 
-namespace mbo::types {
-
-using size_t = std::size_t;  // NOLINT(readability-identifier-naming)
-
-}  // namespace mbo::types
-
 namespace mbo::types::types_internal {
 
 // Requirement for the `if_then` cases of the `cases` template.
@@ -39,15 +33,15 @@ concept IsIfThen = requires(T) {
 // expanded and then increase the `Index`.
 // So this will effectively never terminate but rather fail the compiler.
 // But users will ensure there is always a `true` case at the end.
-template<bool IfThen0Value, size_t Index, typename IfThen0Type, typename IfThen1, typename... OtherCases>
+template<bool IfThen0Value, std::size_t Index, typename IfThen0Type, typename IfThen1, typename... OtherCases>
 struct CasesForwardImpl : CasesForwardImpl<IfThen1::value, Index + 1, typename IfThen1::type, OtherCases...> {};
 
 // Concrete implmentation for the front case being `true`.
 // Will set the struct with `type` and `index` and then terminate unpacking.
-template<size_t Index, typename IfThen0Type, typename IfThen1, typename... OtherCases>
+template<std::size_t Index, typename IfThen0Type, typename IfThen1, typename... OtherCases>
 struct CasesForwardImpl<true, Index, IfThen0Type, IfThen1, OtherCases...> {
   using type = IfThen0Type;
-  static constexpr size_t index = Index;
+  static constexpr std::size_t index = Index;
 };
 
 // We forward as a `struct` because we have to change where the parameter-pack
@@ -94,10 +88,10 @@ struct CasesImpl
 template<typename... IfThenCases>
 struct CaseIndexImpl {
  private:
-  static constexpr size_t kRawIndex = CasesImpl<IfThenCases...>::index;
+  static constexpr std::size_t kRawIndex = CasesImpl<IfThenCases...>::index;
 
  public:
-  static constexpr size_t index = kRawIndex >= sizeof...(IfThenCases) ? 0 : kRawIndex + 1;
+  static constexpr std::size_t index = kRawIndex >= sizeof...(IfThenCases) ? 0 : kRawIndex + 1;
 };
 
 }  // namespace mbo::types::types_internal

@@ -150,7 +150,7 @@ struct AbslFormatImpl : ExtenderBase {
     std::apply(
         [&os](const Ts&... fields) {
           os << '{';
-          size_t idx{0};  // NOLINT(misc-const-correctness)
+          std::size_t idx{0};  // NOLINT(misc-const-correctness)
           ((os << (OStreamField(os, fields), (++idx < sizeof...(fields) ? ", " : ""))), ...);
           os << '}';
         },
@@ -159,7 +159,7 @@ struct AbslFormatImpl : ExtenderBase {
 
   template<typename V>
   static void OStreamField(std::ostream& os, const V& v) {
-    if constexpr (std::is_same_v<V, nullptr_t>) {
+    if constexpr (std::is_same_v<V, std::nullptr_t>) {
       os << absl::StreamFormat("nullptr_t");
     } else if constexpr (std::is_pointer_v<V>) {
       if (v) {
@@ -206,8 +206,8 @@ struct AbslHashableImpl : ExtenderBase {
 //
 // void demo() {
 //   const Name name{.first = "first", .last = "last"};
-//   const size_t hash = absl::HashOf(name);
-//   const size_t std_hash = std::hash<Name>{}(name);
+//   const std::size_t hash = absl::HashOf(name);
+//   const std::size_t std_hash = std::hash<Name>{}(name);
 //   static_assert(hash == std_hash, "Must be the same");
 // }
 // ```

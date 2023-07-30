@@ -12,6 +12,8 @@
 
 namespace mbo::strings {
 
+using std::size_t;
+
 std::vector<std::string_view> DropIndentAndSplit(std::string_view text) {
   // If the first line is empty, simply remove it and the new first line will
   // determine the indent to remove. Otherwise the first line will be left alone

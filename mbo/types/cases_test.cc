@@ -19,6 +19,9 @@
 #include "gtest/gtest.h"
 
 namespace mbo::types {
+
+using std::size_t;
+
 namespace {
 
 class CasesTest : public ::testing::Test {};

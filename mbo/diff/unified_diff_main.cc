@@ -31,7 +31,7 @@
 // NOLINTBEGIN(abseil-no-namespace)
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 
-ABSL_FLAG(size_t, unified, 3, "Produces a diff with number lines of context");
+ABSL_FLAG(std::size_t, unified, 3, "Produces a diff with number lines of context");
 ABSL_FLAG(bool, skip_time, false, "Sets the time to the unix epoch 0.");
 
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)

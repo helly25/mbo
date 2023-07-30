@@ -32,10 +32,10 @@ class TupleTest : public ::testing::Test {};
 template<typename T>
 class GenTupleTest : public ::testing::Test {
  public:
-  static constexpr size_t kDerivedFieldCount =
-      static_cast<size_t>(T::kFieldCount);
-  static constexpr size_t kBaseFieldCount =
-      static_cast<size_t>(T::BaseType::kFieldCount);
+  static constexpr std::size_t kDerivedFieldCount =
+      static_cast<std::size_t>(T::kFieldCount);
+  static constexpr std::size_t kBaseFieldCount =
+      static_cast<std::size_t>(T::BaseType::kFieldCount);
 };
 
 TYPED_TEST_SUITE(GenTupleTest, AllConstructedTypes);

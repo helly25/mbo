@@ -31,10 +31,10 @@ concept IsAggregate = types_internal::IsAggregate<T>;
 // * T is an aggregate.
 // * T has no or only empty base classes.
 template<typename T>
-inline constexpr size_t DecomposeCountV = types_internal::DecomposeCountImpl<T>::value;
+inline constexpr std::size_t DecomposeCountV = types_internal::DecomposeCountImpl<T>::value;
 
 // If a `T` cannot be decomposed, then `decompose_count` returns this value.
-inline constexpr size_t NotDecomposableV = types_internal::NotDecomposableImpl::value;
+inline constexpr std::size_t NotDecomposableV = types_internal::NotDecomposableImpl::value;
 
 // Returns whether `T` can be decomposed.
 // This is only true if a non empty structured binding of T is possible:

@@ -81,14 +81,14 @@ namespace std {
 // };
 //
 // void demo() {
-//   size_t hash = std::hash<Name>{}(
+//   std::size_t hash = std::hash<Name>{}(
 //       Name{.first = "first", .last = "last"});
 // }
 // ```
 template<typename Extended>
 requires mbo::types::extender_internal::HasExtender<Extended, mbo::types::extender::AbslHashable>
 struct hash<Extended> {  // NOLINT(cert-dcl58-cpp)
-  size_t operator()(const Extended& obj) const noexcept { return absl::HashOf(obj); }
+  std::size_t operator()(const Extended& obj) const noexcept { return absl::HashOf(obj); }
 };
 
 }  // namespace std

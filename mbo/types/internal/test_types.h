@@ -47,7 +47,7 @@ struct BaseOutOfRange final {
   BaseOutOfRange() = delete;
 };
 
-template<size_t base>
+template<std::size_t base>
 using ConstructBase = typename CasesImpl<
     IfThen<base == 0, Empty>,
     IfThen<base == 1, Base1>,
@@ -96,7 +96,7 @@ struct DerivedOutOfRange final {
   DerivedOutOfRange() = delete;
 };
 
-template<size_t derived, size_t base>
+template<std::size_t derived, std::size_t base>
 using ConstructType = typename CasesImpl<
     IfThen<derived == 0, Derived0<ConstructBase<base>>>,
     IfThen<derived == 1, Derived1<ConstructBase<base>>>,
@@ -181,7 +181,7 @@ struct Base3B {
   int b_c;
 };
 
-template<size_t base>
+template<std::size_t base>
 using ConstructBase2 = typename CasesImpl<
     IfThen<base == 0, EmptyB>,
     IfThen<base == 1, Base2B>,
@@ -189,7 +189,7 @@ using ConstructBase2 = typename CasesImpl<
     IfThen<base == 3, Base3B>,
     IfElse<BaseOutOfRange>>::type;
 
-template<size_t derived, size_t a, size_t b>
+template<std::size_t derived, std::size_t a, std::size_t b>
 using ConstructMultiType = typename CasesImpl<
     IfThen<derived == 0, Multi0<ConstructBase<a>, ConstructBase2<b>>>,
     IfThen<derived == 1, Multi1<ConstructBase<a>, ConstructBase2<b>>>,

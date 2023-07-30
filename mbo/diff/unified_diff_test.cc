@@ -338,7 +338,7 @@ TEST_F(UnifiedDiffTest, Multi1) {
       UnifiedDiff(
           {ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(kOneChunk))));
-  for (const size_t context_size : {2, 3, 5, 50}) {
+  for (const std::size_t context_size : {2, 3, 5, 50}) {
     EXPECT_THAT(
         UnifiedDiff(
             {ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"},

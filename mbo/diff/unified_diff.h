@@ -47,7 +47,7 @@ class UnifiedDiff final {
   struct Options final {
     static const Options& Default() noexcept;
 
-    size_t context_size = 3;
+    std::size_t context_size = 3;
     std::string time_format = "%F %H:%M:%E3S %z";
   };
 

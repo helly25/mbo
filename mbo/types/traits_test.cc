@@ -25,6 +25,7 @@ namespace {
 using ::mbo::types::types_internal::AnyBaseType;
 using ::mbo::types::types_internal::AnyType;
 using ::testing::Ne;
+using std::size_t;
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::mbo::types::types_internal::test_types;

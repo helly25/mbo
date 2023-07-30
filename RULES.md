@@ -47,4 +47,4 @@ Some rules for the code layout and its development.
   * Macros for local application must be undefined as close after the last use
     as possible.
   * Where possible macros should be named "{path}_{file}_{usecase}".
-* Use `std::size_t` as `size_t`.
+* Use `std::size_t` as `size_t` **ONLY** in CC files with `using std::size_t`.
