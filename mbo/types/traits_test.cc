@@ -16,7 +16,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "mbo/types/internal/decompose_count.h"
 #include "mbo/types/internal/test_types.h"
 
 namespace mbo::types {
@@ -108,9 +107,9 @@ TEST_F(TraitsTest, DecomposeCountV) {
 }
 
 struct MadMix {
-    int a;
+    int a = 0;
     std::string b;
-    char c[5];  // NOLINT(*-magic-numbers,*-avoid-c-arrays)
+    char c[5] {};  // NOLINT(*-magic-numbers,*-avoid-c-arrays)
 };
 
 TEST_F(TraitsTest, DecomposeMadMix) {
