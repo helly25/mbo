@@ -410,6 +410,25 @@ struct DecomposeCountImpl : DecomposeCountraw<std::remove_cvref_t<T>> {};
 
 #else  // __clang__
 
+// From https://github.com/helly25/mbo/commit/03789fed711e9603170dda767b1ebe50be6df282
+//
+// Unlike Clang, GCC does not understand `decltype` of a lmbda performing
+// structured-bindings, e.g.: `decltype([]() { const auto& [a0] = T(); }`.
+//
+// Thus GCC needs to count initializers and fields and base classes.
+// The core idea of identifying the actual number of values a struct
+// decomposes into for a structured-binding is extremely well discussed in
+// https://towardsdev.com/counting-the-number-of-fields-in-an-aggregate-in-c-20-part-2-d3103dec734f
+//
+// However, that solution still does not respect base classes, which is why
+// I originally gave up on that approach independently and developed the
+// Clang solution instead. Finding this documentation was an excellent
+// refresher on all the basic field handling. With that, I went on to
+// identifying base classes and all conditions that structured-bindings
+// apply while upgrading the core field/initializer handling.
+//
+// Some experiments were made here: https://godbolt.org/z/se7PcjqGz
+
 // First determine how many initializer values can be used to initialize `T`.
 
 template<typename T, typename... Args>
