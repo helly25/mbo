@@ -153,7 +153,7 @@ struct AbslFormatImpl : ExtenderBase {
 #ifdef __clang__
           const auto names = types_internal::GetFieldNames<Type>(static_cast<const Type&>(*this));
 #else
-          static consexpr std::array<std::string_view, 0> field_names;
+          static constexpr std::array<std::string_view, 0> names;
 #endif  // __clang__
           os << '{';
           std::size_t idx{0};  // NOLINT(misc-const-correctness)
