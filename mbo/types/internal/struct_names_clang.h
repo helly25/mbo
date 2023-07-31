@@ -16,16 +16,16 @@
 #include <string_view>
 #include <type_traits>
 
-#include "absl/strings/match.h"
-#include "absl/strings/strip.h"
+#include "absl/strings/match.h"  // IWYU pragma: keep
+#include "absl/strings/strip.h"  // IWYU pragma: keep
 #include "absl/types/span.h"
-#include "mbo/types/internal/decompose_count.h"
+#include "mbo/types/internal/decompose_count.h"  // IWYU pragma: keep
 
 // IWYU pragma: private, include "mbo/types/traits.h"
 
 namespace mbo::types::types_internal {
 
-#ifdef __clang__
+#if defined(__clang__) && defined(__clang__) && __clang_major__ >= 15
 
 static constexpr bool kStructNameSupport = true;
 
@@ -125,6 +125,11 @@ inline absl::Span<const std::string_view> GetFieldNames(const T& v) {
 #else  // __clang__
 
 static constexpr bool kStructNameSupport = false;
+
+template<typename T>
+inline absl::Span<const std::string_view> GetFieldNames(const T& v) {
+  return {};
+}
 
 #endif  // __clang__
 

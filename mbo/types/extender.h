@@ -150,11 +150,7 @@ struct AbslFormatImpl : ExtenderBase {
   void OStreamFieldsImpl(std::ostream& os, const std::tuple<Ts...>& v) const {
     std::apply(
         [&os, this](const Ts&... fields) {
-#ifdef __clang__
           const auto names = types_internal::GetFieldNames<Type>(static_cast<const Type&>(*this));
-#else
-          static constexpr std::array<std::string_view, 0> names;
-#endif  // __clang__
           os << '{';
           std::size_t idx{0};  // NOLINT(misc-const-correctness)
           (OStreamField(os, names, idx++, fields), ...);
