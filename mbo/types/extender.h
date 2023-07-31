@@ -57,6 +57,7 @@
 #include "absl/hash/hash.h"  // IWYU pragma: keep
 #include "absl/strings/str_format.h"
 #include "mbo/types/internal/extender.h"  // IWYU pragma: export
+#include "mbo/types/internal/struct_names_clang.h"  // IWYU pragma: keep
 #include "mbo/types/tstring.h"
 
 namespace mbo::types::extender {
@@ -146,19 +147,30 @@ struct AbslFormatImpl : ExtenderBase {
 
  private:
   template<typename... Ts>
-  static void OStreamFieldsImpl(std::ostream& os, const std::tuple<Ts...>& v) {
+  void OStreamFieldsImpl(std::ostream& os, const std::tuple<Ts...>& v) const {
     std::apply(
-        [&os](const Ts&... fields) {
+        [&os, this](const Ts&... fields) {
+#ifdef __clang__
+          const auto names = types_internal::GetFieldNames<Type>(static_cast<const Type&>(*this));
+#else
+          static consexpr std::array<std::string_view, 0> field_names;
+#endif  // __clang__
           os << '{';
           std::size_t idx{0};  // NOLINT(misc-const-correctness)
-          ((os << (OStreamField(os, fields), (++idx < sizeof...(fields) ? ", " : ""))), ...);
+          (OStreamField(os, names, idx++, fields), ...);
           os << '}';
         },
         v);
   }
 
   template<typename V>
-  static void OStreamField(std::ostream& os, const V& v) {
+  static void OStreamField(std::ostream& os, absl::Span<const std::string_view> names, std::size_t idx, const V& v) {
+    if (idx) {
+      os << ", ";
+    }
+    if (idx < names.length()) {
+      os << names[idx] << ": ";
+    }
     if constexpr (std::is_same_v<V, std::nullptr_t>) {
       os << absl::StreamFormat("nullptr_t");
     } else if constexpr (std::is_pointer_v<V>) {

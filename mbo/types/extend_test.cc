@@ -22,10 +22,10 @@
 #include "absl/hash/hash_testing.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "mbo/types/internal/extend.h"
 #include "mbo/types/traits.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace mbo::types {
 namespace {
@@ -34,6 +34,8 @@ using ::mbo::types::extender::AbslFormat;
 using ::mbo::types::extender::Comparable;
 using ::mbo::types::extender::Printable;
 using ::mbo::types::extender::Streamable;
+using ::mbo::types::types_internal::kStructNameSupport;
+using ::testing::Conditional;
 using ::testing::Contains;
 using ::testing::ElementsAre;
 using ::testing::Eq;
@@ -78,7 +80,7 @@ struct Extend4 : public Extend<Extend4> {
   int a = 0;
   int b = 0;
   std::string c;
-  const int* ptr = nullptr;
+  const int *ptr = nullptr;
 };
 
 struct SimpleName {
@@ -106,8 +108,8 @@ class ExtendTest : public ::testing::Test {};
 #if !defined(__clang__)
 TEST_F(ExtendTest, TestDecomposeInfo) {
   using ::mbo::types::types_internal::DecomposeInfo;
-#define DEBUG_AND_TEST(Type, kExpected) \
-  ABSL_LOG(INFO) << #Type << ": " << DecomposeInfo<Type>::Debug(); \
+#define DEBUG_AND_TEST(Type, kExpected)                                        \
+  ABSL_LOG(INFO) << #Type << ": " << DecomposeInfo<Type>::Debug();             \
   EXPECT_THAT(DecomposeInfo<Type>::kDecomposeCount, kExpected)
 
   DEBUG_AND_TEST(Extend4, 4);
@@ -131,36 +133,47 @@ TEST_F(ExtendTest, Print) {
   {
     const Extend2 ext2{.a = 25, .b = 42};
     ASSERT_THAT(DecomposeCountV<decltype(ext2)>, 2);
-    EXPECT_THAT(ext2.ToString(), "{25, 42}");
+    EXPECT_THAT(ext2.ToString(),
+                Conditional(kStructNameSupport, "{a: 25, b: 42}", "{25, 42}"));
   }
 
   {
     const Extend4 ext4{.a = 25, .b = 42, .c = "Hello There!"};
     ASSERT_THAT(DecomposeCountV<decltype(ext4)>, 4);
-    EXPECT_THAT(ext4.ToString(), R"({25, 42, "Hello There!", <nullptr>})");
+    EXPECT_THAT(
+        ext4.ToString(),
+        Conditional(kStructNameSupport,
+                    R"({a: 25, b: 42, c: "Hello There!", ptr: <nullptr>})",
+                    R"({25, 42, "Hello There!", <nullptr>})"));
   }
   {
     constexpr int kVal = 1'337;
     const Extend4 ext4{.a = 25, .b = 42, .c = "Hello There!", .ptr = &kVal};
     ASSERT_THAT(DecomposeCountV<decltype(ext4)>, 4);
-    EXPECT_THAT(ext4.ToString(), R"({25, 42, "Hello There!", *{1337}})");
+    EXPECT_THAT(
+        ext4.ToString(),
+        Conditional(kStructNameSupport,
+                    R"({a: 25, b: 42, c: "Hello There!", ptr: *{1337}})",
+                    R"({25, 42, "Hello There!", *{1337}})"));
   }
 }
 
 TEST_F(ExtendTest, NestedPrint) {
   const Person person{.name = {.first = "First", .last = "Last"}, .age = 42};
-  static constexpr std::string_view kExpected = R"({{"First", "Last"}, 42})";
+  static constexpr std::string_view kExpected =
+      kStructNameSupport ? R"({name: {first: "First", last: "Last"}, age: 42})"
+                         : R"({{"First", "Last"}, 42})";
   EXPECT_THAT(person.ToString(), kExpected);
   EXPECT_THAT(absl::StrFormat("%v", person), kExpected);
 }
 
 TEST_F(ExtendTest, Streamable) {
-  {
-    const Extend4 ext4{.a = 25, .b = 42};
-    std::ostringstream ss4;
-    ss4 << ext4;
-    EXPECT_THAT(ss4.str(), R"({25, 42, "", <nullptr>})");
-  }
+  const Extend4 ext4{.a = 25, .b = 42};
+  std::ostringstream ss4;
+  ss4 << ext4;
+  EXPECT_THAT(ss4.str(), Conditional(kStructNameSupport,
+                                     R"({a: 25, b: 42, c: "", ptr: <nullptr>})",
+                                     R"({25, 42, "", <nullptr>})"));
 }
 
 TEST_F(ExtendTest, Comparable) {
@@ -180,7 +193,7 @@ TEST_F(ExtendTest, Comparable) {
     EXPECT_THAT(kTest1 <= kTest1, true);
     EXPECT_THAT(kTest1 > kTest1, false);
     EXPECT_THAT(kTest1 >= kTest1, true);
-    EXPECT_THAT(kTest1, kTest1);  // sortcut for Eq, see below
+    EXPECT_THAT(kTest1, kTest1); // sortcut for Eq, see below
     EXPECT_THAT(kTest1, Eq(kTest1));
     EXPECT_THAT(kTest1, Not(Lt(kTest1)));
     EXPECT_THAT(kTest1, Le(kTest1));
@@ -222,7 +235,7 @@ TEST_F(ExtendTest, Comparable) {
     EXPECT_THAT(kTest1 <= kTest4, true);
     EXPECT_THAT(kTest1 > kTest4, false);
     EXPECT_THAT(kTest1 >= kTest4, true);
-    EXPECT_THAT(kTest1, kTest4);  // sortcut for Eq, see below
+    EXPECT_THAT(kTest1, kTest4); // sortcut for Eq, see below
     EXPECT_THAT(kTest1, Eq(kTest4));
     EXPECT_THAT(kTest1, Not(Lt(kTest4)));
     EXPECT_THAT(kTest1, Le(kTest4));
@@ -263,8 +276,8 @@ struct PlainName {
   std::string first;
   std::string last;
 
-  template<typename H>
-  friend H AbslHashValue(H hash, const PlainName& obj) noexcept {
+  template <typename H>
+  friend H AbslHashValue(H hash, const PlainName &obj) noexcept {
     return H::combine(std::move(hash), obj.first, obj.last);
   }
 };
@@ -273,15 +286,16 @@ struct PlainPerson {
   PlainName name;
   std::size_t age = 0;
 
-  template<typename H>
-  friend H AbslHashValue(H hash, const PlainPerson& obj) noexcept {
+  template <typename H>
+  friend H AbslHashValue(H hash, const PlainPerson &obj) noexcept {
     return H::combine(std::move(hash), obj.name, obj.age);
   }
 };
 
 TEST_F(ExtendTest, Hashable) {
   const Person person{.name = {.first = "First", .last = "Last"}, .age = 42};
-  const PlainPerson plain_person{.name = {.first = "First", .last = "Last"}, .age = 42};
+  const PlainPerson plain_person{.name = {.first = "First", .last = "Last"},
+                                 .age = 42};
 
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({person, Person{}}));
 
@@ -290,8 +304,12 @@ TEST_F(ExtendTest, Hashable) {
   ASSERT_THAT((extender_internal::IsExtended<PlainName>), false);
   ASSERT_THAT((extender_internal::IsExtended<PlainPerson>), false);
   ASSERT_THAT(Person::RegisteredExtenderNames(), Contains("AbslHashable"));
-  ASSERT_THAT(Person::RegisteredExtenderNames().size(), std::tuple_size_v<Person::RegisteredExtenders>);
-  ASSERT_THAT((extender_internal::HasExtender<Person, mbo::types::extender::AbslHashable>), true);
+  ASSERT_THAT(Person::RegisteredExtenderNames().size(),
+              std::tuple_size_v<Person::RegisteredExtenders>);
+  ASSERT_THAT(
+      (extender_internal::HasExtender<Person,
+                                      mbo::types::extender::AbslHashable>),
+      true);
 
   EXPECT_THAT(absl::HashOf(person), Ne(0));
   EXPECT_THAT(absl::HashOf(person), absl::HashOf(plain_person));
@@ -303,7 +321,10 @@ TEST_F(ExtendTest, Hashable) {
   };
 
   ASSERT_THAT((extender_internal::IsExtended<NameNoDefault>), true);
-  ASSERT_THAT((extender_internal::HasExtender<NameNoDefault, mbo::types::extender::AbslHashable>), false);
+  ASSERT_THAT(
+      (extender_internal::HasExtender<NameNoDefault,
+                                      mbo::types::extender::AbslHashable>),
+      false);
 }
 
 TEST_F(ExtendTest, ExtenderNames) {
@@ -313,26 +334,35 @@ TEST_F(ExtendTest, ExtenderNames) {
 
   struct T2 : ExtendNoDefault<T2, AbslFormat, Streamable> {};
 
-  struct T3a : ExtendNoDefault<T3a, AbslFormat, Comparable, Printable, Streamable> {};
+  struct T3a
+      : ExtendNoDefault<T3a, AbslFormat, Comparable, Printable, Streamable> {};
 
-  struct T3b : ExtendNoDefault<T3b, AbslFormat, Streamable, Printable, Comparable> {};
+  struct T3b
+      : ExtendNoDefault<T3b, AbslFormat, Streamable, Printable, Comparable> {};
 
   struct T4 : Extend<T4> {};
 
-  EXPECT_THAT(  // No defaults, no extras.
+  EXPECT_THAT( // No defaults, no extras.
       T0::RegisteredExtenderNames(), IsEmpty());
-  EXPECT_THAT(  // No default, only the specified extra.
-      T1::RegisteredExtenderNames(), WhenSorted(ElementsAre("AbslFormat", "Printable")));
-  EXPECT_THAT(  // No defaults, two extra.
-      T2::RegisteredExtenderNames(), WhenSorted(ElementsAre("AbslFormat", "Streamable")));
-  EXPECT_THAT(  // All defaults, no extra.
-      T3a::RegisteredExtenderNames(), WhenSorted(ElementsAre("AbslFormat", "Comparable", "Printable", "Streamable")));
-  EXPECT_THAT(  // All defaults, no extra.
-      T3b::RegisteredExtenderNames(), WhenSorted(ElementsAre("AbslFormat", "Comparable", "Printable", "Streamable")));
-  EXPECT_THAT(  // All defaults, and as extra.
+  EXPECT_THAT( // No default, only the specified extra.
+      T1::RegisteredExtenderNames(),
+      WhenSorted(ElementsAre("AbslFormat", "Printable")));
+  EXPECT_THAT( // No defaults, two extra.
+      T2::RegisteredExtenderNames(),
+      WhenSorted(ElementsAre("AbslFormat", "Streamable")));
+  EXPECT_THAT( // All defaults, no extra.
+      T3a::RegisteredExtenderNames(),
+      WhenSorted(
+          ElementsAre("AbslFormat", "Comparable", "Printable", "Streamable")));
+  EXPECT_THAT( // All defaults, no extra.
+      T3b::RegisteredExtenderNames(),
+      WhenSorted(
+          ElementsAre("AbslFormat", "Comparable", "Printable", "Streamable")));
+  EXPECT_THAT( // All defaults, and as extra.
       T4::RegisteredExtenderNames(),
-      WhenSorted(ElementsAre("AbslFormat", "AbslHashable", "Comparable", "Printable", "Streamable")));
+      WhenSorted(ElementsAre("AbslFormat", "AbslHashable", "Comparable",
+                             "Printable", "Streamable")));
 }
 
-}  // namespace
-}  // namespace mbo::types
+} // namespace
+} // namespace mbo::types

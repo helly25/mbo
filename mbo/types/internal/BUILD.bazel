@@ -14,6 +14,16 @@ cc_library(
 )
 
 cc_library(
+    name = "struct_names_cc",
+    hdrs = ["struct_names_clang.h"],
+    deps = [
+        ":traits_cc",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_library(
     name = "traits_cc",
     hdrs = [
         "binary_search.h",

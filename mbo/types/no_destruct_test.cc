@@ -1,4 +1,3 @@
-#include "mbo/types/internal/decompose_count.h"
 #include "mbo/types/no_destruct.h"
 
 #include <string>
@@ -11,6 +10,8 @@
 namespace mbo::types {
 
 using ::mbo::types::Extend;
+using ::mbo::types::types_internal::kStructNameSupport;
+using ::testing::Conditional;
 using ::testing::Ge;
 
 // NOLINTBEGIN(*-magic-numbers)
@@ -40,18 +41,20 @@ class NoDestructTest : public ::testing::Test {};
 
 #ifdef _LIBCPP_STD_VER
 TEST_F(NoDestructTest, ClangCheck) {
-    const std::string kLibCppStdVer = std::to_string(_LIBCPP_STD_VER);
-    EXPECT_THAT(kLibCppStdVer, Ge("20"));
+    const std::string k_lib_cpp_std_ver = std::to_string(_LIBCPP_STD_VER);
+    EXPECT_THAT(k_lib_cpp_std_ver, Ge("20"));
 }
 #endif  // _LIBCPP_STD_VER
 
 TEST_F(NoDestructTest, Test) {
-    EXPECT_THAT(kTestSimple.Get().ToString(), "{25, 42}");
-    EXPECT_THAT((*kTestSimple).ToString(), "{25, 42}");
-    EXPECT_THAT(kTestSimple->ToString(), "{25, 42}");
-    EXPECT_THAT(kTestString.Get().ToString(), R"({"25", "42"})");
-    EXPECT_THAT((*kTestString).ToString(), R"({"25", "42"})");
-    EXPECT_THAT(kTestString->ToString(), R"({"25", "42"})");
+    const auto expected_simple = Conditional(kStructNameSupport, "{a: 25, b: 42}", "{25, 42}");
+    const auto expected_string = Conditional(kStructNameSupport, R"({a: "25", b: "42"})", R"({"25", "42"})");
+    EXPECT_THAT(kTestSimple.Get().ToString(), expected_simple);
+    EXPECT_THAT((*kTestSimple).ToString(), expected_simple);
+    EXPECT_THAT(kTestSimple->ToString(), expected_simple);
+    EXPECT_THAT(kTestString.Get().ToString(), expected_string);
+    EXPECT_THAT((*kTestString).ToString(), expected_string);
+    EXPECT_THAT(kTestString->ToString(), expected_string);
 }
 
 }  // namespace
