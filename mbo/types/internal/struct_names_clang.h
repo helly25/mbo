@@ -15,7 +15,7 @@
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
 #include <string_view>
-#include <type_traits>
+#include <type_traits>  // IWYU pragma: keep
 
 #include "absl/types/span.h"
 #include "mbo/types/internal/decompose_count.h"  // IWYU pragma: keep
@@ -23,8 +23,6 @@
 // IWYU pragma: private, include "mbo/types/internal/struct_names.h"
 
 namespace mbo::types::types_internal::clang {
-
-static constexpr bool kStructNameSupport = true;
 
 template<typename T>
 class StructMeta {

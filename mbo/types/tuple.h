@@ -13,9 +13,7 @@
 #ifndef MBO_TYPES_TUPLE_H_
 #define MBO_TYPES_TUPLE_H_
 
-#include <concepts>
-#include <tuple>
-#include <type_traits>
+#include <utility>
 
 #include "mbo/types/internal/decompose_count.h"  // IWYU pragma: export
 
