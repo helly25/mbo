@@ -149,11 +149,11 @@ struct AbslFormatImpl : ExtenderBase {
   template<typename... Ts>
   void OStreamFieldsImpl(std::ostream& os, const std::tuple<Ts...>& v) const {
     std::apply(
-        [&os, this](const Ts&... fields) {
-          const auto names = types_internal::GetFieldNames<Type>(static_cast<const Type&>(*this));
+        [&os](const Ts&... fields) {
+          static const auto kNames = types_internal::GetFieldNames<Type>();
           os << '{';
           std::size_t idx{0};  // NOLINT(misc-const-correctness)
-          (OStreamField(os, names, idx++, fields), ...);
+          (OStreamField(os, kNames, idx++, fields), ...);
           os << '}';
         },
         v);

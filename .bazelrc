@@ -13,3 +13,16 @@ build --define absl=1
 
 build --cxxopt=-std=c++20 --host_cxxopt=-std=c++20 --cxxopt=-Werror
 test --test_output=errors
+
+# Custom --config=asan mode:
+build:asan --distinct_host_configuration=true
+build:asan --copt -fsanitize=address,undefined
+build:asan --linkopt -fsanitize=address,undefined
+build:asan --copt -fno-sanitize=vptr
+build:asan --linkopt -fno-sanitize=vptr
+build:asan --linkopt -ldl
+build:asan --define tcmalloc=disabled
+build:asan --define signal_trace=disabled
+build:asan --build_tag_filters=-no_san  # skip san targets
+build:asan --test_tag_filters=-no_san  # skip san targets
+build:asan --define san=true  # skip san targets

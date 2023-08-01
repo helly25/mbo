@@ -14,6 +14,7 @@
 #define MBO_TYPES_INTERNAL_STRUCT_NAMES_CLANG_H_
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
+#include <mutex>
 #include <string_view>
 #include <type_traits>  // IWYU pragma: keep
 
@@ -27,16 +28,32 @@ namespace mbo::types::types_internal::clang {
 template<typename T>
 class StructMeta {
  public:
-  static absl::Span<const std::string_view> GetNames(const T& v) {
-    if (!initialized) {
-      __builtin_dump_struct(&v, &StructMeta<T>::DumpStructVisitor);  // NOLINT(*-vararg)
-      initialized = true;
-    }
+  static absl::Span<const std::string_view> GetNames() {
+    static std::once_flag once;
+    std::call_once(once, []() {
+      std::size_t field_index = 0;
+      Init(field_index);
+      return true;
+    });
     return absl::MakeConstSpan(field_names);
   }
 
-  static int DumpStructVisitor(std::string_view format, ...) {  // NOLINT(cert-dcl50-cpp)
-    static std::size_t field_index = 0;
+  static constexpr void Init(std::size_t& field_index) {
+    union Uninitialized {
+      constexpr Uninitialized() noexcept {}
+      constexpr ~Uninitialized() noexcept {};
+      Uninitialized(const Uninitialized&) = delete;
+      Uninitialized& operator=(const Uninitialized&) = delete;
+      Uninitialized(Uninitialized&&) = delete;
+      Uninitialized& operator=(Uninitialized&&) = delete;
+      const std::array<char, sizeof(T)> buf{};
+      T invalid;
+    };
+    constexpr Uninitialized kTemp;
+    __builtin_dump_struct(&kTemp.invalid, &StructMeta<T>::DumpStructVisitor, field_index);  // NOLINT(*-vararg)
+  }
+
+  static constexpr int DumpStructVisitor(std::size_t& field_index, std::string_view format, ...) {  // NOLINT(cert-dcl50-cpp)
     if (field_index >= kNumFields) {
       return 0;
     }
@@ -60,7 +77,6 @@ class StructMeta {
   // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
   inline static constexpr std::size_t kNumFields = DecomposeCountImpl<T>::value;
   inline static std::array<std::string_view, kNumFields> field_names;
-  inline static bool initialized = false;
   // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 };
 
