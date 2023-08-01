@@ -12,6 +12,7 @@
 
 #ifndef MBO_TYPES_INTERNAL_STRUCT_NAMES_CLANG_H_
 #define MBO_TYPES_INTERNAL_STRUCT_NAMES_CLANG_H_
+#if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
 #include <string_view>
 #include <type_traits>
@@ -19,11 +20,9 @@
 #include "absl/types/span.h"
 #include "mbo/types/internal/decompose_count.h"  // IWYU pragma: keep
 
-// IWYU pragma: private, include "mbo/types/traits.h"
+// IWYU pragma: private, include "mbo/types/internal/struct_names.h"
 
-namespace mbo::types::types_internal {
-
-#if defined(__clang__) && defined(__clang__) && __clang_major__ >= 15
+namespace mbo::types::types_internal::clang {
 
 static constexpr bool kStructNameSupport = true;
 
@@ -67,22 +66,7 @@ class StructMeta {
   // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 };
 
-template<typename T>
-inline absl::Span<const std::string_view> GetFieldNames(const T& v) {
-  return StructMeta<T>::GetNames(v);
-}
-
-#else  // __clang__
-
-static constexpr bool kStructNameSupport = false;
-
-template<typename T>
-inline absl::Span<const std::string_view> GetFieldNames(const T& v) {
-  return {};
-}
+}  // namespace mbo::types::types_internal::clang
 
 #endif  // __clang__
-
-}  // namespace mbo::types::types_internal
-
 #endif  // MBO_TYPES_INTERNAL_STRUCT_NAMES_CLANG_H_

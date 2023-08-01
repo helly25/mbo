@@ -57,7 +57,7 @@
 #include "absl/hash/hash.h"  // IWYU pragma: keep
 #include "absl/strings/str_format.h"
 #include "mbo/types/internal/extender.h"  // IWYU pragma: export
-#include "mbo/types/internal/struct_names_clang.h"  // IWYU pragma: keep
+#include "mbo/types/internal/struct_names.h"  // IWYU pragma: keep
 #include "mbo/types/tstring.h"
 
 namespace mbo::types::extender {
