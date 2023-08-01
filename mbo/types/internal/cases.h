@@ -15,7 +15,7 @@
 
 // IWYU pragma private, include "mbo/types/cases.h"
 
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 #include <type_traits>
 #include <utility>
 

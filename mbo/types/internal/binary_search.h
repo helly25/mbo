@@ -15,7 +15,7 @@
 
 // IWYU pragma private, include "mbo/types/internal/decompose_count.h"
 
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 #include <type_traits>
 
 namespace mbo::types::types_internal {

@@ -13,7 +13,8 @@
 #ifndef MBO_TYPES_NO_DESTRUCT_H_
 #define MBO_TYPES_NO_DESTRUCT_H_
 
-#include <memory>
+#include <memory>  // IWYU pragma: keep
+#include <utility>
 
 namespace mbo::types {
 

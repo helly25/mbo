@@ -13,7 +13,7 @@
 #ifndef MBO_TYPES_CASES_H_
 #define MBO_TYPES_CASES_H_
 
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 
 #include "mbo/types/internal/cases.h"  // IWYU pragma: export
 

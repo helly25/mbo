@@ -12,7 +12,6 @@
 
 #include "mbo/types/extend.h"
 
-#include <compare>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -20,7 +19,6 @@
 #include <type_traits>
 
 #include "absl/hash/hash_testing.h"
-#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "mbo/types/internal/extend.h"
 #include "mbo/types/traits.h"

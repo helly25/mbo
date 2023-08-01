@@ -13,7 +13,7 @@
 #ifndef MBO_TYPES_TRAITS_H_
 #define MBO_TYPES_TRAITS_H_
 
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 
 #include "mbo/types/internal/decompose_count.h"          // IWYU pragma: export
 #include "mbo/types/internal/is_braces_constructible.h"  // IWYU pragma: export

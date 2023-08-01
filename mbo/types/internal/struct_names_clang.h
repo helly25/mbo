@@ -46,7 +46,7 @@ class StructMeta {
       Uninitialized& operator=(const Uninitialized&) = delete;
       Uninitialized(Uninitialized&&) = delete;
       Uninitialized& operator=(Uninitialized&&) = delete;
-      const std::array<char, sizeof(T)> buf{};
+      alignas(T) const char buf[sizeof(T)]{};  // NOLINT(*-avoid-c-arrays)
       T invalid;
     };
     constexpr Uninitialized kTemp;

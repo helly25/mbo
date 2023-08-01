@@ -16,7 +16,7 @@
 #define MBO_TYPES_TSTRING_H_
 
 #include <array>
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 #include <string_view>
 
 namespace mbo::types {
