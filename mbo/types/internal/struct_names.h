@@ -39,7 +39,7 @@ namespace mbo::types::types_internal {
 static constexpr bool kStructNameSupport = false;
 
 template<typename T>
-inline absl::Span<const std::string_view> GetFieldNames(const T& v) {
+inline absl::Span<const std::string_view> GetFieldNames() {
   return {};
 }
 

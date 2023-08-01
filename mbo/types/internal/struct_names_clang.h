@@ -14,6 +14,7 @@
 #define MBO_TYPES_INTERNAL_STRUCT_NAMES_CLANG_H_
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
+#include <cstdarg>  // IWYU pragma: keep
 #include <mutex>
 #include <string_view>
 #include <type_traits>  // IWYU pragma: keep
@@ -59,7 +60,7 @@ class StructMeta {
     }
     if (format.starts_with("%s%s %s =")) {
       // NOLINTBEGIN(*-array-to-pointer-decay,*-avoid-c-arrays,*-no-array-decay,*-pointer-arithmetic,*-vararg)
-      va_list vap = nullptr;
+      va_list vap{};
       va_start(vap, format);
       const char* indent = va_arg(vap, const char*);
       if (indent[0] == ' ' && indent[1] == ' ' && indent[2] == '\0') {
