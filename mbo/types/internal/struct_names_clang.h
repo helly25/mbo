@@ -54,7 +54,7 @@ class StructMeta {
   }
 
   static constexpr int DumpStructVisitor(std::size_t& field_index, std::string_view format, ...) {  // NOLINT(cert-dcl50-cpp)
-    if (field_index >= kNumFields) {
+    if (field_index >= DecomposeCountImpl<T>::value) {
       return 0;
     }
     if (format.starts_with("%s%s %s =")) {
@@ -74,10 +74,8 @@ class StructMeta {
     return 0;
   }
 
-  // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
-  inline static constexpr std::size_t kNumFields = DecomposeCountImpl<T>::value;
-  inline static std::array<std::string_view, kNumFields> field_names;
-  // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+  inline static std::array<std::string_view, DecomposeCountImpl<T>::value> field_names;
 };
 
 }  // namespace mbo::types::types_internal::clang
