@@ -16,8 +16,6 @@
 #include <string_view>
 #include <type_traits>
 
-#include "absl/strings/match.h"  // IWYU pragma: keep
-#include "absl/strings/strip.h"  // IWYU pragma: keep
 #include "absl/types/span.h"
 #include "mbo/types/internal/decompose_count.h"  // IWYU pragma: keep
 
@@ -31,87 +29,39 @@ static constexpr bool kStructNameSupport = true;
 
 template<typename T>
 class StructMeta {
- private:
-  static constexpr std::size_t kMaxFieldNameLength = 64;
-  static constexpr std::size_t kNumFields = DecomposeCountImpl<T>::value;
-
-  struct FieldStorage {
-    char name[kMaxFieldNameLength]{0};  // NOLINT(*-c-arrays)
-  };
-
  public:
   static absl::Span<const std::string_view> GetNames(const T& v) {
     if (!initialized) {
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
-      __builtin_dump_struct(&v, &StructMeta<T>::DumpStructVisitor);
+      __builtin_dump_struct(&v, &StructMeta<T>::DumpStructVisitor);  // NOLINT(*-vararg)
       initialized = true;
     }
     return absl::MakeConstSpan(field_names);
   }
 
-  // NOLINTNEXTLINE(cert-dcl50-cpp)
-  static int DumpStructVisitor(std::string_view format, ...) {
+  static int DumpStructVisitor(std::string_view format, ...) {  // NOLINT(cert-dcl50-cpp)
     static std::size_t field_index = 0;
-    // NOLINTBEGIN(*-array-to-pointer-decay,*-avoid-c-arrays,*-magic-numbers,*-no-array-decay,*-vararg)
-    if (field_index >= kNumFields || !absl::StrContains(format, '=')) {
-      va_list vap = nullptr;
-      va_start(vap, format);
-      va_end(vap);
-      return 0;  // Not a field.
+    if (field_index >= kNumFields) {
+      return 0;
     }
-    auto& field = field_storage[field_index];
-    if (format.starts_with("%s%s %s = %")) {
+    if (format.starts_with("%s%s %s =")) {
+      // NOLINTBEGIN(*-array-to-pointer-decay,*-avoid-c-arrays,*-no-array-decay,*-pointer-arithmetic,*-vararg)
       va_list vap = nullptr;
       va_start(vap, format);
       const char* indent = va_arg(vap, const char*);
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-      if (indent[0] != ' ' || indent[1] != ' ' || indent[2] != '\0') {
-        va_end(vap);
-        return 0;
+      if (indent[0] == ' ' && indent[1] == ' ' && indent[2] == '\0') {
+        (void)va_arg(vap, const char*); // type
+        const char* name = va_arg(vap, const char*);
+        // index 3 is the init value (const char* or other type)
+        field_names[field_index++] = std::string_view(name);
       }
-      (void)va_arg(vap, const char*); // type
-      const char* name = va_arg(vap, const char*);
-      // index 3 is the init value
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-      field_names[field_index] = std::string_view(name);
-
-      va_end(vap);      
-    } else {
-      std::string_view line;
-      char buf[1024 * 10];
-      va_list vap = nullptr;
-      va_start(vap, format);
-      const int len = vsnprintf(buf, sizeof(buf), format.data(), vap);
       va_end(vap);
-
-      line = std::string_view(buf, len);
-
-      if (!absl::ConsumePrefix(&line, "  ") || line[0] == ' ') {
-        return 0;  // Not the correct level or type of info.
-      }
-      line.remove_suffix(line.length() - line.find('='));
-      line = absl::StripTrailingAsciiWhitespace(line);
-      // Now we have: <type> ' ' <field_name>
-      // The field_name cannot have a space, so we cut there.
-      auto pos = line.find_last_of(' ');
-      if (pos != std::string_view::npos) {
-        line.remove_prefix(pos + 1);
-      }
-
-      // Copy what we found
-      auto copy_len = std::min(line.length(), kMaxFieldNameLength - 1);
-      std::strncpy(field.name, line.data(), copy_len);
-      field.name[kMaxFieldNameLength - 1] = '\0';
-      field_names[field_index] = std::string_view(field.name, copy_len);
+      // NOLINTEND(*-array-to-pointer-decay,*-avoid-c-arrays,*-no-array-decay,*-pointer-arithmetic,*-vararg)
     }
-    // NOLINTEND(*-array-to-pointer-decay,*-avoid-c-arrays,*-magic-numbers,*-no-array-decay,*-vararg)
-
-    ++field_index;
     return 0;
   }
 
   // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
-  inline static std::array<FieldStorage, kNumFields> field_storage;
+  inline static constexpr std::size_t kNumFields = DecomposeCountImpl<T>::value;
   inline static std::array<std::string_view, kNumFields> field_names;
   inline static bool initialized = false;
   // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
