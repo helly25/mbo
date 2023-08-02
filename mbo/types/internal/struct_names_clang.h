@@ -15,7 +15,6 @@
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
 #include <cstdarg>  // IWYU pragma: keep
-#include <mutex>
 #include <string_view>
 #include <type_traits>  // IWYU pragma: keep
 
@@ -30,16 +29,13 @@ template<typename T>
 class StructMeta {
  public:
   static absl::Span<const std::string_view> GetNames() {
-    static std::once_flag once;
-    std::call_once(once, []() {
-      std::size_t field_index = 0;
-      Init(field_index);
-      return true;
-    });
-    return absl::MakeConstSpan(field_names);
+    return absl::MakeConstSpan(kFieldNames);
   }
 
-  static constexpr void Init(std::size_t& field_index) {
+ private:
+  using FieldData = std::array<std::string_view, DecomposeCountImpl<T>::value>;
+
+  static constexpr void Init(FieldData& fields, std::size_t& field_index) {
     union Uninitialized {
       constexpr Uninitialized() noexcept {}
       constexpr ~Uninitialized() noexcept {};
@@ -51,10 +47,11 @@ class StructMeta {
       T invalid;
     };
     constexpr Uninitialized kTemp;
-    __builtin_dump_struct(&kTemp.invalid, &StructMeta<T>::DumpStructVisitor, field_index);  // NOLINT(*-vararg)
+    __builtin_dump_struct(&kTemp.invalid, &StructMeta<T>::DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
   }
 
-  static constexpr int DumpStructVisitor(std::size_t& field_index, std::string_view format, ...) {  // NOLINT(cert-dcl50-cpp)
+  // NOLINTNEXTLINE(cert-dcl50-cpp)
+  static constexpr int DumpStructVisitor(FieldData& fields, std::size_t& field_index, std::string_view format, ...) {
     if (field_index >= DecomposeCountImpl<T>::value) {
       return 0;
     }
@@ -64,10 +61,11 @@ class StructMeta {
       va_start(vap, format);
       const char* indent = va_arg(vap, const char*);
       if (indent[0] == ' ' && indent[1] == ' ' && indent[2] == '\0') {
-        (void)va_arg(vap, const char*); // type
+        [[maybe_unused]] const char* type = va_arg(vap, const char*);
         const char* name = va_arg(vap, const char*);
-        // index 3 is the init value (const char* or other type)
-        field_names[field_index++] = std::string_view(name);
+        // Since an **uninitialized** value is passed the 'value' should not be accessed.
+        // [[maybe_unused]] const char* type = va_arg(vap, const char*);
+        fields[field_index++] = std::string_view(name);
       }
       va_end(vap);
       // NOLINTEND(*-array-to-pointer-decay,*-avoid-c-arrays,*-no-array-decay,*-pointer-arithmetic,*-vararg)
@@ -75,8 +73,12 @@ class StructMeta {
     return 0;
   }
 
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-  inline static std::array<std::string_view, DecomposeCountImpl<T>::value> field_names;
+  inline static const FieldData kFieldNames = []{  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    std::size_t field_index = 0;
+    FieldData fields;
+    Init(fields, field_index);
+    return fields;
+  }();
 };
 
 }  // namespace mbo::types::types_internal::clang
