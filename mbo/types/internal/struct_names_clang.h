@@ -14,7 +14,6 @@
 #define MBO_TYPES_INTERNAL_STRUCT_NAMES_CLANG_H_
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
-#include <cstdarg>  // IWYU pragma: keep
 #include <string_view>
 #include <type_traits>  // IWYU pragma: keep
 
@@ -28,9 +27,7 @@ namespace mbo::types::types_internal::clang {
 template<typename T>
 class StructMeta {
  public:
-  static absl::Span<const std::string_view> GetNames() {
-    return absl::MakeConstSpan(kFieldNames);
-  }
+  static absl::Span<const std::string_view> GetNames() { return absl::MakeConstSpan(kFieldNames); }
 
  private:
   using FieldData = std::array<std::string_view, DecomposeCountImpl<T>::value>;
@@ -38,6 +35,7 @@ class StructMeta {
   static constexpr void Init(FieldData& fields, std::size_t& field_index) {
     union Uninitialized {
       constexpr Uninitialized() noexcept {}
+
       constexpr ~Uninitialized() noexcept {};
       Uninitialized(const Uninitialized&) = delete;
       Uninitialized& operator=(const Uninitialized&) = delete;
@@ -46,34 +44,27 @@ class StructMeta {
       alignas(T) const char buf[sizeof(T)]{};  // NOLINT(*-avoid-c-arrays)
       T invalid;
     };
+
     constexpr Uninitialized kTemp;
     __builtin_dump_struct(&kTemp.invalid, &StructMeta<T>::DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
   }
 
-  // NOLINTNEXTLINE(cert-dcl50-cpp)
-  static constexpr int DumpStructVisitor(FieldData& fields, std::size_t& field_index, std::string_view format, ...) {
-    if (field_index >= DecomposeCountImpl<T>::value) {
-      return 0;
-    }
-    if (format.starts_with("%s%s %s =")) {
-      // NOLINTBEGIN(*-array-to-pointer-decay,*-avoid-c-arrays,*-no-array-decay,*-pointer-arithmetic,*-vararg)
-      va_list vap{};
-      va_start(vap, format);
-      const char* indent = va_arg(vap, const char*);
-      if (indent[0] == ' ' && indent[1] == ' ' && indent[2] == '\0') {
-        [[maybe_unused]] const char* type = va_arg(vap, const char*);
-        const char* name = va_arg(vap, const char*);
-        // Since an **uninitialized** value is passed the 'value' should not be accessed.
-        // [[maybe_unused]] const char* type = va_arg(vap, const char*);
-        fields[field_index++] = std::string_view(name);
-      }
-      va_end(vap);
-      // NOLINTEND(*-array-to-pointer-decay,*-avoid-c-arrays,*-no-array-decay,*-pointer-arithmetic,*-vararg)
+  static constexpr int DumpStructVisitor(  // NOLINT(cert-dcl50-cpp)
+      FieldData& fields,
+      std::size_t& field_index,
+      std::string_view format,
+      std::string_view indent = {},
+      std::string_view /*type*/ = {},
+      std::string_view name = {},
+      ...) {
+    if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent.length() == 2
+        && indent.starts_with("  ")) {
+      fields[field_index++] = std::string_view(name);
     }
     return 0;
   }
 
-  inline static const FieldData kFieldNames = []{  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+  inline static const FieldData kFieldNames = [] {  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
     std::size_t field_index = 0;
     FieldData fields;
     Init(fields, field_index);
