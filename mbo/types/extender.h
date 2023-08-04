@@ -150,22 +150,22 @@ struct AbslFormatImpl : ExtenderBase {
   void OStreamFieldsImpl(std::ostream& os, const std::tuple<Ts...>& v) const {
     std::apply(
         [&os](const Ts&... fields) {
-          static const auto kNames = types_internal::GetFieldNames<Type>();
           os << '{';
           std::size_t idx{0};  // NOLINT(misc-const-correctness)
-          (OStreamField(os, kNames, idx++, fields), ...);
+          (OStreamField(os, idx++, fields), ...);
           os << '}';
         },
         v);
   }
 
   template<typename V>
-  static void OStreamField(std::ostream& os, absl::Span<const std::string_view> names, std::size_t idx, const V& v) {
+  static void OStreamField(std::ostream& os, std::size_t idx, const V& v) {
+    static constexpr auto kNames = types_internal::GetFieldNames<Type>();
     if (idx) {
       os << ", ";
     }
-    if (idx < names.length()) {
-      os << names[idx] << ": ";
+    if (idx < kNames.length()) {
+      os << kNames[idx] << ": ";
     }
     if constexpr (std::is_same_v<V, std::nullptr_t>) {
       os << absl::StreamFormat("nullptr_t");

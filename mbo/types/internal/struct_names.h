@@ -26,8 +26,8 @@ namespace mbo::types::types_internal {
 static constexpr bool kStructNameSupport = true;
 
 template<typename T>
-inline absl::Span<const std::string_view> GetFieldNames() {
-  return clang::StructMeta<T>::GetNames();
+inline constexpr absl::Span<const std::string_view> GetFieldNames() {
+  return clang::StructMeta<T>::GetFieldNames();
 }
 
 }  // namespace mbo::types::types_internal
@@ -36,10 +36,10 @@ inline absl::Span<const std::string_view> GetFieldNames() {
 
 namespace mbo::types::types_internal {
 
-static constexpr bool kStructNameSupport = false;
+static const bool kStructNameSupport = false;
 
 template<typename T>
-inline absl::Span<const std::string_view> GetFieldNames() {
+inline constexpr absl::Span<const std::string_view> GetFieldNames() {
   return {};
 }
 

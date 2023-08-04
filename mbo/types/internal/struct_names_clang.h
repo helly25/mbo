@@ -15,7 +15,7 @@
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
 #include <string_view>
-#include <type_traits>  // IWYU pragma: keep
+#include <type_traits>
 
 #include "absl/types/span.h"
 #include "mbo/types/internal/decompose_count.h"  // IWYU pragma: keep
@@ -24,29 +24,43 @@
 
 namespace mbo::types::types_internal::clang {
 
-template<typename T>
+template<typename T, bool = std::is_default_constructible_v<T> && !std::is_array_v<T>>
 class StructMeta {
  public:
-  static absl::Span<const std::string_view> GetNames() { return absl::MakeSpan(kFieldNames); }
+  static constexpr absl::Span<const std::string_view> GetFieldNames() { return absl::MakeSpan(kFieldNames); }
 
  private:
   using FieldData = std::array<std::string_view, DecomposeCountImpl<T>::value>;
 
-  static constexpr void Init(FieldData& fields, std::size_t& field_index) {
+  class Storage final {
+   private:
     union Uninitialized {
       constexpr Uninitialized() noexcept {}
-
       constexpr ~Uninitialized() noexcept {};
       Uninitialized(const Uninitialized&) = delete;
       Uninitialized& operator=(const Uninitialized&) = delete;
       Uninitialized(Uninitialized&&) = delete;
       Uninitialized& operator=(Uninitialized&&) = delete;
-      alignas(T) const char buf[sizeof(T)]{};  // NOLINT(*-avoid-c-arrays)
-      T invalid;
+      T value;
     };
 
-    constexpr Uninitialized kTemp;
-    __builtin_dump_struct(&kTemp.invalid, &StructMeta<T>::DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
+   public:
+    constexpr Storage() noexcept { std::construct_at(&storage_[0].value); }
+    constexpr ~Storage() noexcept { std::destroy_at(&storage_[0].value); }
+
+    Storage(const Storage&) = delete;
+    Storage& operator=(const Storage&) = delete;
+    Storage(Storage&&) = delete;
+    Storage& operator=(Storage&&) = delete;
+
+    constexpr const T& Get() const noexcept { return storage_[0].value; }
+
+   private:
+    const std::array<Uninitialized, 1> storage_;
+  };
+
+  static constexpr void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
+    __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
   }
 
   static constexpr int DumpStructVisitor(  // NOLINT(cert-dcl50-cpp)
@@ -64,12 +78,20 @@ class StructMeta {
     return 0;
   }
 
-  inline static const FieldData kFieldNames = [] {
+  // Older compilers may not allow this to be a `constexpr`.
+  inline static constexpr FieldData kFieldNames = []() constexpr {
+    Storage storage{};
     std::size_t field_index = 0;
     FieldData fields;
-    Init(fields, field_index);
+    Init(&storage.Get(), fields, field_index);
     return fields;
   }();
+};
+
+template<typename T>
+class StructMeta<T, false> {
+ public:
+  static constexpr absl::Span<const std::string_view> GetFieldNames() { return {}; }
 };
 
 }  // namespace mbo::types::types_internal::clang
