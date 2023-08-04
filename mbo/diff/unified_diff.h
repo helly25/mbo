@@ -18,6 +18,7 @@
 
 #include "absl/status/statusor.h"
 #include "mbo/file/artefact.h"
+#include "mbo/types/no_destruct.h"
 
 namespace mbo::diff {
 
@@ -45,7 +46,11 @@ class UnifiedDiff final {
   UnifiedDiff() = delete;
 
   struct Options final {
-    static const Options& Default() noexcept;
+    static const Options& Default() noexcept {
+      // This function can be `constexpr` with GCC 12
+      const types::NoDestruct<UnifiedDiff::Options> defaults{};
+      return defaults.Get();
+    }
 
     std::size_t context_size = 3;
     std::string time_format = "%F %H:%M:%E3S %z";

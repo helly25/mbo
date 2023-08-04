@@ -25,13 +25,15 @@ using ::mbo::types::Extend;
 using ::mbo::types::types_internal::kStructNameSupport;
 using ::testing::Conditional;
 using ::testing::Ge;
+using ::testing::Ne;
 
-// NOLINTBEGIN(*-magic-numbers)
+static constexpr int kValueA = 25;
+static constexpr int kValueB = 42;
+
 struct TestSimple : Extend<TestSimple> {
-    int a = 25;
-    int b = 42;
+    int a = kValueA;
+    int b = kValueB;
 };
-// NOLINTEND(*-magic-numbers)
 
 struct TestString : Extend<TestString> {
     std::string a = "25";
@@ -67,6 +69,26 @@ TEST_F(NoDestructTest, Test) {
     EXPECT_THAT(kTestString.Get().ToString(), expected_string);
     EXPECT_THAT((*kTestString).ToString(), expected_string);
     EXPECT_THAT(kTestString->ToString(), expected_string);
+}
+
+static constexpr NoDestruct<TestSimple> kConstexprTest;  // NOLINT(readability-static-definition-in-anonymous-namespace)
+
+TEST_F(NoDestructTest, ConstExpr) {
+    EXPECT_THAT(kConstexprTest->a, kValueA);
+    EXPECT_THAT(kConstexprTest->b, kValueB);
+}
+
+TEST_F(NoDestructTest, Modify) {
+    static NoDestruct<TestSimple> test;
+    EXPECT_THAT(test->a, kValueA);
+    EXPECT_THAT(test->b, kValueB);
+    test->a = 3;
+    ASSERT_THAT(kValueA, Ne(3));
+    EXPECT_THAT(test->a, Ne(kValueA));
+    EXPECT_THAT(test->b, kValueB);
+    test->a = kValueA;
+    EXPECT_THAT(test->a, kValueA);
+    EXPECT_THAT(test->b, kValueB);
 }
 
 }  // namespace

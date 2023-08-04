@@ -13,13 +13,13 @@
 #ifndef MBO_TYPES_NO_DESTRUCT_H_
 #define MBO_TYPES_NO_DESTRUCT_H_
 
+#include <array>
 #include <memory>  // IWYU pragma: keep
 #include <utility>
 
 namespace mbo::types {
 
 // NOLINTBEGIN(*-pro-type-member-init)
-// NOLINTBEGIN(*-pro-type-reinterpret-cast)
 
 // Template `struct NoDestruct` allows to create `static const` (global) variables.
 // New compilers are necessary in order to allow for `static constexpr`, where the
@@ -31,18 +31,28 @@ namespace mbo::types {
 //     Clang 15.0.7 should work.
 // . For `constexpr` to work the target (and thus all fields) must be able to be
 //   `constexpr` constructable. One common issue is with `std::string` which need
-//   . GCC >= 12.2, global `static const` works with GCC 10.1+
-//   . Clang 16+ for global `static const`, global (`static`) constexpr` not supported
-//   . Apple clang version 15.0.0 (clang-1500.0.34.3) (Beta 4+) supports
-//     `static const`.
+//   . GCC >= 11,
+//   . Clang 16+,
+//   . Apple clang version 15.0.0 (clang-1500.0.34.3) (Beta 4+).
 // https://godbolt.org/z/WahPP8z36
 template<typename T>
-struct NoDestruct final {
+class NoDestruct final {
+ private:
+  union Data {
+    constexpr Data() noexcept {}
+    constexpr ~Data() noexcept {};
+    Data(const Data&) = delete;
+    Data& operator=(const Data&) = delete;
+    Data(Data&&) = delete;
+    Data& operator=(Data&&) = delete;
+    T value;
+  };
+
+ public:
+  constexpr NoDestruct() noexcept { std::construct_at(&data_[0].value); }
   template<typename... Args>
-  constexpr explicit NoDestruct(Args&&... args) noexcept : data_() {
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-const-cast)
-    std::construct_at(const_cast<T*>(&data_.t), std::forward<Args>(args)...);
-  }
+  constexpr explicit NoDestruct(Args&&... args) noexcept { std::construct_at(&data_[0].value, std::forward<Args>(args)...); }
+  
   constexpr ~NoDestruct() noexcept = default;
 
   NoDestruct(const NoDestruct&) = delete;
@@ -50,24 +60,19 @@ struct NoDestruct final {
   NoDestruct& operator=(const NoDestruct&) = delete;
   NoDestruct& operator=(NoDestruct&&) = delete;
 
-  constexpr const T& Get() const noexcept { return data_.t; }
+  constexpr const T& Get() const noexcept { return data_[0].value; }
 
   constexpr const T& operator*() const noexcept { return Get(); }
   constexpr const T* operator->() const noexcept { return &Get(); }
 
+  T& Get() noexcept { return data_[0].value; }
+
+  T& operator*() noexcept { return Get(); }
+  T* operator->() noexcept { return &Get(); }
+
  private:
-  union Data {
-    constexpr Data() noexcept : buf{} {}
-    constexpr ~Data() noexcept {};
-    Data(const Data&) = delete;
-    Data(Data&&) = delete;
-    Data& operator=(const Data&) = delete;
-    Data& operator=(Data&&) = delete;
-    alignas(T) unsigned char buf[sizeof(T)];  // NOLINT(*-avoid-c-arrays)
-    T t;
-  } const data_;
+  std::array<Data, 1> data_;
 };
-// NOLINTEND(*-pro-type-reinterpret-cast)
 // NOLINTEND(*-pro-type-member-init)
 
 }  // namespace mbo::types
