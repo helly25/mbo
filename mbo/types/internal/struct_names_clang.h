@@ -27,7 +27,7 @@ namespace mbo::types::types_internal::clang {
 template<typename T>
 class StructMeta {
  public:
-  static absl::Span<const std::string_view> GetNames() { return absl::MakeConstSpan(kFieldNames); }
+  static absl::Span<const std::string_view> GetNames() { return absl::MakeSpan(kFieldNames); }
 
  private:
   using FieldData = std::array<std::string_view, DecomposeCountImpl<T>::value>;
@@ -64,7 +64,7 @@ class StructMeta {
     return 0;
   }
 
-  inline static const FieldData kFieldNames = [] {  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+  inline static const FieldData kFieldNames = [] {
     std::size_t field_index = 0;
     FieldData fields;
     Init(fields, field_index);
