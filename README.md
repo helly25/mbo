@@ -52,7 +52,10 @@ The C++ library is organized in functional groups each residing in their own dir
             * extender-struct `AbslFormat`: Extender that injects functionality to make an `Extend`ed type work with abseil format/print functions.
             * extender-struct `AbslHashable`: Extender that injects functionality to make an `Extend`ed type work with abseil hashing (and also `std::hash`).
             * extender-struct `Comparable`: Extender that injects functionality to make an `Extend`ed type comparable. All comparators will be injected: `<=>`, `==`, `!=`, `<`, `<=`, `>`, `>=`.
-            * extender-struct `Printable`: Extender that injects functionality to make an `Extend`ed type get a `std::string ToString() const` function which can be used to convert a type into a `std::string`.
+            * extender-struct `Printable`:
+                * Extender that injects functionality to make an `Extend`ed type get a `std::string ToString() const` function which can be used to convert a type into a `std::string`.
+                * The output is a comma separated list of field values, e.g. `{ 25, 42 }`.
+                * If available (Clang 16+) this function prints field names `{ a = 25, b = 42 }`.
             * extender-struct `Streamable`: Extender that injects functionality to make an `Extend`ed type streamable. This allows the type to be used directly with `std::ostream`s.
     * mbo/types:no_destruct_cc, mbo/types/no_destruct.h
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
