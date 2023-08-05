@@ -71,6 +71,7 @@ cc_test(
     deps = [
         ":extend_cc",
         ":no_destruct_cc",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_googletest//:gtest_main",
     ],
 )

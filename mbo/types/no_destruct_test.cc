@@ -14,6 +14,7 @@
 
 #include <string>
 
+#include "absl/log/absl_check.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/types/extend.h"
@@ -89,6 +90,41 @@ TEST_F(NoDestructTest, Modify) {
     test->a = kValueA;
     EXPECT_THAT(test->a, kValueA);
     EXPECT_THAT(test->b, kValueB);
+}
+
+TEST_F(NoDestructTest, NoDtorNoCopyNoMove) {
+  struct NoDtor {
+    NoDtor() = default;
+    ~NoDtor() {
+      ABSL_CHECK(true) << "Should not call: " << __FUNCTION__;
+    }
+    NoDtor(const NoDtor& other) : a(other.a){
+      ABSL_CHECK(true) << "Should not call: " << __FUNCTION__;
+    }
+    NoDtor(NoDtor&& other) noexcept : a(other.a){
+      ABSL_CHECK(true) << "Should not call: " << __FUNCTION__;
+    }
+    NoDtor& operator=(const NoDtor& other) noexcept {
+      ABSL_CHECK(true) << "Should not call: " << __FUNCTION__;
+      if (this != &other) {
+        a = other.a;
+      }
+      return *this;
+    }
+    NoDtor& operator=(NoDtor&& other) noexcept {
+      ABSL_CHECK(true) << "Should not call: " << __FUNCTION__;
+      a = other.a;
+      return *this;
+    }
+  
+    int a = kValueA;
+  };
+  NoDestruct<NoDtor> test;
+  EXPECT_THAT(test->a, kValueA);
+  test->a = kValueB;
+  EXPECT_THAT(test->a, kValueB);
+  test->a = kValueA;
+  EXPECT_THAT(test->a, kValueA);
 }
 
 }  // namespace
