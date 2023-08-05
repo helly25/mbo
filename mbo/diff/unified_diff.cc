@@ -186,10 +186,8 @@ class Chunk {
 
   Chunk(const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options)
       : lhs_empty_(lhs.data.empty()), rhs_empty_(rhs.data.empty()), context_(options) {
-    absl::StrAppendFormat(
-        &output_, "--- %s %s\n", InputName(lhs.name), absl::FormatTime(options.time_format, lhs.time, lhs.tz));
-    absl::StrAppendFormat(
-        &output_, "+++ %s %s\n", InputName(rhs.name), absl::FormatTime(options.time_format, rhs.time, rhs.tz));
+    absl::StrAppend(&output_, "--- ", FileHeader(lhs, options), "\n");
+    absl::StrAppend(&output_, "+++ ", FileHeader(rhs, options), "\n");
   }
 
   Chunk(const Chunk&) = delete;
@@ -236,7 +234,10 @@ class Chunk {
   }
 
  private:
-  static std::string_view InputName(std::string_view name) { return name.empty() ? "-" : name; }
+  static std::string FileHeader(const file::Artefact& info, const UnifiedDiff::Options& options) {
+    return absl::StrCat(
+        info.name.empty() ? "-" : info.name, " ", absl::FormatTime(options.time_format, info.time, info.tz));
+  }
 
   void CheckContext(size_t lhs_idx, size_t rhs_idx) {
     if (context_.Empty() && lhs_size_ == 0 && rhs_size_ == 0) {
