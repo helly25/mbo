@@ -39,7 +39,7 @@ class UnifiedDiffTest : public ::testing::Test {
   static absl::StatusOr<std::vector<std::string_view>> UnifiedDiff(
       file::Artefact lhs,
       file::Artefact rhs,
-      UnifiedDiff::Options options = UnifiedDiff::Options::Default()) {
+      const UnifiedDiff::Options& options = UnifiedDiff::Options::Default()) {
     std::set<std::string> foo;
     lhs.data = DropIndent(lhs.data);
     rhs.data = DropIndent(rhs.data);
