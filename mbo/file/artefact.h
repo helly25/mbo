@@ -10,8 +10,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_FILE_ARTEFACT_H_
-#define MBO_FILE_ARTEFACT_H_
+#ifndef MBO_FILE_ARTIFACT_H_
+#define MBO_FILE_ARTIFACT_H_
 
 #include <string>
 #include <string_view>
@@ -44,4 +44,4 @@ inline Artefact::Options Artefact::Options::Default() noexcept {
 
 }  // namespace mbo::file
 
-#endif  // MBO_FILE_ARTEFACT_H_
+#endif  // MBO_FILE_ARTIFACT_H_

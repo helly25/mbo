@@ -48,6 +48,56 @@ concept IsDecomposable = types_internal::IsAggregate<T> &&
 template<typename T, typename... Args>
 inline constexpr bool IsBracesConstructibleV = types_internal::IsBracesConstructibleImplT<T, Args...>::value;
 
+// Identifies std like `Container` types that are at least iteratable.
+template<typename Container>
+concept ContainerIsForwardIteratable = requires (Container container, const Container const_container) {
+  requires std::forward_iterator<typename Container::iterator>;
+  requires std::forward_iterator<typename Container::const_iterator>;
+  requires std::same_as<typename Container::reference, typename Container::value_type &>;
+  requires std::same_as<typename Container::const_reference, const typename Container::value_type &>;
+  requires std::forward_iterator<typename Container::iterator>;
+  requires std::forward_iterator<typename Container::const_iterator>;
+  requires std::signed_integral<typename Container::difference_type>;
+  requires std::same_as<typename Container::difference_type, typename std::iterator_traits<typename Container::iterator>::difference_type>;
+  requires std::same_as<typename Container::difference_type, typename std::iterator_traits<typename Container::const_iterator>::difference_type>;
+  { container.begin() } -> std::same_as<typename Container::iterator>;
+  { container.end() } -> std::same_as<typename Container::iterator>;
+  { const_container.begin() } -> std::same_as<typename Container::const_iterator>;
+  { const_container.end() } -> std::same_as<typename Container::const_iterator>;
+  { container.cbegin() } -> std::same_as<typename Container::const_iterator>;
+  { container.cend() } -> std::same_as<typename Container::const_iterator>;
+  { container.size() } -> std::same_as<typename Container::size_type>;
+  { container.empty() } -> std::same_as<bool>;
+};
+
+// Identifies std like `Container` types that support `emplace` with `ValueType`.
+template<typename Container, typename ValueType>
+concept ContainerHasEmplace = requires(Container container, ValueType new_value) {
+  ContainerIsForwardIteratable<Container>;
+  container.emplace(new_value);
+};
+
+// Identifies std like `Container` types that support `emplace_back` with `ValueType`.
+template<typename Container, typename ValueType>
+concept ContainerHasEmplaceBack = requires(Container container, ValueType new_value) {
+  ContainerIsForwardIteratable<Container>;
+  container.emplace_back(new_value);
+};
+
+// Identifies std like `Container` types that support `emplace` with `ValueType`.
+template<typename Container, typename ValueType>
+concept ContainerHasInsert = requires(Container container, ValueType new_value) {
+  ContainerIsForwardIteratable<Container>;
+  container.insert(new_value);
+};
+
+// Identifies std like `Container` types that support `emplace_back` with `ValueType`.
+template<typename Container, typename ValueType>
+concept ContainerHasPushBack = requires(Container container, ValueType new_value) {
+  ContainerIsForwardIteratable<Container>;
+  container.push_back(new_value);
+};
+
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_TRAITS_H_

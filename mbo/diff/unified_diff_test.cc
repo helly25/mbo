@@ -13,7 +13,6 @@
 #include "mbo/diff/unified_diff.h"
 
 #include <initializer_list>
-#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -22,6 +21,7 @@
 #include "gtest/gtest.h"
 #include "mbo/strings/indent.h"
 #include "mbo/testing/status.h"
+#include "mbo/types/copy_convert_container.h"
 
 namespace mbo::diff {
 namespace {
@@ -29,30 +29,29 @@ namespace {
 using ::mbo::strings::DropIndent;
 using ::mbo::strings::DropIndentAndSplit;
 using ::mbo::testing::IsOkAndHolds;
-using ::testing::ContainerEq;
 using ::testing::ElementsAreArray;
 using ::testing::IsEmpty;
 
 class UnifiedDiffTest : public ::testing::Test {
  public:
   // IMPORTANT: Uses a global cache, so cannot be used simultaneously.
-  static absl::StatusOr<std::vector<std::string_view>> UnifiedDiff(
+  static absl::StatusOr<std::vector<std::string>> UnifiedDiff(
       file::Artefact lhs,
       file::Artefact rhs,
       const UnifiedDiff::Options& options = UnifiedDiff::Options::Default()) {
-    std::set<std::string> foo;
     lhs.data = DropIndent(lhs.data);
     rhs.data = DropIndent(rhs.data);
-    absl::StatusOr<std::string> result =
-        mbo::diff::UnifiedDiff::Diff(lhs, rhs, options);
+    absl::StatusOr<std::string> result = mbo::diff::UnifiedDiff::Diff(lhs, rhs, options);
     if (!result.ok()) {
       return result.status();
     }
     if (result->empty()) {
-      return std::vector<std::string_view>{};
+      return std::vector<std::string>{};
     }
-    static std::string global_cache;
-    return DropIndentAndSplit(global_cache = *result);
+    //static std::string global_cache;
+    //return DropIndentAndSplit(global_cache = *result);
+    std::vector<std::string> strs = mbo::types::CopyConvertContainer(DropIndentAndSplit(*result));
+    return strs;
   }
 
   static std::string ToLines(std::string_view input) {
@@ -67,14 +66,12 @@ class UnifiedDiffTest : public ::testing::Test {
 
 TEST_F(UnifiedDiffTest, Empty) {
   EXPECT_THAT(UnifiedDiff({}, {}), IsOkAndHolds(IsEmpty()));
-  EXPECT_THAT(
-      UnifiedDiff({"\n", "lhs"}, {"\n", "rhs"}), IsOkAndHolds(IsEmpty()));
+  EXPECT_THAT(UnifiedDiff({"\n", "lhs"}, {"\n", "rhs"}), IsOkAndHolds(IsEmpty()));
 }
 
 TEST_F(UnifiedDiffTest, Equal) {
   for (const std::string txt : {"a", "a\nb", "a\nb\n"}) {
-    EXPECT_THAT(
-        UnifiedDiff({txt, "lhs"}, {txt, "rhs"}), IsOkAndHolds(IsEmpty()));
+    EXPECT_THAT(UnifiedDiff({txt, "lhs"}, {txt, "rhs"}), IsOkAndHolds(IsEmpty()));
   }
 }
 
@@ -484,7 +481,7 @@ TEST_F(UnifiedDiffTest, Multi3) {
       UnifiedDiff(
           {ToLines("123456789_XYZac0"), "lhs"},
           {ToLines("1234ab789_XYZ0"), "rhs"}, {.context_size = 4}),
-      IsOkAndHolds(ContainerEq(DropIndentAndSplit(R"txt(
+      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1,16 +1,14 @@

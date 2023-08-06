@@ -45,6 +45,8 @@ The C++ library is organized in functional groups each residing in their own dir
         * meta-type `IfElse`: Helper type to generate else `Cases` which are always true and must go last.
         * meta-type `IfFalseThenVoid`: Helper type that can be used to skip a case.
         * meta-type `IfTrueThenVoid`: Helper type to inject default cases and to ensure the required type expansion is always possible.
+    * mbo/types:copy_convert_container_cc, mbo/types/copy_convert_container.h
+        * Conversion struct `CopyConvertContainer` simplifies copying containers to value convertible containers.
     * mbo/types:extend_cc, mbo/types/extend.h
         * crtp-struct `Extend`: Enables extending of struct/classe types with basic functionality.
         * crtp-struct `ExtendNoDefault` Like `Extend` but without default extender functionality.
@@ -55,11 +57,20 @@ The C++ library is organized in functional groups each residing in their own dir
             * extender-struct `Printable`:
                 * Extender that injects functionality to make an `Extend`ed type get a `std::string ToString() const` function which can be used to convert a type into a `std::string`.
                 * The output is a comma separated list of field values, e.g. `{ 25, 42 }`.
-                * If available (Clang 16+) this function prints field names `{ a = 25, b = 42 }`.
+                * If available (Clang 16+) this function prints field names `{ first = 25, second = 42 }`.
             * extender-struct `Streamable`: Extender that injects functionality to make an `Extend`ed type streamable. This allows the type to be used directly with `std::ostream`s.
     * mbo/types:no_destruct_cc, mbo/types/no_destruct.h
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
         * Mainly, this prevents calling the destructor and thus prevents termination issues.
+    * mbo/types:traits_cc, mbo/types/traits.h
+        * Concept `IsAggregate` determines whether a type is an aggregate.
+        * Concept `IsDecomposable` determines whether a type can be used in static-bindings.
+        * Concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
+        * Concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.
+        * Concept `ContainerHasEmplace` determines whether a container has `emplace`.
+        * Concept `ContainerHasEmplaceBack` determines whether a container has `emplace_back`.
+        * Concept `ContainerHasInsert` determines whether a container has `insert`.
+        * Concept `ContainerHasPushBack` determines whether a container has `push_back`.
     * mbo/types:tstring_cc, mbo/types/tstring.h
         * struct `tstring`: Implements type `tstring` a compile time string-literal type.
         * operator `operator"" _ts`: String literal support for Clang, GCC and derived compilers.

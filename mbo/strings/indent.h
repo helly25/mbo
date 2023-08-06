@@ -10,8 +10,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_STRING_INDENT_H_
-#define MBO_STRING_INDENT_H_
+#ifndef MBO_STRINGS_INDENT_H_
+#define MBO_STRINGS_INDENT_H_
 
 #include <string_view>  // IWYU pragma: keep
 #include <vector>
@@ -33,4 +33,4 @@ std::vector<std::string_view> DropIndentAndSplit(std::string_view text);
 
 }  // namespace mbo::strings
 
-#endif  // MBO_STRING_INDENT_H_
+#endif  // MBO_STRINGS_INDENT_H_

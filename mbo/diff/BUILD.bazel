@@ -35,7 +35,7 @@ cc_library(
     deps = [
         "//mbo/file:artefact_cc",
         "//mbo/types:no_destruct_cc",
-        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:absl_log",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -52,7 +52,7 @@ cc_binary(
         ":update_absl_log_flags_cc",
         "//mbo/file:artefact_cc",
         "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:absl_log",
     ],
 )
 
@@ -64,6 +64,7 @@ cc_test(
         ":unified_diff_cc",
         "//mbo/strings:indent_cc",
         "//mbo/testing:status_cc",
+        "//mbo/types:copy_convert_container_cc",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",

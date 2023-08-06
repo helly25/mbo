@@ -32,6 +32,13 @@ cc_test(
 )
 
 cc_library(
+    name = "copy_convert_container_cc",
+    hdrs = ["copy_convert_container.h"],
+    deps = [":traits_cc"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "extend_cc",
     hdrs = ["extend.h"],
     srcs = ["extender.h"],

@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include "absl/log/log.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
@@ -196,7 +196,6 @@ class Chunk {
   Chunk& operator=(Chunk&&) = delete;
 
   void PushBoth(size_t lhs_idx, size_t rhs_idx, std::string_view ctx) {
-    //LOG(INFO) << __FUNCTION__ << "(" << lhs_idx << ", " << rhs_idx << ", " << ctx.length() << ")";
     MoveDiffs();
     if (!data_.empty() && context_.Full()) {
       // We have a finished chunk_.
@@ -406,7 +405,7 @@ bool UnifiedDiff::Impl::PastMaxDiffChunkLength(size_t& loop) {
   static constexpr size_t kMaxDiffChunkLength = 1'337'000;
   if (++loop > kMaxDiffChunkLength) {
     static constexpr std::string_view kMsg = "Maximum loop count reached";
-    LOG(ERROR) << kMsg;
+    ABSL_LOG(ERROR) << kMsg;
     chunk_.PushLhs(lhs_data_.Idx(), rhs_data_.Idx(), kMsg);
     return true;
   }
@@ -476,6 +475,11 @@ UnifiedDiff::Diff(const file::Artefact& lhs, const file::Artefact& rhs, const Op
   }
   Impl diff(lhs, rhs, options);
   return diff.Compute();
+}
+
+const UnifiedDiff::Options& UnifiedDiff::Options::Default() noexcept {
+  static const types::NoDestruct<UnifiedDiff::Options> kDefaults;
+  return *kDefaults;
 }
 
 }  // namespace mbo::diff
