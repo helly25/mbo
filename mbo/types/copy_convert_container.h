@@ -30,14 +30,9 @@ concept ContainerCopyConvertibleRaw = requires {
 template<typename ContainerIn, typename ContainerOut>
 concept ContainerCopyConvertible = ContainerCopyConvertibleRaw<std::remove_cvref_t<ContainerIn>, std::remove_reference_t<ContainerOut>>;
 
-// Copies `Container` into `ContainerOut` while converting values as needed.
-// Requires that the values in `Container` can be emplaced or inserted into `ContainerOut`.
-//
-// Example:
-//
-//   std::vector<std::string_view> input{"foo", "bar", "baz"};
-//   std::vector<string> strs = CopyConvertContainer(input);
-template<ContainerIsForwardIteratable Container>
+namespace internal {
+
+template<IsForwardIteratable Container>
 class CopyConvertContainer {
  public:
   using ContainerType = std::remove_reference_t<Container>;
@@ -47,8 +42,8 @@ class CopyConvertContainer {
   ~CopyConvertContainer() = default;
   CopyConvertContainer(const CopyConvertContainer&) = delete;
   CopyConvertContainer& operator=(const CopyConvertContainer&) = delete;
-  CopyConvertContainer(CopyConvertContainer&&) = delete;
-  CopyConvertContainer& operator=(CopyConvertContainer&&) = delete;
+  CopyConvertContainer(CopyConvertContainer&&) noexcept = default;
+  CopyConvertContainer& operator=(CopyConvertContainer&&) noexcept = default;
 
   template<typename ContainerOut>
   requires ContainerCopyConvertible<Container, ContainerOut>
@@ -71,6 +66,21 @@ class CopyConvertContainer {
  private:
   const ContainerType& container_;
 };
+
+}  // namespace internal
+
+// Copies `Container` into `ContainerOut` while converting values as needed.
+// Requires that the values in `Container` can be emplaced or inserted into `ContainerOut`.
+//
+// Example:
+//
+//   std::vector<std::string_view> input{"foo", "bar", "baz"};
+//   std::vector<string> strs = CopyConvertContainer(input);
+
+template<IsForwardIteratable Container>
+internal::CopyConvertContainer<Container> CopyConvertContainer(const Container& container) {
+  return internal::CopyConvertContainer(container);
+}
 
 }  // namespace mbo::types
 

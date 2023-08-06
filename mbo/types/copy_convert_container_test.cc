@@ -12,9 +12,11 @@
 
 #include "mbo/types/copy_convert_container.h"
 
+#include <initializer_list>
 #include <set>
 #include <string>       // IWYU pragma: keep
 #include <string_view>  // IWYU pragma: keep
+#include <unordered_set>
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -30,6 +32,10 @@ using ::testing::WhenSorted;
 static_assert(ContainerIsForwardIteratable<std::vector<std::string>>);
 static_assert(ContainerIsForwardIteratable<const std::vector<std::string>>);
 static_assert(ContainerIsForwardIteratable<const std::vector<std::string>&>);
+
+static_assert(!ContainerIsForwardIteratable<std::initializer_list<std::string>>);
+static_assert(IsForwardIteratable<std::initializer_list<std::string>>);
+
 static_assert(ContainerCopyConvertible<std::vector<std::string_view>, std::set<std::string>>);
 static_assert(ContainerCopyConvertible<const std::vector<std::string_view>, std::set<std::string>>);
 static_assert(ContainerCopyConvertible<const std::vector<std::string_view>&, std::set<std::string>>);
@@ -56,7 +62,8 @@ using TestTypes = ::testing::Types<
     FromTo<std::vector<std::string>, std::vector<std::string>>,
     FromTo<std::vector<std::string_view>, std::set<std::string>>,
     FromTo<std::vector<const char*>, std::set<std::string>>,
-    FromTo<std::set<std::string_view>, std::vector<std::string>>>;
+    FromTo<std::set<std::string_view>, std::vector<std::string>>,
+    FromTo<std::initializer_list<std::string_view>, std::unordered_set<std::string>>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(Tests, CopyConvertContainerTest, TestTypes);
 
