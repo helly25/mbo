@@ -38,6 +38,17 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+cc_test(
+    name = "copy_convert_container_test",
+    srcs = ["copy_convert_container_test.cc"],
+    deps = [
+        ":copy_convert_container_cc",
+        ":traits_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+    visibility = ["//visibility:public"],
+)
+
 cc_library(
     name = "extend_cc",
     hdrs = ["extend.h"],

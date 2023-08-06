@@ -10,16 +10,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_STRINGS_TO_STRING_CONTAINER_H_
-#define MBO_STRINGS_TO_STRING_CONTAINER_H_
+#ifndef MBO_TYPES_COPY_CONVERT_CONTAINER_H_
+#define MBO_TYPES_COPY_CONVERT_CONTAINER_H_
 
-#include <iterator>
 #include "mbo/types/traits.h"
 
 namespace mbo::types {
 
 template<typename ContainerIn, typename ContainerOut>
-concept ContainerCopyConvertible = requires {
+concept ContainerCopyConvertibleRaw = requires {
   ContainerIsForwardIteratable<ContainerIn>;
   ContainerIsForwardIteratable<ContainerOut>;
   ContainerHasEmplace<ContainerOut, typename ContainerIn::value_type>
@@ -28,12 +27,16 @@ concept ContainerCopyConvertible = requires {
       || ContainerHasPushBack<ContainerOut, typename ContainerIn::value_type>;
 };
 
+template<typename ContainerIn, typename ContainerOut>
+concept ContainerCopyConvertible = ContainerCopyConvertibleRaw<std::remove_cvref_t<ContainerIn>, std::remove_reference_t<ContainerOut>>;
+
 template<ContainerIsForwardIteratable Container>
 class CopyConvertContainer {
  public:
-  using ValueType = typename Container::value_type;
+  using ContainerType = std::remove_reference_t<Container>;
+  using ValueType = typename ContainerType::value_type;
 
-  explicit CopyConvertContainer(Container&& container) : container_(container) {}
+  explicit CopyConvertContainer(const Container& container) noexcept : container_(container) {}
   ~CopyConvertContainer() = default;
   CopyConvertContainer(const CopyConvertContainer&) = delete;
   CopyConvertContainer& operator=(const CopyConvertContainer&) = delete;
@@ -59,9 +62,9 @@ class CopyConvertContainer {
   }
 
  private:
-  const Container container_;
+  const ContainerType& container_;
 };
 
 }  // namespace mbo::types
 
-#endif  // MBO_STRINGS_TO_STRING_CONTAINER_H_
+#endif  // MBO_TYPES_COPY_CONVERT_CONTAINER_H_

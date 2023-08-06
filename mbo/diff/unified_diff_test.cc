@@ -48,10 +48,7 @@ class UnifiedDiffTest : public ::testing::Test {
     if (result->empty()) {
       return std::vector<std::string>{};
     }
-    //static std::string global_cache;
-    //return DropIndentAndSplit(global_cache = *result);
-    std::vector<std::string> strs = mbo::types::CopyConvertContainer(DropIndentAndSplit(*result));
-    return strs;
+    return std::vector<std::string>(mbo::types::CopyConvertContainer(DropIndentAndSplit(*result)));
   }
 
   static std::string ToLines(std::string_view input) {

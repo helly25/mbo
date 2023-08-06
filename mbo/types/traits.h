@@ -50,7 +50,7 @@ inline constexpr bool IsBracesConstructibleV = types_internal::IsBracesConstruct
 
 // Identifies std like `Container` types that are at least iteratable.
 template<typename Container>
-concept ContainerIsForwardIteratable = requires (Container container, const Container const_container) {
+concept ContainerIsForwardIteratableRaw = requires (Container container, const Container const_container) {
   requires std::forward_iterator<typename Container::iterator>;
   requires std::forward_iterator<typename Container::const_iterator>;
   requires std::same_as<typename Container::reference, typename Container::value_type &>;
@@ -69,6 +69,9 @@ concept ContainerIsForwardIteratable = requires (Container container, const Cont
   { container.size() } -> std::same_as<typename Container::size_type>;
   { container.empty() } -> std::same_as<bool>;
 };
+
+template<typename Container>
+concept ContainerIsForwardIteratable = ContainerIsForwardIteratableRaw<std::remove_cvref_t<Container>>;
 
 // Identifies std like `Container` types that support `emplace` with `ValueType`.
 template<typename Container, typename ValueType>
