@@ -76,9 +76,8 @@ class CopyConvertContainer {
 //
 //   std::vector<std::string_view> input{"foo", "bar", "baz"};
 //   std::vector<string> strs = CopyConvertContainer(input);
-
 template<IsForwardIteratable Container>
-internal::CopyConvertContainer<Container> CopyConvertContainer(const Container& container) {
+inline internal::CopyConvertContainer<Container> CopyConvertContainer(const Container& container) {
   return internal::CopyConvertContainer(container);
 }
 
