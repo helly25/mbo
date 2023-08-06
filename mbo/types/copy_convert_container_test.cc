@@ -13,8 +13,8 @@
 #include "mbo/types/copy_convert_container.h"
 
 #include <set>
-#include <string>
-#include <string_view>
+#include <string>       // IWYU pragma: keep
+#include <string_view>  // IWYU pragma: keep
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -53,10 +53,10 @@ TYPED_TEST_P(CopyConvertContainerTest, StringTest) {
 REGISTER_TYPED_TEST_SUITE_P(CopyConvertContainerTest, StringTest);
 
 using TestTypes = ::testing::Types<
-  FromTo<std::vector<std::string>, std::vector<std::string>>,
-  FromTo<std::vector<std::string_view>, std::set<std::string>>,
-  FromTo<std::vector<const char*>, std::set<std::string>>,
-  FromTo<std::set<std::string_view>, std::vector<std::string>>>;
+    FromTo<std::vector<std::string>, std::vector<std::string>>,
+    FromTo<std::vector<std::string_view>, std::set<std::string>>,
+    FromTo<std::vector<const char*>, std::set<std::string>>,
+    FromTo<std::set<std::string_view>, std::vector<std::string>>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(Tests, CopyConvertContainerTest, TestTypes);
 

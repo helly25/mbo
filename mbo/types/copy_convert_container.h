@@ -30,6 +30,13 @@ concept ContainerCopyConvertibleRaw = requires {
 template<typename ContainerIn, typename ContainerOut>
 concept ContainerCopyConvertible = ContainerCopyConvertibleRaw<std::remove_cvref_t<ContainerIn>, std::remove_reference_t<ContainerOut>>;
 
+// Copies `Container` into `ContainerOut` while converting values as needed.
+// Requires that the values in `Container` can be emplaced or inserted into `ContainerOut`.
+//
+// Example:
+//
+//   std::vector<std::string_view> input{"foo", "bar", "baz"};
+//   std::vector<string> strs = CopyConvertContainer(input);
 template<ContainerIsForwardIteratable Container>
 class CopyConvertContainer {
  public:
