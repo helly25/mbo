@@ -28,7 +28,7 @@ namespace mbo::types {
 // template<typename T, typename... Extender>
 // using mbo::types::Extend;
 //
-// struct Name : Extend<> {
+// struct Name : Extend<Name> {
 //    std::string first;
 //    std::string last;
 // };
@@ -38,6 +38,7 @@ namespace mbo::types {
 //
 // The struct `Name` automatically gains the ability to print, stream and
 // compare itself. In the above example `{"First", "Last"}` will be printed.
+// If compiled on Clang it will print `{first: "First", last: "Last"}`.
 template<typename T, typename... Extender>
 struct Extend
     : extender_internal::ExtendImpl<
