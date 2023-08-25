@@ -33,7 +33,7 @@ namespace mbo::types {
 //    std::string last;
 // };
 //
-// std::cout << Name{.first = "", .last = ""} << std::endl;
+// std::cout << Name{.first = "First", .last = "Last"} << std::endl;
 // ```
 //
 // The struct `Name` automatically gains the ability to print, stream and
