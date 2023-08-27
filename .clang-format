@@ -21,6 +21,7 @@ BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeConceptDeclarations: Always
 BreakBeforeTernaryOperators: true
 BreakInheritanceList: BeforeComma
+DerivePointerAlignment: false
 EmptyLineBeforeAccessModifier: Always
 FixNamespaceComments: true
 IndentRequiresClause: false
