@@ -194,6 +194,56 @@ struct DecomposeCount<
     final : std::true_type {};
 
 template<typename T>
+struct DecomposeCount<
+    T,
+    21,
+    std::void_t<decltype([]() {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21] =
+          T();
+    })>>
+    final : std::true_type {};
+
+template<typename T>
+struct DecomposeCount<
+    T,
+    22,
+    std::void_t<decltype([]() {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22] =
+          T();
+    })>>
+    final : std::true_type {};
+
+template<typename T>
+struct DecomposeCount<
+    T,
+    23,
+    std::void_t<decltype([]() {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23] =
+          T();
+    })>>
+    final : std::true_type {};
+
+template<typename T>
+struct DecomposeCount<
+    T,
+    24,
+    std::void_t<decltype([]() {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24] =
+          T();
+    })>>
+    final : std::true_type {};
+
+template<typename T>
+struct DecomposeCount<
+    T,
+    25,
+    std::void_t<decltype([]() {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25] =
+          T();
+    })>>
+    final : std::true_type {};
+
+template<typename T>
 struct DecomposeCountnImpl
     : std::integral_constant<
           std::size_t,
@@ -218,6 +268,11 @@ struct DecomposeCountnImpl
               DecomposeCount<T, 18>,
               DecomposeCount<T, 19>,
               DecomposeCount<T, 20>,
+              DecomposeCount<T, 21>,
+              DecomposeCount<T, 22>,
+              DecomposeCount<T, 23>,
+              DecomposeCount<T, 24>,
+              DecomposeCount<T, 25>,
               std::false_type>::index> {};
 
 template<typename T>
@@ -617,6 +672,32 @@ struct DecomposeHelper final {
     } else if constexpr (kNumFields == 20) {
       auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] = data;
       return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
+    } else if constexpr (kNumFields == 21) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21] = data;
+      return std::make_tuple(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21);
+    } else if constexpr (kNumFields == 22) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22] =
+          data;
+      return std::make_tuple(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22);
+    } else if constexpr (kNumFields == 23) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23] =
+          data;
+      return std::make_tuple(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23);
+    } else if constexpr (kNumFields == 24) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24] =
+          data;
+      return std::make_tuple(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23,
+          a24);
+    } else if constexpr (kNumFields == 25) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25] =
+          data;
+      return std::make_tuple(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
+          a25);
     }
   }
 
@@ -685,6 +766,31 @@ struct DecomposeHelper final {
     } else if constexpr (kNumFields == 20) {
       auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
+    } else if constexpr (kNumFields == 21) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21);
+    } else if constexpr (kNumFields == 22) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22] =
+          data;
+      return std::tie(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22);
+    } else if constexpr (kNumFields == 23) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23] =
+          data;
+      return std::tie(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23);
+    } else if constexpr (kNumFields == 24) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24] =
+          data;
+      return std::tie(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23,
+          a24);
+    } else if constexpr (kNumFields == 25) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25] =
+          data;
+      return std::tie(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
+          a25);
     }
   }
 
@@ -753,6 +859,32 @@ struct DecomposeHelper final {
     } else if constexpr (kNumFields == 20) {
       const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
+    } else if constexpr (kNumFields == 21) {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21] =
+          data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21);
+    } else if constexpr (kNumFields == 22) {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22] =
+          data;
+      return std::tie(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22);
+    } else if constexpr (kNumFields == 23) {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23] =
+          data;
+      return std::tie(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23);
+    } else if constexpr (kNumFields == 24) {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24] =
+          data;
+      return std::tie(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23,
+          a24);
+    } else if constexpr (kNumFields == 25) {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25] =
+          data;
+      return std::tie(
+          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
+          a25);
     }
   }
 };

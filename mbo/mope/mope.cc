@@ -13,14 +13,16 @@
 #include "mbo/mope/mope.h"
 
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "absl/cleanup/cleanup.h"
+#include "absl/log/absl_log.h"  // IWYU pragma: keep
 #include "absl/strings/match.h"
 #include "absl/strings/numbers.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_replace.h"
-#include "absl/strings/string_view.h"
 #include "re2/re2.h"
 
 namespace mbo::mope {
@@ -56,76 +58,122 @@ std::pair<std::size_t, std::size_t> FindTag(std::string_view output, std::string
 
 }  // namespace
 
-template<class DataType>
-Template::TagData<DataType>::TagData(TagInfo tag, DataType data) : tag(std::move(tag)), data(std::move(data)) {}
+template<typename Sink>
+void AbslStringify(Sink& sink, const Template::TagType& value) {
+  absl::Format(&sink, "%s", [value] {
+    switch (value) {
+      case Template::TagType::kValue: return "TagType::Value";
+      case Template::TagType::kSection: return "TagType::Section";
+      case Template::TagType::kControl: return "TagType::Control";
+    }
+    return "TagType::UNKNOWN";
+  }());
+}
 
 Template* Template::AddSectionDictionary(std::string_view name) {
   TagInfo tag{
       .name{name},
       .start = absl::StrCat("{{#", name, "}}"),
       .end = absl::StrCat("{{/", name, "}}"),
+      .type = TagType::kSection,
   };
-  auto [it, inserted] = data_.emplace(name, TagData<SectionDictionary>(std::move(tag), {}));
+  auto [it, inserted] = data_.emplace(name, TagData<SectionDictionary>{.tag = std::move(tag), .data = {}});
   auto& dict = std::get<TagData<SectionDictionary>>(it->second).data;
   return &dict.emplace_back();
 }
 
-bool Template::SetValue(std::string_view name, std::string_view value) {
+bool Template::SetValue(std::string_view name, std::string_view value, bool allow_update) {
   TagInfo tag{
       .name{name},
       .start = absl::StrCat("{{", name, "}}"),
+      .type = TagType::kValue,
   };
-  auto [it, inserted] = data_.emplace(name, TagData<std::string>(std::move(tag), std::string(value)));
-  return inserted;
+  auto [it, inserted] = data_.emplace(name, TagData<std::string>{.tag = std::move(tag), .data{value}});
+  if (inserted) {
+    return true;
+  }
+  if (allow_update) {
+    it->second.emplace<TagData<std::string>>(TagData<std::string>{.tag = std::move(tag), .data = std::string(value)});
+    return true;
+  }
+  return false;
+}
+
+std::optional<const Template::TagInfo> Template::FindAndConsumeTag(std::string_view* pos, bool configured_only) {
+  // Grab parts as string_view. Done in a separate block so these cannot escape.
+  // They will be invalid upon the first change of `output`.
+  static constexpr LazyRE2 kNormalTags = {"({{(#?)(\\w+)}})"};
+  static constexpr LazyRE2 kConfiguredTags = {"({{(#?)(\\w+)(?:=((?:[^}]|[}][^}])+))?}})"};
+  const RE2* regex = configured_only ? &*kConfiguredTags : &*kNormalTags;
+  std::string_view start;
+  std::string_view name;
+  std::string_view config;
+  std::string_view type;
+  if (!RE2::FindAndConsume(pos, *regex, &start, &type, &name, &config)) {
+    return std::nullopt;
+  }
+  return TagInfo{
+      .name{name},
+      .start{start},
+      .end = absl::StrCat("{{/", name, "}}"),
+      .config{config},
+      .type = type.empty() ? (config.empty() ? TagType::kValue : TagType::kControl) : TagType::kSection,
+  };
 }
 
 absl::Status Template::ExpandTags(
     bool configured_only,
     std::string& output,
     absl::FunctionRef<absl::Status(const TagInfo&, std::string&)> func) {
-  static constexpr LazyRE2 kNormalTags = {"({{#(\\w+)}})"};
-  static constexpr LazyRE2 kConfiguredTags = {"({{#(\\w+)(?:=((?:[^}]|[}][^}])+))?}})"};
   std::string_view pos = output;
   while (true) {
     if (pos.empty()) {
       return absl::OkStatus();
     }
-    const TagInfo tag;
-    {
-      // Grab parts as string_view. Done in a separate block so these cannot escape.
-      // They will be invalid upon the first change of `output`.
-      std::string_view start;
-      std::string_view name;
-      std::string_view config;
-      if (!RE2::FindAndConsume(&pos, configured_only ? *kConfiguredTags : *kNormalTags, &start, &name, &config)) {
-        return absl::OkStatus();
-      }
-      if (data_.find(name) != data_.end()) {
-        return absl::InvalidArgumentError(absl::StrCat("Tag name '", name, "' appears twice."));
-      }
-      tag.~TagInfo();
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-      new (const_cast<TagInfo*>(&tag)) TagInfo{
-          .name{name},
-          .start{start},
-          .end = absl::StrCat("{{/", name, "}}"),
-          .config{config},
-      };
+    std::optional<TagInfo> result = FindAndConsumeTag(&pos, configured_only);
+    if (result == std::nullopt) {
+      return absl::OkStatus();
+    }
+    const TagInfo tag = *std::move(result);
+    if (tag.type == TagType::kSection && data_.find(tag.name) != data_.end()) {
+      return absl::InvalidArgumentError(absl::StrCat("Tag name '", tag.name, "' appears twice."));
     }
     const std::size_t tag_pos = pos.data() - output.c_str() - tag.start.length();
+    if (tag.type == TagType::kValue) {
+      // Skip the value tags, they are handled elsewhere.
+      pos = output;
+      pos.remove_prefix(tag_pos + tag.start.length());
+      continue;
+    }
     const auto [replace_pos, replace_tag_len] = ExpandWhiteSpace(output, tag_pos, tag.start.length());
     output.erase(replace_pos, replace_tag_len);
-    const auto tag_end_pos = output.find(tag.end, replace_pos);
-    if (tag_end_pos == std::string_view::npos) {
-      return absl::InvalidArgumentError(absl::StrCat("Tag name '", tag.name, "' has no end tag '", tag.end, "'."));
-    }
-    const auto [replace_end, replace_end_len] = ExpandWhiteSpace(output, tag_end_pos, tag.end.length());
-    const std::size_t replace_len = replace_end - replace_pos;
-    std::string replace_str = output.substr(replace_pos, replace_len);
-    output.erase(replace_pos, replace_len + replace_end_len);
-    auto result = func(tag, replace_str);
-    if (!result.ok()) {
-      return result;
+    std::string replace_str;
+    switch (tag.type) {
+      case TagType::kControl: {
+        auto result = func(tag, replace_str);
+        if (!result.ok()) {
+          return result;
+        }
+        break;
+      }
+      case TagType::kSection: {
+        const auto tag_end_pos = output.find(tag.end, replace_pos);
+        if (tag_end_pos == std::string_view::npos) {
+          return absl::InvalidArgumentError(absl::StrCat("Tag name '", tag.name, "' has no end tag '", tag.end, "'."));
+        }
+        const auto [replace_end, replace_end_len] = ExpandWhiteSpace(output, tag_end_pos, tag.end.length());
+        const std::size_t replace_len = replace_end - replace_pos;
+        replace_str = output.substr(replace_pos, replace_len);
+        output.erase(replace_pos, replace_len + replace_end_len);
+        auto result = func(tag, replace_str);
+        if (!result.ok()) {
+          return result;
+        }
+        break;
+      }
+      case TagType::kValue: {
+        break;
+      }
     }
     output.insert(replace_pos, replace_str);
     pos = output;
@@ -199,7 +247,7 @@ absl::Status Template::ExpandRangeData(const TagInfo& tag, const RangeData& rang
   // * range.step > 0 && range.start > range.end
   // * range.step < 0 && range.start < range.end
   // But that would not work well with values that were looked up or computed.
-  auto [r_tag_it, inserted] = data_.emplace(tag.name, TagData(tag, range));
+  auto [r_tag_it, inserted] = data_.emplace(tag.name, TagData<Range>{.tag = tag, .data = range});
   if (!inserted) {
     return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' appears twice."));
   }
@@ -213,9 +261,21 @@ absl::Status Template::ExpandConfiguredTag(const TagInfo& tag, std::string& outp
   // Parse tag config and translate into whatever that says...
   static constexpr LazyRE2 kReFor = {
       R"(\s*(-?\d+|[_a-zA-Z]\w*)\s*;\s*(-?\d+|[_a-zA-Z]\w*)\s*(?:;\s*(-?\d+|[_a-zA-Z]\w*)\s*)?)"};
-  RangeData range;
-  if (RE2::FullMatch(tag.config, *kReFor, &range.start, &range.end, &range.step)) {
-    return ExpandRangeData(tag, range, output);
+  switch (tag.type) {
+    case TagType::kSection: {
+      RangeData range;
+      if (RE2::FullMatch(tag.config, *kReFor, &range.start, &range.end, &range.step)) {
+        return ExpandRangeData(tag, range, output);
+      }
+      break;
+    }
+    case TagType::kControl: {
+      SetValue(tag.name, tag.config, true);
+      return absl::OkStatus();
+    }
+    case TagType::kValue: {
+      break;  // Unexpected. Ignore.
+    }
   }
   return absl::UnimplementedError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", tag.config, "'."));
 }

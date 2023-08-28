@@ -13,22 +13,36 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
-// #include "absl/flags/flag.h"
+#include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/log/globals.h"
 #include "absl/log/initialize.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_split.h"
 #include "mbo/file/artefact.h"
 #include "mbo/mope/mope.h"
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables,abseil-no-namespace)
+ABSL_FLAG(
+    std::vector<std::string>,
+    set,
+    {},
+    "Acomma separated list of `name=value` pairs, used to seed the "
+    "template config.");
 
 namespace mbo {
 
 absl::Status Process(std::string_view input_name) {
   auto input = mbo::file::Artefact::Read(input_name);
   mbo::mope::Template mope_template;
-  mope_template.SetValue("max_fields", "20");
+  for (const auto& set_kv : absl::GetFlag(FLAGS_set)) {
+    const std::pair<std::string_view, std::string_view> kv = absl::StrSplit(set_kv, '=');
+    std::cerr << "Set '" << kv.first << "' = '" << kv.second << "'" << std::endl;
+    mope_template.SetValue(kv.first, kv.second);
+  }
   auto result = mope_template.Expand(input->data);
   if (!result.ok()) {
     return result;

@@ -10,6 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -17,6 +18,7 @@
 #include "absl/container/node_hash_map.h"
 #include "absl/functional/function_ref.h"
 #include "absl/status/status.h"
+#include "mbo/types/extend.h"
 
 namespace mbo::mope {
 
@@ -30,10 +32,10 @@ namespace mbo::mope {
 // While more dynamic features might be added in the future, it is expressily not a goal to become turing complete.
 // There are many good choices available if that is necessary.
 //
-// MOPE understands single values and sections which are heirarchical dictionaries that are made up of sections and
+// MOPE understands single values and sections which are hierarchical dictionaries that are made up of sections and
 // values.
 //
-// A single value is identified by: '{{' <name> '}}'. The value van be set by calling `SetValue`.
+// 1) A single value is identified by: '{{' <name> '}}'. The value van be set by calling `SetValue`.
 //
 // ```c++
 // mbo::mope::Templaye mope;
@@ -43,8 +45,8 @@ namespace mbo::mope {
 // CHECK_EQ(output, "My bar.");
 // ```
 //
-// A section dictionary can be build by calling `AddSubDictionary` multiple times for the same `name` which becomes the
-// section name. The section starts with '{{#' <name> '}}' and ends with '{{/' <name> '}};.
+// 2) A section dictionary can be build by calling `AddSubDictionary` multiple times for the same `name` which becomes
+// the section name. The section starts with '{{#' <name> '}}' and ends with '{{/' <name> '}};.
 //
 // ```c++
 // mbo::mope::Templaye mope;
@@ -57,7 +59,7 @@ namespace mbo::mope {
 // CHECK_EQ(output, "My bar-baz.");
 // ```
 //
-// The template supports for-loops:
+// 3) The template supports for-loops:
 //
 // '{{# <name> '=' <start> ';' <end> ( ';' <step> )?'}}'...'{{/' <name> '}}'
 //
@@ -78,13 +80,31 @@ namespace mbo::mope {
 // mope.Expand(output);
 // CHECK_EQ(output, "My 1.3.5.");
 // ```
+//
+// 4) The template allows to set tags from within the template. This allows to
+// provide centralized configuration values for instance to for-loops.
+//
+// These are value tags with a configuration: '{{' <<name> '=' <value> '}}'
+//
+// ```c++
+// mbo::mope::Templaye mope;
+// std::string output(R"(
+//    {{foo_start=1}}
+//    {{foo_end=8}}
+//    {{foo_step=2}}
+//    My {{#foo=foo_start;foo_end;foo_step}}{{foo}}.{{/foor}})"R);
+// mope.Expand(output);
+// CHECK_EQ(output, "My 1.3.5.7.");
+// ```
 class Template {
  public:
   explicit Template() = default;
 
   // Sets template variable `name` to `value`.
+  // The function by default only inserts new values, but if `allow_update` is true, it will also
+  // overwrite existing values.
   // Returns whether `name` was newly added (or overwritten).
-  bool SetValue(std::string_view name, std::string_view value);
+  bool SetValue(std::string_view name, std::string_view value, bool allow_update = false);
 
   // Add a sub-dictionary under `name`.
   // The purpose of a sub-dictionary is to be filled, which can be done by calling `SetValue` or `AddSubDictionary`, on
@@ -97,23 +117,29 @@ class Template {
   [[nodiscard]] absl::Status Expand(std::string& output);
 
  private:
-  struct TagInfo {
-    const std::string name;
-    const std::string start;
-    const std::string end;
-    const std::string config;
+  enum class TagType {
+    kValue,
+    kSection,
+    kControl,
+  };
+
+  struct TagInfo : mbo::types::Extend<TagInfo> {
+    std::string name;
+    std::string start;
+    std::string end;
+    std::string config;
+    TagType type = TagType::kValue;
   };
 
   template<class DataType>
-  struct TagData {
-    TagData(TagInfo tag, DataType data);
+  struct TagData : mbo::types::Extend<TagData<DataType>> {
     const TagInfo tag;
     DataType data;
   };
 
   using SectionDictionary = std::vector<Template>;
 
-  struct Range {
+  struct Range : mbo::types::Extend<Range> {
     int start = 0;
     int end = 0;
     int step = 1;
@@ -121,7 +147,7 @@ class Template {
     mutable int curr = 0;
   };
 
-  struct RangeData {
+  struct RangeData : mbo::types::Extend<RangeData> {
     std::string start;
     std::string end;
     std::string step;
@@ -130,6 +156,8 @@ class Template {
   // Type `Data` holds all possible information variants. Each of these needs
   // to have a matching `Expand(const TagInfo<Data-Type>&, std::string*)`.
   using Data = std::variant<TagData<SectionDictionary>, TagData<Range>, TagData<std::string>>;
+
+  static std::optional<const Template::TagInfo> FindAndConsumeTag(std::string_view* pos, bool configured_only);
 
   absl::Status RemoveTags(std::string& output);
   absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, int& value) const;
@@ -144,6 +172,9 @@ class Template {
   absl::Status Expand(TagData<SectionDictionary>& tag, std::string& output);
   static absl::Status Expand(const TagData<Range>& tag, std::string& output);
   absl::Status Expand(const TagData<std::string>& tag, std::string& output) const;
+
+  template<typename Sink>
+  friend void AbslStringify(Sink& sink, const TagType& value);
 
   absl::node_hash_map<std::string, Data> data_ = {};
 };

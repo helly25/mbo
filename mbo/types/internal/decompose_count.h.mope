@@ -9,6 +9,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+{{max_fields=25}}
 
 #ifndef MBO_TYPES_INTERNAL_DECOMPOSE_COUNT_H_
 #define MBO_TYPES_INTERNAL_DECOMPOSE_COUNT_H_
