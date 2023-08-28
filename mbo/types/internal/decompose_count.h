@@ -85,78 +85,112 @@ concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 #if defined(__clang__)  // ----------------------------------------------------
 
 template<typename T, size_t N, typename = void>
-struct DecomposeCount : IfFalseThenVoid {};
+struct DecomposeCount final : std::false_type {};
 
 template<typename T>
-struct DecomposeCount<T, 1, std::void_t<decltype([]() { const auto& [a0] = T(); })>> final : std::true_type {};
+struct DecomposeCount<T, 1, std::void_t<decltype([]() { const auto& [a1] = T(); })>> final : std::true_type {};
 
 template<typename T>
-struct DecomposeCount<T, 2, std::void_t<decltype([]() { const auto& [a0, a1] = T(); })>> final : std::true_type {};
+struct DecomposeCount<T, 2, std::void_t<decltype([]() { const auto& [a1, a2] = T(); })>> final : std::true_type {};
 
 template<typename T>
-struct DecomposeCount<T, 3, std::void_t<decltype([]() { const auto& [a0, a1, a2] = T(); })>> final : std::true_type {};
+struct DecomposeCount<T, 3, std::void_t<decltype([]() { const auto& [a1, a2, a3] = T(); })>> final : std::true_type {};
 
 template<typename T>
-struct DecomposeCount<T, 4, std::void_t<decltype([]() { const auto& [a0, a1, a2, a3] = T(); })>> final
+struct DecomposeCount<T, 4, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4] = T(); })>> final
     : std::true_type {};
 
 template<typename T>
-struct DecomposeCount<T, 5, std::void_t<decltype([]() { const auto& [a0, a1, a2, a3, a4] = T(); })>> final
+struct DecomposeCount<T, 5, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4, a5] = T(); })>> final
     : std::true_type {};
 
 template<typename T>
-struct DecomposeCount<T, 6, std::void_t<decltype([]() { const auto& [a0, a1, a2, a3, a4, a5] = T(); })>> final
+struct DecomposeCount<T, 6, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4, a5, a6] = T(); })>> final
     : std::true_type {};
 
 template<typename T>
-struct DecomposeCount<T, 7, std::void_t<decltype([]() { const auto& [a0, a1, a2, a3, a4, a5, a6] = T(); })>> final
+struct DecomposeCount<T, 7, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4, a5, a6, a7] = T(); })>> final
     : std::true_type {};
 
 template<typename T>
-struct DecomposeCount<T, 8, std::void_t<decltype([]() { const auto& [a0, a1, a2, a3, a4, a5, a6, a7] = T(); })>> final
+struct DecomposeCount<T, 8, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4, a5, a6, a7, a8] = T(); })>> final
     : std::true_type {};
 
 template<typename T>
-struct DecomposeCount<T, 9, std::void_t<decltype([]() { const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8] = T(); })>>
+struct DecomposeCount<T, 9, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9] = T(); })>>
     final : std::true_type {};
 
 template<typename T>
 struct DecomposeCount<T, 10, std::void_t<decltype([]() {
-                        const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9] = T();
+                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = T();
                       })>>
     final : std::true_type {};
 
-template<typename T, typename = void>
-struct DecomposeCount11 final : IfFalseThenVoid {};
-
 template<typename T>
 struct DecomposeCount<T, 11, std::void_t<decltype([]() {
-                        const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = T();
+                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = T();
                       })>>
     final : std::true_type {};
 
 template<typename T>
 struct DecomposeCount<T, 12, std::void_t<decltype([]() {
-                        const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = T();
+                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = T();
                       })>>
     final : std::true_type {};
 
 template<typename T>
 struct DecomposeCount<T, 13, std::void_t<decltype([]() {
-                        const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = T();
+                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = T();
                       })>>
     final : std::true_type {};
 
 template<typename T>
 struct DecomposeCount<T, 14, std::void_t<decltype([]() {
-                        const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = T();
+                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] = T();
                       })>>
     final : std::true_type {};
 
 template<typename T>
 struct DecomposeCount<T, 15, std::void_t<decltype([]() {
-                        const auto& [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] = T();
+                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15] = T();
                       })>>
+    final : std::true_type {};
+
+template<typename T>
+struct DecomposeCount<T, 16, std::void_t<decltype([]() {
+                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16] = T();
+                      })>>
+    final : std::true_type {};
+
+template<typename T>
+struct DecomposeCount<T, 17, std::void_t<decltype([]() {
+                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17] = T();
+                      })>>
+    final : std::true_type {};
+
+template<typename T>
+struct DecomposeCount<T, 18, std::void_t<decltype([]() {
+                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18] =
+                            T();
+                      })>>
+    final : std::true_type {};
+
+template<typename T>
+struct DecomposeCount<
+    T,
+    19,
+    std::void_t<decltype([]() {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19] = T();
+    })>>
+    final : std::true_type {};
+
+template<typename T>
+struct DecomposeCount<
+    T,
+    20,
+    std::void_t<decltype([]() {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] = T();
+    })>>
     final : std::true_type {};
 
 template<typename T>
@@ -178,7 +212,13 @@ struct DecomposeCountnImpl
               DecomposeCount<T, 12>,
               DecomposeCount<T, 13>,
               DecomposeCount<T, 14>,
-              DecomposeCount<T, 15>>::index> {};
+              DecomposeCount<T, 15>,
+              DecomposeCount<T, 16>,
+              DecomposeCount<T, 17>,
+              DecomposeCount<T, 18>,
+              DecomposeCount<T, 19>,
+              DecomposeCount<T, 20>,
+              std::false_type>::index> {};
 
 template<typename T>
 concept DecomposeConditionRaw = std::is_aggregate_v<T> && (std::is_empty_v<T> || DecomposeCountnImpl<T>::value != 0);
@@ -562,6 +602,21 @@ struct DecomposeHelper final {
     } else if constexpr (kNumFields == 15) {
       auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15] = data;
       return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+    } else if constexpr (kNumFields == 16) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16] = data;
+      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16);
+    } else if constexpr (kNumFields == 17) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17] = data;
+      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17);
+    } else if constexpr (kNumFields == 18) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18] = data;
+      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18);
+    } else if constexpr (kNumFields == 19) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19] = data;
+      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19);
+    } else if constexpr (kNumFields == 20) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] = data;
+      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
     }
   }
 
@@ -571,50 +626,65 @@ struct DecomposeHelper final {
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {
-      const auto& [a1] = data;
+      auto& [a1] = data;
       return std::tie(a1);
     } else if constexpr (kNumFields == 2) {
-      const auto& [a1, a2] = data;
+      auto& [a1, a2] = data;
       return std::tie(a1, a2);
     } else if constexpr (kNumFields == 3) {
-      const auto& [a1, a2, a3] = data;
+      auto& [a1, a2, a3] = data;
       return std::tie(a1, a2, a3);
     } else if constexpr (kNumFields == 4) {
-      const auto& [a1, a2, a3, a4] = data;
+      auto& [a1, a2, a3, a4] = data;
       return std::tie(a1, a2, a3, a4);
     } else if constexpr (kNumFields == 5) {
-      const auto& [a1, a2, a3, a4, a5] = data;
+      auto& [a1, a2, a3, a4, a5] = data;
       return std::tie(a1, a2, a3, a4, a5);
     } else if constexpr (kNumFields == 6) {
-      const auto& [a1, a2, a3, a4, a5, a6] = data;
+      auto& [a1, a2, a3, a4, a5, a6] = data;
       return std::tie(a1, a2, a3, a4, a5, a6);
     } else if constexpr (kNumFields == 7) {
-      const auto& [a1, a2, a3, a4, a5, a6, a7] = data;
+      auto& [a1, a2, a3, a4, a5, a6, a7] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7);
     } else if constexpr (kNumFields == 8) {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8] = data;
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8);
     } else if constexpr (kNumFields == 9) {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9] = data;
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     } else if constexpr (kNumFields == 10) {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = data;
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     } else if constexpr (kNumFields == 11) {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = data;
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
     } else if constexpr (kNumFields == 12) {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = data;
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
     } else if constexpr (kNumFields == 13) {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = data;
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
     } else if constexpr (kNumFields == 14) {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] = data;
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
     } else if constexpr (kNumFields == 15) {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15] = data;
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+    } else if constexpr (kNumFields == 16) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16);
+    } else if constexpr (kNumFields == 17) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17);
+    } else if constexpr (kNumFields == 18) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18);
+    } else if constexpr (kNumFields == 19) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19);
+    } else if constexpr (kNumFields == 20) {
+      auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
     }
   }
 
@@ -668,6 +738,21 @@ struct DecomposeHelper final {
     } else if constexpr (kNumFields == 15) {
       const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15] = data;
       return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+    } else if constexpr (kNumFields == 16) {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16);
+    } else if constexpr (kNumFields == 17) {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17);
+    } else if constexpr (kNumFields == 18) {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18);
+    } else if constexpr (kNumFields == 19) {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19);
+    } else if constexpr (kNumFields == 20) {
+      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] = data;
+      return std::tie(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
     }
   }
 };
