@@ -1,1 +1,7 @@
 package(default_visibility = ["//visibility:private"])
+
+filegroup(
+    name = "clang-format",
+    srcs = [".clang-format"],
+    visibility = ["//visibility:public"],
+)
