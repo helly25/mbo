@@ -68,7 +68,7 @@ def _clang_format_impl(ctx, src, dst):
 _clang_format_common_attrs = {
     "_clang_fallback_style": attr.string(
         doc = "The fllback stype to pass to clang-format, e.g. 'None' or 'Google'.",
-        default = "None",
+        default = "Google",
     ),
     "_clang_format_tool": attr.label(
         doc = "The target of the clang-format executable.",
