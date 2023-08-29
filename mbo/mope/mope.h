@@ -35,7 +35,7 @@ namespace mbo::mope {
 // MOPE understands single values and sections which are hierarchical dictionaries that are made up of sections and
 // values.
 //
-// 1) A single value is identified by: '{{' <name> '}}'. The value van be set by calling `SetValue`.
+// 1) A single value is identified by: '{{' <name> '}}'. The value can be set by calling `SetValue`.
 //
 // ```c++
 // mbo::mope::Templaye mope;
@@ -102,9 +102,9 @@ class Template {
 
   // Sets template variable `name` to `value`.
   // The function by default only inserts new values, but if `allow_update` is true, it will also
-  // overwrite existing values.
+  // overwrite existing values. It will however fail if an existing value is not a matching value type.
   // Returns whether `name` was newly added (or overwritten).
-  bool SetValue(std::string_view name, std::string_view value, bool allow_update = false);
+  absl::Status SetValue(std::string_view name, std::string_view value, bool allow_update = false);
 
   // Add a sub-dictionary under `name`.
   // The purpose of a sub-dictionary is to be filled, which can be done by calling `SetValue` or `AddSubDictionary`, on

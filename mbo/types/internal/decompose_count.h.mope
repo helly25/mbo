@@ -9,7 +9,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-{{max_fields=25}}
+{{max_fields=40}}
 
 #ifndef MBO_TYPES_INTERNAL_DECOMPOSE_COUNT_H_
 #define MBO_TYPES_INTERNAL_DECOMPOSE_COUNT_H_
@@ -434,6 +434,8 @@ struct DecomposeCountImpl : std::integral_constant<std::size_t, DecomposeInfo<T>
 
 #endif  // __clang__ / not __clang__ // ----------------------------------------
 
+// NOLINTBEGIN(readability-function-cognitive-complexity)
+
 template<typename T>
 struct DecomposeHelper final {
   DecomposeHelper() = delete;
@@ -487,6 +489,7 @@ struct DecomposeHelper final {
   }
 };
 
+// NOLINTEND(readability-function-cognitive-complexity)
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace mbo::types::types_internal

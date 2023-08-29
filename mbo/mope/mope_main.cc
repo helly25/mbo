@@ -18,51 +18,162 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
 #include "absl/log/globals.h"
 #include "absl/log/initialize.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_split.h"
 #include "mbo/file/artefact.h"
+#include "mbo/file/file.h"
 #include "mbo/mope/mope.h"
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables,abseil-no-namespace)
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables,abseil-no-namespace)
+ABSL_FLAG(std::string, template, "", "The templte input file (.tpl, .mope).");
+ABSL_FLAG(std::string, generate, "-", "The generated out file ('-' for stdout)");
+
 ABSL_FLAG(
     std::vector<std::string>,
     set,
     {},
-    "Acomma separated list of `name=value` pairs, used to seed the "
-    "template config.");
+    "A comma separated list of `name=value` pairs, used to seed the template config.");
+
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables,abseil-no-namespace)
 
 namespace mbo {
 
-absl::Status Process(std::string_view input_name) {
-  auto input = mbo::file::Artefact::Read(input_name);
+struct Options {
+  std::string template_name;
+  std::string generate_name;
+};
+
+absl::Status Process(const Options& opts) {
+  auto input = mbo::file::Artefact::Read(opts.template_name);
   mbo::mope::Template mope_template;
   for (const auto& set_kv : absl::GetFlag(FLAGS_set)) {
     const std::pair<std::string_view, std::string_view> kv = absl::StrSplit(set_kv, '=');
-    std::cerr << "Set '" << kv.first << "' = '" << kv.second << "'" << std::endl;
-    mope_template.SetValue(kv.first, kv.second);
+    auto result = mope_template.SetValue(kv.first, kv.second);
+    if (!result.ok()) {
+      return result;
+    }
   }
   auto result = mope_template.Expand(input->data);
   if (!result.ok()) {
     return result;
   }
-  std::cout << input->data;
+  if (opts.generate_name.empty() || opts.generate_name == "-") {
+    std::cout << input->data;
+  } else {
+    return mbo::file::SetContents(opts.generate_name, input->data);
+  }
   return absl::OkStatus();
 }
 
 }  // namespace mbo
 
+static constexpr std::string_view kHelp = R"help(mope --template=<file.mope> [ --generate=<output> ] [ args ]
+
+MOPE: Mope Over Pump Ends - Is a simple templating system.
+
+Args:
+  --template=<file.mope>  Path to the mope template.
+  --generate=<file.out>   Path to output file. This defaults to '-'- which
+                          results in using stdout as output.
+  --set=(key=val,)+       List of comma separated `key`, `value` pairs used to
+                          set simple values.
+
+Background: Pump.py (Pretty Useful for Meta Programming) is a templating system
+that allows to expand generic code mostly using simple for-loops and conditions.
+Its drawback is that it is written in Python and that it does not support
+structureed/hierarchical configuration. While moping over possible solutions,
+the idea came up to implement just the necessary dynamic pices combined with a
+structural templating system.
+
+While more dynamic features might be added in the future, it is expressily not a
+goal to become turing complete. There are many good choices available if that is
+necessary.
+
+MOPE understands single values and sections which are hierarchical dictionaries
+that are made up of sections and values.
+
+1) A single value is identified by: '{{' <name> '}}'. The value can be set by
+calling `SetValue`.
+
+```c++
+mbo::mope::Templaye mope;
+mope.SetValue("foo", "bar");
+std::string output("My {{foo}}.");
+mope.Expand(output);
+CHECK_EQ(output, "My bar.");
+```
+
+2) A section dictionary can be build by calling `AddSubDictionary` multiple
+times for the same `name` which becomes the section name. The section starts
+with '{{#' <name> '}}' and ends with '{{/' <name> '}};.
+
+```c++
+mbo::mope::Templaye mope;
+mope.AddSectionDictinary("section")->SetValue("foo", "bar");
+mope.AddSectionDictinary("section")->SetValue("foo", "-");
+mope.AddSectionDictinary("section")->SetValue("foo", "baz");
+mope.AddSectionDictinary("other")->SetValue("many", "more");
+std::string output("My {{#section}}{{foo}}{{/section}}.");
+mope.Expand(output);
+CHECK_EQ(output, "My bar-baz.");
+```
+
+3) The template supports for-loops:
+
+'{{# <name> '=' <start> ';' <end> ( ';' <step> )?'}}'...'{{/' <name> '}}'
+
+* <step> is optional and defaults to 1.
+* <step> canot be set to zero.
+* The values <start>, <end> and <step> can either be a number or a name of
+  an existing section dictionary value.
+* <step> > 0: Iteration ends when the current value > <end>.
+* <step> < 0: Iteration ends when the current value < <end>.
+
+This creates an automatic 'section' with a dynamic value under <name> which
+can be accessed by '{{' <name> '}}'.
+
+```c++
+mbo::mope::Templaye mope;
+mope.SetValue("max", "5");
+std::string output("My {{#foo=1;max;2}}{{foo}}.{{/foor}}");
+mope.Expand(output);
+CHECK_EQ(output, "My 1.3.5.");
+```
+
+4) The template allows to set tags from within the template. This allows to
+provide centralized configuration values for instance to for-loops.
+
+These are value tags with a configuration: '{{' <<name> '=' <value> '}}'
+
+```c++
+mbo::mope::Templaye mope;
+std::string output(R"(
+   {{foo_start=1}}
+   {{foo_end=8}}
+   {{foo_step=2}}
+   My {{#foo=foo_start;foo_end;foo_step}}{{foo}}.{{/foor}})"R);
+mope.Expand(output);
+CHECK_EQ(output, "My 1.3.5.7.");
+```
+)help";
+
 int main(int argc, char** argv) {
   absl::InitializeLog();
   absl::SetStderrThreshold(absl::LogSeverityAtLeast::kInfo);
+  absl::SetProgramUsageMessage(kHelp);
   std::vector<char*> args = absl::ParseCommandLine(argc, argv);
-  if (args.size() != 2) {
-    std::cerr << "Exactly 1 argument, the input filename is required.";
+  if (args.size() != 1 || absl::GetFlag(FLAGS_template).empty()) {
+    std::cerr << absl::ProgramUsageMessage();
     return 1;
   }
   args.erase(args.begin());
-  const auto result = mbo::Process(args[0]);
+  const auto result = mbo::Process({
+      .template_name = absl::GetFlag(FLAGS_template),
+      .generate_name = absl::GetFlag(FLAGS_generate),
+  });
   if (result.ok()) {
     return 0;
   }

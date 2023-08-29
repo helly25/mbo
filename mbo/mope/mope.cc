@@ -41,7 +41,12 @@ ExpandWhiteSpace(std::string_view output, std::size_t tag_pos, std::size_t tag_l
     }
     if (pos == 0 || output[pos - 1] == '\n' || output[pos - 1] == '\r') {
       // Only preceded by whitespace and followed directly by a new-line.
-      return {pos, tag_pos - pos + tag_len + 1};
+      // Must we keep very last new-line, otherwise the result is not a text file.
+      if (end == output.length()) {
+        return {pos, tag_pos - pos + tag_len};
+      } else {
+        return {pos, tag_pos - pos + tag_len + 1};
+      }
     }
   }
   return {tag_pos, tag_len};
@@ -82,7 +87,7 @@ Template* Template::AddSectionDictionary(std::string_view name) {
   return &dict.emplace_back();
 }
 
-bool Template::SetValue(std::string_view name, std::string_view value, bool allow_update) {
+absl::Status Template::SetValue(std::string_view name, std::string_view value, bool allow_update) {
   TagInfo tag{
       .name{name},
       .start = absl::StrCat("{{", name, "}}"),
@@ -90,13 +95,17 @@ bool Template::SetValue(std::string_view name, std::string_view value, bool allo
   };
   auto [it, inserted] = data_.emplace(name, TagData<std::string>{.tag = std::move(tag), .data{value}});
   if (inserted) {
-    return true;
+    return absl::OkStatus();
   }
   if (allow_update) {
-    it->second.emplace<TagData<std::string>>(TagData<std::string>{.tag = std::move(tag), .data = std::string(value)});
-    return true;
+    auto* data_str = std::get_if<TagData<std::string>>(&it->second);
+    if (data_str == nullptr) {
+      return absl::AlreadyExistsError(absl::StrCat("A value for '", name, "' already exists with a different type."));
+    }
+    data_str->data.assign(value);
+    return absl::OkStatus();
   }
-  return false;
+  return absl::AlreadyExistsError(absl::StrCat("A value for '", name, "' already exists."));
 }
 
 std::optional<const Template::TagInfo> Template::FindAndConsumeTag(std::string_view* pos, bool configured_only) {
@@ -115,7 +124,7 @@ std::optional<const Template::TagInfo> Template::FindAndConsumeTag(std::string_v
   return TagInfo{
       .name{name},
       .start{start},
-      .end = absl::StrCat("{{/", name, "}}"),
+      .end = type.empty() ? "" : absl::StrCat("{{/", name, "}}"),
       .config{config},
       .type = type.empty() ? (config.empty() ? TagType::kValue : TagType::kControl) : TagType::kSection,
   };
@@ -139,17 +148,11 @@ absl::Status Template::ExpandTags(
       return absl::InvalidArgumentError(absl::StrCat("Tag name '", tag.name, "' appears twice."));
     }
     const std::size_t tag_pos = pos.data() - output.c_str() - tag.start.length();
-    if (tag.type == TagType::kValue) {
-      // Skip the value tags, they are handled elsewhere.
-      pos = output;
-      pos.remove_prefix(tag_pos + tag.start.length());
-      continue;
-    }
     const auto [replace_pos, replace_tag_len] = ExpandWhiteSpace(output, tag_pos, tag.start.length());
-    output.erase(replace_pos, replace_tag_len);
     std::string replace_str;
     switch (tag.type) {
       case TagType::kControl: {
+        output.erase(replace_pos, replace_tag_len);
         auto result = func(tag, replace_str);
         if (!result.ok()) {
           return result;
@@ -157,6 +160,7 @@ absl::Status Template::ExpandTags(
         break;
       }
       case TagType::kSection: {
+        output.erase(replace_pos, replace_tag_len);
         const auto tag_end_pos = output.find(tag.end, replace_pos);
         if (tag_end_pos == std::string_view::npos) {
           return absl::InvalidArgumentError(absl::StrCat("Tag name '", tag.name, "' has no end tag '", tag.end, "'."));
@@ -172,6 +176,21 @@ absl::Status Template::ExpandTags(
         break;
       }
       case TagType::kValue: {
+        bool replace = false;
+        const auto it = data_.find(tag.name);
+        if (it != data_.end()) {
+          const auto* data_str = std::get_if<TagData<std::string>>(&it->second);
+          if (data_str != nullptr) {
+            output.erase(replace_pos, replace_tag_len);
+            replace_str = data_str->data;
+            replace = true;
+          }
+        }
+        if (!replace) {
+          pos = output;
+          pos.remove_prefix(replace_pos + replace_tag_len);
+          continue;
+        }
         break;
       }
     }
@@ -270,8 +289,7 @@ absl::Status Template::ExpandConfiguredTag(const TagInfo& tag, std::string& outp
       break;
     }
     case TagType::kControl: {
-      SetValue(tag.name, tag.config, true);
-      return absl::OkStatus();
+      return SetValue(tag.name, tag.config, true);
     }
     case TagType::kValue: {
       break;  // Unexpected. Ignore.

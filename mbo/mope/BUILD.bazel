@@ -10,6 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("mope.bzl", "mope_test")
+
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
@@ -42,4 +45,17 @@ cc_binary(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
     ],
+)
+
+mope_test(
+    name = "mope_test",
+    srcs = glob(["tests/*.mope"]),
+    outs = glob(["tests/*.golden"]),
+)
+
+bzl_library(
+    name = "mope_bzl",
+    srcs = ["mope.bzl"],
+    deps = ["//mbo/diff:diff_bzl"],
+    visibility = ["//visibility:public"],
 )
