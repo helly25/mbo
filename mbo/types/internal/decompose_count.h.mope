@@ -88,12 +88,9 @@ concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 template<typename T, size_t N, typename = void>
 struct DecomposeCount final : std::false_type {};
 
+{{#num_fields=1;max_fields}}
 template<typename T>
-struct DecomposeCount<T, 1, std::void_t<decltype([]() { const auto& [a1] = T(); })>> final : std::true_type {};
-
-{{#num_fields=2;max_fields}}
-template<typename T>
-struct DecomposeCount<T, {{num_fields}}, std::void_t<decltype([]() { const auto& [a1{{#field=2;num_fields}}, a{{field}}{{/field}}] = T(); })>> final : std::true_type {};
+struct DecomposeCount<T, {{num_fields}}, std::void_t<decltype([]() { const auto& [{{#field=1;num_fields;1;', '}}a{{field}}{{/field}}] = T(); })>> final : std::true_type {};
 
 {{/num_fields}}
 template<typename T>
@@ -101,10 +98,9 @@ struct DecomposeCountnImpl
     : std::integral_constant<
           std::size_t,
           CaseIndexImpl<
-              {{#num_fields=1;max_fields}}
-              DecomposeCount<T, {{num_fields}}>,
-              {{/num_fields}}
-              std::false_type>::index> {};
+              {{#num_fields=1;max_fields;1;', '}}
+              DecomposeCount<T, {{num_fields}}>
+              {{/num_fields}}>::index> {};
 
 template<typename T>
 concept DecomposeConditionRaw = std::is_aggregate_v<T> && (std::is_empty_v<T> || DecomposeCountnImpl<T>::value != 0);
@@ -445,13 +441,10 @@ struct DecomposeHelper final {
     constexpr auto kNumFields = DecomposeCountImpl<U>::value;
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
-    } else if constexpr (kNumFields == 1) {
-      auto& [a1] = data;
-      return std::make_tuple(a1);
-    {{#num_fields=2;max_fields}}
+    {{#num_fields=1;max_fields}}
     } else if constexpr (kNumFields == {{num_fields}}) {
-      auto& [a1{{#field=2;num_fields}}, a{{field}}{{/field}}] = data;
-      return std::make_tuple(a1{{#field=2;num_fields}}, a{{field}}{{/field}});
+      auto& [{{#field=1;num_fields;1;', '}}a{{field}}{{/field}}] = data;
+      return std::make_tuple({{#field=1;num_fields;1;', '}}a{{field}}{{/field}});
     {{/num_fields}}
     }
   }
@@ -461,13 +454,10 @@ struct DecomposeHelper final {
     constexpr auto kNumFields = DecomposeCountImpl<U>::value;
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
-    } else if constexpr (kNumFields == 1) {
-      auto& [a1] = data;
-      return std::tie(a1);
-    {{#num_fields=2;max_fields}}
+    {{#num_fields=1;max_fields}}
     } else if constexpr (kNumFields == {{num_fields}}) {
-      auto& [a1{{#field=2;num_fields}}, a{{field}}{{/field}}] = data;
-      return std::tie(a1{{#field=2;num_fields}}, a{{field}}{{/field}});
+      auto& [{{#field=1;num_fields;1;', '}}a{{field}}{{/field}}] = data;
+      return std::tie({{#field=1;num_fields;1;', '}}a{{field}}{{/field}});
     {{/num_fields}}
     }
   }
@@ -477,13 +467,10 @@ struct DecomposeHelper final {
     constexpr auto kNumFields = DecomposeCountImpl<U>::value;
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
-    } else if constexpr (kNumFields == 1) {
-      const auto& [a1] = data;
-      return std::tie(a1);
-    {{#num_fields=2;max_fields}}
+    {{#num_fields=1;max_fields}}
     } else if constexpr (kNumFields == {{num_fields}}) {
-      const auto& [a1{{#field=2;num_fields}}, a{{field}}{{/field}}] = data;
-      return std::tie(a1{{#field=2;num_fields}}, a{{field}}{{/field}});
+      const auto& [{{#field=1;num_fields;1;', '}}a{{field}}{{/field}}] = data;
+      return std::tie({{#field=1;num_fields;1;', '}}a{{field}}{{/field}});
     {{/num_fields}}
     }
   }

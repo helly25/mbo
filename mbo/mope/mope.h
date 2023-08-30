@@ -14,10 +14,12 @@
 #include <string>
 #include <string_view>
 #include <variant>
+#include <vector>
 
 #include "absl/container/node_hash_map.h"
 #include "absl/functional/function_ref.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "mbo/types/extend.h"
 
 namespace mbo::mope {
@@ -143,6 +145,7 @@ class Template {
     int start = 0;
     int end = 0;
     int step = 1;
+    std::string join;
     mutable bool expanding = false;
     mutable int curr = 0;
   };
@@ -151,6 +154,7 @@ class Template {
     std::string start;
     std::string end;
     std::string step;
+    std::string join;
   };
 
   // Type `Data` holds all possible information variants. Each of these needs
@@ -159,17 +163,22 @@ class Template {
 
   static std::optional<const Template::TagInfo> FindAndConsumeTag(std::string_view* pos, bool configured_only);
 
+  static absl::StatusOr<std::vector<std::string>> ParseStringList(std::string_view data);
+
   absl::Status RemoveTags(std::string& output);
+  absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, std::string& value) const;
   absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, int& value) const;
   absl::Status ExpandRangeTag(const TagInfo& tag, Range& range, std::string& output);
   absl::Status ExpandRangeData(const TagInfo& tag, const RangeData& range_data, std::string& output);
+  absl::Status ExpandConfiguredSection(std::string_view name, std::vector<std::string> str_list, std::string &output);
+  absl::Status ExpandConfiguredList(const TagInfo& tag, std::string_view str_list_data, std::string& output);
   absl::Status ExpandConfiguredTag(const TagInfo& tag, std::string& output);
   absl::Status ExpandTags(
       bool configured_only,
       std::string& output,
       absl::FunctionRef<absl::Status(const TagInfo& tag, std::string&)> func);
 
-  absl::Status Expand(TagData<SectionDictionary>& tag, std::string& output);
+  static absl::Status Expand(TagData<SectionDictionary>& tag, std::string& output);
   static absl::Status Expand(const TagData<Range>& tag, std::string& output);
   absl::Status Expand(const TagData<std::string>& tag, std::string& output) const;
 

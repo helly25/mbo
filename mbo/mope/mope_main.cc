@@ -117,7 +117,7 @@ CHECK_EQ(output, "My bar-baz.");
 
 3) The template supports for-loops:
 
-'{{# <name> '=' <start> ';' <end> ( ';' <step> )?'}}'...'{{/' <name> '}}'
+'{{#'<name>'='<start>';'<end>(';'<step>(';'<join> )? )? '}}'...'{{/'<name>'}}'
 
 * <step> is optional and defaults to 1.
 * <step> canot be set to zero.
@@ -125,6 +125,8 @@ CHECK_EQ(output, "My bar-baz.");
   an existing section dictionary value.
 * <step> > 0: Iteration ends when the current value > <end>.
 * <step> < 0: Iteration ends when the current value < <end>.
+* <step>:     optional, functions as a joiner. The value can be a reference or
+              a string in single (') or double quotes (").
 
 This creates an automatic 'section' with a dynamic value under <name> which
 can be accessed by '{{' <name> '}}'.
@@ -132,7 +134,7 @@ can be accessed by '{{' <name> '}}'.
 ```c++
 mbo::mope::Templaye mope;
 mope.SetValue("max", "5");
-std::string output("My {{#foo=1;max;2}}{{foo}}.{{/foor}}");
+std::string output("My {{#foo=1;max;2;"."}}{{foo}}{{/foor}}");
 mope.Expand(output);
 CHECK_EQ(output, "My 1.3.5.");
 ```
@@ -148,10 +150,26 @@ std::string output(R"(
    {{foo_start=1}}
    {{foo_end=8}}
    {{foo_step=2}}
-   My {{#foo=foo_start;foo_end;foo_step}}{{foo}}.{{/foor}})"R);
+   My {{#foo=foo_start;foo_end;foo_step;'.'}}{{foo}}{{/foor}})"R);
 mope.Expand(output);
 CHECK_EQ(output, "My 1.3.5.7.");
 ```
+
+5) The template supports lists:
+
+'{{#' <name> '=[' <values> ']}}'...'{{/'<name>'}}'
+
+<values>: is a comma separated list which supports (limited, simple only) C++
+          escaping. In addition to the standard C++ escapes, the comma itself
+          can be escaped.
+
+```c++
+mbo::mope::Templaye mope;
+std::string output(R"({{#foo=['1,2',3\,4]}}[{{foo}}]{{/foo}})"R);
+mope.Expand(output);
+CHECK_EQ(output, "[1,2][3,4]");
+```
+
 )help";
 
 int main(int argc, char** argv) {

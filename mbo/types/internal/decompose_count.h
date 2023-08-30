@@ -437,8 +437,7 @@ struct DecomposeCountnImpl
               DecomposeCount<T, 37>,
               DecomposeCount<T, 38>,
               DecomposeCount<T, 39>,
-              DecomposeCount<T, 40>,
-              std::false_type>::index> {};
+              DecomposeCount<T, 40>>::index> {};
 
 template<typename T>
 concept DecomposeConditionRaw = std::is_aggregate_v<T> && (std::is_empty_v<T> || DecomposeCountnImpl<T>::value != 0);
