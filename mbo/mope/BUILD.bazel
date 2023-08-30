@@ -21,6 +21,7 @@ cc_library(
     hdrs = ["mope.h"],
     deps = [
         "//mbo/types:extend_cc",
+        "//mbo/status:status_macros_cc",
         "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:node_hash_map",
         "@com_google_absl//absl/log:absl_log",
@@ -40,6 +41,7 @@ cc_binary(
     deps = [
         ":mope_cc",
         "//mbo/file:artefact_cc",
+        "//mbo/status:status_macros_cc",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/log:initialize",
         "@com_google_absl//absl/status",

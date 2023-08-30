@@ -26,6 +26,7 @@
 #include "mbo/file/artefact.h"
 #include "mbo/file/file.h"
 #include "mbo/mope/mope.h"
+#include "mbo/status/status_macros.h"
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables,abseil-no-namespace)
 ABSL_FLAG(std::string, template, "", "The templte input file (.tpl, .mope).");
@@ -51,21 +52,14 @@ absl::Status Process(const Options& opts) {
   mbo::mope::Template mope_template;
   for (const auto& set_kv : absl::GetFlag(FLAGS_set)) {
     const std::pair<std::string_view, std::string_view> kv = absl::StrSplit(set_kv, '=');
-    auto result = mope_template.SetValue(kv.first, kv.second);
-    if (!result.ok()) {
-      return result;
-    }
+    MBO_STATUS_RETURN_IF_ERROR(mope_template.SetValue(kv.first, kv.second));
   }
-  auto result = mope_template.Expand(input->data);
-  if (!result.ok()) {
-    return result;
-  }
+  MBO_STATUS_RETURN_IF_ERROR(mope_template.Expand(input->data));
   if (opts.generate_name.empty() || opts.generate_name == "-") {
     std::cout << input->data;
-  } else {
-    return mbo::file::SetContents(opts.generate_name, input->data);
+    return absl::OkStatus();
   }
-  return absl::OkStatus();
+  return mbo::file::SetContents(opts.generate_name, input->data);
 }
 
 }  // namespace mbo

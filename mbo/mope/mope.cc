@@ -23,6 +23,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_replace.h"
+#include "mbo/status/status_macros.h"
 #include "re2/re2.h"
 
 namespace mbo::mope {
@@ -150,43 +151,30 @@ absl::Status Template::ExpandTags(
     const std::size_t tag_pos = pos.data() - output.c_str() - tag.start.length();
     const auto [replace_pos, replace_tag_len] = ExpandWhiteSpace(output, tag_pos, tag.start.length());
     std::string replace_str;
+    std::size_t replace_len = 0;
     switch (tag.type) {
       case TagType::kControl: {
-        output.erase(replace_pos, replace_tag_len);
-        auto result = func(tag, replace_str);
-        if (!result.ok()) {
-          return result;
-        }
+        replace_len = replace_tag_len;
+        MBO_STATUS_RETURN_IF_ERROR(func(tag, replace_str));
         break;
       }
       case TagType::kSection: {
-        output.erase(replace_pos, replace_tag_len);
-        const auto tag_end_pos = output.find(tag.end, replace_pos);
+        const auto tag_end_pos = output.find(tag.end, replace_pos + replace_tag_len);
         if (tag_end_pos == std::string_view::npos) {
           return absl::InvalidArgumentError(absl::StrCat("Tag name '", tag.name, "' has no end tag '", tag.end, "'."));
         }
         const auto [replace_end, replace_end_len] = ExpandWhiteSpace(output, tag_end_pos, tag.end.length());
-        const std::size_t replace_len = replace_end - replace_pos;
-        replace_str = output.substr(replace_pos, replace_len);
-        output.erase(replace_pos, replace_len + replace_end_len);
-        auto result = func(tag, replace_str);
-        if (!result.ok()) {
-          return result;
-        }
+        replace_len = replace_end + replace_end_len - replace_pos;  // whole replace incl. tags
+        replace_str = output.substr(replace_pos + replace_tag_len, replace_len - replace_tag_len - replace_end_len);
+        MBO_STATUS_RETURN_IF_ERROR(func(tag, replace_str));
         break;
       }
       case TagType::kValue: {
-        bool replace = false;
         const auto it = data_.find(tag.name);
-        if (it != data_.end()) {
-          const auto* data_str = std::get_if<TagData<std::string>>(&it->second);
-          if (data_str != nullptr) {
-            output.erase(replace_pos, replace_tag_len);
-            replace_str = data_str->data;
-            replace = true;
-          }
-        }
-        if (!replace) {
+        if (it != data_.end() && std::get_if<TagData<std::string>>(&it->second) != nullptr) {
+          replace_len = replace_tag_len;
+          replace_str = std::get<TagData<std::string>>(it->second).data;
+        } else {
           pos = output;
           pos.remove_prefix(replace_pos + replace_tag_len);
           continue;
@@ -194,6 +182,7 @@ absl::Status Template::ExpandTags(
         break;
       }
     }
+    output.erase(replace_pos, replace_len);
     output.insert(replace_pos, replace_str);
     pos = output;
     pos.remove_prefix(replace_pos + replace_str.length());
@@ -238,10 +227,7 @@ absl::Status Template::ExpandRangeTag(const TagInfo& /*tag*/, Range& range, std:
   for (range.curr = range.start; range.step > 0 ? range.curr <= range.end : range.curr >= range.end;
        range.curr += range.step) {
     std::string expanded = original;
-    auto result = Expand(expanded);
-    if (!result.ok()) {
-      return result;
-    }
+    MBO_STATUS_RETURN_IF_ERROR(Expand(expanded));
     output.append(expanded);
   }
   return absl::OkStatus();
@@ -249,16 +235,9 @@ absl::Status Template::ExpandRangeTag(const TagInfo& /*tag*/, Range& range, std:
 
 absl::Status Template::ExpandRangeData(const TagInfo& tag, const RangeData& range_data, std::string& output) {
   Range range;
-  auto result = MaybeLookup(tag, range_data.start, range.start);
-  if (result.ok()) {
-    result = MaybeLookup(tag, range_data.end, range.end);
-  }
-  if (result.ok()) {
-    result = MaybeLookup(tag, range_data.step, range.step);
-  }
-  if (!result.ok()) {
-    return result;
-  }
+  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.start, range.start));
+  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.end, range.end));
+  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.step, range.step));
   if (range.step == 0) {
     return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' cannot have step == 0."));
   }
@@ -271,7 +250,7 @@ absl::Status Template::ExpandRangeData(const TagInfo& tag, const RangeData& rang
     return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' appears twice."));
   }
   auto& tag_range = std::get<TagData<Range>>(r_tag_it->second).data;
-  result = ExpandRangeTag(tag, tag_range, output);
+  auto result = ExpandRangeTag(tag, tag_range, output);
   data_.erase(tag.name);
   return result;
 }
@@ -306,16 +285,12 @@ absl::Status Template::RemoveTags(std::string& output) {
 }
 
 absl::Status Template::Expand(std::string& output) {
-  auto result =
-      ExpandTags(true, output, [this](const TagInfo& tag, std::string& out) { return ExpandConfiguredTag(tag, out); });
-  if (!result.ok()) {
-    return result;
-  }
+  MBO_STATUS_RETURN_IF_ERROR(
+      ExpandTags(true, output, [this](const TagInfo &tag, std::string &out) {
+        return ExpandConfiguredTag(tag, out);
+      }));
   for (auto& [name, data] : data_) {
-    absl::Status result = std::visit([&](auto& typed_data) { return Expand(typed_data, output); }, data);
-    if (!result.ok()) {
-      return result;
-    }
+    MBO_STATUS_RETURN_IF_ERROR(std::visit([&](auto& typed_data) { return Expand(typed_data, output); }, data));
   }
   return RemoveTags(output);
 }
@@ -344,10 +319,7 @@ absl::Status Template::Expand(TagData<SectionDictionary>& tag, std::string& outp
     std::size_t pos_insert = pos_end + end_len;
     for (auto& section : tag.data) {
       std::string value = output.substr(pos_start + start_len, tmpl_len);  // We still hold the "input" part.
-      auto result = section.Expand(value);
-      if (!result.ok()) {
-        return result;
-      }
+      MBO_STATUS_RETURN_IF_ERROR(section.Expand(value));
       output.insert(pos_insert, value);
       pos_insert += value.length();
     }
