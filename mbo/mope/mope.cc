@@ -358,6 +358,8 @@ Template::ParseStringList(std::string_view data) {
       }
       chr = data[pos];
       switch (chr) {
+      case '{':
+      case '}':
       case ',': // CUSTOM all other once follow
                 // https://en.cppreference.com/w/cpp/language/escape
       case '\'':

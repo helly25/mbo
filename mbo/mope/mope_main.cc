@@ -160,8 +160,9 @@ CHECK_EQ(output, "My 1.3.5.7.");
 '{{#' <name> '=[' <values> ']}}'...'{{/'<name>'}}'
 
 <values>: is a comma separated list which supports (limited, simple only) C++
-          escaping. In addition to the standard C++ escapes, the comma itself
-          can be escaped.
+          escaping. In addition to the standard C++ escapes, the comma ','
+          and the curly braces '{', '}' can also be escaped to simplify template
+          writing.
 
 ```c++
 mbo::mope::Templaye mope;
