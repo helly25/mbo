@@ -170,7 +170,7 @@ class Template {
   absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, int& value) const;
   absl::Status ExpandRangeTag(const TagInfo& tag, Range& range, std::string& output);
   absl::Status ExpandRangeData(const TagInfo& tag, const RangeData& range_data, std::string& output);
-  absl::Status ExpandConfiguredSection(std::string_view name, std::vector<std::string> str_list, std::string &output);
+  absl::Status ExpandConfiguredSection(std::string_view name, std::vector<std::string> str_list, std::string& output);
   absl::Status ExpandConfiguredList(const TagInfo& tag, std::string_view str_list_data, std::string& output);
   absl::Status ExpandConfiguredTag(const TagInfo& tag, std::string& output);
   absl::Status ExpandTags(
@@ -180,7 +180,7 @@ class Template {
 
   static absl::Status Expand(TagData<SectionDictionary>& tag, std::string& output);
   static absl::Status Expand(const TagData<Range>& tag, std::string& output);
-  absl::Status Expand(const TagData<std::string>& tag, std::string& output) const;
+  static absl::Status Expand(const TagData<std::string>& tag, std::string& output);
 
   template<typename Sink>
   friend void AbslStringify(Sink& sink, const TagType& value);
