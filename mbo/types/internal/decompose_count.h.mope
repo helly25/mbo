@@ -90,7 +90,7 @@ struct DecomposeCount final : std::false_type {};
 
 {{#num_fields=1;max_fields}}
 template<typename T>
-struct DecomposeCount<T, {{num_fields}}, std::void_t<decltype([]() { const auto& [{{#field=1;num_fields;1;', '}}a{{field}}{{/field}}] = T(); })>> final : std::true_type {};
+struct DecomposeCount<T, {{num_fields}}, std::void_t<decltype([]() { const auto& [{{#field=1;num_fields;;', '}}a{{field}}{{/field}}] = T(); })>> final : std::true_type {};
 
 {{/num_fields}}
 template<typename T>
@@ -98,7 +98,7 @@ struct DecomposeCountnImpl
     : std::integral_constant<
           std::size_t,
           CaseIndexImpl<
-              {{#num_fields=1;max_fields;1;', '}}
+              {{#num_fields=1;max_fields;;', '}}
               DecomposeCount<T, {{num_fields}}>
               {{/num_fields}}>::index> {};
 
@@ -443,8 +443,8 @@ struct DecomposeHelper final {
       return std::make_tuple();
     {{#num_fields=1;max_fields}}
     } else if constexpr (kNumFields == {{num_fields}}) {
-      auto& [{{#field=1;num_fields;1;', '}}a{{field}}{{/field}}] = data;
-      return std::make_tuple({{#field=1;num_fields;1;', '}}a{{field}}{{/field}});
+      auto& [{{#field=1;num_fields;;', '}}a{{field}}{{/field}}] = data;
+      return std::make_tuple({{#field=1;num_fields;;', '}}a{{field}}{{/field}});
     {{/num_fields}}
     }
   }
@@ -456,8 +456,8 @@ struct DecomposeHelper final {
       return std::make_tuple();
     {{#num_fields=1;max_fields}}
     } else if constexpr (kNumFields == {{num_fields}}) {
-      auto& [{{#field=1;num_fields;1;', '}}a{{field}}{{/field}}] = data;
-      return std::tie({{#field=1;num_fields;1;', '}}a{{field}}{{/field}});
+      auto& [{{#field=1;num_fields;;', '}}a{{field}}{{/field}}] = data;
+      return std::tie({{#field=1;num_fields;;', '}}a{{field}}{{/field}});
     {{/num_fields}}
     }
   }
@@ -469,8 +469,8 @@ struct DecomposeHelper final {
       return std::make_tuple();
     {{#num_fields=1;max_fields}}
     } else if constexpr (kNumFields == {{num_fields}}) {
-      const auto& [{{#field=1;num_fields;1;', '}}a{{field}}{{/field}}] = data;
-      return std::tie({{#field=1;num_fields;1;', '}}a{{field}}{{/field}});
+      const auto& [{{#field=1;num_fields;;', '}}a{{field}}{{/field}}] = data;
+      return std::tie({{#field=1;num_fields;;', '}}a{{field}}{{/field}});
     {{/num_fields}}
     }
   }

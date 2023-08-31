@@ -22,7 +22,6 @@
 #include "absl/strings/numbers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/str_join.h"
 #include "absl/strings/str_replace.h"
 #include "mbo/status/status_macros.h"
 #include "re2/re2.h"
@@ -436,15 +435,10 @@ absl::Status Template::ExpandConfiguredList(const TagInfo &tag,
                                             std::string &output) {
   MBO_STATUS_ASSIGN_OR_RETURN(auto str_list, ParseStringList(str_list_data));
   data_.erase(tag.name); // Cannot be present.
-  ABSL_LOG(INFO) << "FOUND LIST: " << tag.name << " = "
-                 << absl::StrJoin(str_list, ", ");
   // CONSIDER: A specialized type would make this faster. But also less generic
   // and thus complicate extensions.
-  ABSL_LOG(INFO) << "EXPANDING LIST: " << tag.name;
-  ABSL_LOG(INFO) << "OUTPUT:<" << output << ">";
   MBO_STATUS_RETURN_IF_ERROR(
       ExpandConfiguredSection(tag.name, str_list, output));
-  ABSL_LOG(INFO) << "EXPANDING LIST DONE: " << tag.name;
   data_.erase(tag.name); // Remove, cannot be left over.
   return absl::OkStatus();
 }
@@ -455,7 +449,7 @@ absl::Status Template::ExpandConfiguredTag(const TagInfo &tag,
   switch (tag.type) {
   case TagType::kSection: {
     static constexpr LazyRE2 kReFor = {
-        R"(\s*(-?\d+|[_a-zA-Z]\w*)\s*;\s*(-?\d+|[_a-zA-Z]\w*)\s*(?:;\s*(-?\d+|[_a-zA-Z]\w*)\s*(?:;([^;]*))?)?)"};
+        R"(\s*(-?\d+|[_a-zA-Z]\w*)\s*;\s*(-?\d+|[_a-zA-Z]\w*)\s*(?:;\s*(|-?\d+|[_a-zA-Z]\w*)\s*(?:;([^;]*))?)?)"};
     RangeData range;
     if (RE2::FullMatch(tag.config, *kReFor, &range.start, &range.end,
                        &range.step, &range.join)) {
