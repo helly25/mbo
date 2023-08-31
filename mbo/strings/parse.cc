@@ -189,6 +189,7 @@ absl::StatusOr<std::vector<std::string>> ParseStringList(const ParseOptions& opt
   if (data.size() == 1 && absl::StrContains(str_options.stop_at_any_of, data[0])) {
     result.emplace_back("");
     result.emplace_back("");
+    data.remove_prefix(1);
     return result;
   }
   while (true) {
@@ -199,6 +200,8 @@ absl::StatusOr<std::vector<std::string>> ParseStringList(const ParseOptions& opt
     }
     if (data.size() == 1 && absl::StrContains(str_options.stop_at_any_of, data[0])) {
       result.emplace_back("");
+      data.remove_prefix(1);
+      return result;
     }
     data.remove_prefix(1);
   }

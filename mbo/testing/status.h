@@ -184,9 +184,17 @@ class StatusIsMatcher {
       if (message_match) {
         *listener << "has a matching message";
       } else {
-        *listener << "has a non matching message";
-        if (!inner.str().empty()) {
-          *listener << " " << inner.str();
+        *listener << "has message ";
+        if (actual_status.message().empty()) {
+          *listener << " an empty message ";
+        } else {
+          *listener << "'" << actual_status.message() << "' ";
+        }
+        *listener << "which does not match";
+        if (inner.str().empty()) {
+          *listener << " the expected empty message";
+        } else {
+          *listener << " '" << inner.str() << "'";
         }
       }
     }

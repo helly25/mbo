@@ -138,7 +138,7 @@ TEST_F(StatusMatcherTest, StatusIs) {
         MatchAndExplain(matcher, absl::UnknownError("Message")),
         Pair(
             false,
-            "which has status UNKNOWN that isn't OK and has a non matching "
+            "which has status UNKNOWN that isn't OK and has message 'Message' which does not match the expected empty "
             "message"));
   }
   {
@@ -162,7 +162,7 @@ TEST_F(StatusMatcherTest, StatusIs) {
         Pair(
             false,
             "which has matching status CANCELLED "
-            "and has a non matching message"));
+            "and has message 'Message' which does not match the expected empty message"));
   }
   {
     const StatusIsMatcher matcher(absl::StatusCode::kDataLoss, IsEmpty());
@@ -174,7 +174,7 @@ TEST_F(StatusMatcherTest, StatusIs) {
         Pair(
             false,
             "which has matching status DATA_LOSS "
-            "and has a non matching message whose size is 7"));
+            "and has message 'Message' which does not match 'whose size is 7'"));
   }
 }
 
