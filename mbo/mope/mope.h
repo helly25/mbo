@@ -19,7 +19,6 @@
 #include "absl/container/node_hash_map.h"
 #include "absl/functional/function_ref.h"
 #include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "mbo/types/extend.h"
 
 namespace mbo::mope {
@@ -162,8 +161,6 @@ class Template {
   using Data = std::variant<TagData<SectionDictionary>, TagData<Range>, TagData<std::string>>;
 
   static std::optional<const Template::TagInfo> FindAndConsumeTag(std::string_view* pos, bool configured_only);
-
-  static absl::StatusOr<std::vector<std::string>> ParseStringList(std::string_view data);
 
   absl::Status RemoveTags(std::string& output);
   absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, std::string& value) const;

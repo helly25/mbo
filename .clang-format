@@ -26,11 +26,11 @@ EmptyLineBeforeAccessModifier: Always
 FixNamespaceComments: true
 IndentRequiresClause: false
 InsertBraces: true
-#InsertNewlineAtEOF: true
-# InsertTrailingCommas: true <- Would change structs to never bin pack
-#IntegerLiteralSeparator:
-#  Binary: 0
-#  Decimal: 3
+InsertNewlineAtEOF: true
+## InsertTrailingCommas: true <- Would change structs to never bin pack
+IntegerLiteralSeparator:
+  Binary: 0
+  Decimal: 3
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 1
 PackConstructorInitializers: NextLine
@@ -40,9 +40,9 @@ QualifierAlignment: Left
 ReferenceAlignment: Left
 RemoveSemicolon: true
 RequiresClausePosition: OwnLine
-#RequiresExpressionIndentation: OuterScope
+RequiresExpressionIndentation: OuterScope
 SeparateDefinitionBlocks: Always
-#SortUsingDeclarations: Lexicographic
+SortUsingDeclarations: Lexicographic
 SpaceAfterTemplateKeyword: false
 SpaceAroundPointerQualifiers: After
 Standard: c++20

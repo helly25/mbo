@@ -19,3 +19,29 @@ cc_test(
     ],
     size = "small",
 )
+
+cc_library(
+    name = "parse_cc",
+    srcs = ["parse.cc"],
+    hdrs = ["parse.h"],
+    deps = [
+        "//mbo/status:status_macros_cc",
+        "@com_google_absl//absl/log:absl_check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "parse_test",
+    srcs = ["parse_test.cc"],
+    deps = [
+        ":parse_cc",
+        "//mbo/status:status_macros_cc",
+        "//mbo/testing:status_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+    size = "small",
+)

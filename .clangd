@@ -1,2 +1,12 @@
+CompileFlags:
+    Compiler: /usr/bin/clang
 Diagnostics:
     UnusedIncludes: Strict
+
+---
+If:
+  PathMatch: .*_test.cc
+
+Diagnostics:
+    ClangTidy:
+        Remove: [cppcoreguidelines-avoid-non-const-global-variables, cppcoreguidelines-owning-memory]

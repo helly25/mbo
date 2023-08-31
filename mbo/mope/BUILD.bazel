@@ -22,6 +22,7 @@ cc_library(
     deps = [
         "//mbo/types:extend_cc",
         "//mbo/status:status_macros_cc",
+        "//mbo/strings:parse_cc",
         "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:node_hash_map",
         "@com_google_absl//absl/log:absl_log",

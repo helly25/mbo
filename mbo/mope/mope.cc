@@ -24,6 +24,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_replace.h"
 #include "mbo/status/status_macros.h"
+#include "mbo/strings/parse.h"
 #include "re2/re2.h"
 
 namespace mbo::mope {
@@ -285,72 +286,6 @@ absl::Status Template::ExpandRangeData(const TagInfo& tag, const RangeData& rang
   return result;
 }
 
-absl::StatusOr<std::vector<std::string>> Template::ParseStringList(std::string_view data) {
-  std::vector<std::string> result;
-  std::string curr;
-  bool quote = false;
-  for (std::size_t pos = 0; pos < data.size(); ++pos) {
-    char chr = data[pos];
-    switch (chr) {
-      default: break;  // normal character, just add.
-      case ',':
-        if (!quote) {
-          // A Split!
-          result.push_back(curr);
-          curr.clear();
-          if (pos + 1 == data.size()) {
-            result.emplace_back("");
-            return absl::OkStatus();
-          }
-          continue;
-        }
-        break;
-      case '"': quote = !quote; break;
-      case '\\': {
-        if (++pos == data.size()) {
-          return absl::InvalidArgumentError("StringList ends in '\\'.");
-        }
-        chr = data[pos];
-        switch (chr) {
-          case '{':
-          case '}':
-          case ',':  // CUSTOM all other once follow
-                     // https://en.cppreference.com/w/cpp/language/escape
-          case '\'':
-          case '"':
-          case '?':
-          case '\\': curr += chr; continue;
-          case 'a': curr += '\a'; continue;
-          case 'b': curr += '\b'; continue;
-          case 'f': curr += '\f'; continue;
-          case 'n': curr += '\n'; continue;
-          case 'r': curr += '\r'; continue;
-          case 't': curr += '\t'; continue;
-          case 'v': curr += '\v'; continue;
-          case '0':  // octal
-          case '1':  // octal
-          case '2':  // octal
-          case '3':  // octal
-          case '4':  // octal
-          case '5':  // octal
-          case '6':  // octal
-          case '7':  // octal
-          case 'x':  // \x{n...} C++23: hex; without {} is pre-C++23
-          case 'o':  // \o{n...} C++23: octal 1..3
-          case 'u':  // \u{nn..}: unicode 4 hex C++23
-          case 'U':  // Unicode 8-hex
-          case 'N':  // \N{Name}: Named unicode char
-            return absl::UnimplementedError("StringList has not yet supported escape sequence.");
-          default: return absl::InvalidArgumentError("StringList has unsupported escape sequence.");
-        }  // switch for escape
-      }    // case escape
-    }      // switch char
-    curr += chr;
-  }
-  result.push_back(curr);
-  return result;
-}
-
 absl::Status Template::ExpandConfiguredSection(
     std::string_view name,
     std::vector<std::string> str_list,  // NOLINT(performance-unnecessary-value-param): Incorrect, we move strings out.
@@ -367,7 +302,10 @@ absl::Status Template::ExpandConfiguredSection(
 }
 
 absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view str_list_data, std::string& output) {
-  MBO_STATUS_ASSIGN_OR_RETURN(auto str_list, ParseStringList(str_list_data));
+  static constexpr mbo::strings::ParseOptions kConfiguredListParseOptions {
+    .stop_at_any_of = ",",
+  };
+  MBO_STATUS_ASSIGN_OR_RETURN(auto str_list, mbo::strings::ParseStringList(kConfiguredListParseOptions, str_list_data));
   data_.erase(tag.name);  // Cannot be present.
   // CONSIDER: A specialized type would make this faster. But also less generic
   // and thus complicate extensions.
