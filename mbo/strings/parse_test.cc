@@ -24,7 +24,6 @@
 namespace mbo::strings {
 namespace {
 
-using ::mbo::testing::IsOk;
 using ::mbo::testing::IsOkAndHolds;
 using ::mbo::testing::StatusIs;
 using ::testing::ElementsAre;
@@ -96,6 +95,8 @@ TEST_F(ParseTest, ParseStringList) {
   EXPECT_THAT(ParseStringList({.stop_at_any_of = ","}, "4,2"), IsOkAndHolds(Pair(ElementsAre("4", "2"), "")));
   EXPECT_THAT(
       ParseStringList({.stop_at_any_of = ".,;"}, "4,3;2.1"), IsOkAndHolds(Pair(ElementsAre("4", "3", "2", "1"), "")));
+  EXPECT_THAT(
+      ParseStringList({.stop_at_any_of = ".,;"}, ".,;."), IsOkAndHolds(Pair(ElementsAre("","", "", "", ""), "")));
 }
 
 }  // namespace
