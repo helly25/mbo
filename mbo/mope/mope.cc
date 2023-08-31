@@ -29,8 +29,10 @@
 namespace mbo::mope {
 namespace {
 
-std::pair<std::size_t, std::size_t>
-ExpandWhiteSpace(std::string_view output, std::size_t tag_pos, std::size_t tag_len) {
+std::pair<std::size_t, std::size_t> ExpandWhiteSpace(
+    std::string_view output,
+    std::size_t tag_pos,
+    std::size_t tag_len) {
   std::size_t end = tag_pos + tag_len;
   // Is the tag followed by a new-line?
   if (end < output.size() && (output[end] == '\n' || output[end] == '\r')) {
@@ -349,8 +351,10 @@ absl::StatusOr<std::vector<std::string>> Template::ParseStringList(std::string_v
   return result;
 }
 
-absl::Status
-Template::ExpandConfiguredSection(std::string_view name, std::vector<std::string> str_list, std::string& output) {
+absl::Status Template::ExpandConfiguredSection(
+    std::string_view name,
+    std::vector<std::string> str_list,  // NOLINT(performance-unnecessary-value-param): Incorrect, we move strings out.
+    std::string& output) {
   const std::string original(std::move(output));
   output = "";
   for (auto& str : str_list) {
@@ -367,7 +371,7 @@ absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view
   data_.erase(tag.name);  // Cannot be present.
   // CONSIDER: A specialized type would make this faster. But also less generic
   // and thus complicate extensions.
-  MBO_STATUS_RETURN_IF_ERROR(ExpandConfiguredSection(tag.name, str_list, output));
+  MBO_STATUS_RETURN_IF_ERROR(ExpandConfiguredSection(tag.name, std::move(str_list), output));
   data_.erase(tag.name);  // Remove, cannot be left over.
   return absl::OkStatus();
 }
