@@ -16,23 +16,12 @@
 #include <string_view>
 #include <vector>
 
-#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "mbo/status/status_macros.h"
 
 namespace mbo::strings {
-namespace {
-
-inline char PopChar(std::string_view& data) {
-  ABSL_CHECK(!data.empty());
-  const char result = data[0];
-  data.remove_prefix(1);
-  return result;
-}
-
-}  // namespace
 
 absl::StatusOr<char> ParseOctal(char first_char, std::string_view& data) {
   const bool octal_23 = first_char == 'o';
@@ -103,23 +92,61 @@ absl::StatusOr<char> ParseHex(std::string_view& data) {
   return static_cast<char>(next_chr);
 }
 
+enum class Quotes {
+  kNone,
+  kSingle,
+  kDouble
+};
+
+void HandleQuotes(const ParseOptions& options, char chr, Quotes& quotes, std::string& result) {
+  if (options.enable_double_quotes) {
+    switch (quotes) {
+      case Quotes::kNone:
+        quotes = chr == '"' ? Quotes::kDouble : Quotes::kSingle;
+        break;
+      case Quotes::kSingle:
+        if (chr == '\'') {
+          quotes = Quotes::kNone;
+        } else {
+          result += chr;
+          return;
+        }
+        break;
+      case Quotes::kDouble:
+        if (chr == '"') {
+          quotes = Quotes::kNone;
+        } else {
+          result += chr;
+          return;
+        }
+        break;
+    }
+    if (!options.remove_quotes) {
+      result += chr;
+    }
+  }
+}
+
 absl::StatusOr<std::string> ParseString(const ParseOptions& options, std::string_view& data) {
   std::string result;
-  bool quote = false;
+  Quotes quotes = Quotes::kNone;
   while (!data.empty()) {
     char chr = data[0];  // Cannot use `PopChar`, need the char left in-place
-    if (!quote && absl::StrContains(options.stop_at_any_of, chr)) {
-      return result;
+    if (quotes == Quotes::kNone) {
+      if (absl::StrContains(options.stop_at_any_of, chr) || absl::StrContains(options.split_at_any_of, chr)) {
+        return result;
+      }
+      if (!options.allow_unquoted && chr != '\'' && chr != '"') {
+        return result;
+      }
     }
     data.remove_prefix(1);
     switch (chr) {
       default: break;  // normal character, just add.
       case '"':
-        if (options.enable_double_quotes) {
-          quote = !quote;
-          continue;
-        }
-        break;
+      case '\'':
+        HandleQuotes(options, chr, quotes, result);
+        continue;
       case '\\': {
         if (data.empty()) {
           return absl::InvalidArgumentError("StringList ends in '\\'.");
@@ -129,6 +156,8 @@ absl::StatusOr<std::string> ParseString(const ParseOptions& options, std::string
           // Direct escapes, just the next char.
           case '{':  // CUSTOM
           case '}':  // CUSTOM
+          case '[':  // CUSTOM
+          case ']':  // CUSTOM
           case ',':  // CUSTOM
           // all other escape sequences follow
           // https://en.cppreference.com/w/cpp/language/escape
@@ -183,10 +212,13 @@ absl::StatusOr<std::vector<std::string>> ParseStringList(const ParseOptions& opt
     return result;
   }
   ParseOptions str_options = options;
-  if (options.stop_at_any_of.empty()) {
-    str_options.stop_at_any_of = ",";
+  if (str_options.split_at_any_of.empty()) {
+    str_options.split_at_any_of = ",";
   }
-  if (data.size() == 1 && absl::StrContains(str_options.stop_at_any_of, data[0])) {
+  if (absl::StrContains(options.stop_at_any_of, data[0])) {
+    return result;
+  }
+  if (data.size() == 1 && absl::StrContains(str_options.split_at_any_of, data[0])) {
     result.emplace_back("");
     result.emplace_back("");
     data.remove_prefix(1);
@@ -198,7 +230,10 @@ absl::StatusOr<std::vector<std::string>> ParseStringList(const ParseOptions& opt
     if (data.empty()) {
       return result;
     }
-    if (data.size() == 1 && absl::StrContains(str_options.stop_at_any_of, data[0])) {
+    if (absl::StrContains(options.stop_at_any_of, data[0])) {
+      return result;
+    }
+    if (data.size() == 1 && absl::StrContains(str_options.split_at_any_of, data[0])) {
       result.emplace_back("");
       data.remove_prefix(1);
       return result;

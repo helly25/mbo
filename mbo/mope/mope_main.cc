@@ -119,14 +119,14 @@ CHECK_EQ(output, "My bar-baz.");
 
 '{{#'<name>'='<start>';'<end>(';'<step>(';'<join> )? )? '}}'...'{{/'<name>'}}'
 
-* <step> is optional and defaults to 1.
-* <step> canot be set to zero.
 * The values <start>, <end> and <step> can either be a number or a name of
   an existing section dictionary value.
+* <step>:     Is the optional step-difference between iterations and defaults
+              to 1. It canot be set to zero.
 * <step> > 0: Iteration ends when the current value > <end>.
 * <step> < 0: Iteration ends when the current value < <end>.
-* <step>:     optional, functions as a joiner. The value can be a reference or
-              a string in single (') or double quotes (").
+* <join>:     Optional value that functions as a joiner. The value can be a
+              reference or a string in single (') or double quotes (").
 
 This creates an automatic 'section' with a dynamic value under <name> which
 can be accessed by '{{' <name> '}}'.
@@ -157,12 +157,14 @@ CHECK_EQ(output, "My 1.3.5.7.");
 
 5) The template supports lists:
 
-'{{#' <name> '=[' <values> ']}}'...'{{/'<name>'}}'
+'{{#' <name> '=[' <values> '] (';' <join>)? }}'...'{{/'<name>'}}'
 
-<values>: is a comma separated list which supports (limited, simple only) C++
-          escaping. In addition to the standard C++ escapes, the comma ','
-          and the curly braces '{', '}' can also be escaped to simplify template
-          writing.
+<values>:     Is a comma separated list which supports (limited, simple only)
+              C++ escaping. In addition to the standard C++ escapes, the comma
+              ',' curly braces '{', '}' and square braces '[', ']' can also be
+              escaped to simplify template writing.
+* <join>:     Optional value that functions as a joiner. The value can be a
+              reference or a string in single (') or double quotes (").
 
 ```c++
 mbo::mope::Templaye mope;

@@ -85,18 +85,64 @@ TEST_F(ParseTest, ParseStringStopAtAnyOf) {
   EXPECT_THAT(ParseString({.stop_at_any_of = ".,"}, "."), IsOkAndHolds(Pair("", ".")));
 }
 
+TEST_F(ParseTest, ParseStringRemoveQuotes) {
+  ASSERT_THAT(ParseOptions().remove_quotes, true);
+  ASSERT_THAT(ParseOptions().allow_unquoted, true);
+  EXPECT_THAT(ParseString({}, ""), IsOkAndHolds(Pair("", "")));
+  EXPECT_THAT(ParseString({}, "."), IsOkAndHolds(Pair(".", "")));
+  EXPECT_THAT(ParseString({}, "'1,2'\",3\""), IsOkAndHolds(Pair("1,2,3", "")));
+  EXPECT_THAT(ParseString({}, "'1,2',3"), IsOkAndHolds(Pair("1,2,3", "")));
+  static constexpr ParseOptions kOpts{
+    .remove_quotes = false,
+  };
+  EXPECT_THAT(ParseString(kOpts, ""), IsOkAndHolds(Pair("", "")));
+  EXPECT_THAT(ParseString(kOpts, "."), IsOkAndHolds(Pair(".", "")));
+  EXPECT_THAT(ParseString(kOpts, "'1,2'\",3\""), IsOkAndHolds(Pair("'1,2'\",3\"", "")));
+  EXPECT_THAT(ParseString(kOpts, "'1,2',3"), IsOkAndHolds(Pair("'1,2',3", "")));
+}
+
+TEST_F(ParseTest, ParseStringAllowUnquoted) {
+  ASSERT_THAT(ParseOptions().remove_quotes, true);
+  ASSERT_THAT(ParseOptions().allow_unquoted, true);
+  EXPECT_THAT(ParseString({}, ""), IsOkAndHolds(Pair("", "")));
+  EXPECT_THAT(ParseString({}, "."), IsOkAndHolds(Pair(".", "")));
+  EXPECT_THAT(ParseString({}, "'1,2'\",3\""), IsOkAndHolds(Pair("1,2,3", "")));
+  EXPECT_THAT(ParseString({}, "'1,2',3"), IsOkAndHolds(Pair("1,2,3", "")));
+  static constexpr ParseOptions kOpts{
+    .allow_unquoted = false,
+  };
+  EXPECT_THAT(ParseString(kOpts, ""), IsOkAndHolds(Pair("", "")));
+  EXPECT_THAT(ParseString(kOpts, "."), IsOkAndHolds(Pair("", ".")));
+  EXPECT_THAT(ParseString(kOpts, "'1,2'\",3\""), IsOkAndHolds(Pair("1,2,3", "")));
+  EXPECT_THAT(ParseString(kOpts, "'1,2',3"), IsOkAndHolds(Pair("1,2", ",3")));
+}
+
 TEST_F(ParseTest, ParseStringList) {
   EXPECT_THAT(ParseStringList({}, ""), IsOkAndHolds(Pair(IsEmpty(), "")));
-  EXPECT_THAT(ParseStringList({.stop_at_any_of = "."}, ""), IsOkAndHolds(Pair(IsEmpty(), "")));
-  EXPECT_THAT(ParseStringList({.stop_at_any_of = "."}, "."), IsOkAndHolds(Pair(ElementsAre("", ""), "")));
-  EXPECT_THAT(ParseStringList({.stop_at_any_of = "."}, ".42"), IsOkAndHolds(Pair(ElementsAre("", "42"), "")));
-  EXPECT_THAT(ParseStringList({.stop_at_any_of = "."}, "42."), IsOkAndHolds(Pair(ElementsAre("42", ""), "")));
-  EXPECT_THAT(ParseStringList({.stop_at_any_of = "."}, "4,2"), IsOkAndHolds(Pair(ElementsAre("4,2"), "")));
-  EXPECT_THAT(ParseStringList({.stop_at_any_of = ","}, "4,2"), IsOkAndHolds(Pair(ElementsAre("4", "2"), "")));
+  EXPECT_THAT(ParseStringList({}, "1,2"), IsOkAndHolds(Pair(ElementsAre("1", "2"), "")));
+}
+
+TEST_F(ParseTest, ParseStringListSplitAtAnyOf) {
+  EXPECT_THAT(ParseStringList({.split_at_any_of = "."}, ""), IsOkAndHolds(Pair(IsEmpty(), "")));
+  EXPECT_THAT(ParseStringList({.split_at_any_of = "."}, "."), IsOkAndHolds(Pair(ElementsAre("", ""), "")));
+  EXPECT_THAT(ParseStringList({.split_at_any_of = "."}, ".4,2"), IsOkAndHolds(Pair(ElementsAre("", "4,2"), "")));
+  EXPECT_THAT(ParseStringList({.split_at_any_of = "."}, "4,2."), IsOkAndHolds(Pair(ElementsAre("4,2", ""), "")));
+  EXPECT_THAT(ParseStringList({.split_at_any_of = "."}, "4,2"), IsOkAndHolds(Pair(ElementsAre("4,2"), "")));
+  EXPECT_THAT(ParseStringList({.split_at_any_of = ","}, "4,2"), IsOkAndHolds(Pair(ElementsAre("4", "2"), "")));
   EXPECT_THAT(
-      ParseStringList({.stop_at_any_of = ".,;"}, "4,3;2.1"), IsOkAndHolds(Pair(ElementsAre("4", "3", "2", "1"), "")));
+      ParseStringList({.split_at_any_of = ".,;"}, "4,3;2.1"), IsOkAndHolds(Pair(ElementsAre("4", "3", "2", "1"), "")));
   EXPECT_THAT(
-      ParseStringList({.stop_at_any_of = ".,;"}, ".,;."), IsOkAndHolds(Pair(ElementsAre("","", "", "", ""), "")));
+      ParseStringList({.split_at_any_of = ".,;"}, ".,;."), IsOkAndHolds(Pair(ElementsAre("","", "", "", ""), "")));
+}
+
+TEST_F(ParseTest, ParseStringListStopAtAnyOf) {
+  static constexpr ParseOptions kOpts{
+    .stop_at_any_of = ".",
+  };
+  EXPECT_THAT(ParseStringList(kOpts, ""), IsOkAndHolds(Pair(IsEmpty(), "")));
+  EXPECT_THAT(ParseStringList(kOpts, "."), IsOkAndHolds(Pair(IsEmpty(), ".")));
+  EXPECT_THAT(ParseStringList(kOpts, "1,2.3,4"), IsOkAndHolds(Pair(ElementsAre("1", "2"), ".3,4")));
+  EXPECT_THAT(ParseStringList(kOpts, "1,2,.3,4"), IsOkAndHolds(Pair(ElementsAre("1", "2", ""), ".3,4")));
 }
 
 }  // namespace

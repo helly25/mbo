@@ -197,10 +197,16 @@ absl::Status Template::MaybeLookup(const TagInfo& tag_info, std::string_view dat
   if (data.empty()) {
     return absl::OkStatus();
   }
-  if ((data.starts_with('"') && data.ends_with('"')) || (data.starts_with('\'') && data.ends_with('\''))) {
-    data.remove_prefix(1);
-    data.remove_suffix(1);
-    value = data;
+  if ((data.starts_with('"') || data.starts_with('\'')) && (data.ends_with('"') || data.ends_with('\''))) {
+    static constexpr mbo::strings::ParseOptions kOptions{
+      .remove_quotes = true,
+      .allow_unquoted = false,
+    };
+    MBO_STATUS_ASSIGN_OR_RETURN(value, ParseString(kOptions, data));
+    if (!data.empty()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Tag '", tag_info.name, "' has bad literal joiner '", data, "'."));
+    }
     return absl::OkStatus();
   }
   auto data_it = data_.find(data);
@@ -289,13 +295,19 @@ absl::Status Template::ExpandRangeData(const TagInfo& tag, const RangeData& rang
 absl::Status Template::ExpandConfiguredSection(
     std::string_view name,
     std::vector<std::string> str_list,  // NOLINT(performance-unnecessary-value-param): Incorrect, we move strings out.
+    std::string_view join,
     std::string& output) {
   const std::string original(std::move(output));
   output = "";
+  bool first = true;
   for (auto& str : str_list) {
     MBO_STATUS_RETURN_IF_ERROR(SetValue(name, std::move(str), true));
     std::string result(original);
     MBO_STATUS_RETURN_IF_ERROR(Expand(result));
+    if (!first) {
+      output.append(join);
+    }
+    first = false;
     output.append(result);
   }
   return absl::OkStatus();
@@ -303,13 +315,26 @@ absl::Status Template::ExpandConfiguredSection(
 
 absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view str_list_data, std::string& output) {
   static constexpr mbo::strings::ParseOptions kConfiguredListParseOptions {
-    .stop_at_any_of = ",",
+    .stop_at_any_of = "]",
+    .split_at_any_of = ",",
   };
-  MBO_STATUS_ASSIGN_OR_RETURN(auto str_list, mbo::strings::ParseStringList(kConfiguredListParseOptions, str_list_data));
+  str_list_data.remove_prefix(1);  // Drop '[']
+  // str_list_data.remove_suffix(1);  // Drop ']'
+  MBO_STATUS_ASSIGN_OR_RETURN(auto str_list, mbo::strings::ParseStringList(kConfiguredListParseOptions, str_list_data));  
+  std::string join;
+  if (str_list_data.empty() || mbo::strings::PopChar(str_list_data) != ']') {
+    return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", tag.config, "'."));
+  }
+  if (!str_list_data.empty()) {
+    if (str_list_data.size() < 2 || mbo::strings::PopChar(str_list_data) != ';') {
+      return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", tag.config, "'."));
+    }
+    MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, str_list_data, join));
+  }
   data_.erase(tag.name);  // Cannot be present.
   // CONSIDER: A specialized type would make this faster. But also less generic
   // and thus complicate extensions.
-  MBO_STATUS_RETURN_IF_ERROR(ExpandConfiguredSection(tag.name, std::move(str_list), output));
+  MBO_STATUS_RETURN_IF_ERROR(ExpandConfiguredSection(tag.name, std::move(str_list), std::move(join), output));
   data_.erase(tag.name);  // Remove, cannot be left over.
   return absl::OkStatus();
 }
@@ -324,11 +349,8 @@ absl::Status Template::ExpandConfiguredTag(const TagInfo& tag, std::string& outp
       if (RE2::FullMatch(tag.config, *kReFor, &range.start, &range.end, &range.step, &range.join)) {
         return ExpandRangeData(tag, range, output);
       }
-      if (tag.config.starts_with('[') && tag.config.ends_with(']')) {
-        std::string_view str_list_data(tag.config);
-        str_list_data.remove_prefix(1);
-        str_list_data.remove_suffix(1);
-        return ExpandConfiguredList(tag, str_list_data, output);
+      if (tag.config.starts_with('[')) {
+        return ExpandConfiguredList(tag, tag.config, output);
       }
       break;
     }

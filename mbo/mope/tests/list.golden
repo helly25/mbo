@@ -4,8 +4,11 @@ List example:
 3
 4
 
-With comma:
+With escaped comma:
 1,2
 3,4
+
+With joiner:
+(1,2);(3,4)
 
 Done
