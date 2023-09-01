@@ -19,6 +19,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
+#include "absl/strings/str_format.h"
 #include "mbo/status/status_macros.h"
 
 namespace mbo::strings {
@@ -27,7 +28,7 @@ absl::StatusOr<char> ParseOctal(char first_char, std::string_view& data) {
   const bool octal_23 = first_char == 'o';
   if (octal_23) {
     if (data.size() < 3 || data[0] != '{') {
-      return absl::InvalidArgumentError("StringList has bad octal C++23 sequence.");
+      return absl::InvalidArgumentError("ParseString input has bad octal C++23 sequence.");
     }
     data.remove_prefix(1);
     first_char = PopChar(data);
@@ -37,12 +38,12 @@ absl::StatusOr<char> ParseOctal(char first_char, std::string_view& data) {
   if (!data.empty() && data[0] >= '0' && data[0] <= '7') {
     next_chr = next_chr * kOctalDigit + (PopChar(data) - '0');
     if (!data.empty() && data[0] >= '0' && data[0] <= '7') {
-      next_chr = next_chr * kOctalDigit + (PopChar(data)  - '0');
+      next_chr = next_chr * kOctalDigit + (PopChar(data) - '0');
     }
   }
   if (octal_23) {
     if (data.empty() || data[0] != '}') {
-      return absl::InvalidArgumentError("StringList has bad octal C++23 sequence.");
+      return absl::InvalidArgumentError("ParseString input has bad octal C++23 sequence.");
     }
     data.remove_prefix(1);
   }
@@ -73,7 +74,7 @@ absl::StatusOr<char> ParseHex(std::string_view& data) {
   const bool hex_23 = data[0] == '{';
   if (hex_23) {
     if (data.size() < 3) {
-      return absl::InvalidArgumentError("StringList has bad hex C++23 sequence.");
+      return absl::InvalidArgumentError("ParseString input has bad hex C++23 sequence.");
     }
     data.remove_prefix(1);
   }
@@ -81,29 +82,23 @@ absl::StatusOr<char> ParseHex(std::string_view& data) {
   if (NextHexChar(data, next_chr)) {
     NextHexChar(data, next_chr);
   } else {
-      return absl::InvalidArgumentError("StringList has bad hex sequence.");
+    return absl::InvalidArgumentError("ParseString input has bad hex sequence.");
   }
   if (hex_23) {
     if (data.empty() || data[0] != '}') {
-      return absl::InvalidArgumentError("StringList has bad hex C++23 sequence.");
+      return absl::InvalidArgumentError("ParseString input has bad hex C++23 sequence.");
     }
     data.remove_prefix(1);
   }
   return static_cast<char>(next_chr);
 }
 
-enum class Quotes {
-  kNone,
-  kSingle,
-  kDouble
-};
+enum class Quotes { kNone, kSingle, kDouble };
 
 void HandleQuotes(const ParseOptions& options, char chr, Quotes& quotes, std::string& result) {
   if (options.enable_double_quotes) {
     switch (quotes) {
-      case Quotes::kNone:
-        quotes = chr == '"' ? Quotes::kDouble : Quotes::kSingle;
-        break;
+      case Quotes::kNone: quotes = chr == '"' ? Quotes::kDouble : Quotes::kSingle; break;
       case Quotes::kSingle:
         if (chr == '\'') {
           quotes = Quotes::kNone;
@@ -132,78 +127,79 @@ absl::StatusOr<std::string> ParseString(const ParseOptions& options, std::string
   Quotes quotes = Quotes::kNone;
   while (!data.empty()) {
     char chr = data[0];  // Cannot use `PopChar`, need the char left in-place
-    if (quotes == Quotes::kNone) {
-      if (absl::StrContains(options.stop_at_any_of, chr) || absl::StrContains(options.split_at_any_of, chr)) {
-        return result;
-      }
-      if (!options.allow_unquoted && chr != '\'' && chr != '"') {
-        return result;
-      }
+    if (quotes == Quotes::kNone
+        && (absl::StrContains(options.stop_at_any_of, chr) || absl::StrContains(options.split_at_any_of, chr)
+            || (!options.allow_unquoted && chr != '\'' && chr != '"'))) {
+      return result;
     }
     data.remove_prefix(1);
+    if (chr == '"' || chr == '\'') {
+      HandleQuotes(options, chr, quotes, result);
+      continue;
+    } else if (chr != '\\') {
+      result += chr;
+      continue;
+    } else if (data.empty()) {
+      return absl::InvalidArgumentError("ParseString input ends in '\\'.");
+    }
+    chr = PopChar(data);
+    // Direct escapes, just the next char.
+    if (absl::StrContains(options.custom_escapes, chr)) {
+      result += chr;
+      continue;
+    }
     switch (chr) {
-      default: break;  // normal character, just add.
-      case '"':
+      // all other escape sequences follow
+      // https://en.cppreference.com/w/cpp/language/escape
+      // "Simple"
       case '\'':
-        HandleQuotes(options, chr, quotes, result);
+      case '"':
+      case '?':
+      case '\\': result += chr; continue;
+      case 'a': result += '\a'; continue;
+      case 'b': result += '\b'; continue;
+      case 'f': result += '\f'; continue;
+      case 'n': result += '\n'; continue;
+      case 'r': result += '\r'; continue;
+      case 't': result += '\t'; continue;
+      case 'v': result += '\v'; continue;
+      // "Numeric", octal
+      case '0':    // octal first digit
+      case '1':    // octal first digit
+      case '2':    // octal first digit
+      case '3':    // octal first digit
+      case '4':    // octal first digit
+      case '5':    // octal first digit
+      case '6':    // octal first digit
+      case '7':    // octal first digit
+      case 'o': {  // octal \o{n...}, C++23
+        MBO_STATUS_ASSIGN_OR_RETURN(const char next_chr, ParseOctal(chr, data));
+        result += static_cast<char>(next_chr);
         continue;
-      case '\\': {
-        if (data.empty()) {
-          return absl::InvalidArgumentError("StringList ends in '\\'.");
-        }
-        chr = PopChar(data);
-        switch (chr) {
-          // Direct escapes, just the next char.
-          case '{':  // CUSTOM
-          case '}':  // CUSTOM
-          case '[':  // CUSTOM
-          case ']':  // CUSTOM
-          case ',':  // CUSTOM
-          // all other escape sequences follow
-          // https://en.cppreference.com/w/cpp/language/escape
-          case '\'':
-          case '"':
-          case '?':
-          case '\\': result += chr; continue;
-          case 'a': result += '\a'; continue;
-          case 'b': result += '\b'; continue;
-          case 'f': result += '\f'; continue;
-          case 'n': result += '\n'; continue;
-          case 'r': result += '\r'; continue;
-          case 't': result += '\t'; continue;
-          case 'v': result += '\v'; continue;
-          // octal
-          case '0':  // octal first digit
-          case '1':  // octal first digit
-          case '2':  // octal first digit
-          case '3':  // octal first digit
-          case '4':  // octal first digit
-          case '5':  // octal first digit
-          case '6':  // octal first digit
-          case '7':  // octal first digit
-          case 'o': { // octal \o{n...}, C++23
-            MBO_STATUS_ASSIGN_OR_RETURN(const char next_chr, ParseOctal(chr, data));
-            result += static_cast<char>(next_chr);
-            continue;
-          }
-          case 'x': { // \x...: hex, (\x{n...}: C++23
-            MBO_STATUS_ASSIGN_OR_RETURN(const char next_chr, ParseHex(data));
-            result += static_cast<char>(next_chr);
-            continue;
-          }
-          // UNSUPPORTED FOLLOW:
-          case 'u':  // \u{nn..}: unicode 4 hex C++23
-          case 'U':  // Unicode 8-hex
-            return absl::UnimplementedError("StringList has not yet supported unicode escape sequence.");
-          case 'N':  // \N{Name}: Named unicode char
-            return absl::UnimplementedError("StringList has not yet supported named unicode char escape sequence.");
-          default: return absl::InvalidArgumentError("StringList has unsupported escape sequence.");
-        }  // switch for escape
-      }    // case escape
-    }      // switch char
-    result += chr;
+      }
+      // "Numeric", hex
+      case 'x': {  // \x...: hex, (\x{n...}: C++23
+        MBO_STATUS_ASSIGN_OR_RETURN(const char next_chr, ParseHex(data));
+        result += static_cast<char>(next_chr);
+        continue;
+      }
+      // UNSUPPORTED FOLLOW:
+      case 'u':  // \u{nn..}: unicode 4 hex C++23
+      case 'U':  // Unicode 8-hex
+        return absl::UnimplementedError("ParseString input has not yet supported unicode escape sequence.");
+      case 'N':  // \N{Name}: Named unicode char
+        return absl::UnimplementedError(
+            "ParseString input has not yet supported named unicode char escape sequence.");
+      default: return absl::InvalidArgumentError("ParseString input has unsupported escape sequence.");
+    }  // switch for escape
   }
-  return result;
+  if (quotes == Quotes::kNone) {
+    return result;
+  }
+  return absl::InvalidArgumentError(absl::StrFormat(
+        "ParseString input has unterminated %s quotes (%s).",  //
+        quotes == Quotes::kSingle ? "single" : "double",  //
+        quotes == Quotes::kSingle ? "'" : "\""));
 }
 
 absl::StatusOr<std::vector<std::string>> ParseStringList(const ParseOptions& options, std::string_view& data) {

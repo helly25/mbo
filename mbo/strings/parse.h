@@ -31,17 +31,13 @@ inline char PopChar(std::string_view& data) {
 
 // ParseString follows: https://en.cppreference.com/w/cpp/language/escape
 //
-// The parser stops as soon as it hits a non quoted, non escaped character listed in `stop_at_any_of`.
+// Parsing has various configurable options as described below.
 //
-// Escaping: Beyond C++ "simple" and "numeric"" escaping the following "custom" escapes are supported:
-// '\,' -> ','
-// '\{' -> '{'
-// '\}' -> '}'
-// '\[' -> '['
-// '\]' -> ']'
-//
-// The parser is currently limited to 8-bit chars, so octal/hex encoding are limited accordingly.
-// The parser does not support "Universal character names", so no unicode.
+// Escaping:
+//   * Support for C++ "simple" escaping.
+//   * Support for C++ "numeric" escaping (limited to 8 bit).
+//   * Additional "custom" escaping is supported through `custom_escapes` which defaults to: "(){}[]<>,;&".
+//   * NO SUPPORT for C++ "Universal character names", so no unicode.
 //
 struct ParseOptions {
   // Any character in this list will stop `ParseString` and `ParseStringList`.
@@ -63,6 +59,9 @@ struct ParseOptions {
 
   // If disabled, then parsing will stop at any unquoted character (e.g. in <"foo"bad"bar"> 'bad' is unquoted).
   bool allow_unquoted = true;
+
+  // Custom escape support: A backslash followed by one of these characters will be replaced with that character.
+  std::string_view custom_escapes = "(){}[]<>,;&";
 };
 
 // Parses a single string according to `options`.

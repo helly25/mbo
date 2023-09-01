@@ -58,7 +58,7 @@ TEST_F(ParseTest, ParseStringOctal) {
   EXPECT_THAT(ParseString({}, "\\19"), IsOkAndHolds(Pair("\19", "")));
   EXPECT_THAT(
       ParseString({}, "\\9a"),
-      StatusIs(absl::StatusCode::kInvalidArgument, "StringList has unsupported escape sequence."));
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has unsupported escape sequence."));
   EXPECT_THAT(ParseString({}, "\\o{123}9"), IsOkAndHolds(Pair("S9", "")));
   EXPECT_THAT(ParseString({}, "4,2"), IsOkAndHolds(Pair("4,2", "")));
 }
@@ -72,17 +72,33 @@ TEST_F(ParseTest, ParseStringHex) {
   EXPECT_THAT(ParseString({}, "\\x{4}"), IsOkAndHolds(Pair("\4", "")));
   EXPECT_THAT(
       ParseString({}, "\\x{423}"),
-      StatusIs(absl::StatusCode::kInvalidArgument, "StringList has bad hex C++23 sequence."));
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex C++23 sequence."));
 }
 
 TEST_F(ParseTest, ParseStringStopAtAnyOf) {
-  EXPECT_THAT(ParseString({.stop_at_any_of = ".,"}, ""), IsOkAndHolds(Pair("", "")));
-  EXPECT_THAT(ParseString({.stop_at_any_of = ".,"}, "."), IsOkAndHolds(Pair("", ".")));
-  EXPECT_THAT(ParseString({.stop_at_any_of = ".,"}, ","), IsOkAndHolds(Pair("", ",")));
-  EXPECT_THAT(ParseString({.stop_at_any_of = ".,"}, "4;2"), IsOkAndHolds(Pair("4;2", "")));
-  EXPECT_THAT(ParseString({.stop_at_any_of = ".,"}, "4,2"), IsOkAndHolds(Pair("4", ",2")));
-  EXPECT_THAT(ParseString({.stop_at_any_of = ".,"}, "4.2"), IsOkAndHolds(Pair("4", ".2")));
-  EXPECT_THAT(ParseString({.stop_at_any_of = ".,"}, "."), IsOkAndHolds(Pair("", ".")));
+  ASSERT_THAT(ParseOptions().stop_at_any_of, IsEmpty());
+  ASSERT_THAT(ParseOptions().split_at_any_of, IsEmpty());
+  static constexpr ParseOptions kOpts{.stop_at_any_of = ".,"};
+  EXPECT_THAT(ParseString(kOpts, ""), IsOkAndHolds(Pair("", "")));
+  EXPECT_THAT(ParseString(kOpts, "."), IsOkAndHolds(Pair("", ".")));
+  EXPECT_THAT(ParseString(kOpts, ","), IsOkAndHolds(Pair("", ",")));
+  EXPECT_THAT(ParseString(kOpts, "4;2"), IsOkAndHolds(Pair("4;2", "")));
+  EXPECT_THAT(ParseString(kOpts, "4,2"), IsOkAndHolds(Pair("4", ",2")));
+  EXPECT_THAT(ParseString(kOpts, "4.2"), IsOkAndHolds(Pair("4", ".2")));
+  EXPECT_THAT(ParseString(kOpts, "."), IsOkAndHolds(Pair("", ".")));
+}
+
+TEST_F(ParseTest, ParseStringSplitAtAnyOf) {
+  ASSERT_THAT(ParseOptions().stop_at_any_of, IsEmpty());
+  ASSERT_THAT(ParseOptions().split_at_any_of, IsEmpty());
+  static constexpr ParseOptions kOpts{.split_at_any_of = ".,"};
+  EXPECT_THAT(ParseString(kOpts, ""), IsOkAndHolds(Pair("", "")));
+  EXPECT_THAT(ParseString(kOpts, "."), IsOkAndHolds(Pair("", ".")));
+  EXPECT_THAT(ParseString(kOpts, ","), IsOkAndHolds(Pair("", ",")));
+  EXPECT_THAT(ParseString(kOpts, "4;2"), IsOkAndHolds(Pair("4;2", "")));
+  EXPECT_THAT(ParseString(kOpts, "4,2"), IsOkAndHolds(Pair("4", ",2")));
+  EXPECT_THAT(ParseString(kOpts, "4.2"), IsOkAndHolds(Pair("4", ".2")));
+  EXPECT_THAT(ParseString(kOpts, "."), IsOkAndHolds(Pair("", ".")));
 }
 
 TEST_F(ParseTest, ParseStringRemoveQuotes) {
@@ -93,7 +109,7 @@ TEST_F(ParseTest, ParseStringRemoveQuotes) {
   EXPECT_THAT(ParseString({}, "'1,2'\",3\""), IsOkAndHolds(Pair("1,2,3", "")));
   EXPECT_THAT(ParseString({}, "'1,2',3"), IsOkAndHolds(Pair("1,2,3", "")));
   static constexpr ParseOptions kOpts{
-    .remove_quotes = false,
+      .remove_quotes = false,
   };
   EXPECT_THAT(ParseString(kOpts, ""), IsOkAndHolds(Pair("", "")));
   EXPECT_THAT(ParseString(kOpts, "."), IsOkAndHolds(Pair(".", "")));
@@ -109,12 +125,48 @@ TEST_F(ParseTest, ParseStringAllowUnquoted) {
   EXPECT_THAT(ParseString({}, "'1,2'\",3\""), IsOkAndHolds(Pair("1,2,3", "")));
   EXPECT_THAT(ParseString({}, "'1,2',3"), IsOkAndHolds(Pair("1,2,3", "")));
   static constexpr ParseOptions kOpts{
-    .allow_unquoted = false,
+      .allow_unquoted = false,
   };
   EXPECT_THAT(ParseString(kOpts, ""), IsOkAndHolds(Pair("", "")));
   EXPECT_THAT(ParseString(kOpts, "."), IsOkAndHolds(Pair("", ".")));
   EXPECT_THAT(ParseString(kOpts, "'1,2'\",3\""), IsOkAndHolds(Pair("1,2,3", "")));
   EXPECT_THAT(ParseString(kOpts, "'1,2',3"), IsOkAndHolds(Pair("1,2", ",3")));
+}
+
+TEST_F(ParseTest, ParseStringErrors) {
+  EXPECT_THAT(ParseString({}, "\\"), StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input ends in '\\'."));
+  EXPECT_THAT(
+      ParseString({}, "\\o"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad octal C++23 sequence."));
+  EXPECT_THAT(
+      ParseString({}, "\\o{"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad octal C++23 sequence."));
+  EXPECT_THAT(
+      ParseString({}, "\\o{}"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad octal C++23 sequence."));
+  EXPECT_THAT(
+      ParseString({}, "\\x"), StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex sequence."));
+  EXPECT_THAT(
+      ParseString({}, "\\x{"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex C++23 sequence."));
+  EXPECT_THAT(
+      ParseString({}, "\\x{}"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex C++23 sequence."));
+  EXPECT_THAT(
+      ParseString({}, "'"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has unterminated single quotes (')."));
+  EXPECT_THAT(
+      ParseString({}, "\""),
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has unterminated double quotes (\")."));
+  EXPECT_THAT(
+      ParseString({}, "\\u"),
+      StatusIs(absl::StatusCode::kUnimplemented, "ParseString input has not yet supported unicode escape sequence."));
+  EXPECT_THAT(
+      ParseString({}, "\\U"),
+      StatusIs(absl::StatusCode::kUnimplemented, "ParseString input has not yet supported unicode escape sequence."));
+  EXPECT_THAT(
+      ParseString({}, "\\N"),
+      StatusIs(absl::StatusCode::kUnimplemented, "ParseString input has not yet supported named unicode char escape sequence."));
 }
 
 TEST_F(ParseTest, ParseStringList) {
@@ -132,12 +184,12 @@ TEST_F(ParseTest, ParseStringListSplitAtAnyOf) {
   EXPECT_THAT(
       ParseStringList({.split_at_any_of = ".,;"}, "4,3;2.1"), IsOkAndHolds(Pair(ElementsAre("4", "3", "2", "1"), "")));
   EXPECT_THAT(
-      ParseStringList({.split_at_any_of = ".,;"}, ".,;."), IsOkAndHolds(Pair(ElementsAre("","", "", "", ""), "")));
+      ParseStringList({.split_at_any_of = ".,;"}, ".,;."), IsOkAndHolds(Pair(ElementsAre("", "", "", "", ""), "")));
 }
 
 TEST_F(ParseTest, ParseStringListStopAtAnyOf) {
   static constexpr ParseOptions kOpts{
-    .stop_at_any_of = ".",
+      .stop_at_any_of = ".",
   };
   EXPECT_THAT(ParseStringList(kOpts, ""), IsOkAndHolds(Pair(IsEmpty(), "")));
   EXPECT_THAT(ParseStringList(kOpts, "."), IsOkAndHolds(Pair(IsEmpty(), ".")));
