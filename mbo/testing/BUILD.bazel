@@ -4,6 +4,7 @@ cc_library(
     name = "status_cc",
     hdrs = ["status.h"],
     deps = [
+        "//mbo/status:status_macros_cc",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest",

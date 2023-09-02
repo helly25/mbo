@@ -18,7 +18,6 @@
 
 #include "absl/status/statusor.h"
 #include "mbo/file/artefact.h"
-#include "mbo/types/no_destruct.h"
 
 namespace mbo::diff {
 

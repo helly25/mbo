@@ -26,6 +26,7 @@
 #include "absl/strings/strip.h"
 #include "absl/time/time.h"
 #include "mbo/file/artefact.h"
+#include "mbo/types/no_destruct.h"
 
 namespace mbo::diff {
 
@@ -478,7 +479,7 @@ UnifiedDiff::Diff(const file::Artefact& lhs, const file::Artefact& rhs, const Op
 }
 
 const UnifiedDiff::Options& UnifiedDiff::Options::Default() noexcept {
-  static const types::NoDestruct<UnifiedDiff::Options> kDefaults;
+  static const mbo::types::NoDestruct<UnifiedDiff::Options> kDefaults;
   return *kDefaults;
 }
 

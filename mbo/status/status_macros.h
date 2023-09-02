@@ -12,8 +12,8 @@
 
 #include <utility>
 
-#include "absl/status/status.h"   // IWYU pragma: keep
-#include "absl/status/statusor.h" // IWYU pragma: keep
+#include "absl/status/status.h"    // IWYU pragma: keep
+#include "absl/status/statusor.h"  // IWYU pragma: keep
 
 // Macro that allows to return from a non-OkStatus in a single line.
 // This is pure syntactical sugar for readability:
@@ -34,13 +34,21 @@
 // ```
 //
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define MBO_STATUS_RETURN_IF_ERROR(expr)                                       \
-  if (!(expr).ok())                                                            \
+#define MBO_STATUS_RETURN_IF_ERROR(expr) \
+  if (!(expr).ok())                      \
   return absl::Status(expr)
+
+#define _MBO_STATUS_ASSIGN_OR_RETURN_IMPL_(var, res, expr) \
+  auto var = (expr);                                       \
+  if (!var.ok()) {                                         \
+    return var.status();                                   \
+  }                                                        \
+  res = *std::move(var)
 
 // PRIVATE MACRO - DO NOT USE.
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define _MBO_VAR_CAT_(var, line) var##line
+#define _MBO_VAR_CAT_IMPL_(var, line) var ## line
+#define _MBO_VAR_CAT_(var, line) _MBO_VAR_CAT_IMPL_(var, line)
 
 // Similar to MBO_STATUS_RETURN_IF_ERROR but this assigns the result os an
 // `absl::StatusOr<T>`:
@@ -62,9 +70,5 @@
 // ```
 //
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define MBO_STATUS_ASSIGN_OR_RETURN(res, expr)                                 \
-  auto _MBO_VAR_CAT_(var, __LINE__) = (expr);                                  \
-  if (!_MBO_VAR_CAT_(var, __LINE__).ok()) {                                    \
-    return _MBO_VAR_CAT_(var, __LINE__).status();                              \
-  }                                                                            \
-  res = *std::move(_MBO_VAR_CAT_(var, __LINE__))
+#define MBO_STATUS_ASSIGN_OR_RETURN(res, expr) \
+  _MBO_STATUS_ASSIGN_OR_RETURN_IMPL_(_MBO_VAR_CAT_(_status_or_macro_var_, __LINE__), res, expr)

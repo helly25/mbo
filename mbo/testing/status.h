@@ -22,6 +22,15 @@
 #include "absl/status/statusor.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/status/status_macros.h"
+
+#define _MBO_STATUS_ASSERT_OK_AND_ASSIGN_IMPL(var, lhs, rexpr) \
+  auto var = (rexpr);                                   \
+  ASSERT_THAT(var, mbo::status::IsOk());                \
+  lhs = std::move(var.value())
+
+#define MBO_STATUS_ASSERT_OK_AND_ASSIGN(lhs, rexpr) \
+  _MBO_STATUS_ASSERT_OK_AND_ASSIGN_IMPL(_MBO_VAR_CAT_(_status_or_macro_var_, __COUNTER__), lhs, rexpr)
 
 namespace mbo::testing {
 namespace testing_internal {
