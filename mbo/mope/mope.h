@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "absl/container/node_hash_map.h"
-#include "absl/functional/function_ref.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "mbo/types/extend.h"
@@ -115,7 +114,6 @@ class Template {
   absl::Status ExpandConfiguredList(const TagInfo& tag, std::string_view str_list_data, std::string& output);
   absl::StatusOr<bool> ExpandValueTag(const TagInfo& tag, std::string& output);
   absl::Status ExpandTag(const TagInfo& tag, std::string& output);
-  absl::Status ExpandTags(std::string& output, absl::FunctionRef<absl::Status(const TagInfo& tag, std::string&)> func);
 
   static absl::Status ExpandSectionTag(TagData<Section>& tag, std::string& output);
 

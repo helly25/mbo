@@ -28,6 +28,8 @@
 namespace mbo::mope {
 namespace {
 
+// NOLINTBEGIN(misc-no-recursion)
+
 std::pair<std::size_t, std::size_t> ExpandWhiteSpace(
     std::string_view output,
     std::size_t tag_pos,
@@ -142,9 +144,7 @@ absl::StatusOr<bool> Template::ExpandValueTag(const TagInfo& tag, std::string& o
   return absl::UnimplementedError(absl::StrCat("Tag '", tag.name, "' cannot be handled."));
 }
 
-absl::Status Template::ExpandTags(
-    std::string& output,
-    absl::FunctionRef<absl::Status(const TagInfo&, std::string&)> func) {
+absl::Status Template::Expand(std::string& output) {
   std::string_view pos = output;
   while (true) {
     if (pos.empty()) {
@@ -162,7 +162,7 @@ absl::Status Template::ExpandTags(
     switch (tag.type) {
       case TagType::kControl: {
         replace_len = replace_tag_len;
-        MBO_STATUS_RETURN_IF_ERROR(func(tag, replace_str));
+        MBO_STATUS_RETURN_IF_ERROR(ExpandTag(tag, replace_str));
         break;
       }
       case TagType::kSection: {
@@ -173,7 +173,7 @@ absl::Status Template::ExpandTags(
         const auto [replace_end, replace_end_len] = ExpandWhiteSpace(output, tag_end_pos, tag.end.length());
         replace_len = replace_end + replace_end_len - replace_pos;  // whole replace incl. tags
         replace_str = output.substr(replace_pos + replace_tag_len, replace_len - replace_tag_len - replace_end_len);
-        MBO_STATUS_RETURN_IF_ERROR(func(tag, replace_str));
+        MBO_STATUS_RETURN_IF_ERROR(ExpandTag(tag, replace_str));
         break;
       }
       case TagType::kValue: {
@@ -397,8 +397,6 @@ absl::Status Template::ExpandTag(const TagInfo& tag, std::string& output) {
   return absl::UnimplementedError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", *tag.config, "'."));
 }
 
-absl::Status Template::Expand(std::string& output) {
-  return ExpandTags(output, [this](const TagInfo& tag, std::string& out) { return ExpandTag(tag, out); });
-}
+// NOLINTEND(misc-no-recursion)
 
 }  // namespace mbo::mope
