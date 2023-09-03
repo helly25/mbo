@@ -18,11 +18,9 @@
 
 #include "absl/cleanup/cleanup.h"
 #include "absl/log/absl_log.h"  // IWYU pragma: keep
-#include "absl/strings/match.h"
 #include "absl/strings/numbers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/str_replace.h"
 #include "mbo/status/status_macros.h"
 #include "mbo/strings/parse.h"
 #include "re2/re2.h"
@@ -50,15 +48,6 @@ std::pair<std::size_t, std::size_t> ExpandWhiteSpace(
   return {tag_pos, tag_len};
 }
 
-// NOxLINTNEXTLINE(bugprone-easily-swappable-parameters)
-std::pair<std::size_t, std::size_t> FindTag(std::string_view output, std::string_view tag) {
-  const std::size_t tag_pos = output.find(tag);
-  if (tag_pos == std::string::npos) {
-    return {tag_pos, 0};
-  }
-  return ExpandWhiteSpace(output, tag_pos, tag.length());
-}
-
 }  // namespace
 
 template<typename Sink>
@@ -73,16 +62,16 @@ void AbslStringify(Sink& sink, const Template::TagType& value) {
   }());
 }
 
-Template* Template::AddSectionDictionary(std::string_view name) {
+Template* Template::AddSection(std::string_view name) {
   TagInfo tag{
       .name{name},
       .start = absl::StrCat("{{#", name, "}}"),
       .end = absl::StrCat("{{/", name, "}}"),
       .type = TagType::kSection,
   };
-  auto [it, inserted] = data_.emplace(name, TagData<SectionDictionary>{.tag = std::move(tag), .data = {}});
-  auto& dict = std::get<TagData<SectionDictionary>>(it->second).data;
-  return &dict.emplace_back();
+  auto [it, inserted] = data_.emplace(name, TagData<Section>{.tag = std::move(tag), .data = {}});
+  auto& section = std::get<TagData<Section>>(it->second).data;
+  return &section.dictionary.emplace_back();
 }
 
 absl::Status Template::SetValue(std::string_view name, std::string_view value, bool allow_update) {
@@ -135,8 +124,25 @@ std::pair<std::size_t, std::size_t> Template::MaybeExpandWhiteSpace(
                                                                  : std::make_pair(tag_pos, tag.start.length());
 }
 
+absl::StatusOr<bool> Template::ExpandValueTag(const TagInfo& tag, std::string& output) {
+  const auto it = data_.find(tag.name);
+  if (it == data_.end()) {
+    return false;
+  }
+  const auto* tag_str = std::get_if<TagData<std::string>>(&it->second);
+  if (tag_str != nullptr) {
+    output = std::get<TagData<std::string>>(it->second).data;
+    return true;
+  }
+  const auto* tag_range = std::get_if<TagData<Range>>(&it->second);
+  if (tag_range != nullptr) {
+    output = absl::StrCat(tag_range->data.curr);
+    return true;
+  }
+  return absl::UnimplementedError(absl::StrCat("Tag '", tag.name, "' cannot be handled."));
+}
+
 absl::Status Template::ExpandTags(
-    bool configured_only,
     std::string& output,
     absl::FunctionRef<absl::Status(const TagInfo&, std::string&)> func) {
   std::string_view pos = output;
@@ -149,10 +155,6 @@ absl::Status Template::ExpandTags(
       return absl::OkStatus();
     }
     const TagInfo tag = *std::move(result);
-    const bool skip = configured_only && !tag.config.has_value();
-    if (!skip && tag.type == TagType::kSection && data_.find(tag.name) != data_.end()) {
-      return absl::InvalidArgumentError(absl::StrCat("Tag name '", tag.name, "' appears twice."));
-    }
     const std::size_t tag_pos = pos.data() - output.c_str() - tag.start.length();
     const auto [replace_pos, replace_tag_len] = MaybeExpandWhiteSpace(output, tag, tag_pos);
     std::string replace_str;
@@ -171,27 +173,18 @@ absl::Status Template::ExpandTags(
         const auto [replace_end, replace_end_len] = ExpandWhiteSpace(output, tag_end_pos, tag.end.length());
         replace_len = replace_end + replace_end_len - replace_pos;  // whole replace incl. tags
         replace_str = output.substr(replace_pos + replace_tag_len, replace_len - replace_tag_len - replace_end_len);
-        if (skip) {
-          pos = output;
-          // Drop this block and implement the UNIMPLEMENTED part of the func below. Then remove old section handling.
-          // Unless the old section block works better.
-          pos.remove_prefix(replace_pos + replace_len);
-          continue;
-        }
         MBO_STATUS_RETURN_IF_ERROR(func(tag, replace_str));
         break;
       }
       case TagType::kValue: {
-        const auto it = data_.find(tag.name);
-        if (it != data_.end() && std::get_if<TagData<std::string>>(&it->second) != nullptr) {
+        MBO_STATUS_ASSIGN_OR_RETURN(const bool replace, ExpandValueTag(tag, replace_str));
+        if (replace) {
           replace_len = replace_tag_len;
-          replace_str = std::get<TagData<std::string>>(it->second).data;
-        } else {
-          pos = output;
-          pos.remove_prefix(replace_pos + replace_tag_len);
-          continue;
+          break;
         }
-        break;
+        pos = output;
+        pos.remove_prefix(replace_pos + replace_tag_len);
+        continue;
       }
     }
     output.erase(replace_pos, replace_len);
@@ -270,6 +263,8 @@ absl::Status Template::ExpandRangeTag(const TagInfo& /*tag*/, Range& range, std:
       output.append(range.join);
     }
     std::string expanded = original;
+    // It is possible to use `StrReplaceAll` here, but `Expand` has to be called anyway, so it can do the replacement.
+    // absl::StrReplaceAll({{absl::StrCat("{{", tag.name, "}}"), absl::StrCat(range.curr)}}, &expanded);
     MBO_STATUS_RETURN_IF_ERROR(Expand(expanded));
     output.append(expanded);
   }
@@ -297,6 +292,22 @@ absl::Status Template::ExpandRangeData(const TagInfo& tag, const RangeData& rang
   auto result = ExpandRangeTag(tag, tag_range, output);
   data_.erase(tag.name);
   return result;
+}
+
+absl::Status Template::ExpandSectionTag(TagData<Section>& tag, std::string& output) {
+  const std::string original(std::move(output));
+  output = "";
+  bool first = true;
+  for (Template& section : tag.data.dictionary) {
+    std::string result(original);
+    MBO_STATUS_RETURN_IF_ERROR(section.Expand(result));
+    if (!first) {
+      output.append(tag.data.join);
+    }
+    first = false;
+    output.append(result);
+  }
+  return absl::OkStatus(); 
 }
 
 absl::Status Template::ExpandConfiguredSection(
@@ -340,7 +351,9 @@ absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view
     }
     MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, str_list_data, join));
   }
-  data_.erase(tag.name);  // Cannot be present.
+  if (data_.contains(tag.name)) {
+    return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' may not be present prior to expanding a list of the same name."));
+  }
   // CONSIDER: A specialized type would make this faster. But also less generic
   // and thus complicate extensions.
   MBO_STATUS_RETURN_IF_ERROR(ExpandConfiguredSection(tag.name, std::move(str_list), std::move(join), output));
@@ -348,9 +361,20 @@ absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view
   return absl::OkStatus();
 }
 
-absl::Status Template::ExpandConfiguredTag(const TagInfo& tag, std::string& output) {
+absl::Status Template::ExpandTag(const TagInfo& tag, std::string& output) {
   // Parse tag config and translate into whatever that says...
   if (!tag.config.has_value()) {
+    if (tag.type == TagType::kSection) {
+      auto data_it = data_.find(tag.name);
+      if (data_it == data_.end()) {
+        return absl::OkStatus();
+      }
+      auto* section = std::get_if<TagData<Section>>(&data_it->second);
+      if (section == nullptr) {
+        return absl::InvalidArgumentError(absl::StrCat("Section tag '", tag.name, "' has no dictionary."));
+      }
+      return ExpandSectionTag(*section, output);
+    }
     return absl::OkStatus();
   }
   switch (tag.type) {
@@ -372,72 +396,8 @@ absl::Status Template::ExpandConfiguredTag(const TagInfo& tag, std::string& outp
   return absl::UnimplementedError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", *tag.config, "'."));
 }
 
-absl::Status Template::RemoveTags(std::string& output) {
-  return ExpandTags(false, output, [](const TagInfo&, std::string& output) {
-    output.clear();
-    return absl::OkStatus();
-  });
-}
-
 absl::Status Template::Expand(std::string& output) {
-  MBO_STATUS_RETURN_IF_ERROR(
-      ExpandTags(true, output, [this](const TagInfo& tag, std::string& out) { return ExpandConfiguredTag(tag, out); }));
-  for (auto& [name, data] : data_) {
-    MBO_STATUS_RETURN_IF_ERROR(ExpandData(data, output));
-  }
-  return RemoveTags(output);
-}
-
-absl::Status Template::ExpandData(Data& data, std::string& output) {
-  return std::visit([&](auto& typed_data) { return Expand(typed_data, output); }, data);
-}
-
-absl::Status Template::Expand(TagData<SectionDictionary>& tag, std::string& output) {
-  if (absl::StrContains(output, absl::StrCat("{{", tag.tag.name, "}}"))) {
-    return absl::InvalidArgumentError(absl::StrCat("Simple tag '", tag.tag.name, "' used in SectionDictionary."));
-  }
-  while (true) {
-    const auto [pos_start, start_len] = FindTag(output, tag.tag.start);
-    const auto [pos_end, end_len] = FindTag(output, tag.tag.end);
-    if (pos_start == std::string::npos) {
-      if (pos_end != std::string::npos) {
-        return absl::InvalidArgumentError(absl::StrCat("Section '", tag.tag.name, "' has end but no start marker."));
-      }
-      break;
-    }
-    if (pos_end == std::string::npos) {
-      return absl::InvalidArgumentError(absl::StrCat("Section '", tag.tag.name, "' has start but no end marker."));
-    }
-    if (pos_end < pos_start) {
-      return absl::InvalidArgumentError(absl::StrCat("Section '", tag.tag.name, "' has end before start marker."));
-    }
-    const std::size_t tmpl_len = pos_end - pos_start - start_len;
-    std::size_t pos_insert = pos_end + end_len;
-    for (auto& section : tag.data) {
-      std::string value = output.substr(pos_start + start_len, tmpl_len);  // We still hold the "input" part.
-      MBO_STATUS_RETURN_IF_ERROR(section.Expand(value));
-      output.insert(pos_insert, value);
-      pos_insert += value.length();
-    }
-    output.replace(pos_start, tmpl_len + start_len + end_len, "");  // Now delete "input".
-  }
-  return absl::OkStatus();
-}
-
-absl::Status Template::Expand(const TagData<Range>& tag, std::string& output) {
-  // Unlike when expanding sections, here the tag is both the section and the value.
-  if (!tag.data.expanding) {
-    return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.tag.name, "' cannot be expanded."));
-  }
-  std::string tag_replace = absl::StrCat("{{", tag.tag.name, "}}");
-  std::string value = absl::StrCat(tag.data.curr);
-  absl::StrReplaceAll({{tag_replace, value}}, &output);
-  return absl::OkStatus();
-}
-
-absl::Status Template::Expand(const TagData<std::string>& tag, std::string& output) {
-  absl::StrReplaceAll({{tag.tag.start, tag.data}}, &output);
-  return absl::OkStatus();
+  return ExpandTags(output, [this](const TagInfo& tag, std::string& out) { return ExpandTag(tag, out); });
 }
 
 }  // namespace mbo::mope

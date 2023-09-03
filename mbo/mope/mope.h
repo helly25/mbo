@@ -22,6 +22,7 @@
 #include "absl/container/node_hash_map.h"
 #include "absl/functional/function_ref.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "mbo/types/extend.h"
 
 namespace mbo::mope {
@@ -45,7 +46,7 @@ class Template {
   // the returned value (so it must be used to do so).
   // If the function is called repetedly with the same `name`, then each time a new dictionary for that `name` will be
   // added.
-  [[nodiscard]] Template* AddSectionDictionary(std::string_view name);
+  [[nodiscard]] Template* AddSection(std::string_view name);
 
   // Expands the template `output` in-place.
   [[nodiscard]] absl::Status Expand(std::string& output);
@@ -71,7 +72,10 @@ class Template {
     DataType data;
   };
 
-  using SectionDictionary = std::vector<Template>;
+  struct Section {
+    std::string join;
+    std::vector<Template> dictionary;
+  };
 
   struct Range : mbo::types::Extend<Range> {
     int start = 0;
@@ -91,7 +95,7 @@ class Template {
 
   // Type `Data` holds all possible information variants. Each of these needs
   // to have a matching `Expand(const TagInfo<Data-Type>&, std::string*)`.
-  using Data = std::variant<TagData<SectionDictionary>, TagData<Range>, TagData<std::string>>;
+  using Data = std::variant<TagData<Section>, TagData<Range>, TagData<std::string>>;
 
   static std::optional<const Template::TagInfo> FindAndConsumeTag(std::string_view& pos);
   static std::pair<std::size_t, std::size_t> MaybeExpandWhiteSpace(
@@ -99,7 +103,6 @@ class Template {
       const TagInfo& tag,
       std::size_t tag_pos);
 
-  absl::Status RemoveTags(std::string& output);
   absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, std::string& value) const;
   absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, int& value) const;
   absl::Status ExpandRangeTag(const TagInfo& tag, Range& range, std::string& output);
@@ -110,16 +113,11 @@ class Template {
       std::string_view join,
       std::string& output);
   absl::Status ExpandConfiguredList(const TagInfo& tag, std::string_view str_list_data, std::string& output);
-  absl::Status ExpandConfiguredTag(const TagInfo& tag, std::string& output);
-  absl::Status ExpandTags(
-      bool configured_only,
-      std::string& output,
-      absl::FunctionRef<absl::Status(const TagInfo& tag, std::string&)> func);
+  absl::StatusOr<bool> ExpandValueTag(const TagInfo& tag, std::string& output);
+  absl::Status ExpandTag(const TagInfo& tag, std::string& output);
+  absl::Status ExpandTags(std::string& output, absl::FunctionRef<absl::Status(const TagInfo& tag, std::string&)> func);
 
-  static absl::Status ExpandData(Data& data, std::string& output);
-  static absl::Status Expand(TagData<SectionDictionary>& tag, std::string& output);
-  static absl::Status Expand(const TagData<Range>& tag, std::string& output);
-  static absl::Status Expand(const TagData<std::string>& tag, std::string& output);
+  static absl::Status ExpandSectionTag(TagData<Section>& tag, std::string& output);
 
   template<typename Sink>
   friend void AbslStringify(Sink& sink, const TagType& value);
