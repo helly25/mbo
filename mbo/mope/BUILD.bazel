@@ -16,6 +16,20 @@ load("mope.bzl", "mope_test")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "ini_cc",
+    srcs = ["ini.cc"],
+    hdrs = ["ini.h"],
+    deps = [
+        ":mope_cc",
+        "//mbo/file/ini:ini_file_cc",
+        "//mbo/status:status_macros_cc",
+        "@com_google_absl//absl/container:btree",
+        "@com_google_absl//absl/strings",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "mope_cc",
     srcs = ["mope.cc"],
     hdrs = ["mope.h"],
@@ -33,6 +47,7 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_googlesource_code_re2//:re2",
     ],
+    visibility = ["//visibility:public"],
 )
 
 cc_binary(
@@ -40,6 +55,7 @@ cc_binary(
     srcs = ["mope_main.cc"],
     visibility = ["//visibility:public"],
     deps = [
+        ":ini_cc",
         ":mope_cc",
         "//mbo/file:artefact_cc",
         "//mbo/file/ini:ini_file_cc",

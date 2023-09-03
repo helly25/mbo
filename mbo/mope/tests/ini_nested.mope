@@ -1,0 +1,9 @@
+People:
+{{#person}}
+
+Name: {{name}}
+Id: {{id}}
+{{#contact}}
+Phone: {{phone}}
+{{/contact}}
+{{/person}}

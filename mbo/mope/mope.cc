@@ -44,14 +44,7 @@ std::pair<std::size_t, std::size_t> ExpandWhiteSpace(
       --pos;
     }
     if (pos == 0 || output[pos - 1] == '\n' || output[pos - 1] == '\r') {
-      // Only preceded by whitespace and followed directly by a new-line.
-      // Must we keep very last new-line, otherwise the result is not a text
-      // file.
-      if (end == output.length()) {
-        return {pos, tag_pos - pos + tag_len};
-      } else {
-        return {pos, tag_pos - pos + tag_len + 1};
-      }
+      return {pos, tag_pos - pos + tag_len + 1};
     }
   }
   return {tag_pos, tag_len};
@@ -113,24 +106,23 @@ absl::Status Template::SetValue(std::string_view name, std::string_view value, b
   return absl::AlreadyExistsError(absl::StrCat("A value for '", name, "' already exists."));
 }
 
-std::optional<const Template::TagInfo> Template::FindAndConsumeTag(std::string_view* pos, bool configured_only) {
+std::optional<const Template::TagInfo> Template::FindAndConsumeTag(std::string_view& pos) {
   // Grab parts as string_view. Done in a separate block so these cannot escape.
   // They will be invalid upon the first change of `output`.
-  static constexpr LazyRE2 kNormalTags = {"({{(#?)(\\w+)}})"};
-  static constexpr LazyRE2 kConfiguredTags = {"({{(#?)(\\w+)(?:=((?:[^}]|[}][^}])+))?}})"};
-  const RE2* regex = configured_only ? &*kConfiguredTags : &*kNormalTags;
+  static constexpr LazyRE2 kTagRegex = {"({{(#?)(\\w+)(?:(=)((?:[^}]|[}][^}])+))?}})"};
   std::string_view start;
-  std::string_view name;
-  std::string_view config;
   std::string_view type;
-  if (!RE2::FindAndConsume(pos, *regex, &start, &type, &name, &config)) {
+  std::string_view name;
+  std::string_view has_config;
+  std::string_view config;
+  if (!RE2::FindAndConsume(&pos, *kTagRegex, &start, &type, &name, &has_config, &config)) {
     return std::nullopt;
   }
   return TagInfo{
       .name{name},
       .start{start},
       .end = type.empty() ? "" : absl::StrCat("{{/", name, "}}"),
-      .config{config},
+      .config = has_config.empty() ? std::nullopt : std::optional<std::string>(config),
       .type = type.empty() ? (config.empty() ? TagType::kValue : TagType::kControl) : TagType::kSection,
   };
 }
@@ -144,17 +136,19 @@ absl::Status Template::ExpandTags(
     if (pos.empty()) {
       return absl::OkStatus();
     }
-    std::optional<TagInfo> result = FindAndConsumeTag(&pos, configured_only);
+    std::optional<TagInfo> result = FindAndConsumeTag(pos);
     if (result == std::nullopt) {
       return absl::OkStatus();
     }
     const TagInfo tag = *std::move(result);
-    const bool skip = configured_only && tag.config.empty();
+    const bool skip = configured_only && !tag.config.has_value();
     if (!skip && tag.type == TagType::kSection && data_.find(tag.name) != data_.end()) {
       return absl::InvalidArgumentError(absl::StrCat("Tag name '", tag.name, "' appears twice."));
     }
     const std::size_t tag_pos = pos.data() - output.c_str() - tag.start.length();
-    const auto [replace_pos, replace_tag_len] = ExpandWhiteSpace(output, tag_pos, tag.start.length());
+    const auto [replace_pos, replace_tag_len] = tag.type == TagType::kSection || tag.config.has_value()
+                                                    ? ExpandWhiteSpace(output, tag_pos, tag.start.length())
+                                                    : std::make_pair(tag_pos, tag.start.length());
     std::string replace_str;
     std::size_t replace_len = 0;
     switch (tag.type) {
@@ -178,7 +172,11 @@ absl::Status Template::ExpandTags(
           pos.remove_prefix(replace_pos + replace_len);
           continue;
         }
+        const bool add_new_line = replace_str.ends_with("\n");
         MBO_STATUS_RETURN_IF_ERROR(func(tag, replace_str));
+        if (add_new_line && !replace_str.ends_with("\n")) {
+          absl::StrAppend(&replace_str, "\n");
+        }
         break;
       }
       case TagType::kValue: {
@@ -207,13 +205,12 @@ absl::Status Template::MaybeLookup(const TagInfo& tag_info, std::string_view dat
   }
   if ((data.starts_with('"') || data.starts_with('\'')) && (data.ends_with('"') || data.ends_with('\''))) {
     static constexpr mbo::strings::ParseOptions kOptions{
-      .remove_quotes = true,
-      .allow_unquoted = false,
+        .remove_quotes = true,
+        .allow_unquoted = false,
     };
     MBO_STATUS_ASSIGN_OR_RETURN(value, ParseString(kOptions, data));
     if (!data.empty()) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Tag '", tag_info.name, "' has bad literal joiner '", data, "'."));
+      return absl::InvalidArgumentError(absl::StrCat("Tag '", tag_info.name, "' has bad literal joiner '", data, "'."));
     }
     return absl::OkStatus();
   }
@@ -322,20 +319,22 @@ absl::Status Template::ExpandConfiguredSection(
 }
 
 absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view str_list_data, std::string& output) {
-  static constexpr mbo::strings::ParseOptions kConfiguredListParseOptions {
-    .stop_at_any_of = "]",
-    .split_at_any_of = ",",
+  static constexpr mbo::strings::ParseOptions kConfiguredListParseOptions{
+      .stop_at_any_of = "]",
+      .split_at_any_of = ",",
   };
   str_list_data.remove_prefix(1);  // Drop '[']
   // str_list_data.remove_suffix(1);  // Drop ']'
-  MBO_STATUS_ASSIGN_OR_RETURN(auto str_list, mbo::strings::ParseStringList(kConfiguredListParseOptions, str_list_data));  
+  MBO_STATUS_ASSIGN_OR_RETURN(auto str_list, mbo::strings::ParseStringList(kConfiguredListParseOptions, str_list_data));
   std::string join;
   if (str_list_data.empty() || mbo::strings::PopChar(str_list_data) != ']') {
-    return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", tag.config, "'."));
+    return absl::InvalidArgumentError(
+        absl::StrCat("Tag '", tag.name, "' has unknown config format '", tag.config.value_or(""), "'."));
   }
   if (!str_list_data.empty()) {
     if (str_list_data.size() < 2 || mbo::strings::PopChar(str_list_data) != ';') {
-      return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", tag.config, "'."));
+      return absl::InvalidArgumentError(
+          absl::StrCat("Tag '", tag.name, "' has unknown config format '", tag.config.value_or(""), "'."));
     }
     MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, str_list_data, join));
   }
@@ -349,23 +348,25 @@ absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view
 
 absl::Status Template::ExpandConfiguredTag(const TagInfo& tag, std::string& output) {
   // Parse tag config and translate into whatever that says...
+  ABSL_CHECK(tag.config.has_value());  // NOLINTBEGIN(bugprone-unchecked-optional-access)
   switch (tag.type) {
     case TagType::kSection: {
       static constexpr LazyRE2 kReFor = {
           R"(\s*(-?\d+|[_a-zA-Z]\w*)\s*;\s*(-?\d+|[_a-zA-Z]\w*)\s*(?:;\s*(|-?\d+|[_a-zA-Z]\w*)\s*(?:;([^;]*))?)?)"};
       RangeData range;
-      if (RE2::FullMatch(tag.config, *kReFor, &range.start, &range.end, &range.step, &range.join)) {
+      if (RE2::FullMatch(*tag.config, *kReFor, &range.start, &range.end, &range.step, &range.join)) {
         return ExpandRangeData(tag, range, output);
       }
-      if (tag.config.starts_with('[')) {
-        return ExpandConfiguredList(tag, tag.config, output);
+      if (tag.config->starts_with('[')) {
+        return ExpandConfiguredList(tag, *tag.config, output);
       }
       break;
     }
-    case TagType::kControl: return SetValue(tag.name, tag.config, true);
+    case TagType::kControl: return SetValue(tag.name, *tag.config, true);
     case TagType::kValue: break;  // Unexpected. Ignore.
   }
-  return absl::UnimplementedError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", tag.config, "'."));
+  return absl::UnimplementedError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", *tag.config, "'."));
+  // NOLINTEND(bugprone-unchecked-optional-access)
 }
 
 absl::Status Template::RemoveTags(std::string& output) {

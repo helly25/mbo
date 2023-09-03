@@ -26,7 +26,7 @@
 #include "absl/strings/str_split.h"
 #include "mbo/file/artefact.h"
 #include "mbo/file/file.h"
-#include "mbo/file/ini/ini_file.h"
+#include "mbo/mope/ini.h"
 #include "mbo/mope/mope.h"
 #include "mbo/status/status_macros.h"
 
@@ -61,31 +61,7 @@ absl::Status Process(const Options& opts) {
   // Read `--ini` file if present.
   const std::string ini_filename = absl::GetFlag(FLAGS_ini);
   if (!ini_filename.empty()) {
-    MBO_STATUS_ASSIGN_OR_RETURN(const mbo::file::IniFile ini, mbo::file::IniFile::Read(ini_filename));
-    absl::btree_map<std::vector<std::pair<std::string, std::string>>, mbo::mope::Template*> sections;
-    sections[{{"", ""}}] = &mope_template;
-    for (const std::string& group : ini.GetGroups()) {
-      mbo::mope::Template* target = &mope_template;
-      std::vector<std::string> levels = absl::StrSplit(group, '.');
-      if (levels.size() == 1 && levels.front().empty()) {
-        levels.clear();
-      }
-      if (!levels.empty()) {
-        std::vector<std::pair<std::string, std::string>> section_path;
-        for (const auto& level : levels) {
-          std::pair<std::string, std::string> tail = absl::StrSplit(level, absl::MaxSplits(':', 1));
-          section_path.push_back(tail);
-          auto [section, inserted] = sections.emplace(section_path, nullptr);
-          if (inserted) {
-            section->second = target->AddSectionDictionary(tail.first);
-          }
-          target = section->second;
-        }
-      }
-      for (const auto& [key, val] : ini.GetGroupData(group)) {
-        MBO_STATUS_RETURN_IF_ERROR(target->SetValue(key, val));
-      }
-    }
+    MBO_STATUS_RETURN_IF_ERROR(mope::ReadIniToTemlate(ini_filename, mope_template));
   }
   // Expand the template.
   MBO_STATUS_RETURN_IF_ERROR(mope_template.Expand(input->data));
