@@ -94,6 +94,10 @@ class Template {
   using Data = std::variant<TagData<SectionDictionary>, TagData<Range>, TagData<std::string>>;
 
   static std::optional<const Template::TagInfo> FindAndConsumeTag(std::string_view& pos);
+  static std::pair<std::size_t, std::size_t> MaybeExpandWhiteSpace(
+      std::string_view output,
+      const TagInfo& tag,
+      std::size_t tag_pos);
 
   absl::Status RemoveTags(std::string& output);
   absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, std::string& value) const;
@@ -112,6 +116,7 @@ class Template {
       std::string& output,
       absl::FunctionRef<absl::Status(const TagInfo& tag, std::string&)> func);
 
+  static absl::Status ExpandData(Data& data, std::string& output);
   static absl::Status Expand(TagData<SectionDictionary>& tag, std::string& output);
   static absl::Status Expand(const TagData<Range>& tag, std::string& output);
   static absl::Status Expand(const TagData<std::string>& tag, std::string& output);

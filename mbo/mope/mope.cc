@@ -127,6 +127,14 @@ std::optional<const Template::TagInfo> Template::FindAndConsumeTag(std::string_v
   };
 }
 
+std::pair<std::size_t, std::size_t> Template::MaybeExpandWhiteSpace(
+    std::string_view output,
+    const TagInfo& tag,
+    std::size_t tag_pos) {
+  return tag.type == TagType::kSection || tag.config.has_value() ? ExpandWhiteSpace(output, tag_pos, tag.start.length())
+                                                                 : std::make_pair(tag_pos, tag.start.length());
+}
+
 absl::Status Template::ExpandTags(
     bool configured_only,
     std::string& output,
@@ -146,9 +154,7 @@ absl::Status Template::ExpandTags(
       return absl::InvalidArgumentError(absl::StrCat("Tag name '", tag.name, "' appears twice."));
     }
     const std::size_t tag_pos = pos.data() - output.c_str() - tag.start.length();
-    const auto [replace_pos, replace_tag_len] = tag.type == TagType::kSection || tag.config.has_value()
-                                                    ? ExpandWhiteSpace(output, tag_pos, tag.start.length())
-                                                    : std::make_pair(tag_pos, tag.start.length());
+    const auto [replace_pos, replace_tag_len] = MaybeExpandWhiteSpace(output, tag, tag_pos);
     std::string replace_str;
     std::size_t replace_len = 0;
     switch (tag.type) {
@@ -172,11 +178,7 @@ absl::Status Template::ExpandTags(
           pos.remove_prefix(replace_pos + replace_len);
           continue;
         }
-        const bool add_new_line = replace_str.ends_with("\n");
         MBO_STATUS_RETURN_IF_ERROR(func(tag, replace_str));
-        if (add_new_line && !replace_str.ends_with("\n")) {
-          absl::StrAppend(&replace_str, "\n");
-        }
         break;
       }
       case TagType::kValue: {
@@ -348,7 +350,9 @@ absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view
 
 absl::Status Template::ExpandConfiguredTag(const TagInfo& tag, std::string& output) {
   // Parse tag config and translate into whatever that says...
-  ABSL_CHECK(tag.config.has_value());  // NOLINTBEGIN(bugprone-unchecked-optional-access)
+  if (!tag.config.has_value()) {
+    return absl::OkStatus();
+  }
   switch (tag.type) {
     case TagType::kSection: {
       static constexpr LazyRE2 kReFor = {
@@ -366,7 +370,6 @@ absl::Status Template::ExpandConfiguredTag(const TagInfo& tag, std::string& outp
     case TagType::kValue: break;  // Unexpected. Ignore.
   }
   return absl::UnimplementedError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", *tag.config, "'."));
-  // NOLINTEND(bugprone-unchecked-optional-access)
 }
 
 absl::Status Template::RemoveTags(std::string& output) {
@@ -380,9 +383,13 @@ absl::Status Template::Expand(std::string& output) {
   MBO_STATUS_RETURN_IF_ERROR(
       ExpandTags(true, output, [this](const TagInfo& tag, std::string& out) { return ExpandConfiguredTag(tag, out); }));
   for (auto& [name, data] : data_) {
-    MBO_STATUS_RETURN_IF_ERROR(std::visit([&](auto& typed_data) { return Expand(typed_data, output); }, data));
+    MBO_STATUS_RETURN_IF_ERROR(ExpandData(data, output));
   }
   return RemoveTags(output);
+}
+
+absl::Status Template::ExpandData(Data& data, std::string& output) {
+  return std::visit([&](auto& typed_data) { return Expand(typed_data, output); }, data);
 }
 
 absl::Status Template::Expand(TagData<SectionDictionary>& tag, std::string& output) {
