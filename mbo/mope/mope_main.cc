@@ -84,6 +84,8 @@ Args:
                           results in using stdout as output.
   --set=(key=val,)+       List of comma separated `key`, `value` pairs used to
                           set simple values.
+  --ini=<filename>        An optional INI file that can be used to configure
+                          the template data, see below.
 
 Background: Pump.py (Pretty Useful for Meta Programming) is a templating system
 that allows to expand generic code mostly using simple for-loops and conditions.
@@ -181,6 +183,32 @@ mbo::mope::Templaye mope;
 std::string output(R"({{#foo=['1,2',3\,4]}}[{{foo}}]{{/foo}})"R);
 mope.Expand(output);
 CHECK_EQ(output, "[1,2][3,4]");
+```
+
+Extras:
+
+1) INI File handling
+
+INI groups are used as sections. They can build ahierarchy:
+
+* The group names are split at '.' to make up the nesting levels.
+* Each level can be repeated by appending a different ':' to the level name.
+
+Example:
+
+```
+[person]
+id=0
+[person.contact]
+phone=1234
+[person.contact:1]
+phone=2345
+[person:1]
+id=1
+[person:1.contact]
+phone=3456
+[person:1.contact:1]
+phone=4567
 ```
 
 )help";
