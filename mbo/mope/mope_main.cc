@@ -114,7 +114,7 @@ CHECK_EQ(output, "My bar.");
 
 2) A section dictionary can be build by calling `AddSubDictionary` multiple
 times for the same `name` which becomes the section name. The section starts
-with '{{#' <name> '}}' and ends with '{{/' <name> '}};.
+with '{{#' <name> (':' <join>)? '}}' and ends with '{{/' <name> '}};.
 
 ```c++
 mbo::mope::Templaye mope;
@@ -126,6 +126,10 @@ std::string output("My {{#section}}{{foo}}{{/section}}.");
 mope.Expand(output);
 CHECK_EQ(output, "My bar-baz.");
 ```
+
+The optional <join> value can be a quoted string or a reference. It is used to
+join the section values and won't be used if the section has fewer then 2
+elements.
 
 3) The template supports for-loops:
 

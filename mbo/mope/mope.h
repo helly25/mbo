@@ -62,6 +62,7 @@ class Template {
     std::string start;
     std::string end;
     std::optional<std::string> config;
+    std::optional<std::string> option;
     TagType type = TagType::kValue;
   };
 

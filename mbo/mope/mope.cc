@@ -100,21 +100,22 @@ absl::Status Template::SetValue(std::string_view name, std::string_view value, b
 std::optional<const Template::TagInfo> Template::FindAndConsumeTag(std::string_view& pos) {
   // Grab parts as string_view. Done in a separate block so these cannot escape.
   // They will be invalid upon the first change of `output`.
-  static constexpr LazyRE2 kTagRegex = {"({{(#?)(\\w+)(?:(=)((?:[^}]|[}][^}])+))?}})"};
+  static constexpr LazyRE2 kTagRegex = {"({{(#?)(\\w+)(?:([=:])((?:[^}]|[}][^}])+))?}})"};
   std::string_view start;
   std::string_view type;
   std::string_view name;
-  std::string_view has_config;
-  std::string_view config;
-  if (!RE2::FindAndConsume(&pos, *kTagRegex, &start, &type, &name, &has_config, &config)) {
+  std::string_view has_extra;
+  std::string_view extra;
+  if (!RE2::FindAndConsume(&pos, *kTagRegex, &start, &type, &name, &has_extra, &extra)) {
     return std::nullopt;
   }
   return TagInfo{
       .name{name},
       .start{start},
       .end = type.empty() ? "" : absl::StrCat("{{/", name, "}}"),
-      .config = has_config.empty() ? std::nullopt : std::optional<std::string>(config),
-      .type = type.empty() ? (config.empty() ? TagType::kValue : TagType::kControl) : TagType::kSection,
+      .config = has_extra == "=" ? std::optional<std::string>(extra) : std::nullopt,
+      .option = has_extra == ":" ? std::optional<std::string>(extra) : std::nullopt,
+      .type = type.empty() ? (extra.empty() ? TagType::kValue : TagType::kControl) : TagType::kSection,
   };
 }
 
@@ -336,7 +337,7 @@ absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view
       .stop_at_any_of = "]",
       .split_at_any_of = ",",
   };
-  str_list_data.remove_prefix(1);  // Drop '[']
+  str_list_data.remove_prefix(1);  // Drop '['
   // str_list_data.remove_suffix(1);  // Drop ']'
   MBO_STATUS_ASSIGN_OR_RETURN(auto str_list, mbo::strings::ParseStringList(kConfiguredListParseOptions, str_list_data));
   std::string join;
@@ -374,6 +375,15 @@ absl::Status Template::ExpandTag(const TagInfo& tag, std::string& output) {
       if (section == nullptr) {
         return absl::InvalidArgumentError(absl::StrCat("Section tag '", tag.name, "' has no dictionary."));
       }
+      static constexpr mbo::strings::ParseOptions kOptions{
+        .remove_quotes = true,
+        .allow_unquoted = false,
+      };
+      std::string_view join;
+      if (tag.option.has_value()) {
+        join = *tag.option;
+      }
+      MBO_STATUS_ASSIGN_OR_RETURN(section->data.join, ParseString(kOptions, join));
       return ExpandSectionTag(*section, output);
     }
     return absl::OkStatus();

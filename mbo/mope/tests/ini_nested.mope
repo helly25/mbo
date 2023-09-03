@@ -1,6 +1,4 @@
-People:
-{{#person}}
-
+{{#person:"\n"}}
 Name: {{name}}
 Id: {{id}}
 {{#contact}}
