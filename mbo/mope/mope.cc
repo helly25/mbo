@@ -307,7 +307,7 @@ absl::Status Template::ExpandSectionTag(TagData<Section>& tag, std::string& outp
     first = false;
     output.append(result);
   }
-  return absl::OkStatus(); 
+  return absl::OkStatus();
 }
 
 absl::Status Template::ExpandConfiguredSection(
@@ -352,7 +352,8 @@ absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view
     MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, str_list_data, join));
   }
   if (data_.contains(tag.name)) {
-    return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' may not be present prior to expanding a list of the same name."));
+    return absl::InvalidArgumentError(
+        absl::StrCat("Tag '", tag.name, "' may not be present prior to expanding a list of the same name."));
   }
   // CONSIDER: A specialized type would make this faster. But also less generic
   // and thus complicate extensions.
