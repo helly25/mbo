@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/container/btree_map.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
@@ -25,12 +26,14 @@
 #include "absl/strings/str_split.h"
 #include "mbo/file/artefact.h"
 #include "mbo/file/file.h"
+#include "mbo/file/ini/ini_file.h"
 #include "mbo/mope/mope.h"
 #include "mbo/status/status_macros.h"
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables,abseil-no-namespace)
 ABSL_FLAG(std::string, template, "", "The templte input file (.tpl, .mope).");
 ABSL_FLAG(std::string, generate, "-", "The generated out file ('-' for stdout)");
+ABSL_FLAG(std::string, ini, "-", "An INI file that can be used to initialize section data.");
 
 ABSL_FLAG(
     std::vector<std::string>,
@@ -50,10 +53,41 @@ struct Options {
 absl::Status Process(const Options& opts) {
   auto input = mbo::file::Artefact::Read(opts.template_name);
   mbo::mope::Template mope_template;
+  // Add `--set` flag values.
   for (const auto& set_kv : absl::GetFlag(FLAGS_set)) {
     const std::pair<std::string_view, std::string_view> kv = absl::StrSplit(set_kv, '=');
     MBO_STATUS_RETURN_IF_ERROR(mope_template.SetValue(kv.first, kv.second));
   }
+  // Read `--ini` file if present.
+  const std::string ini_filename = absl::GetFlag(FLAGS_ini);
+  if (!ini_filename.empty()) {
+    MBO_STATUS_ASSIGN_OR_RETURN(const mbo::file::IniFile ini, mbo::file::IniFile::Read(ini_filename));
+    absl::btree_map<std::vector<std::pair<std::string, std::string>>, mbo::mope::Template*> sections;
+    sections[{{"", ""}}] = &mope_template;
+    for (const std::string& group : ini.GetGroups()) {
+      mbo::mope::Template* target = &mope_template;
+      std::vector<std::string> levels = absl::StrSplit(group, '.');
+      if (levels.size() == 1 && levels.front().empty()) {
+        levels.clear();
+      }
+      if (!levels.empty()) {
+        std::vector<std::pair<std::string, std::string>> section_path;
+        for (const auto& level : levels) {
+          std::pair<std::string, std::string> tail = absl::StrSplit(level, absl::MaxSplits(':', 1));
+          section_path.push_back(tail);
+          auto [section, inserted] = sections.emplace(section_path, nullptr);
+          if (inserted) {
+            section->second = target->AddSectionDictionary(tail.first);
+          }
+          target = section->second;
+        }
+      }
+      for (const auto& [key, val] : ini.GetGroupData(group)) {
+        MBO_STATUS_RETURN_IF_ERROR(target->SetValue(key, val));
+      }
+    }
+  }
+  // Expand the template.
   MBO_STATUS_RETURN_IF_ERROR(mope_template.Expand(input->data));
   if (opts.generate_name.empty() || opts.generate_name == "-") {
     std::cout << input->data;

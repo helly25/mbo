@@ -25,6 +25,13 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `NormalizePath`: Normalizes a path.
         * function `Readable`: Returns whether a file is readable or an absl::Status error.
         * function `SetContents`: Writes contents to a file.
+    * mbo/file/ini:ini_file_cc, mbo/file/ini/ini_file.h
+        * class `IniFile`: A simple INI file reader.
+* Status
+    * `namespace mbo::status`
+    * mbo/status:status_macros_cc, mbo/status/status_macros.h
+        * macro `MBO_STATUS_RETURN_IF_ERROR`: Macro that simplifies handling functions returning `absl::Status`.
+        * macro `MBO_STATUS_ASSIGN_OR_RETURN`: Macro that simplifies handling functions returning `absl::StatusOr<T>`.
 * Strings
     * `namespace mbo::strings`
     * mbo/strings:indent_cc, mbo/strings/indent.h
@@ -36,6 +43,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * gMock-matcher `IsOk`: Tests whether an absl::Status or absl::StatusOr is absl::OkStatus.
         * gMock-matcher `IsOkAndHolds`: Tests an absl::StatusOr for absl::OkStatus and contents.
         * gMock-Matcher `StatusIs`: Tests an absl::Status or absl::StatusOr against a specific status code and message.
+        * macro `MBO_STATUS_ASSERT_OK_AND_ASSIGN`: Simplifies testing with functions that return `absl::StatusOr<T>`.
 * Types
     * `namespace mbo::types`
     * mbo/types:cases_cc, mbo/types/cases.h

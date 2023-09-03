@@ -42,7 +42,9 @@ cc_binary(
     deps = [
         ":mope_cc",
         "//mbo/file:artefact_cc",
+        "//mbo/file/ini:ini_file_cc",
         "//mbo/status:status_macros_cc",
+        "@com_google_absl//absl/container:btree",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/log:initialize",
         "@com_google_absl//absl/status",
@@ -54,6 +56,7 @@ mope_test(
     name = "mope_test",
     srcs = glob(["tests/*.mope"]),
     outs = glob(["tests/*.golden"]),
+    data = glob(["tests/*.ini"]),
 )
 
 bzl_library(

@@ -1,0 +1,10 @@
+Subject: {{subject}}
+
+People:
+{{#person}}
+
+Name: {{name}}
+Age: {{age}}
+{{/person}}
+
+Done.

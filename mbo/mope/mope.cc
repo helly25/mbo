@@ -149,7 +149,8 @@ absl::Status Template::ExpandTags(
       return absl::OkStatus();
     }
     const TagInfo tag = *std::move(result);
-    if (tag.type == TagType::kSection && data_.find(tag.name) != data_.end()) {
+    const bool skip = configured_only && tag.config.empty();
+    if (!skip && tag.type == TagType::kSection && data_.find(tag.name) != data_.end()) {
       return absl::InvalidArgumentError(absl::StrCat("Tag name '", tag.name, "' appears twice."));
     }
     const std::size_t tag_pos = pos.data() - output.c_str() - tag.start.length();
@@ -170,6 +171,13 @@ absl::Status Template::ExpandTags(
         const auto [replace_end, replace_end_len] = ExpandWhiteSpace(output, tag_end_pos, tag.end.length());
         replace_len = replace_end + replace_end_len - replace_pos;  // whole replace incl. tags
         replace_str = output.substr(replace_pos + replace_tag_len, replace_len - replace_tag_len - replace_end_len);
+        if (skip) {
+          pos = output;
+          // Drop this block and implement the UNIMPLEMENTED part of the func below. Then remove old section handling.
+          // Unless the old section block works better.
+          pos.remove_prefix(replace_pos + replace_len);
+          continue;
+        }
         MBO_STATUS_RETURN_IF_ERROR(func(tag, replace_str));
         break;
       }

@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/container/btree_map.h"
+#include "absl/container/btree_set.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 
@@ -84,6 +85,25 @@ class IniFile {
       typename = std::void_t<decltype(absl::StrCat(std::declval<const T&>()))>>
   void SetKey(const GroupKey& group_key, const T& new_value = "") {
     SetKey(group_key, absl::StrCat(new_value));
+  }
+
+  absl::btree_set<std::string> GetGroups() const {
+    absl::btree_set<std::string> result;
+    for (const auto& [group, _] : data_) {
+      result.emplace(group);
+    }
+    return result;
+  }
+
+  absl::btree_map<std::string, std::string> GetGroupData(std::string_view group) const {
+    absl::btree_map<std::string, std::string> result;
+    const auto group_it= data_.find(group);
+    if (group_it != data_.end()) {
+      for (const auto& kv : group_it->second) {
+        result.emplace(kv);
+      }
+    }
+    return result;
   }
 
   bool empty() const { return data_.empty(); }  // NOLINT(readability-identifier-naming)

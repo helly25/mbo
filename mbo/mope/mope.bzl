@@ -100,6 +100,16 @@ def _rule_name(str):
             res += "_"
     return res
 
+def _base_no_ext(file):
+    # Other files.
+    if type(file) == "string":
+        name = file.split(":")[-1]
+    else:
+        name = file.basename
+    if not "." in name:
+        return name
+    return ".".join(name.split(".")[:-1])
+
 def _template_base_no_ext(file):
     # Templates are defined to only accept '.tpl' or '.mope'.
     if type(file) == "string":
@@ -138,9 +148,9 @@ def _build_relative(ctx, file):
     return file.short_path.removeprefix(path).removeprefix("/")
 
 def _mope_rule_impl(ctx):
-    osrcs = [src.files.to_list()[0] for src in ctx.attr.srcs]
-    srcs = {_template_base_no_ext(src): src for src in osrcs}
+    srcs = {_template_base_no_ext(src): src for src in ctx.files.srcs}
     outs = {_gen_name_base_no_ext(out): ctx.actions.declare_file(_build_relative(ctx, out)) for out in ctx.outputs.outs}
+    inis = {_base_no_ext(ini): ini.path for ini in ctx.files.data if ini.extension == "ini"}
     if srcs.keys() != outs.keys():
         fail("Files in `srcs` and `outs` do not match on basenames without extensions.")
     for key, src in srcs.items():
@@ -153,9 +163,10 @@ def _mope_rule_impl(ctx):
             arguments = ctx.attr.args + [
                 "--template=" + src.path,
                 "--generate=" + gen.path,
+                "--ini=" + inis.get(key, ""),
             ],
             executable = ctx.executable._mope_tool,
-            inputs = [src],
+            inputs = ctx.files.srcs + ctx.files.data,
             mnemonic = "Mope",
             outputs = [gen],
             progress_message = "Mope over " + key,
@@ -175,25 +186,31 @@ _mope_attrs = {
     "args": attr.string_list(
         doc = "Args to be passed to the mope tool.",
     ),
+    "clang_format": attr.bool(
+        doc = "Whether to apply clang-format to the generated result.",
+        default = False,
+    ),
+    "data": attr.label_list(
+        allow_files = [".ini"],
+        default = [],
+        doc = "All data files (excl. sources and outs).",
+        mandatory = False,
+    ),
     "outs": attr.output_list(
         doc = "List of generated file(s). This must match srcs by matching the basenames without extensions (" +
                 "e.g. a template `foo.cc.tpl` must have an output `foo.cc`).",
         mandatory = True,
     ),
     "srcs": attr.label_list(
-        doc = "List of templates.",
         allow_files = [".tpl", ".mope"],
+        doc = "List of templates.",
         mandatory = True,
     ),
-    "clang_format": attr.bool(
-        doc = "Whether to apply clang-format to the generated result.",
-        default = False,
-    ),
     "_mope_tool": attr.label(
-        doc = "The `mope` tool.",
-        default = Label("//mbo/mope"),
-        executable = True,
         cfg = "exec",
+        default = Label("//mbo/mope"),
+        doc = "The `mope` tool.",
+        executable = True,
     ),
 }
 
@@ -214,6 +231,7 @@ def mope_test(
         name,
         srcs,
         outs,
+        data = [],
         clang_format = False,
         args = [],
         **kwargs
@@ -224,6 +242,7 @@ def mope_test(
         name: Name of the resulting test_suite
         srcs: The mope template(s).
         outs: The corresponding golden generated files.
+        data: additional data files (e.g. INI files).ß
         clang_format: Whether to apply clang-fromat to the generated results.
         args: Arguments to pass to the mope tool.
         **kwargs: Other args (e.g. tags, visibility).
@@ -240,10 +259,11 @@ def mope_test(
         fail("Files in `srcs` and `outs` do not match on basenames without extensions.")
     mope(
         name = base_name + "_mope",
-        srcs = srcs,
-        outs = gens.values(),
-        clang_format = clang_format,
         args = args,
+        clang_format = clang_format,
+        data = data,
+        outs = gens.values(),
+        srcs = srcs,
         testonly = 1,
         **kwargs
     )
