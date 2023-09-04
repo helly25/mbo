@@ -156,7 +156,9 @@ CHECK_EQ(output, "My 1.3.5.");
 ```
 
 4) The template allows to set tags from within the template. This allows to
-provide centralized configuration values for instance to for-loops.
+provide centralized configuration values for instance to for-loops. The values
+are global but can be overwritten at any point. However, they cannot override
+template tags.
 
 These are value tags with a configuration: '{{' <<name> '=' <value> '}}'
 

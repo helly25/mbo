@@ -51,7 +51,7 @@ class Template {
   absl::StatusOr<Template*> AddSection(std::string_view name);
 
   // Expands the template `output` in-place.
-  absl::Status Expand(std::string& output);
+  absl::Status Expand(std::string& output) const;
 
  private:
   enum class TagType {
@@ -76,7 +76,7 @@ class Template {
   };
 
   struct Section {
-    std::string join;
+    mutable std::string join;
     std::vector<Template> dictionary;
   };
 
@@ -99,6 +99,11 @@ class Template {
   // Type `Data` holds all possible information variants. Each of these needs
   // to have a matching `Expand(const TagInfo<Data-Type>&, std::string*)`.
   using Data = std::variant<TagData<Section>, TagData<Range>, TagData<std::string>>;
+  using DataMap = absl::node_hash_map<std::string, Data>;
+
+  struct Context {
+    DataMap data;
+  };
 
   static std::optional<const Template::TagInfo> FindAndConsumeTag(std::string_view& pos);
   static std::pair<std::size_t, std::size_t> MaybeExpandWhiteSpace(
@@ -106,27 +111,40 @@ class Template {
       const TagInfo& tag,
       std::size_t tag_pos);
 
-  absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, std::string& value) const;
-  absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, int& value) const;
-  absl::Status ExpandRangeTag(const TagInfo& tag, Range& range, std::string& output);
-  absl::Status ExpandRangeData(const TagInfo& tag, const RangeData& range_data, std::string& output);
+  static absl::Status SetValueInternal(std::string_view name, std::string_view value, bool allow_update, DataMap& data);
+
+  bool Exists(std::string_view name, const Context& ctx) const;
+  const Data* Lookup(std::string_view name, const Context& ctx) const;
+  absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, const Context& ctx, std::string& value)
+      const;
+  absl::Status MaybeLookup(const TagInfo& tag_info, std::string_view data, const Context& ctx, int& value) const;
+  absl::Status ExpandRangeTag(const TagInfo& tag, Range& range, Context& ctx, std::string& output) const;
+  absl::Status ExpandRangeData(const TagInfo& tag, const RangeData& range_data, Context& ctx, std::string& output)
+      const;
   absl::Status ExpandConfiguredSection(
       std::string_view name,
       std::vector<std::string> str_list,
       std::string_view join,
-      std::string& output);
-  absl::Status ExpandConfiguredList(const TagInfo& tag, std::string_view str_list_data, std::string& output);
-  absl::Status ExpandSectionTag(const TagInfo& tag, std::string& output);
-  absl::Status ExpandControlTag(const TagInfo& tag);
-  absl::StatusOr<bool> ExpandValueTag(const TagInfo& tag, std::string& output);
+      Context& ctx,
+      std::string& output) const;
+  absl::Status ExpandConfiguredList(
+      const TagInfo& tag,
+      std::string_view str_list_data,
+      Context& ctx,
+      std::string& output) const;
+  absl::Status ExpandSectionTag(const TagInfo& tag, Context& ctx, std::string& output) const;
+  absl::Status ExpandControlTag(const TagInfo& tag, Context& ctx) const;
+  absl::StatusOr<bool> ExpandValueTag(const TagInfo& tag, Context& ctx, std::string& output) const;
 
-  static absl::Status ExpandSection(TagData<Section>& tag, std::string& output);
+  absl::Status ExpandInternal(Context& ctx, std::string& output) const;
+
+  static absl::Status ExpandSection(const TagData<Section>& tag, Context& ctx, std::string& output);
 
   template<typename Sink>
   friend void AbslStringify(Sink&, TagType);
   friend std::ostream& operator<<(std::ostream&, TagType);
 
-  absl::node_hash_map<std::string, Data> data_ = {};
+  DataMap data_ = {};
 };
 
 }  // namespace mbo::mope

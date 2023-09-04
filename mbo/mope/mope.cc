@@ -89,7 +89,11 @@ absl::StatusOr<Template*> Template::AddSection(std::string_view name) {
   return &section.dictionary.emplace_back();
 }
 
-absl::Status Template::SetValue(std::string_view name, std::string_view value, bool allow_update) {
+absl::Status Template::SetValueInternal(
+    std::string_view name,
+    std::string_view value,
+    bool allow_update,
+    DataMap& data) {
   if (!IsValidName(name)) {
     return absl::InvalidArgumentError(absl::StrCat("Name '", name, "' is not valid."));
   }
@@ -98,7 +102,7 @@ absl::Status Template::SetValue(std::string_view name, std::string_view value, b
       .start = absl::StrCat("{{", name, "}}"),
       .type = TagType::kValue,
   };
-  auto [it, inserted] = data_.emplace(name, TagData<std::string>{.tag = std::move(tag), .data{value}});
+  auto [it, inserted] = data.emplace(name, TagData<std::string>{.tag = std::move(tag), .data{value}});
   if (inserted) {
     return absl::OkStatus();
   }
@@ -113,7 +117,31 @@ absl::Status Template::SetValue(std::string_view name, std::string_view value, b
   return absl::AlreadyExistsError(absl::StrCat("A value for '", name, "' already exists."));
 }
 
-absl::Status Template::MaybeLookup(const TagInfo& tag_info, std::string_view data, std::string& value) const {
+absl::Status Template::SetValue(std::string_view name, std::string_view value, bool allow_update) {
+  return SetValueInternal(name, value, allow_update, data_);
+}
+
+bool Template::Exists(std::string_view name, const Context& ctx) const {
+  return data_.contains(name) || ctx.data.contains(name);
+}
+
+const Template::Data* Template::Lookup(std::string_view name, const Context& ctx) const {
+  auto data_it = data_.find(name);
+  if (data_it != data_.end()) {
+    return &data_it->second;
+  }
+  data_it = ctx.data.find(name);
+  if (data_it != ctx.data.end()) {
+    return &data_it->second;
+  }
+  return nullptr;
+}
+
+absl::Status Template::MaybeLookup(
+    const TagInfo& tag_info,
+    std::string_view data,
+    const Context& ctx,
+    std::string& value) const {
   if (data.empty()) {
     return absl::OkStatus();
   }
@@ -128,12 +156,11 @@ absl::Status Template::MaybeLookup(const TagInfo& tag_info, std::string_view dat
     }
     return absl::OkStatus();
   }
-  auto data_it = data_.find(data);
-  if (data_it == data_.end()) {
+  const Data* data_found = Lookup(data, ctx);
+  if (data_found == nullptr) {
     return absl::NotFoundError(absl::StrCat("Tag '", tag_info.name, "' references '", data, "' which was not found."));
   }
-  const auto& found = data_it->second;
-  if (const auto* tag_data = std::get_if<TagData<std::string>>(&found)) {
+  if (const auto* tag_data = std::get_if<TagData<std::string>>(data_found)) {
     value = tag_data->data;
     return absl::OkStatus();
   }
@@ -141,22 +168,22 @@ absl::Status Template::MaybeLookup(const TagInfo& tag_info, std::string_view dat
       absl::StrCat("Tag '", tag_info.name, "' refrences '", data, "' which has unsupported data type."));
 }
 
-absl::Status Template::MaybeLookup(const TagInfo& tag_info, std::string_view data, int& value) const {
+absl::Status Template::MaybeLookup(const TagInfo& tag_info, std::string_view data, const Context& ctx, int& value)
+    const {
   if (data.empty() || absl::SimpleAtoi(data, &value)) {
     return absl::OkStatus();
   }
-  auto data_it = data_.find(data);
-  if (data_it == data_.end()) {
+  const Data* found_data_ptr = Lookup(data, ctx);
+  if (found_data_ptr == nullptr) {
     return absl::NotFoundError(absl::StrCat("Tag '", tag_info.name, "' references '", data, "' which was not found."));
   }
-  const auto& found = data_it->second;
-  if (const auto* tag_data = std::get_if<TagData<std::string>>(&found)) {
+  if (const auto* tag_data = std::get_if<TagData<std::string>>(found_data_ptr)) {
     if (absl::SimpleAtoi(tag_data->data, &value)) {
       return absl::OkStatus();
     }
     return absl::InvalidArgumentError(absl::StrCat(
         "Tag '", tag_info.name, "' refrences '", data, "' which has non numeric value '", tag_data->data, "'"));
-  } else if (const auto* tag_data = std::get_if<TagData<Range>>(&found)) {
+  } else if (const auto* tag_data = std::get_if<TagData<Range>>(found_data_ptr)) {
     if (tag_data->data.expanding) {
       value = tag_data->data.curr;
       return absl::OkStatus();
@@ -168,7 +195,7 @@ absl::Status Template::MaybeLookup(const TagInfo& tag_info, std::string_view dat
       absl::StrCat("Tag '", tag_info.name, "' refrences '", data, "' which has unsupported data type."));
 }
 
-absl::Status Template::ExpandRangeTag(const TagInfo& /*tag*/, Range& range, std::string& output) {
+absl::Status Template::ExpandRangeTag(const TagInfo& /*tag*/, Range& range, Context& ctx, std::string& output) const {
   const std::string original = std::move(output);
   output = "";
   if (range.step == 0) {
@@ -184,18 +211,22 @@ absl::Status Template::ExpandRangeTag(const TagInfo& /*tag*/, Range& range, std:
     std::string expanded = original;
     // It is possible to use `StrReplaceAll` here, but `Expand` has to be called anyway, so it can do the replacement.
     // absl::StrReplaceAll({{absl::StrCat("{{", tag.name, "}}"), absl::StrCat(range.curr)}}, &expanded);
-    MBO_STATUS_RETURN_IF_ERROR(Expand(expanded));
+    MBO_STATUS_RETURN_IF_ERROR(ExpandInternal(ctx, expanded));
     output.append(expanded);
   }
   return absl::OkStatus();
 }
 
-absl::Status Template::ExpandRangeData(const TagInfo& tag, const RangeData& range_data, std::string& output) {
+absl::Status Template::ExpandRangeData(
+    const TagInfo& tag,
+    const RangeData& range_data,
+    Context& ctx,
+    std::string& output) const {
   Range range;
-  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.start, range.start));
-  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.end, range.end));
-  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.step, range.step));
-  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.join, range.join));
+  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.start, ctx, range.start));
+  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.end, ctx, range.end));
+  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.step, ctx, range.step));
+  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.join, ctx, range.join));
   if (range.step == 0) {
     return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' cannot have step == 0."));
   }
@@ -203,23 +234,23 @@ absl::Status Template::ExpandRangeData(const TagInfo& tag, const RangeData& rang
   // * range.step > 0 && range.start > range.end
   // * range.step < 0 && range.start < range.end
   // But that would not work well with values that were looked up or computed.
-  auto [r_tag_it, inserted] = data_.emplace(tag.name, TagData<Range>{.tag = tag, .data = range});
+  auto [r_tag_it, inserted] = ctx.data.emplace(tag.name, TagData<Range>{.tag = tag, .data = range});
   if (!inserted) {
     return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' appears twice."));
   }
   auto& tag_range = std::get<TagData<Range>>(r_tag_it->second).data;
-  auto result = ExpandRangeTag(tag, tag_range, output);
-  data_.erase(tag.name);
+  auto result = ExpandRangeTag(tag, tag_range, ctx, output);
+  ctx.data.erase(tag.name);
   return result;
 }
 
-absl::Status Template::ExpandSection(TagData<Section>& tag, std::string& output) {
+absl::Status Template::ExpandSection(const TagData<Section>& tag, Context& ctx, std::string& output) {
   const std::string original(std::move(output));
   output = "";
   bool first = true;
-  for (Template& section : tag.data.dictionary) {
+  for (const Template& section : tag.data.dictionary) {
     std::string result(original);
-    MBO_STATUS_RETURN_IF_ERROR(section.Expand(result));
+    MBO_STATUS_RETURN_IF_ERROR(section.ExpandInternal(ctx, result));
     if (!first) {
       output.append(tag.data.join);
     }
@@ -233,14 +264,19 @@ absl::Status Template::ExpandConfiguredSection(
     std::string_view name,
     std::vector<std::string> str_list,  // NOLINT(performance-unnecessary-value-param): Incorrect, we move strings out.
     std::string_view join,
-    std::string& output) {
+    Context& ctx,
+    std::string& output) const {
   const std::string original(std::move(output));
   output = "";
   bool first = true;
+  if (Exists(name, ctx)) {
+    return absl::InvalidArgumentError(absl::StrCat("Cannot override existing section tag '", name, "'."));
+  }
+  absl::Cleanup cleanup = [&] { ctx.data.erase(name); };
   for (auto& str : str_list) {
-    MBO_STATUS_RETURN_IF_ERROR(SetValue(name, std::move(str), true));
+    MBO_STATUS_RETURN_IF_ERROR(SetValueInternal(name, std::move(str), true, ctx.data));
     std::string result(original);
-    MBO_STATUS_RETURN_IF_ERROR(Expand(result));
+    MBO_STATUS_RETURN_IF_ERROR(ExpandInternal(ctx, result));
     if (!first) {
       output.append(join);
     }
@@ -250,7 +286,11 @@ absl::Status Template::ExpandConfiguredSection(
   return absl::OkStatus();
 }
 
-absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view str_list_data, std::string& output) {
+absl::Status Template::ExpandConfiguredList(
+    const TagInfo& tag,
+    std::string_view str_list_data,
+    Context& ctx,
+    std::string& output) const {
   static constexpr mbo::strings::ParseOptions kConfiguredListParseOptions{
       .stop_at_any_of = "]",
       .split_at_any_of = ",",
@@ -268,74 +308,78 @@ absl::Status Template::ExpandConfiguredList(const TagInfo& tag, std::string_view
       return absl::InvalidArgumentError(
           absl::StrCat("Tag '", tag.name, "' has unknown config format '", tag.config.value_or(""), "'."));
     }
-    MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, str_list_data, join));
+    MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, str_list_data, ctx, join));
   }
-  if (data_.contains(tag.name)) {
+  if (Exists(tag.name, ctx)) {
     return absl::InvalidArgumentError(
         absl::StrCat("Tag '", tag.name, "' may not be present prior to expanding a list of the same name."));
   }
   // CONSIDER: A specialized type would make this faster. But also less generic
   // and thus complicate extensions.
-  MBO_STATUS_RETURN_IF_ERROR(ExpandConfiguredSection(tag.name, std::move(str_list), std::move(join), output));
-  data_.erase(tag.name);  // Remove, cannot be left over.
+  MBO_STATUS_RETURN_IF_ERROR(ExpandConfiguredSection(tag.name, std::move(str_list), std::move(join), ctx, output));
   return absl::OkStatus();
 }
 
-absl::Status Template::ExpandSectionTag(const TagInfo& tag, std::string& output) {
+absl::Status Template::ExpandSectionTag(const TagInfo& tag, Context& ctx, std::string& output) const {
   // Parse tag config and translate into whatever that says...
   ABSL_CHECK_EQ(tag.type, TagType::kSection);
   if (!tag.config.has_value()) {
-    auto data_it = data_.find(tag.name);
-    if (data_it == data_.end()) {
+    const Data* found_data_ptr = Lookup(tag.name, ctx);
+    if (found_data_ptr == nullptr) {
       return absl::OkStatus();
     }
-    auto* section = std::get_if<TagData<Section>>(&data_it->second);
+    const auto* section = std::get_if<TagData<Section>>(found_data_ptr);
     if (section == nullptr) {
       return absl::InvalidArgumentError(absl::StrCat("Section tag '", tag.name, "' has no dictionary."));
     }
     static constexpr mbo::strings::ParseOptions kOptions{
-      .remove_quotes = true,
-      .allow_unquoted = false,
+        .remove_quotes = true,
+        .allow_unquoted = false,
     };
     std::string_view join;
     if (tag.option.has_value()) {
       join = *tag.option;
     }
     MBO_STATUS_ASSIGN_OR_RETURN(section->data.join, ParseString(kOptions, join));
-    return ExpandSection(*section, output);
+    return ExpandSection(*section, ctx, output);
   }
   static constexpr LazyRE2 kReFor = {
       R"(\s*(-?\d+|[_a-zA-Z]\w*)\s*;\s*(-?\d+|[_a-zA-Z]\w*)\s*(?:;\s*(|-?\d+|[_a-zA-Z]\w*)\s*(?:;([^;]*))?)?)"};
   RangeData range;
   if (RE2::FullMatch(*tag.config, *kReFor, &range.start, &range.end, &range.step, &range.join)) {
-    return ExpandRangeData(tag, range, output);
+    return ExpandRangeData(tag, range, ctx, output);
   }
   if (!tag.config->starts_with('[')) {
-    return absl::UnimplementedError(absl::StrCat("Tag '", tag.name, "' has unknown config format '", *tag.config, "'."));
+    return absl::UnimplementedError(
+        absl::StrCat("Tag '", tag.name, "' has unknown config format '", *tag.config, "'."));
   }
-  return ExpandConfiguredList(tag, *tag.config, output);
+  return ExpandConfiguredList(tag, *tag.config, ctx, output);
 }
 
-absl::Status Template::ExpandControlTag(const TagInfo& tag) {
+absl::Status Template::ExpandControlTag(const TagInfo& tag, Context& ctx) const {
   ABSL_CHECK_EQ(tag.type, TagType::kControl);
   if (!tag.config.has_value()) {
     return absl::OkStatus();
   }
-  return SetValue(tag.name, *tag.config, true);
+  if (data_.contains(tag.name)) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Control tag '", tag.name, "' cannot override an existing template tag."));
+  }
+  return SetValueInternal(tag.name, *tag.config, true, ctx.data);
 }
 
-absl::StatusOr<bool> Template::ExpandValueTag(const TagInfo& tag, std::string& output) {
+absl::StatusOr<bool> Template::ExpandValueTag(const TagInfo& tag, Context& ctx, std::string& output) const {
   ABSL_CHECK_EQ(tag.type, TagType::kValue);
-  const auto it = data_.find(tag.name);
-  if (it == data_.end()) {
+  const Data* found_data_ptr = Lookup(tag.name, ctx);
+  if (found_data_ptr == nullptr) {
     return false;
   }
-  const auto* tag_str = std::get_if<TagData<std::string>>(&it->second);
+  const auto* tag_str = std::get_if<TagData<std::string>>(found_data_ptr);
   if (tag_str != nullptr) {
-    output = std::get<TagData<std::string>>(it->second).data;
+    output = tag_str->data;
     return true;
   }
-  const auto* tag_range = std::get_if<TagData<Range>>(&it->second);
+  const auto* tag_range = std::get_if<TagData<Range>>(found_data_ptr);
   if (tag_range != nullptr) {
     output = absl::StrCat(tag_range->data.curr);
     return true;
@@ -373,7 +417,7 @@ std::pair<std::size_t, std::size_t> Template::MaybeExpandWhiteSpace(
                                                                  : std::make_pair(tag_pos, tag.start.length());
 }
 
-absl::Status Template::Expand(std::string& output) {
+absl::Status Template::ExpandInternal(Context& ctx, std::string& output) const {
   std::string_view pos = output;
   while (true) {
     if (pos.empty()) {
@@ -391,7 +435,7 @@ absl::Status Template::Expand(std::string& output) {
     switch (tag.type) {
       case TagType::kControl: {
         replace_len = replace_tag_len;
-        MBO_STATUS_RETURN_IF_ERROR(ExpandControlTag(tag));
+        MBO_STATUS_RETURN_IF_ERROR(ExpandControlTag(tag, ctx));
         break;
       }
       case TagType::kSection: {
@@ -402,11 +446,11 @@ absl::Status Template::Expand(std::string& output) {
         const auto [replace_end, replace_end_len] = ExpandWhiteSpace(output, tag_end_pos, tag.end.length());
         replace_len = replace_end + replace_end_len - replace_pos;  // whole replace incl. tags
         replace_str = output.substr(replace_pos + replace_tag_len, replace_len - replace_tag_len - replace_end_len);
-        MBO_STATUS_RETURN_IF_ERROR(ExpandSectionTag(tag, replace_str));
+        MBO_STATUS_RETURN_IF_ERROR(ExpandSectionTag(tag, ctx, replace_str));
         break;
       }
       case TagType::kValue: {
-        MBO_STATUS_ASSIGN_OR_RETURN(const bool replace, ExpandValueTag(tag, replace_str));
+        MBO_STATUS_ASSIGN_OR_RETURN(const bool replace, ExpandValueTag(tag, ctx, replace_str));
         if (replace) {
           replace_len = replace_tag_len;
           break;
@@ -421,6 +465,11 @@ absl::Status Template::Expand(std::string& output) {
     pos = output;
     pos.remove_prefix(replace_pos + replace_str.length());
   }
+}
+
+absl::Status Template::Expand(std::string& output) const {
+  Context ctx;
+  return ExpandInternal(ctx, output);
 }
 
 // NOLINTEND(misc-no-recursion)
