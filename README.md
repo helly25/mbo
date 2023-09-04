@@ -11,7 +11,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * class `UnifiedDiff`: A class that implements unified-diffing.
     * mbo/diff:unified_diff
         * binary `unfied_diff`: A binary that performs a unified-diff on two files.
-    * mbo/diff:diff.bzl
+    * mbo/diff:diff_bzl, mbo/diff/diff.bzl
         * bzl-macro `difftest`: A test rule that compares an output versus a golden file.
 * Files
     * `namespace mbo::files`
@@ -27,6 +27,18 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `SetContents`: Writes contents to a file.
     * mbo/file/ini:ini_file_cc, mbo/file/ini/ini_file.h
         * class `IniFile`: A simple INI file reader.
+* Mope
+    * The `MOPE` templating engine. Run `bazel run //mbo/mope -- --help` for detailed documentation.
+    * mbo/mope
+        * binary `mope`.
+    * mbo/mope:mope_cc, mbo/mope/mope.h
+        * class `Template`: The mope template engine and data holder.
+    * mbo/mope:ini_cc, mbo/mope/ini.h
+        * function `ReadIniToTemlate`: Helper to initialize a mope Template from an INI file.
+    * mbo/mope:mope_bzl, mbo/mope/mope.bzl
+        * bzl-rule `mope`: A rule that expands a mope template file.
+        * bazl-macro `mope_test`: A test rule compares mope template expansion against golden files. This
+          supports `clang-format` and thus can be used for source-code generation and verification.
 * Status
     * `namespace mbo::status`
     * mbo/status:status_macros_cc, mbo/status/status_macros.h
@@ -54,7 +66,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * meta-type `IfFalseThenVoid`: Helper type that can be used to skip a case.
         * meta-type `IfTrueThenVoid`: Helper type to inject default cases and to ensure the required type expansion is always possible.
     * mbo/types:copy_convert_container_cc, mbo/types/copy_convert_container.h
-        * Conversion struct `CopyConvertContainer` simplifies copying containers to value convertible containers.
+        * conversion struct `CopyConvertContainer` simplifies copying containers to value convertible containers.
     * mbo/types:extend_cc, mbo/types/extend.h
         * crtp-struct `Extend`: Enables extending of struct/classe types with basic functionality.
         * crtp-struct `ExtendNoDefault` Like `Extend` but without default extender functionality.
@@ -69,16 +81,16 @@ The C++ library is organized in functional groups each residing in their own dir
             * extender-struct `Streamable`: Extender that injects functionality to make an `Extend`ed type streamable. This allows the type to be used directly with `std::ostream`s.
     * mbo/types:no_destruct_cc, mbo/types/no_destruct.h
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
-        * Mainly, this prevents calling the destructor and thus prevents termination issues.
+        * Mainly, this prevents calling the destructor and thus prevents termination issues (initialization order fiasco).
     * mbo/types:traits_cc, mbo/types/traits.h
-        * Concept `IsAggregate` determines whether a type is an aggregate.
-        * Concept `IsDecomposable` determines whether a type can be used in static-bindings.
-        * Concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
-        * Concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.
-        * Concept `ContainerHasEmplace` determines whether a container has `emplace`.
-        * Concept `ContainerHasEmplaceBack` determines whether a container has `emplace_back`.
-        * Concept `ContainerHasInsert` determines whether a container has `insert`.
-        * Concept `ContainerHasPushBack` determines whether a container has `push_back`.
+        * concept `IsAggregate` determines whether a type is an aggregate.
+        * concept `IsDecomposable` determines whether a type can be used in static-bindings.
+        * concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
+        * concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.
+        * concept `ContainerHasEmplace` determines whether a container has `emplace`.
+        * concept `ContainerHasEmplaceBack` determines whether a container has `emplace_back`.
+        * concept `ContainerHasInsert` determines whether a container has `insert`.
+        * concept `ContainerHasPushBack` determines whether a container has `push_back`.
     * mbo/types:tstring_cc, mbo/types/tstring.h
         * struct `tstring`: Implements type `tstring` a compile time string-literal type.
         * operator `operator"" _ts`: String literal support for Clang, GCC and derived compilers.
