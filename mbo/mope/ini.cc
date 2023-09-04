@@ -44,7 +44,7 @@ absl::Status ReadIniToTemlate(std::string_view ini_filename, Template& root_temp
         section_path.emplace_back(tail.first, tail.second);
         auto [section, inserted] = sections.emplace(section_path, nullptr);
         if (inserted) {
-          section->second = target->AddSection(tail.first);
+          MBO_STATUS_ASSIGN_OR_RETURN(section->second, target->AddSection(tail.first));
         }
         target = section->second;
       }

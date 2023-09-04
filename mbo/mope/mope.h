@@ -32,6 +32,9 @@ namespace mbo::mope {
 // ```
 class Template {
  public:
+  // Determines whether `name` is allowed for `SetValue` and `AddSection`.
+  static bool IsValidName(std::string_view name);
+
   explicit Template() = default;
 
   // Sets template variable `name` to `value`.
@@ -45,10 +48,10 @@ class Template {
   // the returned value (so it must be used to do so).
   // If the function is called repetedly with the same `name`, then each time a new dictionary for that `name` will be
   // added.
-  [[nodiscard]] Template* AddSection(std::string_view name);
+  absl::StatusOr<Template*> AddSection(std::string_view name);
 
   // Expands the template `output` in-place.
-  [[nodiscard]] absl::Status Expand(std::string& output);
+  absl::Status Expand(std::string& output);
 
  private:
   enum class TagType {
@@ -113,13 +116,15 @@ class Template {
       std::string_view join,
       std::string& output);
   absl::Status ExpandConfiguredList(const TagInfo& tag, std::string_view str_list_data, std::string& output);
+  absl::Status ExpandSectionTag(const TagInfo& tag, std::string& output);
+  absl::Status ExpandControlTag(const TagInfo& tag);
   absl::StatusOr<bool> ExpandValueTag(const TagInfo& tag, std::string& output);
-  absl::Status ExpandTag(const TagInfo& tag, std::string& output);
 
-  static absl::Status ExpandSectionTag(TagData<Section>& tag, std::string& output);
+  static absl::Status ExpandSection(TagData<Section>& tag, std::string& output);
 
   template<typename Sink>
-  friend void AbslStringify(Sink& sink, const TagType& value);
+  friend void AbslStringify(Sink&, TagType);
+  friend std::ostream& operator<<(std::ostream&, TagType);
 
   absl::node_hash_map<std::string, Data> data_ = {};
 };

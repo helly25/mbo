@@ -39,6 +39,7 @@ cc_library(
         "//mbo/strings:parse_cc",
         "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:node_hash_map",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/log:absl_log",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
