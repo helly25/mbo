@@ -79,7 +79,7 @@ absl::StatusOr<Template*> Template::AddSection(std::string_view name) {
     return absl::InvalidArgumentError(absl::StrCat("Name '", name, "' is not valid."));
   }
   TagInfo tag{
-      .name{name},
+      .name = std::string(name),
       .start = absl::StrCat("{{#", name, "}}"),
       .end = absl::StrCat("{{/", name, "}}"),
       .type = TagType::kSection,
@@ -98,11 +98,11 @@ absl::Status Template::SetValueInternal(
     return absl::InvalidArgumentError(absl::StrCat("Name '", name, "' is not valid."));
   }
   TagInfo tag{
-      .name{name},
+      .name = std::string(name),
       .start = absl::StrCat("{{", name, "}}"),
       .type = TagType::kValue,
   };
-  auto [it, inserted] = data.emplace(name, TagData<std::string>{.tag = std::move(tag), .data{value}});
+  auto [it, inserted] = data.emplace(name, TagData<std::string>{.tag = std::move(tag), .data = std::string(value)});
   if (inserted) {
     return absl::OkStatus();
   }
@@ -400,8 +400,8 @@ std::optional<const Template::TagInfo> Template::FindAndConsumeTag(std::string_v
     return std::nullopt;
   }
   return TagInfo{
-      .name{name},
-      .start{start},
+      .name = std::string(name),
+      .start = std::string(start),
       .end = type.empty() ? "" : absl::StrCat("{{/", name, "}}"),
       .config = has_extra == "=" ? std::optional<std::string>(extra) : std::nullopt,
       .option = has_extra == ":" ? std::optional<std::string>(extra) : std::nullopt,
