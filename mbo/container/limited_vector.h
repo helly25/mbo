@@ -22,7 +22,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 
 // NOLINTBEGIN(readability-identifier-naming)
 
@@ -176,28 +176,28 @@ class LimitedVector final {
   constexpr const_iterator cend() const noexcept { return &storage_.values[size_].data; }
 
   constexpr reference operator[](std::size_t index) noexcept {
-    ABSL_CHECK_LT(index, size_) << "Access past size.";
+    ABSL_LOG_IF(FATAL, index >= size_) << "Access past size.";
     return storage_.value[index].data;
   }
 
   constexpr reference at(std::size_t index) noexcept {
-    ABSL_CHECK_LT(index, size_) << "Access past size.";
+    ABSL_LOG_IF(FATAL, index >= size_) << "Access past size.";
     return storage_.value[index].data;
   }
 
   constexpr const_reference operator[](std::size_t index) const noexcept {
-    ABSL_CHECK_LT(index, size_) << "Access past size.";
+    ABSL_LOG_IF(FATAL, index >= size_) << "Access past size.";
     return storage_.value[index].data;
   }
 
   constexpr const_reference at(std::size_t index) const noexcept {
-    ABSL_CHECK_LT(index, size_) << "Access past size.";
+    ABSL_LOG_IF(FATAL, index >= size_) << "Access past size.";
     return storage_.value[index].data;
   }
 
   template<typename... Args>
   constexpr reference emplace_back(Args&&... args) noexcept {
-    ABSL_CHECK_LE(size_, Capacity) << "Called `emplace_back` at capacity.";
+    ABSL_LOG_IF(FATAL, size_ >= Capacity) << "Called `emplace_back` at capacity.";
     auto& data_ref{storage_.values[size_]};
     std::construct_at(&data_ref.data, std::forward<Args>(args)...);
     ++size_;
@@ -205,7 +205,7 @@ class LimitedVector final {
   }
 
   constexpr reference push_back(T&& val) noexcept {
-    ABSL_CHECK_LE(size_, Capacity) << "Called `push_back` at capacity.";
+    ABSL_LOG_IF(FATAL, size_ >= Capacity) << "Called `push_back` at capacity.";
     auto& data_ref{storage_.values[size_]};
     std::construct_at(&data_ref.data, std::forward<T>(val));
     ++size_;
@@ -213,7 +213,7 @@ class LimitedVector final {
   }
 
   constexpr reference push_back(const T& val) noexcept {
-    ABSL_CHECK_LE(size_, Capacity) << "Called `push_back` at capacity.";
+    ABSL_LOG_IF(FATAL, size_ >= Capacity) << "Called `push_back` at capacity.";
     auto& data_ref{storage_.values[size_]};
     std::construct_at(&data_ref.data, val);
     ++size_;
@@ -221,7 +221,7 @@ class LimitedVector final {
   }
 
   constexpr void pop_back() noexcept {
-    ABSL_CHECK_GT(size_, 0) << "No element to pop.";
+    ABSL_LOG_IF(FATAL, size_ == 0) << "No element to pop.";
     std::destroy_at(&storage_.values[--size_].data);
   }
 
@@ -235,7 +235,7 @@ class LimitedVector final {
   }
 
   constexpr void reserve(std::size_t size) noexcept {
-    ABSL_CHECK_LE(size, Capacity) << "Cannot reserve beyond capacity.";
+    ABSL_LOG_IF(FATAL, size > Capacity) << "Cannot reserve beyond capacity.";
   }
 
   constexpr void clear() noexcept {
@@ -273,7 +273,7 @@ inline constexpr auto MakeLimitedVector(It&& begin, It&& end) noexcept {
 
 template<std::size_t N, typename T>
 inline constexpr auto MakeLimitedVector(std::initializer_list<T>&& data) {
-  ABSL_CHECK_LE(data.size(), N) << "Too many initlizer values.";
+  ABSL_LOG_IF(FATAL, data.size() > N) << "Too many initlizer values.";
   return LimitedVector<T, N>(std::forward<std::initializer_list<T>>(data));
 }
 

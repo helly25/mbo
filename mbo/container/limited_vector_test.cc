@@ -27,7 +27,7 @@ using ::testing::Not;
 using ::testing::SizeIs;
 
 MATCHER_P(Capacity, cap, "Capacity is") {
-  return arg.capacity() == cap;
+  return arg.capacity() == static_cast<std::size_t>(cap);
 }
 
 struct LimitedVectorTest : ::testing::Test {
