@@ -5,8 +5,12 @@ with [Google's Abseil library](https://abseil.io/).
 
 The C++ library is organized in functional groups each residing in their own directory.
 
+* Container
+    * `namespace mbo::container`
+    * mbo/container:limited_vector_cc, mbo/container/limited_vector.h
+        * class `LimitedVector`: A space limited, constexpr compliant vector.
 * Diff
-    * `namespacembo::diff`
+    * `namespace mbo::diff`
     * mbo/diff:unified_dff_cc, mbo/diff/unified_diff.h
         * class `UnifiedDiff`: A class that implements unified-diffing.
     * mbo/diff:unified_diff
@@ -28,6 +32,7 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/file/ini:ini_file_cc, mbo/file/ini/ini_file.h
         * class `IniFile`: A simple INI file reader.
 * Mope
+    * `namespace mbo::mope`
     * The `MOPE` templating engine. Run `bazel run //mbo/mope -- --help` for detailed documentation.
     * mbo/mope
         * binary `mope`.
