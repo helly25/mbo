@@ -459,9 +459,12 @@ inline constexpr auto MakeLimitedVector(const T& value) noexcept {
 }
 
 template<mbo::types::NotInitializerList... Args>
+requires((types::NotInitializerList<Args> && !std::forward_iterator<Args>) && ...)
 inline constexpr auto MakeLimitedVector(Args&&... args) noexcept {
   using T = std::common_type_t<Args...>;
-  return LimitedVector<T, sizeof...(Args)>(std::initializer_list<T>{std::forward<T>(args)...});
+  auto result = LimitedVector<T, sizeof...(Args)>();
+  (result.emplace_back(std::forward<T>(args)), ...);
+  return result;
 }
 
 // NOLINTBEGIN(*-avoid-c-arrays)
