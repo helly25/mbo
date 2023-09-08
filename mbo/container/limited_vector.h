@@ -135,7 +135,7 @@ class LimitedVector final {
 
   template<typename U>
   requires std::convertible_to<U, T>
-  constexpr LimitedVector(std::initializer_list<U> list) noexcept {
+  constexpr LimitedVector(std::initializer_list<U>&& list) noexcept {
     auto it = list.begin();
     while (it < list.end()) {
       emplace_back(std::move(*it++));
@@ -201,6 +201,54 @@ class LimitedVector final {
     LV_REQUIRE(FATAL, size <= Capacity) << "Cannot reserve beyond capacity.";
   }
 
+  constexpr void shrink_to_fit() noexcept {
+    // Nothing to do. The contract says there is no requirement to reduce capacity.
+  }
+
+  template<typename... Args>
+  constexpr iterator emplace(const_iterator pos, Args&&... args) noexcept {
+    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `emplace` at capacity.";
+    LV_REQUIRE(FATAL, &values_[0].data <= pos && pos <= &values_[size_].data) << "Invalid `pos`";
+    iterator dst = end();
+    for (; dst > pos; --dst) {
+      *dst = std::move(*std::prev(dst));
+    }
+    std::construct_at(dst, std::forward<Args>(args)...);
+    ++size_;
+    return dst;
+  }
+
+  constexpr iterator erase(const_iterator pos) noexcept {
+    // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)
+    LV_REQUIRE(FATAL, &values_[0].data <= pos && pos < &values_[size_].data) << "Invalid `pos`";
+    auto dst = const_cast<iterator>(pos);
+    --size_;
+    std::destroy_at(dst);
+    for (; dst < end(); ++dst) {
+      *dst = std::move(*std::next(dst));
+    }
+    return pos > end() ? end() : const_cast<iterator>(pos);
+    // NOLINTEND(cppcoreguidelines-pro-type-const-cast)
+  }
+
+  constexpr iterator erase(const_iterator first, const_iterator last) noexcept {
+    // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)
+    LV_REQUIRE(FATAL, &values_[0].data <= first && first <= last && last <= &values_[size_].data) << "Invalid `first` or `last`";
+    std::size_t deleted = 0;
+    for (const_iterator it = first; it < last; ++it) {
+      std::destroy_at(it);
+      ++deleted;
+    }
+    auto dst = const_cast<iterator>(first);
+    auto src = const_cast<iterator>(last);
+    for (; src < end(); ++src, ++dst) {
+      *dst = std::move(*src);
+    }
+    size_ -= deleted;
+    return const_cast<iterator>(first);
+    // NOLINTEND(cppcoreguidelines-pro-type-const-cast)
+  }
+
   template<typename... Args>
   constexpr reference emplace_back(Args&&... args) noexcept {
     LV_REQUIRE(FATAL, size_ < Capacity) << "Called `emplace_back` at capacity.";
@@ -243,15 +291,15 @@ class LimitedVector final {
     }
   }
 
-  constexpr void assign(std::initializer_list<T> list) noexcept {
+  constexpr void assign(std::initializer_list<T>&& list) noexcept {
     clear();
     auto it = list.begin();
     while (it < list.end()) {
-      emplace_back(std::move(*it));
+      emplace_back(std::forward<T>(*it));
     }
   }
 
-  constexpr LimitedVector& operator=(std::initializer_list<T> list) noexcept {
+  constexpr LimitedVector& operator=(std::initializer_list<T>&& list) noexcept {
     assign(std::move(list));
     return *this;
   }
@@ -376,7 +424,7 @@ inline constexpr auto MakeLimitedVector(const T& value) noexcept {
 template<mbo::types::NotInitializerList... Args>
 inline constexpr auto MakeLimitedVector(Args&&... args) noexcept {
   using T = std::common_type_t<Args...>;
-  return LimitedVector<T, sizeof...(Args)>(std::initializer_list<T>{args...});
+  return LimitedVector<T, sizeof...(Args)>(std::initializer_list<T>{std::forward<T>(args)...});
 }
 
 // NOLINTBEGIN(*-avoid-c-arrays)

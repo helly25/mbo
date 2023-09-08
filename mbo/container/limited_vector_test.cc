@@ -228,6 +228,67 @@ TEST_F(LimitedVectorTest, WriteAccess) {
   ASSERT_THAT(test, ElementsAre(10, 11, 12, 13));
 }
 
+TEST_F(LimitedVectorTest, Emplace) {
+  auto test = MakeLimitedVector<7>({1, 3});
+  EXPECT_THAT(test, Not(IsEmpty()));
+  EXPECT_THAT(test, SizeIs(2));
+  EXPECT_THAT(test, Capacity(7));
+  ASSERT_THAT(test, ElementsAre(1, 3));
+  EXPECT_THAT(test.emplace(test.begin() + 1, 20), test.begin() + 1);
+  EXPECT_THAT(test, SizeIs(3));
+  EXPECT_THAT(test, ElementsAre(1, 20, 3));
+  EXPECT_THAT(test.emplace(test.end(), 40), test.begin() + 3);
+  EXPECT_THAT(test, SizeIs(4));
+  EXPECT_THAT(test, ElementsAre(1, 20, 3, 40));
+  EXPECT_THAT(test.emplace(test.begin(), 0), test.begin());
+  EXPECT_THAT(test, SizeIs(5));
+  EXPECT_THAT(test, ElementsAre(0, 1, 20, 3, 40));
+}
+
+TEST_F(LimitedVectorTest, Erase) {
+  auto test = MakeLimitedVector(0, 1, 20, 3, 40);
+  EXPECT_THAT(test, Not(IsEmpty()));
+  EXPECT_THAT(test, SizeIs(5));
+  EXPECT_THAT(test, Capacity(5));
+  ASSERT_THAT(test, ElementsAre(0, 1, 20, 3, 40));
+  EXPECT_THAT(test.erase(test.begin() + 2), test.begin() + 2);
+  EXPECT_THAT(test, SizeIs(4));
+  EXPECT_THAT(test, ElementsAre(0, 1, 3, 40));
+  EXPECT_THAT(test.erase(test.end() - 1), test.begin() + 3);
+  EXPECT_THAT(test.begin() + 3, test.end()) << "Should have returned new `end`.";
+  EXPECT_THAT(test, SizeIs(3));
+  EXPECT_THAT(test, ElementsAre(0, 1, 3));
+  EXPECT_THAT(test.erase(test.begin()), test.begin());
+  EXPECT_THAT(test, SizeIs(2));
+  EXPECT_THAT(test, ElementsAre(1, 3));
+  EXPECT_THAT(test.erase(test.begin()), test.begin());
+  EXPECT_THAT(test.erase(test.begin()), test.begin());
+  EXPECT_THAT(test.begin(), test.end()) << "Should have returned new `end`.";
+  EXPECT_THAT(test, IsEmpty());
+}
+
+TEST_F(LimitedVectorTest, EraseRange) {
+  auto test = MakeLimitedVector(0, 1, 20, 3, 40, 50, 60, 70, 8, 9);
+  using Type = decltype(test);
+  EXPECT_THAT(test, Not(IsEmpty()));
+  EXPECT_THAT(test, SizeIs(10));
+  EXPECT_THAT(test, Capacity(10));
+  ASSERT_THAT(test, ElementsAre(0, 1, 20, 3, 40, 50, 60, 70, 8, 9));
+  Type::const_iterator first = test.begin() + 4;
+  Type::const_iterator last = test.begin() + 8;
+  Type::const_iterator it = test.erase(first, last);
+  EXPECT_THAT(it, test.begin() + 4);
+  EXPECT_THAT(test, SizeIs(6));
+  EXPECT_THAT(test, ElementsAre(0, 1, 20, 3, 8, 9));
+  EXPECT_THAT(test.erase(test.begin() + 3, test.end()), test.begin() + 3);
+  EXPECT_THAT(test.begin() + 3, test.end()) << "Should have returned new `end`.";
+  EXPECT_THAT(test, SizeIs(3));
+  EXPECT_THAT(test, ElementsAre(0, 1, 20));
+  EXPECT_THAT(test.erase(test.begin(), test.end()), test.begin());
+  EXPECT_THAT(test.begin(), test.end()) << "Should have returned new `end`.";
+  EXPECT_THAT(test, IsEmpty());
+}
+
 TEST_F(LimitedVectorTest, Compare) {
   constexpr auto k42v25 = MakeLimitedVector(42, 25);
   constexpr auto k42o25 = MakeLimitedVector(42, 25);
