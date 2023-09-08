@@ -23,21 +23,11 @@
 #include <utility>
 
 #include "absl/log/absl_log.h"
+#include "mbo/types/traits.h"
 
 // NOLINTBEGIN(readability-identifier-naming)
 
 namespace mbo::container {
-namespace internal {
-
-template<typename>
-constexpr inline bool is_initializer_list = false;
-template<typename T>
-constexpr inline bool is_initializer_list<std::initializer_list<T>> = true;
-
-template<typename T>
-concept NotInitializerList = !is_initializer_list<T>;
-
-}  // namespace internal
 
 // Implements a `std::vector` like container that only uses inlined memory. So if used as a local
 // variable with a types that does not perform memory allocation, then this type does not perform
@@ -285,7 +275,7 @@ inline constexpr auto MakeLimitedVector(T&& value) noexcept {
   return result;
 }
 
-template<internal::NotInitializerList... Args>
+template<mbo::types::NotInitializerList... Args>
 inline constexpr auto MakeLimitedVector(Args&&... args) noexcept {
   return LimitedVector<std::common_type_t<Args...>, sizeof...(Args)>({args...});
 }

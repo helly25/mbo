@@ -17,6 +17,7 @@ cc_library(
     hdrs = ["limited_vector.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "//mbo/types:traits_cc",
         "@com_google_absl//absl/log:absl_log",
     ],
 )
