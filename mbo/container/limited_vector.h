@@ -85,6 +85,8 @@ class LimitedVector final {
   using const_pointer = const T*;
   using iterator = T*;
   using const_iterator = const T*;
+  using reverse_iterator = std::reverse_iterator<iterator>;
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
   // Destructor and constructors from same type.
 
@@ -260,7 +262,8 @@ class LimitedVector final {
 
   constexpr iterator erase(const_iterator first, const_iterator last) noexcept {
     // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)
-    LV_REQUIRE(FATAL, &values_[0].data <= first && first <= last && last <= &values_[size_].data) << "Invalid `first` or `last`";
+    LV_REQUIRE(FATAL, &values_[0].data <= first && first <= last && last <= &values_[size_].data)
+        << "Invalid `first` or `last`";
     std::size_t deleted = 0;
     for (const_iterator it = first; it < last; ++it) {
       std::destroy_at(it);
@@ -355,6 +358,18 @@ class LimitedVector final {
   constexpr const_iterator end() const noexcept { return &values_[size_].data; }
 
   constexpr const_iterator cend() const noexcept { return &values_[size_].data; }
+
+  constexpr reverse_iterator rbegin() noexcept { return std::make_reverse_iterator(end()); }
+
+  constexpr const_reverse_iterator rbegin() const noexcept { return std::make_reverse_iterator(end()); }
+
+  constexpr const_reverse_iterator crbegin() const noexcept { return std::make_reverse_iterator(end()); }
+
+  constexpr reverse_iterator rend() noexcept { return std::make_reverse_iterator(begin()); }
+
+  constexpr const_reverse_iterator rend() const noexcept { return std::make_reverse_iterator(begin()); }
+
+  constexpr const_reverse_iterator crend() const noexcept { return std::make_reverse_iterator(cbegin()); }
 
   constexpr reference operator[](std::size_t index) noexcept {
     LV_REQUIRE(FATAL, index < size_) << "Access past size.";

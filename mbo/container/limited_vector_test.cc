@@ -289,7 +289,6 @@ TEST_F(LimitedVectorTest, EraseRange) {
   EXPECT_THAT(test, IsEmpty());
 }
 
-
 TEST_F(LimitedVectorTest, Swap) {
   auto test1 = MakeLimitedVector(0, 1, 2);
   auto test2 = MakeLimitedVector<3>(3);
@@ -311,6 +310,13 @@ TEST_F(LimitedVectorTest, Swap) {
   test1.swap(test2);
   EXPECT_THAT(test1, ElementsAre());
   EXPECT_THAT(test2, ElementsAre());
+}
+
+TEST_F(LimitedVectorTest, Iterators) {
+  constexpr auto kTest = MakeLimitedVector(0, 1, 2);
+  // Restrictions apply: The two following cannot be constexpr.
+  EXPECT_THAT((MakeLimitedVector<3>(kTest.begin(), kTest.end())), ElementsAre(0, 1, 2));
+  EXPECT_THAT((MakeLimitedVector<3>(kTest.rbegin(), kTest.rend())), ElementsAre(2, 1, 0));
 }
 
 TEST_F(LimitedVectorTest, Compare) {
