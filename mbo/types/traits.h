@@ -40,10 +40,9 @@ inline constexpr std::size_t NotDecomposableV = types_internal::NotDecomposableI
 // Returns whether `T` can be decomposed.
 // This is only true if a non empty structured binding of T is possible:
 //   const auto& [a0....] = T()
-template <typename T>
-concept IsDecomposable = types_internal::IsAggregate<T> &&
-                         (DecomposeCountV<T> != 0) &&
-                         (DecomposeCountV<T> != NotDecomposableV);
+template<typename T>
+concept IsDecomposable =
+    types_internal::IsAggregate<T> && (DecomposeCountV<T> != 0) && (DecomposeCountV<T> != NotDecomposableV);
 
 // Returns whether `T` can be constructed from `Args...`.
 template<typename T, typename... Args>
@@ -51,11 +50,12 @@ inline constexpr bool IsBracesConstructibleV = types_internal::IsBracesConstruct
 
 namespace internal {
 template<typename Container>
-concept IsForwardIteratableRaw = requires (Container container, const Container const_container) {
+concept IsForwardIteratableRaw = requires(Container container, const Container const_container) {
   requires std::forward_iterator<typename Container::iterator>;
   requires std::forward_iterator<typename Container::const_iterator>;
-  requires std::same_as<typename Container::reference, typename Container::value_type&> || std::same_as<typename Container::reference, const typename Container::value_type&>;
-  requires std::same_as<typename Container::const_reference, const typename Container::value_type &>;
+  requires std::same_as<typename Container::reference, typename Container::value_type&>
+               || std::same_as<typename Container::reference, const typename Container::value_type&>;
+  requires std::same_as<typename Container::const_reference, const typename Container::value_type&>;
   requires std::forward_iterator<typename Container::iterator>;
   requires std::forward_iterator<typename Container::const_iterator>;
   { container.begin() } -> std::same_as<typename Container::iterator>;
@@ -72,11 +72,15 @@ concept IsForwardIteratable = internal::IsForwardIteratableRaw<std::remove_cvref
 
 namespace internal {
 template<typename Container>
-concept ContainerIsForwardIteratableRaw = requires (Container container, const Container const_container) {
+concept ContainerIsForwardIteratableRaw = requires(Container container, const Container const_container) {
   IsForwardIteratableRaw<Container>;
   requires std::signed_integral<typename Container::difference_type>;
-  requires std::same_as<typename Container::difference_type, typename std::iterator_traits<typename Container::iterator>::difference_type>;
-  requires std::same_as<typename Container::difference_type, typename std::iterator_traits<typename Container::const_iterator>::difference_type>;
+  requires std::same_as<
+      typename Container::difference_type,
+      typename std::iterator_traits<typename Container::iterator>::difference_type>;
+  requires std::same_as<
+      typename Container::difference_type,
+      typename std::iterator_traits<typename Container::const_iterator>::difference_type>;
   { container.cbegin() } -> std::same_as<typename Container::const_iterator>;
   { container.cend() } -> std::same_as<typename Container::const_iterator>;
   { container.empty() } -> std::same_as<bool>;
@@ -114,6 +118,42 @@ concept ContainerHasPushBack = requires(Container container, ValueType new_value
   ContainerIsForwardIteratable<Container>;
   container.push_back(new_value);
 };
+
+namespace internal {
+
+template<typename T>
+struct IsInitializerListImpl : std::false_type {};
+
+template<typename T>
+struct IsInitializerListImpl<std::initializer_list<T>> : std::true_type {};
+
+}  // namespace internal
+
+template<typename T>
+concept IsInitializerList = internal::IsInitializerListImpl<T>::value;
+
+template<typename T>
+concept NotInitializerList = !IsInitializerList<T>;
+
+template<typename T>
+concept HasValueType = requires { typename T::value_type; };
+
+namespace internal {
+
+template<std::forward_iterator It, bool = HasValueType<It>>
+struct ForwardIteratorValueTypeImpl {
+  using type = It::value_type;
+};
+
+template<std::forward_iterator It>
+struct ForwardIteratorValueTypeImpl<It, false> {
+  using type = std::remove_reference_t<decltype(*std::declval<It&>())>;
+};
+
+}  // namespace internal
+
+template<std::forward_iterator It>
+using ForwardIteratorValueType = internal::ForwardIteratorValueTypeImpl<It>::type;
 
 }  // namespace mbo::types
 

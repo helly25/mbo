@@ -97,7 +97,7 @@ cc_test(
 cc_library(
     name = "traits_cc",
     hdrs = ["traits.h"],
-    visibility = ["//visibility:private"],
+    visibility = ["//mbo:__subpackages__"],
     deps = ["//mbo/types/internal:traits_cc"],
 )
 
