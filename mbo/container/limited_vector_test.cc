@@ -289,6 +289,30 @@ TEST_F(LimitedVectorTest, EraseRange) {
   EXPECT_THAT(test, IsEmpty());
 }
 
+
+TEST_F(LimitedVectorTest, Swap) {
+  auto test1 = MakeLimitedVector(0, 1, 2);
+  auto test2 = MakeLimitedVector<3>(3);
+  test2.pop_back();
+  test2.pop_back();
+  ASSERT_THAT(test1, ElementsAre(0, 1, 2));
+  ASSERT_THAT(test2, ElementsAre(3));
+  test1.swap(test2);
+  EXPECT_THAT(test1, ElementsAre(3));
+  EXPECT_THAT(test2, ElementsAre(0, 1, 2));
+  test1.swap(test2);
+  EXPECT_THAT(test1, ElementsAre(0, 1, 2));
+  EXPECT_THAT(test2, ElementsAre(3));
+  test2.clear();
+  test1.swap(test2);
+  EXPECT_THAT(test1, ElementsAre());
+  EXPECT_THAT(test2, ElementsAre(0, 1, 2));
+  test2.clear();
+  test1.swap(test2);
+  EXPECT_THAT(test1, ElementsAre());
+  EXPECT_THAT(test2, ElementsAre());
+}
+
 TEST_F(LimitedVectorTest, Compare) {
   constexpr auto k42v25 = MakeLimitedVector(42, 25);
   constexpr auto k42o25 = MakeLimitedVector(42, 25);

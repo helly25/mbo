@@ -144,6 +144,13 @@ class LimitedVector final {
 
   template<typename U, std::size_t OtherN>
   requires(std::convertible_to<U, T> && OtherN <= Capacity)
+  constexpr LimitedVector& operator=(std::initializer_list<U>&& list) noexcept {
+    assign(std::move(list));
+    return *this;
+  }
+
+  template<typename U, std::size_t OtherN>
+  requires(std::convertible_to<U, T> && OtherN <= Capacity)
   constexpr explicit LimitedVector(const LimitedVector<U, OtherN>& other) noexcept {
     for (; size_ < other.size(); ++size_) {
       std::construct_at(&values_[size_].data, other.at(size_));
@@ -203,6 +210,26 @@ class LimitedVector final {
 
   constexpr void shrink_to_fit() noexcept {
     // Nothing to do. The contract says there is no requirement to reduce capacity.
+  }
+
+  constexpr void swap(LimitedVector& other) noexcept {
+    std::size_t pos = 0;
+    for (; pos < size_ && pos < other.size(); ++pos) {
+      std::swap(values_[pos].data, other.at(pos));
+    }
+    if (size_ > other.size()) {
+      std::size_t new_size = other.size();
+      for (; pos < size_; ++pos) {
+        other.emplace_back(std::move(values_[pos].data));
+      }
+      size_ = new_size;
+    } else if (other.size() > size_) {
+      std::size_t new_size = size_;
+      for (; pos < other.size(); ++pos) {
+        emplace_back(std::move(other.at(pos)));
+      }
+      other.size_ = new_size;
+    }
   }
 
   template<typename... Args>
@@ -297,11 +324,6 @@ class LimitedVector final {
     while (it < list.end()) {
       emplace_back(std::forward<T>(*it));
     }
-  }
-
-  constexpr LimitedVector& operator=(std::initializer_list<T>&& list) noexcept {
-    assign(std::move(list));
-    return *this;
   }
 
   // Read/write access
