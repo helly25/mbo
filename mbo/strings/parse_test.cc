@@ -77,6 +77,7 @@ TEST_F(ParseTest, ParseStringHex) {
 
 TEST_F(ParseTest, ParseStringStopAtAnyOf) {
   ASSERT_THAT(ParseOptions().stop_at_any_of, IsEmpty());
+  ASSERT_THAT(ParseOptions().stop_at_any_of, IsEmpty());
   ASSERT_THAT(ParseOptions().split_at_any_of, IsEmpty());
   static constexpr ParseOptions kOpts{.stop_at_any_of = ".,"};
   EXPECT_THAT(ParseString(kOpts, ""), IsOkAndHolds(Pair("", "")));
@@ -88,7 +89,19 @@ TEST_F(ParseTest, ParseStringStopAtAnyOf) {
   EXPECT_THAT(ParseString(kOpts, "."), IsOkAndHolds(Pair("", ".")));
 }
 
+TEST_F(ParseTest, ParseStringStopAtStr) {
+  ASSERT_THAT(ParseOptions().stop_at_any_of, IsEmpty());
+  ASSERT_THAT(ParseOptions().stop_at_str, IsEmpty());
+  ASSERT_THAT(ParseOptions().split_at_any_of, IsEmpty());
+  static constexpr ParseOptions kOpts{.stop_at_str = "//", .remove_quotes = false};
+  EXPECT_THAT(ParseString(kOpts, ""), IsOkAndHolds(Pair("", "")));
+  EXPECT_THAT(ParseString(kOpts, "//"), IsOkAndHolds(Pair("", "//")));
+  EXPECT_THAT(ParseString(kOpts, "x //"), IsOkAndHolds(Pair("x ", "//")));
+  EXPECT_THAT(ParseString(kOpts, "x('//'); // y"), IsOkAndHolds(Pair("x('//'); ", "// y")));
+}
+
 TEST_F(ParseTest, ParseStringSplitAtAnyOf) {
+  ASSERT_THAT(ParseOptions().stop_at_any_of, IsEmpty());
   ASSERT_THAT(ParseOptions().stop_at_any_of, IsEmpty());
   ASSERT_THAT(ParseOptions().split_at_any_of, IsEmpty());
   static constexpr ParseOptions kOpts{.split_at_any_of = ".,"};

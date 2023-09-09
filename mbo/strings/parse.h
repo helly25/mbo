@@ -43,6 +43,9 @@ struct ParseOptions {
   // Any character in this list will stop `ParseString` and `ParseStringList`.
   std::string_view stop_at_any_of;
 
+  // Similar to `stop_at_any_of`, but an actual single sequence. If this sequence is found, then the parsing stops.
+  std::string_view stop_at_str;
+
   // A character in this list will split `ParseStringList` or stop `ParseString`.
   // It will default to ',' for `ParseStringList`.
   std::string_view split_at_any_of;

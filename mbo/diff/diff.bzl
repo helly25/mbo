@@ -32,7 +32,7 @@ def diff_test(
         file_old: The old file.
         file_new: The new file.
         failure_message: Additional message to log if the files don't match.
-        strip_comments:  Strip out any thing starting from `strip_comments`.
+        strip_comments:  Strip out anything starting from `strip_comments`.
         **kwargs: Keyword args to pass down to native rules.
     """
     _diff_test(

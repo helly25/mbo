@@ -35,11 +35,14 @@
 
 ABSL_FLAG(std::size_t, unified, 3, "Produces a diff with number lines of context");
 ABSL_FLAG(bool, skip_time, false, "Sets the time to the unix epoch 0.");
-ABSL_FLAG(
-    std::string,
-    strip_comments,
-    "",
-    "Can be used to strip comments (if this is a single char than parsing is enabled).");
+ABSL_FLAG(std::string, strip_comments, "", "Can be used to strip comments.");
+ABSL_FLAG(bool, strip_parsed_comments, true, R"(
+Whether to use comment parsing or single character finding. In the former form (default), the
+string in `--strip_comments` functions as a single sub-string, for instance '//'. If found, then
+all line content to its right will be removed as well as any remaining trailing line whitespec.
+In single character finding mode (`--nostrip_parsed_comments`), the line gets capped as soon as
+any character of that set is found and also all remaining trailing whitespec will be stripped.
+)");
 
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 // NOLINTEND(abseil-no-namespace)
@@ -66,12 +69,12 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
       .strip_comments = [&]() -> mbo::diff::UnifiedDiff::StripCommentOptions {
         if (strip_comments.empty()) {
           return {};
-        } else if (strip_comments.length() > 1) {
+        } else if (absl::GetFlag(FLAGS_strip_parsed_comments)) {
           return mbo::strings::StripCommentArgs{.comment_start = strip_comments};
         } else {
           return mbo::strings::StripParsedCommentArgs{
               .parse = {
-                  .stop_at_any_of = strip_comments,
+                  .stop_at_str = strip_comments,
                   .remove_quotes = false,
               }};
         }

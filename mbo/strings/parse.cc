@@ -122,14 +122,22 @@ void HandleQuotes(const ParseOptions& options, char chr, Quotes& quotes, std::st
   }
 }
 
+namespace {
+bool StopParsing(const ParseOptions& options, std::string_view data) {
+  const char chr = data[0];
+  return absl::StrContains(options.stop_at_any_of, chr) //
+         || absl::StrContains(options.split_at_any_of, chr)
+         || (!options.stop_at_str.empty() && data.starts_with(options.stop_at_str));
+}
+}  // namespace
+
 absl::StatusOr<std::string> ParseString(const ParseOptions& options, std::string_view& data) {
   std::string result;
   Quotes quotes = Quotes::kNone;
   while (!data.empty()) {
     char chr = data[0];  // Cannot use `PopChar`, need the char left in-place
     if (quotes == Quotes::kNone
-        && (absl::StrContains(options.stop_at_any_of, chr) || absl::StrContains(options.split_at_any_of, chr)
-            || (!options.allow_unquoted && chr != '\'' && chr != '"'))) {
+        && (StopParsing(options, data) || (!options.allow_unquoted && chr != '\'' && chr != '"'))) {
       return result;
     }
     data.remove_prefix(1);
@@ -188,8 +196,7 @@ absl::StatusOr<std::string> ParseString(const ParseOptions& options, std::string
       case 'U':  // Unicode 8-hex
         return absl::UnimplementedError("ParseString input has not yet supported unicode escape sequence.");
       case 'N':  // \N{Name}: Named unicode char
-        return absl::UnimplementedError(
-            "ParseString input has not yet supported named unicode char escape sequence.");
+        return absl::UnimplementedError("ParseString input has not yet supported named unicode char escape sequence.");
       default: return absl::InvalidArgumentError("ParseString input has unsupported escape sequence.");
     }  // switch for escape
   }
@@ -197,9 +204,9 @@ absl::StatusOr<std::string> ParseString(const ParseOptions& options, std::string
     return result;
   }
   return absl::InvalidArgumentError(absl::StrFormat(
-        "ParseString input has unterminated %s quotes (%s).",  //
-        quotes == Quotes::kSingle ? "single" : "double",  //
-        quotes == Quotes::kSingle ? "'" : "\""));
+      "ParseString input has unterminated %s quotes (%s).",  //
+      quotes == Quotes::kSingle ? "single" : "double",       //
+      quotes == Quotes::kSingle ? "'" : "\""));
 }
 
 absl::StatusOr<std::vector<std::string>> ParseStringList(const ParseOptions& options, std::string_view& data) {
