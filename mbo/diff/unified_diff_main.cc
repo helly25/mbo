@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "absl/flags/flag.h"
+#include "absl/flags/usage.h"
 #include "absl/flags/parse.h"
 #include "absl/log/initialize.h"
 #include "absl/log/log.h"
@@ -28,6 +29,7 @@
 #include "mbo/diff/unified_diff.h"
 #include "mbo/diff/update_absl_log_flags.h"
 #include "mbo/file/artefact.h"
+#include "mbo/strings/indent.h"
 #include "mbo/strings/strip.h"
 
 // NOLINTBEGIN(abseil-no-namespace)
@@ -37,12 +39,13 @@ ABSL_FLAG(std::size_t, unified, 3, "Produces a diff with number lines of context
 ABSL_FLAG(bool, skip_time, false, "Sets the time to the unix epoch 0.");
 ABSL_FLAG(std::string, strip_comments, "", "Can be used to strip comments.");
 ABSL_FLAG(bool, strip_parsed_comments, true, R"(
-Whether to use comment parsing or single character finding. In the former form (default), the
-string in `--strip_comments` functions as a single sub-string, for instance '//'. If found, then
-all line content to its right will be removed as well as any remaining trailing line whitespec.
-In single character finding mode (`--nostrip_parsed_comments`), the line gets capped as soon as
-any character of that set is found and also all remaining trailing whitespec will be stripped.
-)");
+Whether to use comment parsing or single character finding. In the former
+form (default), the string in `--strip_comments` functions as a single
+sub-string, for instance '//'. If found, then all line content to its
+right will be removed and any remaining trailing line whitespec will be
+stripped. In single character finding mode (`--nostrip_parsed_comments`),
+the line gets capped as soon as any character of that set is found and
+also all remaining trailing whitespec will be stripped.)");
 
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 // NOLINTEND(abseil-no-namespace)
@@ -97,6 +100,11 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
 namespace fs = std::filesystem;
 
 int main(int argc, char* argv[]) {
+  absl::SetProgramUsageMessage(mbo::strings::DropIndent(R"(
+[ <flags>> ] <old/lef> <new/right>
+
+Performs a unified diff (diff -du) between files <old/left> and <new/right>.
+)"));
   absl::InitializeLog();
   const std::vector<char*> args = absl::ParseCommandLine(argc, argv);
   mbo::UpdateAbslLogFlags();
