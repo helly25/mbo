@@ -82,8 +82,6 @@ else
   echo >&2 "ERROR: could not find \"{file_old}\" and \"{file_new}\""
   exit 1
 fi
-pwd
-find mbo -type f
 if ! {diff_tool} "${{OLD}}" "${{NEW}}" --strip_comments='{strip_comments}'; then
   echo >&2 "FAIL: files \"{file_old}\" and \"{file_new}\" differ. "{failure_message}
   exit 1
@@ -93,7 +91,7 @@ fi
                 failure_message = shell.quote(ctx.attr.failure_message),
                 file_old = _runfiles_path(ctx.file.file_old),
                 file_new = _runfiles_path(ctx.file.file_new),
-                strip_comments = ctx.attr.strip_comments,
+                strip_comments = shell.quote(ctx.attr.strip_comments),
             ),
             is_executable = True,
         )
@@ -135,4 +133,5 @@ _diff_test = rule(
     },
     test = True,
     implementation = _diff_test_impl,
+    provides = [DefaultInfo],
 )

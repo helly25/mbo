@@ -93,8 +93,10 @@ class Data final {
     return absl::StrCat(text.substr(pos), "\n\\ No newline at end of file");
   }
 
-  static std::vector<std::string_view>
-  SplitAndAdaptLastLine(std::string_view text, bool got_nl, std::string_view last_line) {
+  static std::vector<std::string_view> SplitAndAdaptLastLine(
+      std::string_view text,
+      bool got_nl,
+      std::string_view last_line) {
     if (!got_nl && text.empty()) {
       // This means a zero-length input (not just a single new-line).
       // For that case `diff -du` does not show 'No newline at end of file'.
@@ -119,8 +121,10 @@ class Data final {
     return text.substr(pos);
   }
 
-  static std::vector<std::string_view>
-  UpdateLast(std::vector<std::string_view> lines, bool got_nl, std::string_view last_line) {
+  static std::vector<std::string_view> UpdateLast(
+      std::vector<std::string_view> lines,
+      bool got_nl,
+      std::string_view last_line) {
     if (!got_nl) {
       lines.back() = last_line;
     }
@@ -294,8 +298,9 @@ class Chunk {
     //   whether ot not it has content.
     // - Do not show length 1
     absl::StrAppendFormat(
-        &output_, "@@ -%s +%s @@\n",  //
-        ChunkPos(lhs_empty_, lhs_idx_, lhs_size_), ChunkPos(rhs_empty_, rhs_idx_, rhs_size_));
+        &output_, "@@ -%s +%s @@\n",                // Format
+        ChunkPos(lhs_empty_, lhs_idx_, lhs_size_),  // Format
+        ChunkPos(rhs_empty_, rhs_idx_, rhs_size_));
     while (!data_.empty()) {
       absl::StrAppendFormat(&output_, "%c%s\n", data_.front().first, data_.front().second);
       data_.pop_front();
@@ -362,27 +367,28 @@ class UnifiedDiff::Impl {
 };
 
 template<class... Ts>
-struct Select : Ts... { using Ts::operator()...; };
+struct Select : Ts... {
+  using Ts::operator()...;
+};
 template<class... Ts>
 Select(Ts...) -> Select<Ts...>;
 
 bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) const {
-  return std::visit(Select{
-    [&](UnifiedDiff::NoCommentStripping)-> bool {
-      return lhs == rhs;
-    },
-    [&](const mbo::strings::StripCommentArgs& args)-> bool {
-      return mbo::strings::StripLineComments(lhs, args) == mbo::strings::StripLineComments(rhs, args);
-    },
-    [&](const mbo::strings::StripParsedCommentArgs& args)->bool {
-      const auto lhs_or = mbo::strings::StripParsedLineComments(lhs, args);
-      const auto rhs_or = mbo::strings::StripParsedLineComments(rhs, args);
-      if (!lhs_or.ok() || !rhs_or.ok()) {
-        return lhs == rhs;
-      }
-      return *lhs_or == *rhs_or;
-    }
-  }, options_.strip_comments);
+  return std::visit(
+      Select{
+          [&](UnifiedDiff::NoCommentStripping) -> bool { return lhs == rhs; },
+          [&](const mbo::strings::StripCommentArgs& args) -> bool {
+            return mbo::strings::StripLineComments(lhs, args) == mbo::strings::StripLineComments(rhs, args);
+          },
+          [&](const mbo::strings::StripParsedCommentArgs& args) -> bool {
+            const auto lhs_or = mbo::strings::StripParsedLineComments(lhs, args);
+            const auto rhs_or = mbo::strings::StripParsedLineComments(rhs, args);
+            if (!lhs_or.ok() || !rhs_or.ok()) {
+              return lhs == rhs;
+            }
+            return *lhs_or == *rhs_or;
+          }},
+      options_.strip_comments);
 }
 
 void UnifiedDiff::Impl::LoopBoth() {
@@ -496,14 +502,16 @@ absl::StatusOr<std::string> UnifiedDiff::Impl::Finalize() {
     chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
   }
   while (!rhs_data_.Done()) {
-      const size_t r_idx = rhs_data_.Idx();
+    const size_t r_idx = rhs_data_.Idx();
     chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
   }
   return chunk_.MoveOutput();
 }
 
-absl::StatusOr<std::string>
-UnifiedDiff::Diff(const file::Artefact& lhs, const file::Artefact& rhs, const Options& options) {
+absl::StatusOr<std::string> UnifiedDiff::Diff(
+    const file::Artefact& lhs,
+    const file::Artefact& rhs,
+    const Options& options) {
   if (lhs.data == rhs.data) {
     return std::string();
   }
