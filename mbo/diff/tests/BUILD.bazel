@@ -22,6 +22,13 @@ diff_test(
     file_new = "abc.txt",
 )
 
+diff_test(
+    name = "diff_comments_equal_test",
+    file_old = "abc.txt",
+    file_new = "abc_comments.txt",
+    strip_comments = '#',
+)
+
 genrule(
     name = "diff_abc_axc",
     srcs = [
@@ -37,8 +44,51 @@ genrule(
     """,
 )
 
+genrule(
+    name = "diff_abc_axc_comments",
+    srcs = [
+        "abc.txt",
+        "axc_comments.txt",
+    ],
+    outs = ["abc_axc_comments.test.txt"],
+    tools = ["//mbo/diff:unified_diff"],
+    cmd = """
+        $(location //mbo/diff:unified_diff) --skip_time \\
+            $(location abc.txt) $(location axc_comments.txt) > $@ \\
+            || true
+    """,
+)
+
+genrule(
+    name = "diff_abc_axc_comments_stripped",
+    srcs = [
+        "abc.txt",
+        "axc_comments.txt",
+    ],
+    outs = ["abc_axc_comments_stripped.test.txt"],
+    tools = ["//mbo/diff:unified_diff"],
+    cmd = """
+        $(location //mbo/diff:unified_diff) --skip_time \\
+            $(location abc.txt) $(location axc_comments.txt) > $@ \\
+            --strip_comments='#' \\
+            || true
+    """,
+)
+
 diff_test(
     name = "diff_abc_axc_test",
     file_old = "abc_axc.diff.txt",
     file_new = "abc_axc.test.txt",
+)
+
+diff_test(
+    name = "diff_abc_axc_comments_test",
+    file_old = "abc_axc_comments.diff.txt",
+    file_new = "abc_axc_comments.test.txt",
+)
+
+diff_test(
+    name = "diff_abc_axc_comments_stripped_test",
+    file_old = "abc_axc_comments_stripped.diff.txt",
+    file_new = "abc_axc_comments_stripped.test.txt",
 )

@@ -21,6 +21,7 @@ def diff_test(
         file_old,
         file_new,
         failure_message = "",
+        strip_comments = "",
         **kwargs):
     """Create a diff test that compares `file_old` vs `file_new`.
 
@@ -31,6 +32,7 @@ def diff_test(
         file_old: The old file.
         file_new: The new file.
         failure_message: Additional message to log if the files don't match.
+        strip_comments:  Strip out any thing starting from `strip_comments`.
         **kwargs: Keyword args to pass down to native rules.
     """
     _diff_test(
@@ -42,6 +44,7 @@ def diff_test(
             "@bazel_tools//src/conditions:host_windows": True,
             "//conditions:default": False,
         }),
+        strip_comments = strip_comments,
         **kwargs
     )
 
@@ -60,7 +63,7 @@ def _diff_test_impl(ctx):
             output = test_bin,
             content = r"""#!/usr/bin/env bash
 
-set -euo pipefail
+set -xeuo pipefail
 
 OLD="{file_old}"
 NEW="{file_new}"
@@ -79,14 +82,18 @@ else
   echo >&2 "ERROR: could not find \"{file_old}\" and \"{file_new}\""
   exit 1
 fi
-if ! diff -du "${{OLD}}" "${{NEW}}"; then
+pwd
+find mbo -type f
+if ! {diff_tool} "${{OLD}}" "${{NEW}}" --strip_comments='{strip_comments}'; then
   echo >&2 "FAIL: files \"{file_old}\" and \"{file_new}\" differ. "{failure_message}
   exit 1
 fi
 """.format(
+                diff_tool = ctx.executable._diff_tool.short_path,
                 failure_message = shell.quote(ctx.attr.failure_message),
                 file_old = _runfiles_path(ctx.file.file_old),
                 file_new = _runfiles_path(ctx.file.file_new),
+                strip_comments = ctx.attr.strip_comments,
             ),
             is_executable = True,
         )
@@ -95,6 +102,7 @@ fi
         files = depset(direct = [test_bin]),
         runfiles = ctx.runfiles(files = [
             test_bin,
+            ctx.executable._diff_tool,
             ctx.file.file_old,
             ctx.file.file_new,
         ]),
@@ -114,6 +122,9 @@ _diff_test = rule(
             mandatory = True,
         ),
         "is_windows": attr.bool(mandatory = True),
+        "strip_comments": attr.string(
+            doc = "Strip out any thing starting from `strip_comments`.",
+        ),
         "_diff_tool": attr.label(
             doc = "The diff tool executable.",
             default = Label("//mbo/diff:unified_diff"),

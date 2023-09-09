@@ -18,6 +18,7 @@
 
 #include "absl/status/statusor.h"
 #include "mbo/file/artefact.h"
+#include "mbo/strings/strip.h"
 
 namespace mbo::diff {
 
@@ -41,18 +42,28 @@ namespace mbo::diff {
 // the algorithm is closer to O(max(L,R)) for small differences. In detail the
 // algorithm has a complexity of O(max(L,R)+dL*R+L*dR).
 class UnifiedDiff final {
+ private:
+  struct NoCommentStripping {};
+
  public:
   UnifiedDiff() = delete;
+
+  using StripCommentOptions =
+      std::variant<NoCommentStripping, mbo::strings::StripCommentArgs, mbo::strings::StripParsedCommentArgs>;
 
   struct Options final {
     static const Options& Default() noexcept;
 
     std::size_t context_size = 3;
     std::string time_format = "%F %H:%M:%E3S %z";
+
+    StripCommentOptions strip_comments = NoCommentStripping{};
   };
 
-  static absl::StatusOr<std::string>
-  Diff(const file::Artefact& lhs, const file::Artefact& rhs, const Options& options = Options::Default());
+  static absl::StatusOr<std::string> Diff(
+      const file::Artefact& lhs,
+      const file::Artefact& rhs,
+      const Options& options = Options::Default());
 
  private:
   class Impl;

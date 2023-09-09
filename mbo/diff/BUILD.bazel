@@ -34,6 +34,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//mbo/file:artefact_cc",
+        "//mbo/strings:strip_cc",
         "//mbo/types:no_destruct_cc",
         "@com_google_absl//absl/log:absl_log",
         "@com_google_absl//absl/status:statusor",
@@ -51,8 +52,10 @@ cc_binary(
         ":unified_diff_cc",
         ":update_absl_log_flags_cc",
         "//mbo/file:artefact_cc",
+        "//mbo/strings:strip_cc",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/log:absl_log",
+        "@com_google_absl//absl/log:initialize",
     ],
 )
 

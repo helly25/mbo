@@ -54,6 +54,13 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/strings:indent_cc, mbo/strings/indent.h
         * function `DropIndent`: Converts a raw-string text block as if it had no indent.
         * function `DropIndentAndSplit`: Variant of `DropIndent` that returns the result as lines.
+    * mbo/strings:strip_cc, mbo/strings/strip.h
+        * struct `StripCommentsArgs`: Arguments for `StripComments` and `StripLineComments`.
+        * function `StripComments`: Strips comments from lines.
+        * function `StripLineComments`: Strips comments from a single line.
+        * struct `StripParsedCommentsArgs`: Arguments for `StripParsedComments` and `StripParsedLineComments`.
+        * function `StripParsedComments`: Strips comments from parsed lines.
+        * function `StripLineParsedComments`: Strips comments from a single parsed line.
 * Testing
     * `namespace mbo::testing`
     * mbo/testing:status_cc, mbo/testing/status.h

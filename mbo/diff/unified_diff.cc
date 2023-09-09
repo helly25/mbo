@@ -26,6 +26,7 @@
 #include "absl/strings/strip.h"
 #include "absl/time/time.h"
 #include "mbo/file/artefact.h"
+#include "mbo/strings/strip.h"
 #include "mbo/types/no_destruct.h"
 
 namespace mbo::diff {
@@ -230,7 +231,11 @@ class Chunk {
 
   std::string MoveOutput() {
     OutputChunk();
-    return std::move(output_);
+    if (diff_found_) {
+      return std::move(output_);
+    } else {
+      return "";  // Not showing chunk header.
+    }
   }
 
  private:
@@ -281,6 +286,7 @@ class Chunk {
     if (lhs_size_ == 0 && rhs_size_ == 0) {
       return;
     }
+    diff_found_ = true;
     MoveContext(true);
     MoveDiffs();
     // Output position and length:
@@ -316,6 +322,7 @@ class Chunk {
   size_t rhs_idx_ = 0;
   size_t lhs_size_ = 0;
   size_t rhs_size_ = 0;
+  bool diff_found_ = false;
 };
 
 }  // namespace diff_internal
@@ -325,7 +332,7 @@ class UnifiedDiff::Impl {
   Impl() = delete;
 
   Impl(const file::Artefact& lhs, const file::Artefact& rhs, const Options& options)
-      : lhs_data_(lhs.data), rhs_data_(rhs.data), chunk_(lhs, rhs, options) {}
+      : options_(options), lhs_data_(lhs.data), rhs_data_(rhs.data), chunk_(lhs, rhs, options_) {}
 
   ~Impl() = default;
   Impl(const Impl&) = delete;
@@ -339,6 +346,7 @@ class UnifiedDiff::Impl {
   }
 
  private:
+  bool CompareEq(std::string_view lhs, std::string_view rhs) const;
   void Loop();
   void LoopBoth();
   bool FindNext();
@@ -347,13 +355,38 @@ class UnifiedDiff::Impl {
   bool PastMaxDiffChunkLength(size_t& loop);
   absl::StatusOr<std::string> Finalize();
 
+  const UnifiedDiff::Options& options_;
   diff_internal::Data lhs_data_;
   diff_internal::Data rhs_data_;
   diff_internal::Chunk chunk_;
 };
 
+template<class... Ts>
+struct Select : Ts... { using Ts::operator()...; };
+template<class... Ts>
+Select(Ts...) -> Select<Ts...>;
+
+bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) const {
+  return std::visit(Select{
+    [&](UnifiedDiff::NoCommentStripping)-> bool {
+      return lhs == rhs;
+    },
+    [&](const mbo::strings::StripCommentArgs& args)-> bool {
+      return mbo::strings::StripLineComments(lhs, args) == mbo::strings::StripLineComments(rhs, args);
+    },
+    [&](const mbo::strings::StripParsedCommentArgs& args)->bool {
+      const auto lhs_or = mbo::strings::StripParsedLineComments(lhs, args);
+      const auto rhs_or = mbo::strings::StripParsedLineComments(rhs, args);
+      if (!lhs_or.ok() || !rhs_or.ok()) {
+        return lhs == rhs;
+      }
+      return *lhs_or == *rhs_or;
+    }
+  }, options_.strip_comments);
+}
+
 void UnifiedDiff::Impl::LoopBoth() {
-  while (!lhs_data_.Done() && !rhs_data_.Done() && lhs_data_.Line() == rhs_data_.Line()) {
+  while (!lhs_data_.Done() && !rhs_data_.Done() && CompareEq(lhs_data_.Line(), rhs_data_.Line())) {
     chunk_.PushBoth(lhs_data_.Idx(), rhs_data_.Idx(), lhs_data_.Line());
     lhs_data_.Next();
     rhs_data_.Next();
@@ -366,7 +399,7 @@ std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextRight() {
   bool equal = false;
   while (!rhs_data_.Done(rhs)) {
     while (!lhs_data_.Done(lhs)) {
-      if (lhs_data_.Line(lhs) == rhs_data_.Line(rhs)) {
+      if (CompareEq(lhs_data_.Line(lhs), rhs_data_.Line(rhs))) {
         equal = true;
         break;
       }
@@ -387,7 +420,7 @@ std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
   bool equal = false;
   while (!lhs_data_.Done(lhs)) {
     while (!rhs_data_.Done(rhs)) {
-      if (lhs_data_.Line(lhs) == rhs_data_.Line(rhs)) {
+      if (CompareEq(lhs_data_.Line(lhs), rhs_data_.Line(rhs))) {
         equal = true;
         break;
       }

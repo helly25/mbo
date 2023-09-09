@@ -41,7 +41,34 @@ cc_test(
         ":parse_cc",
         "//mbo/status:status_macros_cc",
         "//mbo/testing:status_cc",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
     size = "small",
+)
+
+cc_library(
+    name = "strip_cc",
+    srcs = ["strip.cc"],
+    hdrs = ["strip.h"],
+    deps =[
+        ":parse_cc",
+        "//mbo/status:status_macros_cc",
+        "//mbo/testing:status_cc",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "strip_test",
+    srcs = ["strip_test.cc"],
+    deps = [
+        ":strip_cc",
+        "//mbo/status:status_macros_cc",
+        "//mbo/testing:status_cc",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
+    ],
 )
