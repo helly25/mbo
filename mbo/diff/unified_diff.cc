@@ -366,12 +366,11 @@ class UnifiedDiff::Impl {
   diff_internal::Chunk chunk_;
 };
 
-template<class... Ts>
-struct Select : Ts... {
-  using Ts::operator()...;
+template<class... Args>
+struct Select : Args... {
+  explicit Select(Args... args) : Args(args)... {}
+  using Args::operator()...;
 };
-template<class... Ts>
-Select(Ts...) -> Select<Ts...>;
 
 bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) const {
   return std::visit(
@@ -383,10 +382,7 @@ bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) co
           [&](const mbo::strings::StripParsedCommentArgs& args) -> bool {
             const auto lhs_or = mbo::strings::StripParsedLineComments(lhs, args);
             const auto rhs_or = mbo::strings::StripParsedLineComments(rhs, args);
-            if (!lhs_or.ok() || !rhs_or.ok()) {
-              return lhs == rhs;
-            }
-            return *lhs_or == *rhs_or;
+            return lhs_or.ok() && rhs_or.ok() ? *lhs_or == *rhs_or : lhs == rhs;
           }},
       options_.strip_comments);
 }
