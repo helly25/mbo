@@ -78,3 +78,25 @@ diff_test_test(
     file_old = "abc.txt",
     file_new = "abc_whitespace.txt",
 )
+
+diff_test(
+    name = "numnbers_ignore_blank_lines_diff_test",
+    file_old = "numbers.txt",
+    file_new = "numbers_blanks.txt",
+    ignore_blank_lines = True,
+)
+
+diff_test_test(
+    name = "numbers_blanks_diff_test",
+    expected_diff = "numbers_blanks.diff.txt",
+    file_old = "numbers.txt",
+    file_new = "numbers_blanks.txt",
+)
+
+diff_test_test(
+    name = "numbers_blnanks_plus_diff_test",
+    expected_diff = "numbers_blanks_plus.diff.txt",
+    file_old = "numbers.txt",
+    file_new = "numbers_blanks_plus.txt",
+    ignore_blank_lines = True,
+)

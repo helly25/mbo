@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/cleanup/cleanup.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
@@ -192,7 +193,7 @@ class Chunk {
   ~Chunk() = default;
 
   Chunk(const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options)
-      : lhs_empty_(lhs.data.empty()), rhs_empty_(rhs.data.empty()), context_(options) {
+      : options_(options), lhs_empty_(lhs.data.empty()), rhs_empty_(rhs.data.empty()), context_(options) {
     absl::StrAppend(&output_, "--- ", FileHeader(lhs, options), "\n");
     absl::StrAppend(&output_, "+++ ", FileHeader(rhs, options), "\n");
   }
@@ -223,12 +224,14 @@ class Chunk {
   }
 
   void PushLhs(size_t lhs_idx, size_t rhs_idx, std::string_view lhs) {
+    only_blank_lines_ &= lhs.empty();
     CheckContext(lhs_idx, rhs_idx);
     lhs_.emplace_back(lhs);
     ++lhs_size_;
   }
 
   void PushRhs(size_t lhs_idx, size_t rhs_idx, std::string_view rhs) {
+    only_blank_lines_ &= rhs.empty();
     CheckContext(lhs_idx, rhs_idx);
     rhs_.emplace_back(rhs);
     ++rhs_size_;
@@ -288,12 +291,16 @@ class Chunk {
   }
 
   void OutputChunk() {
+    absl::Cleanup clear = [this]{ Clear(); };
     if (lhs_size_ == 0 && rhs_size_ == 0) {
       return;
     }
-    diff_found_ = true;
     MoveContext(true);
     MoveDiffs();
+    if (only_blank_lines_ && options_.ignore_blank_lines) {
+      return;
+    }
+    diff_found_ = true;
     // Output position and length:
     // - If there is no content, then line is 0, otherwise use next line,
     //   whether ot not it has content.
@@ -306,6 +313,9 @@ class Chunk {
       absl::StrAppendFormat(&output_, "%c%s\n", data_.front().first, data_.front().second);
       data_.pop_front();
     }
+  }
+
+  void Clear() {
     lhs_.clear();
     rhs_.clear();
     data_.clear();
@@ -315,8 +325,10 @@ class Chunk {
     rhs_idx_ += rhs_size_;
     lhs_size_ = 0;
     rhs_size_ = 0;
+    only_blank_lines_ = true;
   }
 
+  const UnifiedDiff::Options& options_;
   const bool lhs_empty_ = false;
   const bool rhs_empty_ = false;
   std::string output_;
@@ -329,6 +341,7 @@ class Chunk {
   size_t lhs_size_ = 0;
   size_t rhs_size_ = 0;
   bool diff_found_ = false;
+  bool only_blank_lines_ = true;
 };
 
 }  // namespace diff_internal
@@ -447,8 +460,7 @@ std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
 }
 
 bool UnifiedDiff::Impl::PastMaxDiffChunkLength(size_t& loop) {
-  static constexpr size_t kMaxDiffChunkLength = 1'337'000;
-  if (++loop > kMaxDiffChunkLength) {
+  if (++loop > options_.max_diff_chunk_length) {
     static constexpr std::string_view kMsg = "Maximum loop count reached";
     ABSL_LOG(ERROR) << kMsg;
     chunk_.PushLhs(lhs_data_.Idx(), rhs_data_.Idx(), kMsg);

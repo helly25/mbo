@@ -57,9 +57,12 @@ class UnifiedDiff final {
     std::size_t context_size = 3;
     std::string time_format = "%F %H:%M:%E3S %z";
 
+    bool ignore_blank_lines = false;
     bool ignore_case = false;
     bool ignore_space_change = false;
     StripCommentOptions strip_comments = NoCommentStripping{};
+
+    std::size_t max_diff_chunk_length = 1'337'000;  // NOLINT(*-magic-numbers)
   };
 
   static absl::StatusOr<std::string> Diff(

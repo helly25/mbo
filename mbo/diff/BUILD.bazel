@@ -36,6 +36,7 @@ cc_library(
         "//mbo/file:artefact_cc",
         "//mbo/strings:strip_cc",
         "//mbo/types:no_destruct_cc",
+        "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/log:absl_log",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
