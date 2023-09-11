@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "absl/flags/flag.h"
-#include "absl/flags/usage.h"
 #include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
 #include "absl/log/initialize.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -73,13 +73,15 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
         if (strip_comments.empty()) {
           return {};
         } else if (absl::GetFlag(FLAGS_strip_parsed_comments)) {
-          return mbo::strings::StripCommentArgs{.comment_start = strip_comments};
-        } else {
           return mbo::strings::StripParsedCommentArgs{
               .parse = {
                   .stop_at_str = strip_comments,
                   .remove_quotes = false,
               }};
+        } else {
+          return mbo::strings::StripCommentArgs{
+              .comment_start = strip_comments,
+          };
         }
       }(),
   };
