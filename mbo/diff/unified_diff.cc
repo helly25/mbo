@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "absl/log/absl_log.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
@@ -369,20 +370,28 @@ class UnifiedDiff::Impl {
 template<class... Args>
 struct Select : Args... {
   explicit Select(Args... args) : Args(args)... {}
+
   using Args::operator()...;
 };
 
 bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) const {
+  if (options_.ignore_space_change) {
+    lhs = absl::StripAsciiWhitespace(lhs);
+    rhs = absl::StripAsciiWhitespace(rhs);
+  }
+  const auto comp = options_.ignore_case
+                        ? [](std::string_view lhs, std::string_view rhs) { return absl::EqualsIgnoreCase(lhs, rhs); }
+                        : [](std::string_view lhs, std::string_view rhs) { return lhs == rhs; };
   return std::visit(
       Select{
-          [&](UnifiedDiff::NoCommentStripping) -> bool { return lhs == rhs; },
+          [&](UnifiedDiff::NoCommentStripping) -> bool { return comp(lhs, rhs); },
           [&](const mbo::strings::StripCommentArgs& args) -> bool {
-            return mbo::strings::StripLineComments(lhs, args) == mbo::strings::StripLineComments(rhs, args);
+            return comp(mbo::strings::StripLineComments(lhs, args), mbo::strings::StripLineComments(rhs, args));
           },
           [&](const mbo::strings::StripParsedCommentArgs& args) -> bool {
             const auto lhs_or = mbo::strings::StripParsedLineComments(lhs, args);
             const auto rhs_or = mbo::strings::StripParsedLineComments(rhs, args);
-            return lhs_or.ok() && rhs_or.ok() ? *lhs_or == *rhs_or : lhs == rhs;
+            return lhs_or.ok() && rhs_or.ok() ? comp(*lhs_or, *rhs_or) : comp(lhs, rhs);
           }},
       options_.strip_comments);
 }

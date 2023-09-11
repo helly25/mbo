@@ -21,6 +21,8 @@ def diff_test(
         file_old,
         file_new,
         failure_message = "",
+        ignore_case = False,
+        ignore_space_change = False,
         strip_comments = "",
         **kwargs):
     """Create a diff test that compares `file_old` vs `file_new`.
@@ -32,6 +34,8 @@ def diff_test(
         file_old: The old file.
         file_new: The new file.
         failure_message: Additional message to log if the files don't match.
+        ignore_case:         Whether to ignore letter case.
+        ignore_space_change: Ignore leading and traling whitespace changes.
         strip_comments:  Strip out anything starting from `strip_comments`.
         **kwargs: Keyword args to pass down to native rules.
     """
@@ -44,7 +48,66 @@ def diff_test(
             "@bazel_tools//src/conditions:host_windows": True,
             "//conditions:default": False,
         }),
+        ignore_case = ignore_case,
+        ignore_space_change = ignore_space_change,
         strip_comments = strip_comments,
+        **kwargs
+    )
+
+
+def diff_test_test(
+        name,
+        file_old,
+        file_new,
+        expected_diff,
+        ignore_case = False,
+        ignore_space_change = False,
+        strip_comments = "",
+        **kwargs):
+    """Create a diff test that compares `file_old` vs `file_new`.
+
+    If the test detects differences, then the output will be in `diff -du` form.
+
+    Args:
+        name: Name of the test
+        file_old: The old file.
+        file_new: The new file.
+        expected_diff:       The expected diff result.
+        ignore_case:         Whether to ignore letter case.
+        ignore_space_change: Ignore leading and traling whitespace changes.
+        strip_comments:      Strip out anything starting from `strip_comments`.
+        **kwargs: Keyword args to pass down to native rules.
+    """
+    native.genrule(
+        name = name + "_diff",
+        srcs = [
+            file_old,
+            file_new,
+        ],
+        outs = [name + ".diff"],
+        tools = ["//mbo/diff:unified_diff"],
+        cmd = """
+            $(location //mbo/diff:unified_diff) --skip_time \\
+                $(location {file_old}) $(location {file_new}) > $@ \\
+                --ignore_case={ignore_case} \\
+                --ignore_space_change={ignore_space_change} \\
+                --strip_comments='{strip_comments}' \\
+                || true
+        """.format(
+            file_old = file_old,
+            file_new = file_new,
+            ignore_case = "1" if ignore_case else "0",
+            ignore_space_change = "1" if ignore_space_change else "0",
+            strip_comments = strip_comments,
+        ),
+        tags = kwargs.get("tags, None"),
+        testonly = True,
+        visibility = ["//visibility:private"],
+    )
+    diff_test(
+        name = name,
+        file_old = expected_diff,
+        file_new = name + ".diff",
         **kwargs
     )
 
@@ -82,7 +145,11 @@ else
   echo >&2 "ERROR: could not find \"{file_old}\" and \"{file_new}\""
   exit 1
 fi
-if ! {diff_tool} "${{OLD}}" "${{NEW}}" --strip_comments='{strip_comments}'; then
+if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
+    --ignore_case={ignore_case} \
+    --ignore_space_change={ignore_space_change} \
+    --strip_comments='{strip_comments}' \
+; then
   echo >&2 "FAIL: files \"{file_old}\" and \"{file_new}\" differ. "{failure_message}
   exit 1
 fi
@@ -91,6 +158,8 @@ fi
                 failure_message = shell.quote(ctx.attr.failure_message),
                 file_old = _runfiles_path(ctx.file.file_old),
                 file_new = _runfiles_path(ctx.file.file_new),
+                ignore_case = "1" if ctx.attr.ignore_case else "0",
+                ignore_space_change = "1" if ctx.attr.ignore_space_change else "0",
                 strip_comments = shell.quote(ctx.attr.strip_comments),
             ),
             is_executable = True,
@@ -118,6 +187,14 @@ _diff_test = rule(
             allow_single_file = True,
             doc = "The new (right) file of the comparison.",
             mandatory = True,
+        ),
+        "ignore_case": attr.bool(
+            doc = "Whether to ignore letter case.",
+            default = False,
+        ),
+        "ignore_space_change": attr.bool(
+            doc = "Ignore leading and traling whitespace changes.",
+            default = False,
         ),
         "is_windows": attr.bool(mandatory = True),
         "strip_comments": attr.string(

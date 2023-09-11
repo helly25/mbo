@@ -46,6 +46,8 @@ right will be removed and any remaining trailing line whitespec will be
 stripped. In single character finding mode (`--nostrip_parsed_comments`),
 the line gets capped as soon as any character of that set is found and
 also all remaining trailing whitespec will be stripped.)");
+ABSL_FLAG(bool, ignore_case, false, "Whether to ignore the case of letters.");
+ABSL_FLAG(bool, ignore_space_change, false, "Ignore leading and trailing whitespace changes.");
 
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 // NOLINTEND(abseil-no-namespace)
@@ -69,6 +71,8 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
   const std::string strip_comments = absl::GetFlag(FLAGS_strip_comments);
   mbo::diff::UnifiedDiff::Options diff_options{
       .context_size = absl::GetFlag(FLAGS_unified),
+      .ignore_case = absl::GetFlag(FLAGS_ignore_case),
+      .ignore_space_change = absl::GetFlag(FLAGS_ignore_space_change),
       .strip_comments = [&]() -> mbo::diff::UnifiedDiff::StripCommentOptions {
         if (strip_comments.empty()) {
           return {};

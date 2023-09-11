@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//mbo/diff:diff.bzl", "diff_test")
+load("//mbo/diff:diff.bzl", "diff_test", "diff_test_test")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -22,73 +22,59 @@ diff_test(
     file_new = "abc.txt",
 )
 
+diff_test_test(
+    name = "abc_axc_diff_test",
+    expected_diff = "abc_axc.diff.txt",
+    file_old = "abc.txt",
+    file_new = "axc.txt",
+)
+
 diff_test(
-    name = "diff_comments_equal_test",
+    name = "abc_comments_equal_test",
     file_old = "abc.txt",
     file_new = "abc_comments.txt",
     strip_comments = '#',
 )
 
-genrule(
-    name = "diff_abc_axc",
-    srcs = [
-        "abc.txt",
-        "axc.txt",
-    ],
-    outs = ["abc_axc.test.txt"],
-    tools = ["//mbo/diff:unified_diff"],
-    cmd = """
-        $(location //mbo/diff:unified_diff) --skip_time \\
-            $(location abc.txt) $(location axc.txt) > $@ \\
-            || true
-    """,
+diff_test_test(
+    name = "abc_axc_comments_diff_test",
+    expected_diff = "abc_axc_comments.diff.txt",
+    file_old = "abc.txt",
+    file_new = "axc_comments.txt",
 )
 
-genrule(
-    name = "diff_abc_axc_comments",
-    srcs = [
-        "abc.txt",
-        "axc_comments.txt",
-    ],
-    outs = ["abc_axc_comments.test.txt"],
-    tools = ["//mbo/diff:unified_diff"],
-    cmd = """
-        $(location //mbo/diff:unified_diff) --skip_time \\
-            $(location abc.txt) $(location axc_comments.txt) > $@ \\
-            || true
-    """,
-)
-
-genrule(
-    name = "diff_abc_axc_comments_stripped",
-    srcs = [
-        "abc.txt",
-        "axc_comments.txt",
-    ],
-    outs = ["abc_axc_comments_stripped.test.txt"],
-    tools = ["//mbo/diff:unified_diff"],
-    cmd = """
-        $(location //mbo/diff:unified_diff) --skip_time \\
-            $(location abc.txt) $(location axc_comments.txt) > $@ \\
-            --strip_comments='#' \\
-            || true
-    """,
+diff_test_test(
+    name = "abc_axc_comments_stripped_diff_test",
+    expected_diff = "abc_axc_comments_stripped.diff.txt",
+    file_old = "abc.txt",
+    file_new = "axc_comments.txt",
+    strip_comments = "#",
 )
 
 diff_test(
-    name = "diff_abc_axc_test",
-    file_old = "abc_axc.diff.txt",
-    file_new = "abc_axc.test.txt",
+    name = "abc_ignore_case_diff_test",
+    file_old = "abc.txt",
+    file_new = "abc_caps.txt",
+    ignore_case = True,
+)
+
+diff_test_test(
+    name = "abc_caps_diff_test",
+    expected_diff = "abc_caps.diff.txt",
+    file_old = "abc.txt",
+    file_new = "abc_caps.txt",
 )
 
 diff_test(
-    name = "diff_abc_axc_comments_test",
-    file_old = "abc_axc_comments.diff.txt",
-    file_new = "abc_axc_comments.test.txt",
+    name = "abc_ignore_space_change_diff_test",
+    file_old = "abc.txt",
+    file_new = "abc_whitespace.txt",
+    ignore_space_change = True,
 )
 
-diff_test(
-    name = "diff_abc_axc_comments_stripped_test",
-    file_old = "abc_axc_comments_stripped.diff.txt",
-    file_new = "abc_axc_comments_stripped.test.txt",
+diff_test_test(
+    name = "abc_whitespace_diff_test",
+    expected_diff = "abc_whitespace.diff.txt",
+    file_old = "abc.txt",
+    file_new = "abc_whitespace.txt",
 )
