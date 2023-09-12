@@ -80,5 +80,8 @@ cc_test(
 bzl_library(
     name = "diff_bzl",
     srcs = ["diff.bzl"],
+    deps = [
+        "@bazel_skylib//lib:shell",
+    ],
     visibility = ["//visibility:public"],
 )

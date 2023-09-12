@@ -16,6 +16,9 @@
 
 load("@bazel_skylib//lib:shell.bzl", "shell")
 
+def _bool_arg(arg):
+    return "1" if arg else "0"
+
 def diff_test(
         name,
         file_old,
@@ -25,21 +28,23 @@ def diff_test(
         ignore_case = False,
         ignore_space_change = False,
         strip_comments = "",
+        strip_parsed_comments = True,
         **kwargs):
     """Create a diff test that compares `file_old` vs `file_new`.
 
     If the test detects differences, then the output will be in `diff -du` form.
 
     Args:
-        name: Name of the test
-        file_old: The old file.
-        file_new: The new file.
-        failure_message: Additional message to log if the files don't match.
-        ignore_blank_lines:  Ignore chunks which include only blank lines.
-        ignore_case:         Whether to ignore letter case.
-        ignore_space_change: Ignore leading and traling whitespace changes.
-        strip_comments:  Strip out anything starting from `strip_comments`.
-        **kwargs: Keyword args to pass down to native rules.
+        name:                  Name of the test
+        file_old:              The old file.
+        file_new:              The new file.
+        failure_message:       Additional message to log if the files don't match.
+        ignore_blank_lines:    Ignore chunks which include only blank lines.
+        ignore_case:           Whether to ignore letter case.
+        ignore_space_change:   Ignore leading and traling whitespace changes.
+        strip_comments:        Strip out anything starting from `strip_comments`.
+        strip_parsed_comments: Whether to parse lines when stripping comments.
+        **kwargs:              Keyword args to pass down to native rules.
     """
     _diff_test(
         name = name,
@@ -54,69 +59,10 @@ def diff_test(
         ignore_case = ignore_case,
         ignore_space_change = ignore_space_change,
         strip_comments = strip_comments,
+        strip_parsed_comments = strip_parsed_comments,
         **kwargs
     )
 
-
-def diff_test_test(
-        name,
-        file_old,
-        file_new,
-        expected_diff,
-        ignore_blank_lines = False,
-        ignore_case = False,
-        ignore_space_change = False,
-        strip_comments = "",
-        **kwargs):
-    """Create a diff test that compares `file_old` vs `file_new`.
-
-    If the test detects differences, then the output will be in `diff -du` form.
-
-    Args:
-        name: Name of the test
-        file_old: The old file.
-        file_new: The new file.
-        expected_diff:       The expected diff result.
-        ignore_blank_lines:  Ignore chunks which include only blank lines.
-        ignore_case:         Whether to ignore letter case.
-        ignore_space_change: Ignore leading and traling whitespace changes.
-        strip_comments:      Strip out anything starting from `strip_comments`.
-        **kwargs: Keyword args to pass down to native rules.
-    """
-    native.genrule(
-        name = name + "_diff",
-        srcs = [
-            file_old,
-            file_new,
-        ],
-        outs = [name + ".diff"],
-        tools = ["//mbo/diff:unified_diff"],
-        cmd = """
-            $(location //mbo/diff:unified_diff) --skip_time \\
-                $(location {file_old}) $(location {file_new}) > $@ \\
-                --ignore_blank_lines={ignore_blank_lines} \\
-                --ignore_case={ignore_case} \\
-                --ignore_space_change={ignore_space_change} \\
-                --strip_comments='{strip_comments}' \\
-                || true
-        """.format(
-            file_old = file_old,
-            file_new = file_new,
-            ignore_blank_lines = "1" if ignore_blank_lines else "0",
-            ignore_case = "1" if ignore_case else "0",
-            ignore_space_change = "1" if ignore_space_change else "0",
-            strip_comments = strip_comments,
-        ),
-        tags = kwargs.get("tags, None"),
-        testonly = True,
-        visibility = ["//visibility:private"],
-    )
-    diff_test(
-        name = name,
-        file_old = expected_diff,
-        file_new = name + ".diff",
-        **kwargs
-    )
 
 def _runfiles_path(f):
     if f.root.path:
@@ -156,7 +102,8 @@ if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
     --ignore_blank_lines={ignore_blank_lines} \
     --ignore_case={ignore_case} \
     --ignore_space_change={ignore_space_change} \
-    --strip_comments='{strip_comments}' \
+    --strip_comments={strip_comments} \
+    --strip_parsed_comments={strip_parsed_comments} \
 ; then
   echo >&2 "FAIL: files \"{file_old}\" and \"{file_new}\" differ. "{failure_message}
   exit 1
@@ -166,10 +113,11 @@ fi
                 failure_message = shell.quote(ctx.attr.failure_message),
                 file_old = _runfiles_path(ctx.file.file_old),
                 file_new = _runfiles_path(ctx.file.file_new),
-                ignore_blank_lines = "1" if ctx.attr.ignore_blank_lines else "0",
-                ignore_case = "1" if ctx.attr.ignore_case else "0",
-                ignore_space_change = "1" if ctx.attr.ignore_space_change else "0",
+                ignore_blank_lines = _bool_arg(ctx.attr.ignore_blank_lines),
+                ignore_case = _bool_arg(ctx.attr.ignore_case),
+                ignore_space_change = _bool_arg(ctx.attr.ignore_space_change),
                 strip_comments = shell.quote(ctx.attr.strip_comments),
+                strip_parsed_comments = _bool_arg(ctx.attr.strip_parsed_comments),
             ),
             is_executable = True,
         )
@@ -209,9 +157,15 @@ _diff_test = rule(
             doc = "Ignore leading and traling whitespace changes.",
             default = False,
         ),
-        "is_windows": attr.bool(mandatory = True),
+        "is_windows": attr.bool(
+            mandatory = True,
+        ),
         "strip_comments": attr.string(
             doc = "Strip out any thing starting from `strip_comments`.",
+        ),
+        "strip_parsed_comments": attr.bool(
+            doc = "Whether to parse lines when stripping comments.",
+            default = True,
         ),
         "_diff_tool": attr.label(
             doc = "The diff tool executable.",

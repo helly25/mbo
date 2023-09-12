@@ -39,13 +39,13 @@ ABSL_FLAG(std::size_t, unified, 3, "Produces a diff with number lines of context
 ABSL_FLAG(bool, skip_time, false, "Sets the time to the unix epoch 0.");
 ABSL_FLAG(std::string, strip_comments, "", "Can be used to strip comments.");
 ABSL_FLAG(bool, strip_parsed_comments, true, R"(
-Whether to use comment parsing or single character finding. In the former
-form (default), the string in `--strip_comments` functions as a single
-sub-string, for instance '//'. If found, then all line content to its
-right will be removed and any remaining trailing line whitespec will be
-stripped. In single character finding mode (`--nostrip_parsed_comments`),
-the line gets capped as soon as any character of that set is found and
-also all remaining trailing whitespec will be stripped.)");
+Whether to use perform line parsing (default) or simple substring finding. In
+the first form, the line gets parsed, respecting single and double quotes as
+well as escape sequences (https://en.cppreference.com/w/cpp/language/escape and
+custom escapes for any of '(){}[]<>,;&'). If the substring is found, then all
+line content to its right will be removed and any remaining trailing line
+whitespace will be stripped. In the latter form of simple substring finding, the
+substring will be searched for as is.)");
 ABSL_FLAG(bool, ignore_blank_lines, false, "Ignore chunks which include only blank lines.");
 ABSL_FLAG(bool, ignore_case, false, "Whether to ignore the case of letters.");
 ABSL_FLAG(bool, ignore_space_change, false, "Ignore leading and trailing whitespace changes.");
