@@ -83,7 +83,7 @@ TEST_F(FileTest, NormalizePath) {
   EXPECT_THAT(NormalizePath("a/"), "a");
 }
 
-TEST_F(FileTest, JoinPath) {
+TEST_F(FileTest, JoinPaths) {
   EXPECT_THAT(JoinPaths(""), "");
   EXPECT_THAT(JoinPaths("a"), "a");
   EXPECT_THAT(JoinPaths("", ""), "");
@@ -102,6 +102,38 @@ TEST_F(FileTest, JoinPath) {
   EXPECT_THAT(JoinPaths("", "/", "/"), "/");
   EXPECT_THAT(JoinPaths("", "/", "/", "a"), "/a");
   EXPECT_THAT(JoinPaths("a/"), "a");
+  EXPECT_THAT(JoinPaths("a", "/b", "/c", "d"), "a/b/c/d");
+  EXPECT_THAT(JoinPaths("/a", "/b", "/c", "d"), "/a/b/c/d");
+#ifdef _WIN32
+  EXPECT_THAT(JoinPaths("a", "/b", "x:/c", "d"), "a/b/c/d");
+#endif
+}
+
+
+TEST_F(FileTest, JoinPathsRespectAbsolute) {
+  EXPECT_THAT(JoinPathsRespectAbsolute(""), "");
+  EXPECT_THAT(JoinPathsRespectAbsolute("a"), "a");
+  EXPECT_THAT(JoinPathsRespectAbsolute("", ""), "");
+  EXPECT_THAT(JoinPathsRespectAbsolute("a", ""), "a");
+  EXPECT_THAT(JoinPathsRespectAbsolute("", "b"), "b");
+  EXPECT_THAT(JoinPathsRespectAbsolute("a", "b"), "a/b");
+  EXPECT_THAT(JoinPathsRespectAbsolute("", "", ""), "");
+  EXPECT_THAT(JoinPathsRespectAbsolute("a", "", ""), "a");
+  EXPECT_THAT(JoinPathsRespectAbsolute("", "b", ""), "b");
+  EXPECT_THAT(JoinPathsRespectAbsolute("a", "b", ""), "a/b");
+  EXPECT_THAT(JoinPathsRespectAbsolute("", "", "c"), "c");
+  EXPECT_THAT(JoinPathsRespectAbsolute("a", "", "c"), "a/c");
+  EXPECT_THAT(JoinPathsRespectAbsolute("a", "b", ""), "a/b");
+  EXPECT_THAT(JoinPathsRespectAbsolute("a", "b", "c"), "a/b/c");
+  EXPECT_THAT(JoinPathsRespectAbsolute("", "/", ""), "/");
+  EXPECT_THAT(JoinPathsRespectAbsolute("", "/", "/"), "/");
+  EXPECT_THAT(JoinPathsRespectAbsolute("", "/", "/", "a"), "/a");
+  EXPECT_THAT(JoinPathsRespectAbsolute("a/"), "a");
+  EXPECT_THAT(JoinPathsRespectAbsolute("a", "/b", "/c", "d"), "/c/d");
+  EXPECT_THAT(JoinPathsRespectAbsolute("/a", "/b", "/c", "d"), "/c/d");
+#ifdef _WIN32
+  EXPECT_THAT(JoinPathsRespectAbsolute("a", "/b", "x:/c", "d"), "x:/c/d");
+#endif
 }
 
 }  // namespace

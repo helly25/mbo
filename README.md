@@ -26,6 +26,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `GetMTime`: Returns the last update/modified time of a file or an absl::Status error.
         * function `IsAbsolutePath`: Returns whether a given path is absolute.
         * function `JoinPaths`: Join multiple path elements.
+        * function `JoinPathsRespectAbsolute`: Join multiple path elements respecting absolute path elements.
         * function `NormalizePath`: Normalizes a path.
         * function `Readable`: Returns whether a file is readable or an absl::Status error.
         * function `SetContents`: Writes contents to a file.

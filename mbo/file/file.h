@@ -37,6 +37,7 @@ inline bool IsAbsolutePath(const std::filesystem::path& path) {
 
 // Combine all parameters as if they were path elements.
 // Simplifies the result using `SimplifyPath`.
+// Any path component that is absolute will simply be treated as realtive and concatenated.
 template<typename... T>
 inline std::filesystem::path JoinPaths(const std::filesystem::path& first_path, const T&... paths) {
   return NormalizePath([&] {
@@ -45,7 +46,34 @@ inline std::filesystem::path JoinPaths(const std::filesystem::path& first_path, 
     } else if (first_path.empty()) {
       return JoinPaths(paths...);
     } else {
-      return first_path / JoinPaths(paths...);
+      auto joined = JoinPaths(paths...);
+      if (joined.is_absolute()) {
+        return first_path / joined.relative_path();
+      } else {
+        return first_path / joined;
+      }
+    }
+  }());
+}
+
+// Combine all parameters as if they were path elements.
+// Simplifies the result using `SimplifyPath`.
+// Any path component that is absolute will drop anything to its left..
+template<typename... T>
+inline std::filesystem::path JoinPathsRespectAbsolute(const std::filesystem::path& first_path, const T&... paths) {
+  return NormalizePath([&] {
+    if constexpr (sizeof...(paths) == 0) {
+      return std::filesystem::path(first_path);
+    } else if (first_path.empty()) {
+      return JoinPaths(paths...);
+    } else {
+      // In theory this is what `fs::path /=` should do. But then it does way more.
+      auto joined = JoinPathsRespectAbsolute(paths...);
+      if (joined.is_absolute()) {
+        return joined;
+      } else {
+        return first_path / joined;
+      }
     }
   }());
 }
