@@ -392,9 +392,18 @@ bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) co
     lhs = absl::StripAsciiWhitespace(lhs);
     rhs = absl::StripAsciiWhitespace(rhs);
   }
-  const auto comp = options_.ignore_case
-                        ? [](std::string_view lhs, std::string_view rhs) { return absl::EqualsIgnoreCase(lhs, rhs); }
-                        : [](std::string_view lhs, std::string_view rhs) { return lhs == rhs; };
+  const auto str_comp =
+      options_.ignore_case ? [](std::string_view lhs, std::string_view rhs) { return absl::EqualsIgnoreCase(lhs, rhs); }
+                           : [](std::string_view lhs, std::string_view rhs) { return lhs == rhs; };
+  const auto comp = [&](std::string_view lhs, std::string_view rhs) {
+    if (options_.ignore_matching_lines.has_value()) {
+      if (RE2::PartialMatch(lhs, *options_.ignore_matching_lines)
+          || RE2::PartialMatch(rhs, *options_.ignore_matching_lines)) {
+        return true;
+      }
+    }
+    return str_comp(lhs, rhs);
+  };
   return std::visit(
       Select{
           [&](UnifiedDiff::NoCommentStripping) -> bool { return comp(lhs, rhs); },

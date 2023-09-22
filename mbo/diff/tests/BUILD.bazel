@@ -42,6 +42,13 @@ diff_test_test(
 )
 
 diff_test(
+    name = "diff_ignore_matching_lines_test",
+    file_old = "abc.txt",
+    file_new = "axc.txt",
+    ignore_matching_lines = "x",
+)
+
+diff_test(
     name = "abc_comments_equal_test",
     file_old = "abc.txt",
     file_new = "abc_comments.txt",

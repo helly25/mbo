@@ -14,11 +14,13 @@
 #define MBO_DIFF_UNIFIED_DIFF_H_
 
 #include <cstddef>
+#include <optional>
 #include <string>
 
 #include "absl/status/statusor.h"
 #include "mbo/file/artefact.h"
 #include "mbo/strings/strip.h"
+#include "re2/re2.h"
 
 namespace mbo::diff {
 
@@ -59,6 +61,7 @@ class UnifiedDiff final {
 
     bool ignore_blank_lines = false;
     bool ignore_case = false;
+    std::optional<RE2> ignore_matching_lines;
     bool ignore_space_change = false;
     StripCommentOptions strip_comments = NoCommentStripping{};
 
