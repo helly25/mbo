@@ -56,15 +56,15 @@ absl::Status Process(const Options& opts) {
   // Add `--set` flag values.
   for (const auto& set_kv : absl::GetFlag(FLAGS_set)) {
     const std::pair<std::string_view, std::string_view> kv = absl::StrSplit(set_kv, '=');
-    MBO_STATUS_RETURN_IF_ERROR(mope_template.SetValue(kv.first, kv.second));
+    MBO_RETURN_IF_ERROR(mope_template.SetValue(kv.first, kv.second));
   }
   // Read `--ini` file if present.
   const std::string ini_filename = absl::GetFlag(FLAGS_ini);
   if (!ini_filename.empty()) {
-    MBO_STATUS_RETURN_IF_ERROR(mope::ReadIniToTemlate(ini_filename, mope_template));
+    MBO_RETURN_IF_ERROR(mope::ReadIniToTemlate(ini_filename, mope_template));
   }
   // Expand the template.
-  MBO_STATUS_RETURN_IF_ERROR(mope_template.Expand(input->data));
+  MBO_RETURN_IF_ERROR(mope_template.Expand(input->data));
   if (opts.generate_name.empty() || opts.generate_name == "-") {
     std::cout << input->data;
     return absl::OkStatus();

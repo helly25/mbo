@@ -28,7 +28,7 @@ namespace mbo::mope {
 
 absl::Status ReadIniToTemlate(std::string_view ini_filename, Template& root_template) {
   using SectionPath = std::vector<std::pair<std::string, std::string>>;
-  MBO_STATUS_ASSIGN_OR_RETURN(const mbo::file::IniFile ini, mbo::file::IniFile::Read(ini_filename));
+  MBO_ASSIGN_OR_RETURN(const mbo::file::IniFile ini, mbo::file::IniFile::Read(ini_filename));
   absl::btree_map<SectionPath, mbo::mope::Template*> sections;
   sections[{{"", ""}}] = &root_template;
   for (const std::string& group : ini.GetGroups()) {
@@ -44,13 +44,13 @@ absl::Status ReadIniToTemlate(std::string_view ini_filename, Template& root_temp
         section_path.emplace_back(tail.first, tail.second);
         auto [section, inserted] = sections.emplace(section_path, nullptr);
         if (inserted) {
-          MBO_STATUS_ASSIGN_OR_RETURN(section->second, target->AddSection(tail.first));
+          MBO_ASSIGN_OR_RETURN(section->second, target->AddSection(tail.first));
         }
         target = section->second;
       }
     }
     for (const auto& [key, val] : ini.GetGroupData(group)) {
-      MBO_STATUS_RETURN_IF_ERROR(target->SetValue(key, val));
+      MBO_RETURN_IF_ERROR(target->SetValue(key, val));
     }
   }
   return absl::OkStatus();

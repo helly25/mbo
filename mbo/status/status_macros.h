@@ -30,15 +30,15 @@
 // The same can be written as:
 //
 // ```c++
-// MBO_STATUS_RETURN_IF_ERROR(FooBar());
+// MBO_RETURN_IF_ERROR(FooBar());
 // ```
 //
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define MBO_STATUS_RETURN_IF_ERROR(expr) \
+#define MBO_RETURN_IF_ERROR(expr) \
   if (!(expr).ok())                      \
   return absl::Status(expr)
 
-#define _MBO_STATUS_ASSIGN_OR_RETURN_IMPL_(var, res, expr) \
+#define _MBO_ASSIGN_OR_RETURN_IMPL_(var, res, expr) \
   auto var = (expr);                                       \
   if (!var.ok()) {                                         \
     return var.status();                                   \
@@ -50,7 +50,7 @@
 #define _MBO_VAR_CAT_IMPL_(var, line) var ## line
 #define _MBO_VAR_CAT_(var, line) _MBO_VAR_CAT_IMPL_(var, line)
 
-// Similar to MBO_STATUS_RETURN_IF_ERROR but this assigns the result os an
+// Similar to MBO_RETURN_IF_ERROR but this assigns the result os an
 // `absl::StatusOr<T>`:
 //
 // Instead of:
@@ -66,9 +66,9 @@
 // This can be simplified to:
 //
 // ```c++
-// MBO_STATUS_ASSIGN_OR_RETURN(T var, FooBar());
+// MBO_ASSIGN_OR_RETURN(T var, FooBar());
 // ```
 //
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define MBO_STATUS_ASSIGN_OR_RETURN(res, expr) \
-  _MBO_STATUS_ASSIGN_OR_RETURN_IMPL_(_MBO_VAR_CAT_(_status_or_macro_var_, __LINE__), res, expr)
+#define MBO_ASSIGN_OR_RETURN(res, expr) \
+  _MBO_ASSIGN_OR_RETURN_IMPL_(_MBO_VAR_CAT_(_status_or_macro_var_, __LINE__), res, expr)

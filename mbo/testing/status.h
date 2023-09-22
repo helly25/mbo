@@ -24,14 +24,6 @@
 #include "gtest/gtest.h"
 #include "mbo/status/status_macros.h"
 
-#define _MBO_STATUS_ASSERT_OK_AND_ASSIGN_IMPL(var, lhs, rexpr) \
-  auto var = (rexpr);                                   \
-  ASSERT_THAT(var, mbo::status::IsOk());                \
-  lhs = std::move(var.value())
-
-#define MBO_STATUS_ASSERT_OK_AND_ASSIGN(lhs, rexpr) \
-  _MBO_STATUS_ASSERT_OK_AND_ASSIGN_IMPL(_MBO_VAR_CAT_(_status_or_macro_var_, __COUNTER__), lhs, rexpr)
-
 namespace mbo::testing {
 namespace testing_internal {
 
@@ -259,6 +251,7 @@ template<typename MessageMatcher>
 // absl::StatusOr<T> (for any type T).
 #undef MBO_EXPECT_OK
 #define MBO_EXPECT_OK(expression) EXPECT_THAT(expression, mbo::testing::IsOk())
+
 #ifndef EXPECT_OK
 #define EXPECT_OK(expr) MBO_EXPECT_OK(expr)
 #elif __cplusplus >= 202'302L
@@ -267,6 +260,7 @@ template<typename MessageMatcher>
 
 #undef MBO_ASSERT_OK
 #define MBO_ASSERT_OK(expression) ASSERT_THAT(expression, mbo::testing::IsOk())
+
 #ifndef ASSERT_OK
 #define ASSERT_OK(expr) MBO_ASSERT_OK(expr)
 #elif __cplusplus >= 202'302L
@@ -275,12 +269,15 @@ template<typename MessageMatcher>
 
 #undef MBO_ASSERT_OK_AND_ASSIGN_IMPL_
 #undef MBO_ASSERT_OK_AND_ASSIGN
+
 #define MBO_ASSERT_OK_AND_ASSIGN_IMPL_(statusor, lhs, rexpr) \
   auto statusor = (rexpr);                                   \
   ASSERT_TRUE(statusor.ok());                                \
   lhs = std::move(statusor.value())
+
 #define MBO_ASSERT_OK_AND_ASSIGN(lhs, rexpr) \
   MBO_ASSERT_OK_AND_ASSIGN_IMPL_(MBO_STATUS_MACROS_IMPL_CONCAT_(_status_or_value, __LINE__), lhs, rexpr)
+
 #ifndef ASSERT_OK_AND_ASSIGN
 #define ASSERT_OK_AND_ASSIGN(lhs, rexpr) MBO_ASSERT_OK_AND_ASSIGN(lhs, rexpr)
 #elif __cplusplus >= 202'302L

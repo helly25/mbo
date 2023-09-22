@@ -35,14 +35,14 @@ class ParseTest : public ::testing::Test {
   static absl::StatusOr<std::pair<std::string, std::string>> ParseString(
       const ParseOptions& options,
       std::string_view data) {
-    MBO_STATUS_ASSIGN_OR_RETURN(std::string result, mbo::strings::ParseString(options, data));
+    MBO_ASSIGN_OR_RETURN(std::string result, mbo::strings::ParseString(options, data));
     return std::make_pair(std::move(result), std::string(data));
   }
 
   static absl::StatusOr<std::pair<std::vector<std::string>, std::string>> ParseStringList(
       const ParseOptions& options,
       std::string_view data) {
-    MBO_STATUS_ASSIGN_OR_RETURN(std::vector<std::string> result, mbo::strings::ParseStringList(options, data));
+    MBO_ASSIGN_OR_RETURN(std::vector<std::string> result, mbo::strings::ParseStringList(options, data));
     return std::make_pair(std::move(result), std::string(data));
   }
 };

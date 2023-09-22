@@ -181,13 +181,13 @@ absl::StatusOr<std::string> ParseString(const ParseOptions& options, std::string
       case '6':    // octal first digit
       case '7':    // octal first digit
       case 'o': {  // octal \o{n...}, C++23
-        MBO_STATUS_ASSIGN_OR_RETURN(const char next_chr, ParseOctal(chr, data));
+        MBO_ASSIGN_OR_RETURN(const char next_chr, ParseOctal(chr, data));
         result += static_cast<char>(next_chr);
         continue;
       }
       // "Numeric", hex
       case 'x': {  // \x...: hex, (\x{n...}: C++23
-        MBO_STATUS_ASSIGN_OR_RETURN(const char next_chr, ParseHex(data));
+        MBO_ASSIGN_OR_RETURN(const char next_chr, ParseHex(data));
         result += static_cast<char>(next_chr);
         continue;
       }
@@ -228,7 +228,7 @@ absl::StatusOr<std::vector<std::string>> ParseStringList(const ParseOptions& opt
     return result;
   }
   while (true) {
-    MBO_STATUS_ASSIGN_OR_RETURN(std::string curr, ParseString(str_options, data));
+    MBO_ASSIGN_OR_RETURN(std::string curr, ParseString(str_options, data));
     result.emplace_back(std::move(curr));
     if (data.empty()) {
       return result;

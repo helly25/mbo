@@ -150,7 +150,7 @@ absl::Status Template::MaybeLookup(
         .remove_quotes = true,
         .allow_unquoted = false,
     };
-    MBO_STATUS_ASSIGN_OR_RETURN(value, ParseString(kOptions, data));
+    MBO_ASSIGN_OR_RETURN(value, ParseString(kOptions, data));
     if (!data.empty()) {
       return absl::InvalidArgumentError(absl::StrCat("Tag '", tag_info.name, "' has bad literal joiner '", data, "'."));
     }
@@ -211,7 +211,7 @@ absl::Status Template::ExpandRangeTag(const TagInfo& /*tag*/, Range& range, Cont
     std::string expanded = original;
     // It is possible to use `StrReplaceAll` here, but `Expand` has to be called anyway, so it can do the replacement.
     // absl::StrReplaceAll({{absl::StrCat("{{", tag.name, "}}"), absl::StrCat(range.curr)}}, &expanded);
-    MBO_STATUS_RETURN_IF_ERROR(ExpandInternal(ctx, expanded));
+    MBO_RETURN_IF_ERROR(ExpandInternal(ctx, expanded));
     output.append(expanded);
   }
   return absl::OkStatus();
@@ -223,10 +223,10 @@ absl::Status Template::ExpandRangeData(
     Context& ctx,
     std::string& output) const {
   Range range;
-  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.start, ctx, range.start));
-  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.end, ctx, range.end));
-  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.step, ctx, range.step));
-  MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, range_data.join, ctx, range.join));
+  MBO_RETURN_IF_ERROR(MaybeLookup(tag, range_data.start, ctx, range.start));
+  MBO_RETURN_IF_ERROR(MaybeLookup(tag, range_data.end, ctx, range.end));
+  MBO_RETURN_IF_ERROR(MaybeLookup(tag, range_data.step, ctx, range.step));
+  MBO_RETURN_IF_ERROR(MaybeLookup(tag, range_data.join, ctx, range.join));
   if (range.step == 0) {
     return absl::InvalidArgumentError(absl::StrCat("Tag '", tag.name, "' cannot have step == 0."));
   }
@@ -250,7 +250,7 @@ absl::Status Template::ExpandSection(const TagData<Section>& tag, Context& ctx, 
   bool first = true;
   for (const Template& section : tag.data.dictionary) {
     std::string result(original);
-    MBO_STATUS_RETURN_IF_ERROR(section.ExpandInternal(ctx, result));
+    MBO_RETURN_IF_ERROR(section.ExpandInternal(ctx, result));
     if (!first) {
       output.append(tag.data.join);
     }
@@ -274,9 +274,9 @@ absl::Status Template::ExpandConfiguredSection(
   }
   absl::Cleanup cleanup = [&] { ctx.data.erase(name); };
   for (auto& str : str_list) {
-    MBO_STATUS_RETURN_IF_ERROR(SetValueInternal(name, std::move(str), true, ctx.data));
+    MBO_RETURN_IF_ERROR(SetValueInternal(name, std::move(str), true, ctx.data));
     std::string result(original);
-    MBO_STATUS_RETURN_IF_ERROR(ExpandInternal(ctx, result));
+    MBO_RETURN_IF_ERROR(ExpandInternal(ctx, result));
     if (!first) {
       output.append(join);
     }
@@ -297,7 +297,7 @@ absl::Status Template::ExpandConfiguredList(
   };
   str_list_data.remove_prefix(1);  // Drop '['
   // str_list_data.remove_suffix(1);  // Drop ']'
-  MBO_STATUS_ASSIGN_OR_RETURN(auto str_list, mbo::strings::ParseStringList(kConfiguredListParseOptions, str_list_data));
+  MBO_ASSIGN_OR_RETURN(auto str_list, mbo::strings::ParseStringList(kConfiguredListParseOptions, str_list_data));
   std::string join;
   if (str_list_data.empty() || mbo::strings::PopChar(str_list_data) != ']') {
     return absl::InvalidArgumentError(
@@ -308,7 +308,7 @@ absl::Status Template::ExpandConfiguredList(
       return absl::InvalidArgumentError(
           absl::StrCat("Tag '", tag.name, "' has unknown config format '", tag.config.value_or(""), "'."));
     }
-    MBO_STATUS_RETURN_IF_ERROR(MaybeLookup(tag, str_list_data, ctx, join));
+    MBO_RETURN_IF_ERROR(MaybeLookup(tag, str_list_data, ctx, join));
   }
   if (Exists(tag.name, ctx)) {
     return absl::InvalidArgumentError(
@@ -316,7 +316,7 @@ absl::Status Template::ExpandConfiguredList(
   }
   // CONSIDER: A specialized type would make this faster. But also less generic
   // and thus complicate extensions.
-  MBO_STATUS_RETURN_IF_ERROR(ExpandConfiguredSection(tag.name, std::move(str_list), std::move(join), ctx, output));
+  MBO_RETURN_IF_ERROR(ExpandConfiguredSection(tag.name, std::move(str_list), std::move(join), ctx, output));
   return absl::OkStatus();
 }
 
@@ -340,7 +340,7 @@ absl::Status Template::ExpandSectionTag(const TagInfo& tag, Context& ctx, std::s
     if (tag.option.has_value()) {
       join = *tag.option;
     }
-    MBO_STATUS_ASSIGN_OR_RETURN(section->data.join, ParseString(kOptions, join));
+    MBO_ASSIGN_OR_RETURN(section->data.join, ParseString(kOptions, join));
     return ExpandSection(*section, ctx, output);
   }
   static constexpr LazyRE2 kReFor = {
@@ -435,7 +435,7 @@ absl::Status Template::ExpandInternal(Context& ctx, std::string& output) const {
     switch (tag.type) {
       case TagType::kControl: {
         replace_len = replace_tag_len;
-        MBO_STATUS_RETURN_IF_ERROR(ExpandControlTag(tag, ctx));
+        MBO_RETURN_IF_ERROR(ExpandControlTag(tag, ctx));
         break;
       }
       case TagType::kSection: {
@@ -446,11 +446,11 @@ absl::Status Template::ExpandInternal(Context& ctx, std::string& output) const {
         const auto [replace_end, replace_end_len] = ExpandWhiteSpace(output, tag_end_pos, tag.end.length());
         replace_len = replace_end + replace_end_len - replace_pos;  // whole replace incl. tags
         replace_str = output.substr(replace_pos + replace_tag_len, replace_len - replace_tag_len - replace_end_len);
-        MBO_STATUS_RETURN_IF_ERROR(ExpandSectionTag(tag, ctx, replace_str));
+        MBO_RETURN_IF_ERROR(ExpandSectionTag(tag, ctx, replace_str));
         break;
       }
       case TagType::kValue: {
-        MBO_STATUS_ASSIGN_OR_RETURN(const bool replace, ExpandValueTag(tag, ctx, replace_str));
+        MBO_ASSIGN_OR_RETURN(const bool replace, ExpandValueTag(tag, ctx, replace_str));
         if (replace) {
           replace_len = replace_tag_len;
           break;
