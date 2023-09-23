@@ -219,19 +219,16 @@ class LimitedVector final {
     for (; pos < size_ && pos < other.size(); ++pos) {
       std::swap(values_[pos].data, other.at(pos));
     }
-    if (size_ > other.size()) {
-      std::size_t new_size = other.size();
-      for (; pos < size_; ++pos) {
-        other.emplace_back(std::move(values_[pos].data));
-      }
-      size_ = new_size;
-    } else if (other.size() > size_) {
-      std::size_t new_size = size_;
-      for (; pos < other.size(); ++pos) {
-        emplace_back(std::move(other.at(pos)));
-      }
-      other.size_ = new_size;
+    std::size_t other_size = other.size_;
+    std::size_t this_size = size_;
+    for (; pos < size_; ++pos) {
+      other.emplace_back(std::move(values_[pos].data));
     }
+    for (; pos < other.size(); ++pos) {
+      emplace_back(std::move(other.at(pos)));
+    }
+    size_ = other_size;
+    other.size_ = this_size;
   }
 
   template<typename... Args>
@@ -397,8 +394,8 @@ class LimitedVector final {
 };
 
 template<size_t LN, size_t RN, typename LHS, typename RHS>
-requires std::equality_comparable_with<LHS, RHS>
-inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
+requires std::three_way_comparable_with<LHS, RHS>
+constexpr inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
   std::size_t minsize = std::min(LN, RN);
   for (std::size_t index = 0; index < minsize; ++index) {
     const auto comp = lhs[index] <=> rhs[index];
@@ -406,24 +403,25 @@ inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const LimitedVector<R
       return comp;
     }
   }
-  return LN <=> RN;
+  return lhs.size() <=> rhs.size();
 }
 
 template<size_t LN, size_t RN, typename LHS, typename RHS>
-requires std::equality_comparable_with<LHS, RHS>
-inline bool operator==(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
+requires std::three_way_comparable_with<LHS, RHS>
+constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
   std::size_t minsize = std::min(LN, RN);
   for (std::size_t index = 0; index < minsize; ++index) {
-    if (lhs[index] != rhs[index]) {
+    const auto comp = lhs[index] <=> rhs[index];
+    if (comp != 0) {
       return false;
     }
   }
-  return LN == RN;
+  return lhs.size() == rhs.size();
 }
 
 template<size_t LN, size_t RN, typename LHS, typename RHS>
-requires std::equality_comparable_with<LHS, RHS>
-inline bool operator<(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
+requires std::three_way_comparable_with<LHS, RHS>
+constexpr inline bool operator<(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
   std::size_t minsize = std::min(LN, RN);
   for (std::size_t index = 0; index < minsize; ++index) {
     const auto comp = lhs[index] <=> rhs[index];
@@ -431,7 +429,7 @@ inline bool operator<(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS
       return comp < 0;
     }
   }
-  return LN < RN;
+  return lhs.size() < rhs.size();
 }
 
 template<typename T, std::size_t N = 0>
@@ -458,12 +456,28 @@ inline constexpr auto MakeLimitedVector(const T& value) noexcept {
   return result;
 }
 
-template<mbo::types::NotInitializerList... Args>
-requires((types::NotInitializerList<Args> && !std::forward_iterator<Args>) && ...)
+template<typename... Args>
+requires((types::NotInitializerList<Args> && !std::forward_iterator<Args> && !types::IsCharArray<Args>) && ...)
 inline constexpr auto MakeLimitedVector(Args&&... args) noexcept {
   using T = std::common_type_t<Args...>;
   auto result = LimitedVector<T, sizeof...(Args)>();
   (result.emplace_back(std::forward<T>(args)), ...);
+  return result;
+}
+
+// This specialization takes `const char*` and `const char(&)[N]` arguments and creates an appropriately sized container
+// of type `LimitedVector<std::string_view>`.
+template<int&..., types::IsCharArray... Args>
+inline constexpr auto MakeLimitedVector(Args... args) noexcept {
+  auto result = LimitedVector<std::string_view, sizeof...(Args)>();
+  (result.emplace_back(std::string_view(args)), ...);
+  return result;
+}
+
+template<types::NotIsCharArray T, int&..., types::IsCharArray... Args>
+inline constexpr auto MakeLimitedVector(Args... args) noexcept {
+  auto result = LimitedVector<T, sizeof...(Args)>();
+  (result.emplace_back(T(args)), ...);
   return result;
 }
 

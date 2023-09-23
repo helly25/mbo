@@ -155,6 +155,26 @@ struct ForwardIteratorValueTypeImpl<It, false> {
 template<std::forward_iterator It>
 using ForwardIteratorValueType = internal::ForwardIteratorValueTypeImpl<It>::type;
 
+namespace internal {
+
+template<typename T>
+struct IsCharArrayImpl : std::false_type {};
+
+template<>
+struct IsCharArrayImpl<char*> : std::true_type {};
+
+template<>
+struct IsCharArrayImpl<const char*> : std::true_type {};
+
+}  // namespace internal
+
+template<typename T>
+concept IsCharArray = internal::IsCharArrayImpl<std::decay_t<T>>::value;
+
+template<typename T>
+concept NotIsCharArray = !IsCharArray<T>;
+
+
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_TRAITS_H_

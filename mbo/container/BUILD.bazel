@@ -13,6 +13,26 @@
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "limited_set_cc",
+    hdrs = ["limited_set.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mbo/types:traits_cc",
+        "@com_google_absl//absl/log:absl_log",
+    ],
+)
+
+cc_test(
+    name = "limited_set_test",
+    srcs = ["limited_set_test.cc"],
+    deps = [
+        ":limited_set_cc",
+        "@com_google_absl//absl/log:initialize",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "limited_vector_cc",
     hdrs = ["limited_vector.h"],
     visibility = ["//visibility:public"],
