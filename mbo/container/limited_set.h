@@ -506,7 +506,7 @@ class LimitedSet final {
  private:
   std::size_t size_{0};
   std::array<Data, Capacity == 0 ? 1 : Capacity> values_;
-  const key_compare key_comp_;
+  const key_compare key_comp_ = {};
 };
 
 template<size_t LN, size_t RN, typename LHS, typename RHS, typename LCompare, typename RCompare>
