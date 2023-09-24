@@ -20,7 +20,7 @@
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("//mbo/diff:diff.bzl", "diff_test")
 
-CLANG_FORMAT_TARGET = False
+CLANG_FORMAT_BINARY = "clang-format-auto"
 
 def _clang_format_impl(ctx, src, dst):
     """Clang-format a file.
@@ -37,14 +37,32 @@ def _clang_format_impl(ctx, src, dst):
       The output file.
     """
     clang_config = ctx.files._clang_format_config[0]
-    clang_format_tool = [ctx.executable._clang_format_tool] if CLANG_FORMAT_TARGET else []
+    clang_format_tool = [] if CLANG_FORMAT_BINARY else [ctx.executable._clang_format_tool]
     ctx.actions.run_shell(
         outputs = [dst],
         inputs = [src, clang_config] + clang_format_tool,
         tools = clang_format_tool,
         command = """
-            # Must cat, so that --assume-filename works, so that incldue order gets correct.
-            {clang_format} \
+            CLANG_FORMAT="{clang_format}"
+            if [ "{clang_format}" == "clang-format-auto" ]; then
+                if [ $(which "{clang_format}") ]; then
+                    CLANG_FORMAT="{clang_format}"
+                elif [ $(which "clang-format-18") ]; then
+                    CLANG_FORMAT="clang-format-18"
+                elif [ $(which "clang-format-17") ]; then
+                    CLANG_FORMAT="clang-format-17"
+                elif [ $(which "clang-format-16") ]; then
+                    CLANG_FORMAT="clang-format-16"
+                elif [ $(which "clang-format-15") ]; then
+                    CLANG_FORMAT="clang-format-15"
+                elif [ $(which "clang-format-14") ]; then
+                    CLANG_FORMAT="clang-format-14"
+                else
+                    CLANG_FORMAT="clang_format"
+                fi;
+            fi;
+            # Must cat (<), so that --assume-filename works, so that incldue order gets correct.
+            ${{CLANG_FORMAT}} \
                 --assume-filename={assume_filename} \
                 --fallback-style={fallback_style} \
                 --sort-includes={sort_includes} \
@@ -53,7 +71,7 @@ def _clang_format_impl(ctx, src, dst):
                 < {src} > {dst}
             """.format(
             assume_filename = dst.short_path.removesuffix(".gen"),
-            clang_format = ctx.executable._clang_format_tool.path if CLANG_FORMAT_TARGET else ctx.attr._clang_format_tool,
+            clang_format = ctx.attr._clang_format_tool if CLANG_FORMAT_BINARY else ctx.executable._clang_format_tool.path,
             clang_config = clang_config.path,
             dst = dst.path,
             fallback_style = ctx.attr._clang_fallback_style,
@@ -70,15 +88,15 @@ _clang_format_common_attrs = {
         doc = "The fllback stype to pass to clang-format, e.g. 'None' or 'Google'.",
         default = "Google",
     ),
-    "_clang_format_tool": attr.label(
+    "_clang_format_tool": attr.string(
+        doc = "The target of the clang-format executable.",
+        default = CLANG_FORMAT_BINARY if type(CLANG_FORMAT_BINARY) == "string" else "clang-format",
+    ) if CLANG_FORMAT_BINARY else attr.label(
         doc = "The target of the clang-format executable.",
         default = Label("@llvm_toolchain_llvm//:bin/clang-format"),
         allow_single_file = True,
         executable = True,
         cfg = "exec",
-    ) if CLANG_FORMAT_TARGET else attr.string(
-        doc = "The target of the clang-format executable.",
-        default = "clang-format",
     ),
     "_clang_format_config": attr.label(
         doc = "The `.clang-format` file.",
