@@ -74,6 +74,7 @@ class UnifiedDiff final {
     bool ignore_space_change = false;
     bool skip_left_deletions = false;
     StripCommentOptions strip_comments = NoCommentStripping{};
+    std::string strip_file_header_prefix;
 
     std::size_t max_diff_chunk_length = 1'337'000;  // NOLINT(*-magic-numbers)
 

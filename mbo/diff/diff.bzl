@@ -111,6 +111,7 @@ if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
     --ignore_matching_lines={ignore_matching_lines} \
     --ignore_space_change={ignore_space_change} \
     --strip_comments={strip_comments} \
+    --strip_file_header_prefix="external/com_helly25_mbo/" \
     --strip_parsed_comments={strip_parsed_comments} \
 ; then
   echo >&2 "FAIL: files \"{file_old}\" and \"{file_new}\" differ. "{failure_message}

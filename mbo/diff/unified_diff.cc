@@ -190,18 +190,6 @@ class Context final {
 };
 
 class Chunk {
-  static std::string SelectFileHeader(const file::Artefact& either, const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options) {
-    switch (options.file_header_use) {
-      case UnifiedDiff::Options::FileHeaderUse::kBoth:
-        break;  // Do not use default, but break for this case, so it becomes the function return.
-      case UnifiedDiff::Options::FileHeaderUse::kLeft:
-        return FileHeader(lhs, options);
-      case UnifiedDiff::Options::FileHeaderUse::kRight:
-        return FileHeader(rhs, options);
-    }
-    return FileHeader(either, options);
-  }
-
  public:
   Chunk() = delete;
   ~Chunk() = default;
@@ -267,8 +255,21 @@ class Chunk {
 
  private:
   static std::string FileHeader(const file::Artefact& info, const UnifiedDiff::Options& options) {
+    std::string_view name = absl::StripPrefix(info.name, options.strip_file_header_prefix);
     return absl::StrCat(
-        info.name.empty() ? "-" : info.name, " ", absl::FormatTime(options.time_format, info.time, info.tz));
+        info.name.empty() ? "-" : name, " ", absl::FormatTime(options.time_format, info.time, info.tz));
+  }
+
+  static std::string SelectFileHeader(const file::Artefact& either, const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options) {
+    switch (options.file_header_use) {
+      case UnifiedDiff::Options::FileHeaderUse::kBoth:
+        break;  // Do not use default, but break for this case, so it becomes the function return.
+      case UnifiedDiff::Options::FileHeaderUse::kLeft:
+        return FileHeader(lhs, options);
+      case UnifiedDiff::Options::FileHeaderUse::kRight:
+        return FileHeader(rhs, options);
+    }
+    return FileHeader(either, options);
   }
 
   void CheckContext(size_t lhs_idx, size_t rhs_idx) {

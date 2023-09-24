@@ -36,19 +36,6 @@
 // NOLINTBEGIN(abseil-no-namespace)
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 
-ABSL_FLAG(std::size_t, unified, 3, "Produces a diff with number lines of context");
-ABSL_FLAG(bool, skip_time, false, "Sets the time to the unix epoch 0.");
-ABSL_FLAG(std::string, strip_comments, "", "Can be used to strip comments.");
-ABSL_FLAG(
-    bool,
-    strip_parsed_comments,
-    true,
-    "\
-Whether to perform line parsing (default) or simple substring finding. Parsing respects single and \
-double quotes as well as escape sequences, see (https://en.cppreference.com/w/cpp/language/escape \
-and custom escapes for any of '(){}[]<>,;&'). If the substring is found, then all line content to \
-its right will be removed and any remaining trailing line whitespace will be stripped. In the \
-latter form of simple substring finding, the substring will be searched for as is.");
 ABSL_FLAG(bool, ignore_blank_lines, false, "Ignore chunks which include only blank lines.");
 ABSL_FLAG(bool, ignore_case, false, "Whether to ignore the case of letters.");
 ABSL_FLAG(
@@ -67,13 +54,31 @@ ABSL_FLAG(
     "\
 Controls whether `--ignore_matching_lines` applies to full chunks (Default) or just to single lines.");
 ABSL_FLAG(bool, ignore_space_change, false, "Ignore leading and trailing whitespace changes.");
-ABSL_FLAG(std::size_t, max_lines, 0, "Read (and compare) at most the given number of lines (ignored if 0).");
 ABSL_FLAG(std::string, file_header_use, "both", R"(Select which file header to use:
 - both: Both file names are used (left uses left file name and right uses right file name).
 - left: The left and right header both use left file name.
 - right: The left and right header both use right file name.
 )");
+ABSL_FLAG(std::size_t, max_lines, 0, "Read (and compare) at most the given number of lines (ignored if 0).");
 ABSL_FLAG(bool, skip_left_deletions, false, "Ignore left deletions.");
+ABSL_FLAG(bool, skip_time, false, "Sets the time to the unix epoch 0.");
+ABSL_FLAG(std::string, strip_comments, "", "Can be used to strip comments.");
+ABSL_FLAG(
+    std::string,
+    strip_file_header_prefix,
+    "",
+    "If this is a prefix to a filename in the header, then remove from header.");
+ABSL_FLAG(
+    bool,
+    strip_parsed_comments,
+    true,
+    "\
+Whether to perform line parsing (default) or simple substring finding. Parsing respects single and \
+double quotes as well as escape sequences, see (https://en.cppreference.com/w/cpp/language/escape \
+and custom escapes for any of '(){}[]<>,;&'). If the substring is found, then all line content to \
+its right will be removed and any remaining trailing line whitespace will be stripped. In the \
+latter form of simple substring finding, the substring will be searched for as is.");
+ABSL_FLAG(std::size_t, unified, 3, "Produces a diff with number lines of context");
 
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 // NOLINTEND(abseil-no-namespace)
@@ -85,7 +90,8 @@ using mbo::file::Artefact;
 absl::StatusOr<Artefact> Read(std::string_view file_name) {
   const Artefact::Options options{.skip_time = absl::GetFlag(FLAGS_skip_time)};
   const std::size_t max_lines = absl::GetFlag(FLAGS_max_lines);
-  auto result = max_lines > 0 ? Artefact::ReadMaxLines(file_name, max_lines, options) : Artefact::Read(file_name, options);
+  auto result =
+      max_lines > 0 ? Artefact::ReadMaxLines(file_name, max_lines, options) : Artefact::Read(file_name, options);
   if (!result.ok()) {
     LOG(ERROR) << "ERROR: " << result.status();
   }
@@ -142,6 +148,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
           };
         }
       }(),
+      .strip_file_header_prefix = absl::GetFlag(FLAGS_strip_file_header_prefix),
   };
   const auto result = mbo::diff::UnifiedDiff::Diff(*lhs, *rhs, diff_options);
   if (!result.ok()) {
