@@ -61,6 +61,7 @@ class UnifiedDiff final {
 
     bool ignore_blank_lines = false;
     bool ignore_case = false;
+    bool ignore_matching_chunks = true;
     std::optional<RE2> ignore_matching_lines;
     bool ignore_space_change = false;
     StripCommentOptions strip_comments = NoCommentStripping{};

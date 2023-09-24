@@ -45,7 +45,7 @@ diff_test(
     name = "diff_ignore_matching_lines_test",
     file_old = "abc.txt",
     file_new = "axc.txt",
-    ignore_matching_lines = "x",
+    ignore_matching_lines = "[bx]",
 )
 
 diff_test(

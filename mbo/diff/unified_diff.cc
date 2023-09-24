@@ -225,6 +225,7 @@ class Chunk {
 
   void PushLhs(size_t lhs_idx, size_t rhs_idx, std::string_view lhs) {
     only_blank_lines_ &= lhs.empty();
+    only_matching_lines_ &= options_.ignore_matching_lines && RE2::PartialMatch(lhs, *options_.ignore_matching_lines);
     CheckContext(lhs_idx, rhs_idx);
     lhs_.emplace_back(lhs);
     ++lhs_size_;
@@ -232,6 +233,7 @@ class Chunk {
 
   void PushRhs(size_t lhs_idx, size_t rhs_idx, std::string_view rhs) {
     only_blank_lines_ &= rhs.empty();
+    only_matching_lines_ &= options_.ignore_matching_lines && RE2::PartialMatch(rhs, *options_.ignore_matching_lines);
     CheckContext(lhs_idx, rhs_idx);
     rhs_.emplace_back(rhs);
     ++rhs_size_;
@@ -298,6 +300,11 @@ class Chunk {
     MoveContext(true);
     MoveDiffs();
     if (only_blank_lines_ && options_.ignore_blank_lines) {
+      only_matching_lines_ = true;
+      return;
+    }
+    if (only_matching_lines_ && options_.ignore_matching_chunks && options_.ignore_matching_lines) {
+      only_blank_lines_ = true;
       return;
     }
     diff_found_ = true;
@@ -326,6 +333,7 @@ class Chunk {
     lhs_size_ = 0;
     rhs_size_ = 0;
     only_blank_lines_ = true;
+    only_matching_lines_ = true;
   }
 
   const UnifiedDiff::Options& options_;
@@ -342,6 +350,7 @@ class Chunk {
   size_t rhs_size_ = 0;
   bool diff_found_ = false;
   bool only_blank_lines_ = true;
+  bool only_matching_lines_ = true;
 };
 
 }  // namespace diff_internal
@@ -396,9 +405,9 @@ bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) co
       options_.ignore_case ? [](std::string_view lhs, std::string_view rhs) { return absl::EqualsIgnoreCase(lhs, rhs); }
                            : [](std::string_view lhs, std::string_view rhs) { return lhs == rhs; };
   const auto comp = [&](std::string_view lhs, std::string_view rhs) {
-    if (options_.ignore_matching_lines.has_value()) {
+    if (options_.ignore_matching_chunks && options_.ignore_matching_lines.has_value()) {
       if (RE2::PartialMatch(lhs, *options_.ignore_matching_lines)
-          || RE2::PartialMatch(rhs, *options_.ignore_matching_lines)) {
+          && RE2::PartialMatch(rhs, *options_.ignore_matching_lines)) {
         return true;
       }
     }

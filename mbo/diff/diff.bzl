@@ -26,6 +26,7 @@ def diff_test(
         failure_message = "",
         ignore_blank_lines = False,
         ignore_case = False,
+        ignore_matching_chunks = True,
         ignore_matching_lines = "",
         ignore_space_change = False,
         strip_comments = "",
@@ -42,6 +43,7 @@ def diff_test(
         failure_message:       Additional message to log if the files don't match.
         ignore_blank_lines:    Ignore chunks which include only blank lines.
         ignore_case:           Whether to ignore letter case.
+        ignore_matching_chunks:Whether `ignore_matching_lines` applies to chanks or single lines.
         ignore_matching_lines: Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
         ignore_space_change:   Ignore leading and traling whitespace changes.
         strip_comments:        Strip out anything starting from `strip_comments`.
@@ -60,6 +62,7 @@ def diff_test(
         ignore_blank_lines = ignore_blank_lines,
         ignore_case = ignore_case,
         ignore_matching_lines = ignore_matching_lines,
+        ignore_matching_chunks = ignore_matching_chunks,
         ignore_space_change = ignore_space_change,
         strip_comments = strip_comments,
         strip_parsed_comments = strip_parsed_comments,
@@ -104,6 +107,7 @@ fi
 if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
     --ignore_blank_lines={ignore_blank_lines} \
     --ignore_case={ignore_case} \
+    --ignore_matching_chunks={ignore_matching_chunks} \
     --ignore_matching_lines={ignore_matching_lines} \
     --ignore_space_change={ignore_space_change} \
     --strip_comments={strip_comments} \
@@ -119,6 +123,7 @@ fi
                 file_new = _runfiles_path(ctx.file.file_new),
                 ignore_blank_lines = _bool_arg(ctx.attr.ignore_blank_lines),
                 ignore_case = _bool_arg(ctx.attr.ignore_case),
+                ignore_matching_chunks = _bool_arg(ctx.attr.ignore_matching_chunks),
                 ignore_matching_lines = shell.quote(ctx.attr.ignore_matching_lines),
                 ignore_space_change = _bool_arg(ctx.attr.ignore_space_change),
                 strip_comments = shell.quote(ctx.attr.strip_comments),
@@ -157,6 +162,10 @@ _diff_test = rule(
         "ignore_case": attr.bool(
             doc = "Whether to ignore letter case.",
             default = False,
+        ),
+        "ignore_matching_chunks": attr.bool(
+            doc = "Whether `ignore_matching_lines` applies to chanks or single lines.",
+            default = True,
         ),
         "ignore_matching_lines": attr.string(
             doc = "Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).",

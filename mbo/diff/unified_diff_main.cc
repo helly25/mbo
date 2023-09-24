@@ -55,7 +55,17 @@ ABSL_FLAG(
     std::string,
     ignore_matching_lines,
     "",
-    "Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).");
+    "\
+Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax). By default this \
+applies only for chunks where all insertions and deletions match. Using --ignore_matching_chunks=0 \
+this can be changed to apply to lines where both the left and the right side match the given \
+regular expression.");
+ABSL_FLAG(
+    bool,
+    ignore_matching_chunks,
+    true,
+    "\
+Controls whether `--ignore_matching_lines` applies to full chunks (Default) or just to single lines.");
 ABSL_FLAG(bool, ignore_space_change, false, "Ignore leading and trailing whitespace changes.");
 
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)

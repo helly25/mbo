@@ -27,6 +27,7 @@ def diff_test_test(
         expected_diff,
         ignore_blank_lines = False,
         ignore_case = False,
+        ignore_matching_chunks = True,
         ignore_matching_lines = "",
         ignore_space_change = False,
         strip_comments = "",
@@ -43,6 +44,7 @@ def diff_test_test(
         expected_diff:         The expected diff result.
         ignore_blank_lines:    Ignore chunks which include only blank lines.
         ignore_case:           Whether to ignore letter case.
+        ignore_matching_chunks:Whether `ignore_matching_lines` applies to chanks or single lines.
         ignore_matching_lines: Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
         ignore_space_change:   Ignore leading and traling whitespace changes.
         strip_comments:        Strip out anything starting from `strip_comments`.
@@ -62,6 +64,7 @@ def diff_test_test(
                 $(location {file_old}) $(location {file_new}) > $@ \\
                 --ignore_blank_lines={ignore_blank_lines} \\
                 --ignore_case={ignore_case} \\
+                --ignore_matching_chunks={ignore_matching_chunks} \\
                 --ignore_matching_lines={ignore_matching_lines} \\
                 --ignore_space_change={ignore_space_change} \\
                 --strip_comments={strip_comments} \\
@@ -71,6 +74,7 @@ def diff_test_test(
             file_new = file_new,
             ignore_blank_lines = _bool_arg(ignore_blank_lines),
             ignore_case = _bool_arg(ignore_case),
+            ignore_matching_chunks = _bool_arg(ignore_matching_chunks),
             ignore_matching_lines = shell.quote(ignore_matching_lines),
             ignore_space_change = _bool_arg(ignore_space_change),
             strip_comments = shell.quote(strip_comments),
