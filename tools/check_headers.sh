@@ -21,7 +21,7 @@ bazel build -c opt //mbo/diff:unified_diff
 UNIFIED_DIFF="bazel-bin/mbo/diff/unified_diff"
 
 MAX_LINES=$(wc -l tools/header_cpp.txt | sed -e 's,^ *,,g' | cut -d ' ' -f 1)
-find -E . -regex '.*[.](c|cc|cpp|h|hh|hpp)$' \
+find -E . -regex '.*[.](c|cc|cpp|h|hh|hpp)([.]mope)?$' \
     -exec "${UNIFIED_DIFF}" \
         --file_header_use left \
         --ignore_matching_lines="^($|([^/]($|[^/])))" \
