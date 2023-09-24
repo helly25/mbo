@@ -269,6 +269,8 @@ TEST_F(LimitedSetTest, Contains) {
   ASSERT_THAT(kTest, ElementsAre(0, 1, 2, 3));
   EXPECT_THAT(kTest.contains(0), true);
   EXPECT_THAT(kTest.contains(4), false);
+  EXPECT_THAT(kTest.contains(std::vector<int>{1, 2}), true);
+  EXPECT_THAT(kTest.contains(std::vector<int>{1, 5}), false);
 }
 
 TEST_F(LimitedSetTest, Insert) {

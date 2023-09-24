@@ -391,6 +391,17 @@ class LimitedSet final {
 
   constexpr bool contains(const Key& key) const { return std::binary_search(begin(), end(), key, key_comp_); }
 
+  // Performs contains-all functionality (not part of STL).
+  template<typename Other>
+  constexpr bool contains(const Other& other) const {
+    for (auto it = other.begin(); it != other.end(); ++it) {
+      if (!contains(*it)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   constexpr std::pair<iterator, iterator> equal_range(const Key& key) {
     return std::equal_range(begin(), end(), key, key_comp_);
   }
