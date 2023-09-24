@@ -41,7 +41,7 @@ std::filesystem::path NormalizePath(const std::filesystem::path& path) {
 
 absl::Status SetContents(const std::filesystem::path& file_name, std::string_view content) {
   std::ofstream ofs;
-  ofs.exceptions(std::ios_base::iostate(0));
+  ofs.exceptions(static_cast<std::ios_base::iostate>(0));
   ofs.open(file_name, std::ios_base::out | std::ios_base::trunc);
   if (!ofs) {
     return absl::UnknownError(absl::StrFormat("Unable to open file: '%s'", file_name));
@@ -69,7 +69,7 @@ absl::Status Readable(const std::filesystem::path& file_name) {
   // Perform same operation as `GetContents` and use the ifstream constructor
   // to check for readability.
   std::ifstream ifs;
-  ifs.exceptions(std::ios_base::iostate(0));
+  ifs.exceptions(static_cast<std::ios_base::iostate>(0));
   ifs.open(file_name, std::ios_base::in);
   if (!ifs) {
     return absl::NotFoundError(absl::StrFormat("Unable to read file: '%s'", file_name));
@@ -80,7 +80,7 @@ absl::Status Readable(const std::filesystem::path& file_name) {
 
 absl::StatusOr<std::string> GetContents(const std::filesystem::path& file_name) {
   std::ifstream ifs;
-  ifs.exceptions(std::ios_base::iostate(0));
+  ifs.exceptions(static_cast<std::ios_base::iostate>(0));
   ifs.open(file_name, std::ios_base::in);
   if (!ifs) {
     return absl::NotFoundError(absl::StrFormat("Unable to read file: '%s'", file_name));
