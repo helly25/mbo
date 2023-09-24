@@ -58,7 +58,7 @@ def _clang_format_impl(ctx, src, dst):
                 elif [ $(which "clang-format-14") ]; then
                     CLANG_FORMAT="clang-format-14"
                 else
-                    CLANG_FORMAT="clang_format"
+                    CLANG_FORMAT="clang-format"
                 fi;
             fi;
             # Must cat (<), so that --assume-filename works, so that incldue order gets correct.
