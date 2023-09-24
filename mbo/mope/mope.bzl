@@ -165,7 +165,7 @@ def _gen_name_base_no_ext(file):
 
 def _build_relative(ctx, file):
     path = "/".join(ctx.build_file_path.split("/")[:-1])
-    return file.short_path.removeprefix(path).removeprefix("/")
+    return file.short_path.removeprefix("../com_helly25_mbo/").removeprefix(path).removeprefix("/")
 
 def _mope_rule_impl(ctx):
     srcs = {_template_base_no_ext(src): src for src in ctx.files.srcs}
