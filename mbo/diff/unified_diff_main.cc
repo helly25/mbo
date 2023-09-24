@@ -67,6 +67,7 @@ ABSL_FLAG(
     "\
 Controls whether `--ignore_matching_lines` applies to full chunks (Default) or just to single lines.");
 ABSL_FLAG(bool, ignore_space_change, false, "Ignore leading and trailing whitespace changes.");
+ABSL_FLAG(std::size_t, max_lines, 0, "Read (and compare) at most the given number of lines (ignored if 0).");
 
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 // NOLINTEND(abseil-no-namespace)
@@ -75,16 +76,23 @@ namespace {
 
 using mbo::file::Artefact;
 
-int Diff(std::string_view lhs_name, std::string_view rhs_name) {
+absl::StatusOr<Artefact> Read(std::string_view file_name) {
   const Artefact::Options options{.skip_time = absl::GetFlag(FLAGS_skip_time)};
-  const auto lhs = Artefact::Read(lhs_name, options);
+  const std::size_t max_lines = absl::GetFlag(FLAGS_max_lines);
+  auto result = max_lines > 0 ? Artefact::ReadMaxLines(file_name, max_lines, options) : Artefact::Read(file_name, options);
+  if (!result.ok()) {
+    LOG(ERROR) << "ERROR: " << result.status();
+  }
+  return result;
+}
+
+int Diff(std::string_view lhs_name, std::string_view rhs_name) {
+  const auto lhs = Read(lhs_name);
   if (!lhs.ok()) {
-    LOG(ERROR) << "ERROR: " << lhs.status();
     return 1;
   }
-  const auto rhs = Artefact::Read(rhs_name, options);
+  const auto rhs = Read(rhs_name);
   if (!rhs.ok()) {
-    LOG(ERROR) << "ERROR: " << rhs.status();
     return 1;
   }
   const std::string strip_comments = absl::GetFlag(FLAGS_strip_comments);
