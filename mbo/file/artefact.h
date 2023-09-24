@@ -30,6 +30,10 @@ struct Artefact final {
   };
 
   static absl::StatusOr<Artefact> Read(std::string_view filename, const Options& options = Options::Default());
+  static absl::StatusOr<Artefact> ReadMaxLines(
+      std::string_view filename,
+      std::size_t max_lines,
+      const Options& options = Options::Default());
 
   std::string data;                            // Artefact's 'data' (text or binary content).
   std::string name = "-";                      // Artefact's 'name'.

@@ -26,6 +26,7 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/file:file_cc, mbo/file.file.h
         * function `GetContents`: Reads a file and returns its contents or an absl::Status error.
         * function `GetMTime`: Returns the last update/modified time of a file or an absl::Status error.
+        * function `GetMaxLines`: Reads at most given number of text lines from a file or returns absl::Status error.
         * function `IsAbsolutePath`: Returns whether a given path is absolute.
         * function `JoinPaths`: Join multiple path elements.
         * function `JoinPathsRespectAbsolute`: Join multiple path elements respecting absolute path elements.

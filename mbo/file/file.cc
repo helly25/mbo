@@ -104,6 +104,34 @@ absl::StatusOr<std::string> GetContents(const std::filesystem::path& file_name) 
   return result;
 }
 
+absl::StatusOr<std::string> GetMaxLines(const std::filesystem::path& file_name, std::size_t max_lines) {
+  std::ifstream ifs;
+  ifs.exceptions(static_cast<std::ios_base::iostate>(0));
+  ifs.open(file_name, std::ios_base::in);
+  if (!ifs) {
+    return absl::NotFoundError(absl::StrFormat("Unable to read file: '%s'", file_name));
+  }
+
+  std::string result;
+  std::string line;
+  std::size_t curr_line = 0;
+
+  if (ifs.eof()) {
+    return result;
+  }
+  
+  while (curr_line++ < max_lines) {
+    line.clear();
+    std::getline(ifs, line, '\n');
+    absl::StrAppend(&result, line);
+    if (ifs.eof()) {
+      break;
+    }
+    absl::StrAppend(&result, "\n");
+  }
+  return result;
+}
+
 absl::StatusOr<absl::Time> GetMTime(const std::filesystem::path& file_name) {
   std::error_code error;
   const auto ftime = std::filesystem::last_write_time(file_name, error);

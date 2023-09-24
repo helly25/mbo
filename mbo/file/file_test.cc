@@ -65,6 +65,46 @@ TEST_F(FileTest, SetAndGetContents) {
   EXPECT_THAT(GetContents(tmp_file), IsOkAndHolds("foo"));
 }
 
+TEST_F(FileTest, GetMaxLines) {
+  const fs::path tmp_file = JoinPaths(tmp_dir, "foo.txt");
+  {
+    static constexpr std::string_view kContents;
+    EXPECT_OK(SetContents(tmp_file, kContents));
+    EXPECT_THAT(GetContents(tmp_file), IsOkAndHolds(kContents));
+    EXPECT_THAT(GetMaxLines(tmp_file, 0), IsOkAndHolds(""));
+    EXPECT_THAT(GetMaxLines(tmp_file, 1), IsOkAndHolds(""));
+    EXPECT_THAT(GetMaxLines(tmp_file, 9), IsOkAndHolds(""));
+  }
+  {
+    static constexpr std::string_view kContents = "\n";
+    EXPECT_OK(SetContents(tmp_file, kContents));
+    EXPECT_THAT(GetContents(tmp_file), IsOkAndHolds(kContents));
+    EXPECT_THAT(GetMaxLines(tmp_file, 0), IsOkAndHolds(""));
+    EXPECT_THAT(GetMaxLines(tmp_file, 1), IsOkAndHolds(kContents));
+    EXPECT_THAT(GetMaxLines(tmp_file, 9), IsOkAndHolds(kContents));
+  }
+  {
+    static constexpr std::string_view kContents = "foo\nbar\nbaz";
+    EXPECT_OK(SetContents(tmp_file, kContents));
+    EXPECT_THAT(GetContents(tmp_file), IsOkAndHolds(kContents));
+    EXPECT_THAT(GetMaxLines(tmp_file, 0), IsOkAndHolds(""));
+    EXPECT_THAT(GetMaxLines(tmp_file, 1), IsOkAndHolds("foo\n"));
+    EXPECT_THAT(GetMaxLines(tmp_file, 2), IsOkAndHolds("foo\nbar\n"));
+    EXPECT_THAT(GetMaxLines(tmp_file, 3), IsOkAndHolds(kContents));
+    EXPECT_THAT(GetMaxLines(tmp_file, 9), IsOkAndHolds(kContents));
+  }
+  {
+    static constexpr std::string_view kContents = "foo\nbar\nbaz\n";
+    EXPECT_OK(SetContents(tmp_file, kContents));
+    EXPECT_THAT(GetContents(tmp_file), IsOkAndHolds(kContents));
+    EXPECT_THAT(GetMaxLines(tmp_file, 0), IsOkAndHolds(""));
+    EXPECT_THAT(GetMaxLines(tmp_file, 1), IsOkAndHolds("foo\n"));
+    EXPECT_THAT(GetMaxLines(tmp_file, 2), IsOkAndHolds("foo\nbar\n"));
+    EXPECT_THAT(GetMaxLines(tmp_file, 3), IsOkAndHolds(kContents));
+    EXPECT_THAT(GetMaxLines(tmp_file, 9), IsOkAndHolds(kContents));
+  }
+}
+
 TEST_F(FileTest, IsAbsolutePath) {
   EXPECT_TRUE(IsAbsolutePath(tmp_dir));
 }

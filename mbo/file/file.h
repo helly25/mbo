@@ -107,6 +107,18 @@ absl::Status Readable(const std::filesystem::path& file_name);
 //  * absl::StatusCode::kUnknownError: File does not exist or other error.
 absl::StatusOr<std::string> GetContents(const std::filesystem::path& file_name);
 
+// Read the contents of file `file_name` on a line by line basis and stop
+// when reaching `max_lines` or the file ends. The returned string will contain
+// a new-line at the end as long as either reading stopped prior to the end of
+// the file or if the file ended in a new-line. That is the function will not
+// append a new-line where there was no new-line in the file. That in turn means
+// that a non text-file does not become a text-file in memory.
+//
+// Returns:
+//  * string:                          The contents
+//  * absl::StatusCode::kUnknownError: File does not exist or other error.
+absl::StatusOr<std::string> GetMaxLines(const std::filesystem::path& file_name, std::size_t max_lines);
+
 // Return the last modified time.
 //
 // Returns:
