@@ -27,7 +27,6 @@ find -E . -regex '.*[.](c|cc|cpp|h|hh|hpp)$' \
         --file_header_use left \
         --ignore_matching_lines="^($|([^/]($|[^/])))" \
         --max_lines "${MAX_LINES}" \
-        --skip_left_deletions \
         {} \
         tools/header_cpp.txt > /tmp/diff-{} \
         \; \
@@ -38,7 +37,6 @@ find -E . -regex '.*/(.*[.](bzl|bazel)|BAZEL|WORKSPACE)$' \
         --file_header_use left \
         --ignore_matching_lines="^($|[^#])" \
         --max_lines "${MAX_LINES}" \
-        --skip_left_deletions \
         {} \
         tools/header.txt > /tmp/diff-{} \
         \; \
@@ -49,7 +47,6 @@ find -E . -regex '.*[.](sh)$' \
         --file_header_use left \
         --ignore_matching_lines="^($|[^#]|(#!/bin/bash$))" \
         --max_lines "${MAX_LINES}" \
-        --skip_left_deletions \
         {} \
         tools/header_sh.txt > /tmp/diff-{} \
         \; \
