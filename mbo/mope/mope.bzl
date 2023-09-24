@@ -62,12 +62,12 @@ def _clang_format_impl(ctx, src, dst):
                 fi;
             fi;
             # Must cat (<), so that --assume-filename works, so that incldue order gets correct.
-            ${{CLANG_FORMAT}} \
-                --assume-filename={assume_filename} \
-                --fallback-style={fallback_style} \
-                --sort-includes={sort_includes} \
-                --style=file:{clang_config} \
-                --Werror \
+            ${{CLANG_FORMAT}} \\
+                --assume-filename={assume_filename} \\
+                --fallback-style={fallback_style} \\
+                --sort-includes={sort_includes} \\
+                --style=file:{clang_config} \\
+                --Werror \\
                 < {src} > {dst}
             """.format(
             assume_filename = dst.short_path.removesuffix(".gen"),
