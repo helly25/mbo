@@ -193,13 +193,15 @@ class Chunk {
   static std::string SelectFileHeader(const file::Artefact& either, const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options) {
     switch (options.file_header_use) {
       case UnifiedDiff::Options::FileHeaderUse::kBoth:
-        return FileHeader(either, options);
+        break;  // Do not use default, but break for this case, so it becomes the function return.
       case UnifiedDiff::Options::FileHeaderUse::kLeft:
         return FileHeader(lhs, options);
       case UnifiedDiff::Options::FileHeaderUse::kRight:
         return FileHeader(rhs, options);
     }
+    return FileHeader(either, options);
   }
+
  public:
   Chunk() = delete;
   ~Chunk() = default;
