@@ -105,6 +105,14 @@ TEST_F(LimitedSetTest, MakeInitArgBasics) {
   EXPECT_THAT(test.find(6), test.begin() + 6);
 }
 
+TEST_F(LimitedSetTest, MakeInitWithDuplicates) {
+  auto test = MakeLimitedSet<3>({1, 3, 3, 3, 5});
+  EXPECT_THAT(test, Not(IsEmpty()));
+  EXPECT_THAT(test, SizeIs(3));
+  EXPECT_THAT(test, Capacity(3)) << "There are duplicates, and so the construction with M=3 works.";
+  EXPECT_THAT(test, ElementsAre(1, 3, 5));
+}
+
 TEST_F(LimitedSetTest, MakeInitArg) {
   constexpr auto kTest = MakeLimitedSet<3>({1, 2, 0});
   EXPECT_THAT(kTest, Not(IsEmpty()));
@@ -127,6 +135,14 @@ TEST_F(LimitedSetTest, MakeMultiArg) {
   EXPECT_THAT(kTest, SizeIs(4));
   EXPECT_THAT(kTest, Capacity(4));
   EXPECT_THAT(kTest, ElementsAre(0, 1, 2, 3));
+}
+
+TEST_F(LimitedSetTest, CustomCompare) {
+  constexpr auto kTest = MakeLimitedSet<4>({0, 3, 2, 1}, std::greater());
+  EXPECT_THAT(kTest, Not(IsEmpty()));
+  EXPECT_THAT(kTest, SizeIs(4));
+  EXPECT_THAT(kTest, Capacity(4));
+  EXPECT_THAT(kTest, ElementsAre(3, 2, 1, 0));
 }
 
 TEST_F(LimitedSetTest, MakeIteratorArg) {
@@ -217,6 +233,30 @@ TEST_F(LimitedSetTest, ConstexprMakeClear) {
   EXPECT_THAT(kTest, SizeIs(0));
   EXPECT_THAT(kTest, Capacity(5));
   EXPECT_THAT(kTest, ElementsAre());
+}
+
+
+TEST_F(LimitedSetTest, Erase) {
+  auto test = MakeLimitedSet(0, 1, 2, 3, 4);
+  EXPECT_THAT(test, Not(IsEmpty()));
+  EXPECT_THAT(test, SizeIs(5));
+  EXPECT_THAT(test, Capacity(5));
+  ASSERT_THAT(test, ElementsAre(0, 1, 2, 3, 4));
+  EXPECT_THAT(test.erase(test.begin() + 2), test.begin() + 2);
+  EXPECT_THAT(test, SizeIs(4));
+  EXPECT_THAT(test, ElementsAre(0, 1, 3, 4));
+  EXPECT_THAT(test.erase(test.end() - 1), test.begin() + 3);
+  EXPECT_THAT(test.begin() + 3, test.end()) << "Should have returned new `end`.";
+  EXPECT_THAT(test, SizeIs(3));
+  EXPECT_THAT(test, ElementsAre(0, 1, 3));
+  EXPECT_THAT(test.erase(1), 1);
+  EXPECT_THAT(test.erase(1), 0);
+  EXPECT_THAT(test, SizeIs(2));
+  EXPECT_THAT(test, ElementsAre(0, 3));
+  EXPECT_THAT(test.erase(test.begin()), test.begin());
+  EXPECT_THAT(test.erase(test.begin()), test.begin());
+  EXPECT_THAT(test.begin(), test.end()) << "Should have returned new `end`.";
+  EXPECT_THAT(test, IsEmpty());
 }
 
 TEST_F(LimitedSetTest, Contains) {

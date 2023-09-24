@@ -7,6 +7,8 @@ The C++ library is organized in functional groups each residing in their own dir
 
 * Container
     * `namespace mbo::container`
+    * mbo/container:limited_set_cc, mbo/container/limited_set.h
+        * class `LimitedSet`: A space loimited, constexpr compliant set.
     * mbo/container:limited_vector_cc, mbo/container/limited_vector.h
         * class `LimitedVector`: A space limited, constexpr compliant vector.
 * Diff

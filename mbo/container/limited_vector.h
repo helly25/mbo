@@ -52,7 +52,7 @@ namespace mbo::container {
 //
 // The above example infers the value_type to be `int` as it is the common type of the arguments.
 // The resulting `LimitedVector` has a capacity of 4 and the elements {1, 2, 3, 4}.
-template<class T, std::size_t Capacity>
+template<typename T, std::size_t Capacity>
 class LimitedVector final {
  private:
   struct None final {};
@@ -92,7 +92,7 @@ class LimitedVector final {
 
   constexpr ~LimitedVector() noexcept { clear(); }
 
-  LimitedVector() noexcept = default;
+  constexpr LimitedVector() noexcept = default;
 
   constexpr LimitedVector(const LimitedVector& other) noexcept {
     for (; size_ < other.size_; ++size_) {
