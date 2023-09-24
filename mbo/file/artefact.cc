@@ -43,4 +43,27 @@ absl::StatusOr<Artefact> Artefact::Read(std::string_view filename, const Artefac
   };
 }
 
+absl::StatusOr<Artefact> Artefact::ReadMaxLines(std::string_view filename, std::size_t max_lines, const Artefact::Options& options) {
+  const auto data = mbo::file::GetMaxLines(filename, max_lines);
+  if (!data.ok()) {
+    return data.status();
+  }
+  const auto time = [&]() -> absl::StatusOr<absl::Time> {
+    if (options.skip_time) {
+      return absl::UnixEpoch();
+    } else {
+      return mbo::file::GetMTime(filename);
+    }
+  }();
+  if (!time.ok()) {
+    return time.status();
+  }
+  return Artefact{
+      .data = *data,
+      .name = std::string(filename),
+      .time = *time,
+      .tz = options.tz,
+  };
+}
+
 }  // namespace mbo::file
