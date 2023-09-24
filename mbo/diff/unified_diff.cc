@@ -188,14 +188,24 @@ class Context final {
 };
 
 class Chunk {
+  static std::string SelectFileHeader(const file::Artefact& either, const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options) {
+    switch (options.file_header_use) {
+      case UnifiedDiff::Options::FileHeaderUse::kBoth:
+        return FileHeader(either, options);
+      case UnifiedDiff::Options::FileHeaderUse::kLeft:
+        return FileHeader(lhs, options);
+      case UnifiedDiff::Options::FileHeaderUse::kRight:
+        return FileHeader(rhs, options);
+    }
+  }
  public:
   Chunk() = delete;
   ~Chunk() = default;
 
   Chunk(const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options)
       : options_(options), lhs_empty_(lhs.data.empty()), rhs_empty_(rhs.data.empty()), context_(options) {
-    absl::StrAppend(&output_, "--- ", FileHeader(lhs, options), "\n");
-    absl::StrAppend(&output_, "+++ ", FileHeader(rhs, options), "\n");
+    absl::StrAppend(&output_, "--- ", SelectFileHeader(lhs, lhs, rhs, options), "\n");
+    absl::StrAppend(&output_, "+++ ", SelectFileHeader(rhs, lhs, rhs, options), "\n");
   }
 
   Chunk(const Chunk&) = delete;
@@ -224,6 +234,9 @@ class Chunk {
   }
 
   void PushLhs(size_t lhs_idx, size_t rhs_idx, std::string_view lhs) {
+    if (options_.skip_left_deletions) {
+      return;
+    }
     only_blank_lines_ &= lhs.empty();
     only_matching_lines_ &= options_.ignore_matching_lines && RE2::PartialMatch(lhs, *options_.ignore_matching_lines);
     CheckContext(lhs_idx, rhs_idx);

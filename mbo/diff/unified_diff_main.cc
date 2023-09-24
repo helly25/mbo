@@ -1,4 +1,4 @@
-// Copyright 2023 M.Boerger
+// Copyright 2023 M. Boerger (helly25.com)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,6 +68,12 @@ ABSL_FLAG(
 Controls whether `--ignore_matching_lines` applies to full chunks (Default) or just to single lines.");
 ABSL_FLAG(bool, ignore_space_change, false, "Ignore leading and trailing whitespace changes.");
 ABSL_FLAG(std::size_t, max_lines, 0, "Read (and compare) at most the given number of lines (ignored if 0).");
+ABSL_FLAG(std::string, file_header_use, "both", R"(Select which file header to use:
+- both: Both file names are used (left uses left file name and right uses right file name).
+- left: The left and right header both use left file name.
+- right: The left and right header both use right file name.
+)");
+ABSL_FLAG(bool, skip_left_deletions, false, "Ignore left deletions.");
 
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 // NOLINTEND(abseil-no-namespace)
@@ -86,6 +92,17 @@ absl::StatusOr<Artefact> Read(std::string_view file_name) {
   return result;
 }
 
+mbo::diff::UnifiedDiff::Options::FileHeaderUse GetFileHeaderUse() {
+  const std::string mode = absl::GetFlag(FLAGS_file_header_use);
+  if (mode == "left") {
+    return mbo::diff::UnifiedDiff::Options::FileHeaderUse::kLeft;
+  }
+  if (mode == "right") {
+    return mbo::diff::UnifiedDiff::Options::FileHeaderUse::kRight;
+  }
+  return mbo::diff::UnifiedDiff::Options::FileHeaderUse::kBoth;
+}
+
 int Diff(std::string_view lhs_name, std::string_view rhs_name) {
   const auto lhs = Read(lhs_name);
   if (!lhs.ok()) {
@@ -98,6 +115,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
   const std::string strip_comments = absl::GetFlag(FLAGS_strip_comments);
   mbo::diff::UnifiedDiff::Options diff_options{
       .context_size = absl::GetFlag(FLAGS_unified),
+      .file_header_use = GetFileHeaderUse(),
       .ignore_blank_lines = absl::GetFlag(FLAGS_ignore_blank_lines),
       .ignore_case = absl::GetFlag(FLAGS_ignore_case),
       .ignore_matching_lines = [&]() -> std::optional<RE2> {
@@ -108,6 +126,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
         return std::make_optional<RE2>(regex);
       }(),
       .ignore_space_change = absl::GetFlag(FLAGS_ignore_space_change),
+      .skip_left_deletions = absl::GetFlag(FLAGS_skip_left_deletions),
       .strip_comments = [&]() -> mbo::diff::UnifiedDiff::StripCommentOptions {
         if (strip_comments.empty()) {
           return {};

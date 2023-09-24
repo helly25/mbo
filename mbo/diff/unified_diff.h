@@ -54,19 +54,28 @@ class UnifiedDiff final {
       std::variant<NoCommentStripping, mbo::strings::StripCommentArgs, mbo::strings::StripParsedCommentArgs>;
 
   struct Options final {
+    enum class FileHeaderUse {
+      kBoth = 0,   // In header both file names are used (left uses left file name and right uses right file name).
+      kLeft = 1,   // In header left and right file both use left file name.
+      kRight = 2,  // In header left and right file both use right file name.
+    };
+
     static const Options& Default() noexcept;
 
     std::size_t context_size = 3;
-    std::string time_format = "%F %H:%M:%E3S %z";
 
+    FileHeaderUse file_header_use = FileHeaderUse::kBoth;
     bool ignore_blank_lines = false;
     bool ignore_case = false;
     bool ignore_matching_chunks = true;
     std::optional<RE2> ignore_matching_lines;
     bool ignore_space_change = false;
+    bool skip_left_deletions = false;
     StripCommentOptions strip_comments = NoCommentStripping{};
 
     std::size_t max_diff_chunk_length = 1'337'000;  // NOLINT(*-magic-numbers)
+
+    std::string time_format = "%F %H:%M:%E3S %z";
   };
 
   static absl::StatusOr<std::string> Diff(
