@@ -1,6 +1,6 @@
-# 0.1
+# 0.2.1
 
-* Initial release: Clang support only.
+* Fix issue with MOPE in case it runs as an external dependency.
 
 # 0.2
 
@@ -59,3 +59,7 @@
         * concept `IsDecomposable` determines whether a type can be used in static-bindings.
         * concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
+
+# 0.1
+
+* Initial release: Clang support only.
