@@ -1,5 +1,7 @@
 # 0.2.2
 
+* Make `LimitedSet` and `LimitedVector` use C-arrays instead of `std::array` in order to solve some ASAN issues.
+* Make `NoDestruct` ASAN friendly.
 * Make tests PASS in mode ASAN out-of-the-box for Clang.
 * Make `//mbo/types:tstring_test` PASS in ASAN mode.
 

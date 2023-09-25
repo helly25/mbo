@@ -15,7 +15,6 @@
 #ifndef MBO_CONTAINER_LIMITED_VECTOR_H_
 #define MBO_CONTAINER_LIMITED_VECTOR_H_
 
-#include <array>
 #include <compare>
 #include <concepts>
 #include <initializer_list>
@@ -392,7 +391,9 @@ class LimitedVector final {
 
  private:
   std::size_t size_{0};
-  std::array<Data, Capacity == 0 ? 1 : Capacity> values_;
+  // Array would be better but that does not work with ASAN builds.
+  // std::array<Data, Capacity == 0 ? 1 : Capacity> values_;
+  Data values_[Capacity == 0 ? 1 : Capacity];  // NOLINT(*-avoid-c-arrays)
 };
 
 template<size_t LN, size_t RN, typename LHS, typename RHS>

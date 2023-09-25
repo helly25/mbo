@@ -40,21 +40,35 @@ namespace mbo::types {
 template<typename T>
 class NoDestruct final {
  private:
+  struct None final {};
+
   union Data {
-    constexpr Data() noexcept {}
-    constexpr ~Data() noexcept {};
-    Data(const Data&) = delete;
-    Data& operator=(const Data&) = delete;
-    Data(Data&&) = delete;
-    Data& operator=(Data&&) = delete;
+    constexpr Data() noexcept : none{} {}
+
+    constexpr ~Data() noexcept {}
+
+    constexpr Data(const Data&) noexcept = default;
+    constexpr Data& operator=(const Data&) noexcept = default;
+    constexpr Data(Data&&) noexcept = default;
+    constexpr Data& operator=(Data&&) noexcept = default;
+
+    None none;
     T value;
   };
 
  public:
-  constexpr NoDestruct() noexcept { std::construct_at(&data_[0].value); }
+  constexpr NoDestruct() noexcept : data_(buf_) { std::construct_at(&data_.value); }
+
   template<typename... Args>
-  constexpr explicit NoDestruct(Args&&... args) noexcept { std::construct_at(&data_[0].value, std::forward<Args>(args)...); }
-  
+  constexpr explicit NoDestruct(Args&&... args) noexcept : data_(buf_) {
+    std::construct_at(&data_.value, std::forward<Args>(args)...);
+  }
+
+  template<typename U>
+  constexpr NoDestruct(const std::initializer_list<U>& args) noexcept : data_(buf_) {
+    std::construct_at(&data_.value, args);
+  }
+
   constexpr ~NoDestruct() noexcept = default;
 
   NoDestruct(const NoDestruct&) = delete;
@@ -62,19 +76,23 @@ class NoDestruct final {
   NoDestruct& operator=(const NoDestruct&) = delete;
   NoDestruct& operator=(NoDestruct&&) = delete;
 
-  constexpr const T& Get() const noexcept { return data_[0].value; }
+  constexpr const T& Get() const noexcept { return data_.value; }
 
   constexpr const T& operator*() const noexcept { return Get(); }
+
   constexpr const T* operator->() const noexcept { return &Get(); }
 
-  T& Get() noexcept { return data_[0].value; }
+  constexpr T& Get() noexcept { return data_.value; }
 
-  T& operator*() noexcept { return Get(); }
-  T* operator->() noexcept { return &Get(); }
+  constexpr T& operator*() noexcept { return Get(); }
+
+  constexpr T* operator->() noexcept { return &Get(); }
 
  private:
-  std::array<Data, 1> data_;
+  Data buf_ = {};  // NOLINT(*-avoid-c-arrays)
+  Data& data_;
 };
+
 // NOLINTEND(*-pro-type-member-init)
 
 }  // namespace mbo::types

@@ -16,7 +16,6 @@
 #define MBO_CONTAINER_LIMITED_SET_H_
 
 #include <algorithm>
-#include <array>
 #include <compare>
 #include <concepts>
 #include <initializer_list>
@@ -56,7 +55,7 @@ namespace mbo::container {
 // The above example infers the value_type to be `int` as it is the common type of the arguments.
 // The resulting `LimitedSet` has a capacity of 4 and the elements {1, 2, 3, 4}.
 //
-// Interenally a `std::array` is used and elements are moved as needed. That means that element
+// Internally a C-array is used and elements are moved as needed. That means that element
 // addresses are not stable.
 template<typename Key, std::size_t Capacity, typename Compare = std::less<Key>>
 requires(std::move_constructible<Key>)
@@ -304,11 +303,11 @@ class LimitedSet final {
     }
   }
 
-  constexpr LimitedSet(std::initializer_list<Key> list, const Compare& key_comp = Compare()) noexcept
+  constexpr LimitedSet(const std::initializer_list<Key>& list, const Compare& key_comp = Compare()) noexcept
       : key_comp_(key_comp) {
     auto it = list.begin();
     while (it < list.end()) {
-      emplace(std::move(*it));
+      emplace(*it);//emplace(std::move(*it));
       ++it;
     }
   }
@@ -467,7 +466,7 @@ class LimitedSet final {
   constexpr void swap(LimitedSet& other) noexcept {
     std::size_t pos = 0;
     for (; pos < size_ && pos < other.size(); ++pos) {
-      std::swap(values_[pos].data, other.values_.at(pos).data);
+      std::swap(values_[pos].data, other.values_[pos].data);
     }
     std::size_t other_size = other.size_;
     std::size_t this_size = size_;
@@ -475,7 +474,7 @@ class LimitedSet final {
       other.emplace(std::move(values_[pos].data));
     }
     for (; pos < other.size(); ++pos) {
-      emplace(std::move(other.values_.at(pos).data));
+      emplace(std::move(other.values_[pos].data));
     }
     size_ = other_size;
     other.size_ = this_size;
@@ -616,7 +615,9 @@ class LimitedSet final {
   static constexpr iterator to_iterator(const const_iterator& pos) noexcept { return iterator(pos.pos); }
 
   std::size_t size_{0};
-  std::array<Data, Capacity == 0 ? 1 : Capacity> values_;
+  // Array would be better but that does not work with ASAN builds.
+  // std::array<Data, Capacity == 0 ? 1 : Capacity> values_;
+  Data values_[Capacity == 0 ? 1 : Capacity];  // NOLINT(*-avoid-c-arrays)
   const key_compare key_comp_ = {};
 };
 

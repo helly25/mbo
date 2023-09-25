@@ -27,7 +27,7 @@ namespace mbo::types {
 using ::mbo::types::Extend;
 using ::mbo::types::types_internal::kStructNameSupport;
 using ::testing::Conditional;
-using ::testing::Ge;
+using ::testing::Ge;  // NOLINT(misc-unused-using-decls)
 using ::testing::Ne;
 
 static constexpr int kValueA = 25;
