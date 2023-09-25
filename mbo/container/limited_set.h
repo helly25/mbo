@@ -59,6 +59,7 @@ namespace mbo::container {
 // Interenally a `std::array` is used and elements are moved as needed. That means that element
 // addresses are not stable.
 template<typename Key, std::size_t Capacity, typename Compare = std::less<Key>>
+requires(std::move_constructible<Key>)
 class LimitedSet final {
  private:
   struct None final {};
@@ -258,7 +259,7 @@ class LimitedSet final {
   constexpr ~LimitedSet() noexcept { clear(); }
 
   constexpr LimitedSet() noexcept = default;
-  constexpr explicit LimitedSet(const Compare& key_comp) noexcept : key_comp_(key_comp) {};
+  constexpr explicit LimitedSet(const Compare& key_comp) noexcept : key_comp_(key_comp){};
 
   constexpr LimitedSet(const LimitedSet& other) noexcept {
     for (; size_ < other.size_; ++size_) {
@@ -302,7 +303,8 @@ class LimitedSet final {
     }
   }
 
-  constexpr LimitedSet(std::initializer_list<Key> list, const Compare& key_comp = Compare()) noexcept : key_comp_(key_comp) {
+  constexpr LimitedSet(std::initializer_list<Key> list, const Compare& key_comp = Compare()) noexcept
+      : key_comp_(key_comp) {
     auto it = list.begin();
     while (it < list.end()) {
       emplace(std::move(*it));
@@ -312,7 +314,8 @@ class LimitedSet final {
 
   template<typename U>
   requires(std::convertible_to<U, Key> && !std::same_as<Key, U>)
-  constexpr LimitedSet(std::initializer_list<U> list, const Compare& key_comp = Compare()) noexcept : key_comp_(key_comp) {
+  constexpr LimitedSet(std::initializer_list<U> list, const Compare& key_comp = Compare()) noexcept
+      : key_comp_(key_comp) {
     auto it = list.begin();
     while (it < list.end()) {
       emplace(std::move(*it));
@@ -391,15 +394,52 @@ class LimitedSet final {
 
   constexpr bool contains(const Key& key) const { return std::binary_search(begin(), end(), key, key_comp_); }
 
-  // Performs contains-all functionality (not part of STL).
+  // Performs contains-all-of functionality (not part of STL).
   template<typename Other>
-  constexpr bool contains(const Other& other) const {
+  requires(types::ContainerIsForwardIteratable<Other> && std::equality_comparable_with<typename Other::value_type, Key>)
+  constexpr bool contains_all(const Other& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (!contains(*it)) {
         return false;
       }
     }
     return true;
+  }
+
+  // Performs contains-all-of functionality (not part of STL).
+  template<typename U>
+  requires(std::equality_comparable_with<Key, U>)
+  constexpr bool contains_all(const std::initializer_list<U>& other) const {
+    for (auto it = other.begin(); it != other.end(); ++it) {
+      if (!contains(*it)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Performs contains-any-of functionality (not part of STL).
+  template<typename Other = std::initializer_list<Key>>
+  requires(types::ContainerIsForwardIteratable<Other> && std::equality_comparable_with<typename Other::value_type, Key>)
+  constexpr bool contains_any(const Other& other) const {
+    for (auto it = other.begin(); it != other.end(); ++it) {
+      if (contains(*it)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Performs contains-any-of functionality (not part of STL).
+  template<typename U>
+  requires(std::equality_comparable_with<Key, U>)
+  constexpr bool contains_any(const std::initializer_list<U>& other) const {
+    for (auto it = other.begin(); it != other.end(); ++it) {
+      if (contains(*it)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   constexpr std::pair<iterator, iterator> equal_range(const Key& key) {
@@ -566,6 +606,7 @@ class LimitedSet final {
   // Observers
 
   constexpr key_compare key_comp() const { return key_comp; }
+
   constexpr value_compare value_comp() const { return key_comp; }
 
  private:
@@ -637,7 +678,10 @@ inline constexpr auto MakeLimitedSet() noexcept {  // Parameter `key_comp` would
   return LimitedSet<Key, N, Compare>();
 }
 
-template<std::size_t N, std::forward_iterator It, typename Compare = std::less<mbo::types::ForwardIteratorValueType<It>>>
+template<
+    std::size_t N,
+    std::forward_iterator It,
+    typename Compare = std::less<mbo::types::ForwardIteratorValueType<It>>>
 inline constexpr auto MakeLimitedSet(It begin, It end, const Compare& key_comp = Compare()) noexcept {
   return LimitedSet<mbo::types::ForwardIteratorValueType<It>, N, Compare>(begin, end, key_comp);
 }
@@ -674,7 +718,9 @@ inline constexpr auto MakeLimitedSet(Args... args) noexcept {
 
 // NOLINTBEGIN(*-avoid-c-arrays)
 template<typename Key, std::size_t N, typename Compare = std::less<Key>>
-constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(Key (&array)[N], const Compare& key_comp = Compare()) {
+constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(
+    Key (&array)[N],
+    const Compare& key_comp = Compare()) {
   LimitedSet<std::remove_cvref_t<Key>, N, Compare> result(key_comp);
   for (std::size_t idx = 0; idx < N; ++idx) {
     result.emplace(array[idx]);
@@ -683,7 +729,9 @@ constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(Key (&ar
 }
 
 template<typename Key, std::size_t N, typename Compare = std::less<Key>>
-constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(Key (&&array)[N], const Compare& key_comp = Compare()) {
+constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(
+    Key (&&array)[N],
+    const Compare& key_comp = Compare()) {
   LimitedSet<std::remove_cvref_t<Key>, N, Compare> result(key_comp);
   for (std::size_t idx = 0; idx < N; ++idx) {
     result.emplace(std::move(array[idx]));

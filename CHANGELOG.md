@@ -1,7 +1,8 @@
 # 0.2.1
 
 * Fix issue with MOPE in case it runs as an external dependency.
-* Add `LimitedSet::contains(other)` which performs contains-all functionality (not part of STL).
+* Add `LimitedSet::contains_all(other)` which performs contains-all-of functionality (not part of STL).
+* Add `LimitedSet::contains_any(other)` which performs contains-any-of functionality (not part of STL).
 
 # 0.2
 
