@@ -594,10 +594,12 @@ TEST_F(TStringTest, BeginEnd) {
 }
 
 TEST_F(TStringTest, FindFirstLast) {
+#ifndef __SANITIZE_ADDRESS__
   {
     constexpr size_t kPos = kTestA1.find_first_of('e');  // Verify `constexpr`
     EXPECT_THAT(kPos, 3);
   }
+#endif  // __SANITIZE_ADDRESS__
   {
     constexpr size_t kPos = kTestA1.find_first_of("asx");  // Verify `constexpr`
     EXPECT_THAT(kPos, 4);

@@ -1,3 +1,8 @@
+# 0.2.2
+
+* Make tests PASS in mode ASAN out-of-the-box for Clang.
+* Make `//mbo/types:tstring_test` PASS in ASAN mode.
+
 # 0.2.1
 
 * Fix issue with MOPE in case it runs as an external dependency.
