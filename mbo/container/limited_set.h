@@ -80,6 +80,7 @@ class LimitedSet final {
 
   // Must declare each other as friends so that we can correctly move from other.
   template<typename U, std::size_t OtherN, typename Comp>
+  requires(std::move_constructible<U>)
   friend class LimitedSet;
 
  public:
