@@ -37,7 +37,13 @@ namespace fs = std::filesystem;
 
 struct IniFileTest : ::testing::Test {
   static std::string SrcDir(std::convertible_to<std::string_view> auto&& src_rel) {
-    return JoinPaths(::testing::UnitTest::GetInstance()->original_working_dir(), src_rel);
+    std::string workdir = ::testing::UnitTest::GetInstance()->original_working_dir();
+    std::string external = JoinPaths(workdir, "..", "com_helly25_mbo");
+    if (fs::exists(external)) {
+      return JoinPaths(external, src_rel);
+    } else {
+      return JoinPaths(workdir, src_rel);
+    }
   }
 
   static std::string TmpDir() { return ::testing::TempDir(); }
