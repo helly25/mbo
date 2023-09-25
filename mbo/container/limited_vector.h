@@ -341,9 +341,9 @@ class LimitedVector final {
 
   constexpr const_reference front() const noexcept { return values_[0].data; }
 
-  constexpr reference back() noexcept { return values_[size_ - 1].data; }
+  constexpr reference back() noexcept { return values_[size_ > 0 ? size_ - 1 : 0].data; }
 
-  constexpr const_reference back() const noexcept { return values_[size_ - 1].data; }
+  constexpr const_reference back() const noexcept { return values_[size_ > 0 ? size_ - 1 : 0].data; }
 
   constexpr iterator begin() noexcept { return &values_[0].data; }
 
@@ -393,7 +393,8 @@ class LimitedVector final {
   std::size_t size_{0};
   // Array would be better but that does not work with ASAN builds.
   // std::array<Data, Capacity == 0 ? 1 : Capacity> values_;
-  Data values_[Capacity == 0 ? 1 : Capacity];  // NOLINT(*-avoid-c-arrays)
+  // Add an unused sentinal, so that `end` and other functions do not cause memory issues.
+  Data values_[Capacity + 1];  // NOLINT(*-avoid-c-arrays)
 };
 
 template<size_t LN, size_t RN, typename LHS, typename RHS>

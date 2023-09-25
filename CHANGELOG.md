@@ -1,3 +1,7 @@
+# 0.2.3
+
+* For `LimitedVector` add an unused sentinal, so that `end` and other functions do not cause memory issues.
+
 # 0.2.2
 
 * Make `LimitedSet` and `LimitedVector` use C-arrays instead of `std::array` in order to solve some ASAN issues.
