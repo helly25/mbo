@@ -1,6 +1,7 @@
 # 0.2.1
 
 * Fix issue with MOPE in case it runs as an external dependency.
+* Make tests work when run as external repository dependency.
 * Add `LimitedSet::contains_all(other)` which performs contains-all-of functionality (not part of STL).
 * Add `LimitedSet::contains_any(other)` which performs contains-any-of functionality (not part of STL).
 
