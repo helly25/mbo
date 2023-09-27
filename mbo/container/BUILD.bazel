@@ -15,6 +15,25 @@
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "convert_container_cc",
+    hdrs = ["convert_container.h"],
+    deps = ["//mbo/types:traits_cc"],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "convert_container_test",
+    srcs = ["convert_container_test.cc"],
+    deps = [
+        ":convert_container_cc",
+        "//mbo/types:traits_cc",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "limited_set_cc",
     hdrs = ["limited_set.h"],
     visibility = ["//visibility:public"],

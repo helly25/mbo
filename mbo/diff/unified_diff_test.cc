@@ -23,7 +23,7 @@
 #include "gtest/gtest.h"
 #include "mbo/strings/indent.h"
 #include "mbo/testing/status.h"
-#include "mbo/types/copy_convert_container.h"
+#include "mbo/container/convert_container.h"
 
 namespace mbo::diff {
 namespace {
@@ -50,7 +50,7 @@ class UnifiedDiffTest : public ::testing::Test {
     if (result->empty()) {
       return std::vector<std::string>{};
     }
-    return std::vector<std::string>(mbo::types::CopyConvertContainer(DropIndentAndSplit(*result)));
+    return std::vector<std::string>(mbo::container::ConvertContainer(DropIndentAndSplit(*result)));
   }
 
   static std::string ToLines(std::string_view input) {

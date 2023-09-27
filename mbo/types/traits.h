@@ -75,7 +75,7 @@ concept IsForwardIteratable = internal::IsForwardIteratableRaw<std::remove_cvref
 namespace internal {
 template<typename Container>
 concept ContainerIsForwardIteratableRaw = requires(Container container, const Container const_container) {
-  IsForwardIteratableRaw<Container>;
+  requires IsForwardIteratableRaw<Container>;
   requires std::signed_integral<typename Container::difference_type>;
   requires std::same_as<
       typename Container::difference_type,
@@ -132,7 +132,7 @@ struct IsInitializerListImpl<std::initializer_list<T>> : std::true_type {};
 }  // namespace internal
 
 template<typename T>
-concept IsInitializerList = internal::IsInitializerListImpl<T>::value;
+concept IsInitializerList = internal::IsInitializerListImpl<std::remove_cvref_t<T>>::value;
 
 template<typename T>
 concept NotInitializerList = !IsInitializerList<T>;
@@ -176,6 +176,37 @@ concept IsCharArray = internal::IsCharArrayImpl<std::decay_t<T>>::value;
 template<typename T>
 concept NotIsCharArray = !IsCharArray<T>;
 
+namespace internal {
+
+struct NoFunc final {};
+
+template<typename T, typename Func>
+struct ValueOrResult {
+  using type = std::invoke_result<Func, T>;
+};
+
+template<typename T>
+struct ValueOrResult<T, NoFunc> {
+  using type = T;
+};
+
+template<typename T, typename Func>
+using ValueOrResultT = ValueOrResult<T, Func>::type;
+
+template<typename ContainerIn, typename ContainerOut, typename Func = NoFunc>
+concept ContainerCopyConvertibleRaw =                                              //
+    (ContainerIsForwardIteratable<ContainerIn> || IsInitializerList<ContainerIn>)  //
+    &&ContainerIsForwardIteratable<ContainerOut>
+    && (ContainerHasEmplace<ContainerOut, ValueOrResultT<typename ContainerIn::value_type, Func>>
+        || ContainerHasEmplaceBack<ContainerOut, ValueOrResultT<typename ContainerIn::value_type, Func>>
+        || ContainerHasInsert<ContainerOut, ValueOrResultT<typename ContainerIn::value_type, Func>>
+        || ContainerHasPushBack<ContainerOut, ValueOrResultT<typename ContainerIn::value_type, Func>>);
+
+}  // namespace internal
+
+template<typename ContainerIn, typename ContainerOut, typename Func = internal::NoFunc>
+concept ContainerCopyConvertible = internal::
+    ContainerCopyConvertibleRaw<std::remove_cvref_t<ContainerIn>, std::remove_reference_t<ContainerOut>, Func>;
 
 }  // namespace mbo::types
 

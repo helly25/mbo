@@ -70,9 +70,9 @@ cc_test(
     srcs = ["unified_diff_test.cc"],
     deps = [
         ":unified_diff_cc",
+        "//mbo/container:convert_container_cc",
         "//mbo/strings:indent_cc",
         "//mbo/testing:status_cc",
-        "//mbo/types:copy_convert_container_cc",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",

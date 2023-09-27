@@ -7,6 +7,8 @@ The C++ library is organized in functional groups each residing in their own dir
 
 * Container
     * `namespace mbo::container`
+    * mbo/container:convert_container_cc, mbo/container/convert_container.h
+        * conversion struct `ConvertContainer` simplifies copying containers to value convertible containers.
     * mbo/container:limited_set_cc, mbo/container/limited_set.h
         * class `LimitedSet`: A space loimited, constexpr compliant set.
     * mbo/container:limited_vector_cc, mbo/container/limited_vector.h
@@ -81,8 +83,6 @@ The C++ library is organized in functional groups each residing in their own dir
         * meta-type `IfElse`: Helper type to generate else `Cases` which are always true and must go last.
         * meta-type `IfFalseThenVoid`: Helper type that can be used to skip a case.
         * meta-type `IfTrueThenVoid`: Helper type to inject default cases and to ensure the required type expansion is always possible.
-    * mbo/types:copy_convert_container_cc, mbo/types/copy_convert_container.h
-        * conversion struct `CopyConvertContainer` simplifies copying containers to value convertible containers.
     * mbo/types:extend_cc, mbo/types/extend.h
         * crtp-struct `Extend`: Enables extending of struct/classe types with basic functionality.
         * crtp-struct `ExtendNoDefault` Like `Extend` but without default extender functionality.

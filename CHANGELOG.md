@@ -1,3 +1,7 @@
+# 0.2.4
+
+* Move `CopyConvertContainer` to `mbo::container::ConvertContainer` and add conversion functions.
+
 # 0.2.3
 
 * For `LimitedVector` add an unused sentinal, so that `end` and other functions do not cause memory issues.
