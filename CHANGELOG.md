@@ -1,6 +1,7 @@
 # 0.2.4
 
 * Move `CopyConvertContainer` to `mbo::container::ConvertContainer` and add conversion functions.
+* Various traits fixes to corectly handle C++ concepts (pretty much every published explanation makes the same mistake).
 
 # 0.2.3
 

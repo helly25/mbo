@@ -26,19 +26,15 @@ class ConvertContainer final {
   using NoFunc = ::mbo::types::internal::NoFunc;
 
  public:
-  using ContainerType = std::conditional_t<
-      std::is_move_assignable_v<Container>,
-      std::remove_cvref_t<Container>,           // Assign from move, no copy
-      std::add_lvalue_reference_t<Container>>;  // Assign to const&, no copy
-  using ValueType = typename std::remove_reference_t<Container>::value_type;
+  using ValueType = mbo::types::internal::ValueOrResultT<typename std::remove_reference_t<Container>::value_type, Func>;
 
   explicit ConvertContainer(Container&& container) noexcept
   requires std::same_as<Func, NoFunc>
       : container_(std::forward<Container>(container)) {}
 
-  explicit ConvertContainer(Container&& container, const Func& convert) noexcept
+  explicit ConvertContainer(Container&& container, Func&& convert) noexcept
   requires(!std::same_as<Func, NoFunc>)
-      : container_(std::forward<Container>(container)), convert_(convert) {}
+      : container_(std::forward<Container>(container)), convert_(std::forward<Func>(convert)) {}
 
   ~ConvertContainer() = default;
   ConvertContainer(const ConvertContainer&) = delete;
@@ -47,33 +43,29 @@ class ConvertContainer final {
   ConvertContainer& operator=(ConvertContainer&&) noexcept = default;
 
   template<typename ContainerOut>
-  requires mbo::types::ContainerCopyConvertible<Container, ContainerOut>
-  operator ContainerOut() const {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+  requires mbo::types::ContainerCopyConvertible<Container, ContainerOut, Func>
+  operator ContainerOut() {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
     ContainerOut result;
     for (auto&& v : container_) {
-      using DestValueType = std::conditional_t<
-          std::is_move_assignable_v<Container> && std::is_move_assignable_v<ValueType>,
-          std::add_rvalue_reference<ValueType>,
-          decltype(v)>;
-      if constexpr (mbo::types::ContainerHasEmplace<ContainerOut, DestValueType>) {
+      if constexpr (mbo::types::ContainerHasEmplace<ContainerOut, ValueType>) {
         if constexpr (std::same_as<Func, NoFunc>) {
           result.emplace(std::move(v));
         } else {
           result.emplace(convert_(std::move(v)));
         }
-      } else if constexpr (mbo::types::ContainerHasEmplaceBack<ContainerOut, DestValueType>) {
+      } else if constexpr (mbo::types::ContainerHasEmplaceBack<ContainerOut, ValueType>) {
         if constexpr (std::same_as<Func, NoFunc>) {
           result.emplace_back(std::move(v));
         } else {
           result.emplace_back(convert_(std::move(v)));
         }
-      } else if constexpr (mbo::types::ContainerHasInsert<ContainerOut, DestValueType>) {
+      } else if constexpr (mbo::types::ContainerHasInsert<ContainerOut, ValueType>) {
         if constexpr (std::same_as<Func, NoFunc>) {
           result.insert(std::move(v));
         } else {
           result.insert(convert_(std::move(v)));
         }
-      } else if constexpr (mbo::types::ContainerHasPushBack<ContainerOut, DestValueType>) {
+      } else if constexpr (mbo::types::ContainerHasPushBack<ContainerOut, ValueType>) {
         if constexpr (std::same_as<Func, NoFunc>) {
           result.push_back(std::move(v));
         } else {
@@ -86,8 +78,8 @@ class ConvertContainer final {
 
  private:
   static inline constexpr NoFunc kNoFunc{};
-  ContainerType container_;
-  const Func& convert_ = kNoFunc;
+  Container container_;
+  Func convert_ = kNoFunc;
 };
 
 }  // namespace internal
@@ -99,14 +91,27 @@ class ConvertContainer final {
 //
 //   std::vector<std::string_view> input{"foo", "bar", "baz"};
 //   std::vector<string> strs = ConvertContainer(input);
+
 template<mbo::types::IsForwardIteratable Container>
+requires ::mbo::types::NotInitializerList<Container>
 inline internal::ConvertContainer<Container> ConvertContainer(Container&& container) {
   return internal::ConvertContainer<Container>(std::forward<Container>(container));
 }
 
 template<mbo::types::IsForwardIteratable Container, typename Func>
-inline internal::ConvertContainer<Container, Func> ConvertContainer(Container&& container, const Func& conversion) {
-  return internal::ConvertContainer<Container, Func>(std::forward<Container>(container), conversion);
+requires ::mbo::types::NotInitializerList<Container>
+inline internal::ConvertContainer<Container, Func> ConvertContainer(Container&& container, Func&& conversion) {
+  return internal::ConvertContainer<Container, Func>(std::forward<Container>(container), std::forward<Func>(conversion));
+}
+
+template<typename U>
+inline internal::ConvertContainer<const std::initializer_list<U>&> ConvertContainer(const std::initializer_list<U>& container) {
+  return internal::ConvertContainer<const std::initializer_list<U>&>(container);
+}
+
+template<typename U, typename Func>
+inline internal::ConvertContainer<const std::initializer_list<U>&, Func> ConvertContainer(const std::initializer_list<U>& container, Func&& conversion) {
+  return internal::ConvertContainer<const std::initializer_list<U>&, Func>(container, std::forward<Func>(conversion));
 }
 
 }  // namespace mbo::container

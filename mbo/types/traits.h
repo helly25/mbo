@@ -96,29 +96,33 @@ concept ContainerIsForwardIteratable = internal::ContainerIsForwardIteratableRaw
 // Identifies std like `Container` types that support `emplace` with `ValueType`.
 template<typename Container, typename ValueType>
 concept ContainerHasEmplace = requires(Container container, ValueType new_value) {
-  ContainerIsForwardIteratable<Container>;
-  container.emplace(new_value);
+  requires ContainerIsForwardIteratable<Container>;
+  requires std::constructible_from<typename Container::value_type, ValueType>;
+  { container.emplace(new_value) };  // Only tests whether emplace(<arg>) exists, not whether new_value can be that arg.
 };
 
 // Identifies std like `Container` types that support `emplace_back` with `ValueType`.
 template<typename Container, typename ValueType>
 concept ContainerHasEmplaceBack = requires(Container container, ValueType new_value) {
-  ContainerIsForwardIteratable<Container>;
-  container.emplace_back(new_value);
+  requires ContainerIsForwardIteratable<Container>;
+  requires std::constructible_from<typename Container::value_type, ValueType>;
+  { container.emplace_back(new_value) };
 };
 
 // Identifies std like `Container` types that support `emplace` with `ValueType`.
 template<typename Container, typename ValueType>
 concept ContainerHasInsert = requires(Container container, ValueType new_value) {
-  ContainerIsForwardIteratable<Container>;
-  container.insert(new_value);
+  requires ContainerIsForwardIteratable<Container>;
+  requires std::convertible_to<ValueType, typename Container::value_type>;
+  { container.insert(new_value) };
 };
 
 // Identifies std like `Container` types that support `emplace_back` with `ValueType`.
 template<typename Container, typename ValueType>
 concept ContainerHasPushBack = requires(Container container, ValueType new_value) {
-  ContainerIsForwardIteratable<Container>;
-  container.push_back(new_value);
+  requires ContainerIsForwardIteratable<Container>;
+  requires std::convertible_to<ValueType, typename Container::value_type>;
+  { container.push_back(new_value) };
 };
 
 namespace internal {
@@ -182,7 +186,7 @@ struct NoFunc final {};
 
 template<typename T, typename Func>
 struct ValueOrResult {
-  using type = std::invoke_result<Func, T>;
+  using type = std::invoke_result_t<Func, T>;
 };
 
 template<typename T>
