@@ -36,6 +36,27 @@ cc_test(
 )
 
 cc_library(
+    name = "limited_map_cc",
+    hdrs = ["limited_map.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mbo/types:traits_cc",
+        "@com_google_absl//absl/log:absl_log",
+    ],
+)
+
+cc_test(
+    name = "limited_map_test",
+    srcs = ["limited_map_test.cc"],
+    deps = [
+        ":limited_map_cc",
+        "//mbo/testing:matchers_cc",
+        "@com_google_absl//absl/log:initialize",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "limited_set_cc",
     hdrs = ["limited_set.h"],
     visibility = ["//visibility:public"],
@@ -50,6 +71,7 @@ cc_test(
     srcs = ["limited_set_test.cc"],
     deps = [
         ":limited_set_cc",
+        "//mbo/testing:matchers_cc",
         "@com_google_absl//absl/log:initialize",
         "@com_google_googletest//:gtest_main",
     ],
@@ -70,6 +92,7 @@ cc_test(
     srcs = ["limited_vector_test.cc"],
     deps = [
         ":limited_vector_cc",
+        "//mbo/testing:matchers_cc",
         "@com_google_absl//absl/log:initialize",
         "@com_google_googletest//:gtest_main",
     ],

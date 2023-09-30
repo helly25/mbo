@@ -15,6 +15,16 @@
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "matchers_cc",
+    hdrs = ["matchers.h"],
+    deps = [
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "runfiles_dir_cc",
     srcs = ["runfiles_dir.cc"],
     hdrs = ["runfiles_dir.h"],

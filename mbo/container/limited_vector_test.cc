@@ -17,12 +17,14 @@
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/testing/matchers.h"
 
 namespace mbo::container {
 namespace {
 
 // NOLINTBEGIN(*-magic-numbers)
 
+using ::mbo::testing::CapacityIs;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::Ge;
@@ -33,10 +35,6 @@ using ::testing::Lt;
 using ::testing::Not;
 using ::testing::SizeIs;
 
-MATCHER_P(Capacity, cap, "Capacity is") {
-  return arg.capacity() == static_cast<std::size_t>(cap);
-}
-
 struct LimitedVectorTest : ::testing::Test {
   static void SetUpTestSuite() { absl::InitializeLog(); }
 };
@@ -45,7 +43,7 @@ TEST_F(LimitedVectorTest, MakeNoArg) {
   constexpr auto kTest = MakeLimitedVector<int>();
   EXPECT_THAT(kTest, IsEmpty());
   EXPECT_THAT(kTest, SizeIs(0));
-  EXPECT_THAT(kTest, Capacity(0));
+  EXPECT_THAT(kTest, CapacityIs(0));
   EXPECT_THAT(kTest, ElementsAre());
 }
 
@@ -53,7 +51,7 @@ TEST_F(LimitedVectorTest, MakeOneArg) {
   constexpr auto kTest = MakeLimitedVector(42);
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(1));
-  EXPECT_THAT(kTest, Capacity(1));
+  EXPECT_THAT(kTest, CapacityIs(1));
   EXPECT_THAT(kTest, ElementsAre(42));
 }
 
@@ -61,7 +59,7 @@ TEST_F(LimitedVectorTest, MakeInitArg) {
   constexpr auto kTest = MakeLimitedVector<3>({0, 1, 2});
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(3));
-  EXPECT_THAT(kTest, Capacity(3));
+  EXPECT_THAT(kTest, CapacityIs(3));
   EXPECT_THAT(kTest, ElementsAre(0, 1, 2));
 }
 
@@ -69,7 +67,7 @@ TEST_F(LimitedVectorTest, MakeInitArgLarger) {
   constexpr auto kTest = MakeLimitedVector<5>({0, 1, 2});
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(3));
-  EXPECT_THAT(kTest, Capacity(5));
+  EXPECT_THAT(kTest, CapacityIs(5));
   EXPECT_THAT(kTest, ElementsAre(0, 1, 2));
 }
 
@@ -77,7 +75,7 @@ TEST_F(LimitedVectorTest, MakeMultiArg) {
   constexpr auto kTest = MakeLimitedVector(0, 1, 2, 3);
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
-  EXPECT_THAT(kTest, Capacity(4));
+  EXPECT_THAT(kTest, CapacityIs(4));
   EXPECT_THAT(kTest, ElementsAre(0, 1, 2, 3));
 }
 
@@ -89,12 +87,12 @@ TEST_F(LimitedVectorTest, MakeNumArg) {
   constexpr auto kTest1 = MakeLimitedVector<1>(42);
   EXPECT_THAT(kTest1, Not(IsEmpty()));
   EXPECT_THAT(kTest1, SizeIs(1));
-  EXPECT_THAT(kTest1, Capacity(1));
+  EXPECT_THAT(kTest1, CapacityIs(1));
   EXPECT_THAT(kTest1, ElementsAre(42));
   constexpr auto kTest2 = MakeLimitedVector<2>(42);
   EXPECT_THAT(kTest2, Not(IsEmpty()));
   EXPECT_THAT(kTest2, SizeIs(2));
-  EXPECT_THAT(kTest2, Capacity(2));
+  EXPECT_THAT(kTest2, CapacityIs(2));
   EXPECT_THAT(kTest2, ElementsAre(42, 42));
 }
 
@@ -103,7 +101,7 @@ TEST_F(LimitedVectorTest, MakeIteratorArg) {
   constexpr auto kTest = MakeLimitedVector<5>(kVec.begin(), kVec.end());
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
-  EXPECT_THAT(kTest, Capacity(5));
+  EXPECT_THAT(kTest, CapacityIs(5));
   EXPECT_THAT(kTest, ElementsAre(0, 1, 2, 3));
 }
 
@@ -112,7 +110,7 @@ TEST_F(LimitedVectorTest, MakeWithStrings) {
   auto test = MakeLimitedVector<4>(data.begin(), data.end());
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
-  EXPECT_THAT(test, Capacity(4));
+  EXPECT_THAT(test, CapacityIs(4));
   EXPECT_THAT(test, ElementsAre("0", "1", "2", "3"));
 }
 
@@ -149,7 +147,7 @@ TEST_F(LimitedVectorTest, ToLimitedVector) {
   constexpr auto kTest = ToLimitedVector(kArray);
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
-  EXPECT_THAT(kTest, Capacity(4));
+  EXPECT_THAT(kTest, CapacityIs(4));
   EXPECT_THAT(kTest, ElementsAre(0, 1, 2, 3));
   // NOLINTEND(*-avoid-c-arrays)
 }
@@ -160,7 +158,7 @@ TEST_F(LimitedVectorTest, ToLimitedVectorStringCopy) {
   auto test = ToLimitedVector(array);
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
-  EXPECT_THAT(test, Capacity(4));
+  EXPECT_THAT(test, CapacityIs(4));
   EXPECT_THAT(test, ElementsAre("0", "1", "2", "3"));
   // NOLINTEND(*-avoid-c-arrays)
 }
@@ -171,7 +169,7 @@ TEST_F(LimitedVectorTest, ToLimitedVectorStringMove) {
   auto test = ToLimitedVector(std::move(array));
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
-  EXPECT_THAT(test, Capacity(4));
+  EXPECT_THAT(test, CapacityIs(4));
   EXPECT_THAT(test, ElementsAre("0", "1", "2", "3"));
   // NOLINTEND(*-avoid-c-arrays)
 }
@@ -184,7 +182,7 @@ TEST_F(LimitedVectorTest, ConstexprMakeClear) {
   }();
   EXPECT_THAT(kTest, IsEmpty());
   EXPECT_THAT(kTest, SizeIs(0));
-  EXPECT_THAT(kTest, Capacity(5));
+  EXPECT_THAT(kTest, CapacityIs(5));
   EXPECT_THAT(kTest, ElementsAre());
 }
 
@@ -198,7 +196,7 @@ TEST_F(LimitedVectorTest, ConstexprMakePushPop) {
   }();
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
-  EXPECT_THAT(kTest, Capacity(6));
+  EXPECT_THAT(kTest, CapacityIs(6));
   EXPECT_THAT(kTest, ElementsAre(0, 1, 3, 4));
 }
 
@@ -206,7 +204,7 @@ TEST_F(LimitedVectorTest, ReadAccess) {
   constexpr auto kTest = MakeLimitedVector<6>({0, 1, 2, 3});
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
-  EXPECT_THAT(kTest, Capacity(6));
+  EXPECT_THAT(kTest, CapacityIs(6));
   ASSERT_THAT(kTest, ElementsAre(0, 1, 2, 3));
   EXPECT_THAT(kTest.front(), 0);
   EXPECT_THAT(kTest.at(1), 1);
@@ -218,7 +216,7 @@ TEST_F(LimitedVectorTest, WriteAccess) {
   auto test = MakeLimitedVector<6>({0, 1, 2, 3});
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
-  EXPECT_THAT(test, Capacity(6));
+  EXPECT_THAT(test, CapacityIs(6));
   ASSERT_THAT(test, ElementsAre(0, 1, 2, 3));
   test.front() = 10;
   test.at(1) = 11;
@@ -226,7 +224,7 @@ TEST_F(LimitedVectorTest, WriteAccess) {
   test.back() = 13;
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
-  EXPECT_THAT(test, Capacity(6));
+  EXPECT_THAT(test, CapacityIs(6));
   ASSERT_THAT(test, ElementsAre(10, 11, 12, 13));
 }
 
@@ -234,7 +232,7 @@ TEST_F(LimitedVectorTest, Emplace) {
   auto test = MakeLimitedVector<7>({1, 3});
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(2));
-  EXPECT_THAT(test, Capacity(7));
+  EXPECT_THAT(test, CapacityIs(7));
   ASSERT_THAT(test, ElementsAre(1, 3));
   EXPECT_THAT(test.emplace(test.begin() + 1, 20), test.begin() + 1);
   EXPECT_THAT(test, SizeIs(3));
@@ -251,7 +249,7 @@ TEST_F(LimitedVectorTest, Erase) {
   auto test = MakeLimitedVector(0, 1, 20, 3, 40);
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(5));
-  EXPECT_THAT(test, Capacity(5));
+  EXPECT_THAT(test, CapacityIs(5));
   ASSERT_THAT(test, ElementsAre(0, 1, 20, 3, 40));
   EXPECT_THAT(test.erase(test.begin() + 2), test.begin() + 2);
   EXPECT_THAT(test, SizeIs(4));
@@ -274,7 +272,7 @@ TEST_F(LimitedVectorTest, EraseRange) {
   using Type = decltype(test);
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(10));
-  EXPECT_THAT(test, Capacity(10));
+  EXPECT_THAT(test, CapacityIs(10));
   ASSERT_THAT(test, ElementsAre(0, 1, 20, 3, 40, 50, 60, 70, 8, 9));
   Type::const_iterator first = test.begin() + 4;
   Type::const_iterator last = test.begin() + 8;

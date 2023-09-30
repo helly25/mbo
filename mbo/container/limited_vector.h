@@ -138,17 +138,17 @@ class LimitedVector final {
 
   template<typename U>
   requires std::convertible_to<U, T>
-  constexpr LimitedVector(std::initializer_list<U>&& list) noexcept {
+  constexpr LimitedVector(const std::initializer_list<U>& list) noexcept {
     auto it = list.begin();
     while (it < list.end()) {
-      emplace_back(std::move(*it++));
+      emplace_back(*it++);
     }
   }
 
   template<typename U, std::size_t OtherN>
   requires(std::convertible_to<U, T> && OtherN <= Capacity)
-  constexpr LimitedVector& operator=(std::initializer_list<U>&& list) noexcept {
-    assign(std::move(list));
+  constexpr LimitedVector& operator=(const std::initializer_list<U>& list) noexcept {
+    assign(list);
     return *this;
   }
 
@@ -319,7 +319,7 @@ class LimitedVector final {
     }
   }
 
-  constexpr void assign(std::initializer_list<T>&& list) noexcept {
+  constexpr void assign(const std::initializer_list<T>& list) noexcept {
     clear();
     auto it = list.begin();
     while (it < list.end()) {
@@ -447,9 +447,9 @@ inline constexpr auto MakeLimitedVector(It&& begin, It&& end) noexcept {
 }
 
 template<std::size_t N, typename T>
-inline constexpr auto MakeLimitedVector(std::initializer_list<T>&& data) {
+inline constexpr auto MakeLimitedVector(const std::initializer_list<T>& data) {
   LV_REQUIRE(FATAL, data.size() <= N) << "Too many initlizer values.";
-  return LimitedVector<T, N>(std::forward<std::initializer_list<T>>(data));
+  return LimitedVector<T, N>(data);
 }
 
 template<std::size_t N, typename T>

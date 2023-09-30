@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_CONTAINER_LIMITED_SET_H_
-#define MBO_CONTAINER_LIMITED_SET_H_
+#ifndef MBO_CONTAINER_LIMITED_MAP_H_
+#define MBO_CONTAINER_LIMITED_MAP_H_
 
 #include <algorithm>
 #include <compare>
@@ -34,7 +34,7 @@ namespace mbo::container {
 
 // NOLINTBEGIN(readability-identifier-naming)
 
-// Implements a `std::set` like container that only uses inlined memory. So if used as a local
+// Implements a `std::map` like container that only uses inlined memory. So if used as a local
 // variable with a types that does not perform memory allocation, then this type does not perform
 // any memory allocation.
 //
@@ -42,24 +42,73 @@ namespace mbo::container {
 //
 // The type is fully `constexpr` compliant and can be used as a `static constexpr`.
 //
-// Can be constructed with helpers `MakeLimitedSet` or `ToLimitedSet`.
+// Can be constructed with helpers `MakeLimitedMap` or `ToLimitedMap`.
 //
 // Example:
 //
 // ```c++
-// using mbo::container::LimitedSet;
+// using mbo::container::LimitedMap;
 //
-// constexpr auto kMyData = MakeLimitedSet(1, 3, 2, 4);
+// constexpr auto kMyData = MakeLimitedMap({1, "1"}, {3, "3"}, {2, "4"});
 // ```
 //
-// The above example infers the value_type to be `int` as it is the common type of the arguments.
-// The resulting `LimitedSet` has a capacity of 4 and the elements {1, 2, 3, 4}.
+// The above example infers the value_type to be `std::pair<int, std::string>`
+// as it is the common type of the arguments. The resulting `LimitedMap` has a
+// capacity of 4 and the elements {{1, "1"}, {2, "2"}, {3, "3"}, {4, "4"}}.
 //
-// Internally a C-array is used and elements are moved as needed. That means that element
-// addresses are not stable.
-template<typename Key, std::size_t Capacity, typename Compare = std::less<Key>>
-requires(std::move_constructible<Key>)
-class LimitedSet final {
+// Internally a C-array is used and elements are moved as needed. That means
+// that element addresses are not stable.
+template<
+    typename Key,
+    typename Value,
+    std::size_t Capacity,
+    typename KeyComp = std::less<Key>,
+    typename ValueComp = std::less<Value>>
+requires(std::move_constructible<Key> && std::move_constructible<Value>)
+class LimitedMap final {
+ public:
+  using key_type = Key;
+  using mapped_type = Value;
+  using value_type = std::pair<const Key, Value>;
+  using size_type = std::size_t;
+  using difference_type = std::ptrdiff_t;
+
+  struct KeyCompare {
+    constexpr ~KeyCompare() noexcept = default;
+
+    constexpr KeyCompare() noexcept = default;
+    constexpr explicit KeyCompare(const KeyComp& key_comp) noexcept : key_comp_(key_comp) {}
+
+    constexpr KeyCompare(const KeyCompare&) noexcept = default;
+    constexpr KeyCompare& operator=(const KeyCompare&) noexcept = default;
+    constexpr KeyCompare(KeyCompare&&) noexcept = default;
+    constexpr KeyCompare& operator=(KeyCompare&&) noexcept = default;
+
+    template<typename K>
+    constexpr bool operator()(const K& lhs, const value_type& rhs) const noexcept {
+      return key_comp_(lhs, rhs.first);
+    }
+
+    template<typename K>
+    constexpr bool operator()(const value_type& lhs, const K& rhs) const noexcept {
+      return key_comp_(lhs.first, rhs);
+    }
+
+    template<typename K>
+    constexpr bool operator()(const value_type& lhs, const value_type& rhs) const noexcept {
+      return key_comp_(lhs.first, rhs.first);
+    }
+
+    const KeyComp key_comp_;
+  };
+
+  using key_compare = KeyCompare;
+  using value_compare = ValueComp;
+  using reference = value_type&;
+  using const_reference = const value_type&;
+  using pointer = value_type*;
+  using const_pointer = const value_type*;
+
  private:
   struct None final {};
 
@@ -73,34 +122,23 @@ class LimitedSet final {
 
     constexpr ~Data() noexcept {}  // NON DEFAULT
 
-    Key data;
+    value_type data;
     None none;
   };
 
   // Must declare each other as friends so that we can correctly move from other.
-  template<typename U, std::size_t OtherN, typename Comp>
-  requires(std::move_constructible<U>)
-  friend class LimitedSet;
+  template<typename K, typename V, std::size_t OtherN, typename KComp, typename VComp>
+  requires(std::move_constructible<K> && std::move_constructible<V>)
+  friend class LimitedMap;
 
  public:
-  using key_type = Key;
-  using value_type = Key;
-  using size_type = std::size_t;
-  using difference_type = std::ptrdiff_t;
-  using key_compare = Compare;
-  using value_compare = Compare;
-  using reference = Key&;
-  using const_reference = const Key&;
-  using pointer = Key*;
-  using const_pointer = const Key*;
-
   class const_iterator {
    public:
     using iterator_category = std::bidirectional_iterator_tag;
-    using difference_type = LimitedSet::difference_type;
-    using value_type = LimitedSet::value_type;
-    using pointer = LimitedSet::const_pointer;
-    using reference = LimitedSet::const_reference;
+    using difference_type = LimitedMap::difference_type;
+    using value_type = LimitedMap::value_type;
+    using pointer = LimitedMap::const_pointer;
+    using reference = LimitedMap::const_reference;
 
     constexpr const_iterator() noexcept : pos_(nullptr) {}  // Needed for STL
 
@@ -173,10 +211,10 @@ class LimitedSet final {
   class iterator {
    public:
     using iterator_category = std::bidirectional_iterator_tag;
-    using difference_type = LimitedSet::difference_type;
-    using value_type = LimitedSet::value_type;
-    using pointer = LimitedSet::pointer;
-    using reference = LimitedSet::reference;
+    using difference_type = LimitedMap::difference_type;
+    using value_type = LimitedMap::value_type;
+    using pointer = LimitedMap::pointer;
+    using reference = LimitedMap::reference;
 
     constexpr iterator() noexcept : pos_(nullptr) {}  // Needed for STL
 
@@ -237,7 +275,7 @@ class LimitedSet final {
     friend constexpr bool operator==(iterator lhs, iterator rhs) noexcept { return lhs.pos_ == rhs.pos_; }
 
     friend std::ostream& operator<<(std::ostream& os, const iterator& pos) {
-      return os << "[" << pos.pos_ << " = " << pos.pos_->data << "]";
+      return os << "[" << pos.pos_ << " = {" << pos.pos_->data.first << ", " << pos.pos_->data.second << "}]";
     }
 
    private:
@@ -256,18 +294,18 @@ class LimitedSet final {
  public:
   // Destructor and constructors from same type.
 
-  constexpr ~LimitedSet() noexcept { clear(); }
+  constexpr ~LimitedMap() noexcept { clear(); }
 
-  constexpr LimitedSet() noexcept = default;
-  constexpr explicit LimitedSet(const Compare& key_comp) noexcept : key_comp_(key_comp){};
+  constexpr LimitedMap() noexcept = default;
+  constexpr explicit LimitedMap(const KeyComp& key_comp) noexcept : key_comp_(key_comp){};
 
-  constexpr LimitedSet(const LimitedSet& other) noexcept {
+  constexpr LimitedMap(const LimitedMap& other) noexcept {
     for (; size_ < other.size_; ++size_) {
       std::construct_at(&values_[size_].data, other.values_[size_].data);
     }
   }
 
-  constexpr LimitedSet& operator=(const LimitedSet& other) noexcept {
+  constexpr LimitedMap& operator=(const LimitedMap& other) noexcept {
     if (this != &other) {
       clear();
       size_ = other.size_;
@@ -276,14 +314,14 @@ class LimitedSet final {
     return *this;
   }
 
-  constexpr LimitedSet(LimitedSet&& other) noexcept {
+  constexpr LimitedMap(LimitedMap&& other) noexcept {
     for (; size_ < other.size_; ++size_) {
       std::construct_at(&values_[size_].data, std::move(other.values_[size_].data));
     }
     other.size_ = 0;
   }
 
-  constexpr LimitedSet& operator=(LimitedSet&& other) noexcept {
+  constexpr LimitedMap& operator=(LimitedMap&& other) noexcept {
     clear();
     for (; size_ < other.size_; ++size_) {
       std::construct_at(&values_[size_].data, std::move(other.values_[size_].data));
@@ -295,26 +333,26 @@ class LimitedSet final {
   // Constructors and assignment from other LimitVector/value types.
 
   template<std::forward_iterator It>
-  requires std::convertible_to<mbo::types::ForwardIteratorValueType<It>, Key>
-  constexpr LimitedSet(It begin, It end, const Compare& key_comp = Compare()) noexcept : key_comp_(key_comp) {
+  requires std::convertible_to<mbo::types::ForwardIteratorValueType<It>, value_type>
+  constexpr LimitedMap(It begin, It end, const KeyComp& key_comp = KeyComp()) noexcept : key_comp_(key_comp) {
     while (begin < end) {
       emplace(*begin);
       ++begin;
     }
   }
 
-  constexpr LimitedSet(const std::initializer_list<Key>& list, const Compare& key_comp = Compare()) noexcept
+  constexpr LimitedMap(const std::initializer_list<value_type>& list, const KeyComp& key_comp = KeyComp()) noexcept
       : key_comp_(key_comp) {
     auto it = list.begin();
     while (it < list.end()) {
-      emplace(*it);//emplace(std::move(*it));
+      emplace(*it);  // emplace(std::move(*it));
       ++it;
     }
   }
 
   template<typename U>
-  requires(std::convertible_to<U, Key> && !std::same_as<Key, U>)
-  constexpr LimitedSet(const std::initializer_list<U>& list, const Compare& key_comp = Compare()) noexcept
+  requires(std::convertible_to<U, value_type> && !std::same_as<U, value_type>)
+  constexpr LimitedMap(const std::initializer_list<U>& list, const KeyComp& key_comp = KeyComp()) noexcept
       : key_comp_(key_comp) {
     auto it = list.begin();
     while (it < list.end()) {
@@ -324,51 +362,71 @@ class LimitedSet final {
   }
 
   template<typename U, std::size_t OtherN>
-  requires(std::convertible_to<U, Key> && OtherN <= Capacity)
-  constexpr LimitedSet& operator=(const std::initializer_list<U>& list) noexcept {
+  requires(std::convertible_to<U, value_type> && OtherN <= Capacity)
+  constexpr LimitedMap& operator=(const std::initializer_list<U>& list) noexcept {
     assign(list);
     return *this;
   }
 
-  template<typename U, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<U, Key> && OtherN <= Capacity)
-  constexpr explicit LimitedSet(const LimitedSet<U, OtherN, OtherCompare>& other) noexcept {
+  template<typename K, typename V, std::size_t OtherN, typename OtherCompare>
+  requires(std::convertible_to<K, Key> && std::convertible_to<V, Value> && OtherN <= Capacity)
+  constexpr explicit LimitedMap(const LimitedMap<K, V, OtherN, OtherCompare>& other) noexcept {
     for (auto it = other.begin(); it < other.end(); ++it) {
-      emplace(*it);
+      emplace(it->first, it->second);
     }
   }
 
-  template<typename U, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<U, Key> && OtherN <= Capacity)
-  constexpr LimitedSet& operator=(const LimitedSet<U, OtherN, OtherCompare>& other) noexcept {
+  template<typename K, typename V, std::size_t OtherN, typename OtherCompare>
+  requires(std::convertible_to<K, Key> && std::convertible_to<V, Value> && OtherN <= Capacity)
+  constexpr LimitedMap& operator=(const LimitedMap<K, V, OtherN, OtherCompare>& other) noexcept {
     clear();
     for (auto it = other.begin(); it < other.end(); ++it) {
-      emplace(*it);
+      emplace(it->first, it->second);
     }
     return *this;
   }
 
-  template<typename U, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<U, Key> && OtherN <= Capacity)
-  constexpr explicit LimitedSet(LimitedSet<U, OtherN, OtherCompare>&& other) noexcept {
+  template<typename K, typename V, std::size_t OtherN, typename OtherCompare>
+  requires(std::convertible_to<K, Key> && std::convertible_to<V, Value> && OtherN <= Capacity)
+  constexpr explicit LimitedMap(LimitedMap<K, V, OtherN, OtherCompare>&& other) noexcept {
     for (auto it = other.begin(); it < other.end(); ++it) {
-      emplace(std::move(*it));
+      emplace(std::move(it->first, it->second));
     }
     other.size_ = 0;
   }
 
-  template<typename U, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<U, Key> && OtherN <= Capacity)
-  constexpr LimitedSet& operator=(LimitedSet<U, OtherN, OtherCompare>&& other) noexcept {
+  template<typename K, typename V, std::size_t OtherN, typename OtherCompare>
+  requires(std::convertible_to<K, Key> && std::convertible_to<V, Value> && OtherN <= Capacity)
+  constexpr LimitedMap& operator=(LimitedMap<K, V, OtherN, OtherCompare>&& other) noexcept {
     clear();
     for (auto it = other.begin(); it < other.end(); ++it) {
-      emplace(std::move(*it));
+      emplace(std::move(it->first, it->second));
     }
     other.size_ = 0;
     return *this;
   }
 
-  // Find and search: lower_bound, upper_bound, equal_range, find, contains, count
+  // Find and search: at, [], lower_bound, upper_bound, equal_range, find, contains, count
+
+  constexpr Value& at(const Key& key) {
+    auto it = find(key);
+    if (it == end()) {
+      throw std::out_of_range("Out of rage");
+    }
+    return it->second;
+  }
+
+  constexpr const Value& at(const Key& key) const {
+    auto it = find(key);
+    if (it == end()) {
+      throw std::out_of_range("Out of rage");
+    }
+    return it->second;
+  }
+
+  constexpr Value& operator[](const Key& key) { return try_emplace(key, mapped_type{}).first->second; }
+
+  constexpr Value& operator[](Key&& key) { return try_emplace(std::move(key), mapped_type{}).first->second; }
 
   constexpr iterator lower_bound(const Key& key) { return std::lower_bound(begin(), end(), key, key_comp_); }
 
@@ -463,7 +521,7 @@ class LimitedSet final {
     }
   }
 
-  constexpr void swap(LimitedSet& other) noexcept {
+  constexpr void swap(LimitedMap& other) noexcept {
     std::size_t pos = 0;
     for (; pos < size_ && pos < other.size(); ++pos) {
       std::swap(values_[pos].data, other.values_[pos].data);
@@ -482,16 +540,84 @@ class LimitedSet final {
 
   template<typename... Args>
   constexpr std::pair<iterator, bool> emplace(Args&&... args) noexcept {
-    Key new_key(args...);
-    const iterator dst = lower_bound(new_key);
-    if (dst != end() && !key_comp_(*dst, new_key) && !key_comp_(new_key, *dst)) {
+    value_type new_kv(args...);
+    const iterator dst = lower_bound(new_kv.first);
+    if (dst != end() && !key_comp_(*dst, new_kv.first) && !key_comp_(new_kv.first, *dst)) {
       return std::make_pair(dst, false);
     }
     LV_REQUIRE(FATAL, size_ < Capacity) << "Called `emplace` at capacity.";
     for (iterator next = end(); next > dst; --next) {
       std::construct_at(&*next, std::move(*std::prev(next)));
     }
-    std::construct_at(&*dst, std::move(new_key));
+    std::construct_at(&*dst, std::move(new_kv));
+    ++size_;
+    return std::make_pair(dst, true);
+  }
+
+  template<typename... Args>
+  constexpr std::pair<iterator, bool> try_emplace(const Key& key, Args&&... args) {
+    const iterator dst = lower_bound(key);
+    if (dst != end() && !key_comp_(*dst, key) && !key_comp_(key, *dst)) {
+      dst->second = Value(args...);
+      return std::make_pair(dst, false);
+    }
+    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `try_emplace` at capacity.";
+    for (iterator next = end(); next > dst; --next) {
+      std::construct_at(&*next, std::move(*std::prev(next)));
+    }
+    std::construct_at(
+        &*dst, std::piecewise_construct, std::forward_as_tuple(key),
+        std::forward_as_tuple(std::forward<Args>(args)...));
+    ++size_;
+    return std::make_pair(dst, true);
+  }
+
+  template<typename... Args>
+  constexpr std::pair<iterator, bool> try_emplace(Key&& key, Args&&... args) {
+    const iterator dst = lower_bound(key);
+    if (dst != end() && !key_comp_(*dst, key) && !key_comp_(key, *dst)) {
+      dst->second = Value(args...);
+      return std::make_pair(dst, false);
+    }
+    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `try_emplace` at capacity.";
+    for (iterator next = end(); next > dst; --next) {
+      std::construct_at(&*next, std::move(*std::prev(next)));
+    }
+    // Should possibly use: std::piecewise_construct, std::move(key), std::forward_as_tuple(std::forward<Args>(args)...)
+    // But that creates issues with conversion. However, we not the two types, so we do not need piecewise.
+    std::construct_at(
+        &*dst, std::move(key), mapped_type(std::forward<Args>(args)...));    ++size_;
+    return std::make_pair(dst, true);
+  }
+
+  template<class V>
+  constexpr std::pair<iterator, bool> insert_or_assign(const Key& key, V&& value) {
+    const iterator dst = lower_bound(key);
+    if (dst != end() && !key_comp_(*dst, key) && !key_comp_(key, *dst)) {
+      dst->second = std::forward<V>(value);
+      return std::make_pair(dst, false);
+    }
+    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `insert_or_assign` at capacity.";
+    for (iterator next = end(); next > dst; --next) {
+      std::construct_at(&*next, std::move(*std::prev(next)));
+    }
+    std::construct_at(&*dst, key, std::forward<V>(value));
+    ++size_;
+    return std::make_pair(dst, true);
+  }
+
+  template<class V>
+  constexpr std::pair<iterator, bool> insert_or_assign(Key&& key, V&& value) {
+    const iterator dst = lower_bound(key);
+    if (dst != end() && !key_comp_(*dst, key) && !key_comp_(key, *dst)) {
+      dst->second = std::forward<V>(value);
+      return std::make_pair(dst, false);
+    }
+    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `emplace` at capacity.";
+    for (iterator next = end(); next > dst; --next) {
+      std::construct_at(&*next, std::move(*std::prev(next)));
+    }
+    std::construct_at(&*dst, std::move(key), std::forward<V>(value));
     ++size_;
     return std::make_pair(dst, true);
   }
@@ -557,6 +683,12 @@ class LimitedSet final {
 
   constexpr std::pair<iterator, bool> insert(value_type&& value) { return emplace(std::move(value)); }
 
+  template<class P>
+  requires(std::constructible_from<value_type, P>)
+  constexpr std::pair<iterator, bool> insert(P&& value) {
+    return emplace(std::forward<P>(value));
+  }
+
   template<typename InputIt>
   constexpr void insert(InputIt first, InputIt last) {
     while (first < last) {
@@ -618,14 +750,24 @@ class LimitedSet final {
   // Array would be better but that does not work with ASAN builds.
   // std::array<Data, Capacity == 0 ? 1 : Capacity> values_;
   Data values_[Capacity == 0 ? 1 : Capacity];  // NOLINT(*-avoid-c-arrays)
-  const key_compare key_comp_ = {};
+  const KeyCompare key_comp_ = {};
 };
 
-template<size_t LN, size_t RN, typename LHS, typename RHS, typename LCompare, typename RCompare>
-requires std::three_way_comparable_with<LHS, RHS>
+template<
+    size_t LN,
+    size_t RN,
+    typename LHS_K,
+    typename RHS_K,
+    typename LHS_V,
+    typename RHS_V,
+    typename LKComp,
+    typename RKComp,
+    typename LVComp,
+    typename RVComp>
+requires(std::three_way_comparable_with<LHS_K, RHS_K> && std::three_way_comparable_with<LHS_V, RHS_V>)
 constexpr inline auto operator<=>(
-    const LimitedSet<LHS, LN, LCompare>& lhs,
-    const LimitedSet<RHS, RN, RCompare>& rhs) noexcept {
+    const LimitedMap<LHS_K, LHS_V, LN, LKComp, LVComp>& lhs,
+    const LimitedMap<RHS_K, RHS_V, RN, RKComp, LVComp>& rhs) noexcept {
   auto lhs_it = lhs.begin();
   auto rhs_it = rhs.begin();
   while (lhs_it != lhs.end() && rhs_it != rhs.end()) {
@@ -639,11 +781,21 @@ constexpr inline auto operator<=>(
   return lhs.size() <=> rhs.size();
 }
 
-template<size_t LN, size_t RN, typename LHS, typename RHS, typename LCompare, typename RCompare>
-requires std::three_way_comparable_with<LHS, RHS>
+template<
+    size_t LN,
+    size_t RN,
+    typename LHS_K,
+    typename RHS_K,
+    typename LHS_V,
+    typename RHS_V,
+    typename LKComp,
+    typename RKComp,
+    typename LVComp,
+    typename RVComp>
+requires(std::three_way_comparable_with<LHS_K, RHS_K> && std::three_way_comparable_with<LHS_V, RHS_V>)
 constexpr inline bool operator==(
-    const LimitedSet<LHS, LN, LCompare>& lhs,
-    const LimitedSet<RHS, RN, RCompare>& rhs) noexcept {
+    const LimitedMap<LHS_K, LHS_V, LN, LKComp, LVComp>& lhs,
+    const LimitedMap<RHS_K, RHS_V, RN, RKComp, LVComp>& rhs) noexcept {
   auto lhs_it = lhs.begin();
   auto rhs_it = rhs.begin();
   while (lhs_it != lhs.end() && rhs_it != rhs.end()) {
@@ -657,11 +809,21 @@ constexpr inline bool operator==(
   return lhs.size() == rhs.size();
 }
 
-template<size_t LN, size_t RN, typename LHS, typename RHS, typename LCompare, typename RCompare>
-requires std::three_way_comparable_with<LHS, RHS>
+template<
+    size_t LN,
+    size_t RN,
+    typename LHS_K,
+    typename RHS_K,
+    typename LHS_V,
+    typename RHS_V,
+    typename LKComp,
+    typename RKComp,
+    typename LVComp,
+    typename RVComp>
+requires(std::three_way_comparable_with<LHS_K, RHS_K> && std::three_way_comparable_with<LHS_V, RHS_V>)
 constexpr inline bool operator<(
-    const LimitedSet<LHS, LN, LCompare>& lhs,
-    const LimitedSet<RHS, RN, RCompare>& rhs) noexcept {
+    const LimitedMap<LHS_K, LHS_V, LN, LKComp, LVComp>& lhs,
+    const LimitedMap<RHS_K, RHS_V, RN, RKComp, LVComp>& rhs) noexcept {
   auto lhs_it = lhs.begin();
   auto rhs_it = rhs.begin();
   while (lhs_it != lhs.end() && rhs_it != rhs.end()) {
@@ -675,66 +837,52 @@ constexpr inline bool operator<(
   return lhs.size() < rhs.size();
 }
 
-template<typename Key, std::size_t N = 0, typename Compare = std::less<Key>>
-inline constexpr auto MakeLimitedSet() noexcept {  // Parameter `key_comp` would create a conflict.
-  return LimitedSet<Key, N, Compare>();
+template<typename K, typename V, std::size_t N = 0, typename KComp = std::less<K>, typename VComp = std::less<V>>
+inline constexpr auto MakeLimitedMap() noexcept {  // Parameter `key_comp` would create a conflict.
+  return LimitedMap<K, V, N, KComp, VComp>();
 }
 
 template<
     std::size_t N,
     std::forward_iterator It,
-    typename Compare = std::less<mbo::types::ForwardIteratorValueType<It>>>
-inline constexpr auto MakeLimitedSet(It begin, It end, const Compare& key_comp = Compare()) noexcept {
-  return LimitedSet<mbo::types::ForwardIteratorValueType<It>, N, Compare>(begin, end, key_comp);
+    typename KComp = std::less<typename mbo::types::ForwardIteratorValueType<It>::first_type>>
+requires(::mbo::types::IsPair<typename mbo::types::ForwardIteratorValueType<It>>)
+inline constexpr auto MakeLimitedMap(It begin, It end, const KComp& key_comp = KComp()) noexcept {
+  using KV = mbo::types::ForwardIteratorValueType<It>;
+  return LimitedMap<typename KV::first_type, typename KV::second_type, N, KComp>(begin, end, key_comp);
 }
 
-template<std::size_t N, typename Key, typename Compare = std::less<Key>>
-inline constexpr auto MakeLimitedSet(const std::initializer_list<Key>& data, const Compare& key_comp = Compare()) {
-  return LimitedSet<Key, N, Compare>(data, key_comp);
+template<std::size_t N, ::mbo::types::IsPair KV, typename KComp = std::less<typename KV::first_type>, typename VComp = std::less<typename KV::second_type>>
+inline constexpr auto MakeLimitedMap(
+    const std::initializer_list<KV>& data,
+    const KComp& key_comp = KComp()) {
+  return LimitedMap<typename KV::first_type, typename KV::second_type, N, KComp, VComp>(data, key_comp);
 }
 
-template<typename... Args>
-requires((types::NotInitializerList<Args> && !std::forward_iterator<Args> && !types::IsCharArray<Args>) && ...)
-inline constexpr auto MakeLimitedSet(Args&&... args) noexcept {
-  using T = std::common_type_t<Args...>;
-  auto result = LimitedSet<T, sizeof...(Args)>();
-  (result.emplace(std::forward<T>(args)), ...);
-  return result;
-}
-
-// This specialization takes `const char*` and `const char(&)[N]` arguments and creates an appropriately sized container
-// of type `LimitedSet<std::string_view>`.
-template<int&..., types::IsCharArray... Args>
-inline constexpr auto MakeLimitedSet(Args... args) noexcept {
-  auto result = LimitedSet<std::string_view, sizeof...(Args)>();
-  (result.emplace(std::string_view(args)), ...);
-  return result;
-}
-
-template<types::NotIsCharArray Key, int&..., types::IsCharArray... Args>
-inline constexpr auto MakeLimitedSet(Args... args) noexcept {
-  auto result = LimitedSet<Key, sizeof...(Args)>();
-  (result.emplace(Key(args)), ...);
+template<::mbo::types::IsPair... Args>
+requires((/*types::NotInitializerList<Args> && */!std::forward_iterator<Args>) && ...)
+inline constexpr auto MakeLimitedMap(Args&&... args) noexcept {
+  using KV = std::common_type_t<Args...>;
+  auto result = LimitedMap<typename KV::first_type, typename KV::second_type, sizeof...(Args)>();
+  (result.emplace(std::forward<Args>(args)), ...);
   return result;
 }
 
 // NOLINTBEGIN(*-avoid-c-arrays)
-template<typename Key, std::size_t N, typename Compare = std::less<Key>>
-constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(
-    Key (&array)[N],
-    const Compare& key_comp = Compare()) {
-  LimitedSet<std::remove_cvref_t<Key>, N, Compare> result(key_comp);
+template<::mbo::types::IsPair KV, std::size_t N, typename KComp = std::less<typename std::remove_cvref_t<KV>::first_type>>
+constexpr auto ToLimitedMap(KV (&array)[N], const KComp& key_comp = KComp()) {
+  LimitedMap<typename std::remove_cvref_t<KV>::first_type, typename std::remove_cvref_t<KV>::second_type, N, KComp>
+      result(key_comp);
   for (std::size_t idx = 0; idx < N; ++idx) {
     result.emplace(array[idx]);
   }
   return result;
 }
 
-template<typename Key, std::size_t N, typename Compare = std::less<Key>>
-constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(
-    Key (&&array)[N],
-    const Compare& key_comp = Compare()) {
-  LimitedSet<std::remove_cvref_t<Key>, N, Compare> result(key_comp);
+template<::mbo::types::IsPair KV, std::size_t N, typename KComp = std::less<typename std::remove_cvref_t<KV>::first_type>>
+constexpr auto ToLimitedMap(KV (&&array)[N], const KComp& key_comp = KComp()) {
+  LimitedMap<typename std::remove_cvref_t<KV>::first_type, typename std::remove_cvref_t<KV>::second_type, N, KComp>
+      result(key_comp);
   for (std::size_t idx = 0; idx < N; ++idx) {
     result.emplace(std::move(array[idx]));
   }
@@ -749,4 +897,4 @@ constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(
 
 }  // namespace mbo::container
 
-#endif  // MBO_CONTAINER_LIMITED_SET_H_
+#endif  // MBO_CONTAINER_LIMITED_MAP_H_

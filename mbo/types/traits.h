@@ -212,6 +212,14 @@ template<typename ContainerIn, typename ContainerOut, typename Func = internal::
 concept ContainerCopyConvertible = internal::
     ContainerCopyConvertibleRaw<std::remove_cvref_t<ContainerIn>, std::remove_reference_t<ContainerOut>, Func>;
 
+template <typename T>
+concept IsPair = requires(T pair) {
+  typename T::first_type;
+  typename T::second_type;
+  requires std::is_same_v<std::remove_reference_t<decltype(pair.first)>, typename T::first_type>;
+  requires std::is_same_v<std::remove_reference_t<decltype(pair.second)>, typename T::second_type>;
+};
+
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_TRAITS_H_

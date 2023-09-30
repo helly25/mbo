@@ -2,6 +2,8 @@
 
 * Move `CopyConvertContainer` to `mbo::container::ConvertContainer` and add conversion functions.
 * Various traits fixes to corectly handle C++ concepts (pretty much every published explanation makes the same mistake).
+* Added matcher `CapacityIs`.
+* Added `LimitedMap`.
 
 # 0.2.3
 

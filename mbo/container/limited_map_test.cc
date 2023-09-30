@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mbo/container/limited_set.h"
+#include "mbo/container/limited_map.h"
 
 #include <iostream>
 
@@ -38,45 +38,53 @@ using ::testing::Not;
 using ::testing::Pair;
 using ::testing::SizeIs;
 
-struct LimitedSetTest : ::testing::Test {
+struct LimitedMapTest : ::testing::Test {
   static void SetUpTestSuite() { absl::InitializeLog(); }
 };
 
-TEST_F(LimitedSetTest, MakeNoArg) {
-  constexpr auto kTest = MakeLimitedSet<int>();
+TEST_F(LimitedMapTest, MakeNoArg) {
+  constexpr auto kTest = MakeLimitedMap<int, int>();
   EXPECT_THAT(kTest, IsEmpty());
   EXPECT_THAT(kTest, SizeIs(0));
   EXPECT_THAT(kTest, CapacityIs(0));
   EXPECT_THAT(kTest, ElementsAre());
 }
 
-TEST_F(LimitedSetTest, MakeOneArg) {
-  constexpr auto kTest = MakeLimitedSet(42);
+TEST_F(LimitedMapTest, MakeFromPairs) {
+  constexpr auto kTest = MakeLimitedMap(std::make_pair(25, 33), std::make_pair(42, 99));
   EXPECT_THAT(kTest, Not(IsEmpty()));
-  EXPECT_THAT(kTest, SizeIs(1));
-  EXPECT_THAT(kTest, CapacityIs(1));
-  EXPECT_THAT(kTest, ElementsAre(42));
+  EXPECT_THAT(kTest, SizeIs(2));
+  EXPECT_THAT(kTest, CapacityIs(2));
+  EXPECT_THAT(kTest, ElementsAre(Pair(25, 33), Pair(42, 99)));
 }
 
-TEST_F(LimitedSetTest, MakeInitArgFind) {
-  constexpr auto kTest = MakeLimitedSet<5>({1, 3, 5});
+TEST_F(LimitedMapTest, MakeInitListOfPairs) {
+  constexpr auto kTest = MakeLimitedMap<3>({std::make_pair(25, 33), std::make_pair(42, 99)});
+  EXPECT_THAT(kTest, Not(IsEmpty()));
+  EXPECT_THAT(kTest, SizeIs(2));
+  EXPECT_THAT(kTest, CapacityIs(3));
+  EXPECT_THAT(kTest, ElementsAre(Pair(25, 33), Pair(42, 99)));
+}
+
+TEST_F(LimitedMapTest, MakeInitArgFind) {
+  constexpr auto kTest = MakeLimitedMap(std::make_pair(1, 11), std::make_pair(2, 22), std::make_pair(3, 33));
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(3));
-  EXPECT_THAT(kTest, CapacityIs(5));
-  EXPECT_THAT(kTest, ElementsAre(1, 3, 5));
+  EXPECT_THAT(kTest, CapacityIs(3));
+  EXPECT_THAT(kTest, ElementsAre(Pair(1, 11), Pair(2, 22), Pair(3, 33)));
   EXPECT_THAT(kTest.find(1) - kTest.begin(), 0);
-  EXPECT_THAT(kTest.find(3) - kTest.begin(), 1);
-  EXPECT_THAT(kTest.find(5) - kTest.begin(), 2);
+  EXPECT_THAT(kTest.find(2) - kTest.begin(), 1);
+  EXPECT_THAT(kTest.find(3) - kTest.begin(), 2);
   EXPECT_THAT(kTest.find(0), kTest.end());
-  EXPECT_THAT(kTest.find(2), kTest.end());
+  EXPECT_THAT(kTest.find(4), kTest.end());
 }
 
-TEST_F(LimitedSetTest, MakeInitArgBasics) {
-  auto test = MakeLimitedSet<7>({1, 3, 5});
+TEST_F(LimitedMapTest, MakeInitArgBasics) {
+  auto test = MakeLimitedMap<7>({std::make_pair(1, 11), std::make_pair(3, 33), std::make_pair(5, 55)});
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(3));
   EXPECT_THAT(test, CapacityIs(7));
-  EXPECT_THAT(test, ElementsAre(1, 3, 5));
+  EXPECT_THAT(test, ElementsAre(Pair(1, 11), Pair(3, 33), Pair(5, 55)));
   EXPECT_THAT(test.find(1), test.begin());
   EXPECT_THAT(test.find(1) - test.begin(), 0);
   EXPECT_THAT(test.find(3), test.begin() + 1);
@@ -85,17 +93,17 @@ TEST_F(LimitedSetTest, MakeInitArgBasics) {
   EXPECT_THAT(test.find(5), test.end() - 1);
   EXPECT_THAT(test.find(5) - test.begin(), 2);
   EXPECT_THAT(test.find(0), test.end());
-  EXPECT_THAT(test.emplace(0), Pair(test.begin(), true));
-  EXPECT_THAT(test, ElementsAre(0, 1, 3, 5));
+  EXPECT_THAT(test.emplace(0, 0), Pair(test.begin(), true));
+  EXPECT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 11), Pair(3, 33), Pair(5, 55)));
   EXPECT_THAT(test.find(2), test.end());
-  EXPECT_THAT(test.emplace(2), Pair(test.begin() + 2, true));
-  EXPECT_THAT(test, ElementsAre(0, 1, 2, 3, 5));
+  EXPECT_THAT(test.emplace(2, 22), Pair(test.begin() + 2, true));
+  EXPECT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 11), Pair(2, 22), Pair(3, 33), Pair(5, 55)));
   EXPECT_THAT(test.find(6), test.end());
-  EXPECT_THAT(test.emplace(6), Pair(test.end(), true));
-  EXPECT_THAT(test, ElementsAre(0, 1, 2, 3, 5, 6));
+  EXPECT_THAT(test.emplace(6, 66), Pair(test.end(), true));
+  EXPECT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 11), Pair(2, 22), Pair(3, 33), Pair(5, 55), Pair(6, 66)));
   EXPECT_THAT(test.find(4), test.end());
-  EXPECT_THAT(test.emplace(4), Pair(test.begin() + 4, true));
-  EXPECT_THAT(test, ElementsAre(0, 1, 2, 3, 4, 5, 6));
+  EXPECT_THAT(test.emplace(4, 44), Pair(test.begin() + 4, true));
+  EXPECT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 11), Pair(2, 22), Pair(3, 33), Pair(4, 44), Pair(5, 55), Pair(6, 66)));
   EXPECT_THAT(test.find(0), test.begin());
   EXPECT_THAT(test.find(1), test.begin() + 1);
   EXPECT_THAT(test.find(2), test.begin() + 2);
@@ -105,95 +113,105 @@ TEST_F(LimitedSetTest, MakeInitArgBasics) {
   EXPECT_THAT(test.find(6), test.begin() + 6);
 }
 
-TEST_F(LimitedSetTest, MakeInitWithDuplicates) {
-  auto test = MakeLimitedSet<3>({1, 3, 3, 3, 5});
-  EXPECT_THAT(test, Not(IsEmpty()));
-  EXPECT_THAT(test, SizeIs(3));
-  EXPECT_THAT(test, CapacityIs(3)) << "There are duplicates, and so the construction with M=3 works.";
-  EXPECT_THAT(test, ElementsAre(1, 3, 5));
+TEST_F(LimitedMapTest, MakeInitWithDuplicates) {
+  constexpr auto kTest1 = MakeLimitedMap(std::make_pair(1, 11), std::make_pair(3, 33), std::make_pair(3, 33), std::make_pair(5, 55));
+  EXPECT_THAT(kTest1, Not(IsEmpty()));
+  EXPECT_THAT(kTest1, SizeIs(3));
+  EXPECT_THAT(kTest1, CapacityIs(4)) << "Autodetected.";
+  EXPECT_THAT(kTest1, ElementsAre(Pair(1, 11), Pair(3, 33), Pair(5, 55)));
+  constexpr auto kTest2 = MakeLimitedMap<3>({std::make_pair(1, 11), std::make_pair(3, 33), std::make_pair(3, 33), std::make_pair(5, 55)});
+  EXPECT_THAT(kTest2, Not(IsEmpty()));
+  EXPECT_THAT(kTest2, SizeIs(3));
+  EXPECT_THAT(kTest2, CapacityIs(3)) << "There are duplicates, and so the construction with M=3 works.";
+  EXPECT_THAT(kTest2, ElementsAre(Pair(1, 11), Pair(3, 33), Pair(5, 55)));
 }
-
-TEST_F(LimitedSetTest, MakeInitArg) {
-  constexpr auto kTest = MakeLimitedSet<3>({1, 2, 0});
-  EXPECT_THAT(kTest, Not(IsEmpty()));
-  EXPECT_THAT(kTest, SizeIs(3));
-  EXPECT_THAT(kTest, CapacityIs(3));
-  EXPECT_THAT(kTest, ElementsAre(0, 1, 2));
-}
-
-TEST_F(LimitedSetTest, MakeInitArgLarger) {
-  constexpr auto kTest = MakeLimitedSet<5>({1, 0, 2});
-  EXPECT_THAT(kTest, Not(IsEmpty()));
-  EXPECT_THAT(kTest, SizeIs(3));
-  EXPECT_THAT(kTest, CapacityIs(5));
-  EXPECT_THAT(kTest, ElementsAre(0, 1, 2));
-}
-
-TEST_F(LimitedSetTest, MakeMultiArg) {
-  constexpr auto kTest = MakeLimitedSet(0, 3, 2, 1);
+TEST_F(LimitedMapTest, CustomCompare) {
+  constexpr auto kTest = MakeLimitedMap<4>({std::make_pair(0, 1), std::make_pair(3, 2), std::make_pair(2, 5), std::make_pair(1, 7)}, std::greater());
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
   EXPECT_THAT(kTest, CapacityIs(4));
-  EXPECT_THAT(kTest, ElementsAre(0, 1, 2, 3));
+  EXPECT_THAT(kTest, ElementsAre(Pair(3, 2), Pair(2, 5), Pair(1, 7), Pair(0, 1)));
 }
 
-TEST_F(LimitedSetTest, CustomCompare) {
-  constexpr auto kTest = MakeLimitedSet<4>({0, 3, 2, 1}, std::greater());
-  EXPECT_THAT(kTest, Not(IsEmpty()));
-  EXPECT_THAT(kTest, SizeIs(4));
-  EXPECT_THAT(kTest, CapacityIs(4));
-  EXPECT_THAT(kTest, ElementsAre(3, 2, 1, 0));
-}
-
-TEST_F(LimitedSetTest, MakeIteratorArg) {
-  constexpr std::array<int, 4> kVec{0, 1, 2, 3};
-  constexpr auto kTest = MakeLimitedSet<5>(kVec.begin(), kVec.end());
+TEST_F(LimitedMapTest, MakeIteratorArg) {
+  constexpr std::array<std::pair<int, int>, 4> kVec{{{0, 0}, {1, 11}, {2, 22}, {3, 33}}};
+  constexpr auto kTest = MakeLimitedMap<5>(kVec.begin(), kVec.end());
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
   EXPECT_THAT(kTest, CapacityIs(5));
-  EXPECT_THAT(kTest, ElementsAre(0, 1, 2, 3));
+  EXPECT_THAT(kTest, ElementsAre(Pair(0, 0), Pair(1, 11), Pair(2, 22), Pair(3, 33)));
 }
 
-TEST_F(LimitedSetTest, MakeWithStrings) {
-  const std::vector<std::string> data{{"0"}, {"1"}, {"2"}, {"3"}};
-  auto test = MakeLimitedSet<4>(data.begin(), data.end());
+TEST_F(LimitedMapTest, MakeWithStrings) {
+  const std::vector<std::pair<std::string, std::string>> data{{"0", "a"}, {"1", "b"}, {"2", "c"}, {"3", "d"}};
+  auto test = MakeLimitedMap<4>(data.begin(), data.end());
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
   EXPECT_THAT(test, CapacityIs(4));
-  EXPECT_THAT(test, ElementsAre("0", "1", "2", "3"));
+  EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "b"), Pair("2", "c"), Pair("3", "d")));
 }
 
-TEST_F(LimitedSetTest, ConstructAssignFromSmaller) {
+TEST_F(LimitedMapTest, Update) {
+  const std::vector<std::pair<std::string, std::string>> data{{"0", "a"}, {"1", "b"}, {"2", "c"}, {"3", "d"}};
+  auto test = MakeLimitedMap<7>(data.begin(), data.end());
+  EXPECT_THAT(test, Not(IsEmpty()));
+  EXPECT_THAT(test, SizeIs(4));
+  EXPECT_THAT(test, CapacityIs(7));
+  EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "b"), Pair("2", "c"), Pair("3", "d")));
+  test["1"] = "bb";
+  EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d")));
+  test["4"] = "eeee";
+  EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
+  test.at("0") = "zero";
+  EXPECT_THAT(test, ElementsAre(Pair("0", "zero"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
+  EXPECT_THAT(test, CapacityIs(Gt(test.size())));
+  test[" "] = "space";
+  EXPECT_THAT(test, ElementsAre(Pair(" ", "space"), Pair("0", "zero"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
+  bool got_exception = false;
+  try {
+    test.at("not_present") = "oops";
+  }
+  catch (const std::out_of_range& e) {
+    got_exception = true;
+  }
+  catch (...) {
+    ASSERT_TRUE(false) << "Should not happen as we specified the exception we expected.";
+  }
+  ASSERT_TRUE(got_exception);
+}
+
+#if 0
+TEST_F(LimitedMapTest, ConstructAssignFromSmaller) {
   {
-    constexpr LimitedSet<unsigned, 3> kSource({0U, 1U, 2U});
-    LimitedSet<int, 5> target(kSource);
+    constexpr LimitedMap<unsigned, 3> kSource({0U, 1U, 2U});
+    LimitedMap<int, 5> target(kSource);
     EXPECT_THAT(target, ElementsAre(0, 1, 2));
   }
   {
-    constexpr LimitedSet<unsigned, 3> kSource({0U, 1U, 2U});
-    LimitedSet<int, 5> target;
+    constexpr LimitedMap<unsigned, 3> kSource({0U, 1U, 2U});
+    LimitedMap<int, 5> target;
     ASSERT_THAT(target, IsEmpty());
     target = kSource;
     EXPECT_THAT(target, ElementsAre(0, 1, 2));
   }
   {
-    LimitedSet<unsigned, 4> source({0U, 1U, 2U});
-    LimitedSet<int, 5> target(std::move(source));
+    LimitedMap<unsigned, 4> source({0U, 1U, 2U});
+    LimitedMap<int, 5> target(std::move(source));
     EXPECT_THAT(target, ElementsAre(0, 1, 2));
   }
   {
-    LimitedSet<unsigned, 3> source({0U, 1U, 2U});
-    LimitedSet<int, 5> target;
+    LimitedMap<unsigned, 3> source({0U, 1U, 2U});
+    LimitedMap<int, 5> target;
     ASSERT_THAT(target, IsEmpty());
     target = std::move(source);
     EXPECT_THAT(target, ElementsAre(0, 1, 2));
   }
 }
 
-TEST_F(LimitedSetTest, ToLimitedSet) {
+TEST_F(LimitedMapTest, ToLimitedMap) {
   // NOLINTBEGIN(*-avoid-c-arrays)
   constexpr int kArray[4] = {0, 1, 2, 3};
-  constexpr auto kTest = ToLimitedSet(kArray);
+  constexpr auto kTest = ToLimitedMap(kArray);
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
   EXPECT_THAT(kTest, CapacityIs(4));
@@ -201,10 +219,10 @@ TEST_F(LimitedSetTest, ToLimitedSet) {
   // NOLINTEND(*-avoid-c-arrays)
 }
 
-TEST_F(LimitedSetTest, ToLimitedSetStringCopy) {
+TEST_F(LimitedMapTest, ToLimitedMapStringCopy) {
   // NOLINTBEGIN(*-avoid-c-arrays)
   const std::string array[4] = {{"0"}, {"1"}, {"2"}, {"3"}};
-  auto test = ToLimitedSet(array);
+  auto test = ToLimitedMap(array);
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
   EXPECT_THAT(test, CapacityIs(4));
@@ -212,10 +230,10 @@ TEST_F(LimitedSetTest, ToLimitedSetStringCopy) {
   // NOLINTEND(*-avoid-c-arrays)
 }
 
-TEST_F(LimitedSetTest, ToLimitedSetStringMove) {
+TEST_F(LimitedMapTest, ToLimitedMapStringMove) {
   // NOLINTBEGIN(*-avoid-c-arrays)
   std::string array[4] = {{"0"}, {"1"}, {"2"}, {"3"}};
-  auto test = ToLimitedSet(std::move(array));
+  auto test = ToLimitedMap(std::move(array));
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
   EXPECT_THAT(test, CapacityIs(4));
@@ -223,9 +241,9 @@ TEST_F(LimitedSetTest, ToLimitedSetStringMove) {
   // NOLINTEND(*-avoid-c-arrays)
 }
 
-TEST_F(LimitedSetTest, ConstexprMakeClear) {
+TEST_F(LimitedMapTest, ConstexprMakeClear) {
   constexpr auto kTest = [] {
-    auto test = MakeLimitedSet<5>({0, 1, 2});
+    auto test = MakeLimitedMap<5>({0, 1, 2});
     test.clear();
     return test;
   }();
@@ -236,8 +254,8 @@ TEST_F(LimitedSetTest, ConstexprMakeClear) {
 }
 
 
-TEST_F(LimitedSetTest, Erase) {
-  auto test = MakeLimitedSet(0, 1, 2, 3, 4);
+TEST_F(LimitedMapTest, Erase) {
+  auto test = MakeLimitedMap(0, 1, 2, 3, 4);
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(5));
   EXPECT_THAT(test, CapacityIs(5));
@@ -259,8 +277,8 @@ TEST_F(LimitedSetTest, Erase) {
   EXPECT_THAT(test, IsEmpty());
 }
 
-TEST_F(LimitedSetTest, Contains) {
-  constexpr auto kTest = MakeLimitedSet<6>({0, 1, 2, 3});
+TEST_F(LimitedMapTest, Contains) {
+  constexpr auto kTest = MakeLimitedMap<6>({0, 1, 2, 3});
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
   EXPECT_THAT(kTest, CapacityIs(6));
@@ -273,8 +291,8 @@ TEST_F(LimitedSetTest, Contains) {
   EXPECT_THAT(kTest.contains_any({4, 5}), false);
 }
 
-TEST_F(LimitedSetTest, Insert) {
-  auto test = MakeLimitedSet<6>({0, 3});
+TEST_F(LimitedMapTest, Insert) {
+  auto test = MakeLimitedMap<6>({0, 3});
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(2));
   EXPECT_THAT(test, CapacityIs(6));
@@ -287,9 +305,9 @@ TEST_F(LimitedSetTest, Insert) {
   ASSERT_THAT(test, ElementsAre(0, 1, 2, 3, 4));
 }
 
-TEST_F(LimitedSetTest, Swap) {
-  auto test1 = MakeLimitedSet<int>(0, 1, 2);
-  auto test2 = LimitedSet<int, 3>({3});
+TEST_F(LimitedMapTest, Swap) {
+  auto test1 = MakeLimitedMap<int>(0, 1, 2);
+  auto test2 = LimitedMap<int, 3>({3});
   ASSERT_THAT(test1, ElementsAre(0, 1, 2));
   ASSERT_THAT(test2, ElementsAre(3));
   test1.swap(test2);
@@ -308,18 +326,18 @@ TEST_F(LimitedSetTest, Swap) {
   EXPECT_THAT(test2, ElementsAre());
 }
 
-TEST_F(LimitedSetTest, Iterators) {
-  constexpr auto kTest = MakeLimitedSet(0, 1, 2);
+TEST_F(LimitedMapTest, Iterators) {
+  constexpr auto kTest = MakeLimitedMap(0, 1, 2);
   // Restrictions apply: The two following cannot be constexpr.
-  EXPECT_THAT((MakeLimitedSet<3>(kTest.begin(), kTest.end())), ElementsAre(0, 1, 2));
-  EXPECT_THAT((MakeLimitedSet<3>(kTest.rbegin(), kTest.rend())), ElementsAre(0, 1, 2));
+  EXPECT_THAT((MakeLimitedMap<3>(kTest.begin(), kTest.end())), ElementsAre(0, 1, 2));
+  EXPECT_THAT((MakeLimitedMap<3>(kTest.rbegin(), kTest.rend())), ElementsAre(0, 1, 2));
 }
 
-TEST_F(LimitedSetTest, Compare) {
-  constexpr auto k42v65 = MakeLimitedSet(42, 65);
-  constexpr auto k42o65 = MakeLimitedSet(42, 65);
-  constexpr auto k42v99 = MakeLimitedSet(42, 99);
-  constexpr auto k42 = MakeLimitedSet(42);
+TEST_F(LimitedMapTest, Compare) {
+  constexpr auto k42v65 = MakeLimitedMap(42, 65);
+  constexpr auto k42o65 = MakeLimitedMap(42, 65);
+  constexpr auto k42v99 = MakeLimitedMap(42, 99);
+  constexpr auto k42 = MakeLimitedMap(42);
   EXPECT_THAT(k42v65 == k42o65, true);
   EXPECT_THAT(k42v65, k42o65);
   EXPECT_THAT(k42v65, Eq(k42o65));
@@ -354,11 +372,11 @@ TEST_F(LimitedSetTest, Compare) {
   EXPECT_THAT(k42v65, Ge(k42));
 }
 
-TEST_F(LimitedSetTest, CompareDifferentType) {
-  const auto k42v65 = MakeLimitedSet<std::string>("42", "65");
-  constexpr auto k42o65 = MakeLimitedSet<std::string_view>("42", "65");
-  constexpr auto k42v99 = MakeLimitedSet("42", "99");
-  constexpr auto k42 = MakeLimitedSet("42");
+TEST_F(LimitedMapTest, CompareDifferentType) {
+  const auto k42v65 = MakeLimitedMap<std::string>("42", "65");
+  constexpr auto k42o65 = MakeLimitedMap<std::string_view>("42", "65");
+  constexpr auto k42v99 = MakeLimitedMap("42", "99");
+  constexpr auto k42 = MakeLimitedMap("42");
   EXPECT_THAT(k42v65 == k42o65, true);
   EXPECT_THAT(k42v65, k42o65);
   EXPECT_THAT(k42v65, Eq(k42o65));
@@ -394,6 +412,6 @@ TEST_F(LimitedSetTest, CompareDifferentType) {
 }
 
 // NOLINTEND(*-magic-numbers)
-
+#endif
 }  // namespace
 }  // namespace mbo::container

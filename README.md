@@ -69,6 +69,8 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `StripLineParsedComments`: Strips comments from a single parsed line.
 * Testing
     * `namespace mbo::testing`
+    * mbo/testing:matchers_cc, mbo/testing/matchers.h
+        * gMock-Matcher `CapacityIs` which checks the capacity of a container.
     * mbo/testing:status_cc, mbo/testing/status.h
         * gMock-matcher `IsOk`: Tests whether an absl::Status or absl::StatusOr is absl::OkStatus.
         * gMock-matcher `IsOkAndHolds`: Tests an absl::StatusOr for absl::OkStatus and contents.
