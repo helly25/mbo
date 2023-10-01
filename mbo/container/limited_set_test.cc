@@ -58,6 +58,37 @@ TEST_F(LimitedSetTest, MakeOneArg) {
   EXPECT_THAT(kTest, ElementsAre(42));
 }
 
+TEST_F(LimitedSetTest, MakeInitArgCTAD) {
+  {
+    constexpr LimitedSet kTest{1};
+    EXPECT_THAT(kTest, Not(IsEmpty()));
+    EXPECT_THAT(kTest, SizeIs(1));
+    EXPECT_THAT(kTest, CapacityIs(1));
+    EXPECT_THAT(kTest, ElementsAre(1));
+  }
+  {
+    constexpr LimitedSet kTest{1, 2};
+    EXPECT_THAT(kTest, Not(IsEmpty()));
+    EXPECT_THAT(kTest, SizeIs(2));
+    EXPECT_THAT(kTest, CapacityIs(2));
+    EXPECT_THAT(kTest, ElementsAre(1, 2));
+  }
+  {
+    constexpr LimitedSet kTest{1, 2, 3};
+    EXPECT_THAT(kTest, Not(IsEmpty()));
+    EXPECT_THAT(kTest, SizeIs(3));
+    EXPECT_THAT(kTest, CapacityIs(3));
+    EXPECT_THAT(kTest, ElementsAre(1, 2, 3));
+  }
+  {
+    constexpr LimitedSet kTest{"a", "b", "c", "d"};
+    EXPECT_THAT(kTest, Not(IsEmpty()));
+    EXPECT_THAT(kTest, SizeIs(4));
+    EXPECT_THAT(kTest, CapacityIs(4));
+    EXPECT_THAT(kTest, ElementsAre("a", "b", "c", "d"));
+  }
+}
+
 TEST_F(LimitedSetTest, MakeInitArgFind) {
   constexpr auto kTest = MakeLimitedSet<5>({1, 3, 5});
   EXPECT_THAT(kTest, Not(IsEmpty()));
@@ -234,7 +265,6 @@ TEST_F(LimitedSetTest, ConstexprMakeClear) {
   EXPECT_THAT(kTest, CapacityIs(5));
   EXPECT_THAT(kTest, ElementsAre());
 }
-
 
 TEST_F(LimitedSetTest, Erase) {
   auto test = MakeLimitedSet(0, 1, 2, 3, 4);

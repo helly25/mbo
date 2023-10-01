@@ -57,6 +57,8 @@ namespace mbo::container {
 //
 // Internally a C-array is used and elements are moved as needed. That means that element
 // addresses are not stable.
+//
+// Note that construction from char-arrays results in a container of `std::string_view` as opposed to `const char*`.
 template<typename Key, std::size_t Capacity, typename Compare = std::less<Key>>
 requires(std::move_constructible<Key>)
 class LimitedSet final {
@@ -620,6 +622,12 @@ class LimitedSet final {
   Data values_[Capacity == 0 ? 1 : Capacity];  // NOLINT(*-avoid-c-arrays)
   const key_compare key_comp_ = {};
 };
+
+template<types::NotIsCharArray... T>
+LimitedSet(T&&... data) -> LimitedSet<std::common_type_t<T...>, sizeof...(T)>;
+
+template<types::IsCharArray... T>
+LimitedSet(T&&... data) -> LimitedSet<std::string_view, sizeof...(T)>;
 
 template<size_t LN, size_t RN, typename LHS, typename RHS, typename LCompare, typename RCompare>
 requires std::three_way_comparable_with<LHS, RHS>
