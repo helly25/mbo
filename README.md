@@ -9,10 +9,12 @@ The C++ library is organized in functional groups each residing in their own dir
     * `namespace mbo::container`
     * mbo/container:convert_container_cc, mbo/container/convert_container.h
         * conversion struct `ConvertContainer` simplifies copying containers to value convertible containers.
+    * mbo/container:limited_map_cc, mbo/container/limited_map.h
+        * class `LimitedMap`: A space limited, constexpr compliant `map`.
     * mbo/container:limited_set_cc, mbo/container/limited_set.h
-        * class `LimitedSet`: A space loimited, constexpr compliant set.
+        * class `LimitedSet`: A space limited, constexpr compliant `set`.
     * mbo/container:limited_vector_cc, mbo/container/limited_vector.h
-        * class `LimitedVector`: A space limited, constexpr compliant vector.
+        * class `LimitedVector`: A space limited, constexpr compliant `vector`.
 * Diff
     * `namespace mbo::diff`
     * mbo/diff:unified_dff_cc, mbo/diff/unified_diff.h

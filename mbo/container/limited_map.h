@@ -77,6 +77,7 @@ class LimitedMap final {
     constexpr ~KeyCompare() noexcept = default;
 
     constexpr KeyCompare() noexcept = default;
+
     constexpr explicit KeyCompare(const KeyComp& key_comp) noexcept : key_comp_(key_comp) {}
 
     constexpr KeyCompare(const KeyCompare&) noexcept = default;
@@ -390,7 +391,7 @@ class LimitedMap final {
   requires(std::convertible_to<K, Key> && std::convertible_to<V, Value> && OtherN <= Capacity)
   constexpr explicit LimitedMap(LimitedMap<K, V, OtherN, OtherCompare>&& other) noexcept {
     for (auto it = other.begin(); it < other.end(); ++it) {
-      emplace(std::move(it->first, it->second));
+      emplace(std::move(*it));
     }
     other.size_ = 0;
   }
@@ -400,7 +401,7 @@ class LimitedMap final {
   constexpr LimitedMap& operator=(LimitedMap<K, V, OtherN, OtherCompare>&& other) noexcept {
     clear();
     for (auto it = other.begin(); it < other.end(); ++it) {
-      emplace(std::move(it->first, it->second));
+      emplace(std::move(*it));
     }
     other.size_ = 0;
     return *this;
@@ -453,8 +454,8 @@ class LimitedMap final {
   constexpr bool contains(const Key& key) const { return std::binary_search(begin(), end(), key, key_comp_); }
 
   // Performs contains-all-of functionality (not part of STL).
-  template<typename Other>
-  requires(types::ContainerIsForwardIteratable<Other> && std::equality_comparable_with<typename Other::value_type, Key>)
+  template<types::ContainerIsForwardIteratable Other>
+  requires(std::equality_comparable_with<typename Other::value_type, Key>)
   constexpr bool contains_all(const Other& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (!contains(*it)) {
@@ -477,8 +478,8 @@ class LimitedMap final {
   }
 
   // Performs contains-any-of functionality (not part of STL).
-  template<typename Other = std::initializer_list<Key>>
-  requires(types::ContainerIsForwardIteratable<Other> && std::equality_comparable_with<typename Other::value_type, Key>)
+  template<types::ContainerIsForwardIteratable Other>
+  requires(std::equality_comparable_with<typename Other::value_type, Key>)
   constexpr bool contains_any(const Other& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (contains(*it)) {
@@ -524,7 +525,9 @@ class LimitedMap final {
   constexpr void swap(LimitedMap& other) noexcept {
     std::size_t pos = 0;
     for (; pos < size_ && pos < other.size(); ++pos) {
-      std::swap(values_[pos].data, other.values_[pos].data);
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+      std::swap(const_cast<Key&>(values_[pos].data.first), const_cast<Key&>(other.values_[pos].data.first));
+      std::swap(values_[pos].data.second, other.values_[pos].data.second);
     }
     std::size_t other_size = other.size_;
     std::size_t this_size = size_;
@@ -585,8 +588,8 @@ class LimitedMap final {
     }
     // Should possibly use: std::piecewise_construct, std::move(key), std::forward_as_tuple(std::forward<Args>(args)...)
     // But that creates issues with conversion. However, we not the two types, so we do not need piecewise.
-    std::construct_at(
-        &*dst, std::move(key), mapped_type(std::forward<Args>(args)...));    ++size_;
+    std::construct_at(&*dst, std::move(key), mapped_type(std::forward<Args>(args)...));
+    ++size_;
     return std::make_pair(dst, true);
   }
 
@@ -630,7 +633,7 @@ class LimitedMap final {
     --size_;
     std::destroy_at(&*dst);
     for (; dst < end(); ++dst) {
-      *dst = std::move(*std::next(dst));
+      std::construct_at(&*dst, *std::next(dst));
     }
     return pos > end() ? end() : to_iterator(pos);
   }
@@ -645,7 +648,7 @@ class LimitedMap final {
     auto dst = to_iterator(first);
     auto src = to_iterator(last);
     for (; src < end(); ++src, ++dst) {
-      *dst = std::move(*src);
+      std::construct_at(&*dst, std::move(*src));
     }
     size_ -= deleted;
     return to_iterator(first);
@@ -767,11 +770,11 @@ template<
 requires(std::three_way_comparable_with<LHS_K, RHS_K> && std::three_way_comparable_with<LHS_V, RHS_V>)
 constexpr inline auto operator<=>(
     const LimitedMap<LHS_K, LHS_V, LN, LKComp, LVComp>& lhs,
-    const LimitedMap<RHS_K, RHS_V, RN, RKComp, LVComp>& rhs) noexcept {
+    const LimitedMap<RHS_K, RHS_V, RN, RKComp, RVComp>& rhs) noexcept {
   auto lhs_it = lhs.begin();
   auto rhs_it = rhs.begin();
   while (lhs_it != lhs.end() && rhs_it != rhs.end()) {
-    const auto comp = *lhs_it <=> *rhs_it;
+    const auto comp = std::tie(lhs_it->first, lhs_it->second) <=> std::tie(rhs_it->first, rhs_it->second);
     if (comp != 0) {
       return comp;
     }
@@ -795,11 +798,11 @@ template<
 requires(std::three_way_comparable_with<LHS_K, RHS_K> && std::three_way_comparable_with<LHS_V, RHS_V>)
 constexpr inline bool operator==(
     const LimitedMap<LHS_K, LHS_V, LN, LKComp, LVComp>& lhs,
-    const LimitedMap<RHS_K, RHS_V, RN, RKComp, LVComp>& rhs) noexcept {
+    const LimitedMap<RHS_K, RHS_V, RN, RKComp, RVComp>& rhs) noexcept {
   auto lhs_it = lhs.begin();
   auto rhs_it = rhs.begin();
   while (lhs_it != lhs.end() && rhs_it != rhs.end()) {
-    const auto comp = *lhs_it <=> *rhs_it;
+    const auto comp = std::tie(lhs_it->first, lhs_it->second) <=> std::tie(rhs_it->first, rhs_it->second);
     if (comp != 0) {
       return false;
     }
@@ -823,11 +826,11 @@ template<
 requires(std::three_way_comparable_with<LHS_K, RHS_K> && std::three_way_comparable_with<LHS_V, RHS_V>)
 constexpr inline bool operator<(
     const LimitedMap<LHS_K, LHS_V, LN, LKComp, LVComp>& lhs,
-    const LimitedMap<RHS_K, RHS_V, RN, RKComp, LVComp>& rhs) noexcept {
+    const LimitedMap<RHS_K, RHS_V, RN, RKComp, RVComp>& rhs) noexcept {
   auto lhs_it = lhs.begin();
   auto rhs_it = rhs.begin();
   while (lhs_it != lhs.end() && rhs_it != rhs.end()) {
-    const auto comp = *lhs_it <=> *rhs_it;
+    const auto comp = std::tie(lhs_it->first, lhs_it->second) <=> std::tie(rhs_it->first, rhs_it->second);
     if (comp != 0) {
       return comp < 0;
     }
@@ -846,21 +849,23 @@ template<
     std::size_t N,
     std::forward_iterator It,
     typename KComp = std::less<typename mbo::types::ForwardIteratorValueType<It>::first_type>>
-requires(::mbo::types::IsPair<typename mbo::types::ForwardIteratorValueType<It>>)
+requires(types::IsPair<typename mbo::types::ForwardIteratorValueType<It>>)
 inline constexpr auto MakeLimitedMap(It begin, It end, const KComp& key_comp = KComp()) noexcept {
   using KV = mbo::types::ForwardIteratorValueType<It>;
   return LimitedMap<typename KV::first_type, typename KV::second_type, N, KComp>(begin, end, key_comp);
 }
 
-template<std::size_t N, ::mbo::types::IsPair KV, typename KComp = std::less<typename KV::first_type>, typename VComp = std::less<typename KV::second_type>>
-inline constexpr auto MakeLimitedMap(
-    const std::initializer_list<KV>& data,
-    const KComp& key_comp = KComp()) {
+template<
+    std::size_t N,
+    types::IsPair KV,
+    typename KComp = std::less<typename KV::first_type>,
+    typename VComp = std::less<typename KV::second_type>>
+inline constexpr auto MakeLimitedMap(const std::initializer_list<KV>& data, const KComp& key_comp = KComp()) {
   return LimitedMap<typename KV::first_type, typename KV::second_type, N, KComp, VComp>(data, key_comp);
 }
 
-template<::mbo::types::IsPair... Args>
-requires((/*types::NotInitializerList<Args> && */!std::forward_iterator<Args>) && ...)
+template<types::IsPair... Args>
+requires((types::NotInitializerList<Args> && !std::forward_iterator<Args>) && ...)
 inline constexpr auto MakeLimitedMap(Args&&... args) noexcept {
   using KV = std::common_type_t<Args...>;
   auto result = LimitedMap<typename KV::first_type, typename KV::second_type, sizeof...(Args)>();
@@ -869,7 +874,7 @@ inline constexpr auto MakeLimitedMap(Args&&... args) noexcept {
 }
 
 // NOLINTBEGIN(*-avoid-c-arrays)
-template<::mbo::types::IsPair KV, std::size_t N, typename KComp = std::less<typename std::remove_cvref_t<KV>::first_type>>
+template<types::IsPair KV, std::size_t N, typename KComp = std::less<typename std::remove_cvref_t<KV>::first_type>>
 constexpr auto ToLimitedMap(KV (&array)[N], const KComp& key_comp = KComp()) {
   LimitedMap<typename std::remove_cvref_t<KV>::first_type, typename std::remove_cvref_t<KV>::second_type, N, KComp>
       result(key_comp);
@@ -879,10 +884,30 @@ constexpr auto ToLimitedMap(KV (&array)[N], const KComp& key_comp = KComp()) {
   return result;
 }
 
-template<::mbo::types::IsPair KV, std::size_t N, typename KComp = std::less<typename std::remove_cvref_t<KV>::first_type>>
+template<types::IsPair KV, std::size_t N, typename KComp = std::less<typename std::remove_cvref_t<KV>::first_type>>
 constexpr auto ToLimitedMap(KV (&&array)[N], const KComp& key_comp = KComp()) {
   LimitedMap<typename std::remove_cvref_t<KV>::first_type, typename std::remove_cvref_t<KV>::second_type, N, KComp>
       result(key_comp);
+  for (std::size_t idx = 0; idx < N; ++idx) {
+    result.emplace(std::move(array[idx]));
+  }
+  return result;
+}
+
+template<typename K, typename V, std::size_t N, typename KComp = std::less<K>>
+requires(!types::IsPair<K>)
+constexpr auto ToLimitedMap(std::pair<K, V> (&array)[N], const KComp& key_comp = KComp()) {
+  LimitedMap<K, V, N, KComp> result(key_comp);
+  for (std::size_t idx = 0; idx < N; ++idx) {
+    result.emplace(array[idx]);
+  }
+  return result;
+}
+
+template<typename K, typename V, std::size_t N, typename KComp = std::less<K>>
+requires(!types::IsPair<K>)
+constexpr auto ToLimitedMap(std::pair<K, V> (&&array)[N], const KComp& key_comp = KComp()) {
+  LimitedMap<K, V, N, KComp> result(key_comp);
   for (std::size_t idx = 0; idx < N; ++idx) {
     result.emplace(std::move(array[idx]));
   }

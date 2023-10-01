@@ -42,12 +42,37 @@ struct LimitedMapTest : ::testing::Test {
   static void SetUpTestSuite() { absl::InitializeLog(); }
 };
 
+TEST_F(LimitedMapTest, ConstructEmpty) {
+  constexpr auto kTest = LimitedMap<int, int, 0>();
+  EXPECT_THAT(kTest, IsEmpty());
+  EXPECT_THAT(kTest, SizeIs(0));
+  EXPECT_THAT(kTest, CapacityIs(0));
+  EXPECT_THAT(kTest, ElementsAre());
+}
+
 TEST_F(LimitedMapTest, MakeNoArg) {
   constexpr auto kTest = MakeLimitedMap<int, int>();
   EXPECT_THAT(kTest, IsEmpty());
   EXPECT_THAT(kTest, SizeIs(0));
   EXPECT_THAT(kTest, CapacityIs(0));
   EXPECT_THAT(kTest, ElementsAre());
+}
+
+TEST_F(LimitedMapTest, TypedInit) {
+  {
+    constexpr LimitedMap<int, int, 2> kTest{{{25, 33}, {42, 99}}};
+    EXPECT_THAT(kTest, Not(IsEmpty()));
+    EXPECT_THAT(kTest, SizeIs(2));
+    EXPECT_THAT(kTest, CapacityIs(2));
+    EXPECT_THAT(kTest, ElementsAre(Pair(25, 33), Pair(42, 99)));
+  }
+  {
+    constexpr auto kTest = LimitedMap<int, int, 2>{{{25, 33}, {42, 99}}};
+    EXPECT_THAT(kTest, Not(IsEmpty()));
+    EXPECT_THAT(kTest, SizeIs(2));
+    EXPECT_THAT(kTest, CapacityIs(2));
+    EXPECT_THAT(kTest, ElementsAre(Pair(25, 33), Pair(42, 99)));
+  }
 }
 
 TEST_F(LimitedMapTest, MakeFromPairs) {
@@ -103,7 +128,8 @@ TEST_F(LimitedMapTest, MakeInitArgBasics) {
   EXPECT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 11), Pair(2, 22), Pair(3, 33), Pair(5, 55), Pair(6, 66)));
   EXPECT_THAT(test.find(4), test.end());
   EXPECT_THAT(test.emplace(4, 44), Pair(test.begin() + 4, true));
-  EXPECT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 11), Pair(2, 22), Pair(3, 33), Pair(4, 44), Pair(5, 55), Pair(6, 66)));
+  EXPECT_THAT(
+      test, ElementsAre(Pair(0, 0), Pair(1, 11), Pair(2, 22), Pair(3, 33), Pair(4, 44), Pair(5, 55), Pair(6, 66)));
   EXPECT_THAT(test.find(0), test.begin());
   EXPECT_THAT(test.find(1), test.begin() + 1);
   EXPECT_THAT(test.find(2), test.begin() + 2);
@@ -114,19 +140,23 @@ TEST_F(LimitedMapTest, MakeInitArgBasics) {
 }
 
 TEST_F(LimitedMapTest, MakeInitWithDuplicates) {
-  constexpr auto kTest1 = MakeLimitedMap(std::make_pair(1, 11), std::make_pair(3, 33), std::make_pair(3, 33), std::make_pair(5, 55));
+  constexpr auto kTest1 =
+      MakeLimitedMap(std::make_pair(1, 11), std::make_pair(3, 33), std::make_pair(3, 33), std::make_pair(5, 55));
   EXPECT_THAT(kTest1, Not(IsEmpty()));
   EXPECT_THAT(kTest1, SizeIs(3));
   EXPECT_THAT(kTest1, CapacityIs(4)) << "Autodetected.";
   EXPECT_THAT(kTest1, ElementsAre(Pair(1, 11), Pair(3, 33), Pair(5, 55)));
-  constexpr auto kTest2 = MakeLimitedMap<3>({std::make_pair(1, 11), std::make_pair(3, 33), std::make_pair(3, 33), std::make_pair(5, 55)});
+  constexpr auto kTest2 =
+      MakeLimitedMap<3>({std::make_pair(1, 11), std::make_pair(3, 33), std::make_pair(3, 33), std::make_pair(5, 55)});
   EXPECT_THAT(kTest2, Not(IsEmpty()));
   EXPECT_THAT(kTest2, SizeIs(3));
   EXPECT_THAT(kTest2, CapacityIs(3)) << "There are duplicates, and so the construction with M=3 works.";
   EXPECT_THAT(kTest2, ElementsAre(Pair(1, 11), Pair(3, 33), Pair(5, 55)));
 }
+
 TEST_F(LimitedMapTest, CustomCompare) {
-  constexpr auto kTest = MakeLimitedMap<4>({std::make_pair(0, 1), std::make_pair(3, 2), std::make_pair(2, 5), std::make_pair(1, 7)}, std::greater());
+  constexpr auto kTest = MakeLimitedMap<4>(
+      {std::make_pair(0, 1), std::make_pair(3, 2), std::make_pair(2, 5), std::make_pair(1, 7)}, std::greater());
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
   EXPECT_THAT(kTest, CapacityIs(4));
@@ -166,111 +196,114 @@ TEST_F(LimitedMapTest, Update) {
   EXPECT_THAT(test, ElementsAre(Pair("0", "zero"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
   EXPECT_THAT(test, CapacityIs(Gt(test.size())));
   test[" "] = "space";
-  EXPECT_THAT(test, ElementsAre(Pair(" ", "space"), Pair("0", "zero"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
+  EXPECT_THAT(
+      test,
+      ElementsAre(
+          Pair(" ", "space"), Pair("0", "zero"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
   bool got_exception = false;
   try {
     test.at("not_present") = "oops";
-  }
-  catch (const std::out_of_range& e) {
+  } catch (const std::out_of_range& e) {
     got_exception = true;
-  }
-  catch (...) {
+  } catch (...) {
     ASSERT_TRUE(false) << "Should not happen as we specified the exception we expected.";
   }
   ASSERT_TRUE(got_exception);
 }
 
-#if 0
 TEST_F(LimitedMapTest, ConstructAssignFromSmaller) {
   {
-    constexpr LimitedMap<unsigned, 3> kSource({0U, 1U, 2U});
-    LimitedMap<int, 5> target(kSource);
-    EXPECT_THAT(target, ElementsAre(0, 1, 2));
+    constexpr LimitedMap<uint32_t, uint32_t, 3> kSource({{0U, 0U}, {1U, 1U}, {2U, 2U}});
+    LimitedMap<int64_t, int64_t, 5> target(kSource);
+    EXPECT_THAT(target, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
+    EXPECT_THAT(kSource, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
   }
   {
-    constexpr LimitedMap<unsigned, 3> kSource({0U, 1U, 2U});
-    LimitedMap<int, 5> target;
+    constexpr LimitedMap<uint32_t, uint32_t, 3> kSource({{0U, 0U}, {1U, 1U}, {2U, 2U}});
+    LimitedMap<int64_t, int64_t, 5> target;
     ASSERT_THAT(target, IsEmpty());
     target = kSource;
-    EXPECT_THAT(target, ElementsAre(0, 1, 2));
+    EXPECT_THAT(target, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
+    EXPECT_THAT(kSource, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
   }
   {
-    LimitedMap<unsigned, 4> source({0U, 1U, 2U});
-    LimitedMap<int, 5> target(std::move(source));
-    EXPECT_THAT(target, ElementsAre(0, 1, 2));
+    LimitedMap<uint32_t, uint32_t, 3> source({{0U, 0U}, {1U, 1U}, {2U, 2U}});
+    LimitedMap<int64_t, int64_t, 5> target(std::move(source));
+    EXPECT_THAT(target, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
+    EXPECT_THAT(source, IsEmpty());
   }
   {
-    LimitedMap<unsigned, 3> source({0U, 1U, 2U});
-    LimitedMap<int, 5> target;
+    LimitedMap<uint32_t, uint32_t, 3> source({{0U, 0U}, {1U, 1U}, {2U, 2U}});
+    LimitedMap<int64_t, int64_t, 5> target;
     ASSERT_THAT(target, IsEmpty());
     target = std::move(source);
-    EXPECT_THAT(target, ElementsAre(0, 1, 2));
+    EXPECT_THAT(target, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
+    EXPECT_THAT(source, IsEmpty());
   }
 }
 
 TEST_F(LimitedMapTest, ToLimitedMap) {
   // NOLINTBEGIN(*-avoid-c-arrays)
-  constexpr int kArray[4] = {0, 1, 2, 3};
+  constexpr std::pair<int, int> kArray[4] = {{0, 0}, {1, 1}, {2, 2}, {3, 3}};
   constexpr auto kTest = ToLimitedMap(kArray);
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
   EXPECT_THAT(kTest, CapacityIs(4));
-  EXPECT_THAT(kTest, ElementsAre(0, 1, 2, 3));
+  EXPECT_THAT(kTest, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2), Pair(3, 3)));
   // NOLINTEND(*-avoid-c-arrays)
 }
 
 TEST_F(LimitedMapTest, ToLimitedMapStringCopy) {
   // NOLINTBEGIN(*-avoid-c-arrays)
-  const std::string array[4] = {{"0"}, {"1"}, {"2"}, {"3"}};
+  const std::pair<std::string, std::string> array[4] = {{"0", "a"}, {"1", "b"}, {"2", "c"}, {"3", "d"}};
   auto test = ToLimitedMap(array);
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
   EXPECT_THAT(test, CapacityIs(4));
-  EXPECT_THAT(test, ElementsAre("0", "1", "2", "3"));
+  EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "b"), Pair("2", "c"), Pair("3", "d")));
   // NOLINTEND(*-avoid-c-arrays)
 }
 
 TEST_F(LimitedMapTest, ToLimitedMapStringMove) {
   // NOLINTBEGIN(*-avoid-c-arrays)
-  std::string array[4] = {{"0"}, {"1"}, {"2"}, {"3"}};
+  std::pair<std::string, std::string> array[4] = {{"0", "a"}, {"1", "b"}, {"2", "c"}, {"3", "d"}};
   auto test = ToLimitedMap(std::move(array));
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
   EXPECT_THAT(test, CapacityIs(4));
-  EXPECT_THAT(test, ElementsAre("0", "1", "2", "3"));
+  EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "b"), Pair("2", "c"), Pair("3", "d")));
   // NOLINTEND(*-avoid-c-arrays)
 }
 
 TEST_F(LimitedMapTest, ConstexprMakeClear) {
   constexpr auto kTest = [] {
-    auto test = MakeLimitedMap<5>({0, 1, 2});
+    auto test = ToLimitedMap<int, int>({{0, 0}, {1, 1}, {2, 2}});
     test.clear();
     return test;
   }();
   EXPECT_THAT(kTest, IsEmpty());
   EXPECT_THAT(kTest, SizeIs(0));
-  EXPECT_THAT(kTest, CapacityIs(5));
+  EXPECT_THAT(kTest, CapacityIs(3));
   EXPECT_THAT(kTest, ElementsAre());
 }
 
-
 TEST_F(LimitedMapTest, Erase) {
-  auto test = MakeLimitedMap(0, 1, 2, 3, 4);
+  auto test = LimitedMap<int, int, 5>{{{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}}};
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(5));
   EXPECT_THAT(test, CapacityIs(5));
-  ASSERT_THAT(test, ElementsAre(0, 1, 2, 3, 4));
+  ASSERT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2), Pair(3, 3), Pair(4, 4)));
   EXPECT_THAT(test.erase(test.begin() + 2), test.begin() + 2);
   EXPECT_THAT(test, SizeIs(4));
-  EXPECT_THAT(test, ElementsAre(0, 1, 3, 4));
+  ASSERT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(3, 3), Pair(4, 4)));
   EXPECT_THAT(test.erase(test.end() - 1), test.begin() + 3);
   EXPECT_THAT(test.begin() + 3, test.end()) << "Should have returned new `end`.";
   EXPECT_THAT(test, SizeIs(3));
-  EXPECT_THAT(test, ElementsAre(0, 1, 3));
+  ASSERT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(3, 3)));
   EXPECT_THAT(test.erase(1), 1);
   EXPECT_THAT(test.erase(1), 0);
   EXPECT_THAT(test, SizeIs(2));
-  EXPECT_THAT(test, ElementsAre(0, 3));
+  ASSERT_THAT(test, ElementsAre(Pair(0, 0), Pair(3, 3)));
   EXPECT_THAT(test.erase(test.begin()), test.begin());
   EXPECT_THAT(test.erase(test.begin()), test.begin());
   EXPECT_THAT(test.begin(), test.end()) << "Should have returned new `end`.";
@@ -278,11 +311,11 @@ TEST_F(LimitedMapTest, Erase) {
 }
 
 TEST_F(LimitedMapTest, Contains) {
-  constexpr auto kTest = MakeLimitedMap<6>({0, 1, 2, 3});
+  constexpr auto kTest = LimitedMap<int, int, 6>{{0, 0}, {1, 1}, {2, 2}, {3, 3}};
   EXPECT_THAT(kTest, Not(IsEmpty()));
   EXPECT_THAT(kTest, SizeIs(4));
   EXPECT_THAT(kTest, CapacityIs(6));
-  ASSERT_THAT(kTest, ElementsAre(0, 1, 2, 3));
+  ASSERT_THAT(kTest, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2), Pair(3, 3)));
   EXPECT_THAT(kTest.contains(0), true);
   EXPECT_THAT(kTest.contains(4), false);
   EXPECT_THAT(kTest.contains_all(std::vector<int>{1, 2}), true);
@@ -292,34 +325,34 @@ TEST_F(LimitedMapTest, Contains) {
 }
 
 TEST_F(LimitedMapTest, Insert) {
-  auto test = MakeLimitedMap<6>({0, 3});
+  auto test = LimitedMap<int, int, 6>({{0, 0}, {3, 3}});
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(2));
   EXPECT_THAT(test, CapacityIs(6));
-  ASSERT_THAT(test, ElementsAre(0, 3));
-  const std::vector<int> other{1, 2, 4};
+  ASSERT_THAT(test, ElementsAre(Pair(0, 0), Pair(3, 3)));
+  const std::vector<std::pair<int, int>> other{{1, 1}, {2, 2}, {4, 4}};
   test.insert(other.begin(), other.end());
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(5));
   EXPECT_THAT(test, CapacityIs(6));
-  ASSERT_THAT(test, ElementsAre(0, 1, 2, 3, 4));
+  ASSERT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2), Pair(3, 3), Pair(4, 4)));
 }
 
 TEST_F(LimitedMapTest, Swap) {
-  auto test1 = MakeLimitedMap<int>(0, 1, 2);
-  auto test2 = LimitedMap<int, 3>({3});
-  ASSERT_THAT(test1, ElementsAre(0, 1, 2));
-  ASSERT_THAT(test2, ElementsAre(3));
+  auto test1 = LimitedMap<int, int, 3>({{0, 0}, {1, 1}, {2, 2}});
+  auto test2 = LimitedMap<int, int, 3>({{3, 3}});
+  ASSERT_THAT(test1, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
+  ASSERT_THAT(test2, ElementsAre(Pair(3, 3)));
   test1.swap(test2);
-  EXPECT_THAT(test1, ElementsAre(3));
-  EXPECT_THAT(test2, ElementsAre(0, 1, 2));
+  EXPECT_THAT(test1, ElementsAre(Pair(3, 3)));
+  EXPECT_THAT(test2, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
   test1.swap(test2);
-  EXPECT_THAT(test1, ElementsAre(0, 1, 2));
-  EXPECT_THAT(test2, ElementsAre(3));
+  EXPECT_THAT(test1, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
+  EXPECT_THAT(test2, ElementsAre(Pair(3, 3)));
   test2.clear();
   test1.swap(test2);
   EXPECT_THAT(test1, ElementsAre());
-  EXPECT_THAT(test2, ElementsAre(0, 1, 2));
+  EXPECT_THAT(test2, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
   test2.clear();
   test1.swap(test2);
   EXPECT_THAT(test1, ElementsAre());
@@ -327,17 +360,18 @@ TEST_F(LimitedMapTest, Swap) {
 }
 
 TEST_F(LimitedMapTest, Iterators) {
-  constexpr auto kTest = MakeLimitedMap(0, 1, 2);
+  constexpr auto kTest = LimitedMap<int, int, 3>{{0, 0}, {1, 1}, {2, 2}};
   // Restrictions apply: The two following cannot be constexpr.
-  EXPECT_THAT((MakeLimitedMap<3>(kTest.begin(), kTest.end())), ElementsAre(0, 1, 2));
-  EXPECT_THAT((MakeLimitedMap<3>(kTest.rbegin(), kTest.rend())), ElementsAre(0, 1, 2));
+  EXPECT_THAT((MakeLimitedMap<3>(kTest.begin(), kTest.end())), ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
+  EXPECT_THAT((MakeLimitedMap<3>(kTest.rbegin(), kTest.rend())), ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
 }
 
 TEST_F(LimitedMapTest, Compare) {
-  constexpr auto k42v65 = MakeLimitedMap(42, 65);
-  constexpr auto k42o65 = MakeLimitedMap(42, 65);
-  constexpr auto k42v99 = MakeLimitedMap(42, 99);
-  constexpr auto k42 = MakeLimitedMap(42);
+  constexpr auto k42v65 = LimitedMap<int, int, 2>{{{42, 42}, {65, 65}}};
+  constexpr auto k42o65 = LimitedMap<int, int, 2>{{{42, 42}, {65, 65}}};
+  constexpr auto k42c42o65c64 = LimitedMap<int, int, 2>{{{42, 42}, {65, 64}}};
+  constexpr auto k42v99 = LimitedMap<int, int, 2>{{{42, 42}, {99, 99}}};
+  constexpr auto k42 = LimitedMap<int, int, 1>{{{42, 42}}};
   EXPECT_THAT(k42v65 == k42o65, true);
   EXPECT_THAT(k42v65, k42o65);
   EXPECT_THAT(k42v65, Eq(k42o65));
@@ -370,13 +404,19 @@ TEST_F(LimitedMapTest, Compare) {
 
   EXPECT_THAT(k42v65 >= k42, true);
   EXPECT_THAT(k42v65, Ge(k42));
+
+  EXPECT_THAT(k42v65 != k42c42o65c64, true);
+  EXPECT_THAT(k42v65 > k42c42o65c64, true);
+  EXPECT_THAT(k42v65 >= k42c42o65c64, true);
+  EXPECT_THAT(k42c42o65c64 < k42v65, true);
+  EXPECT_THAT(k42c42o65c64 <= k42v65, true);
 }
 
 TEST_F(LimitedMapTest, CompareDifferentType) {
-  const auto k42v65 = MakeLimitedMap<std::string>("42", "65");
-  constexpr auto k42o65 = MakeLimitedMap<std::string_view>("42", "65");
-  constexpr auto k42v99 = MakeLimitedMap("42", "99");
-  constexpr auto k42 = MakeLimitedMap("42");
+  const auto k42v65 = LimitedMap<std::string, int, 2>{{{"42", 42}, {"65", 65}}};
+  constexpr auto k42o65 = LimitedMap<std::string_view, int, 2>{{{"42", 42}, {"65", 65}}};
+  constexpr auto k42v99 = LimitedMap<std::string_view, int, 2>{{{"42", 42}, {"99", 99}}};
+  constexpr auto k42 = LimitedMap<std::string_view, int, 1>{{{"42", 42}}};
   EXPECT_THAT(k42v65 == k42o65, true);
   EXPECT_THAT(k42v65, k42o65);
   EXPECT_THAT(k42v65, Eq(k42o65));
@@ -412,6 +452,6 @@ TEST_F(LimitedMapTest, CompareDifferentType) {
 }
 
 // NOLINTEND(*-magic-numbers)
-#endif
+
 }  // namespace
 }  // namespace mbo::container
