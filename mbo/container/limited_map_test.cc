@@ -21,6 +21,18 @@
 #include "gtest/gtest.h"
 #include "mbo/testing/matchers.h"
 
+// Clang has issues with exception tracing in ASAN, so corresponding tests must
+// be disabled. But we do so for all known ASAN identification methods.
+#ifndef HAS_ADDRESS_SANITIZER
+# if defined(__has_feature)
+#  if __has_feature(address_sanitizer)
+#   define HAS_ADDRESS_SANITIZER 1
+#  endif
+# elif defined(__SANITIZE_ADDRESS__)
+#  define HAS_ADDRESS_SANITIZER 1
+# endif
+#endif
+
 namespace mbo::container {
 namespace {
 
@@ -200,7 +212,7 @@ TEST_F(LimitedMapTest, Update) {
       test,
       ElementsAre(
           Pair(" ", "space"), Pair("0", "zero"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
-#if !__has_feature(address_sanitizer) && !defined(__SANITIZE_ADDRESS__)
+#if !HAS_ADDRESS_SANITIZER
   bool got_exception = false;
   try {
     test.at("not_present") = "oops";
