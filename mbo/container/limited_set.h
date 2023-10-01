@@ -309,7 +309,7 @@ class LimitedSet final {
       : key_comp_(key_comp) {
     auto it = list.begin();
     while (it < list.end()) {
-      emplace(*it);//emplace(std::move(*it));
+      emplace(*it);
       ++it;
     }
   }
