@@ -1,5 +1,8 @@
 # 0.2.5
 
+* Make `Limited{Map|Set|Vector}` iterators compliant with `std::contiguous_iterator`.
+* Add `Limited{Map|Set|Vector}::data()`.
+
 # 0.2.4
 
 * Move `CopyConvertContainer` to `mbo::container::ConvertContainer` and add conversion functions.

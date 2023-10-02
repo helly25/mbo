@@ -135,7 +135,7 @@ class LimitedMap final {
  public:
   class const_iterator {
    public:
-    using iterator_category = std::bidirectional_iterator_tag;
+    using iterator_category = std::contiguous_iterator_tag;
     using difference_type = LimitedMap::difference_type;
     using value_type = LimitedMap::value_type;
     using pointer = LimitedMap::const_pointer;
@@ -173,30 +173,42 @@ class LimitedMap final {
       return it;
     }
 
-    constexpr const_iterator& operator+=(size_type ofs) noexcept {
+    constexpr const_iterator& operator+=(difference_type ofs) noexcept {
       pos_ += ofs;
       return *this;
     }
 
-    constexpr const_iterator& operator-=(size_type ofs) noexcept {
+    constexpr const_iterator& operator-=(difference_type ofs) noexcept {
       pos_ -= ofs;
       return *this;
     }
 
-    friend constexpr size_type operator-(const_iterator lhs, const_iterator rhs) noexcept {
+    constexpr reference operator[](difference_type ofs) const noexcept {
+      return pos_[ofs].data;  // NOLINT(*-pointer-arithmetic)
+    }
+
+    friend constexpr difference_type operator-(const_iterator lhs, const_iterator rhs) noexcept {
       return lhs.pos_ - rhs.pos_;
     }
 
-    friend constexpr size_type operator+(const_iterator lhs, const_iterator rhs) noexcept {
+    friend constexpr difference_type operator+(const_iterator lhs, const_iterator rhs) noexcept {
       return lhs.pos_ + rhs.pos_;
     }
 
-    friend constexpr const_iterator operator-(const_iterator lhs, size_type rhs) noexcept {
+    friend constexpr const_iterator operator-(const_iterator lhs, difference_type rhs) noexcept {
       return const_iterator(lhs.pos_ - rhs);
     }
 
-    friend constexpr const_iterator operator+(const_iterator lhs, size_type rhs) noexcept {
+    friend constexpr const_iterator operator+(const_iterator lhs, difference_type rhs) noexcept {
       return const_iterator(lhs.pos_ + rhs);
+    }
+
+    friend constexpr const_iterator operator-(difference_type lhs, const_iterator rhs) noexcept {
+      return const_iterator(lhs - rhs.pos_);
+    }
+
+    friend constexpr const_iterator operator+(difference_type lhs, const_iterator rhs) noexcept {
+      return const_iterator(lhs + rhs.pos_);
     }
 
     friend constexpr auto operator<=>(const_iterator lhs, const_iterator rhs) noexcept { return lhs.pos_ <=> rhs.pos_; }
@@ -211,7 +223,7 @@ class LimitedMap final {
 
   class iterator {
    public:
-    using iterator_category = std::bidirectional_iterator_tag;
+    using iterator_category = std::contiguous_iterator_tag;
     using difference_type = LimitedMap::difference_type;
     using value_type = LimitedMap::value_type;
     using pointer = LimitedMap::pointer;
@@ -251,23 +263,31 @@ class LimitedMap final {
       return it;
     }
 
-    constexpr iterator& operator+=(size_type ofs) noexcept {
+    constexpr iterator& operator+=(difference_type ofs) noexcept {
       pos_ += ofs;
       return *this;
     }
 
-    constexpr iterator& operator-=(size_type ofs) noexcept {
+    constexpr iterator& operator-=(difference_type ofs) noexcept {
       pos_ -= ofs;
       return *this;
     }
 
-    friend constexpr size_type operator-(iterator lhs, iterator rhs) noexcept { return lhs.pos_ - rhs.pos_; }
+    constexpr reference operator[](difference_type ofs) const noexcept {
+      return pos_[ofs].data;  // NOLINT(*-pointer-arithmetic)
+    }
 
-    friend constexpr size_type operator+(iterator lhs, iterator rhs) noexcept { return lhs.pos_ + rhs.pos_; }
+    friend constexpr difference_type operator-(iterator lhs, iterator rhs) noexcept { return lhs.pos_ - rhs.pos_; }
 
-    friend constexpr iterator operator-(iterator lhs, size_type rhs) noexcept { return iterator(lhs.pos_ - rhs); }
+    friend constexpr difference_type operator+(iterator lhs, iterator rhs) noexcept { return lhs.pos_ + rhs.pos_; }
 
-    friend constexpr iterator operator+(iterator lhs, size_type rhs) noexcept { return iterator(lhs.pos_ + rhs); }
+    friend constexpr iterator operator-(iterator lhs, difference_type rhs) noexcept { return iterator(lhs.pos_ - rhs); }
+
+    friend constexpr iterator operator+(iterator lhs, difference_type rhs) noexcept { return iterator(lhs.pos_ + rhs); }
+
+    friend constexpr iterator operator-(difference_type lhs, iterator rhs) noexcept { return iterator(lhs - rhs.pos_); }
+
+    friend constexpr iterator operator+(difference_type lhs, iterator rhs) noexcept { return iterator(lhs + rhs.pos_); }
 
     friend constexpr auto operator<=>(iterator lhs, iterator rhs) noexcept { return lhs.pos_ <=> rhs.pos_; }
 
@@ -737,6 +757,8 @@ class LimitedMap final {
   constexpr const_reverse_iterator rend() const noexcept { return std::make_reverse_iterator(begin()); }
 
   constexpr const_reverse_iterator crend() const noexcept { return std::make_reverse_iterator(cbegin()); }
+
+  constexpr const_pointer data() const noexcept { return &values_[0].data; }
 
   // Observers
 

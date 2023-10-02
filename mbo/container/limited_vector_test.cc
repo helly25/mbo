@@ -14,6 +14,11 @@
 
 #include "mbo/container/limited_vector.h"
 
+#include <ranges>
+#include <string>
+#include <string_view>
+#include <type_traits>
+
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -34,6 +39,10 @@ using ::testing::Le;
 using ::testing::Lt;
 using ::testing::Not;
 using ::testing::SizeIs;
+
+static_assert(std::ranges::range<LimitedVector<int, 3>>);
+static_assert(std::contiguous_iterator<LimitedVector<int, 3>::iterator>);
+static_assert(std::contiguous_iterator<LimitedVector<int, 3>::const_iterator>);
 
 struct LimitedVectorTest : ::testing::Test {
   static void SetUpTestSuite() { absl::InitializeLog(); }

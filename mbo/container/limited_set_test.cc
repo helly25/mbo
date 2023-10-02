@@ -15,6 +15,10 @@
 #include "mbo/container/limited_set.h"
 
 #include <iostream>
+#include <ranges>
+#include <string>
+#include <string_view>
+#include <type_traits>
 
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
@@ -37,6 +41,10 @@ using ::testing::Lt;
 using ::testing::Not;
 using ::testing::Pair;
 using ::testing::SizeIs;
+
+static_assert(std::ranges::range<LimitedSet<int, 3>>);
+static_assert(std::contiguous_iterator<LimitedSet<int, 3>::iterator>);
+static_assert(std::contiguous_iterator<LimitedSet<int, 3>::const_iterator>);
 
 struct LimitedSetTest : ::testing::Test {
   static void SetUpTestSuite() { absl::InitializeLog(); }

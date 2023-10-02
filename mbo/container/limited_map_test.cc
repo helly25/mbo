@@ -15,6 +15,10 @@
 #include "mbo/container/limited_map.h"
 
 #include <iostream>
+#include <ranges>
+#include <string>
+#include <string_view>
+#include <type_traits>
 
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
@@ -49,6 +53,10 @@ using ::testing::Lt;
 using ::testing::Not;
 using ::testing::Pair;
 using ::testing::SizeIs;
+
+static_assert(std::ranges::range<LimitedMap<int, int, 3>>);
+static_assert(std::contiguous_iterator<LimitedMap<int, int, 3>::iterator>);
+static_assert(std::contiguous_iterator<LimitedMap<int, int, 3>::const_iterator>);
 
 struct LimitedMapTest : ::testing::Test {
   static void SetUpTestSuite() { absl::InitializeLog(); }

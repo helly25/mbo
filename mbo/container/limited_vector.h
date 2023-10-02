@@ -389,6 +389,8 @@ class LimitedVector final {
     return values_[index].data;
   }
 
+  constexpr const_pointer data() const noexcept { return &values_[0].data; }
+
  private:
   std::size_t size_{0};
   // Array would be better but that does not work with ASAN builds.
@@ -396,6 +398,9 @@ class LimitedVector final {
   // Add an unused sentinal, so that `end` and other functions do not cause memory issues.
   Data values_[Capacity + 1];  // NOLINT(*-avoid-c-arrays)
 };
+
+template<typename... T>
+LimitedVector(T&&... v) -> LimitedVector<std::common_type_t<T...>, sizeof...(T)>;
 
 template<size_t LN, size_t RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
