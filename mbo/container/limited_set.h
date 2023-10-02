@@ -103,6 +103,7 @@ class LimitedSet final {
     using value_type = LimitedSet::value_type;
     using pointer = LimitedSet::const_pointer;
     using reference = LimitedSet::const_reference;
+    using element_type = Key;
 
     constexpr const_iterator() noexcept : pos_(nullptr) {}  // Needed for STL
 
@@ -191,6 +192,7 @@ class LimitedSet final {
     using value_type = LimitedSet::value_type;
     using pointer = LimitedSet::pointer;
     using reference = LimitedSet::reference;
+    using element_type = Key;
 
     constexpr iterator() noexcept : pos_(nullptr) {}  // Needed for STL
 

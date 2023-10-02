@@ -140,6 +140,7 @@ class LimitedMap final {
     using value_type = LimitedMap::value_type;
     using pointer = LimitedMap::const_pointer;
     using reference = LimitedMap::const_reference;
+    using element_type = LimitedMap::value_type;
 
     constexpr const_iterator() noexcept : pos_(nullptr) {}  // Needed for STL
 
@@ -228,6 +229,7 @@ class LimitedMap final {
     using value_type = LimitedMap::value_type;
     using pointer = LimitedMap::pointer;
     using reference = LimitedMap::reference;
+    using element_type = LimitedMap::value_type;
 
     constexpr iterator() noexcept : pos_(nullptr) {}  // Needed for STL
 
