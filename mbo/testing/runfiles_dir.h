@@ -16,14 +16,17 @@
 #define MBO_TESTING_RUNFILES_DIR_H_
 
 #include <string>
+#include <string_view>
 
 #include "absl/status/statusor.h"
 
 namespace mbo::testing {
 
 // Returns bazel_tools's `RLocation`.
-absl::StatusOr<std::string> RunfilesDir();
-std::string RunfilesDirOrDie();
+// Set `workspace` to the Workspace name (as stated in file `WORKSPACE`).
+// Set `source_rel` to a file or directory relative to the workspace root.
+absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_view source_rel);
+std::string RunfilesDirOrDie(std::string_view workspace, std::string_view source_rel);
 
 }  // namespace mbo::testing
 

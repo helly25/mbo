@@ -38,6 +38,7 @@ cc_test(
     "//mbo/diff:unified_diff_cc",
     "//mbo/file:artefact_cc",
     "//mbo/file:file_cc",
+    "//mbo/testing:runfiles_dir_cc",
     "//mbo/testing:status_cc",
     "@com_google_googletest//:gtest_main",
   ],

@@ -15,25 +15,27 @@
 #include "mbo/testing/runfiles_dir.h"
 
 #include <string>
+#include <string_view>
 
 #include "tools/cpp/runfiles/runfiles.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "mbo/file/file.h"
 
 namespace mbo::testing {
 
-absl::StatusOr<std::string> RunfilesDir() {
+absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_view source_rel) {
   std::string error;
   std::unique_ptr<bazel::tools::cpp::runfiles::Runfiles> runfiles(bazel::tools::cpp::runfiles::Runfiles::CreateForTest(&error));
   if (runfiles == nullptr) {
     return absl::NotFoundError("Could not determine runfiles directory.");
   }
-  return runfiles->Rlocation("");
+  return runfiles->Rlocation(mbo::file::JoinPaths(workspace, source_rel));
 }
 
-std::string RunfilesDirOrDie() {
-  const auto runfiles_dir = RunfilesDir();
+std::string RunfilesDirOrDie(std::string_view workspace, std::string_view source_rel) {
+  const auto runfiles_dir = RunfilesDir(workspace, source_rel);
   ABSL_QCHECK_OK(runfiles_dir);
   return *runfiles_dir;
 }

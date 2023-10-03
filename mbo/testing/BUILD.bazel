@@ -29,6 +29,7 @@ cc_library(
     srcs = ["runfiles_dir.cc"],
     hdrs = ["runfiles_dir.h"],
     deps = [
+        "//mbo/file:file_cc",
         "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status:status",
         "@com_google_absl//absl/status:statusor",

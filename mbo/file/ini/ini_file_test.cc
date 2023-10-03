@@ -22,6 +22,7 @@
 #include "gtest/gtest.h"
 #include "mbo/diff/unified_diff.h"
 #include "mbo/file/file.h"
+#include "mbo/testing/runfiles_dir.h"
 #include "mbo/testing/status.h"
 
 namespace mbo::file {
@@ -36,14 +37,8 @@ using ::testing::SizeIs;
 namespace fs = std::filesystem;
 
 struct IniFileTest : ::testing::Test {
-  static std::string SrcDir(std::convertible_to<std::string_view> auto&& src_rel) {
-    std::string workdir = ::testing::UnitTest::GetInstance()->original_working_dir();
-    std::string external = JoinPaths(workdir, "..", "com_helly25_mbo");
-    if (fs::exists(external)) {
-      return JoinPaths(external, src_rel);
-    } else {
-      return JoinPaths(workdir, src_rel);
-    }
+  static std::string SrcDir(std::string_view src_rel) {
+    return mbo::testing::RunfilesDirOrDie("com_helly25_mbo", src_rel);
   }
 
   static std::string TmpDir() { return ::testing::TempDir(); }

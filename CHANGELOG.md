@@ -1,3 +1,7 @@
+# 0.2.6
+
+* Make `RunfilesDir/OrDie` work correctly.
+
 # 0.2.5
 
 * Make `Limited{Map|Set|Vector}` iterators compliant with `std::contiguous_iterator`.
