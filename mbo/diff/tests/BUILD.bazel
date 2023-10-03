@@ -99,7 +99,7 @@ diff_test_test(
 )
 
 diff_test(
-    name = "numnbers_ignore_blank_lines_diff_test",
+    name = "numbers_ignore_blank_lines_diff_test",
     file_old = "numbers.txt",
     file_new = "numbers_blanks.txt",
     ignore_blank_lines = True,
