@@ -40,6 +40,8 @@ cc_library(
     hdrs = ["limited_map.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":limited_ordered_cc",
+        "//mbo/types:compare_cc",
         "//mbo/types:traits_cc",
         "@com_google_absl//absl/log:absl_log",
     ],
@@ -57,10 +59,23 @@ cc_test(
 )
 
 cc_library(
+    name = "limited_ordered_cc",
+    hdrs = ["internal/limited_ordered.h"],
+    visibility = ["//visibility:private"],
+    deps = [
+        "//mbo/types:compare_cc",
+        "//mbo/types:traits_cc",
+        "@com_google_absl//absl/log:absl_log",
+    ],
+)
+
+cc_library(
     name = "limited_set_cc",
     hdrs = ["limited_set.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":limited_ordered_cc",
+        "//mbo/types:compare_cc",
         "//mbo/types:traits_cc",
         "@com_google_absl//absl/log:absl_log",
     ],

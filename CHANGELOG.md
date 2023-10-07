@@ -1,3 +1,9 @@
+# 0.2.7
+
+* Add a new comparator `mbo::types::CompareLess` which allows container optimizations.
+* Move most functionality of `LimitedMap` and `LimitedSet` to new base `internal::LimitedOrdered`.
+* Start to optimize `LimitedMap` and `LimitedSet` with `mbo::types::CompareLess`.
+
 # 0.2.6
 
 * Make `RunfilesDir/OrDie` work correctly.

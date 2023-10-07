@@ -87,6 +87,8 @@ The C++ library is organized in functional groups each residing in their own dir
         * meta-type `IfElse`: Helper type to generate else `Cases` which are always true and must go last.
         * meta-type `IfFalseThenVoid`: Helper type that can be used to skip a case.
         * meta-type `IfTrueThenVoid`: Helper type to inject default cases and to ensure the required type expansion is always possible.
+    * mbo/types:compare_cc, mbo/types/compare.h
+        * comparator `mbo::types::CompareLess` which is compatible to std::Less but allows container optimizations.
     * mbo/types:extend_cc, mbo/types/extend.h
         * crtp-struct `Extend`: Enables extending of struct/classe types with basic functionality.
         * crtp-struct `ExtendNoDefault` Like `Extend` but without default extender functionality.

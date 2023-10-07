@@ -32,6 +32,12 @@ cc_test(
 )
 
 cc_library(
+    name = "compare_cc",
+    hdrs = ["compare.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "extend_cc",
     hdrs = ["extend.h"],
     srcs = ["extender.h"],

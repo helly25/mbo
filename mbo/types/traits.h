@@ -218,6 +218,7 @@ concept IsPair = requires(T pair) {
   typename T::second_type;
   requires std::is_same_v<std::remove_reference_t<decltype(pair.first)>, typename T::first_type>;
   requires std::is_same_v<std::remove_reference_t<decltype(pair.second)>, typename T::second_type>;
+  requires std::same_as<std::remove_const_t<T>, std::pair<typename T::first_type, typename T::second_type>>;
 };
 
 }  // namespace mbo::types
