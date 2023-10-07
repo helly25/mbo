@@ -147,6 +147,11 @@ class LimitedSet final : public internal::LimitedOrdered<Key, Key, Key, Capacity
   using LimitedBase::lower_bound;
   using LimitedBase::upper_bound;
 
+  // Custom
+
+  using LimitedBase::npos;      // Return value for `index_of` if `key` is not found.
+  using LimitedBase::index_of;  // Return 0-based index of `key`, or `npos` if not found.
+
   // Mofification: clear, swap, emplace, insert
 
   using LimitedBase::clear;

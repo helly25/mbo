@@ -117,10 +117,15 @@ TEST_F(LimitedMapTest, MakeInitArgFind) {
   EXPECT_THAT(kTest, SizeIs(3));
   EXPECT_THAT(kTest, CapacityIs(3));
   EXPECT_THAT(kTest, ElementsAre(Pair(1, 11), Pair(2, 22), Pair(3, 33)));
+  EXPECT_THAT(kTest.index_of(1), 0);
   EXPECT_THAT(kTest.find(1) - kTest.begin(), 0);
+  EXPECT_THAT(kTest.index_of(2), 1);
   EXPECT_THAT(kTest.find(2) - kTest.begin(), 1);
+  EXPECT_THAT(kTest.index_of(3), 2);
   EXPECT_THAT(kTest.find(3) - kTest.begin(), 2);
+  EXPECT_THAT(kTest.index_of(0), kTest.npos);
   EXPECT_THAT(kTest.find(0), kTest.end());
+  EXPECT_THAT(kTest.index_of(4), kTest.npos);
   EXPECT_THAT(kTest.find(4), kTest.end());
 }
 
@@ -139,6 +144,7 @@ TEST_F(LimitedMapTest, MakeInitArgBasics) {
   EXPECT_THAT(test.find(5) - test.begin(), 2);
   EXPECT_THAT(test.find(0), test.end());
   EXPECT_THAT(test.emplace(0, 0), Pair(test.begin(), true));
+  EXPECT_THAT(test, SizeIs(4));
   EXPECT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 11), Pair(3, 33), Pair(5, 55)));
   EXPECT_THAT(test.find(2), test.end());
   EXPECT_THAT(test.emplace(2, 22), Pair(test.begin() + 2, true));

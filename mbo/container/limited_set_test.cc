@@ -38,6 +38,7 @@ using ::testing::Gt;
 using ::testing::IsEmpty;
 using ::testing::Le;
 using ::testing::Lt;
+using ::testing::Ne;
 using ::testing::Not;
 using ::testing::Pair;
 using ::testing::SizeIs;
@@ -429,6 +430,48 @@ TEST_F(LimitedSetTest, CompareDifferentType) {
 
   EXPECT_THAT(k42v65 >= k42, true);
   EXPECT_THAT(k42v65, Ge(k42));
+}
+
+template <std::size_t Size>
+constexpr void CompareAllTheSizes() {  // NOLINT(readability-function-cognitive-complexity)
+  LimitedSet<int, Size> data;
+  for (std::size_t len = 0; len < Size; ++len) {
+    data.emplace(len * 100);
+  }
+  while (!data.empty()) {
+    for (std::size_t pos = 0; pos < Size + 1; ++pos) {
+      int v = 100 * static_cast<int>(pos + Size - data.size());
+      if (pos >= data.size()) {
+        ASSERT_THAT(data.index_of(v), data.npos);
+        ASSERT_FALSE(data.contains(v));
+        ASSERT_THAT(data.find(v), data.end());
+      } else {
+        ASSERT_THAT(data.index_of(v), pos);
+        ASSERT_TRUE(data.contains(v));
+        ASSERT_THAT(data.find(v), Ne(data.end()));
+      }
+    }
+    data.erase(data.begin());
+  }
+}
+
+TEST_F(LimitedSetTest, CompareAllTheSizes) {
+  CompareAllTheSizes<1>();
+  CompareAllTheSizes<2>();
+  CompareAllTheSizes<3>();
+  CompareAllTheSizes<4>();
+  CompareAllTheSizes<5>();
+  CompareAllTheSizes<6>();
+  CompareAllTheSizes<7>();
+  CompareAllTheSizes<8>();
+  CompareAllTheSizes<9>();
+  CompareAllTheSizes<10>();
+  CompareAllTheSizes<11>();
+  CompareAllTheSizes<12>();
+  CompareAllTheSizes<13>();
+  CompareAllTheSizes<14>();
+  CompareAllTheSizes<15>();
+  CompareAllTheSizes<16>();
 }
 
 // NOLINTEND(*-magic-numbers)

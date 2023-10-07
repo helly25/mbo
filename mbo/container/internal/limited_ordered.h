@@ -76,7 +76,8 @@ class LimitedOrdered {
   requires(LimitedOrderedValid<OK, OM, OV>)
   friend class LimitedOrdered;
 
-  static constexpr bool kKeyOnly = std::same_as<Key, Value>;
+  static constexpr bool kKeyOnly = std::same_as<Key, Value>;  // true = set, false = map (of pairs).
+  static constexpr std::size_t kUnrollMaxCapacity = 8;        // MUST MATCH `index_of`.
 
  public:
   using key_type = Key;
@@ -88,6 +89,8 @@ class LimitedOrdered {
   using const_reference = const Value&;
   using pointer = Value*;
   using const_pointer = const Value*;
+
+  static constexpr size_type npos = static_cast<size_type>(-1);  // Result of `index_of` if not found.
 
   struct ValueCompare {
     static constexpr const Key& GetKey(const Key& key) noexcept { return key; }
@@ -450,81 +453,82 @@ class LimitedOrdered {
     return std::upper_bound(begin(), end(), key, val_comp_);
   }
 
-  constexpr iterator find(const Key& key) {  // NOLINT(readability-function-cognitive-complexity)
-    // NOLINTBEGIN(*-magic-numbers,cppcoreguidelines-macro-usage)
-    if constexpr (types::IsCompareLess<Compare>) {
-      if constexpr (Capacity <= 8) {
-#define MBO_LIMITED_POS_COMP(POS)                               \
-  if constexpr (Capacity == (POS)) {                            \
-    return end();                                               \
-  }                                                             \
-  if (key_comp_.Compare(key, GetKey(values_[POS].data)) == 0) { \
-    return iterator(&values_[POS]);                             \
-  }
-        MBO_LIMITED_POS_COMP(0)
-        MBO_LIMITED_POS_COMP(1)
-        MBO_LIMITED_POS_COMP(2)
-        MBO_LIMITED_POS_COMP(3)
-        MBO_LIMITED_POS_COMP(4)
-        MBO_LIMITED_POS_COMP(5)
-        MBO_LIMITED_POS_COMP(6)
-        MBO_LIMITED_POS_COMP(7)
-#undef MBO_LIMITED_POS_COMP
-        return end();
-      } else {  // Capacity > 8
-        for (iterator it = begin(); it < end(); ++it) {
-          if (key_comp_.Compare(key, GetKey(*it)) == 0) {
-            return it;
-          }
-        }
-        return end();
+  // NOLINTBEGIN(*-magic-numbers,cppcoreguidelines-macro-usage,readability-function-cognitive-complexity)
+  constexpr std::size_t index_of(const Key& key) const
+  requires(types::IsCompareLess<Compare> && Capacity <= kUnrollMaxCapacity)
+  {
+#define MBO_CASE_LIMITED_POS_COMP(POS)                          \
+  case POS:                                                     \
+    if constexpr ((POS) >= Capacity) {                          \
+      return npos;                                              \
+    }                                                           \
+    if (key_comp_.Compare(key, GetKey(values_[POS].data)) == 0) \
+      return POS
+    switch (size_ - 1) {
+      MBO_CASE_LIMITED_POS_COMP(7);
+      MBO_CASE_LIMITED_POS_COMP(6);
+      MBO_CASE_LIMITED_POS_COMP(5);
+      MBO_CASE_LIMITED_POS_COMP(4);
+      MBO_CASE_LIMITED_POS_COMP(3);
+      MBO_CASE_LIMITED_POS_COMP(2);
+      MBO_CASE_LIMITED_POS_COMP(1);
+      MBO_CASE_LIMITED_POS_COMP(0);
+      default: break;  // Handles `size` - 1 == `npos`.
+    }
+#undef MBO_CASE_LIMITED_POS_COMP
+    return npos;
+  }  // NOLINTEND(*-magic-numbers,cppcoreguidelines-macro-usage,readability-function-cognitive-complexity)
+
+  constexpr std::size_t index_of(const Key& key) const
+  requires(types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
+  {
+    std::size_t left = 0;
+    std::size_t right = size_;
+    while (left < right) {
+      std::size_t pos = left + ((right - left) >> 1U);
+      auto cmp = key_comp_.Compare(key, GetKey(values_[pos]));
+      if (cmp == 0) {
+        return pos;
       }
+      if (cmp < 0) {
+        right = pos;
+      } else {
+        left = pos + 1;
+      }
+    }
+    return npos;
+  }
+
+  constexpr std::size_t index_of(const Key& key) const
+  requires(!types::IsCompareLess<Compare>)
+  {
+    const_iterator it = lower_bound(key);
+    return it == end() || key_comp_(GetKey(*it), key) || key_comp_(key, GetKey(*it)) ? npos : it - begin();
+  }
+
+  constexpr iterator find(const Key& key) {
+    if constexpr (types::IsCompareLess<Compare>) {
+      std::size_t pos = index_of(key);
+      return pos == npos ? end() : iterator(&values_[pos]);
     } else {  // Not IsCompareLess
       iterator it = lower_bound(key);
       return it == end() || key_comp_(GetKey(*it), key) || key_comp_(key, GetKey(*it)) ? end() : it;
     }
-    // NOLINTEND(*-magic-numbers,cppcoreguidelines-macro-usage)
   }
 
   constexpr const_iterator find(const Key& key) const {  // NOLINT(readability-function-cognitive-complexity)
-    // NOLINTBEGIN(*-magic-numbers,cppcoreguidelines-macro-usage)
     if constexpr (types::IsCompareLess<Compare>) {
-      if constexpr (Capacity <= 8) {
-#define MBO_LIMITED_POS_COMP(POS)                               \
-  if constexpr (Capacity == (POS)) {                            \
-    return end();                                               \
-  }                                                             \
-  if (key_comp_.Compare(key, GetKey(values_[POS].data)) == 0) { \
-    return const_iterator(&values_[POS]);                       \
-  }
-        MBO_LIMITED_POS_COMP(0)
-        MBO_LIMITED_POS_COMP(1)
-        MBO_LIMITED_POS_COMP(2)
-        MBO_LIMITED_POS_COMP(3)
-        MBO_LIMITED_POS_COMP(4)
-        MBO_LIMITED_POS_COMP(5)
-        MBO_LIMITED_POS_COMP(6)
-        MBO_LIMITED_POS_COMP(7)
-#undef MBO_LIMITED_POS_COMP
-        return end();
-      } else {  // Capacity > 8
-        for (const_iterator it = begin(); it < end(); ++it) {
-          if (key_comp_.Compare(key, GetKey(*it)) == 0) {
-            return it;
-          }
-        }
-        return end();
-      }
+      std::size_t pos = index_of(key);
+      return pos == npos ? end() : const_iterator(&values_[pos]);
     } else {  // Not IsCompareLess
       const_iterator it = lower_bound(key);
       return it == end() || key_comp_(GetKey(*it), key) || key_comp_(key, GetKey(*it)) ? end() : it;
     }
-    // NOLINTEND(*-magic-numbers,cppcoreguidelines-macro-usage)
   }
 
   constexpr bool contains(const Key& key) const {
     if constexpr (types::IsCompareLess<Compare>) {
-      return find(key) != end();
+      return index_of(key) != npos;
     } else {
       return std::binary_search(begin(), end(), key, val_comp_);
     }

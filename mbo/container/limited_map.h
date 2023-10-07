@@ -187,6 +187,11 @@ class LimitedMap final : public internal::LimitedOrdered<Key, Value, std::pair<c
   using LimitedBase::insert_or_assign;
   using LimitedBase::try_emplace;
 
+  // Custom
+
+  using LimitedBase::npos;      // Return value for `index_of` if `key` is not found.
+  using LimitedBase::index_of;  // Return 0-based index of `key`, or `npos` if not found.
+
   // Read/write access
 
   using LimitedBase::capacity;
