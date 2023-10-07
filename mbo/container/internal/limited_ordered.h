@@ -451,22 +451,27 @@ class LimitedOrdered {
   }
 
   constexpr iterator find(const Key& key) {  // NOLINT(readability-function-cognitive-complexity)
-    // NOLINTBEGIN(*-magic-numbers)
+    // NOLINTBEGIN(*-magic-numbers,cppcoreguidelines-macro-usage)
     if constexpr (types::IsCompareLess<Compare>) {
       if constexpr (Capacity <= 8) {
-        switch (size()) {  // clang-format off
-          case 8: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(7)].data)) == 0) { return iterator(&values_[ValidIndex(7)]); }
-          case 7: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(6)].data)) == 0) { return iterator(&values_[ValidIndex(6)]); }
-          case 6: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(5)].data)) == 0) { return iterator(&values_[ValidIndex(5)]); }
-          case 5: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(4)].data)) == 0) { return iterator(&values_[ValidIndex(4)]); }
-          case 4: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(3)].data)) == 0) { return iterator(&values_[ValidIndex(3)]); }
-          case 3: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(2)].data)) == 0) { return iterator(&values_[ValidIndex(2)]); }
-          case 2: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(1)].data)) == 0) { return iterator(&values_[ValidIndex(1)]); }
-          case 1: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(0)].data)) == 0) { return iterator(&values_[ValidIndex(0)]); }
-          case 0: break;
-        }  // clang-format on
+#define MBO_LIMITED_POS_COMP(POS)                               \
+  if constexpr (Capacity == (POS)) {                            \
+    return end();                                               \
+  }                                                             \
+  if (key_comp_.Compare(key, GetKey(values_[POS].data)) == 0) { \
+    return iterator(&values_[POS]);                             \
+  }
+        MBO_LIMITED_POS_COMP(0)
+        MBO_LIMITED_POS_COMP(1)
+        MBO_LIMITED_POS_COMP(2)
+        MBO_LIMITED_POS_COMP(3)
+        MBO_LIMITED_POS_COMP(4)
+        MBO_LIMITED_POS_COMP(5)
+        MBO_LIMITED_POS_COMP(6)
+        MBO_LIMITED_POS_COMP(7)
+#undef MBO_LIMITED_POS_COMP
         return end();
-      } else {
+      } else {  // Capacity > 8
         for (iterator it = begin(); it < end(); ++it) {
           if (key_comp_.Compare(key, GetKey(*it)) == 0) {
             return it;
@@ -474,30 +479,35 @@ class LimitedOrdered {
         }
         return end();
       }
-    } else {
+    } else {  // Not IsCompareLess
       iterator it = lower_bound(key);
       return it == end() || key_comp_(GetKey(*it), key) || key_comp_(key, GetKey(*it)) ? end() : it;
     }
-    // NOLINTEND(*-magic-numbers)
+    // NOLINTEND(*-magic-numbers,cppcoreguidelines-macro-usage)
   }
 
   constexpr const_iterator find(const Key& key) const {  // NOLINT(readability-function-cognitive-complexity)
-    // NOLINTBEGIN(*-magic-numbers)
+    // NOLINTBEGIN(*-magic-numbers,cppcoreguidelines-macro-usage)
     if constexpr (types::IsCompareLess<Compare>) {
       if constexpr (Capacity <= 8) {
-        switch (size()) {  // clang-format off
-          case 8: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(7)].data)) == 0) { return const_iterator(&values_[ValidIndex(7)]); }
-          case 7: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(6)].data)) == 0) { return const_iterator(&values_[ValidIndex(6)]); }
-          case 6: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(5)].data)) == 0) { return const_iterator(&values_[ValidIndex(5)]); }
-          case 5: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(4)].data)) == 0) { return const_iterator(&values_[ValidIndex(4)]); }
-          case 4: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(3)].data)) == 0) { return const_iterator(&values_[ValidIndex(3)]); }
-          case 3: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(2)].data)) == 0) { return const_iterator(&values_[ValidIndex(2)]); }
-          case 2: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(1)].data)) == 0) { return const_iterator(&values_[ValidIndex(1)]); }
-          case 1: if (key_comp_.Compare(key, GetKey(values_[ValidIndex(0)].data)) == 0) { return const_iterator(&values_[ValidIndex(0)]); }
-          case 0: break;
-        }  // clang-format on
+#define MBO_LIMITED_POS_COMP(POS)                               \
+  if constexpr (Capacity == (POS)) {                            \
+    return end();                                               \
+  }                                                             \
+  if (key_comp_.Compare(key, GetKey(values_[POS].data)) == 0) { \
+    return const_iterator(&values_[POS]);                       \
+  }
+        MBO_LIMITED_POS_COMP(0)
+        MBO_LIMITED_POS_COMP(1)
+        MBO_LIMITED_POS_COMP(2)
+        MBO_LIMITED_POS_COMP(3)
+        MBO_LIMITED_POS_COMP(4)
+        MBO_LIMITED_POS_COMP(5)
+        MBO_LIMITED_POS_COMP(6)
+        MBO_LIMITED_POS_COMP(7)
+#undef MBO_LIMITED_POS_COMP
         return end();
-      } else {
+      } else {  // Capacity > 8
         for (const_iterator it = begin(); it < end(); ++it) {
           if (key_comp_.Compare(key, GetKey(*it)) == 0) {
             return it;
@@ -505,11 +515,11 @@ class LimitedOrdered {
         }
         return end();
       }
-    } else {
+    } else {  // Not IsCompareLess
       const_iterator it = lower_bound(key);
-      return it == end() || key_comp_(GetKey(*it), key) || key_comp_(GetKey(key), *it) ? end() : it;
+      return it == end() || key_comp_(GetKey(*it), key) || key_comp_(key, GetKey(*it)) ? end() : it;
     }
-    // NOLINTEND(*-magic-numbers)
+    // NOLINTEND(*-magic-numbers,cppcoreguidelines-macro-usage)
   }
 
   constexpr bool contains(const Key& key) const {
@@ -821,10 +831,6 @@ class LimitedOrdered {
   static constexpr iterator to_iterator(iterator pos) noexcept { return pos; }
 
   static constexpr iterator to_iterator(const const_iterator& pos) noexcept { return iterator(pos.pos); }
-
-  static constexpr std::size_t ValidIndex(std::size_t idx) {
-    return Capacity == 0 ? 0 : (idx >= Capacity ? Capacity - 1 : idx);
-  }
 
   static constexpr const Key& GetKey(const Key& key) noexcept { return key; }
 
