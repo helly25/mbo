@@ -24,7 +24,12 @@ template<std::three_way_comparable T>
 struct CompareLess {
   using value_type = T;  // NOLINT(readability-identifier-naming)
 
+  constexpr ~CompareLess() noexcept = default;
   constexpr CompareLess() noexcept = default;
+  constexpr CompareLess(const CompareLess&) noexcept = default;
+  constexpr CompareLess& operator=(const CompareLess&) noexcept = default;
+  constexpr CompareLess(CompareLess&&) noexcept = default;
+  constexpr CompareLess& operator=(CompareLess&&) noexcept = default;
 
   constexpr auto Compare(const value_type& lhs, const value_type& rhs) const noexcept { return lhs <=> rhs; }
 

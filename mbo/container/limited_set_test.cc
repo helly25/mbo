@@ -43,8 +43,8 @@ using ::testing::Not;
 using ::testing::Pair;
 using ::testing::SizeIs;
 
-static_assert(std::ranges::range<LimitedSet<int, 3>>);
-static_assert(std::contiguous_iterator<LimitedSet<int, 3>::iterator>);
+static_assert(std::ranges::range<LimitedSet<int, 1>>);
+static_assert(std::contiguous_iterator<LimitedSet<int, 2>::iterator>);
 static_assert(std::contiguous_iterator<LimitedSet<int, 3>::const_iterator>);
 
 struct LimitedSetTest : ::testing::Test {

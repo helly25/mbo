@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "absl/log/absl_log.h"
+#include "mbo/container/limited_options.h"  // IWYU pragma: export
 #include "mbo/types/compare.h"
 #include "mbo/types/traits.h"
 
@@ -38,23 +39,23 @@ namespace mbo::container::internal {
 template<typename Key, typename Mapped, typename Value>
 concept LimitedOrderedValidImpl =
     std::same_as<std::remove_const_t<Key>, std::remove_const_t<Value>>
-    || (mbo::types::IsPair<Value>
-        && std::same_as<std::remove_const_t<Key>, std::remove_const_t<typename Value::first_type>>);
+     || (mbo::types::IsPair<Value>
+         && std::same_as<std::remove_const_t<Key>, std::remove_const_t<typename Value::first_type>>);
 
 template<typename Key, typename Mapped, typename Value>
 concept LimitedOrderedValid =  //
     std::move_constructible<std::remove_const_t<Key>> && std::move_constructible<Mapped>
     && LimitedOrderedValidImpl<Key, Mapped, Value>;
 
-template<
-    typename Key,
-    typename Mapped,
-    typename Value,
-    std::size_t Capacity,
-    typename Compare = types::CompareLess<Key>>
+template<typename Key, typename Mapped, typename Value, auto options, typename Compare = types::CompareLess<Key>>
 requires(LimitedOrderedValid<Key, Mapped, Value>)
 class LimitedOrdered {
  protected:
+  static_assert(IsLimitedOptionsOrSize<decltype(options)>);
+  static constexpr auto Options = MakeLimitedOptions<options>();
+  static_assert(std::is_trivially_destructible_v<Value> || !Options.kEmptyDestructor);
+  static constexpr std::size_t Capacity = Options.kCapacity;
+
   struct None final {};
 
   union Data {
@@ -65,14 +66,15 @@ class LimitedOrdered {
     constexpr Data(Data&&) noexcept = default;
     constexpr Data& operator=(Data&&) noexcept = default;
 
-    constexpr ~Data() noexcept {}  // NON DEFAULT
+    constexpr ~Data() noexcept requires(std::is_trivially_destructible_v<Value>) = default;
+    ~Data() noexcept requires(!std::is_trivially_destructible_v<Value>) {};
 
     Value data;
     None none;
   };
 
   // Must declare each other as friends so that we can correctly move from other.
-  template<typename OK, typename OM, typename OV, std::size_t OtherN, typename Comp>
+  template<typename OK, typename OM, typename OV, auto OtherN, typename Comp>
   requires(LimitedOrderedValid<OK, OM, OV>)
   friend class LimitedOrdered;
 
@@ -105,6 +107,7 @@ class LimitedOrdered {
 
     constexpr ~ValueCompare() noexcept = default;
 
+    constexpr explicit ValueCompare() noexcept = default;
     constexpr explicit ValueCompare(const key_compare& comp) noexcept : key_comp(comp) {}
 
     constexpr ValueCompare(const ValueCompare&) noexcept = default;
@@ -311,7 +314,13 @@ class LimitedOrdered {
  public:
   // Destructor and constructors from same type.
 
-  constexpr ~LimitedOrdered() noexcept { clear(); }
+  constexpr ~LimitedOrdered() noexcept requires(Options.kEmptyDestructor) = default;
+  constexpr ~LimitedOrdered() noexcept requires(!Options.kEmptyDestructor && std::is_trivially_destructible_v<Value>) {
+    clear();
+  }
+  ~LimitedOrdered() noexcept requires(!Options.kEmptyDestructor && !std::is_trivially_destructible_v<Value>) {
+    clear();
+  }
 
   constexpr LimitedOrdered() noexcept = default;
   constexpr explicit LimitedOrdered(const Compare& key_comp) noexcept : key_comp_(key_comp){};
@@ -378,15 +387,17 @@ class LimitedOrdered {
     }
   }
 
-  template<typename U, std::size_t OtherN>
-  requires(std::convertible_to<U, value_type> && OtherN <= Capacity)
+  template<typename U, auto OtherN>
+  requires(std::convertible_to<U, value_type> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedOrdered& operator=(const std::initializer_list<U>& list) noexcept {
     assign(list);
     return *this;
   }
 
-  template<typename OK, typename OM, typename OV, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped> && OtherN <= Capacity)
+  template<typename OK, typename OM, typename OV, auto OtherN, typename OtherCompare>
+  requires(
+      std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped>
+      && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedOrdered(const LimitedOrdered<OK, OM, OV, OtherN, OtherCompare>& other) noexcept {
     for (auto it = other.begin(); it < other.end(); ++it) {
       if constexpr (kKeyOnly) {
@@ -397,8 +408,10 @@ class LimitedOrdered {
     }
   }
 
-  template<typename OK, typename OM, typename OV, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped> && OtherN <= Capacity)
+  template<typename OK, typename OM, typename OV, auto OtherN, typename OtherCompare>
+  requires(
+      std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped>
+      && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedOrdered& operator=(const LimitedOrdered<OK, OM, OV, OtherN, OtherCompare>& other) noexcept {
     clear();
     for (auto it = other.begin(); it < other.end(); ++it) {
@@ -411,8 +424,10 @@ class LimitedOrdered {
     return *this;
   }
 
-  template<typename OK, typename OM, typename OV, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped> && OtherN <= Capacity)
+  template<typename OK, typename OM, typename OV, auto OtherN, typename OtherCompare>
+  requires(
+      std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped>
+      && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedOrdered(LimitedOrdered<OK, OM, OV, OtherN, OtherCompare>&& other) noexcept {
     for (auto it = other.begin(); it < other.end(); ++it) {
       if constexpr (kKeyOnly) {
@@ -424,8 +439,10 @@ class LimitedOrdered {
     other.size_ = 0;
   }
 
-  template<typename OK, typename OM, typename OV, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped> && OtherN <= Capacity)
+  template<typename OK, typename OM, typename OV, auto OtherN, typename OtherCompare>
+  requires(
+      std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped>
+      && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedOrdered& operator=(LimitedOrdered<OK, OM, OV, OtherN, OtherCompare>&& other) noexcept {
     clear();
     for (auto it = other.begin(); it < other.end(); ++it) {
@@ -457,13 +474,17 @@ class LimitedOrdered {
   constexpr std::size_t index_of(const Key& key) const
   requires(types::IsCompareLess<Compare> && Capacity <= kUnrollMaxCapacity)
   {
-#define MBO_CASE_LIMITED_POS_COMP(POS)                          \
-  case POS:                                                     \
-    if constexpr ((POS) >= Capacity) {                          \
-      return npos;                                              \
-    }                                                           \
-    if (key_comp_.Compare(key, GetKey(values_[POS].data)) == 0) \
-      return POS
+#define MBO_CASE_LIMITED_POS_COMP(POS)                              \
+  case POS:                                                         \
+    if constexpr ((POS) >= Capacity) {                              \
+      return npos;                                                  \
+    } else {                                                        \
+      if (key_comp_.Compare(key, GetKey(values_[POS].data)) == 0) { \
+        return POS;                                                 \
+      }                                                             \
+    }                                                               \
+    do /* NOLINT(cppcoreguidelines-avoid-do-while) */ {             \
+    } while (0)
     switch (size_ - 1) {
       MBO_CASE_LIMITED_POS_COMP(7);
       MBO_CASE_LIMITED_POS_COMP(6);
@@ -603,7 +624,11 @@ class LimitedOrdered {
     }
   }
 
-  constexpr void swap(LimitedOrdered& other) noexcept {
+  template<typename OK, typename OM, typename OV, auto OtherN, typename OtherCompare>
+  requires(
+      std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped>
+      && MakeLimitedOptions<OtherN>().kCapacity == Capacity && std::same_as<OtherCompare, Compare>)
+  constexpr void swap(LimitedOrdered<OK, OM, OV, OtherN, OtherCompare>& other) noexcept {
     std::size_t pos = 0;
     for (; pos < size_ && pos < other.size(); ++pos) {
       if constexpr (kKeyOnly) {

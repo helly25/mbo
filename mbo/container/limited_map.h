@@ -60,12 +60,13 @@ namespace mbo::container {
 //
 // Internally a C-array is used and elements are moved as needed. That means
 // that element addresses are not stable.
-template<typename Key, typename Value, std::size_t Capacity, typename KeyComp = mbo::types::CompareLess<Key>>
-requires(std::move_constructible<Key> && std::move_constructible<Value>)
-class LimitedMap final : public internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, Capacity, KeyComp> {
+template<typename Key, typename Value, auto CapacityOrOptions, typename KeyComp = mbo::types::CompareLess<Key>>
+requires(std::move_constructible<Value>)
+class LimitedMap final
+    : public internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, CapacityOrOptions, KeyComp> {
   using KeyValueType = std::pair<const Key, Value>;
-  using LimitedBase = internal::LimitedOrdered<Key, Value, KeyValueType, Capacity, KeyComp>;
-  static_assert(internal::LimitedOrderedValid<Key, Value, std::pair<const Key, Value>>);
+  static constexpr std::size_t kCapacity = MakeLimitedOptions<CapacityOrOptions>().kCapacity;
+  using LimitedBase = internal::LimitedOrdered<Key, Value, KeyValueType, CapacityOrOptions, KeyComp>;
   static_assert(!LimitedBase::kKeyOnly);
 
  public:
@@ -73,9 +74,9 @@ class LimitedMap final : public internal::LimitedOrdered<Key, Value, std::pair<c
 
   // Destructor and constructors from same type.
 
-  using internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, Capacity, KeyComp>::LimitedOrdered;
+  using internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, CapacityOrOptions, KeyComp>::LimitedOrdered;
 
-  constexpr ~LimitedMap() noexcept = default;
+  ~LimitedMap() noexcept = default;
 
   constexpr LimitedMap() noexcept = default;
 
@@ -114,31 +115,31 @@ class LimitedMap final : public internal::LimitedOrdered<Key, Value, std::pair<c
   constexpr LimitedMap(const std::initializer_list<U>& list, const KeyComp& key_comp = KeyComp()) noexcept
       : LimitedBase(list, key_comp) {}
 
-  template<typename U, std::size_t OtherN>
-  requires(std::convertible_to<U, KeyValueType> && OtherN <= Capacity)
+  template<typename U, auto OtherN>
+  requires(std::convertible_to<U, KeyValueType> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(const std::initializer_list<U>& list) noexcept {
     LimitedBase::operator=(list);
     return *this;
   }
 
-  template<typename OK, typename OV, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && OtherN <= Capacity)
+  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
+  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedMap(const LimitedMap<OK, OV, OtherN, OtherCompare>& other) noexcept : LimitedBase(other) {}
 
-  template<typename OK, typename OV, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && OtherN <= Capacity)
+  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
+  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(const LimitedMap<OK, OV, OtherN, OtherCompare>& other) noexcept {
     LimitedBase::operator=(other);
     return *this;
   }
 
-  template<typename OK, typename OV, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && OtherN <= Capacity)
+  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
+  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedMap(LimitedMap<OK, OV, OtherN, OtherCompare>&& other) noexcept
       : LimitedBase(std::move(other)) {}
 
-  template<typename OK, typename OV, std::size_t OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && OtherN <= Capacity)
+  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
+  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(LimitedMap<OK, OV, OtherN, OtherCompare>&& other) noexcept {
     LimitedBase::operator=(std::move(other));
     return *this;
@@ -189,8 +190,8 @@ class LimitedMap final : public internal::LimitedOrdered<Key, Value, std::pair<c
 
   // Custom
 
-  using LimitedBase::npos;      // Return value for `index_of` if `key` is not found.
   using LimitedBase::index_of;  // Return 0-based index of `key`, or `npos` if not found.
+  using LimitedBase::npos;      // Return value for `index_of` if `key` is not found.
 
   // Read/write access
 
@@ -216,8 +217,8 @@ class LimitedMap final : public internal::LimitedOrdered<Key, Value, std::pair<c
 };
 
 template<
-    size_t LN,
-    size_t RN,
+    auto LN,
+    auto RN,
     typename LHS_K,
     typename RHS_K,
     typename LHS_V,
@@ -242,8 +243,8 @@ constexpr inline auto operator<=>(
 }
 
 template<
-    size_t LN,
-    size_t RN,
+    auto LN,
+    auto RN,
     typename LHS_K,
     typename RHS_K,
     typename LHS_V,
@@ -268,8 +269,8 @@ constexpr inline bool operator==(
 }
 
 template<
-    size_t LN,
-    size_t RN,
+    auto LN,
+    auto RN,
     typename LHS_K,
     typename RHS_K,
     typename LHS_V,
@@ -293,13 +294,13 @@ constexpr inline bool operator<(
   return lhs.size() < rhs.size();
 }
 
-template<typename K, typename V, std::size_t N = 0, typename KComp = types::CompareLess<K>>
+template<typename K, typename V, auto N = 0, typename KComp = types::CompareLess<K>>
 inline constexpr auto MakeLimitedMap() noexcept {  // Parameter `key_comp` would create a conflict.
   return LimitedMap<K, V, N, KComp>();
 }
 
 template<
-    std::size_t N,
+    auto N,
     std::forward_iterator It,
     typename KComp = types::CompareLess<typename mbo::types::ForwardIteratorValueType<It>::first_type>>
 requires(types::IsPair<typename mbo::types::ForwardIteratorValueType<It>>)
@@ -308,17 +309,23 @@ inline constexpr auto MakeLimitedMap(It begin, It end, const KComp& key_comp = K
   return LimitedMap<typename KV::first_type, typename KV::second_type, N, KComp>(begin, end, key_comp);
 }
 
-template<std::size_t N, types::IsPair KV, typename KComp = types::CompareLess<typename KV::first_type>>
+template<auto N, types::IsPair KV, typename KComp = types::CompareLess<typename KV::first_type>>
 inline constexpr auto MakeLimitedMap(const std::initializer_list<KV>& data, const KComp& key_comp = KComp()) {
   return LimitedMap<typename KV::first_type, typename KV::second_type, N, KComp>(data, key_comp);
 }
 
 template<types::IsPair... Args>
-requires((types::NotInitializerList<Args> && !std::forward_iterator<Args>) && ...)
+requires(sizeof...(Args) > 0)
 inline constexpr auto MakeLimitedMap(Args&&... args) noexcept {
   using KV = std::common_type_t<Args...>;
   auto result = LimitedMap<typename KV::first_type, typename KV::second_type, sizeof...(Args)>();
   (result.emplace(std::forward<Args>(args)), ...);
+  return result;
+}
+
+template<types::IsPair KV>
+inline constexpr auto MakeLimitedMap() noexcept {
+  auto result = LimitedMap<typename KV::first_type, typename KV::second_type, 0>();
   return result;
 }
 

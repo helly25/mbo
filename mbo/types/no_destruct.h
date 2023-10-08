@@ -59,6 +59,10 @@ class NoDestruct final {
  public:
   constexpr NoDestruct() noexcept : data_(buf_) { std::construct_at(&data_.value); }
 
+  constexpr explicit NoDestruct(T arg) noexcept : data_(buf_) {
+    std::construct_at(&data_.value, std::move(arg));
+  }
+
   template<typename... Args>
   constexpr explicit NoDestruct(Args&&... args) noexcept : data_(buf_) {
     std::construct_at(&data_.value, std::forward<Args>(args)...);

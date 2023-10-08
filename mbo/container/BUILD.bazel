@@ -40,6 +40,7 @@ cc_library(
     hdrs = ["limited_map.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":limited_options_cc",
         ":limited_ordered_cc",
         "//mbo/types:compare_cc",
         "//mbo/types:traits_cc",
@@ -60,14 +61,33 @@ cc_test(
 )
 
 cc_library(
+    name = "limited_options_cc",
+    hdrs = ["limited_options.h"],
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
     name = "limited_ordered_cc",
     hdrs = ["internal/limited_ordered.h"],
     visibility = ["//visibility:private"],
     deps = [
+        ":limited_options_cc",
         "//mbo/types:compare_cc",
         "//mbo/types:traits_cc",
         "@com_google_absl//absl/log:absl_log",
     ],
+)
+
+cc_test(
+    name = "limited_ordered_test",
+    srcs = ["limited_ordered_test.cc"],
+    deps = [
+        ":limited_ordered_cc",
+        "//mbo/testing:matchers_cc",
+        "@com_google_absl//absl/log:initialize",
+        "@com_google_googletest//:gtest_main",
+    ],
+    size = "small",
 )
 
 cc_library(
@@ -75,6 +95,7 @@ cc_library(
     hdrs = ["limited_set.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":limited_options_cc",
         ":limited_ordered_cc",
         "//mbo/types:compare_cc",
         "//mbo/types:traits_cc",
