@@ -1,5 +1,7 @@
 # 0.2.7
 
+* Improve ASAN compatibility for constexpr `LimitedMap` and `LimitedSet`.
+
 # 0.2.6
 
 * Make `RunfilesDir/OrDie` work correctly.
