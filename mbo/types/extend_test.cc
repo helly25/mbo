@@ -31,7 +31,7 @@
 namespace mbo::types {
 namespace {
 
-using ::mbo::types::extender::AbslFormat;
+using ::mbo::types::extender::AbslStringify;
 using ::mbo::types::extender::Comparable;
 using ::mbo::types::extender::Printable;
 using ::mbo::types::extender::Streamable;
@@ -122,6 +122,10 @@ TEST_F(ExtendTest, TestDecomposeInfo) {
 }
 #endif
 
+#if defined(__clang__)
+static_assert(kStructNameSupport);
+#endif
+
 TEST_F(ExtendTest, Test) {
   ASSERT_THAT(std::is_aggregate_v<Extend2>, true);
   ASSERT_THAT(std::is_empty_v<Extend2>, false);
@@ -135,7 +139,7 @@ TEST_F(ExtendTest, Print) {
     const Extend2 ext2{.a = 25, .b = 42};
     ASSERT_THAT(DecomposeCountV<decltype(ext2)>, 2);
     EXPECT_THAT(ext2.ToString(),
-                Conditional(kStructNameSupport, "{a: 25, b: 42}", "{25, 42}"));
+                Conditional(kStructNameSupport, "{.a: 25, .b: 42}", "{25, 42}"));
   }
 
   {
@@ -144,7 +148,7 @@ TEST_F(ExtendTest, Print) {
     EXPECT_THAT(
         ext4.ToString(),
         Conditional(kStructNameSupport,
-                    R"({a: 25, b: 42, c: "Hello There!", ptr: <nullptr>})",
+                    R"({.a: 25, .b: 42, .c: "Hello There!", .ptr: <nullptr>})",
                     R"({25, 42, "Hello There!", <nullptr>})"));
   }
   {
@@ -154,7 +158,7 @@ TEST_F(ExtendTest, Print) {
     EXPECT_THAT(
         ext4.ToString(),
         Conditional(kStructNameSupport,
-                    R"({a: 25, b: 42, c: "Hello There!", ptr: *{1337}})",
+                    R"({.a: 25, .b: 42, .c: "Hello There!", .ptr: *{1337}})",
                     R"({25, 42, "Hello There!", *{1337}})"));
   }
 }
@@ -162,7 +166,7 @@ TEST_F(ExtendTest, Print) {
 TEST_F(ExtendTest, NestedPrint) {
   const Person person{.name = {.first = "First", .last = "Last"}, .age = 42};
   static constexpr std::string_view kExpected =
-      kStructNameSupport ? R"({name: {first: "First", last: "Last"}, age: 42})"
+      kStructNameSupport ? R"({.name: {.first: "First", .last: "Last"}, .age: 42})"
                          : R"({{"First", "Last"}, 42})";
   EXPECT_THAT(person.ToString(), kExpected);
   EXPECT_THAT(absl::StrFormat("%v", person), kExpected);
@@ -173,7 +177,7 @@ TEST_F(ExtendTest, Streamable) {
   std::ostringstream ss4;
   ss4 << ext4;
   EXPECT_THAT(ss4.str(), Conditional(kStructNameSupport,
-                                     R"({a: 25, b: 42, c: "", ptr: <nullptr>})",
+                                     R"({.a: 25, .b: 42, .c: "", .ptr: <nullptr>})",
                                      R"({25, 42, "", <nullptr>})"));
 }
 
@@ -331,15 +335,15 @@ TEST_F(ExtendTest, Hashable) {
 TEST_F(ExtendTest, ExtenderNames) {
   struct T0 : ExtendNoDefault<T0> {};
 
-  struct T1 : ExtendNoDefault<T1, AbslFormat, Printable> {};
+  struct T1 : ExtendNoDefault<T1, AbslStringify, Printable> {};
 
-  struct T2 : ExtendNoDefault<T2, AbslFormat, Streamable> {};
+  struct T2 : ExtendNoDefault<T2, AbslStringify, Streamable> {};
 
   struct T3a
-      : ExtendNoDefault<T3a, AbslFormat, Comparable, Printable, Streamable> {};
+      : ExtendNoDefault<T3a, AbslStringify, Comparable, Printable, Streamable> {};
 
   struct T3b
-      : ExtendNoDefault<T3b, AbslFormat, Streamable, Printable, Comparable> {};
+      : ExtendNoDefault<T3b, AbslStringify, Streamable, Printable, Comparable> {};
 
   struct T4 : Extend<T4> {};
 
@@ -347,21 +351,21 @@ TEST_F(ExtendTest, ExtenderNames) {
       T0::RegisteredExtenderNames(), IsEmpty());
   EXPECT_THAT( // No default, only the specified extra.
       T1::RegisteredExtenderNames(),
-      WhenSorted(ElementsAre("AbslFormat", "Printable")));
+      WhenSorted(ElementsAre("AbslStringify", "Printable")));
   EXPECT_THAT( // No defaults, two extra.
       T2::RegisteredExtenderNames(),
-      WhenSorted(ElementsAre("AbslFormat", "Streamable")));
+      WhenSorted(ElementsAre("AbslStringify", "Streamable")));
   EXPECT_THAT( // All defaults, no extra.
       T3a::RegisteredExtenderNames(),
       WhenSorted(
-          ElementsAre("AbslFormat", "Comparable", "Printable", "Streamable")));
+          ElementsAre("AbslStringify", "Comparable", "Printable", "Streamable")));
   EXPECT_THAT( // All defaults, no extra.
       T3b::RegisteredExtenderNames(),
       WhenSorted(
-          ElementsAre("AbslFormat", "Comparable", "Printable", "Streamable")));
+          ElementsAre("AbslStringify", "Comparable", "Printable", "Streamable")));
   EXPECT_THAT( // All defaults, and as extra.
       T4::RegisteredExtenderNames(),
-      WhenSorted(ElementsAre("AbslFormat", "AbslHashable", "Comparable",
+      WhenSorted(ElementsAre("AbslHashable", "AbslStringify", "Comparable",
                              "Printable", "Streamable")));
 }
 

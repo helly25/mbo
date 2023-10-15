@@ -21,16 +21,16 @@
 //   * Provides method `std::string ToString()` which generates a string
 //     represenation of the fields of the extended class as `"{value, value}"`.
 //   * This is a default extender.
-//   * Requires `AbslFormat`
+//   * Requires `AbslStringify`
 //
 // * Streamable
 //
 //   * Provides an `std:::ostream& operator<<` that uses the same format as
 //     `Printable`.
 //   * This is a default extender.
-//   * Requires `AbslFormat`
+//   * Requires `AbslStringify`
 //
-// * AbslFormat (default)
+// * AbslStringify (default)
 //
 //   * Provides: friend void AbslStringify(Sink&, const Type& t)
 //   * Provides: private void OStreamFields(std::ostream& os) const
@@ -135,7 +135,7 @@ struct MakeExtender {
 };
 
 template<typename ExtenderBase>
-struct AbslFormatImpl : ExtenderBase {
+struct AbslStringifyImpl : ExtenderBase {
   using Type = typename ExtenderBase::ExtenderInfo::Type;
 
   void OStreamFields(std::ostream& os) const { OStreamFieldsImpl(os, this->ToTuple()); }
@@ -167,7 +167,7 @@ struct AbslFormatImpl : ExtenderBase {
       os << ", ";
     }
     if (idx < kNames.length()) {
-      os << kNames[idx] << ": ";
+      os << "." << kNames[idx] << ": ";
     }
     if constexpr (std::is_same_v<V, std::nullptr_t>) {
       os << absl::StreamFormat("nullptr_t");
@@ -190,7 +190,7 @@ struct AbslFormatImpl : ExtenderBase {
 // [AbslStringify](https://abseil.io/docs/cpp/guides/format#abslstringify)).
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct AbslFormat final : MakeExtender<"AbslFormat"_ts, AbslFormatImpl> {};
+struct AbslStringify final : MakeExtender<"AbslStringify"_ts, AbslStringifyImpl> {};
 
 template<typename ExtenderBase>
 struct AbslHashableImpl : ExtenderBase {
@@ -280,7 +280,7 @@ struct PrintableImpl : ExtenderBase {
 // `ToString` function which can be used to convert a type into a `std::string`.
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct Printable final : MakeExtender<"Printable"_ts, PrintableImpl, AbslFormat> {};
+struct Printable final : MakeExtender<"Printable"_ts, PrintableImpl, AbslStringify> {};
 
 template<typename ExtenderBase>
 struct StreamableImpl : ExtenderBase {
@@ -296,7 +296,7 @@ struct StreamableImpl : ExtenderBase {
 // This allows the type to be used directly with `std::ostream`s.
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct Streamable final : MakeExtender<"Streamable"_ts, StreamableImpl, AbslFormat> {};
+struct Streamable final : MakeExtender<"Streamable"_ts, StreamableImpl, AbslStringify> {};
 
 }  // namespace mbo::types::extender
 

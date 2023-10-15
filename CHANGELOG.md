@@ -1,6 +1,8 @@
 # 0.2.7
 
 * Improve ASAN compatibility for constexpr `LimitedMap` and `LimitedSet`.
+* Rename `Extender::AbslFormat` to `Extender::AbslStringify` to better reflect its purpose.
+* Change `Extender::AbslStringify` to print field names prefixed with a fot '.' (requires Clang).
 
 # 0.2.6
 
@@ -45,7 +47,7 @@
 * Add support for GCC (11.4/Ubuntu 22.04).
 * Change Print Extender's `Print` to `ToString` which is a more widely used name.
 * Change Print Extender's `ToString` to print field names (if available, e.g. Clang 16).
-* When compiling with Clang show field names with the `AbslFormatImpl` extender.
+* When compiling with Clang show field names with the `AbslStringify` extender.
 * Enable `static constexpr NoDestruct<>` for more cases and compiler versions.
 * container:
     * Added:

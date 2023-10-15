@@ -46,7 +46,7 @@ struct Extend
     : extender_internal::ExtendImpl<
           T,
           // Default `Extend` functionality
-          extender::AbslFormat,
+          extender::AbslStringify,
           extender::AbslHashable,
           extender::Comparable,
           extender::Printable,

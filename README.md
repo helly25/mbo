@@ -96,7 +96,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * crtp-struct `Extend`: Enables extending of struct/class types with basic functionality.
         * crtp-struct `ExtendNoDefault` Like `Extend` but without default extender functionality.
         * `namespace extender`
-            * extender-struct `AbslFormat`: Extender that injects functionality to make an `Extend`ed type work with abseil format/print functions.
+            * extender-struct `AbslStringify`: Extender that injects functionality to make an `Extend`ed type work with abseil format/print functions.
             * extender-struct `AbslHashable`: Extender that injects functionality to make an `Extend`ed type work with abseil hashing (and also `std::hash`).
             * extender-struct `Comparable`: Extender that injects functionality to make an `Extend`ed type comparable. All comparators will be injected: `<=>`, `==`, `!=`, `<`, `<=`, `>`, `>=`.
             * extender-struct `Printable`:
