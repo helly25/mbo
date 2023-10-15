@@ -27,7 +27,7 @@ The C++ library is organized in functional groups each residing in their own dir
     * `namespace mbo::files`
     * mbo/file:artefact_cc, mbo/file/artefact.h
         * struct `Artefact`: Holds information about a file (its data content, name, and modified time).
-    * mbo/file:file_cc, mbo/file.file.h
+    * mbo/file:file_cc, mbo/file/file.h
         * function `GetContents`: Reads a file and returns its contents or an absl::Status error.
         * function `GetMTime`: Returns the last update/modified time of a file or an absl::Status error.
         * function `GetMaxLines`: Reads at most given number of text lines from a file or returns absl::Status error.
@@ -47,10 +47,10 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/mope:mope_cc, mbo/mope/mope.h
         * class `Template`: The mope template engine and data holder.
     * mbo/mope:ini_cc, mbo/mope/ini.h
-        * function `ReadIniToTemlate`: Helper to initialize a mope Template from an INI file.
+        * function `ReadIniToTemplate`: Helper to initialize a mope Template from an INI file.
     * mbo/mope:mope_bzl, mbo/mope/mope.bzl
         * bzl-rule `mope`: A rule that expands a mope template file.
-        * bazl-macro `mope_test`: A test rule compares mope template expansion against golden files. This
+        * bazl-macro `mope_test`: A test rule that compares mope template expansion against golden files. This
           supports `clang-format` and thus can be used for source-code generation and verification.
 * Status
     * `namespace mbo::status`
@@ -62,6 +62,9 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/strings:indent_cc, mbo/strings/indent.h
         * function `DropIndent`: Converts a raw-string text block as if it had no indent.
         * function `DropIndentAndSplit`: Variant of `DropIndent` that returns the result as lines.
+    * mbo/strings:parse_cc, mbo/strings/parse.h
+        * function `ParseString`: Parses strings respecting C++ and custom escapes as well as quotes (all configurable).
+        * function `ParseStringList`: Parses and splits strings respecting C++ and custom escapes as well as quotes (all configurable).
     * mbo/strings:strip_cc, mbo/strings/strip.h
         * struct `StripCommentsArgs`: Arguments for `StripComments` and `StripLineComments`.
         * function `StripComments`: Strips comments from lines.
@@ -90,7 +93,7 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/types:compare_cc, mbo/types/compare.h
         * comparator `mbo::types::CompareLess` which is compatible to std::Less but allows container optimizations.
     * mbo/types:extend_cc, mbo/types/extend.h
-        * crtp-struct `Extend`: Enables extending of struct/classe types with basic functionality.
+        * crtp-struct `Extend`: Enables extending of struct/class types with basic functionality.
         * crtp-struct `ExtendNoDefault` Like `Extend` but without default extender functionality.
         * `namespace extender`
             * extender-struct `AbslFormat`: Extender that injects functionality to make an `Extend`ed type work with abseil format/print functions.
@@ -105,14 +108,17 @@ The C++ library is organized in functional groups each residing in their own dir
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
         * Mainly, this prevents calling the destructor and thus prevents termination issues (initialization order fiasco).
     * mbo/types:traits_cc, mbo/types/traits.h
-        * concept `IsAggregate` determines whether a type is an aggregate.
-        * concept `IsDecomposable` determines whether a type can be used in static-bindings.
-        * concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
         * concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.
         * concept `ContainerHasEmplace` determines whether a container has `emplace`.
         * concept `ContainerHasEmplaceBack` determines whether a container has `emplace_back`.
         * concept `ContainerHasInsert` determines whether a container has `insert`.
         * concept `ContainerHasPushBack` determines whether a container has `push_back`.
+        * concept `IsAggregate` determines whether a type is an aggregate.
+        * concept `IsCharArray` determines whether a type is a `char*` or `char[]` related type.
+        * concept `IsDecomposable` determines whether a type can be used in static-bindings.
+        * concept `IsInitializerList` determines whether a type is `std::initializer<T> type.
+        * concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
+        * concept `IsPair` determines whether a type is a `std::pair`.
     * mbo/types:tstring_cc, mbo/types/tstring.h
         * struct `tstring`: Implements type `tstring` a compile time string-literal type.
         * operator `operator"" _ts`: String literal support for Clang, GCC and derived compilers.
