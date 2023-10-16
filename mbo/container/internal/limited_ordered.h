@@ -29,7 +29,7 @@
 #include "mbo/types/compare.h"
 #include "mbo/types/traits.h"
 
-namespace mbo::container::internal {
+namespace mbo::container::container_internal {
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define LV_REQUIRE(severity, condition) ABSL_LOG_IF(severity, !(condition))
@@ -39,8 +39,8 @@ namespace mbo::container::internal {
 template<typename Key, typename Mapped, typename Value>
 concept LimitedOrderedValidImpl =
     std::same_as<std::remove_const_t<Key>, std::remove_const_t<Value>>
-     || (mbo::types::IsPair<Value>
-         && std::same_as<std::remove_const_t<Key>, std::remove_const_t<typename Value::first_type>>);
+    || (mbo::types::IsPair<Value>
+        && std::same_as<std::remove_const_t<Key>, std::remove_const_t<typename Value::first_type>>);
 
 template<typename Key, typename Mapped, typename Value>
 concept LimitedOrderedValid =  //
@@ -52,9 +52,9 @@ requires(LimitedOrderedValid<Key, Mapped, Value>)
 class LimitedOrdered {
  protected:
   static_assert(IsLimitedOptionsOrSize<decltype(options)>);
-  static constexpr auto Options = MakeLimitedOptions<options>();
-  static_assert(std::is_trivially_destructible_v<Value> || !Options.kEmptyDestructor);
-  static constexpr std::size_t Capacity = Options.kCapacity;
+  using Options = decltype(MakeLimitedOptions<options>());
+  static_assert(std::is_trivially_destructible_v<Value> || !Options::Has(LimitedOptionsFlag::kEmptyDestructor));
+  static constexpr std::size_t Capacity = Options::kCapacity;
 
   struct None final {};
 
@@ -108,6 +108,7 @@ class LimitedOrdered {
     constexpr ~ValueCompare() noexcept = default;
 
     constexpr explicit ValueCompare() noexcept = default;
+
     constexpr explicit ValueCompare(const key_compare& comp) noexcept : key_comp(comp) {}
 
     constexpr ValueCompare(const ValueCompare&) noexcept = default;
@@ -314,11 +315,13 @@ class LimitedOrdered {
  public:
   // Destructor and constructors from same type.
 
-  constexpr ~LimitedOrdered() noexcept requires(Options.kEmptyDestructor) = default;
-  constexpr ~LimitedOrdered() noexcept requires(!Options.kEmptyDestructor && std::is_trivially_destructible_v<Value>) {
+  constexpr ~LimitedOrdered() noexcept requires(Options::Has(LimitedOptionsFlag::kEmptyDestructor)) = default;
+
+  constexpr ~LimitedOrdered() noexcept requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && std::is_trivially_destructible_v<Value>) {
     clear();
   }
-  ~LimitedOrdered() noexcept requires(!Options.kEmptyDestructor && !std::is_trivially_destructible_v<Value>) {
+
+  ~LimitedOrdered() noexcept requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && !std::is_trivially_destructible_v<Value>) {
     clear();
   }
 
@@ -360,32 +363,27 @@ class LimitedOrdered {
 
   template<std::forward_iterator It>
   requires std::convertible_to<mbo::types::ForwardIteratorValueType<It>, Value>
-  constexpr LimitedOrdered(It begin, It end, const Compare& key_comp = Compare()) noexcept : key_comp_(key_comp) {
-    while (begin < end) {
-      emplace(*begin);
-      ++begin;
+  constexpr LimitedOrdered(It first, It last, const Compare& key_comp = Compare()) noexcept : key_comp_(key_comp) {
+    if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
+      LV_REQUIRE(FATAL, std::is_sorted(first, last, key_comp_));
+    }
+    while (first < last) {
+      if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
+        std::construct_at(&values_[size_++].data, *first);
+      } else {
+        emplace(*first);
+      }
+      ++first;
     }
   }
 
   constexpr LimitedOrdered(const std::initializer_list<value_type>& list, const Compare& key_comp = Compare()) noexcept
-      : key_comp_(key_comp) {
-    auto it = list.begin();
-    while (it < list.end()) {
-      emplace(*it);
-      ++it;
-    }
-  }
+      : LimitedOrdered(list.begin(), list.end(), key_comp) {}
 
   template<typename U>
   requires(std::convertible_to<U, value_type> && !std::same_as<U, value_type>)
   constexpr LimitedOrdered(const std::initializer_list<U>& list, const Compare& key_comp = Compare()) noexcept
-      : key_comp_(key_comp) {
-    auto it = list.begin();
-    while (it < list.end()) {
-      emplace(*it);
-      ++it;
-    }
-  }
+      : LimitedOrdered(list.begin(), list.end(), key_comp) {}
 
   template<typename U, auto OtherN>
   requires(std::convertible_to<U, value_type> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
@@ -892,6 +890,6 @@ class LimitedOrdered {
 
 #undef LV_REQUIRE
 
-}  // namespace mbo::container::internal
+}  // namespace mbo::container::container_internal
 
 #endif  // MBO_CONTAINER_INTERNAL_LIMITED_ORDERED_H_

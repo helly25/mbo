@@ -474,6 +474,12 @@ TEST_F(LimitedSetTest, CompareAllTheSizes) {
   CompareAllTheSizes<16>();
 }
 
+
+TEST_F(LimitedSetTest, PreSortedInput) {
+  constexpr LimitedSet<int, LimitedOptions<4, LimitedOptionsFlag::kRequireSortedInput>{}> kData{0, 1, 2, 42};
+  EXPECT_THAT(kData, ElementsAre(0, 1, 2, 42));
+}
+
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace

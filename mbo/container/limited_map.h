@@ -63,10 +63,10 @@ namespace mbo::container {
 template<typename Key, typename Value, auto CapacityOrOptions, typename KeyComp = mbo::types::CompareLess<Key>>
 requires(std::move_constructible<Value>)
 class LimitedMap final
-    : public internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, CapacityOrOptions, KeyComp> {
+    : public container_internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, CapacityOrOptions, KeyComp> {
   using KeyValueType = std::pair<const Key, Value>;
   static constexpr std::size_t kCapacity = MakeLimitedOptions<CapacityOrOptions>().kCapacity;
-  using LimitedBase = internal::LimitedOrdered<Key, Value, KeyValueType, CapacityOrOptions, KeyComp>;
+  using LimitedBase = container_internal::LimitedOrdered<Key, Value, KeyValueType, CapacityOrOptions, KeyComp>;
   static_assert(!LimitedBase::kKeyOnly);
 
  public:
@@ -74,7 +74,7 @@ class LimitedMap final
 
   // Destructor and constructors from same type.
 
-  using internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, CapacityOrOptions, KeyComp>::LimitedOrdered;
+  using container_internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, CapacityOrOptions, KeyComp>::LimitedOrdered;
 
   ~LimitedMap() noexcept = default;
 

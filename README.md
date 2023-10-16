@@ -11,6 +11,8 @@ The C++ library is organized in functional groups each residing in their own dir
         * conversion struct `ConvertContainer` simplifies copying containers to value convertible containers.
     * mbo/container:limited_map_cc, mbo/container/limited_map.h
         * class `LimitedMap`: A space limited, constexpr compliant `map`.
+    * mbo/container:limited_options_cc, mbo/container/limited_options.h
+        * class `LimitedOptions`: A compile time configuration option for `LimitedSet` and `LimitedMap`.
     * mbo/container:limited_set_cc, mbo/container/limited_set.h
         * class `LimitedSet`: A space limited, constexpr compliant `set`.
     * mbo/container:limited_vector_cc, mbo/container/limited_vector.h

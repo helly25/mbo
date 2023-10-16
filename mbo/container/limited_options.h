@@ -15,42 +15,78 @@
 #ifndef MBO_CONTAINER_LIMITED_OPTIONS_H_
 #define MBO_CONTAINER_LIMITED_OPTIONS_H_
 
+#include <algorithm>
+#include <array>
 #include <concepts>
 #include <type_traits>
 
 namespace mbo::container {
 
-// Type used to control `LimitedSet` anf `LimitedMap`.
-template <std::size_t Capacity, bool EmptyDestructor = false>
-struct LimitedOptions {
-  static constexpr std::size_t kCapacity = Capacity;
+// Flags to be used with `LimitedOptions`. These control specific features of `LimitedSet` and `LimitedMap`.
+enum class LimitedOptionsFlag {
+  // Empty placeholder: Does not cause a change in behavior..
+  kDefault = 0,
 
   // USE WITH CAUTION: By default the destructor will call `clear`. This allows to prevent that.
   // The only reason this is present is to make ASAN analysis of constexpr vars happy.
-  static constexpr bool kEmptyDestructor = EmptyDestructor;
+  kEmptyDestructor,
+
+  // If true, then the input to constructors must be sorted (only applies to `iterator` and `std::initializer_list`
+  // based constructors). This is an optimization for constexpr construction and allows the compiler to handle much
+  // larger sets/maps, as the compiler does not need to execute the `emplace` (which requires sorting and shifting) and
+  // can instead just place the elements.
+  kRequireSortedInput,
 };
 
-template <typename T>
+// Type used to control `LimitedSet` and `LimitedMap`.
+template<std::size_t Capacity, LimitedOptionsFlag... Flags>
+struct LimitedOptions {
+  static constexpr std::size_t kCapacity = Capacity;
+
+  static constexpr std::array<LimitedOptionsFlag, sizeof...(Flags)> kFlags{Flags...};
+
+  static constexpr bool Has(LimitedOptionsFlag test_flag) noexcept {
+    return std::any_of(kFlags.begin(), kFlags.end(), [test_flag](auto flag) { return test_flag == flag; });
+  }
+};
+
+namespace container_internal {
+
+template<std::size_t Size, std::size_t FlagCount, std::array<LimitedOptionsFlag, FlagCount> Flags, std::size_t... Idx>
+constexpr auto MakeLimitedOptionsFromArrayIndices(std::index_sequence<Idx...> /*index_seq*/) {
+  return LimitedOptions<Size, Flags.at(Idx)...>{};
+}
+
+template<std::size_t Size, std::size_t FlagCount, std::array<LimitedOptionsFlag, FlagCount> Flags>
+constexpr auto MakeLimitedOptionsFromArray() {
+  return MakeLimitedOptionsFromArrayIndices<Size, FlagCount, Flags>(std::make_index_sequence<FlagCount>());
+}
+
+}  // namespace container_internal
+
+template<typename T>
 concept IsLimitedOptions = requires(T val) {
-  { val.kCapacity } -> std::convertible_to<std::size_t>;
-  { val.kEmptyDestructor } -> std::convertible_to<bool>;
+  T::kCapacity;
+  T::kFlags.size();
   requires std::same_as<std::remove_cvref_t<decltype(val.kCapacity)>, std::size_t>;
-  requires std::same_as<std::remove_cvref_t<decltype(val.kEmptyDestructor)>, bool>;
-  requires std::same_as<std::remove_cvref_t<T>, LimitedOptions<T::kCapacity, T::kEmptyDestructor>>;
+  requires std::same_as<std::remove_cvref_t<decltype(val.kFlags.size())>, std::size_t>;
+  requires std::same_as<std::remove_cvref_t<decltype(val.kFlags)>, std::array<LimitedOptionsFlag, T::kFlags.size()>>;
+  requires std::same_as<
+      std::remove_cvref_t<T>, decltype(container_internal::MakeLimitedOptionsFromArray<T::kCapacity, T::kFlags.size(), T::kFlags>())>;
 };
 
-template <typename T>
+template<typename T>
 concept IsLimitedOptionsOrSize = std::convertible_to<T, std::size_t> || IsLimitedOptions<T>;
 
-template<std::size_t Size, bool EmptyDestructor = false>
+template<std::size_t Size, LimitedOptionsFlag... Flags>
 constexpr auto MakeLimitedOptions() {
-  return LimitedOptions<Size, EmptyDestructor>{};
-};
+  return LimitedOptions<Size, Flags...>{};
+}
 
 template<LimitedOptions Options>
 constexpr auto MakeLimitedOptions() {
   return Options;
-};
+}
 
 }  // namespace mbo::container
 

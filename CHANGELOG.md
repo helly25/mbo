@@ -1,6 +1,10 @@
 # 0.2.7
 
-* Improve ASAN compatibility for constexpr `LimitedMap` and `LimitedSet`.
+* Improve `LimitedMap` and `LimitedSet`:
+  * Better ASAN compatibility for constexpr.
+  * Allow `LimitedOption` configuration instead of simple length specification.
+    * Option to suppress calling clear in the destructor for cases where that is not a constexpr.
+    * Option to require presorted input: Allows much large constexpr `LimitedSet`/`LimitedValue`.
 * Rename `Extender::AbslFormat` to `Extender::AbslStringify` to better reflect its purpose.
 * Change `Extender::AbslStringify` to print field names prefixed with a fot '.' (requires Clang).
 

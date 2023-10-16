@@ -30,7 +30,7 @@ namespace {
 
 // NOLINTBEGIN(*-magic-numbers)
 
-using ::mbo::container::internal::LimitedOrdered;
+using ::mbo::container::container_internal::LimitedOrdered;
 using ::mbo::testing::CapacityIs;
 using ::testing::ElementsAre;
 using ::testing::Eq;
@@ -47,8 +47,16 @@ using ::testing::SizeIs;
 static_assert(std::ranges::range<LimitedOrdered<int, int, int, 1>>);
 static_assert(std::contiguous_iterator<LimitedOrdered<int, int, int, 2>::iterator>);
 static_assert(std::contiguous_iterator<LimitedOrdered<int, int, int, 3>::const_iterator>);
-static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<4, true>{}>>);
-static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<5, false>{}>>);
+static_assert(IsLimitedOptions<LimitedOptions<4>>);
+static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<4>{}>>);
+static_assert(IsLimitedOptions<LimitedOptions<5, LimitedOptionsFlag::kDefault>>);
+static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<5, LimitedOptionsFlag::kDefault>{}>>);
+static_assert(IsLimitedOptions<LimitedOptions<6, LimitedOptionsFlag::kEmptyDestructor>>);
+static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<6, LimitedOptionsFlag::kEmptyDestructor>{}>>);
+static_assert(IsLimitedOptions<LimitedOptions<7, LimitedOptionsFlag::kRequireSortedInput>>);
+static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<7, LimitedOptionsFlag::kRequireSortedInput>{}>>);
+static_assert(IsLimitedOptions<LimitedOptions<8, LimitedOptionsFlag::kEmptyDestructor, LimitedOptionsFlag::kRequireSortedInput>>);
+static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<8, LimitedOptionsFlag::kEmptyDestructor, LimitedOptionsFlag::kRequireSortedInput>{}>>);
 
 template <typename K = int, typename M = int, typename V = int, auto Capacity = 1>
 struct LimitedOrderedTester : public LimitedOrdered<K, M, V, Capacity> {
@@ -66,15 +74,15 @@ TEST_F(LimitedOrderedTest, ConstexprData) {
 }
 
 TEST_F(LimitedOrderedTest, ConstexprNoDtor) {
-  constexpr auto kTest = internal::LimitedOrdered<int, int, int, LimitedOptions<3, true>{}>{};
+  constexpr auto kTest = LimitedOrdered<int, int, int, LimitedOptions<3, LimitedOptionsFlag::kEmptyDestructor>{}>{};
   EXPECT_THAT(kTest, IsEmpty());
   EXPECT_THAT(kTest, SizeIs(0));
   EXPECT_THAT(kTest, CapacityIs(3));
   EXPECT_THAT(kTest, ElementsAre());
 }
 
-TEST_F(LimitedOrderedTest, Constexpr) {
-  constexpr auto kTest = internal::LimitedOrdered<int, int, int, LimitedOptions<3, false>{}>{};
+TEST_F(LimitedOrderedTest, ConstexprRequireSortedInput) {
+  constexpr auto kTest = LimitedOrdered<int, int, int, LimitedOptions<3, LimitedOptionsFlag::kRequireSortedInput>{}>{};
   EXPECT_THAT(kTest, IsEmpty());
   EXPECT_THAT(kTest, SizeIs(0));
   EXPECT_THAT(kTest, CapacityIs(3));
