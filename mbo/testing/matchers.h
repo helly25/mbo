@@ -19,7 +19,7 @@
 #include "gtest/gtest.h"
 
 namespace mbo::testing {
-namespace internal {
+namespace testing_internal {
 
 // Implements the polymorphic `CapacityIs` matcher, which
 // can be used as a Matcher<T> as long as T is either a container that defines
@@ -69,7 +69,7 @@ class CapacityIsMatcher {
   const CapacityMatcher capacity_matcher_;
 };
 
-}  // namespace internal
+}  // namespace testing_internal
 
 // Returns a matcher that matches the container capacity. The container must support both capacity() and size_type which
 // all STL-like containers provide. Note that the parameter 'capacity' can be a value of type size_type as well as
@@ -77,8 +77,8 @@ class CapacityIsMatcher {
 //   EXPECT_THAT(container, CapacityIs(2));     // Checks container has a capacity for 2 elements.
 //   EXPECT_THAT(container, CapacityIs(Le(2));  // Checks container has a capacity for at most 2.
 template<typename SizeMatcher>
-inline internal::CapacityIsMatcher<SizeMatcher> CapacityIs(const SizeMatcher& size_matcher) {
-  return internal::CapacityIsMatcher<SizeMatcher>(size_matcher);
+inline testing_internal::CapacityIsMatcher<SizeMatcher> CapacityIs(const SizeMatcher& size_matcher) {
+  return testing_internal::CapacityIsMatcher<SizeMatcher>(size_matcher);
 }
 
 }  // namespace mbo::testing

@@ -50,7 +50,7 @@ concept IsDecomposable =
 template<typename T, typename... Args>
 inline constexpr bool IsBracesConstructibleV = types_internal::IsBracesConstructibleImplT<T, Args...>::value;
 
-namespace internal {
+namespace types_internal {
 template<typename Container>
 concept IsForwardIteratableRaw = requires(Container container, const Container const_container) {
   requires std::forward_iterator<typename Container::iterator>;
@@ -66,13 +66,13 @@ concept IsForwardIteratableRaw = requires(Container container, const Container c
   { const_container.end() } -> std::same_as<typename Container::const_iterator>;
   { container.size() } -> std::same_as<typename Container::size_type>;
 };
-}  // namespace internal
+}  // namespace types_internal
 
 // Identifies `Container` types that are at least forward iteratable (this include `std::initializer_list`).
 template<typename Container>
-concept IsForwardIteratable = internal::IsForwardIteratableRaw<std::remove_cvref_t<Container>>;
+concept IsForwardIteratable = types_internal::IsForwardIteratableRaw<std::remove_cvref_t<Container>>;
 
-namespace internal {
+namespace types_internal {
 template<typename Container>
 concept ContainerIsForwardIteratableRaw = requires(Container container, const Container const_container) {
   requires IsForwardIteratableRaw<Container>;
@@ -87,11 +87,11 @@ concept ContainerIsForwardIteratableRaw = requires(Container container, const Co
   { container.cend() } -> std::same_as<typename Container::const_iterator>;
   { container.empty() } -> std::same_as<bool>;
 };
-}  // namespace internal
+}  // namespace types_internal
 
 // Identifies STL like `Container` types that are at least iteratable.
 template<typename Container>
-concept ContainerIsForwardIteratable = internal::ContainerIsForwardIteratableRaw<std::remove_cvref_t<Container>>;
+concept ContainerIsForwardIteratable = types_internal::ContainerIsForwardIteratableRaw<std::remove_cvref_t<Container>>;
 
 // Identifies std like `Container` types that support `emplace` with `ValueType`.
 template<typename Container, typename ValueType>
@@ -125,7 +125,7 @@ concept ContainerHasPushBack = requires(Container container, ValueType new_value
   { container.push_back(new_value) };
 };
 
-namespace internal {
+namespace types_internal {
 
 template<typename T>
 struct IsInitializerListImpl : std::false_type {};
@@ -133,10 +133,10 @@ struct IsInitializerListImpl : std::false_type {};
 template<typename T>
 struct IsInitializerListImpl<std::initializer_list<T>> : std::true_type {};
 
-}  // namespace internal
+}  // namespace types_internal
 
 template<typename T>
-concept IsInitializerList = internal::IsInitializerListImpl<std::remove_cvref_t<T>>::value;
+concept IsInitializerList = types_internal::IsInitializerListImpl<std::remove_cvref_t<T>>::value;
 
 template<typename T>
 concept NotInitializerList = !IsInitializerList<T>;
@@ -144,7 +144,7 @@ concept NotInitializerList = !IsInitializerList<T>;
 template<typename T>
 concept HasValueType = requires { typename T::value_type; };
 
-namespace internal {
+namespace types_internal {
 
 template<std::forward_iterator It, bool = HasValueType<It>>
 struct ForwardIteratorValueTypeImpl {
@@ -156,12 +156,12 @@ struct ForwardIteratorValueTypeImpl<It, false> {
   using type = std::remove_reference_t<decltype(*std::declval<It&>())>;
 };
 
-}  // namespace internal
+}  // namespace types_internal
 
 template<std::forward_iterator It>
-using ForwardIteratorValueType = internal::ForwardIteratorValueTypeImpl<It>::type;
+using ForwardIteratorValueType = types_internal::ForwardIteratorValueTypeImpl<It>::type;
 
-namespace internal {
+namespace types_internal {
 
 template<typename T>
 struct IsCharArrayImpl : std::false_type {};
@@ -172,15 +172,15 @@ struct IsCharArrayImpl<char*> : std::true_type {};
 template<>
 struct IsCharArrayImpl<const char*> : std::true_type {};
 
-}  // namespace internal
+}  // namespace types_internal
 
 template<typename T>
-concept IsCharArray = internal::IsCharArrayImpl<std::decay_t<T>>::value;
+concept IsCharArray = types_internal::IsCharArrayImpl<std::decay_t<T>>::value;
 
 template<typename T>
 concept NotIsCharArray = !IsCharArray<T>;
 
-namespace internal {
+namespace types_internal {
 
 struct NoFunc final {};
 
@@ -206,10 +206,10 @@ concept ContainerCopyConvertibleRaw =                                           
         || ContainerHasInsert<ContainerOut, ValueOrResultT<typename ContainerIn::value_type, Func>>
         || ContainerHasPushBack<ContainerOut, ValueOrResultT<typename ContainerIn::value_type, Func>>);
 
-}  // namespace internal
+}  // namespace types_internal
 
-template<typename ContainerIn, typename ContainerOut, typename Func = internal::NoFunc>
-concept ContainerCopyConvertible = internal::
+template<typename ContainerIn, typename ContainerOut, typename Func = types_internal::NoFunc>
+concept ContainerCopyConvertible = types_internal::
     ContainerCopyConvertibleRaw<std::remove_cvref_t<ContainerIn>, std::remove_reference_t<ContainerOut>, Func>;
 
 template <typename T>

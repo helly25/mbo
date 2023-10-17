@@ -60,7 +60,7 @@ struct CompareLess {
   }
 };
 
-namespace internal {
+namespace types_internal {
 
 template<typename T>
 struct IsCompareLess : std::false_type {};
@@ -68,10 +68,10 @@ struct IsCompareLess : std::false_type {};
 template<typename T>
 struct IsCompareLess<CompareLess<T>> : std::true_type {};
 
-}  // namespace internal
+}  // namespace types_internal
 
 template<typename T>
-concept IsCompareLess = internal::IsCompareLess<T>::value;
+concept IsCompareLess = types_internal::IsCompareLess<T>::value;
 
 }  // namespace mbo::types
 
