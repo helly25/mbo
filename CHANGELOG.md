@@ -1,5 +1,7 @@
 # 0.2.8
 
+* Make `//mbo/types:traits_cc` publicly visible.
+
 # 0.2.7
 
 * Improve `LimitedMap` and `LimitedSet`:
