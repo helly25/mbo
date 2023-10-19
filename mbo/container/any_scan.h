@@ -52,11 +52,18 @@ namespace mbo::container {
 //   compatible have a `difference_type` but in order for `AnyScan` itself to be compatible with
 //   `std::input_iterator` it has to provide that type. Further, we aim to use a predictable type
 //   as much as possible, so that the callers do not need to unnecessarily guess that type.
-template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
+//
+// The more specialized `ConvertingScan` modifies `AnyScan` to accept `MakeConvertingScan` which
+// allows type erased scanning using a specified type that can be constructed from the values of a
+// compatible container. For instance this allows to scan containers of string-like values with a
+// specific string-like container (see below).
+template<typename ValueType, typename DifferenceType = std::ptrdiff_t, bool AccessByRef = true>
 class AnyScan {
  private:
+  using AccessType = std::conditional_t<AccessByRef, const ValueType&, ValueType>;
+
   using FuncMore = std::function<bool()>;
-  using FuncCurr = std::function<const ValueType*()>;
+  using FuncCurr = std::function<AccessType()>;
   using FuncNext = std::function<void()>;
 
   struct TripleFunc {
@@ -72,7 +79,7 @@ class AnyScan {
 
  public:
   using difference_type = DifferenceType;
-  using value_type = const ValueType;
+  using value_type = std::conditional_t<AccessByRef, const ValueType, ValueType>;
   using pointer = const ValueType*;
   using const_pointer = const ValueType*;
   using reference = const ValueType&;
@@ -83,6 +90,7 @@ class AnyScan {
   AnyScan() = delete;
 
   template<::mbo::types::ContainerHasInputIterator Container>
+  requires(AccessByRef)
   explicit AnyScan(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
       : clone_([container = std::forward<Container>(container)] {
           using RawContainer = std::remove_cvref_t<Container>;
@@ -90,7 +98,23 @@ class AnyScan {
           auto pos = std::shared_ptr<const_iterator>(new const_iterator(container.begin()));
           return std::make_shared<TripleFunc>(
               /* more */ [end = container.end(), pos]() -> bool { return *pos != end; },
-              /* curr */ [pos]() -> const ValueType* { return &**pos; },
+              /* curr */ [pos]() -> AccessType { return **pos; },
+              /* next */ [pos] { ++*pos; });
+        }) {}
+
+  template<::mbo::types::ContainerHasInputIterator Container>
+  requires(
+    !AccessByRef &&
+    std::constructible_from<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>> &&
+    std::constructible_from<value_type, AccessType>)
+  explicit AnyScan(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
+      : clone_([container = std::forward<Container>(container)] {
+          using RawContainer = std::remove_cvref_t<Container>;
+          using const_iterator = RawContainer::const_iterator;
+          auto pos = std::shared_ptr<const_iterator>(new const_iterator(container.begin()));
+          return std::make_shared<TripleFunc>(
+              /* more */ [end = container.end(), pos]() -> bool { return *pos != end; },
+              /* curr */ [pos]() -> AccessType { return AccessType(**pos); },
               /* next */ [pos] { ++*pos; });
         }) {}
 
@@ -112,16 +136,29 @@ class AnyScan {
 
     explicit const_iterator(const std::shared_ptr<TripleFunc>& funcs) : funcs_(std::move(funcs)) {}
 
-    const_reference operator*() const noexcept {
+    const_reference operator*() const noexcept
+    requires AccessByRef
+    {
       // We check both the presence of `func_` as well as calling the actual `more` function.
       // That means we bypass any protection an iterator may have, but we can make this function
       // `noexcept` assuming the iterator is noexcept for access. On the other hand we expect that
       // out of bounds access may actually raise. So we effectively side step such exceptions.
       ABSL_CHECK(funcs_ && funcs_->more());
-      return *funcs_->curr();
+      return funcs_->curr();
     }
 
-    const_pointer operator->() const noexcept { return funcs_ ? funcs_->curr() : nullptr; }
+    value_type operator*() const noexcept
+    requires(!AccessByRef)
+    {
+      ABSL_CHECK(funcs_ && funcs_->more());
+      return value_type(funcs_->curr());
+    }
+
+    const_pointer operator->() const noexcept
+    requires AccessByRef
+    {
+      return funcs_ ? &funcs_->curr() : nullptr;
+    }
 
     const_iterator& operator++() noexcept {
       if (funcs_) {
@@ -176,6 +213,24 @@ auto MakeAnyScan(Container&& container) noexcept {
   using DifferenceType = std::conditional_t<
       std::convertible_to<ActualDifferenceType, std::ptrdiff_t>, std::ptrdiff_t, ActualDifferenceType>;
   return AnyScan<ValueType, DifferenceType>(std::forward<Container>(container));
+}
+
+// A `ConvertingScan` is very similar to `AnyScan`, however it allows scanning of any container whose `value_types` - as
+// returned by its const_iterator - can be copy-converted into the specified type. This in particular allows scanning
+// containers of any string-like type as either `std::string` or `std::string_view`. The emphasis is on COPY as this
+// kind of conversion requires return by value. As such the `ConvertingScan`'s iterators do not have `operator->()`.
+template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
+using ConvertingScan = AnyScan<ValueType, DifferenceType, false>;
+
+// Creates `ConvertingScan` instances.
+template<typename ValueType, ::mbo::types::ContainerHasInputIterator Container>
+requires std::constructible_from<ValueType, typename std::remove_cvref_t<Container>::value_type>
+auto MakeConvertingScan(Container&& container) noexcept {
+  using RawContainer = std::remove_cvref_t<Container>;
+  using ActualDifferenceType = ::mbo::types::GetDifferenceType<RawContainer>;
+  using DifferenceType = std::conditional_t<
+      std::convertible_to<ActualDifferenceType, std::ptrdiff_t>, std::ptrdiff_t, ActualDifferenceType>;
+  return ConvertingScan<ValueType, DifferenceType>(std::forward<Container>(container));
 }
 
 }  // namespace mbo::container

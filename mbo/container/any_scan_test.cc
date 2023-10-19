@@ -136,5 +136,21 @@ TEST_F(AnyScanTest, CallFunctionPairOfStrings) {
   EXPECT_THAT(Tester(MakeAnyScan(std::vector<std::pair<std::string, std::string>>{{"1", "a"}, {"2", "b"}})), ElementsAre(Pair("1", "a"), Pair("2", "b")));
 }
 
+template<typename T>
+std::vector<T> ConvTester(const ConvertingScan<T>& span) {
+  return {span.begin(), span.end()};
+}
+
+TEST_F(AnyScanTest, CallFunctionWithConversion) {
+  {
+    const std::array<std::string, 3> data{{"foo", "bar", "baz"}};
+    EXPECT_THAT(ConvTester<std::string_view>(MakeConvertingScan<std::string_view>(data)), ElementsAre("foo", "bar", "baz"));
+  }
+  {
+    const std::array<std::string_view, 3> data{{"foo", "bar", "baz"}};
+    EXPECT_THAT(ConvTester<std::string>(MakeConvertingScan<std::string>(data)), ElementsAre("foo", "bar", "baz"));
+  }
+}
+
 }  // namespace
 }  // namespace mbo::container

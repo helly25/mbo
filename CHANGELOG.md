@@ -1,6 +1,8 @@
 # 0.2.10
 
-* Add missing `LimitedVector` non-converting constructor for `std::initializer_list`.
+* Added missing `LimitedVector` non-converting constructor for `std::initializer_list`.
+* Added trait `ContainerConstIteratorValueType`.
+* Added `ConvertingScan` and `MakeConvertingScan`.
 
 # 0.2.9
 

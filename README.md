@@ -9,7 +9,9 @@ The C++ library is organized in functional groups each residing in their own dir
     * `namespace mbo::container`
     * mbo/container:any_scan_cc, mbo/container/any_scan.h
         * class `AnyScan`: A container type independent iteration view - or scan over the container.
+        * class `ConvertingScan`: A container scanner that allows for conversions.
         * function `MakeAnyScan`: Helper function to create `AnyScan` instances.
+        * function `MakeConvertingScan`: Helper function to create `ConvertingScan` instances.
     * mbo/container:convert_container_cc, mbo/container/convert_container.h
         * conversion struct `ConvertContainer` simplifies copying containers to value convertible containers.
     * mbo/container:limited_map_cc, mbo/container/limited_map.h
@@ -113,6 +115,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
         * Mainly, this prevents calling the destructor and thus prevents termination issues (initialization order fiasco).
     * mbo/types:traits_cc, mbo/types/traits.h
+        * type alias `ContainerConstIteratorValueType` returned the value-type of the const_iterator of a container.
         * concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.
         * concept `ContainerHasEmplace` determines whether a container has `emplace`.
         * concept `ContainerHasEmplaceBack` determines whether a container has `emplace_back`.
@@ -120,7 +123,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * concept `ContainerHasPushBack` determines whether a container has `push_back`.
         * concept `ContainerHasForwardIterator` determines whether a container has `begin`, `end` and `std::forward_iterator` compliant iterators.
         * concept `ContainerHasInputIterator` determines whether a container has `begin`, `end` and `std::input_iterator` compliant iterators.
-        * struct `GetDifferenceType` is either set to the type's `difference_type` or `std::ptrdiff_t`.
+        * type alias `GetDifferenceType` is either set to the type's `difference_type` or `std::ptrdiff_t`.
         * concept `HasDifferenceType` determines whether a type has a `difference_type`.
         * concept `IsAggregate` determines whether a type is an aggregate.
         * concept `IsCharArray` determines whether a type is a `char*` or `char[]` related type.

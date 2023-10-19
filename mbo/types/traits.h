@@ -218,6 +218,10 @@ struct ForwardIteratorValueTypeImpl<It, false> {
 template<std::forward_iterator It>
 using ForwardIteratorValueType = types_internal::ForwardIteratorValueTypeImpl<It>::type;
 
+template<ContainerHasInputIterator Container>
+using ContainerConstIteratorValueType =
+    std::iterator_traits<typename std::remove_cvref_t<Container>::const_iterator>::value_type;
+
 namespace types_internal {
 
 template<typename T>
