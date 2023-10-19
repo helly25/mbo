@@ -8,7 +8,8 @@ The C++ library is organized in functional groups each residing in their own dir
 * Container
     * `namespace mbo::container`
     * mbo/container:any_scan_cc, mbo/container/any_scan.h
-        * A container type independent iteration view - or scan over the container.
+        * class `AnyScan`: A container type independent iteration view - or scan over the container.
+        * function `MakeAnyScan`: Helper function to create `AnyScan` instances.
     * mbo/container:convert_container_cc, mbo/container/convert_container.h
         * conversion struct `ConvertContainer` simplifies copying containers to value convertible containers.
     * mbo/container:limited_map_cc, mbo/container/limited_map.h
