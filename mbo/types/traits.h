@@ -64,7 +64,6 @@ concept IsForwardIteratableRaw = requires(Container container, const Container c
   { container.end() } -> std::same_as<typename Container::iterator>;
   { const_container.begin() } -> std::same_as<typename Container::const_iterator>;
   { const_container.end() } -> std::same_as<typename Container::const_iterator>;
-  { container.size() } -> std::same_as<typename Container::size_type>;
 };
 }  // namespace types_internal
 
@@ -83,9 +82,12 @@ concept ContainerIsForwardIteratableRaw = requires(Container container, const Co
   requires std::same_as<
       typename Container::difference_type,
       typename std::iterator_traits<typename Container::const_iterator>::difference_type>;
+  // Technically `cbegin`, `cend`, `empty` and `size` are not required.
+  // But we require them nonetheless (for now) as decent container implementation will provide them.
   { container.cbegin() } -> std::same_as<typename Container::const_iterator>;
   { container.cend() } -> std::same_as<typename Container::const_iterator>;
   { container.empty() } -> std::same_as<bool>;
+  { container.size() } -> std::same_as<typename Container::size_type>;
 };
 }  // namespace types_internal
 
