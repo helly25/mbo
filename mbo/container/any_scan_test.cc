@@ -31,6 +31,7 @@ namespace mbo::container {
 namespace {
 
 using ::testing::ElementsAre;
+using ::testing::Pair;
 
 static_assert(std::input_iterator<AnyScan<int, std::ptrdiff_t>::const_iterator>);
 static_assert(!std::forward_iterator<AnyScan<int, std::ptrdiff_t>::const_iterator>);
@@ -94,6 +95,15 @@ TEST_F(AnyScanTest, CallFunctionString) {
   EXPECT_THAT(Tester(MakeAnyScan(std::list<std::string>{"a", "b"})), ElementsAre("a", "b"));
   EXPECT_THAT(Tester(MakeAnyScan(std::set<std::string>{"a", "b"})), ElementsAre("a", "b"));
   EXPECT_THAT(Tester(MakeAnyScan(std::vector<std::string>{"a", "b"})), ElementsAre("a", "b"));
+}
+
+TEST_F(AnyScanTest, CallFunctionPairOfStrings) {
+  EXPECT_THAT(Tester(MakeAnyScan(std::array<std::pair<std::string, std::string>, 2>{{{"1", "a"}, {"2", "b"}}})), ElementsAre(Pair("1", "a"), Pair("2", "b")));
+  EXPECT_THAT(Tester(MakeAnyScan(LimitedSet<std::pair<std::string, std::string>, 3>{{"1", "a"}, {"2", "b"}})), ElementsAre(Pair("1", "a"), Pair("2", "b")));
+  EXPECT_THAT(Tester(MakeAnyScan(LimitedVector<std::pair<std::string, std::string>, 3>{{"1", "a"}, {"2", "b"}})), ElementsAre(Pair("1", "a"), Pair("2", "b")));
+  EXPECT_THAT(Tester(MakeAnyScan(std::list<std::pair<std::string, std::string>>{{"1", "a"}, {"2", "b"}})), ElementsAre(Pair("1", "a"), Pair("2", "b")));
+  EXPECT_THAT(Tester(MakeAnyScan(std::set<std::pair<std::string, std::string>>{{"1", "a"}, {"2", "b"}})), ElementsAre(Pair("1", "a"), Pair("2", "b")));
+  EXPECT_THAT(Tester(MakeAnyScan(std::vector<std::pair<std::string, std::string>>{{"1", "a"}, {"2", "b"}})), ElementsAre(Pair("1", "a"), Pair("2", "b")));
 }
 
 }  // namespace
