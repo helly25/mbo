@@ -251,14 +251,10 @@ struct ComparableImpl : ExtenderBase {
 
   // Define operator `<=>` on `const T&` and another type.
   template<typename Lhs>
-  friend auto operator<=>(const Lhs& lhs, const T& rhs) {
-    return lhs <=> rhs.ToTupl();
-  }
+  friend auto operator<=>(const Lhs& lhs, const T& rhs) { return lhs <=> rhs.ToTupl(); }
 
   template<typename Rhs>
-  friend auto operator<=>(const T& lhs, const Rhs& rhs) {
-    return lhs.ToTuple() <=> rhs;
-  }
+  friend auto operator<=>(const T& lhs, const Rhs& rhs) { return lhs.ToTuple() <=> rhs; }
 };
 
 // Extender that injects functionality to make an `Extend`ed type comparable.
