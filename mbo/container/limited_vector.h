@@ -136,6 +136,13 @@ class LimitedVector final {
     }
   }
 
+  constexpr LimitedVector(const std::initializer_list<T>& list) noexcept {
+    auto it = list.begin();
+    while (it < list.end()) {
+      emplace_back(*it++);
+    }
+  }
+
   template<typename U>
   requires std::convertible_to<U, T>
   constexpr LimitedVector(const std::initializer_list<U>& list) noexcept {

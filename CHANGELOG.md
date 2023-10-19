@@ -1,3 +1,7 @@
+# 0.2.10
+
+* Add missing `LimitedVector` non-converting constructor for `std::initializer_list`.
+
 # 0.2.9
 
 * Added `mbo::container::AnyScan` for type erased container views (scanning).
