@@ -213,6 +213,9 @@ requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline bool operator==(
     const LimitedSet<LHS, LN, LCompare>& lhs,
     const LimitedSet<RHS, RN, RCompare>& rhs) noexcept {
+  if (lhs.size() != rhs.size()) {
+    return false;
+  }
   auto lhs_it = lhs.begin();
   auto rhs_it = rhs.begin();
   while (lhs_it != lhs.end() && rhs_it != rhs.end()) {
@@ -223,7 +226,7 @@ constexpr inline bool operator==(
     ++lhs_it;
     ++rhs_it;
   }
-  return lhs.size() == rhs.size();
+  return true;
 }
 
 template<auto LN, auto RN, typename LHS, typename RHS, typename LCompare, typename RCompare>

@@ -418,6 +418,9 @@ constexpr inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const Limit
 template<size_t LN, size_t RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
+  if (lhs.size() != rhs.size()) {
+    return false;
+  }
   std::size_t minsize = std::min(LN, RN);
   for (std::size_t index = 0; index < minsize; ++index) {
     const auto comp = lhs[index] <=> rhs[index];
@@ -425,7 +428,7 @@ constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const Limite
       return false;
     }
   }
-  return lhs.size() == rhs.size();
+  return true;
 }
 
 template<size_t LN, size_t RN, typename LHS, typename RHS>

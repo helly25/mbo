@@ -255,6 +255,9 @@ requires(std::three_way_comparable_with<LHS_K, RHS_K> && std::three_way_comparab
 constexpr inline bool operator==(
     const LimitedMap<LHS_K, LHS_V, LN, LKComp>& lhs,
     const LimitedMap<RHS_K, RHS_V, RN, RKComp>& rhs) noexcept {
+  if (lhs.size() != rhs.size()) {
+    return false;
+  }
   auto lhs_it = lhs.begin();
   auto rhs_it = rhs.begin();
   while (lhs_it != lhs.end() && rhs_it != rhs.end()) {
@@ -265,7 +268,7 @@ constexpr inline bool operator==(
     ++lhs_it;
     ++rhs_it;
   }
-  return lhs.size() == rhs.size();
+  return true;
 }
 
 template<
