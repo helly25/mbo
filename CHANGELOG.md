@@ -5,7 +5,7 @@
   * Added concept `ContainerHasForwardIterator` determines whether a container has `begin`, `end` and `std::forward_iterator` compliant iterators.
   * Added concept `ContainerHasInputIterator` determines whether a container has `begin`, `end` and `std::input_iterator` compliant iterators.
   * Added struct `GetDifferenceType` either `std::ptrdiff_t` or the type's `difference_type`.
-  * Added concept `HasDifferenceType` determines whetehr a type has a `difference_type`.
+  * Added concept `HasDifferenceType` determines whether a type has a `difference_type`.
 
 # 0.2.8
 
