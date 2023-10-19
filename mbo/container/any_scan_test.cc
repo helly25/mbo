@@ -47,6 +47,7 @@ namespace {
 
 using ::testing::ElementsAre;
 using ::testing::Pair;
+using ::testing::UnorderedElementsAre;
 using ::testing::WhenSorted;
 
 static_assert(std::input_iterator<AnyScan<int, std::ptrdiff_t>::const_iterator>);
@@ -92,7 +93,7 @@ TEST_F(AnyScanTest, TestSet) {
 
 TEST_F(AnyScanTest, TestUnorderedSet) {
   std::unordered_set<int> data{1, 2, 3};
-  EXPECT_THAT(MakeAnyScan(data), ElementsAre(1, 2, 3));
+  EXPECT_THAT(MakeAnyScan(data), UnorderedElementsAre(1, 2, 3));
 }
 
 TEST_F(AnyScanTest, TestVector) {
