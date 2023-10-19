@@ -33,6 +33,7 @@ cc_test(
         ":limited_set_cc",
         ":limited_vector_cc",
         "//mbo/types:traits_cc",
+        "@com_google_absl//absl/hash",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
