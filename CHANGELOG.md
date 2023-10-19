@@ -1,3 +1,7 @@
+# 0.2.9
+
+* Add (experimental) `//mbo/container:any_span_cc` / `mbo::container::AnySpan` (maybe need to be renamed to AnyRange or so).
+
 # 0.2.8
 
 * Make `//mbo/types:traits_cc` publicly visible.
