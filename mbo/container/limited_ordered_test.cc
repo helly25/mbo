@@ -69,8 +69,11 @@ struct LimitedOrderedTest : ::testing::Test {
 };
 
 TEST_F(LimitedOrderedTest, ConstexprData) {
+#ifndef NDEBUG
+  // In opt mode the compiler won't initialize the int.
   constexpr auto kTest = LimitedOrderedTester<>::Data{};
   EXPECT_THAT(kTest.data, 0);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+#endif
 }
 
 TEST_F(LimitedOrderedTest, ConstexprNoDtor) {
