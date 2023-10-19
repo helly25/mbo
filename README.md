@@ -120,8 +120,8 @@ The C++ library is organized in functional groups each residing in their own dir
         * concept `ContainerHasPushBack` determines whether a container has `push_back`.
         * concept `ContainerHasForwardIterator` determines whether a container has `begin`, `end` and `std::forward_iterator` compliant iterators.
         * concept `ContainerHasInputIterator` determines whether a container has `begin`, `end` and `std::input_iterator` compliant iterators.
-        * struct `GetDifferenceType` either `std::ptrdiff_t` or the type's `difference_type`.
-        * concept `HasDifferenceType` determines whetehr a type has a `difference_type`.
+        * struct `GetDifferenceType` is either set to the type's `difference_type` or `std::ptrdiff_t`.
+        * concept `HasDifferenceType` determines whether a type has a `difference_type`.
         * concept `IsAggregate` determines whether a type is an aggregate.
         * concept `IsCharArray` determines whether a type is a `char*` or `char[]` related type.
         * concept `IsDecomposable` determines whether a type can be used in static-bindings.
