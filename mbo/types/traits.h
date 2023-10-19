@@ -72,6 +72,7 @@ template<typename Container>
 concept IsForwardIteratable = types_internal::IsForwardIteratableRaw<std::remove_cvref_t<Container>>;
 
 namespace types_internal {
+
 template<typename Container>
 concept ContainerIsForwardIteratableRaw = requires(Container container, const Container const_container) {
   requires IsForwardIteratableRaw<Container>;
@@ -89,11 +90,65 @@ concept ContainerIsForwardIteratableRaw = requires(Container container, const Co
   { container.empty() } -> std::same_as<bool>;
   { container.size() } -> std::same_as<typename Container::size_type>;
 };
+
+template<typename Container>
+concept ContainerHasInputIteratorImpl = requires(Container container, const Container const_container) {
+  typename Container::iterator;
+  typename Container::const_iterator;
+  requires std::input_iterator<typename Container::iterator>;
+  requires std::input_iterator<typename Container::const_iterator>;
+  { container.begin() } -> std::same_as<typename Container::iterator>;
+  { container.end() } -> std::same_as<typename Container::iterator>;
+  { const_container.begin() } -> std::same_as<typename Container::const_iterator>;
+  { const_container.end() } -> std::same_as<typename Container::const_iterator>;
+};
+
+template<typename Container>
+concept ContainerHasForwardIteratorImpl = requires(Container container, const Container const_container) {
+  typename Container::iterator;
+  typename Container::const_iterator;
+  requires std::forward_iterator<typename Container::iterator>;
+  requires std::forward_iterator<typename Container::const_iterator>;
+  { container.begin() } -> std::same_as<typename Container::iterator>;
+  { container.end() } -> std::same_as<typename Container::iterator>;
+  { const_container.begin() } -> std::same_as<typename Container::const_iterator>;
+  { const_container.end() } -> std::same_as<typename Container::const_iterator>;
+};
 }  // namespace types_internal
 
 // Identifies STL like `Container` types that are at least iteratable.
 template<typename Container>
 concept ContainerIsForwardIteratable = types_internal::ContainerIsForwardIteratableRaw<std::remove_cvref_t<Container>>;
+
+// Similar to `ContainerIsForwardIteratable` but only checks for `begin`, `end` and iterators.
+// Here the iterators must comply with `std::input_iterator`.
+template<typename Container>
+concept ContainerHasInputIterator = types_internal::ContainerHasInputIteratorImpl<std::remove_cvref_t<Container>>;
+
+// Similar to `ContainerIsForwardIteratable` but only checks for `begin`, `end` and iterators.
+// Here the iterators must comply with `std::forward_iterator`.
+template<typename Container>
+concept ContainerHasForwardIterator = types_internal::ContainerHasForwardIteratorImpl<std::remove_cvref_t<Container>>;
+
+template<typename T>
+concept HasDifferenceType = requires { typename T::difference_type; };
+
+namespace types_internal {
+
+template<typename T, bool = HasDifferenceType<T>>
+struct GetDifferenceTypeImpl {
+  using type = std::ptrdiff_t;
+};
+
+template<typename T>
+struct GetDifferenceTypeImpl<T, true> {
+  using type = T::difference_type;
+};
+
+}  // namespace types_internal
+
+template<typename T>
+using GetDifferenceType = types_internal::GetDifferenceTypeImpl<T>::type;
 
 // Identifies std like `Container` types that support `emplace` with `ValueType`.
 template<typename Container, typename ValueType>

@@ -1,6 +1,11 @@
 # 0.2.9
 
-* Add (experimental) `//mbo/container:any_span_cc` / `mbo::container::AnySpan` (maybe need to be renamed to AnyRange or so).
+* Added `mbo::container::AnyScan` for type erased container views (scanning).
+* In //mbo/types:traits_cc:
+  * Added concept `ContainerHasForwardIterator` determines whether a container has `begin`, `end` and `std::forward_iterator` compliant iterators.
+  * Added concept `ContainerHasInputIterator` determines whether a container has `begin`, `end` and `std::input_iterator` compliant iterators.
+  * Added struct `GetDifferenceType` either `std::ptrdiff_t` or the type's `difference_type`.
+  * Added concept `HasDifferenceType` determines whetehr a type has a `difference_type`.
 
 # 0.2.8
 

@@ -7,6 +7,8 @@ The C++ library is organized in functional groups each residing in their own dir
 
 * Container
     * `namespace mbo::container`
+    * mbo/container:any_scan_cc, mbo/container/any_scan.h
+        * A container type independent iteration view - or scan over the container.
     * mbo/container:convert_container_cc, mbo/container/convert_container.h
         * conversion struct `ConvertContainer` simplifies copying containers to value convertible containers.
     * mbo/container:limited_map_cc, mbo/container/limited_map.h
@@ -115,6 +117,10 @@ The C++ library is organized in functional groups each residing in their own dir
         * concept `ContainerHasEmplaceBack` determines whether a container has `emplace_back`.
         * concept `ContainerHasInsert` determines whether a container has `insert`.
         * concept `ContainerHasPushBack` determines whether a container has `push_back`.
+        * concept `ContainerHasForwardIterator` determines whether a container has `begin`, `end` and `std::forward_iterator` compliant iterators.
+        * concept `ContainerHasInputIterator` determines whether a container has `begin`, `end` and `std::input_iterator` compliant iterators.
+        * struct `GetDifferenceType` either `std::ptrdiff_t` or the type's `difference_type`.
+        * concept `HasDifferenceType` determines whetehr a type has a `difference_type`.
         * concept `IsAggregate` determines whether a type is an aggregate.
         * concept `IsCharArray` determines whether a type is a `char*` or `char[]` related type.
         * concept `IsDecomposable` determines whether a type can be used in static-bindings.

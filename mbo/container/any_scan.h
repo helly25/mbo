@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_CONTAINER_ANY_SPAN_H_
-#define MBO_CONTAINER_ANY_SPAN_H_
+#ifndef MBO_CONTAINER_ANY_SCAN_H_
+#define MBO_CONTAINER_ANY_SCAN_H_
 
 #include <functional>
 #include <memory>
@@ -26,34 +26,34 @@
 // NOLINTBEGIN(readability-identifier-naming)
 
 namespace mbo::container {
-namespace container_internal {
 
-template<typename Container>
-concept ContainerHasInputIterator = requires {
-  typename std::remove_cvref_t<Container>::const_iterator;
-  requires std::forward_iterator<typename std::remove_cvref_t<Container>::const_iterator>;
-};
-
-template<typename T>
-concept HasDifferenceType = requires { typename T::difference_type; };
-
-template<typename T, bool = HasDifferenceType<T>>
-struct GetDifferenceTypeImpl {
-  using type = std::ptrdiff_t;
-};
-
-template<typename T>
-struct GetDifferenceTypeImpl<T, true> {
-  using type = T::difference_type;
-};
-
-template<typename T>
-using GetDifferenceType = GetDifferenceTypeImpl<T>::type;
-
-}  // namespace container_internal
-
+// Type `AnyScan` is similar to `std::span`, `std::range` and `absl::Span`. However it works with
+// any container that supports `begin()`, `end()` and whose `iterator` (likely the `const_iterator`)
+// is a `std::input_iterator`.
+//
+// That means this type supports pretty much all STL containers including `std::initializer_list`.
+//
+// IMPORTANT: this types is INDEPENDENT of the container type that means it is possible to write
+// single functions that can take containers of any container type without needing further templates
+// or overloads.
+//
+// HOWEVER: This types is slower as the aformentioned wrappers, as it need more abstraction layers
+// to accomplish the independence of the container type.
+//
+// The wrappers of this type can only be instantiated/created through `MakeAnyScan`.
+//
+// The implementqtion is type-safe and does not use any `reinterpret_cast` of other unnecessary
+// tricks.
+//
+// The actual `AnyScan` type depends on two types:
+// - `ValueType` which is derived from the container's value-type.
+// - `DifferenceType` which is either `std::ptrdiff_t` or if provided and not compvertible, the
+//   container's `difference_type`. This is done because not all containers that are otherwise
+//   compatible have a `difference_type` but in order for `AnyScan` itself to be compatible with
+//   `std::input_iterator` it has to provide that type. Further, we aim to use a predictable type
+//   as much as possible, so that the callers do not need to unnecessarily guess that type.
 template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
-class AnySpan {
+class AnyScan {
  private:
   using FuncMore = std::function<bool()>;
   using FuncCurr = std::function<const ValueType*()>;
@@ -78,16 +78,12 @@ class AnySpan {
   using reference = const ValueType&;
   using const_reference = const ValueType&;
 
-  ~AnySpan() noexcept = default;
-  AnySpan() = delete;
+  ~AnyScan() noexcept = default;
 
-  AnySpan(const AnySpan&) noexcept = default;
-  AnySpan& operator=(const AnySpan&) noexcept = default;
-  AnySpan(AnySpan&&) noexcept = default;
-  AnySpan& operator=(AnySpan&&) noexcept = default;
+  AnyScan() = delete;
 
-  template<container_internal::ContainerHasInputIterator Container>
-  explicit AnySpan(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
+  template<::mbo::types::ContainerHasInputIterator Container>
+  explicit AnyScan(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
       : clone_([container = std::forward<Container>(container)] {
           using RawContainer = std::remove_cvref_t<Container>;
           using const_iterator = RawContainer::const_iterator;
@@ -98,14 +94,19 @@ class AnySpan {
               /* next */ [pos] { ++*pos; });
         }) {}
 
+  AnyScan(const AnyScan&) noexcept = default;
+  AnyScan& operator=(const AnyScan&) noexcept = default;
+  AnyScan(AnyScan&&) noexcept = default;
+  AnyScan& operator=(AnyScan&&) noexcept = default;
+
   class const_iterator {
    public:
     using iterator_category = std::input_iterator_tag;
-    using difference_type = AnySpan::difference_type;
-    using value_type = AnySpan::value_type;
-    using pointer = AnySpan::const_pointer;
-    using reference = AnySpan::const_reference;
-    using element_type = AnySpan::value_type;
+    using difference_type = AnyScan::difference_type;
+    using value_type = AnyScan::value_type;
+    using pointer = AnyScan::const_pointer;
+    using reference = AnyScan::const_reference;
+    using element_type = AnyScan::value_type;
 
     const_iterator() : funcs_(nullptr) {}
 
@@ -166,16 +167,19 @@ class AnySpan {
   const FuncClone clone_;
 };
 
-template<container_internal::ContainerHasInputIterator Container>
-auto MakeAnySpan(Container&& container) noexcept {
+// Creates `AnyScan` instances.
+template<::mbo::types::ContainerHasInputIterator Container>
+auto MakeAnyScan(Container&& container) noexcept {
   using RawContainer = std::remove_cvref_t<Container>;
   using ValueType = RawContainer::value_type;
-  using DifferenceType = container_internal::GetDifferenceType<RawContainer>;
-  return AnySpan<ValueType, DifferenceType>(std::forward<Container>(container));
+  using ActualDifferenceType = ::mbo::types::GetDifferenceType<RawContainer>;
+  using DifferenceType = std::conditional_t<
+      std::convertible_to<ActualDifferenceType, std::ptrdiff_t>, std::ptrdiff_t, ActualDifferenceType>;
+  return AnyScan<ValueType, DifferenceType>(std::forward<Container>(container));
 }
 
 }  // namespace mbo::container
 
 // NOLINTEND(readability-identifier-naming)
 
-#endif  // MBO_CONTAINER_ANY_SPAN_H_
+#endif  // MBO_CONTAINER_ANY_SCAN_H_
