@@ -1,3 +1,8 @@
+# 0.2.11
+
+* Made `AnyScan` constructor private.
+* Separated `AnyScan` and `ConvertingScan` into distinct type with the same internal base.
+
 # 0.2.10
 
 * Added missing `LimitedVector` non-converting constructor for `std::initializer_list`.
@@ -15,34 +20,34 @@
 
 # 0.2.8
 
-* Make `//mbo/types:traits_cc` publicly visible.
+* Made `//mbo/types:traits_cc` publicly visible.
 
 # 0.2.7
 
-* Improve `LimitedMap` and `LimitedSet`:
+* Improved `LimitedMap` and `LimitedSet`:
   * Better ASAN compatibility for constexpr.
   * Allow `LimitedOption` configuration instead of simple length specification.
     * Option to suppress calling clear in the destructor for cases where that is not a constexpr.
     * Option to require presorted input: Allows much large constexpr `LimitedSet`/`LimitedValue`.
-* Rename `Extender::AbslFormat` to `Extender::AbslStringify` to better reflect its purpose.
-* Change `Extender::AbslStringify` to print field names prefixed with a fot '.' (requires Clang).
+* Renamed `Extender::AbslFormat` to `Extender::AbslStringify` to better reflect its purpose.
+* Changed `Extender::AbslStringify` to print field names prefixed with a fot '.' (requires Clang).
 
 # 0.2.6
 
-* Make `RunfilesDir/OrDie` work correctly.
-* Add a new comparator `mbo::types::CompareLess` which allows container optimizations.
-* Move most functionality of `LimitedMap` and `LimitedSet` to new base `internal::LimitedOrdered`.
-* Add `LimitedMap::index_of` and `LimitedSet::index_of` (leaves one location to optimize search).
-* Optimize `LimitedMap` and `LimitedSet` with `mbo::types::CompareLess`.
+* Made `RunfilesDir/OrDie` work correctly.
+* Added a new comparator `mbo::types::CompareLess` which allows container optimizations.
+* Moved most functionality of `LimitedMap` and `LimitedSet` to new base `internal::LimitedOrdered`.
+* Added `LimitedMap::index_of` and `LimitedSet::index_of` (leaves one location to optimize search).
+* Optimized `LimitedMap` and `LimitedSet` with `mbo::types::CompareLess`.
 
 # 0.2.5
 
-* Make `Limited{Map|Set|Vector}` iterators compliant with `std::contiguous_iterator`.
-* Add `Limited{Map|Set|Vector}::data()`.
+* Made `Limited{Map|Set|Vector}` iterators compliant with `std::contiguous_iterator`.
+* Added `Limited{Map|Set|Vector}::data()`.
 
 # 0.2.4
 
-* Move `CopyConvertContainer` to `mbo::container::ConvertContainer` and add conversion functions.
+* Moved `CopyConvertContainer` to `mbo::container::ConvertContainer` and add conversion functions.
 * Various traits fixes to correctly handle C++ concepts (pretty much every published explanation makes the same mistake).
 * Added matcher `CapacityIs`.
 * Added `LimitedMap`.
@@ -53,25 +58,25 @@
 
 # 0.2.2
 
-* Make `LimitedSet` and `LimitedVector` use C-arrays instead of `std::array` in order to solve some ASAN issues.
-* Make `NoDestruct` ASAN friendly.
-* Make tests PASS in mode ASAN out-of-the-box for Clang.
-* Make `//mbo/types:tstring_test` PASS in ASAN mode.
+* Made `LimitedSet` and `LimitedVector` use C-arrays instead of `std::array` in order to solve some ASAN issues.
+* Made `NoDestruct` ASAN friendly.
+* Made tests PASS in mode ASAN out-of-the-box for Clang.
+* Made `//mbo/types:tstring_test` PASS in ASAN mode.
 
 # 0.2.1
 
-* Fix issue with MOPE in case it runs as an external dependency.
-* Make tests work when run as external repository dependency.
-* Add `LimitedSet::contains_all(other)` which performs contains-all-of functionality (not part of STL).
-* Add `LimitedSet::contains_any(other)` which performs contains-any-of functionality (not part of STL).
+* Fixed issue with MOPE in case it runs as an external dependency.
+* Made tests work when run as external repository dependency.
+* Added `LimitedSet::contains_all(other)` which performs contains-all-of functionality (not part of STL).
+* Added `LimitedSet::contains_any(other)` which performs contains-any-of functionality (not part of STL).
 
 # 0.2
 
-* Add support for GCC (11.4/Ubuntu 22.04).
-* Change Print Extender's `Print` to `ToString` which is a more widely used name.
-* Change Print Extender's `ToString` to print field names (if available, e.g. Clang 16).
+* Added support for GCC (11.4/Ubuntu 22.04).
+* Changed Print Extender's `Print` to `ToString` which is a more widely used name.
+* Changed Print Extender's `ToString` to print field names (if available, e.g. Clang 16).
 * When compiling with Clang show field names with the `AbslStringify` extender.
-* Enable `static constexpr NoDestruct<>` for more cases and compiler versions.
+* Enabled `static constexpr NoDestruct<>` for more cases and compiler versions.
 * container:
     * Added:
         * class `LimitedSet`: A space loimited, constexpr compliant set.

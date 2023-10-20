@@ -57,8 +57,38 @@ namespace mbo::container {
 // allows type erased scanning using a specified type that can be constructed from the values of a
 // compatible container. For instance this allows to scan containers of string-like values with a
 // specific string-like container (see below).
-template<typename ValueType, typename DifferenceType = std::ptrdiff_t, bool AccessByRef = true>
-class AnyScan {
+template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
+class AnyScan;
+
+// A `ConvertingScan` is very similar to `AnyScan`, however it allows scanning of any container whose `value_types` - as
+// returned by its const_iterator - can be copy-converted into the specified type. This in particular allows scanning
+// containers of any string-like type as either `std::string` or `std::string_view`. The emphasis is on COPY as this
+// kind of conversion requires return by value. As such the `ConvertingScan`'s iterators do not have `operator->()`.
+template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
+class ConvertingScan;
+
+namespace container_internal {
+
+template<typename ValueType, typename DifferenceType = std::ptrdiff_t, bool AccessByRef = false>
+class AnyScanImpl;
+
+template<::mbo::types::ContainerHasInputIterator Container, bool AccessByRef, typename AccessType>
+requires (!AccessByRef || std::same_as<AccessType, void>)
+struct AnyScanTypeImpl {
+  using RawContainer = std::remove_cvref_t<Container>;
+  using ValueType = std::conditional_t<AccessByRef, typename RawContainer::value_type, AccessType>;
+  using ActualDifferenceType = ::mbo::types::GetDifferenceType<RawContainer>;
+  using DifferenceType = std::conditional_t<
+      std::convertible_to<ActualDifferenceType, std::ptrdiff_t>, std::ptrdiff_t, ActualDifferenceType>;
+
+  using type = std::conditional_t<
+      AccessByRef,
+      ::mbo::container::AnyScan<ValueType, DifferenceType>,
+      ::mbo::container::ConvertingScan<ValueType, DifferenceType>>;
+};
+
+template<typename ValueType, typename DifferenceType, bool AccessByRef>
+class AnyScanImpl {
  private:
   using AccessType = std::conditional_t<AccessByRef, const ValueType&, ValueType>;
 
@@ -85,13 +115,19 @@ class AnyScan {
   using reference = const ValueType&;
   using const_reference = const ValueType&;
 
-  ~AnyScan() noexcept = default;
+  ~AnyScanImpl() noexcept = default;
 
-  AnyScan() = delete;
+  AnyScanImpl() = delete;
 
+  AnyScanImpl(const AnyScanImpl&) noexcept = default;
+  AnyScanImpl& operator=(const AnyScanImpl&) noexcept = default;
+  AnyScanImpl(AnyScanImpl&&) noexcept = default;
+  AnyScanImpl& operator=(AnyScanImpl&&) noexcept = default;
+
+ protected:
   template<::mbo::types::ContainerHasInputIterator Container>
   requires(AccessByRef)
-  explicit AnyScan(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
+  explicit AnyScanImpl(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
       : clone_([container = std::forward<Container>(container)] {
           using RawContainer = std::remove_cvref_t<Container>;
           using const_iterator = RawContainer::const_iterator;
@@ -107,7 +143,7 @@ class AnyScan {
     !AccessByRef &&
     std::constructible_from<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>> &&
     std::constructible_from<value_type, AccessType>)
-  explicit AnyScan(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
+  explicit AnyScanImpl(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
       : clone_([container = std::forward<Container>(container)] {
           using RawContainer = std::remove_cvref_t<Container>;
           using const_iterator = RawContainer::const_iterator;
@@ -118,19 +154,15 @@ class AnyScan {
               /* next */ [pos] { ++*pos; });
         }) {}
 
-  AnyScan(const AnyScan&) noexcept = default;
-  AnyScan& operator=(const AnyScan&) noexcept = default;
-  AnyScan(AnyScan&&) noexcept = default;
-  AnyScan& operator=(AnyScan&&) noexcept = default;
-
+ public:
   class const_iterator {
    public:
     using iterator_category = std::input_iterator_tag;
-    using difference_type = AnyScan::difference_type;
-    using value_type = AnyScan::value_type;
-    using pointer = AnyScan::const_pointer;
-    using reference = AnyScan::const_reference;
-    using element_type = AnyScan::value_type;
+    using difference_type = AnyScanImpl::difference_type;
+    using value_type = AnyScanImpl::value_type;
+    using pointer = AnyScanImpl::const_pointer;
+    using reference = AnyScanImpl::const_reference;
+    using element_type = AnyScanImpl::value_type;
 
     const_iterator() : funcs_(nullptr) {}
 
@@ -204,33 +236,57 @@ class AnyScan {
   const FuncClone clone_;
 };
 
+}  // namespace container_internal
+
+template<typename ValueType, typename DifferenceType>
+class AnyScan : public container_internal::AnyScanImpl<ValueType, DifferenceType, true> {
+ private:
+  using AnyScanImpl = container_internal::AnyScanImpl<ValueType, DifferenceType, true>;
+  using AnyScanImpl::AnyScanImpl;
+
+ public:
+  // The constructor is private and the static constructor must be used.
+  // HOWEVER, prefer the free standing function `MakeAnyScan`.
+  template<::mbo::types::ContainerHasInputIterator Container>
+  static AnyScan InternalMakeAnyScan(Container&& container) noexcept { return AnyScan(std::forward<Container>(container)); }
+
+  using AnyScanImpl::begin;
+  using AnyScanImpl::end;
+};
+
+template<::mbo::types::ContainerHasInputIterator Container>
+using AnyScanType = container_internal::AnyScanTypeImpl<Container, true, void>::type;
+
 // Creates `AnyScan` instances.
 template<::mbo::types::ContainerHasInputIterator Container>
-auto MakeAnyScan(Container&& container) noexcept {
-  using RawContainer = std::remove_cvref_t<Container>;
-  using ValueType = RawContainer::value_type;
-  using ActualDifferenceType = ::mbo::types::GetDifferenceType<RawContainer>;
-  using DifferenceType = std::conditional_t<
-      std::convertible_to<ActualDifferenceType, std::ptrdiff_t>, std::ptrdiff_t, ActualDifferenceType>;
-  return AnyScan<ValueType, DifferenceType>(std::forward<Container>(container));
+AnyScanType<Container> MakeAnyScan(Container&& container) noexcept {
+  return AnyScanType<Container>::InternalMakeAnyScan(std::forward<Container>(container));
 }
 
-// A `ConvertingScan` is very similar to `AnyScan`, however it allows scanning of any container whose `value_types` - as
-// returned by its const_iterator - can be copy-converted into the specified type. This in particular allows scanning
-// containers of any string-like type as either `std::string` or `std::string_view`. The emphasis is on COPY as this
-// kind of conversion requires return by value. As such the `ConvertingScan`'s iterators do not have `operator->()`.
-template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
-using ConvertingScan = AnyScan<ValueType, DifferenceType, false>;
+template<typename ValueType, typename DifferenceType>
+class ConvertingScan : public container_internal::AnyScanImpl<ValueType, DifferenceType, false> {
+ private:
+  using AnyScanImpl = container_internal::AnyScanImpl<ValueType, DifferenceType, false>;
+  using AnyScanImpl::AnyScanImpl;
+
+ public:
+  // The constructor is private and the static constructor must be used.
+  // HOWEVER, prefer the free standing function `MakeConvertingScan`.
+  template<::mbo::types::ContainerHasInputIterator Container>
+  static ConvertingScan InternalMakeAnyScan(Container&& container) noexcept { return ConvertingScan(std::forward<Container>(container)); }
+
+  using AnyScanImpl::begin;
+  using AnyScanImpl::end;
+};
+
+template<::mbo::types::ContainerHasInputIterator Container, typename AccessType>
+using ConvertingScanType = container_internal::AnyScanTypeImpl<Container, false, AccessType>::type;
 
 // Creates `ConvertingScan` instances.
-template<typename ValueType, ::mbo::types::ContainerHasInputIterator Container>
-requires std::constructible_from<ValueType, typename std::remove_cvref_t<Container>::value_type>
-auto MakeConvertingScan(Container&& container) noexcept {
-  using RawContainer = std::remove_cvref_t<Container>;
-  using ActualDifferenceType = ::mbo::types::GetDifferenceType<RawContainer>;
-  using DifferenceType = std::conditional_t<
-      std::convertible_to<ActualDifferenceType, std::ptrdiff_t>, std::ptrdiff_t, ActualDifferenceType>;
-  return ConvertingScan<ValueType, DifferenceType>(std::forward<Container>(container));
+template<typename AccessType, ::mbo::types::ContainerHasInputIterator Container>
+requires std::constructible_from<AccessType, typename std::remove_cvref_t<Container>::value_type>
+ConvertingScanType<Container, AccessType> MakeConvertingScan(Container&& container) noexcept {
+  return ConvertingScanType<Container, AccessType>::InternalMakeAnyScan(std::forward<Container>(container));
 }
 
 }  // namespace mbo::container
