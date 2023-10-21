@@ -33,15 +33,7 @@ namespace {
 using ::mbo::container::container_internal::LimitedOrdered;
 using ::mbo::testing::CapacityIs;
 using ::testing::ElementsAre;
-using ::testing::Eq;
-using ::testing::Ge;
-using ::testing::Gt;
 using ::testing::IsEmpty;
-using ::testing::Le;
-using ::testing::Lt;
-using ::testing::Ne;
-using ::testing::Not;
-using ::testing::Pair;
 using ::testing::SizeIs;
 
 static_assert(std::ranges::range<LimitedOrdered<int, int, int, 1>>);
