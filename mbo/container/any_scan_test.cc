@@ -151,6 +151,14 @@ TEST_F(AnyScanTest, CallFunctionWithConversion) {
     const std::array<std::string_view, 3> data{{"foo", "bar", "baz"}};
     EXPECT_THAT(ConvTester<std::string>(MakeConvertingScan<std::string>(data)), ElementsAre("foo", "bar", "baz"));
   }
+  {
+    const std::array<std::string, 3> data{{"foo", "bar", "baz"}};
+    EXPECT_THAT(ConvTester<std::string>(MakeConvertingScan<std::string>(data)), ElementsAre("foo", "bar", "baz"));
+  }
+  {
+    const std::array<std::string_view, 3> data{{"foo", "bar", "baz"}};
+    EXPECT_THAT(ConvTester<std::string_view>(MakeConvertingScan<std::string_view>(data)), ElementsAre("foo", "bar", "baz"));
+  }
 }
 
 }  // namespace

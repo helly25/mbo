@@ -57,6 +57,21 @@ namespace mbo::container {
 // allows type erased scanning using a specified type that can be constructed from the values of a
 // compatible container. For instance this allows to scan containers of string-like values with a
 // specific string-like container (see below).
+//
+// Example:
+//
+// ```
+// void Report(const AnyScan<std::string>& data);
+//
+// void User() {
+//   std::vector<std::string> data{"foo", "bar"};
+//   Report(MakeAnyScan(data));
+// }
+// ```
+//
+// Here the caller used `std::vector`, but the caller may just switch to `std::set` or another
+// caller may use a `std::array` or a `std::initializer_list` or whatever container. However, all
+// callers must use containers with their `value_type` using `std::string`.
 template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
 class AnyScan;
 
@@ -64,6 +79,20 @@ class AnyScan;
 // returned by its const_iterator - can be copy-converted into the specified type. This in particular allows scanning
 // containers of any string-like type as either `std::string` or `std::string_view`. The emphasis is on COPY as this
 // kind of conversion requires return by value. As such the `ConvertingScan`'s iterators do not have `operator->()`.
+//
+// Example:
+//
+// ```
+// void Report(const ConvertingScan<std::string_view>& data);
+//
+// void User() {
+//   std::vector<std::string> data{"foo", "bar"};
+//   Report(MakeConvertingScan(data));
+// }
+// ```
+//
+// Here the caller used `std::vector` with `value_type` set to `std::string`, but the target `Report` wants the elements
+// converted to `std::string_view`, so this had to be a `ConvertingScan` that handles the type difference.
 template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
 class ConvertingScan;
 
@@ -124,7 +153,10 @@ class AnyScanImpl {
   AnyScanImpl(AnyScanImpl&&) noexcept = default;
   AnyScanImpl& operator=(AnyScanImpl&&) noexcept = default;
 
- protected:
+ private:
+  template<typename V, typename D>
+  friend class ::mbo::container::AnyScan;
+
   template<::mbo::types::ContainerHasInputIterator Container>
   requires(AccessByRef)
   explicit AnyScanImpl(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
@@ -137,6 +169,9 @@ class AnyScanImpl {
               /* curr */ [pos]() -> AccessType { return **pos; },
               /* next */ [pos] { ++*pos; });
         }) {}
+
+  template<typename V, typename D>
+  friend class ::mbo::container::ConvertingScan;
 
   template<::mbo::types::ContainerHasInputIterator Container>
   requires(

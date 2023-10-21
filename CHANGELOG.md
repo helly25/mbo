@@ -2,6 +2,7 @@
 
 * Made `AnyScan` constructor private.
 * Separated `AnyScan` and `ConvertingScan` into distinct type with the same internal base.
+* Restricted `AnyScanImpl` access to `MakeAnyScan` and `MakeConvertingScan`.
 
 # 0.2.10
 
