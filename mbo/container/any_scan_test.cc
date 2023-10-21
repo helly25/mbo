@@ -51,6 +51,7 @@ using ::testing::UnorderedElementsAre;
 using ::testing::WhenSorted;
 
 static_assert(std::input_iterator<AnyScan<int, std::ptrdiff_t>::const_iterator>);
+static_assert(std::input_iterator<ConvertingScan<int, std::ptrdiff_t>::const_iterator>);
 static_assert(!std::forward_iterator<AnyScan<int, std::ptrdiff_t>::const_iterator>);
 static_assert(!mbo::types::ContainerIsForwardIteratable<AnyScan<int, std::ptrdiff_t>>);
 
@@ -137,12 +138,19 @@ TEST_F(AnyScanTest, CallFunctionPairOfStrings) {
   EXPECT_THAT(Tester(MakeAnyScan(std::vector<std::pair<std::string, std::string>>{{"1", "a"}, {"2", "b"}})), ElementsAre(Pair("1", "a"), Pair("2", "b")));
 }
 
+TEST_F(AnyScanTest, InitializerList) {
+  EXPECT_THAT(Tester<std::string_view>({"foo", "bar"}), ElementsAre("foo", "bar"));
+  EXPECT_THAT(Tester<std::string>({"foo", "bar"}), ElementsAre("foo", "bar"));
+}
+
+struct ConvertingScanTest : public AnyScanTest {};
+
 template<typename T>
 std::vector<T> ConvTester(const ConvertingScan<T>& span) {
   return {span.begin(), span.end()};
 }
 
-TEST_F(AnyScanTest, CallFunctionWithConversion) {
+TEST_F(ConvertingScanTest, CallFunctionWithConversion) {
   {
     const std::array<std::string, 3> data{{"foo", "bar", "baz"}};
     EXPECT_THAT(ConvTester<std::string_view>(MakeConvertingScan<std::string_view>(data)), ElementsAre("foo", "bar", "baz"));
@@ -159,6 +167,11 @@ TEST_F(AnyScanTest, CallFunctionWithConversion) {
     const std::array<std::string_view, 3> data{{"foo", "bar", "baz"}};
     EXPECT_THAT(ConvTester<std::string_view>(MakeConvertingScan<std::string_view>(data)), ElementsAre("foo", "bar", "baz"));
   }
+}
+
+TEST_F(ConvertingScanTest, InitializerList) {
+  EXPECT_THAT(ConvTester<std::string_view>({"foo", "bar"}), ElementsAre("foo", "bar"));
+  EXPECT_THAT(ConvTester<std::string>({"foo", "bar"}), ElementsAre("foo", "bar"));
 }
 
 }  // namespace
