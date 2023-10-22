@@ -29,16 +29,17 @@ namespace mbo::container {
 
 // Type `AnyScan` is similar to `std::span`, `std::range` and `absl::Span`. However it works with
 // any container that supports `begin()`, `end()` and whose `iterator` (likely the `const_iterator`)
-// is a `std::input_iterator`.
+// is a `std::input_iterator`. Type `ConstScan` is similar to `absl::Span<const T>` made from
+// `absl::MakeConstSpan`.
 //
 // That means this type supports pretty much all STL containers including `std::initializer_list`.
 //
-// IMPORTANT: this types is INDEPENDENT of the container type that means it is possible to write
+// IMPORTANT: This type is INDEPENDENT of the container type that means it is possible to write
 // single functions that can take containers of any container type without needing further templates
 // or overloads.
 //
-// HOWEVER: This types is slower as the aformentioned wrappers, as it need more abstraction layers
-// to accomplish the independence of the container type.
+// HOWEVER: This type is possibly slower as the aformentioned wrappers, as it need mores abstraction
+// layers to accomplish the independence of the container type.
 //
 // The wrappers of this type can only be instantiated/created through `MakeAnyScan` or directly from
 // a `std::initializer_list` argument.
@@ -62,7 +63,11 @@ namespace mbo::container {
 // Example:
 //
 // ```
-// void Report(const AnyScan<std::string>& data);
+// void Report(const AnyScan<std::string>& data) {
+//   for (auto [first, second] : data) {
+//     Report(first, second);
+//   }
+// }
 //
 // void User() {
 //   std::vector<std::string> data{"foo", "bar"};
@@ -73,8 +78,33 @@ namespace mbo::container {
 // Here the caller used `std::vector`, but the caller may just switch to `std::set` or another
 // caller may use a `std::array` or a `std::initializer_list` or whatever container. However, all
 // callers must use containers with their `value_type` using `std::string`.
+//
+// WARNING: When scanning types like `std::set` or `std::map` or similar indexed containers, then it
+// is important to know that their keys `value_type` (for set) or `value_type::first_type` (for map)
+// is const and thus the type to scan over must be specified accordingly. In many cases it is more
+// appropriate to work with `ConstScan` created by `MakeConstScan`. Example with correct `AnyScan`:
+//
+// void Foo(const AnyScan<std::pair<const std::string, int>& scan) {}
+// std::map<std::string, int> data{{"foo", 25}, {"bar", 42}};
+// Foo(MakeAnyScan(data));  // THIS WORKS because `Foo` has its `value_type::first_type` as const.
 template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
 class AnyScan;
+
+// A `ConstScan` is similar to an `AnyScan` and an `absl::Span<const T>` but unlike in the case of
+// an `AnyScan` the values of a `ConstScan` are always const. That simplifies accepting const keyed
+// containers like `std::set` or `std::map`. Exmaple:
+//
+// void Foo(const ConstScan<std::string>& scan) {}
+// std::set<std::string> data{"foo", "bar"};
+// Foo(MakeConstScan(data));  // THIS WORKS because we are using `ConstScan`.
+//
+// NOTE: A `ConstScan` is still referencing the results, so it is faster than a `ConvertingScan`.
+// However, when working with pairs, then all containers must have their `value_type::first_type`
+// const - or it is not possible to mix const key'd containers like `std::map` with non const key'd
+// containers (e.g. `std::vector<std::pair<int, int>>` as opposed to `std::map<int, int>` which is
+// mixable with `std::vector<std::pair<const int, int>>`).
+template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
+class ConstScan;
 
 // A `ConvertingScan` is very similar to `AnyScan`, however it allows scanning of any container
 // whose `value_types` - as returned by its const_iterator - can be copy-converted into the
@@ -88,167 +118,267 @@ class AnyScan;
 // Example:
 //
 // ```
-// void Report(const ConvertingScan<std::string_view>& data);
+// void Report(const ConvertingScan<std::pair<std::string_view, std::string_view>>& data) {
+//   for (auto it = data.begin(); it != data.end(); ++it) {
+//     Report((*it).first, (*it).second);  // Use `(*it)` iteration as `operator->` is missing (1).
+//     // (1) Of course the iteration could just be: for (auto [first, second] : data)
+//   }
+// }
 //
 // void User() {
-//   std::vector<std::string> data{"foo", "bar"};
+//   std::vector<std::string> data{{"foo", "25"}, {"bar", "42"}};
 //   Report(MakeConvertingScan(data));
 // }
 // ```
 //
-// Here the caller used `std::vector` with `value_type` set to `std::string`, but the target
-// `Report` wants the elements converted to `std::string_view`, so this had to be a `ConvertingScan`
-// that handles the type difference.
+// Here the caller used `std::vector<std::pair<std::string, std::string>>`, but the target `Report`
+// wants the elements converted to `std::pair<std::string_view, std::string_view>`, so this had to
+// be a `ConvertingScan` that handles the type difference.
+//
+// Note: ConvertingScan is less restrict about const than AnyScan as it works on copies.
 template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
 class ConvertingScan;
 
 namespace container_internal {
 
-template<typename ValueType, typename DifferenceType = std::ptrdiff_t, bool AccessByRef = false>
+enum class ScanMode { kAny, kConst, kConverting };
+
+template<typename ValueType, typename DifferenceType = std::ptrdiff_t, ScanMode S = ScanMode::kAny>
 class AnyScanImpl;
 
-template<::mbo::types::ContainerHasInputIterator Container, bool AccessByRef, typename AccessType>
-requires(!AccessByRef || std::same_as<AccessType, void>)
-struct AnyScanTypeImpl {
-  using RawContainer = std::remove_cvref_t<Container>;
-  using ValueType = std::conditional_t<AccessByRef, typename RawContainer::value_type, AccessType>;
-  using ActualDifferenceType = ::mbo::types::GetDifferenceType<RawContainer>;
-  using DifferenceType = std::
-      conditional_t<std::convertible_to<ActualDifferenceType, std::ptrdiff_t>, std::ptrdiff_t, ActualDifferenceType>;
+template<typename Container>
+concept AcceptableContainer =
+    ::mbo::types::ContainerHasInputIterator<Container> || ::mbo::types::IsInitializerList<Container>;
 
-  using type = std::conditional_t<
-      AccessByRef,
-      ::mbo::container::AnyScan<ValueType, DifferenceType>,
-      ::mbo::container::ConvertingScan<ValueType, DifferenceType>>;
+template<
+    AcceptableContainer Container,
+    ScanMode ScanModeVal,
+    bool IsMoveOnly = std::movable<Container> && !::mbo::types::IsInitializerList<std::remove_cvref_t<Container>>>
+class MakeAnyScanData {
+ public:
+  template<typename V, typename D, ScanMode S>
+  friend class AnyScanImpl;
+
+  static constexpr ScanMode kScanMode = ScanModeVal;
+
+  MakeAnyScanData() = delete;
+
+  explicit MakeAnyScanData(Container container) : container_(std::make_shared<Container>(std::move(container))) {}
+
+ private:
+  Container& container() const noexcept { return *container_; }
+
+  std::shared_ptr<Container> container_;
 };
 
-template<typename ValueType, typename DifferenceType, bool AccessByRef>
+template<AcceptableContainer Container, ScanMode ScanModeVal>
+class MakeAnyScanData<Container, ScanModeVal, false> {
+ public:
+  template<typename V, typename D, ScanMode S>
+  friend class AnyScanImpl;
+
+  static constexpr ScanMode kScanMode = ScanModeVal;
+
+  MakeAnyScanData() = delete;
+
+  explicit MakeAnyScanData(const Container& container) : container_(container) {}
+
+ private:
+  const Container& container() const noexcept { return container_; }
+
+  const Container& container_;
+};
+
+template<typename ValueType, typename DifferenceType, ScanMode ScanModeVal>
 class AnyScanImpl {
  private:
-  using AccessType = std::conditional_t<AccessByRef, const ValueType&, ValueType>;
+  static constexpr ScanMode kScanMode = ScanModeVal;
+  static constexpr bool kAccessByRef = kScanMode != ScanMode::kConverting;
 
+  using AccessType = std::conditional_t<kAccessByRef, ValueType&, ValueType>;
+
+  using FuncSave = std::function<void()>;
   using FuncMore = std::function<bool()>;
   using FuncCurr = std::function<AccessType()>;
   using FuncNext = std::function<void()>;
 
-  struct TripleFunc {
-    TripleFunc(FuncMore more, FuncCurr curr, FuncNext next)
-        : more(std::move(more)), curr(std::move(curr)), next(std::move(next)) {}
+  struct AccessFuncs {
+    AccessFuncs(FuncSave save, FuncMore more, FuncCurr curr, FuncNext next)
+        : save(std::move(save)), more(std::move(more)), curr(std::move(curr)), next(std::move(next)) {}
 
-    const FuncMore more;
-    const FuncCurr curr;
-    const FuncNext next;
+    FuncSave save;
+    FuncMore more;
+    FuncCurr curr;
+    FuncNext next;
   };
 
-  using FuncClone = std::function<std::shared_ptr<TripleFunc>()>;
+  using FuncClone = std::function<std::shared_ptr<AccessFuncs>()>;
 
- public:
-  using difference_type = DifferenceType;
-  using value_type = std::conditional_t<AccessByRef, const ValueType, ValueType>;
-  using pointer = const ValueType*;
-  using const_pointer = const ValueType*;
-  using reference = const ValueType&;
-  using const_reference = const ValueType&;
+  template<typename T, typename U, bool ArePairs = ::mbo::types::IsPair<T>&& ::mbo::types::IsPair<U>>
+  struct IsCompatibleImpl
+      : std::conditional_t<
+            std::is_const_v<T>,
+            std::bool_constant<std::same_as<T, const U>>,
+            std::bool_constant<std::same_as<T, U>>> {};
 
-  ~AnyScanImpl() noexcept = default;
+  template<typename T, typename U>
+  struct IsCompatibleImpl<T, U, true>
+      : std::bool_constant<
+            std::same_as<typename T::first_type, typename U::first_type>
+            && std::same_as<typename T::second_type, typename U::second_type>> {};
 
-  AnyScanImpl() = delete;
+  template<typename T, typename U>
+  static constexpr void CheckCompatible() noexcept {
+    if constexpr (::mbo::types::IsPair<T> && ::mbo::types::IsPair<U>) {
+      static_assert(
+          IsCompatibleImpl<T, U>::value,
+          "A common reason for this to fail is scanning over `std::map` and similar indexed containers "
+          "without specifying the scan type's `first_type` as const.");
+    } else {
+      static_assert(IsCompatibleImpl<T, U>::value);
+    }
+  }
 
-  AnyScanImpl(const AnyScanImpl&) noexcept = default;
-  AnyScanImpl& operator=(const AnyScanImpl&) noexcept = default;
-  AnyScanImpl(AnyScanImpl&&) noexcept = default;
-  AnyScanImpl& operator=(AnyScanImpl&&) noexcept = default;
-
- private:
   template<typename V, typename D>
   friend class ::mbo::container::AnyScan;
 
-  template<::mbo::types::ContainerHasInputIterator Container>
-  requires(AccessByRef)
-  explicit AnyScanImpl(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
-      : clone_([container = std::forward<Container>(container)] {
-          using RawContainer = std::remove_cvref_t<Container>;
-          using const_iterator = RawContainer::const_iterator;
-          auto pos = std::shared_ptr<const_iterator>(new const_iterator(container.begin()));
-          return std::make_shared<TripleFunc>(
-              /* more */ [end = container.end(), pos]() -> bool { return *pos != end; },
-              /* curr */ [pos]() -> AccessType { return **pos; },
-              /* next */ [pos] { ++*pos; });
-        }) {}
+  template<typename V, typename D>
+  friend class ::mbo::container::ConstScan;
 
   template<typename V, typename D>
   friend class ::mbo::container::ConvertingScan;
 
-  template<::mbo::types::ContainerHasInputIterator Container>
-  requires(
-      !AccessByRef  // This is the ConvertingScan constructor
-      && std::constructible_from<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>>
-      && std::constructible_from<value_type, AccessType>)
-  explicit AnyScanImpl(Container&& container)  // NOLINT(bugprone-forwarding-reference-overload)
-      : clone_([container = std::forward<Container>(container)] {
-          using RawContainer = std::remove_cvref_t<Container>;
-          using const_iterator = RawContainer::const_iterator;
-          auto pos = std::shared_ptr<const_iterator>(new const_iterator(container.begin()));
-          return std::make_shared<TripleFunc>(
-              /* more */ [end = container.end(), pos]() -> bool { return *pos != end; },
-              /* curr */ [pos]() -> AccessType { return AccessType(**pos); },
-              /* next */ [pos] { ++*pos; });
-        }) {}
+  template<typename C>
+  using ContainerIterator = std::conditional_t<
+      std::is_const_v<C>,
+      typename std::remove_cvref_t<C>::const_iterator,
+      typename std::remove_cvref_t<C>::iterator>;
+
+  template<typename C>
+  static auto MakeSharedIterator(C& container) {
+    using Iterator = ContainerIterator<C>;
+    return std::shared_ptr<Iterator>(new Iterator(container.begin()));
+  }
 
  public:
-  class const_iterator {
+  using difference_type = DifferenceType;
+  using element_type = std::remove_cvref_t<ValueType>;
+  using value_type = ValueType;
+  using pointer = ValueType*;
+  using const_pointer = const ValueType*;
+  using reference = ValueType&;
+  using const_reference = const ValueType&;
+
+  AnyScanImpl() = delete;
+
+  // NOLINTBEGIN(bugprone-forwarding-reference-overload)
+
+  AnyScanImpl(const std::initializer_list<ValueType>& data)
+      : clone_([container = data] {
+          auto pos = MakeSharedIterator(container);
+          return std::make_shared<AccessFuncs>(
+              /* save */ [pos = pos] {},
+              /* more */ [end = container.end(), &it = *pos]() -> bool { return it != end; },
+              /* curr */ [&it = *pos]() -> AccessType { return *it; },
+              /* next */ [&it = *pos] { ++it; });
+        }) {}
+
+  AnyScanImpl(const std::initializer_list<std::remove_const_t<ValueType>>& data)
+  requires(std::is_const_v<std::remove_reference_t<ValueType>>)
+      : clone_([container = data] {
+          auto pos = MakeSharedIterator(container);
+          return std::make_shared<AccessFuncs>(
+              /* save */ [pos = pos] {},
+              /* more */ [end = container.end(), &it = *pos]() -> bool { return it != end; },
+              /* curr */ [&it = *pos]() -> AccessType { return *it; },
+              /* next */ [&it = *pos] { ++it; });
+        }) {}
+
+ private:
+  // For MakAnyScan / MakeConstScan
+  template<AcceptableContainer Container>
+  requires(kAccessByRef)
+  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
+      : clone_([data = std::move(data)]() {
+          // CheckCompatible<AccessType, decltype(*std::declval<ContainerIterator<Container>&>())>();
+          auto pos = MakeSharedIterator(data.container());
+          return std::make_shared<AccessFuncs>(
+              /* save */ [save = pos] {},
+              /* more */ [end = data.container().end(), &it = *pos]() -> bool { return it != end; },
+              /* curr */ [&it = *pos]() -> AccessType { return *it; },
+              /* next */ [&it = *pos] { ++it; });
+        }) {}
+
+  // For MakConvertingScan
+  template<AcceptableContainer Container>
+  requires(
+      !kAccessByRef  // This is the ConvertingScan constructor
+      && std::constructible_from<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>>
+      && std::constructible_from<value_type, AccessType>)
+  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
+      : clone_([data = std::move(data)] {
+          auto pos = MakeSharedIterator(data.container());
+          return std::make_shared<AccessFuncs>(
+              /* save */ [pos = pos] {},
+              /* more */ [end = data.container().end(), &it = *pos]() -> bool { return it != end; },
+              /* curr */ [&it = *pos]() -> AccessType { return AccessType(*it); },
+              /* next */ [&it = *pos] { ++it; });
+        }) {}
+
+  // NOLINTEND(bugprone-forwarding-reference-overload)
+
+ public:
+  template<typename ItElementType, typename ItValueType, typename ItPointer, typename ItReference>
+  class iterator_impl {
    public:
     using iterator_category = std::input_iterator_tag;
     using difference_type = AnyScanImpl::difference_type;
-    using value_type = AnyScanImpl::value_type;
-    using pointer = AnyScanImpl::const_pointer;
-    using reference = AnyScanImpl::const_reference;
-    using element_type = AnyScanImpl::value_type;
+    using element_type = ItElementType;
+    using value_type = ItValueType;
+    using pointer = ItPointer;
+    using reference = ItReference;
 
-    const_iterator() : funcs_(nullptr) {}
+    iterator_impl() : funcs_(nullptr) {}
 
-    explicit const_iterator(const std::shared_ptr<TripleFunc>& funcs) : funcs_(std::move(funcs)) {}
+    explicit iterator_impl(const std::shared_ptr<AccessFuncs>& funcs) : funcs_(std::move(funcs)) {}
 
-    const_reference operator*() const noexcept
-    requires AccessByRef
+    reference operator*() const noexcept
+    requires kAccessByRef
     {
       // We check both the presence of `funcs_` as well as calling the actual `more` function.
       // That means we bypass any protection an iterator may have, but we can make this function
       // `noexcept` assuming the iterator is noexcept for access. On the other hand we expect that
       // out of bounds access may actually raise. So we effectively side step such exceptions.
-      ABSL_CHECK(funcs_ && funcs_->more());
+      ABSL_CHECK(funcs_->more());
       return funcs_->curr();
     }
 
     value_type operator*() const noexcept
-    requires(!AccessByRef)
+    requires(!kAccessByRef)
     {
-      ABSL_CHECK(funcs_ && funcs_->more());
+      ABSL_CHECK(funcs_->more());
       return value_type(funcs_->curr());
     }
 
     const_pointer operator->() const noexcept
-    requires AccessByRef
+    requires kAccessByRef
     {
-      return funcs_ ? &funcs_->curr() : nullptr;
+      return funcs_->more() ? &funcs_->curr() : nullptr;
     }
 
-    const_iterator& operator++() noexcept {
-      if (funcs_) {
-        funcs_->next();
-      }
+    iterator_impl& operator++() noexcept {
+      funcs_->next();
       return *this;
     }
 
-    const_iterator operator++(int) noexcept {  // NOLINT(cert-dcl21-cpp)
-      const_iterator result = *this;
-      if (funcs_) {
-        funcs_->next();
-      }
+    iterator_impl operator++(int) noexcept {  // NOLINT(cert-dcl21-cpp)
+      iterator_impl result = *this;
+      funcs_->next();
       return result;
     }
 
-    bool operator==(const const_iterator& other) const noexcept {
+    template<typename OE, typename OV, typename OP, typename OR>
+    bool operator==(const iterator_impl<OE, OV, OP, OR>& other) const noexcept {
       if (this == &other || funcs_ == other.funcs_) {
         return true;
       }
@@ -261,83 +391,113 @@ class AnyScanImpl {
       return false;
     }
 
-    bool operator!=(const const_iterator& other) const noexcept { return !(*this == other); }
+    template<typename OE, typename OV, typename OP, typename OR>
+    bool operator!=(const iterator_impl<OE, OV, OP, OR>& other) const noexcept {
+      return !(*this == other);
+    }
 
    private:
-    std::shared_ptr<TripleFunc> funcs_;
+    std::shared_ptr<AccessFuncs> funcs_;
   };
 
-  using iterator = const_iterator;
+  using iterator = iterator_impl<element_type, value_type, pointer, reference>;
+  using const_iterator = iterator_impl<element_type, const value_type, const_pointer, const_reference>;
+
+  iterator begin() noexcept { return iterator(std::move(clone_())); }
+
+  iterator end() noexcept { return iterator(nullptr); }
 
   const_iterator begin() const noexcept { return const_iterator(std::move(clone_())); }
 
   const_iterator end() const noexcept { return const_iterator(nullptr); }
 
+  const_iterator cbegin() const noexcept { return const_iterator(std::move(clone_())); }
+
+  const_iterator cend() const noexcept { return const_iterator(nullptr); }
+
  private:
-  const FuncClone clone_;
+  FuncClone clone_;
 };
 
 }  // namespace container_internal
 
 template<typename ValueType, typename DifferenceType>
-class AnyScan : public container_internal::AnyScanImpl<ValueType, DifferenceType, true> {
+class AnyScan : public container_internal::AnyScanImpl<ValueType, DifferenceType, container_internal::ScanMode::kAny> {
  private:
-  using AnyScanImpl = container_internal::AnyScanImpl<ValueType, DifferenceType, true>;
-  using AnyScanImpl::AnyScanImpl;
+  using AnyScanImpl = container_internal::AnyScanImpl<ValueType, DifferenceType, container_internal::ScanMode::kAny>;
 
  public:
-  // Only the initializer_list constructor is public.
-  // The other constructors are private and the static constructor must be used.
-  // HOWEVER, prefer the free standing function `MakeAnyScan`.
-  template<::mbo::types::ContainerHasInputIterator Container>
-  static AnyScan InternalMakeAnyScan(Container&& container) noexcept {
-    return AnyScan(std::forward<Container>(container));
-  }
+  using AnyScanImpl::AnyScanImpl;
 
-  AnyScan(const std::initializer_list<ValueType>& data) : AnyScanImpl(data) {}
+  template<container_internal::AcceptableContainer Container>
+  requires(std::constructible_from<ValueType, typename std::remove_cvref_t<Container>::value_type>)
+  AnyScan(  // NOLINT(*-explicit-constructor,*-explicit-conversions)
+      container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kAny> data)
+      : AnyScanImpl(std::move(data)) {}
 
   using AnyScanImpl::begin;
   using AnyScanImpl::end;
 };
-
-template<::mbo::types::ContainerHasInputIterator Container>
-using AnyScanType = container_internal::AnyScanTypeImpl<Container, true, void>::type;
-
-// Creates `AnyScan` instances.
-template<::mbo::types::ContainerHasInputIterator Container>
-AnyScanType<Container> MakeAnyScan(Container&& container) noexcept {
-  return AnyScanType<Container>::InternalMakeAnyScan(std::forward<Container>(container));
-}
 
 template<typename ValueType, typename DifferenceType>
-class ConvertingScan : public container_internal::AnyScanImpl<ValueType, DifferenceType, false> {
+class ConstScan
+    : public container_internal::AnyScanImpl<const ValueType, DifferenceType, container_internal::ScanMode::kConst> {
  private:
-  using AnyScanImpl = container_internal::AnyScanImpl<ValueType, DifferenceType, false>;
-  using AnyScanImpl::AnyScanImpl;
+  using AnyScanImpl =
+      container_internal::AnyScanImpl<const ValueType, DifferenceType, container_internal::ScanMode::kConst>;
 
  public:
-  // Only the initializer_list constructor is public.
-  // The other constructors are private and the static constructor must be used.
-  // HOWEVER, prefer the free standing function `MakeConvertingScan`.
-  template<::mbo::types::ContainerHasInputIterator Container>
-  static ConvertingScan InternalMakeAnyScan(Container&& container) noexcept {
-    return ConvertingScan(std::forward<Container>(container));
-  }
+  using AnyScanImpl::AnyScanImpl;
 
-  ConvertingScan(const std::initializer_list<ValueType>& data) noexcept : AnyScanImpl(data) {}
+  template<container_internal::AcceptableContainer Container>
+  requires(std::constructible_from<const ValueType, typename std::remove_cvref_t<Container>::value_type>)
+  ConstScan(  // NOLINT(*-explicit-constructor,*-explicit-conversions)
+      container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConst> data)
+      : AnyScanImpl(std::move(data)) {}
 
   using AnyScanImpl::begin;
   using AnyScanImpl::end;
 };
 
-template<::mbo::types::ContainerHasInputIterator Container, typename AccessType>
-using ConvertingScanType = container_internal::AnyScanTypeImpl<Container, false, AccessType>::type;
+template<typename ValueType, typename DifferenceType>
+class ConvertingScan
+    : public container_internal::AnyScanImpl<ValueType, DifferenceType, container_internal::ScanMode::kConverting> {
+ private:
+  using AnyScanImpl =
+      container_internal::AnyScanImpl<ValueType, DifferenceType, container_internal::ScanMode::kConverting>;
 
-// Creates `ConvertingScan` instances.
-template<typename AccessType, ::mbo::types::ContainerHasInputIterator Container>
-requires std::constructible_from<AccessType, typename std::remove_cvref_t<Container>::value_type>
-ConvertingScanType<Container, AccessType> MakeConvertingScan(Container&& container) noexcept {
-  return ConvertingScanType<Container, AccessType>::InternalMakeAnyScan(std::forward<Container>(container));
+ public:
+  using AnyScanImpl::AnyScanImpl;
+
+  template<container_internal::AcceptableContainer Container>
+  requires(std::constructible_from<ValueType, typename std::remove_cvref_t<Container>::value_type>)
+  ConvertingScan(  // NOLINT(*-explicit-constructor,*-explicit-conversions)
+      container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConverting> data)
+      : AnyScanImpl(std::move(data)) {}
+
+  using AnyScanImpl::begin;
+  using AnyScanImpl::end;
+};
+
+// Creates adapters that can be received by `AnyScan` parameters.
+template<container_internal::AcceptableContainer Container>
+auto MakeAnyScan(Container&& container) noexcept {
+  return container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kAny>(
+      std::forward<Container>(container));
+}
+
+// Creates adapters that can be received by `ConstScan` parameters.
+template<container_internal::AcceptableContainer Container>
+auto MakeConstScan(Container&& container) noexcept {
+  return container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConst>(
+      std::forward<Container>(container));
+}
+
+// Creates adapters that can be received by `ConvertingScan` parameters.
+template<container_internal::AcceptableContainer Container>
+auto MakeConvertingScan(Container&& container) noexcept {
+  return container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConverting>(
+      std::forward<Container>(container));
 }
 
 }  // namespace mbo::container

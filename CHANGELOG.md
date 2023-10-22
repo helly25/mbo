@@ -1,3 +1,10 @@
+# 0.2.12
+
+* Added `ConstScan` and `MakeConstScan`.
+* Changed all `Make*Scan` types to create intermediate adapters.
+* Made all `*Scan` and `Make*Scan` to accept `std::initializer` types. 
+* Added support for move-only types.
+
 # 0.2.11
 
 * Made `AnyScan` constructor private.
