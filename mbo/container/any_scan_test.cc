@@ -74,7 +74,6 @@ std::vector<std::remove_const_t<T>> ConstTester(const ConstScan<T>& scan) {
 
 TEST_F(AnyScanTest, TestInitializerList) {
   std::initializer_list<int> data{1, 2, 3};
-  EXPECT_THAT(Tester<const int>(data), ElementsAre(1, 2, 3));
   EXPECT_THAT(Tester<const int>(MakeAnyScan(data)), ElementsAre(1, 2, 3));
 }
 
@@ -238,7 +237,7 @@ TEST_F(AnyScanTest, MoveOnly) {
 struct ConvertingScanTest : public AnyScanTest {};
 
 template<typename T>
-std::vector<T> ConvTester(const ConvertingScan<T>& scan) {
+std::vector<std::remove_cvref_t<T>> ConvTester(const ConvertingScan<T>& scan) {  // NOLINT(portability-std-allocator-const
   return {scan.begin(), scan.end()};
 }
 

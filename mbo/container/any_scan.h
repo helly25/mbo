@@ -87,6 +87,13 @@ namespace mbo::container {
 // void Foo(const AnyScan<std::pair<const std::string, int>& scan) {}
 // std::map<std::string, int> data{{"foo", 25}, {"bar", 42}};
 // Foo(MakeAnyScan(data));  // THIS WORKS because `Foo` has its `value_type::first_type` as const.
+//
+// NOTE: When working with `std::initializer_list`, then sometimes these can be assigned directly
+// to the `AnyScan` without the need to invoke `MakeAnyScan`. However, the types must match
+// const correctly. This cannot be fixed as for some types (e.g. std::string) that perform implicit
+// conversions it would be an ambiguity to provide both `std::initializer_list<T>` as well as the
+// const form `std::initializer_list<const T>` as parameters. This is not the case for `ConstScan`
+// of `ConvertingScan`.
 template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
 class AnyScan;
 
@@ -271,30 +278,9 @@ class AnyScanImpl {
 
   AnyScanImpl() = delete;
 
+ private:
   // NOLINTBEGIN(bugprone-forwarding-reference-overload)
 
-  AnyScanImpl(const std::initializer_list<ValueType>& data)
-      : clone_([container = data] {
-          auto pos = MakeSharedIterator(container);
-          return std::make_shared<AccessFuncs>(
-              /* save */ [pos = pos] {},
-              /* more */ [end = container.end(), &it = *pos]() -> bool { return it != end; },
-              /* curr */ [&it = *pos]() -> AccessType { return *it; },
-              /* next */ [&it = *pos] { ++it; });
-        }) {}
-
-  AnyScanImpl(const std::initializer_list<std::remove_const_t<ValueType>>& data)
-  requires(std::is_const_v<std::remove_reference_t<ValueType>>)
-      : clone_([container = data] {
-          auto pos = MakeSharedIterator(container);
-          return std::make_shared<AccessFuncs>(
-              /* save */ [pos = pos] {},
-              /* more */ [end = container.end(), &it = *pos]() -> bool { return it != end; },
-              /* curr */ [&it = *pos]() -> AccessType { return *it; },
-              /* next */ [&it = *pos] { ++it; });
-        }) {}
-
- private:
   // For MakAnyScan / MakeConstScan
   template<AcceptableContainer Container>
   requires(kAccessByRef)
@@ -427,9 +413,12 @@ class AnyScan : public container_internal::AnyScanImpl<ValueType, DifferenceType
   using AnyScanImpl = container_internal::AnyScanImpl<ValueType, DifferenceType, container_internal::ScanMode::kAny>;
 
  public:
-  using AnyScanImpl::AnyScanImpl;
+  AnyScan(const std::initializer_list<ValueType>& data)
+      : AnyScanImpl(
+          container_internal::MakeAnyScanData<std::initializer_list<ValueType>, container_internal::ScanMode::kAny>(
+              data)) {}
 
-  template<container_internal::AcceptableContainer Container>
+  template<::mbo::types::ContainerHasInputIterator Container>
   requires(std::constructible_from<ValueType, typename std::remove_cvref_t<Container>::value_type>)
   AnyScan(  // NOLINT(*-explicit-constructor,*-explicit-conversions)
       container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kAny> data)
@@ -447,7 +436,10 @@ class ConstScan
       container_internal::AnyScanImpl<const ValueType, DifferenceType, container_internal::ScanMode::kConst>;
 
  public:
-  using AnyScanImpl::AnyScanImpl;
+  ConstScan(const std::initializer_list<ValueType>& data)
+      : AnyScanImpl(
+          container_internal::MakeAnyScanData<std::initializer_list<ValueType>, container_internal::ScanMode::kConst>(
+              data)) {}
 
   template<container_internal::AcceptableContainer Container>
   requires(std::constructible_from<const ValueType, typename std::remove_cvref_t<Container>::value_type>)
@@ -467,7 +459,10 @@ class ConvertingScan
       container_internal::AnyScanImpl<ValueType, DifferenceType, container_internal::ScanMode::kConverting>;
 
  public:
-  using AnyScanImpl::AnyScanImpl;
+  ConvertingScan(const std::initializer_list<ValueType>& data)
+      : AnyScanImpl(
+          container_internal::
+              MakeAnyScanData<std::initializer_list<ValueType>, container_internal::ScanMode::kConverting>(data)) {}
 
   template<container_internal::AcceptableContainer Container>
   requires(std::constructible_from<ValueType, typename std::remove_cvref_t<Container>::value_type>)

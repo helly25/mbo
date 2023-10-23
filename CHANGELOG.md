@@ -4,6 +4,7 @@
 * Changed all `Make*Scan` types to create intermediate adapters.
 * Made all `*Scan` and `Make*Scan` to accept `std::initializer` types. 
 * Added support for move-only types.
+* Improved `*scan` handling of initializer_lists.
 
 # 0.2.11
 
