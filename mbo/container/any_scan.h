@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "absl/log/absl_check.h"
+#include "mbo/types/cases.h"
 #include "mbo/types/traits.h"
 
 // NOLINTBEGIN(readability-identifier-naming)
@@ -30,9 +31,10 @@ namespace mbo::container {
 // Type `AnyScan` is similar to `std::span`, `std::range` and `absl::Span`. However it works with
 // any container that supports `begin()`, `end()` and whose `iterator` (likely the `const_iterator`)
 // is a `std::input_iterator`. Type `ConstScan` is similar to `absl::Span<const T>` made from
-// `absl::MakeConstSpan`.
+// `absl::MakeConstSpan`. And while `AnyScan` and `ConstScan` return by reference, `ConvertingScan`
+// returns by copy which allows it to convert the values of the container to the specified value.
 //
-// That means this type supports pretty much all STL containers including `std::initializer_list`.
+// The Scan types supports pretty much all STL containers including `std::initializer_list`.
 //
 // IMPORTANT: This type is INDEPENDENT of the container type that means it is possible to write
 // single functions that can take containers of any container type without needing further templates
@@ -41,10 +43,13 @@ namespace mbo::container {
 // HOWEVER: This type is possibly slower as the aformentioned wrappers, as it need mores abstraction
 // layers to accomplish the independence of the container type.
 //
-// The wrappers of this type can only be instantiated/created through `MakeAnyScan` or directly from
-// a `std::initializer_list` argument.
+// The type `AnyScan` can only be instantiated/created through `MakeAnyScan` or directly from a
+// compatible `std::initializer_list` argument. Similarly `ConstScan` can be constructed from a
+// `MakeConstScan` call or compatible `std::initializer_list` argument and finally `ConvertingScan`
+// can be constructed from `MakeConvertingScan` or compatible `std::initializer_list` argument. This
+// prevents hard to find issues where the different types and helper functions are incompatible.
 //
-// The implementqtion is type-safe and does not use any `reinterpret_cast` of other unnecessary
+// The implementqtion is type-safe and does not use any `reinterpret_cast` or other unnecessary
 // tricks.
 //
 // The actual `AnyScan` type depends on two types:
@@ -63,47 +68,88 @@ namespace mbo::container {
 // Example:
 //
 // ```
-// void Report(const AnyScan<std::string>& data) {
-//   for (auto [first, second] : data) {
-//     Report(first, second);
+// void Report(AnyScan<std::string> data) {
+//   for (auto& [first, second] : data) {
+//     Report(std::move(first), std::move(second));
 //   }
 // }
 //
 // void User() {
 //   std::vector<std::string> data{"foo", "bar"};
-//   Report(MakeAnyScan(data));
+//   Report(MakeAnyScan(std::move(data)));
+// }
+//
+// void Other() {
+//   std::array<std::string, 2> data{"foo", "bar"};
+//   Report(MakeAnyScan(std::move(data)));
 // }
 // ```
 //
-// Here the caller used `std::vector`, but the caller may just switch to `std::set` or another
-// caller may use a `std::array` or a `std::initializer_list` or whatever container. However, all
-// callers must use containers with their `value_type` using `std::string`.
+// Here the `User` used `std::vector`, but the caller may just switch to `std::list` or like `Other`
+// may use a `std::array` or a `std::initializer_list` or whatever container. However, all callers
+// must use containers with their `value_type` using `std::string`.
 //
 // WARNING: When scanning types like `std::set` or `std::map` or similar indexed containers, then it
 // is important to know that their keys `value_type` (for set) or `value_type::first_type` (for map)
 // is const and thus the type to scan over must be specified accordingly. In many cases it is more
 // appropriate to work with `ConstScan` created by `MakeConstScan`. Example with correct `AnyScan`:
 //
+// ```
 // void Foo(const AnyScan<std::pair<const std::string, int>& scan) {}
 // std::map<std::string, int> data{{"foo", 25}, {"bar", 42}};
 // Foo(MakeAnyScan(data));  // THIS WORKS because `Foo` has its `value_type::first_type` as const.
+// ```
 //
 // NOTE: When working with `std::initializer_list`, then sometimes these can be assigned directly
 // to the `AnyScan` without the need to invoke `MakeAnyScan`. However, the types must match
 // const correctly. This cannot be fixed as for some types (e.g. std::string) that perform implicit
 // conversions it would be an ambiguity to provide both `std::initializer_list<T>` as well as the
 // const form `std::initializer_list<const T>` as parameters. This is not the case for `ConstScan`
-// of `ConvertingScan`.
+// or `ConvertingScan`.
+//
+// Another consideration is whether the callers should convert their container data or whether the
+// receiving API should do it. In the examples above the API requires a single entry point taking
+// an `AnyScan` and the callers needed to invoke `MakeAnyScan`. The advantage is that all callers
+// explicitly know how their containers are handle. That is `AnyScan` and `ConstScan` access by
+// reference while `ConvertingScan` uses access by copy-conversion. Also, the receiving API only
+// needs to implement a single function that does not need to be inlined (or require predetermined
+// types). On th the other hand it is possible to leave the conversion handling completely to the
+// receiving API by providing a second converting API function that is inlined, example:
+//
+// ```
+// void Report(AnyScan<std::string> data) {
+//   for (auto& [first, second] : data) {
+//     Report(first, second);
+//   }
+// }
+//
+// template <mbo::types::ContainerHasInputIterator Data>
+// void Report(Data&& data) {
+//   Report(MakeAnyScan(std::forward<Data>(data)));
+// }
+//
+// void User() {
+//   std::vector<std::string> data{"foo", "bar"};
+//   Report(std::move(data));
+// }
+//
+// void Other() {
+//   std::array<std::string, 2> data{"foo", "bar"};
+//   Report(std::move(data));
+// }
+// ```
 template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
 class AnyScan;
 
 // A `ConstScan` is similar to an `AnyScan` and an `absl::Span<const T>` but unlike in the case of
 // an `AnyScan` the values of a `ConstScan` are always const. That simplifies accepting const keyed
-// containers like `std::set` or `std::map`. Exmaple:
+// containers like `std::set` or `std::map`. Example:
 //
+// ```
 // void Foo(const ConstScan<std::string>& scan) {}
 // std::set<std::string> data{"foo", "bar"};
 // Foo(MakeConstScan(data));  // THIS WORKS because we are using `ConstScan`.
+// ```
 //
 // NOTE: A `ConstScan` is still referencing the results, so it is faster than a `ConvertingScan`.
 // However, when working with pairs, then all containers must have their `value_type::first_type`
@@ -114,10 +160,10 @@ template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
 class ConstScan;
 
 // A `ConvertingScan` is very similar to `AnyScan`, however it allows scanning of any container
-// whose `value_types` - as returned by its const_iterator - can be copy-converted into the
+// whose `value_types` - as returned by its const_iterator/iterator - can be copy-converted into the
 // specified type. This in particular allows scanning containers of any string-like type as either
 // `std::string` or `std::string_view`. The emphasis is on COPY as this kind of conversion requires
-// return by value. As such the `ConvertingScan`'s iterators do not have `operator->()`.
+// return by value. As such the `ConvertingScan`'s iterators do not have an `operator->()`.
 //
 // The wrappers of this type can only be instantiated/created through `MakeConvertingScan` or
 // directly from a `std::initializer_list` argument.
@@ -127,14 +173,17 @@ class ConstScan;
 // ```
 // void Report(const ConvertingScan<std::pair<std::string_view, std::string_view>>& data) {
 //   for (auto it = data.begin(); it != data.end(); ++it) {
-//     Report((*it).first, (*it).second);  // Use `(*it)` iteration as `operator->` is missing (1).
-//     // (1) Of course the iteration could just be: for (auto [first, second] : data)
+//     ReportKV((*it).first, (*it).second);  // Use `(*it)` iteration as `operator->` is missing (1).
+//   }
+//   // (1) Of course the iteration could just be:
+//   for (auto [first, second] : data) {
+//     ReportKV(first, second);
 //   }
 // }
 //
 // void User() {
 //   std::vector<std::string> data{{"foo", "25"}, {"bar", "42"}};
-//   Report(MakeConvertingScan(data));
+//   Report(MakeConvertingScan(std::move(data)));
 // }
 // ```
 //
@@ -142,7 +191,8 @@ class ConstScan;
 // wants the elements converted to `std::pair<std::string_view, std::string_view>`, so this had to
 // be a `ConvertingScan` that handles the type difference.
 //
-// Note: ConvertingScan is less restrict about const than AnyScan as it works on copies.
+// Note: The `ConvertingScan` is less restrict about const and reference than `AnyScan` and
+// `ConstScan` as it works on copies.
 template<typename ValueType, typename DifferenceType = std::ptrdiff_t>
 class ConvertingScan;
 
@@ -221,29 +271,31 @@ class AnyScanImpl {
 
   using FuncClone = std::function<std::shared_ptr<AccessFuncs>()>;
 
-  template<typename T, typename U, bool ArePairs = ::mbo::types::IsPair<T>&& ::mbo::types::IsPair<U>>
-  struct IsCompatibleImpl
-      : std::conditional_t<
-            std::is_const_v<T>,
-            std::bool_constant<std::same_as<T, const U>>,
-            std::bool_constant<std::same_as<T, U>>> {};
+  template<typename Pair>
+  requires(mbo::types::IsPair<std::remove_cvref_t<Pair>>)
+  struct FirstType {
+    using RawPair = std::remove_cvref_t<Pair>;
+    using RawFirst = typename RawPair::first_type;
+    using type = mbo::types::Cases<
+          mbo::types::IfThen<std::is_const_v<Pair> && std::is_reference_v<Pair>, const RawFirst&>,
+          mbo::types::IfThen<std::is_const_v<Pair>, const RawFirst>,
+          mbo::types::IfThen<std::is_reference_v<Pair>, RawFirst&>,
+          mbo::types::IfElse<RawFirst>>;
+  };
 
-  template<typename T, typename U>
-  struct IsCompatibleImpl<T, U, true>
-      : std::bool_constant<
-            std::same_as<typename T::first_type, typename U::first_type>
-            && std::same_as<typename T::second_type, typename U::second_type>> {};
-
-  template<typename T, typename U>
+  template<typename SrcValueTypeT, typename DstAccessType>
   static constexpr void CheckCompatible() noexcept {
-    if constexpr (::mbo::types::IsPair<T> && ::mbo::types::IsPair<U>) {
+    using RawSrc = std::remove_cvref_t<SrcValueTypeT>;
+    using RawDst = std::remove_cvref_t<DstAccessType>;
+    if constexpr (::mbo::types::IsPair<RawSrc> && ::mbo::types::IsPair<RawDst>) {
+      using SrcFirstType = typename FirstType<SrcValueTypeT>::type;
+      using DstFirstType = typename FirstType<DstAccessType>::type;
       static_assert(
-          IsCompatibleImpl<T, U>::value,
+          std::convertible_to<SrcFirstType, DstFirstType>,
           "A common reason for this to fail is scanning over `std::map` and similar indexed containers "
           "without specifying the scan type's `first_type` as const.");
-    } else {
-      static_assert(IsCompatibleImpl<T, U>::value);
     }
+    static_assert(std::convertible_to<SrcValueTypeT, DstAccessType>);
   }
 
   template<typename V, typename D>
@@ -286,7 +338,8 @@ class AnyScanImpl {
   requires(kAccessByRef)
   explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
       : clone_([data = std::move(data)]() {
-          // CheckCompatible<AccessType, decltype(*std::declval<ContainerIterator<Container>&>())>();
+          using IteratorValueType = decltype(*std::declval<ContainerIterator<Container>>());
+          CheckCompatible<IteratorValueType, AccessType>();
           auto pos = MakeSharedIterator(data.container());
           return std::make_shared<AccessFuncs>(
               /* save */ [save = pos] {},
@@ -326,7 +379,7 @@ class AnyScanImpl {
 
     iterator_impl() : funcs_(nullptr) {}
 
-    explicit iterator_impl(const std::shared_ptr<AccessFuncs>& funcs) : funcs_(std::move(funcs)) {}
+    explicit iterator_impl(std::shared_ptr<AccessFuncs> funcs) : funcs_(std::move(funcs)) {}
 
     reference operator*() const noexcept
     requires kAccessByRef
@@ -335,31 +388,35 @@ class AnyScanImpl {
       // That means we bypass any protection an iterator may have, but we can make this function
       // `noexcept` assuming the iterator is noexcept for access. On the other hand we expect that
       // out of bounds access may actually raise. So we effectively side step such exceptions.
-      ABSL_CHECK(funcs_->more());
+      ABSL_CHECK(funcs_ && funcs_->more());
       return funcs_->curr();
     }
 
     value_type operator*() const noexcept
     requires(!kAccessByRef)
     {
-      ABSL_CHECK(funcs_->more());
+      ABSL_CHECK(funcs_ && funcs_->more());
       return value_type(funcs_->curr());
     }
 
     const_pointer operator->() const noexcept
     requires kAccessByRef
     {
-      return funcs_->more() ? &funcs_->curr() : nullptr;
+      return (funcs_ && funcs_->more()) ? &funcs_->curr() : nullptr;
     }
 
     iterator_impl& operator++() noexcept {
-      funcs_->next();
+      if (funcs_) {
+        funcs_->next();
+      }
       return *this;
     }
 
     iterator_impl operator++(int) noexcept {  // NOLINT(cert-dcl21-cpp)
       iterator_impl result = *this;
-      funcs_->next();
+      if (funcs_) {
+        funcs_->next();
+      }
       return result;
     }
 
@@ -383,7 +440,7 @@ class AnyScanImpl {
     }
 
    private:
-    std::shared_ptr<AccessFuncs> funcs_;
+    std::shared_ptr<AccessFuncs> funcs_;  // Cannot be const.
   };
 
   using iterator = iterator_impl<element_type, value_type, pointer, reference>;
@@ -402,7 +459,7 @@ class AnyScanImpl {
   const_iterator cend() const noexcept { return const_iterator(nullptr); }
 
  private:
-  FuncClone clone_;
+  const FuncClone clone_;
 };
 
 }  // namespace container_internal

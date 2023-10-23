@@ -170,7 +170,7 @@ TEST_F(AnyScanTest, CallFunctionPairOfStringsConstKeyed) {
 
 TEST_F(AnyScanTest, CallFunctionPairOfStringsWithMap) {
   using Values = std::pair<const std::string, std::string>;
-  // std::map's iterator has type std::pair<sonst...>, meaning its first type is const.
+  // std::map's iterator has type `std::pair<const Key, Value>`, meaning its first type (Key) is const.
   EXPECT_THAT(
       Tester<Values>(MakeAnyScan(std::map<std::string, std::string>{{"1", "a"}, {"2", "b"}})),
       ElementsAre(Pair("1", "a"), Pair("2", "b")));

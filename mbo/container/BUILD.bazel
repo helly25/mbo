@@ -19,6 +19,7 @@ cc_library(
     hdrs = ["any_scan.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "//mbo/types:cases_cc",
         "//mbo/types:traits_cc",
         "@com_google_absl//absl/log:absl_check",
     ],

@@ -1,3 +1,9 @@
+# 0.2.13
+
+* Applied several tweaks for `*Scan`.
+* Improved compiler error message when using `AnyScan` with incompatible pairs due
+  to `first_type` being const on the right side.
+
 # 0.2.12
 
 * Added `ConstScan` and `MakeConstScan`.
