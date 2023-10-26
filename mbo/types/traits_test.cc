@@ -44,7 +44,6 @@ constexpr bool Tester() noexcept {
 }
 
 TEST_F(TraitsTest, Concepts) {
-
   static_assert(Tester<int>());
   static_assert(Tester<short>());  // NOLINT(google-runtime-int)
   static_assert(!Tester<uint16_t>());
