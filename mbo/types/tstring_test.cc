@@ -39,6 +39,27 @@ using ::testing::SizeIs;
 using ::testing::StrEq;
 using std::size_t;
 
+static_assert(sizeof(""_ts) == 1);
+static_assert(""_ts.empty());
+static_assert(""_ts.size() == 0);
+
+static_assert(sizeof("test"_ts) == 1);
+static_assert(!"test"_ts.empty());
+static_assert("test"_ts.size() == 4);
+
+static_assert(sizeof("test-more"_ts) == 1);
+static_assert(!"test-more"_ts.empty());
+static_assert("test-more"_ts.size() == 9);
+
+// Concat
+static_assert(("test"_ts + "-"_ts + "more"_ts).size() == 9);
+static_assert(("test"_ts + "-"_ts + "more"_ts) == "test-more");
+static_assert(("test"_ts + "-"_ts + "more"_ts) == "test-more"_ts);
+
+// Iteration requirement
+static_assert(std::forward_iterator<decltype(""_ts)::iterator>);
+static_assert(std::forward_iterator<decltype(""_ts)::const_iterator>);
+
 struct TStringTest : ::testing::Test {
   static constexpr auto kTestA1 = MBO_MAKE_TSTRING("1_test");
   static constexpr std::string_view kTestB1{MBO_MAKE_TSTRING("1_test")};

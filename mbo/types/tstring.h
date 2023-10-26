@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Implements type `tstring` a compile time string-literal type.
+// Implements type `tstring` a compile time string-literal type, e.g. `"42"_ts`.
 
 #ifndef MBO_TYPES_TSTRING_H_
 #define MBO_TYPES_TSTRING_H_
@@ -36,7 +36,21 @@ namespace mbo::types {
 // Implements type `tstring` a compile time string-literal type.
 //
 // It supports template-string-literal types using '_ts' notation.
-//   constexptr auto name = "Name"_ts;
+//
+// ```
+//   using mbo::types::tstring;
+//   using mbo::types::operator""_ts;
+//
+//   static constexptr auto kName = "First"_ts;
+//   static constexptr auto kLast = "Last"_ts;
+//
+//   static constexpr std::string_view str = kName.str();
+//
+//   static constexpr auto kFull = kName + " "_ts + kLast;
+//
+//   static_assert(sizeof(kFull), 1);   // C++ objects need at least 1 byte.
+//   static_assert(kFull.size() == 9);  // 'First'=5 + ' '=1 + 'Last'=4, no '\0'
+// ```
 //
 // This works great when compiling on Clang, GCC or a derived compiler. For
 // MSVC and other compilers a C++20 compatible version is used that creates a
@@ -83,6 +97,7 @@ struct tstring final {
 
   // Access to the underlying data as a `std::string_view`.
   static constexpr std::string_view str() noexcept { return {data.data(), sizeof...(chars)}; }
+  static constexpr const char* c_str() noexcept { return data.data(); }
 
   // Identity comparison - purely performed as a compile-time, type check.
   //
@@ -410,6 +425,12 @@ struct MakeTstringLiteralHelper {
 #if defined(__clang__) || defined(__GNUC__)
 // String literal support for Clang, GCC and derived compilers. Enables:
 //   constexpr auto my_constexpr_string = "foo"_ts;
+//
+// In order to import the string-literal-operator into another namespace use:
+//
+// ```
+// using mbo::types::operator""_ts;
+// ```
 //
 // String literal operator templates are a GNU extension
 // [-Wgnu-string-literal-operator-template]
