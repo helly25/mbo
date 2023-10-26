@@ -3,6 +3,7 @@
 * Applied several tweaks for `*Scan`.
 * Improved compiler error message when using `AnyScan` with incompatible pairs due
   to `first_type` being const on the right side.
+* Added concept `IsSameAsAnyOfRaw` / `NotSameAsAnyOfRaw` which determine whether type is one of a list of types.
 
 # 0.2.12
 

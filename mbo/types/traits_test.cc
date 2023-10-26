@@ -33,6 +33,28 @@ using namespace ::mbo::types::types_internal::test_types;
 
 class TraitsTest : public ::testing::Test {};
 
+template <IsSameAsAnyOfRaw<int, short> T>
+constexpr bool Tester() noexcept {
+    return 1;
+}
+
+template <NotSameAsAnyOfRaw<int, short> T>
+constexpr bool Tester() noexcept {
+    return 0;
+}
+
+TEST_F(TraitsTest, Concepts) {
+
+  static_assert(Tester<int>());
+  static_assert(Tester<short>());  // NOLINT(google-runtime-int)
+  static_assert(!Tester<uint16_t>());
+  static_assert(!Tester<unsigned>());
+  static_assert(!Tester<void>());
+
+  static_assert(!Tester<int*>());
+  static_assert(Tester<int&>());
+}
+
 template<typename TestType>
 struct GenTraitsTest : public ::testing::Test {
   static constexpr size_t kDerivedFieldCount =

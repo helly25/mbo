@@ -282,6 +282,28 @@ concept IsPair = requires(T pair) {
   requires std::same_as<std::remove_const_t<T>, std::pair<typename T::first_type, typename T::second_type>>;
 };
 
+namespace types_internal {
+
+template <typename SameAs, typename... Ts>
+concept IsSameAsAnyOfRawImpl = (std::same_as<SameAs, std::remove_cvref_t<Ts>> || ...);
+
+}  // namespace types_internal
+
+// Test whetehr a type is one of a list of types. The following example takes any form of `int`
+// or `unsigned` where `const`, `volatile` or `&` are removed. So an `int*` would not be acceptable.
+//
+// ```
+// template <IsSameAsAnyOfRaw<int, unsigned> T>
+// void Func(T) {};
+// ```
+template <typename SameAs, typename... Ts>
+concept IsSameAsAnyOfRaw = types_internal::IsSameAsAnyOfRawImpl<std::remove_cvref_t<SameAs>, Ts...>;
+
+// Inverse of the above. So this prevents specific types. This is necessary when building overload
+// alternatives.
+template <typename SameAs, typename... Ts>
+concept NotSameAsAnyOfRaw = !IsSameAsAnyOfRaw<std::remove_cvref_t<SameAs>, Ts...>;
+
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_TRAITS_H_

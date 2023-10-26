@@ -133,6 +133,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * concept `IsInitializerList` determines whether a type is `std::initializer<T> type.
         * concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
         * concept `IsPair` determines whether a type is a `std::pair`.
+        * concept `IsSameAsAnyOfRaw` / `NotSameAsAnyOfRaw` which determine whether type is one of a list of types.
     * mbo/types:tstring_cc, mbo/types/tstring.h
         * struct `tstring`: Implements type `tstring` a compile time string-literal type.
         * operator `operator"" _ts`: String literal support for Clang, GCC and derived compilers.
