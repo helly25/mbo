@@ -615,15 +615,17 @@ TEST_F(TStringTest, BeginEnd) {
 }
 
 TEST_F(TStringTest, FindFirstLast) {
-#ifndef __SANITIZE_ADDRESS__
   {
-    constexpr size_t kPos = kTestA1.find_first_of('e');  // Verify `constexpr`
-    EXPECT_THAT(kPos, 3);
+    static constexpr size_t kPosF = kTestA1.find_first_of('e');  // Verify `constexpr`
+    EXPECT_THAT(kPosF, 3);
   }
-#endif  // __SANITIZE_ADDRESS__
   {
-    constexpr size_t kPos = kTestA1.find_first_of("asx");  // Verify `constexpr`
+    static constexpr size_t kPos = kTestA1.find_first_of("asx");  // Verify `constexpr`
     EXPECT_THAT(kPos, 4);
+    static constexpr size_t kPos2 = kTestA1.find_first_of("astx");  // Verify `constexpr`
+    EXPECT_THAT(kPos2, 2);
+    static constexpr size_t kPos3 = kTestA1.find_first_of("astx", 3);  // Verify `constexpr`
+    EXPECT_THAT(kPos3, 4);
   }
   EXPECT_THAT(kTestA1.find_first_of('e', 3), 3);
   EXPECT_THAT(kTestA1.find_first_of('e', 4), tstring<>::npos);
@@ -632,12 +634,18 @@ TEST_F(TStringTest, FindFirstLast) {
   EXPECT_THAT(kTestA1.find_first_of('t', 3), 5);
   EXPECT_THAT(kTestA1.find_first_of('x'), tstring<>::npos);
   {
-    constexpr size_t kPos = kTestA1.find_last_of('e');  // Verify `constexpr`
+    static constexpr size_t kPos = kTestA1.find_last_of('e');  // Verify `constexpr`
     EXPECT_THAT(kPos, 3);
+    static constexpr size_t kPos2 = kTestA1.find_last_of('t');  // Verify `constexpr`
+    EXPECT_THAT(kPos2, 5);
   }
   {
-    constexpr size_t kPos = kTestA1.find_last_of("asx");  // Verify `constexpr`
+    static constexpr size_t kPos = kTestA1.find_last_of("asx");  // Verify `constexpr`
     EXPECT_THAT(kPos, 4);
+    static constexpr size_t kPos2 = kTestA1.find_last_of("astx");  // Verify `constexpr`
+    EXPECT_THAT(kPos2, 5);
+    static constexpr size_t kPos3 = kTestA1.find_last_of("atx", 4);  // Verify `constexpr`
+    EXPECT_THAT(kPos3, 2);
   }
   EXPECT_THAT(kTestA1.find_last_of('t'), 5);  // not 3 which would be first
   EXPECT_THAT(kTestA1.find_last_of('t', 5), 5);

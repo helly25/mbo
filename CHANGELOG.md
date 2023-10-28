@@ -1,3 +1,7 @@
+# 0.2.14
+
+* Changed `tstring::find_first_of` and `tstring::find_last_of` solely with `string_view::find` to solve ASAN issue.
+
 # 0.2.13
 
 * Applied several tweaks for `*Scan`.

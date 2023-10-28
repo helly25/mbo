@@ -243,8 +243,7 @@ struct tstring final {
     }
   }
 
-  // Checks (at compile time) whether `tstring<Other...>` is contained in this
-  // `tstring`.
+  // Checks (at compile time) whether `tstring<Other...>` is contained in this `tstring`.
   template<char... Other>
   static constexpr bool contains(tstring<Other...> /* other */) noexcept {
     constexpr size_type other_len = sizeof...(Other);
@@ -261,23 +260,60 @@ struct tstring final {
     }
   }
 
-  // Run-time check for presence of one character of a character-set.
-  //
-  // TODO(helly25): Consider implementing a compile-time variant.
-  template<typename T>
-  requires std::is_convertible_v<T, char> || std::is_convertible_v<T, std::string_view>
-  static constexpr size_type find_first_of(T charset, size_type pos = 0) noexcept {
-    return str().find_first_of(charset, pos);
+  // Check for presence of one character of a character-set.
+  static constexpr size_type find_first_of(char chr, size_type pos = 0) noexcept {
+    for (; pos < num_chars; ++pos) {
+      if (data[pos] == chr) {
+        return pos;
+      }
+    }
+    return npos;
   }
 
-  // Run-time check for presence of one character of a character-set from the
-  // back.
-  //
-  // TODO(helly25): Consider implementing a compile-time variant.
-  template<typename T>
-  requires std::is_convertible_v<T, char> || std::is_convertible_v<T, std::string_view>
-  static constexpr size_type find_last_of(T charset, size_type pos = npos) noexcept {
-    return str().find_last_of(charset, pos);
+  static constexpr size_type find_first_of(std::string_view charset, size_type pos = 0) noexcept {
+    for (; pos < num_chars; ++pos) {
+      if (charset.find(data[pos]) != std::string_view::npos) {
+        return pos;
+      }
+    }
+    return npos;
+  }
+
+  // Check for presence of one character of a character-set from the back.
+  static constexpr size_type find_last_of(char chr, size_type pos = npos) noexcept {
+    if constexpr (num_chars == 0) {
+      return npos;
+    }
+    if (pos >= num_chars) {
+      pos = num_chars - 1;
+    }
+    while (true) {
+      if (data[pos] == chr) {
+        return pos;
+      }
+      if (pos-- == 0) {
+        return npos;
+      }
+    }
+    return npos;
+  }
+
+  static constexpr size_type find_last_of(std::string_view charset, size_type pos = npos) noexcept {
+    if constexpr (num_chars == 0) {
+      return npos;
+    }
+    if (pos >= num_chars) {
+      pos = num_chars - 1;
+    }
+    while (true) {
+      if (charset.find(data[pos]) != std::string_view::npos) {
+        return pos;
+      }
+      if (pos-- == 0) {
+        return npos;
+      }
+    }
+    return npos;
   }
 
   // Only the default constructor is offered - no other constructor is useful.
