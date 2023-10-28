@@ -226,16 +226,23 @@ TEST_F(LimitedMapTest, Update) {
       test,
       ElementsAre(
           Pair(" ", "space"), Pair("0", "zero"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
+}
+
+TEST_F(LimitedMapTest, UpdateNonExistingThrows) {
 #if !HAS_ADDRESS_SANITIZER
-  bool got_exception = false;
-  try {
-    test.at("not_present") = "oops";
-  } catch (const std::out_of_range&) {
-    got_exception = true;
-  } catch (...) {
-    ASSERT_TRUE(false) << "Should not happen as we specified the exception we expected.";
-  }
-  ASSERT_TRUE(got_exception);
+  // Disabled due to https://github.com/google/sanitizers/issues/749
+  const bool caught = []() {
+    auto test = LimitedMap<int, int, 2>();
+    try {
+      test.at(25) = 42;
+    } catch (const std::out_of_range&) {
+      return true;
+    } catch (...) {
+      return false;
+    }
+    return false;
+  }();
+  ASSERT_TRUE(caught);
 #endif
 }
 
