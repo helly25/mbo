@@ -150,8 +150,9 @@ class LimitedSet final : public container_internal::LimitedOrdered<Key, Key, Key
 
   // Custom
 
-  using LimitedBase::npos;      // Return value for `index_of` if `key` is not found.
+  using LimitedBase::at_index;  // Index based access, throws `std::out_of_range` if not found.
   using LimitedBase::index_of;  // Return 0-based index of `key`, or `npos` if not found.
+  using LimitedBase::npos;      // Return value for `index_of` if `key` is not found.
 
   // Mofification: clear, swap, emplace, insert
 

@@ -25,6 +25,18 @@
 #include "gtest/gtest.h"
 #include "mbo/testing/matchers.h"
 
+// Clang has issues with exception tracing in ASAN, so corresponding tests must
+// be disabled. But we do so for all known ASAN identification methods.
+#ifndef HAS_ADDRESS_SANITIZER
+# if defined(__has_feature)
+#  if __has_feature(address_sanitizer)
+#   define HAS_ADDRESS_SANITIZER 1
+#  endif
+# elif defined(__SANITIZE_ADDRESS__)
+#  define HAS_ADDRESS_SANITIZER 1
+# endif
+#endif
+
 namespace mbo::container {
 namespace {
 
@@ -478,6 +490,33 @@ TEST_F(LimitedSetTest, CompareAllTheSizes) {
 TEST_F(LimitedSetTest, PreSortedInput) {
   constexpr LimitedSet<int, LimitedOptions<4, LimitedOptionsFlag::kRequireSortedInput>{}> kData{0, 1, 2, 42};
   EXPECT_THAT(kData, ElementsAre(0, 1, 2, 42));
+}
+
+TEST_F(LimitedSetTest, AtIndex) {
+  static constexpr auto kTest = LimitedSet<int, 2>{25, 42};
+  EXPECT_THAT(kTest.at_index(0), 25);
+  EXPECT_THAT(kTest.at_index(1), 42);
+  auto test = LimitedSet<int, 2>{25, 42};
+  test.at_index(1) = 99;
+  EXPECT_THAT(test, ElementsAre(25, 99));
+}
+
+TEST_F(LimitedSetTest, AtIndexNonExistingThrows) {
+#if !HAS_ADDRESS_SANITIZER
+  // Disabled due to https://github.com/google/sanitizers/issues/749
+  const bool caught = []() {
+    static constexpr auto kTest = LimitedSet<int, 2>{25, 42};
+    try {
+      kTest.at_index(3);
+    } catch (const std::out_of_range&) {
+      return true;
+    } catch (...) {
+      return false;
+    }
+    return false;
+  }();
+  ASSERT_TRUE(caught);
+#endif
 }
 
 // NOLINTEND(*-magic-numbers)

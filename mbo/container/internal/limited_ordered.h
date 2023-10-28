@@ -525,6 +525,20 @@ class LimitedOrdered {
     return it == end() || key_comp_(GetKey(*it), key) || key_comp_(key, GetKey(*it)) ? npos : it - begin();
   }
 
+  constexpr value_type& at_index(size_type pos) {
+    if (pos >= size_) {
+      throw std::out_of_range("Out of rage");
+    }
+    return values_[pos].data;
+  }
+
+  constexpr const value_type& at_index(size_type pos) const {
+    if (pos >= size_) {
+      throw std::out_of_range("Out of rage");
+    }
+    return values_[pos].data;
+  }
+
   constexpr iterator find(const Key& key) {
     if constexpr (types::IsCompareLess<Compare>) {
       std::size_t pos = index_of(key);

@@ -246,6 +246,33 @@ TEST_F(LimitedMapTest, UpdateNonExistingThrows) {
 #endif
 }
 
+TEST_F(LimitedMapTest, AtIndex) {
+  static constexpr auto kTest = LimitedMap<int, int, 2>{{1, 2}, {3, 4}};
+  EXPECT_THAT(kTest.at_index(0), Pair(1, 2));
+  EXPECT_THAT(kTest.at_index(1), Pair(3, 4));
+  auto test = LimitedMap<int, int, 2>{{1, 2}, {3, 4}};
+  test.at_index(1).second = 42;
+  EXPECT_THAT(test, ElementsAre(Pair(1, 2), Pair(3, 42)));
+}
+
+TEST_F(LimitedMapTest, AtIndexNonExistingThrows) {
+#if !HAS_ADDRESS_SANITIZER
+  // Disabled due to https://github.com/google/sanitizers/issues/749
+  const bool caught = []() {
+    static constexpr auto kTest = LimitedMap<int, int, 2>{{1, 2}, {3, 4}};
+    try {
+      kTest.at_index(3);
+    } catch (const std::out_of_range&) {
+      return true;
+    } catch (...) {
+      return false;
+    }
+    return false;
+  }();
+  ASSERT_TRUE(caught);
+#endif
+}
+
 TEST_F(LimitedMapTest, ConstructAssignFromSmaller) {
   {
     constexpr LimitedMap<uint32_t, uint32_t, 3> kSource({{0U, 0U}, {1U, 1U}, {2U, 2U}});
