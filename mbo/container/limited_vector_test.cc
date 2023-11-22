@@ -158,6 +158,10 @@ TEST_F(LimitedVectorTest, ToLimitedVector) {
   EXPECT_THAT(kTest, SizeIs(4));
   EXPECT_THAT(kTest, CapacityIs(4));
   EXPECT_THAT(kTest, ElementsAre(0, 1, 2, 3));
+  constexpr auto kOther = ToLimitedVector({0, 1, 2, 3});
+  EXPECT_THAT(kOther, ElementsAre(0, 1, 2, 3));
+  constexpr auto kTyped = ToLimitedVector<uint32_t>({0, 1, 2, 3});
+  EXPECT_THAT(kTyped, ElementsAre(0, 1, 2, 3));
   // NOLINTEND(*-avoid-c-arrays)
 }
 
