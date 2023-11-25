@@ -25,8 +25,8 @@ jobs:
       - name: Test Clang
         run: |
           ${LLVM_PATH}/bin/clang-format --version
-          ${LLVM_PATH}/bin/clang-format --dump-config
-          ${LLVM_PATH}/bin/clang-format --fallback-style=Google --sort-includes=1 --style=file:.clang-format --Werror mbo/types/internal/decompose_count.h
+          export PATH="${LLVM_PATH}/bin:${PATH}"
+          which clang-format
           bazel build //mbo/types/internal:decompose_count_test || bazel build //mbo/types/internal:decompose_count_test --sandbox_debug -s
 
       - name: Test OPT
