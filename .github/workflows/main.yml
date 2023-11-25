@@ -22,15 +22,10 @@ jobs:
         with:
           version: "17.0"
 
-      - name: Test Clang
-        run: |
-          bazel build //mbo/types/internal:decompose_count_test || bazel build //mbo/types/internal:decompose_count_test --sandbox_debug -s --//mbo/mope:clang_format="${LLVM_PATH}/bin/clang-format"
-
       - name: Test OPT
         run: |
-          echo "${GITHUB_WORKSPACE}"
-          cd "${GITHUB_WORKSPACE}" && bazel build //... -c opt
+          bazel build --//mbo/mope:clang_format="${LLVM_PATH}/bin/clang-format" //... -c opt 
 
       - name: Test ASAN
         run: |
-          cd "${GITHUB_WORKSPACE}" && bazel build //... --config=asan -c dbg
+          bazel build --//mbo/mope:clang_format="${LLVM_PATH}/bin/clang-format" //... --config=asan -c dbg
