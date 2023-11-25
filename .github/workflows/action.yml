@@ -1,0 +1,17 @@
+name: Test
+
+on: [push]
+
+jobs:
+    checks:
+        name: Test
+        runs-on: ubuntu-latest
+        steps:
+        - name: Test OPT
+          run: |
+            cd "${GITHUB_WORKSPACE}"
+            bazel build //... -c opt
+        - name: Test ASAN
+          run: |
+            cd "${GITHUB_WORKSPACE}"
+            bazel build //... --config=asan -c dbg
