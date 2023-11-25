@@ -21,7 +21,11 @@ jobs:
           key: ${{ runner.os }}-{{ env.version }}-bazel-cache
 
       - name: Test OPT
-        run: bazel build //... -c opt
+        run: |
+          cd "${GITHUB_WORKSPACE}"
+          bazel build //... -c opt
 
       - name: Test ASAN
-        run: bazel build //... --config=asan -c dbg
+        run: |
+          cd "${GITHUB_WORKSPACE}"
+          bazel build //... --config=asan -c dbg
