@@ -66,8 +66,8 @@ def _clang_format_impl(ctx, src, dst):
                 fi;
             fi;
             # Must cat (<), so that --assume-filename works, so that incldue order gets correct.
-            ls -la ${{CLANG_FORMAT}}
-            ${{CLANG_FORMAT}} --dump-config
+            echo ${{CLANG_FORMAT}}
+            env
             ${{CLANG_FORMAT}} \\
                 --assume-filename={assume_filename} \\
                 --fallback-style={fallback_style} \\
