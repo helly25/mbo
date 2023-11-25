@@ -1,17 +1,27 @@
 name: Test
-
 on: [push]
-
 jobs:
-    checks:
-        name: Test
-        runs-on: ubuntu-latest
-        steps:
-        - name: Test OPT
-          run: |
-            cd "${GITHUB_WORKSPACE}"
-            bazel build //... -c opt
-        - name: Test ASAN
-          run: |
-            cd "${GITHUB_WORKSPACE}"
-            bazel build //... --config=asan -c dbg
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Bazel cache
+        id: bazel-cache
+        uses: actions/cache@v2
+        env:
+          version: 4.2.1
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-{{ env.version }}-bazel-cache
+
+      - name: Test OPT
+        run: |
+          echo "${GITHUB_WORKSPACE}"
+          cd "${GITHUB_WORKSPACE}" && bazel build //... -c opt
+
+      - name: Test ASAN
+        run: |
+          cd "${GITHUB_WORKSPACE}" && bazel build //... --config=asan -c dbg
