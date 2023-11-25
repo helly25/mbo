@@ -273,7 +273,7 @@ template<typename ContainerIn, typename ContainerOut, typename Func = types_inte
 concept ContainerCopyConvertible = types_internal::
     ContainerCopyConvertibleRaw<std::remove_cvref_t<ContainerIn>, std::remove_reference_t<ContainerOut>, Func>;
 
-template <typename T>
+template<typename T>
 concept IsPair = requires(T pair) {
   typename T::first_type;
   typename T::second_type;
@@ -284,7 +284,7 @@ concept IsPair = requires(T pair) {
 
 namespace types_internal {
 
-template <typename SameAs, typename... Ts>
+template<typename SameAs, typename... Ts>
 concept IsSameAsAnyOfRawImpl = (std::same_as<SameAs, std::remove_cvref_t<Ts>> || ...);
 
 }  // namespace types_internal
@@ -296,12 +296,12 @@ concept IsSameAsAnyOfRawImpl = (std::same_as<SameAs, std::remove_cvref_t<Ts>> ||
 // template <IsSameAsAnyOfRaw<int, unsigned> T>
 // void Func(T) {};
 // ```
-template <typename SameAs, typename... Ts>
+template<typename SameAs, typename... Ts>
 concept IsSameAsAnyOfRaw = types_internal::IsSameAsAnyOfRawImpl<std::remove_cvref_t<SameAs>, Ts...>;
 
 // Inverse of the above. So this prevents specific types. This is necessary when building overload
 // alternatives.
-template <typename SameAs, typename... Ts>
+template<typename SameAs, typename... Ts>
 concept NotSameAsAnyOfRaw = !IsSameAsAnyOfRaw<std::remove_cvref_t<SameAs>, Ts...>;
 
 }  // namespace mbo::types

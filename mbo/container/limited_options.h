@@ -72,7 +72,8 @@ concept IsLimitedOptions = requires(T val) {
   requires std::same_as<std::remove_cvref_t<decltype(val.kFlags.size())>, std::size_t>;
   requires std::same_as<std::remove_cvref_t<decltype(val.kFlags)>, std::array<LimitedOptionsFlag, T::kFlags.size()>>;
   requires std::same_as<
-      std::remove_cvref_t<T>, decltype(container_internal::MakeLimitedOptionsFromArray<T::kCapacity, T::kFlags.size(), T::kFlags>())>;
+      std::remove_cvref_t<T>,
+      decltype(container_internal::MakeLimitedOptionsFromArray<T::kCapacity, T::kFlags.size(), T::kFlags>())>;
 };
 
 template<typename T>

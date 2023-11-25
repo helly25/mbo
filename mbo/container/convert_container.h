@@ -26,7 +26,8 @@ class ConvertContainer final {
   using NoFunc = ::mbo::types::types_internal::NoFunc;
 
  public:
-  using ValueType = mbo::types::types_internal::ValueOrResultT<typename std::remove_reference_t<Container>::value_type, Func>;
+  using ValueType =
+      mbo::types::types_internal::ValueOrResultT<typename std::remove_reference_t<Container>::value_type, Func>;
 
   explicit ConvertContainer(Container&& container) noexcept
   requires std::same_as<Func, NoFunc>
@@ -100,18 +101,25 @@ inline container_internal::ConvertContainer<Container> ConvertContainer(Containe
 
 template<mbo::types::IsForwardIteratable Container, typename Func>
 requires ::mbo::types::NotInitializerList<Container>
-inline container_internal::ConvertContainer<Container, Func> ConvertContainer(Container&& container, Func&& conversion) {
-  return container_internal::ConvertContainer<Container, Func>(std::forward<Container>(container), std::forward<Func>(conversion));
+inline container_internal::ConvertContainer<Container, Func> ConvertContainer(
+    Container&& container,
+    Func&& conversion) {
+  return container_internal::ConvertContainer<Container, Func>(
+      std::forward<Container>(container), std::forward<Func>(conversion));
 }
 
 template<typename U>
-inline container_internal::ConvertContainer<const std::initializer_list<U>&> ConvertContainer(const std::initializer_list<U>& container) {
+inline container_internal::ConvertContainer<const std::initializer_list<U>&> ConvertContainer(
+    const std::initializer_list<U>& container) {
   return container_internal::ConvertContainer<const std::initializer_list<U>&>(container);
 }
 
 template<typename U, typename Func>
-inline container_internal::ConvertContainer<const std::initializer_list<U>&, Func> ConvertContainer(const std::initializer_list<U>& container, Func&& conversion) {
-  return container_internal::ConvertContainer<const std::initializer_list<U>&, Func>(container, std::forward<Func>(conversion));
+inline container_internal::ConvertContainer<const std::initializer_list<U>&, Func> ConvertContainer(
+    const std::initializer_list<U>& container,
+    Func&& conversion) {
+  return container_internal::ConvertContainer<const std::initializer_list<U>&, Func>(
+      container, std::forward<Func>(conversion));
 }
 
 }  // namespace mbo::container

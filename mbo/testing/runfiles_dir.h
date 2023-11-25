@@ -30,4 +30,4 @@ std::string RunfilesDirOrDie(std::string_view workspace, std::string_view source
 
 }  // namespace mbo::testing
 
-#endif // MBO_TESTING_RUNFILES_DIR_H_
+#endif  // MBO_TESTING_RUNFILES_DIR_H_

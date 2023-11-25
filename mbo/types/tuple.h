@@ -26,7 +26,7 @@ namespace mbo::types {
 //
 // There could be additional requirements:
 // - on `std::default_initializable<T>`: but that is technically not necessary.
-// - on `!types_internal::StructHasNonEmptyBase<T>`: 
+// - on `!types_internal::StructHasNonEmptyBase<T>`:
 template<typename T>
 concept CanCreateTuple = types_internal::DecomposeCondition<T>;
 

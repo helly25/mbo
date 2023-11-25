@@ -253,10 +253,7 @@ inline constexpr auto MakeLimitedSet() noexcept {  // Parameter `key_comp` would
   return LimitedSet<Key, N, Compare>();
 }
 
-template<
-    auto N,
-    std::forward_iterator It,
-    typename Compare = std::less<mbo::types::ForwardIteratorValueType<It>>>
+template<auto N, std::forward_iterator It, typename Compare = std::less<mbo::types::ForwardIteratorValueType<It>>>
 inline constexpr auto MakeLimitedSet(It begin, It end, const Compare& key_comp = Compare()) noexcept {
   return LimitedSet<mbo::types::ForwardIteratorValueType<It>, N, Compare>(begin, end, key_comp);
 }

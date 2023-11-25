@@ -277,10 +277,10 @@ class AnyScanImpl {
     using RawPair = std::remove_cvref_t<Pair>;
     using RawFirst = typename RawPair::first_type;
     using type = mbo::types::Cases<
-          mbo::types::IfThen<std::is_const_v<Pair> && std::is_reference_v<Pair>, const RawFirst&>,
-          mbo::types::IfThen<std::is_const_v<Pair>, const RawFirst>,
-          mbo::types::IfThen<std::is_reference_v<Pair>, RawFirst&>,
-          mbo::types::IfElse<RawFirst>>;
+        mbo::types::IfThen<std::is_const_v<Pair> && std::is_reference_v<Pair>, const RawFirst&>,
+        mbo::types::IfThen<std::is_const_v<Pair>, const RawFirst>,
+        mbo::types::IfThen<std::is_reference_v<Pair>, RawFirst&>,
+        mbo::types::IfElse<RawFirst>>;
   };
 
   template<typename SrcValueTypeT, typename DstAccessType>

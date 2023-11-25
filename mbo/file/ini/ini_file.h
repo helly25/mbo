@@ -99,7 +99,7 @@ class IniFile {
 
   absl::btree_map<std::string, std::string> GetGroupData(std::string_view group) const {
     absl::btree_map<std::string, std::string> result;
-    const auto group_it= data_.find(group);
+    const auto group_it = data_.find(group);
     if (group_it != data_.end()) {
       for (const auto& kv : group_it->second) {
         result.emplace(kv);

@@ -38,6 +38,7 @@ class StructMeta {
    private:
     union Uninitialized {
       constexpr Uninitialized() noexcept {}
+
       constexpr ~Uninitialized() noexcept {};
       Uninitialized(const Uninitialized&) = delete;
       Uninitialized& operator=(const Uninitialized&) = delete;
@@ -48,6 +49,7 @@ class StructMeta {
 
    public:
     constexpr Storage() noexcept { std::construct_at(&storage_[0].value); }
+
     constexpr ~Storage() noexcept { std::destroy_at(&storage_[0].value); }
 
     Storage(const Storage&) = delete;

@@ -124,7 +124,6 @@ using AllConstructedTypes = ::testing::Types<
     ConstructType<3, 2>,
     ConstructType<3, 3>>;
 
-
 template<typename BaseA, typename BaseB>
 struct Multi0
     : BaseA
@@ -167,17 +166,23 @@ struct MultiOutOfRange final {
 struct EmptyB {
   enum { kFieldCount = 0 };
 };
+
 struct Base1B {
   enum { kFieldCount = 1 };
+
   int b_a;
 };
+
 struct Base2B {
   enum { kFieldCount = 2 };
+
   int b_a;
   int b_b;
 };
+
 struct Base3B {
   enum { kFieldCount = 3 };
+
   int b_a;
   int b_b;
   int b_c;

@@ -91,6 +91,7 @@ namespace std {
 template<typename Extended>
 requires mbo::types::extender_internal::HasExtender<Extended, mbo::types::extender::AbslHashable>
 struct hash<Extended> {  // NOLINT(cert-dcl58-cpp)
+
   std::size_t operator()(const Extended& obj) const noexcept { return absl::HashOf(obj); }
 };
 
