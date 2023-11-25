@@ -1,0 +1,11 @@
+name: Test
+
+on: [push]
+
+jobs:
+  checks:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - run: bazel build //... -c opt
+    - run: bazel build //... --config=asan -c dbg
