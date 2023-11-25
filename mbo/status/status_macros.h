@@ -37,19 +37,19 @@
 //
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define MBO_RETURN_IF_ERROR(expr) \
-  if (!(expr).ok())                      \
+  if (!(expr).ok())               \
   return absl::Status(expr)
 
 #define _MBO_ASSIGN_OR_RETURN_IMPL_(var, res, expr) \
-  auto var = (expr);                                       \
-  if (!var.ok()) {                                         \
-    return var.status();                                   \
-  }                                                        \
+  auto var = (expr);                                \
+  if (!var.ok()) {                                  \
+    return var.status();                            \
+  }                                                 \
   res = *std::move(var)
 
 // PRIVATE MACRO - DO NOT USE.
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define _MBO_VAR_CAT_IMPL_(var, line) var ## line
+#define _MBO_VAR_CAT_IMPL_(var, line) var##line
 #define _MBO_VAR_CAT_(var, line) _MBO_VAR_CAT_IMPL_(var, line)
 
 // Similar to MBO_RETURN_IF_ERROR but this assigns the result os an

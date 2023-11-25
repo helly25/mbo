@@ -74,7 +74,8 @@ class LimitedMap final
 
   // Destructor and constructors from same type.
 
-  using container_internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, CapacityOrOptions, KeyComp>::LimitedOrdered;
+  using container_internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, CapacityOrOptions, KeyComp>::
+      LimitedOrdered;
 
   ~LimitedMap() noexcept = default;
 
@@ -123,23 +124,31 @@ class LimitedMap final
   }
 
   template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  requires(
+      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
+      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedMap(const LimitedMap<OK, OV, OtherN, OtherCompare>& other) noexcept : LimitedBase(other) {}
 
   template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  requires(
+      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
+      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(const LimitedMap<OK, OV, OtherN, OtherCompare>& other) noexcept {
     LimitedBase::operator=(other);
     return *this;
   }
 
   template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  requires(
+      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
+      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedMap(LimitedMap<OK, OV, OtherN, OtherCompare>&& other) noexcept
       : LimitedBase(std::move(other)) {}
 
   template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && std::convertible_to<OV, Value> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  requires(
+      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
+      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(LimitedMap<OK, OV, OtherN, OtherCompare>&& other) noexcept {
     LimitedBase::operator=(std::move(other));
     return *this;
@@ -193,7 +202,6 @@ class LimitedMap final
   using LimitedBase::at_index;  // Index based access, throws `std::out_of_range` if not found.
   using LimitedBase::index_of;  // Return 0-based index of `key`, or `npos` if not found.
   using LimitedBase::npos;      // Return value for `index_of` if `key` is not found.
-
 
   // Read/write access
 

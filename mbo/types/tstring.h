@@ -97,6 +97,7 @@ struct tstring final {
 
   // Access to the underlying data as a `std::string_view`.
   static constexpr std::string_view str() noexcept { return {data.data(), sizeof...(chars)}; }
+
   static constexpr const char* c_str() noexcept { return data.data(); }
 
   // Identity comparison - purely performed as a compile-time, type check.
@@ -564,9 +565,9 @@ constexpr auto make_ts(const char(&str)[N]) noexcept {
 // that the length can be computed correctly. As a result the macro may support
 // zero chars - as long as the compiler correctly handles length detection.
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define MBO_MAKE_TSTRING(str)                                                                \
+#define MBO_MAKE_TSTRING(str)                                                                     \
   []<std::size_t... Is>(std::index_sequence<Is...>) constexpr noexcept -> tstring<(str)[Is]...> { \
-    return {};                                                                               \
+    return {};                                                                                    \
   }(std::make_index_sequence<types_internal::tstring_input_len(str)>{})
 
 #ifdef __clang__
