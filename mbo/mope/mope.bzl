@@ -45,6 +45,7 @@ def _clang_format_impl(ctx, src, dst):
         inputs = [src, clang_config] + clang_format_tool,
         tools = clang_format_tool,
         command = """
+            set -x
             CLANG_FORMAT="{clang_format}"
             if [ "{clang_format}" == "clang-format-auto" ]; then
                 if [ -x "${{LLVM_PATH}}/bin/clang-format" ]; then
