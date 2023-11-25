@@ -47,9 +47,7 @@ def _clang_format_impl(ctx, src, dst):
         command = """
             CLANG_FORMAT="{clang_format}"
             if [ "{clang_format}" == "clang-format-auto" ]; then
-                if [ -x "${{LLVM_PATH}}/clang-format" ]; then
-                    CLANG_FORMAT="${{LLVM_PATH}}/clang-format"
-                elif [ -x "${{LLVM_PATH}}/bin/clang-format" ]; then
+                if [ -x "${{LLVM_PATH}}/bin/clang-format" ]; then
                     CLANG_FORMAT="${{LLVM_PATH}}/bin/clang-format"
                 elif [ $(which "{clang_format}") ]; then
                     CLANG_FORMAT="{clang_format}"
@@ -68,6 +66,8 @@ def _clang_format_impl(ctx, src, dst):
                 fi;
             fi;
             # Must cat (<), so that --assume-filename works, so that incldue order gets correct.
+            ls -la ${{CLANG_FORMAT}}
+            ${{CLANG_FORMAT}} --dump-config
             ${{CLANG_FORMAT}} \\
                 --assume-filename={assume_filename} \\
                 --fallback-style={fallback_style} \\
