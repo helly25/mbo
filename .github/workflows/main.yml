@@ -22,6 +22,12 @@ jobs:
         with:
           version: "17.0"
 
+      - name: Test Clang
+        run: |
+          ${LLVM_PATH}/bin/clang-format --version
+          ${LLVM_PATH}/bin/clang-format --dump-config
+          bazel build //mbo/types/internal:decompose_count_test --sandbox_debug -s
+
       - name: Test OPT
         run: |
           echo "${GITHUB_WORKSPACE}"
