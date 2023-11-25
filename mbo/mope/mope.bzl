@@ -47,7 +47,13 @@ def _clang_format_impl(ctx, src, dst):
         command = """
             CLANG_FORMAT="{clang_format}"
             if [ "{clang_format}" == "clang-format-auto" ]; then
-                if [ $(which "{clang_format}") ]; then
+                if [ -x "${LLVM_PATH}/bin/clang-format-18" ]; then
+                    CLANG_FORMAT="${LLVM_PATH}/bin/clang-format-18"
+                elif [ -x "${LLVM_PATH}/bin/clang-format-17" ]; then
+                    CLANG_FORMAT="${LLVM_PATH}/bin/clang-format-17"
+                elif [ -x "${LLVM_PATH}/bin/clang-format-16" ]; then
+                    CLANG_FORMAT="${LLVM_PATH}/bin/clang-format-16"
+                elif [ $(which "{clang_format}") ]; then
                     CLANG_FORMAT="{clang_format}"
                 elif [ $(which "clang-format-18") ]; then
                     CLANG_FORMAT="clang-format-18"

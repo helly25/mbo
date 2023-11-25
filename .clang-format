@@ -42,7 +42,7 @@ RemoveSemicolon: true
 RequiresClausePosition: OwnLine
 RequiresExpressionIndentation: OuterScope
 SeparateDefinitionBlocks: Always
-# SortUsingDeclarations: Lexicographic
+SortUsingDeclarations: Lexicographic
 SpaceAfterTemplateKeyword: false
 SpaceAroundPointerQualifiers: After
 Standard: c++20
