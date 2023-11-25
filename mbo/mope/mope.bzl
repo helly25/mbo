@@ -23,6 +23,15 @@ load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("//mbo/diff:diff.bzl", "diff_test")
 
+# The `clang-format` tool is selected as follows:
+# 1) If custom bazel flag `--mbo/mope:clang_format` is set, then that value will be used.
+# 2) If the custom flag is empty and this variable is a non empty string, then use its value.
+#    Otherwise use `@llvm_toolchain_llvm//:bin/clang-format`.
+# 3) If the resulting value is `clang-format-auto`, then the rule tries to find the tool:
+#    a) `${LLVM_PATH}/bin/clang-format`
+#    b) `$(which "clang_format")`
+#    c) `clang-format-18` ... `clang-format-14`
+#    d) `clang-format` will lastly be picked as a fallback.
 CLANG_FORMAT_BINARY = "clang-format-auto"
 
 def _get_clang_format(ctx):
@@ -74,8 +83,6 @@ def _clang_format_impl(ctx, src, dst):
                 fi;
             fi;
             # Must cat (<), so that --assume-filename works, so that incldue order gets correct.
-            echo ${{CLANG_FORMAT}}
-            env
             ${{CLANG_FORMAT}} \\
                 --assume-filename={assume_filename} \\
                 --fallback-style={fallback_style} \\

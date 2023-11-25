@@ -22,10 +22,10 @@ jobs:
         with:
           version: "17.0"
 
-      - name: Test OPT
-        run: |
-          bazel build --//mbo/mope:clang_format="${LLVM_PATH}/bin/clang-format" //... -c opt 
-
       - name: Test ASAN
         run: |
-          bazel build --//mbo/mope:clang_format="${LLVM_PATH}/bin/clang-format" //... --config=asan -c dbg
+          bazel test --//mbo/mope:clang_format="${LLVM_PATH}/bin/clang-format" --config=asan -c dbg //...
+
+      - name: Test OPT
+        run: |
+          bazel test --//mbo/mope:clang_format="${LLVM_PATH}/bin/clang-format" -c opt //...

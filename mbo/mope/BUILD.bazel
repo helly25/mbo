@@ -18,6 +18,10 @@ load("mope.bzl", "mope_test")
 
 package(default_visibility = ["//visibility:private"])
 
+# The custom bazel flag allows to control the `clang-format` tool to use.
+# If it is set to `clang-format-auto`, then the rule tries to find the tool.
+# If the value is an empty string, then the rule is configured in `mope.bzl`.
+# Otherwise the value should be the absolute file location of `clang-format`.
 string_flag(
     name = "clang_format",
     build_setting_default = "clang-format-auto",
