@@ -26,7 +26,7 @@
 
 #include "absl/log/absl_log.h"
 #include "mbo/container/limited_options.h"  // IWYU pragma: export
-#include "mbo/types/compare.h"
+#include "mbo/types/compare.h"              // IWYU pragma: export
 #include "mbo/types/traits.h"
 
 namespace mbo::container::container_internal {
@@ -66,8 +66,12 @@ class LimitedOrdered {
     constexpr Data(Data&&) noexcept = default;
     constexpr Data& operator=(Data&&) noexcept = default;
 
-    constexpr ~Data() noexcept requires(std::is_trivially_destructible_v<Value>) = default;
-    ~Data() noexcept requires(!std::is_trivially_destructible_v<Value>) {};
+    constexpr ~Data() noexcept
+    requires(std::is_trivially_destructible_v<Value>)
+    = default;
+    ~Data() noexcept
+    requires(!std::is_trivially_destructible_v<Value>)
+    {};
 
     Value data;
     None none;
@@ -315,13 +319,19 @@ class LimitedOrdered {
  public:
   // Destructor and constructors from same type.
 
-  constexpr ~LimitedOrdered() noexcept requires(Options::Has(LimitedOptionsFlag::kEmptyDestructor)) = default;
+  constexpr ~LimitedOrdered() noexcept
+  requires(Options::Has(LimitedOptionsFlag::kEmptyDestructor))
+  = default;
 
-  constexpr ~LimitedOrdered() noexcept requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && std::is_trivially_destructible_v<Value>) {
+  constexpr ~LimitedOrdered() noexcept
+  requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && std::is_trivially_destructible_v<Value>)
+  {
     clear();
   }
 
-  ~LimitedOrdered() noexcept requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && !std::is_trivially_destructible_v<Value>) {
+  ~LimitedOrdered() noexcept
+  requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && !std::is_trivially_destructible_v<Value>)
+  {
     clear();
   }
 
