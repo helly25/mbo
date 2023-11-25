@@ -22,6 +22,11 @@ jobs:
           echo "${GITHUB_WORKSPACE}"
           cd "${GITHUB_WORKSPACE}" && bazel build //... -c opt
 
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "17.0"
+
       - name: Test ASAN
         run: |
           cd "${GITHUB_WORKSPACE}" && bazel build //... --config=asan -c dbg
