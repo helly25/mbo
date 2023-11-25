@@ -20,14 +20,14 @@
 """
 
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("//mbo/diff:diff.bzl", "diff_test")
 
 CLANG_FORMAT_BINARY = "clang-format-auto"
 
 def _get_clang_format(ctx):
     """Get the selected clang-format from `--//mbo/mope:clang_format` bazel flag."""
-    return ctx.attr._clang_format_flag[BuildSettingInfo].value.split(",")
- 
+    return ctx.attr._clang_format_flag[BuildSettingInfo].value
 def _clang_format_impl(ctx, src, dst):
     """Clang-format a file.
 
@@ -45,8 +45,10 @@ def _clang_format_impl(ctx, src, dst):
     clang_config = ctx.files._clang_format_config[0]
     clang_format_tool = [] if CLANG_FORMAT_BINARY else [ctx.executable._clang_format_tool]
     clang_format = _get_clang_format(ctx)
+    print(clang_format)
     if not clang_format:
         clang_format = ctx.attr._clang_format_tool if CLANG_FORMAT_BINARY else ctx.executable._clang_format_tool.path
+    print(clang_format)
     ctx.actions.run_shell(
         outputs = [dst],
         inputs = [src, clang_config] + clang_format_tool,
@@ -104,7 +106,7 @@ _clang_format_common_attrs = {
     ),
     "_clang_format_flag": attr.label(
         doc = "The flag for the clang-format executable.",
-        default = Label("//mbo/mode:clang_format"),
+        default = Label("//mbo/mope:clang_format"),
     ),
     "_clang_format_tool": attr.string(
         doc = "The target of the clang-format executable.",

@@ -21,6 +21,7 @@ package(default_visibility = ["//visibility:private"])
 string_flag(
     name = "clang_format",
     build_setting_default = "clang-format-auto",
+    visibility = ["//visibility:public"],
 )
 
 cc_library(
