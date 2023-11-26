@@ -414,11 +414,15 @@ TEST_F(LimitedVectorTest, CompareDifferentType) {
 // In copy and move we decrease the value as there will be two destructor calls.
 struct IncOnDtor {
   ~IncOnDtor() noexcept { ++ref; }
+
   explicit IncOnDtor(int& ref) noexcept : ref(ref) {}
 
   IncOnDtor(const IncOnDtor& other) noexcept : ref(other.ref) { --ref; }
+
   IncOnDtor& operator=(const IncOnDtor& other) noexcept = delete;
+
   IncOnDtor(IncOnDtor&& other) noexcept : ref(other.ref) { --ref; }
+
   IncOnDtor& operator=(IncOnDtor&& other) noexcept = delete;
 
   operator int() const noexcept { return ref; }  // NOLINT(*-explicit-*)
@@ -430,7 +434,8 @@ TEST_F(LimitedVectorTest, EmptyDtor) {
   int var3 = 3;
   int var5 = 5;
   {
-    const auto data = LimitedVector<IncOnDtor, LimitedOptions<3, LimitedOptionsFlag::kEmptyDestructor>{}>({IncOnDtor(var3), IncOnDtor(var5)});
+    const auto data = LimitedVector<IncOnDtor, LimitedOptions<3, LimitedOptionsFlag::kEmptyDestructor>{}>(
+        {IncOnDtor(var3), IncOnDtor(var5)});
     EXPECT_THAT(data, ElementsAre(3, 5));
   }
   EXPECT_THAT(var3, 3) << "If this is 4, then LimitedVector called the destructors for its values.";

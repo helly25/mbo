@@ -15,7 +15,7 @@
 #ifndef MBO_CONTAINER_LIMITED_VECTOR_H_
 #define MBO_CONTAINER_LIMITED_VECTOR_H_
 
-#include <compare>  // IWYU pragma: keep
+#include <compare>   // IWYU pragma: keep
 #include <concepts>  // IWYU pragma: keep
 #include <initializer_list>
 #include <memory>
@@ -34,7 +34,7 @@ namespace mbo::container {
 #endif
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define LV_REQUIRE(severity, condition) \
+#define LV_REQUIRE(severity, condition)                      \
   /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */ \
   ABSL_LOG_IF(severity, !(condition))
 
@@ -71,7 +71,7 @@ class LimitedVector final {
 
   static_assert(IsLimitedOptionsOrSize<decltype(CapacityOrOptions)>);
   using Options = decltype(MakeLimitedOptions<CapacityOrOptions>());
-  //static_assert(std::is_trivially_destructible_v<T> || Options::Has(LimitedOptionsFlag::kEmptyDestructor));
+  // static_assert(std::is_trivially_destructible_v<T> || Options::Has(LimitedOptionsFlag::kEmptyDestructor));
   static constexpr std::size_t Capacity = Options::kCapacity;
 
   union Data {
@@ -122,7 +122,6 @@ class LimitedVector final {
   {
     clear();
   }
-
 
   constexpr LimitedVector() noexcept = default;
 
