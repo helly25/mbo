@@ -29,6 +29,12 @@
 #include "mbo/types/compare.h"              // IWYU pragma: export
 #include "mbo/types/traits.h"
 
+#ifdef MBO_FORCE_INLINE
+#undef MBO_FORCE_INLINE
+#endif
+#define MBO_FORCE_INLINE
+// __attribute__((always_inline))
+
 namespace mbo::container::container_internal {
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -479,7 +485,7 @@ class LimitedOrdered {
   }
 
   // NOLINTBEGIN(*-magic-numbers,cppcoreguidelines-macro-usage,readability-function-cognitive-complexity)
-  constexpr std::size_t index_of(const Key& key) const
+  MBO_FORCE_INLINE constexpr std::size_t index_of(const Key& key) const
   requires(types::IsCompareLess<Compare> && Capacity <= kUnrollMaxCapacity)
   {
 #define MBO_CASE_LIMITED_POS_COMP(POS)                              \
@@ -494,6 +500,14 @@ class LimitedOrdered {
     do /* NOLINT(cppcoreguidelines-avoid-do-while) */ {             \
     } while (0)
     switch (size_ - 1) {
+      MBO_CASE_LIMITED_POS_COMP(15);
+      MBO_CASE_LIMITED_POS_COMP(14);
+      MBO_CASE_LIMITED_POS_COMP(13);
+      MBO_CASE_LIMITED_POS_COMP(12);
+      MBO_CASE_LIMITED_POS_COMP(11);
+      MBO_CASE_LIMITED_POS_COMP(10);
+      MBO_CASE_LIMITED_POS_COMP(9);
+      MBO_CASE_LIMITED_POS_COMP(8);
       MBO_CASE_LIMITED_POS_COMP(7);
       MBO_CASE_LIMITED_POS_COMP(6);
       MBO_CASE_LIMITED_POS_COMP(5);
@@ -508,7 +522,7 @@ class LimitedOrdered {
     return npos;
   }  // NOLINTEND(*-magic-numbers,cppcoreguidelines-macro-usage,readability-function-cognitive-complexity)
 
-  constexpr std::size_t index_of(const Key& key) const
+  MBO_FORCE_INLINE constexpr std::size_t index_of(const Key& key) const
   requires(types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
   {
     std::size_t left = 0;
@@ -528,28 +542,28 @@ class LimitedOrdered {
     return npos;
   }
 
-  constexpr std::size_t index_of(const Key& key) const
+  MBO_FORCE_INLINE constexpr std::size_t index_of(const Key& key) const
   requires(!types::IsCompareLess<Compare>)
   {
     const_iterator it = lower_bound(key);
     return it == end() || key_comp_(GetKey(*it), key) || key_comp_(key, GetKey(*it)) ? npos : it - begin();
   }
 
-  constexpr value_type& at_index(size_type pos) {
+  MBO_FORCE_INLINE constexpr value_type& at_index(size_type pos) {
     if (pos >= size_) {
       throw std::out_of_range("Out of rage");
     }
     return values_[pos].data;
   }
 
-  constexpr const value_type& at_index(size_type pos) const {
+  MBO_FORCE_INLINE constexpr const value_type& at_index(size_type pos) const {
     if (pos >= size_) {
       throw std::out_of_range("Out of rage");
     }
     return values_[pos].data;
   }
 
-  constexpr iterator find(const Key& key) {
+  MBO_FORCE_INLINE constexpr iterator find(const Key& key) {
     if constexpr (types::IsCompareLess<Compare>) {
       std::size_t pos = index_of(key);
       return pos == npos ? end() : iterator(&values_[pos]);
@@ -559,7 +573,7 @@ class LimitedOrdered {
     }
   }
 
-  constexpr const_iterator find(const Key& key) const {  // NOLINT(readability-function-cognitive-complexity)
+  MBO_FORCE_INLINE constexpr const_iterator find(const Key& key) const {
     if constexpr (types::IsCompareLess<Compare>) {
       std::size_t pos = index_of(key);
       return pos == npos ? end() : const_iterator(&values_[pos]);
@@ -569,7 +583,7 @@ class LimitedOrdered {
     }
   }
 
-  constexpr bool contains(const Key& key) const {
+  MBO_FORCE_INLINE constexpr bool contains(const Key& key) const {
     if constexpr (types::IsCompareLess<Compare>) {
       return index_of(key) != npos;
     } else {
@@ -834,7 +848,7 @@ class LimitedOrdered {
 
   // Read/write access
 
-  constexpr std::size_t size() const noexcept { return size_; }
+  MBO_FORCE_INLINE constexpr std::size_t size() const noexcept { return size_; }
 
   constexpr std::size_t max_size() const noexcept { return Capacity; }
 
@@ -850,11 +864,11 @@ class LimitedOrdered {
 
   constexpr const_iterator cbegin() const noexcept { return const_iterator(&values_[0]); }
 
-  constexpr iterator end() noexcept { return iterator(&values_[size_]); }
+  MBO_FORCE_INLINE constexpr iterator end() noexcept { return iterator(&values_[size_]); }
 
-  constexpr const_iterator end() const noexcept { return const_iterator(&values_[size_]); }
+  MBO_FORCE_INLINE constexpr const_iterator end() const noexcept { return const_iterator(&values_[size_]); }
 
-  constexpr const_iterator cend() const noexcept { return const_iterator(&values_[size_]); }
+  MBO_FORCE_INLINE constexpr const_iterator cend() const noexcept { return const_iterator(&values_[size_]); }
 
   constexpr reverse_iterator rbegin() noexcept { return std::make_reverse_iterator(end()); }
 
@@ -862,11 +876,11 @@ class LimitedOrdered {
 
   constexpr const_reverse_iterator crbegin() const noexcept { return std::make_reverse_iterator(end()); }
 
-  constexpr reverse_iterator rend() noexcept { return std::make_reverse_iterator(begin()); }
+  MBO_FORCE_INLINE constexpr reverse_iterator rend() noexcept { return std::make_reverse_iterator(begin()); }
 
-  constexpr const_reverse_iterator rend() const noexcept { return std::make_reverse_iterator(begin()); }
+  MBO_FORCE_INLINE constexpr const_reverse_iterator rend() const noexcept { return std::make_reverse_iterator(begin()); }
 
-  constexpr const_reverse_iterator crend() const noexcept { return std::make_reverse_iterator(cbegin()); }
+  MBO_FORCE_INLINE constexpr const_reverse_iterator crend() const noexcept { return std::make_reverse_iterator(cbegin()); }
 
   constexpr const_pointer data() const noexcept { return &values_[0].data; }
 
@@ -891,7 +905,7 @@ class LimitedOrdered {
     return val.first;
   }
 
-  static constexpr const Key& GetKey(const Data& data) noexcept {
+  MBO_FORCE_INLINE static constexpr const Key& GetKey(const Data& data) noexcept {
     if constexpr (kKeyOnly) {
       return data.data;
     } else {
@@ -915,5 +929,9 @@ class LimitedOrdered {
 #undef LV_REQUIRE
 
 }  // namespace mbo::container::container_internal
+
+#ifdef MBO_FORCE_INLINE
+#undef MBO_FORCE_INLINE
+#endif
 
 #endif  // MBO_CONTAINER_INTERNAL_LIMITED_ORDERED_H_
