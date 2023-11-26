@@ -252,7 +252,9 @@ class LimitedVector final {
     // Nothing to do. The contract says there is no requirement to reduce capacity.
   }
 
-  constexpr void swap(LimitedVector& other) noexcept {
+  template<typename U, auto OtherN>
+  requires(std::same_as<T, U> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
+  constexpr void swap(LimitedVector<U, OtherN>& other) noexcept {
     std::size_t pos = 0;
     for (; pos < size_ && pos < other.size(); ++pos) {
       std::swap(values_[pos].data, other.at(pos));
@@ -481,26 +483,27 @@ constexpr inline bool operator<(const LimitedVector<LHS, LN>& lhs, const Limited
   return lhs.size() < rhs.size();
 }
 
-template<typename T, std::size_t N = 0>
+template<typename T, std::size_t N = 0, LimitedOptionsFlag... Flags>
 inline constexpr auto MakeLimitedVector() noexcept {
-  return LimitedVector<T, N>();
+  return LimitedVector<T, LimitedOptions<N, Flags...>{}>();
 }
 
-template<std::size_t N, std::forward_iterator It>
+template<std::size_t N, LimitedOptionsFlag... Flags, std::forward_iterator It>
 inline constexpr auto MakeLimitedVector(It&& begin, It&& end) noexcept {
-  return LimitedVector<mbo::types::ForwardIteratorValueType<It>, N>(std::forward<It>(begin), std::forward<It>(end));
+  return LimitedVector<mbo::types::ForwardIteratorValueType<It>, LimitedOptions<N, Flags...>{}>(
+      std::forward<It>(begin), std::forward<It>(end));
 }
 
-template<std::size_t N, typename T>
+template<std::size_t N, typename T, LimitedOptionsFlag... Flags>
 inline constexpr auto MakeLimitedVector(const std::initializer_list<T>& data) {
   LV_REQUIRE(FATAL, data.size() <= N) << "Too many initlizer values.";
-  return LimitedVector<T, N>(data);
+  return LimitedVector<T, LimitedOptions<N, Flags...>{}>(data);
 }
 
-template<std::size_t N, typename T>
+template<std::size_t N, typename T, LimitedOptionsFlag... Flags>
 requires(N > 0 && mbo::types::NotInitializerList<T>)
 inline constexpr auto MakeLimitedVector(const T& value) noexcept {
-  auto result = LimitedVector<T, N>();
+  auto result = LimitedVector<T, LimitedOptions<N, Flags...>{}>();
   result.assign(N, value);
   return result;
 }
@@ -531,18 +534,18 @@ inline constexpr auto MakeLimitedVector(Args... args) noexcept {
 }
 
 // NOLINTBEGIN(*-avoid-c-arrays)
-template<typename T, std::size_t N>
-constexpr LimitedVector<std::remove_cvref_t<T>, N> ToLimitedVector(T (&array)[N]) {
-  LimitedVector<std::remove_cvref_t<T>, N> result;
+template<typename T, LimitedOptionsFlag... Flags, int&..., std::size_t N>
+constexpr LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> ToLimitedVector(T (&array)[N]) {
+  LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> result;
   for (std::size_t idx = 0; idx < N; ++idx) {
     result.emplace_back(array[idx]);
   }
   return result;
 }
 
-template<typename T, std::size_t N>
-constexpr LimitedVector<std::remove_cvref_t<T>, N> ToLimitedVector(T (&&array)[N]) {
-  LimitedVector<std::remove_cvref_t<T>, N> result;
+template<typename T, LimitedOptionsFlag... Flags, int&..., std::size_t N>
+constexpr LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> ToLimitedVector(T (&&array)[N]) {
+  LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> result;
   for (std::size_t idx = 0; idx < N; ++idx) {
     result.emplace_back(std::move(array[idx]));
   }

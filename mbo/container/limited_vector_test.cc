@@ -442,6 +442,18 @@ TEST_F(LimitedVectorTest, EmptyDtor) {
   EXPECT_THAT(var5, 5) << "If this is 6, then LimitedVector called the destructors for its values.";
 }
 
+TEST_F(LimitedVectorTest, ToLimitedVectorEmptyDtor) {
+  int var3 = 3;
+  int var5 = 5;
+  {
+    const auto data =
+        ToLimitedVector<IncOnDtor, LimitedOptionsFlag::kEmptyDestructor>({IncOnDtor(var3), IncOnDtor(var5)});
+    EXPECT_THAT(data, ElementsAre(3, 5));
+  }
+  EXPECT_THAT(var3, 3) << "If this is 4, then LimitedVector called the destructors for its values.";
+  EXPECT_THAT(var5, 5) << "If this is 6, then LimitedVector called the destructors for its values.";
+}
+
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace
