@@ -85,7 +85,8 @@ struct AggregateHasNonEmptyBaseImpl : AggregateHasNonEmptyBaseRaw<std::remove_cv
 template<typename T>
 concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 
-#if defined(__clang__)  // ----------------------------------------------------
+#if defined(__clang__) && __clang_major__ < 17
+// ----------------------------------------------------
 
 template<typename T, size_t N, typename = void>
 struct DecomposeCount final : std::false_type {};
@@ -116,12 +117,13 @@ struct DecomposeCountraw : std::conditional_t<DecomposeCondition<T>, DecomposeCo
 template<typename T>
 struct DecomposeCountImpl : DecomposeCountraw<std::remove_cvref_t<T>> {};
 
-#else  // __clang__ // ---------------------------------------------------------
+#else  // defined(__clang__) && __clang_major__ < 17
+// ----------------------------------------------------
 
 // From
 // https://github.com/helly25/mbo/commit/03789fed711e9603170dda767b1ebe50be6df282
 //
-// Unlike Clang, GCC does not understand `decltype` of a lmbda performing
+// Unlike Clang 16, GCC does not understand `decltype` of a lmbda performing
 // structured-bindings, e.g.: `decltype([]() { const auto& [a0] = T(); }`.
 //
 // Thus GCC needs to count initializers and fields and base classes.
@@ -430,7 +432,8 @@ concept DecomposeCondition = DecomposeInfo<T>::kDecomposable;
 template<typename T>
 struct DecomposeCountImpl : std::integral_constant<std::size_t, DecomposeInfo<T>::kDecomposeCount> {};
 
-#endif  // __clang__ / not __clang__ // ----------------------------------------
+#endif  // defined(__clang__) && __clang_major__ < 17
+// ----------------------------------------------------
 
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 
