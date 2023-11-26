@@ -534,7 +534,7 @@ inline constexpr auto MakeLimitedVector(Args... args) noexcept {
 }
 
 // NOLINTBEGIN(*-avoid-c-arrays)
-template<typename T, LimitedOptionsFlag... Flags, std::size_t N>
+template<typename T, LimitedOptionsFlag... Flags, int&..., std::size_t N>
 constexpr LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> ToLimitedVector(T (&array)[N]) {
   LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> result;
   for (std::size_t idx = 0; idx < N; ++idx) {
@@ -543,7 +543,7 @@ constexpr LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> T
   return result;
 }
 
-template<typename T, LimitedOptionsFlag... Flags, std::size_t N>
+template<typename T, LimitedOptionsFlag... Flags, int&..., std::size_t N>
 constexpr LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> ToLimitedVector(T (&&array)[N]) {
   LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> result;
   for (std::size_t idx = 0; idx < N; ++idx) {
