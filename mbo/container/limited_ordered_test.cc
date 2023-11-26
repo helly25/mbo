@@ -14,11 +14,10 @@
 
 #include "mbo/container/internal/limited_ordered.h"
 
-#include <iostream>
-#include <ranges>
-#include <string>
-#include <string_view>
-#include <type_traits>
+#include <ranges>// IWYU pragma: keep
+#include <string>// IWYU pragma: keep
+#include <string_view>// IWYU pragma: keep
+#include <type_traits>// IWYU pragma: keep
 
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"

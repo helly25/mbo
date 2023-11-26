@@ -16,11 +16,11 @@
 #define MBO_CONTAINER_LIMITED_MAP_H_
 
 #include <algorithm>
-#include <compare>
-#include <concepts>
+#include <compare>// IWYU pragma: keep
+#include <concepts>// IWYU pragma: keep
 #include <initializer_list>
-#include <memory>
-#include <new>
+#include <memory>// IWYU pragma: keep
+#include <new>// IWYU pragma: keep
 #include <type_traits>
 #include <utility>
 

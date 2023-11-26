@@ -15,7 +15,7 @@
 #ifndef MBO_TYPES_COMPARE_H_
 #define MBO_TYPES_COMPARE_H_
 
-#include <compare>
+#include <compare>// IWYU pragma: keep
 #include <type_traits>
 
 namespace mbo::types {

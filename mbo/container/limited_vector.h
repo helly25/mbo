@@ -15,23 +15,33 @@
 #ifndef MBO_CONTAINER_LIMITED_VECTOR_H_
 #define MBO_CONTAINER_LIMITED_VECTOR_H_
 
-#include <compare>
-#include <concepts>
+#include <compare>  // IWYU pragma: keep
+#include <concepts>  // IWYU pragma: keep
 #include <initializer_list>
 #include <memory>
-#include <new>
+#include <new>  // IWYU pragma: keep
 #include <type_traits>
 #include <utility>
 
 #include "absl/log/absl_log.h"
+#include "mbo/container/limited_options.h"  // IWYU pragma: export
 #include "mbo/types/traits.h"
 
 namespace mbo::container {
 
+#ifdef LV_REQUIRE
+#undef LV_REQUIRE
+#endif
+
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define LV_REQUIRE(severity, condition) ABSL_LOG_IF(severity, !(condition))
+#define LV_REQUIRE(severity, condition) \
+  /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */ \
+  ABSL_LOG_IF(severity, !(condition))
 
 // NOLINTBEGIN(readability-identifier-naming)
+
+template<typename T>
+concept LimitedVectorValid = std::move_constructible<std::remove_const_t<T>>;
 
 // Implements a `std::vector` like container that only uses inlined memory. So if used as a local
 // variable with a types that does not perform memory allocation, then this type does not perform
@@ -53,10 +63,16 @@ namespace mbo::container {
 //
 // The above example infers the value_type to be `int` as it is the common type of the arguments.
 // The resulting `LimitedVector` has a capacity of 4 and the elements {1, 2, 3, 4}.
-template<typename T, std::size_t Capacity>
+template<typename T, auto CapacityOrOptions>
+requires(LimitedVectorValid<T>)
 class LimitedVector final {
  private:
   struct None final {};
+
+  static_assert(IsLimitedOptionsOrSize<decltype(CapacityOrOptions)>);
+  using Options = decltype(MakeLimitedOptions<CapacityOrOptions>());
+  //static_assert(std::is_trivially_destructible_v<T> || Options::Has(LimitedOptionsFlag::kEmptyDestructor));
+  static constexpr std::size_t Capacity = Options::kCapacity;
 
   union Data {
     constexpr Data() noexcept : none{} {}
@@ -73,7 +89,8 @@ class LimitedVector final {
   };
 
   // Must declare each other as friends so that we can correctly move from other.
-  template<typename U, std::size_t OtherN>
+  template<typename U, auto OtherCapacityOrOptions>
+  requires(LimitedVectorValid<U>)
   friend class LimitedVector;
 
  public:
@@ -90,8 +107,22 @@ class LimitedVector final {
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
   // Destructor and constructors from same type.
+  constexpr ~LimitedVector() noexcept
+  requires(Options::Has(LimitedOptionsFlag::kEmptyDestructor))
+  = default;
 
-  constexpr ~LimitedVector() noexcept { clear(); }
+  constexpr ~LimitedVector() noexcept
+  requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && std::is_trivially_destructible_v<T>)
+  {
+    clear();
+  }
+
+  ~LimitedVector() noexcept
+  requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && !std::is_trivially_destructible_v<T>)
+  {
+    clear();
+  }
+
 
   constexpr LimitedVector() noexcept = default;
 
@@ -130,7 +161,7 @@ class LimitedVector final {
 
   template<std::forward_iterator It>
   requires std::convertible_to<mbo::types::ForwardIteratorValueType<It>, T>
-  constexpr LimitedVector(It&& begin, It&& end) noexcept {
+  constexpr LimitedVector(It begin, It end) noexcept {
     while (begin < end) {
       emplace_back(*begin++);
     }
@@ -152,23 +183,23 @@ class LimitedVector final {
     }
   }
 
-  template<typename U, std::size_t OtherN>
-  requires(std::convertible_to<U, T> && OtherN <= Capacity)
+  template<typename U, auto OtherN>
+  requires(std::convertible_to<U, T> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedVector& operator=(const std::initializer_list<U>& list) noexcept {
     assign(list);
     return *this;
   }
 
-  template<typename U, std::size_t OtherN>
-  requires(std::convertible_to<U, T> && OtherN <= Capacity)
+  template<typename U, auto OtherN>
+  requires(std::convertible_to<U, T> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedVector(const LimitedVector<U, OtherN>& other) noexcept {
     for (; size_ < other.size(); ++size_) {
       std::construct_at(&values_[size_].data, other.at(size_));
     }
   }
 
-  template<typename U, std::size_t OtherN>
-  requires(std::convertible_to<U, T> && OtherN <= Capacity)
+  template<typename U, auto OtherN>
+  requires(std::convertible_to<U, T> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedVector& operator=(const LimitedVector<U, OtherN>& other) noexcept {
     clear();
     for (; size_ < other.size(); ++size_) {
@@ -177,8 +208,8 @@ class LimitedVector final {
     return *this;
   }
 
-  template<typename U, std::size_t OtherN>
-  requires(std::convertible_to<U, T> && OtherN <= Capacity)
+  template<typename U, auto OtherN>
+  requires(std::convertible_to<U, T> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedVector(LimitedVector<U, OtherN>&& other) noexcept {
     for (; size_ < other.size(); ++size_) {
       std::construct_at(&values_[size_].data, std::move(other.at(size_)));
@@ -186,8 +217,8 @@ class LimitedVector final {
     other.size_ = 0;
   }
 
-  template<typename U, std::size_t OtherN>
-  requires(std::convertible_to<U, T> && OtherN <= Capacity)
+  template<typename U, auto OtherN>
+  requires(std::convertible_to<U, T> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedVector& operator=(LimitedVector<U, OtherN>&& other) noexcept {
     clear();
     for (; size_ < other.size(); ++size_) {
@@ -319,7 +350,7 @@ class LimitedVector final {
   }
 
   template<std::forward_iterator It>
-  constexpr void assign(It&& begin, It&& end) noexcept {
+  constexpr void assign(It begin, It end) noexcept {
     clear();
     while (begin < end) {
       emplace_back(std::forward<mbo::types::ForwardIteratorValueType<It>>(*begin));
