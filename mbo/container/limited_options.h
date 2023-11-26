@@ -17,7 +17,7 @@
 
 #include <algorithm>
 #include <array>
-#include <concepts>
+#include <concepts>  // IWYU pragma: keep
 #include <type_traits>
 
 namespace mbo::container {

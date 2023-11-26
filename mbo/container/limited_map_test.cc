@@ -14,11 +14,10 @@
 
 #include "mbo/container/limited_map.h"
 
-#include <iostream>
-#include <ranges>
+#include <ranges>  // IWYU pragma: keep
 #include <string>
 #include <string_view>
-#include <type_traits>
+#include <type_traits>  // IWYU pragma: keep
 
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"

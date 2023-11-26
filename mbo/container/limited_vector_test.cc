@@ -14,10 +14,10 @@
 
 #include "mbo/container/limited_vector.h"
 
-#include <ranges>
+#include <ranges>  // IWYU pragma: keep
 #include <string>
 #include <string_view>
-#include <type_traits>
+#include <type_traits>  // IWYU pragma: keep
 
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
@@ -408,6 +408,38 @@ TEST_F(LimitedVectorTest, CompareDifferentType) {
 
   EXPECT_THAT(k42v25 >= k42, true);
   EXPECT_THAT(k42v25, Ge(k42));
+}
+
+// Test struct that increases a value when the destructor is called.
+// In copy and move we decrease the value as there will be two destructor calls.
+struct IncOnDtor {
+  ~IncOnDtor() noexcept { ++ref; }
+
+  explicit IncOnDtor(int& ref) noexcept : ref(ref) {}
+
+  IncOnDtor(const IncOnDtor& other) noexcept : ref(other.ref) { --ref; }
+
+  IncOnDtor& operator=(const IncOnDtor& other) noexcept = delete;
+
+  IncOnDtor(IncOnDtor&& other) noexcept : ref(other.ref) { --ref; }
+
+  IncOnDtor& operator=(IncOnDtor&& other) noexcept = delete;
+
+  operator int() const noexcept { return ref; }  // NOLINT(*-explicit-*)
+
+  int& ref;
+};
+
+TEST_F(LimitedVectorTest, EmptyDtor) {
+  int var3 = 3;
+  int var5 = 5;
+  {
+    const auto data = LimitedVector<IncOnDtor, LimitedOptions<3, LimitedOptionsFlag::kEmptyDestructor>{}>(
+        {IncOnDtor(var3), IncOnDtor(var5)});
+    EXPECT_THAT(data, ElementsAre(3, 5));
+  }
+  EXPECT_THAT(var3, 3) << "If this is 4, then LimitedVector called the destructors for its values.";
+  EXPECT_THAT(var5, 5) << "If this is 6, then LimitedVector called the destructors for its values.";
 }
 
 // NOLINTEND(*-magic-numbers)

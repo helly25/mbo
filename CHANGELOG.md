@@ -1,3 +1,7 @@
+# 0.2.15
+
+* Added `LimitedOptions` support to `LimitedVector`.
+
 # 0.2.14
 
 * Changed `tstring::find_first_of` and `tstring::find_last_of` solely with `string_view::find` to solve ASAN issue.

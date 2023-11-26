@@ -16,11 +16,11 @@
 #define MBO_CONTAINER_INTERNAL_LIMITED_ORDERED_H_
 
 #include <algorithm>
-#include <compare>
-#include <concepts>
+#include <compare>  // IWYU pragma: keep
+#include <concepts>  // IWYU pragma: keep
 #include <initializer_list>
 #include <memory>
-#include <new>
+#include <new>  // IWYU pragma: keep
 #include <type_traits>
 #include <utility>
 
@@ -37,8 +37,14 @@
 
 namespace mbo::container::container_internal {
 
+#ifdef LV_REQUIRE
+#undef LV_REQUIRE
+#endif
+
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define LV_REQUIRE(severity, condition) ABSL_LOG_IF(severity, !(condition))
+#define LV_REQUIRE(severity, condition) \
+  /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */ \
+  ABSL_LOG_IF(severity, !(condition))
 
 // NOLINTBEGIN(readability-identifier-naming)
 

@@ -14,11 +14,10 @@
 
 #include "mbo/container/internal/limited_ordered.h"
 
-#include <iostream>
-#include <ranges>
-#include <string>
-#include <string_view>
-#include <type_traits>
+#include <ranges>       // IWYU pragma: keep
+#include <string>       // IWYU pragma: keep
+#include <string_view>  // IWYU pragma: keep
+#include <type_traits>  // IWYU pragma: keep
 
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
@@ -44,16 +43,23 @@ static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<4>
 static_assert(IsLimitedOptions<LimitedOptions<5, LimitedOptionsFlag::kDefault>>);
 static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<5, LimitedOptionsFlag::kDefault>{}>>);
 static_assert(IsLimitedOptions<LimitedOptions<6, LimitedOptionsFlag::kEmptyDestructor>>);
-static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<6, LimitedOptionsFlag::kEmptyDestructor>{}>>);
+static_assert(
+    std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<6, LimitedOptionsFlag::kEmptyDestructor>{}>>);
 static_assert(IsLimitedOptions<LimitedOptions<7, LimitedOptionsFlag::kRequireSortedInput>>);
-static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<7, LimitedOptionsFlag::kRequireSortedInput>{}>>);
-static_assert(IsLimitedOptions<LimitedOptions<8, LimitedOptionsFlag::kEmptyDestructor, LimitedOptionsFlag::kRequireSortedInput>>);
-static_assert(std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<8, LimitedOptionsFlag::kEmptyDestructor, LimitedOptionsFlag::kRequireSortedInput>{}>>);
+static_assert(
+    std::ranges::range<LimitedOrdered<int, int, int, LimitedOptions<7, LimitedOptionsFlag::kRequireSortedInput>{}>>);
+static_assert(
+    IsLimitedOptions<LimitedOptions<8, LimitedOptionsFlag::kEmptyDestructor, LimitedOptionsFlag::kRequireSortedInput>>);
+static_assert(std::ranges::range<LimitedOrdered<
+                  int,
+                  int,
+                  int,
+                  LimitedOptions<8, LimitedOptionsFlag::kEmptyDestructor, LimitedOptionsFlag::kRequireSortedInput>{}>>);
 
-template <typename K = int, typename M = int, typename V = int, auto Capacity = 1>
+template<typename K = int, typename M = int, typename V = int, auto Capacity = 1>
 struct LimitedOrderedTester : public LimitedOrdered<K, M, V, Capacity> {
-  public:
-   using typename LimitedOrdered<K, M, V, Capacity>::Data;
+ public:
+  using typename LimitedOrdered<K, M, V, Capacity>::Data;
 };
 
 struct LimitedOrderedTest : ::testing::Test {
