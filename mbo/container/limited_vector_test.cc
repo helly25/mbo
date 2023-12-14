@@ -410,48 +410,81 @@ TEST_F(LimitedVectorTest, CompareDifferentType) {
   EXPECT_THAT(k42v25, Ge(k42));
 }
 
+TEST_F(LimitedVectorTest, ToLimitedVectorEmptyDtor) {
+  // Just makes sure this actually can compile.
+  static constexpr auto kData = ToLimitedVector<int, LimitedOptionsFlag::kEmptyDestructor>({3, 5});
+  EXPECT_THAT(kData, ElementsAre(3, 5));
+}
+
 // Test struct that increases a value when the destructor is called.
 // In copy and move we decrease the value as there will be two destructor calls.
 struct IncOnDtor {
-  ~IncOnDtor() noexcept { ++ref; }
+  constexpr ~IncOnDtor() noexcept { ++(*dtor_called); }
 
-  explicit IncOnDtor(int& ref) noexcept : ref(ref) {}
+  constexpr explicit IncOnDtor(int* dtor_called) noexcept : dtor_called(dtor_called) {}
 
-  IncOnDtor(const IncOnDtor& other) noexcept : ref(other.ref) { --ref; }
+  constexpr IncOnDtor(const IncOnDtor& other) noexcept : dtor_called(other.dtor_called) { --*dtor_called; }
 
-  IncOnDtor& operator=(const IncOnDtor& other) noexcept = delete;
+  constexpr IncOnDtor& operator=(const IncOnDtor& other) noexcept {
+    if (this != &other) {
+      dtor_called = other.dtor_called;
+      --*dtor_called;
+    }
+    return *this;
+  }
 
-  IncOnDtor(IncOnDtor&& other) noexcept : ref(other.ref) { --ref; }
+  constexpr IncOnDtor(IncOnDtor&& other) noexcept : dtor_called(other.dtor_called) { --*other.dtor_called; }
 
-  IncOnDtor& operator=(IncOnDtor&& other) noexcept = delete;
+  constexpr IncOnDtor& operator=(IncOnDtor&& other) noexcept = delete;
 
-  operator int() const noexcept { return ref; }  // NOLINT(*-explicit-*)
+  constexpr operator int() const noexcept { return *dtor_called; }  // NOLINT(*-explicit-*)
 
-  int& ref;
+  int* dtor_called;
 };
 
-TEST_F(LimitedVectorTest, EmptyDtor) {
+TEST_F(LimitedVectorTest, DtorCheck) {
   int var3 = 3;
   int var5 = 5;
   {
-    const auto data = LimitedVector<IncOnDtor, LimitedOptions<3, LimitedOptionsFlag::kEmptyDestructor>{}>(
-        {IncOnDtor(var3), IncOnDtor(var5)});
+    const LimitedVector<IncOnDtor, LimitedOptions<2, LimitedOptionsFlag::kEmptyDestructor>{}> data{
+        IncOnDtor(&var3), IncOnDtor(&var5)};
     EXPECT_THAT(data, ElementsAre(3, 5));
   }
   EXPECT_THAT(var3, 3) << "If this is 4, then LimitedVector called the destructors for its values.";
   EXPECT_THAT(var5, 5) << "If this is 6, then LimitedVector called the destructors for its values.";
+  {
+    const LimitedVector<IncOnDtor, 2> data{IncOnDtor(&var3), IncOnDtor(&var5)};
+    EXPECT_THAT(data, ElementsAre(3, 5));
+  }
+  EXPECT_THAT(var3, 4) << "Destructor should have been called.";
+  EXPECT_THAT(var5, 6) << "Destructor should have been called.";
 }
 
-TEST_F(LimitedVectorTest, ToLimitedVectorEmptyDtor) {
-  int var3 = 3;
-  int var5 = 5;
-  {
-    const auto data =
-        ToLimitedVector<IncOnDtor, LimitedOptionsFlag::kEmptyDestructor>({IncOnDtor(var3), IncOnDtor(var5)});
-    EXPECT_THAT(data, ElementsAre(3, 5));
-  }
-  EXPECT_THAT(var3, 3) << "If this is 4, then LimitedVector called the destructors for its values.";
-  EXPECT_THAT(var5, 5) << "If this is 6, then LimitedVector called the destructors for its values.";
+struct BadDtor {
+  constexpr ~BadDtor() noexcept = default;
+
+  constexpr explicit BadDtor(int v) noexcept : v(v) {}
+
+  constexpr BadDtor(const BadDtor&) noexcept = default;
+  constexpr BadDtor& operator=(const BadDtor&) noexcept = default;
+  constexpr BadDtor(BadDtor&&) noexcept = default;
+  constexpr BadDtor& operator=(BadDtor&&) noexcept = default;
+
+  constexpr operator int() const noexcept { return v; }  // NOLINT(*-explicit-*)
+
+  int v;
+};
+
+TEST_F(LimitedVectorTest, EmptyDtorCheck) {
+  static constexpr LimitedVector<BadDtor, LimitedOptions<2, LimitedOptionsFlag::kEmptyDestructor>{}> kData{
+      BadDtor(3), BadDtor(5)};
+  EXPECT_THAT(kData, ElementsAre(3, 5));
+}
+
+TEST_F(LimitedVectorTest, ToLimitedVectorEmptyDtorCheck) {
+  static constexpr auto kData =
+      ToLimitedVector<BadDtor, LimitedOptionsFlag::kEmptyDestructor>({BadDtor(3), BadDtor(5)});
+  EXPECT_THAT(kData, ElementsAre(3, 5));
 }
 
 // NOLINTEND(*-magic-numbers)

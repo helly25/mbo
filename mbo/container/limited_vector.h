@@ -82,7 +82,13 @@ class LimitedVector final {
     constexpr Data(Data&&) noexcept = default;
     constexpr Data& operator=(Data&&) noexcept = default;
 
-    constexpr ~Data() noexcept {}  // NON DEFAULT
+    constexpr ~Data() noexcept
+    requires(std::is_trivially_destructible_v<T>)
+    = default;
+
+    constexpr ~Data() noexcept
+    requires(!std::is_trivially_destructible_v<T>)
+    {};
 
     None none;
     T data;

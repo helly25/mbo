@@ -70,7 +70,7 @@ class LimitedSet final : public container_internal::LimitedOrdered<Key, Key, Key
  public:
   using container_internal::LimitedOrdered<Key, Key, Key, CapacityOrOptions, Compare>::LimitedOrdered;
 
-  ~LimitedSet() noexcept = default;
+  constexpr ~LimitedSet() noexcept = default;
 
   constexpr explicit LimitedSet(const Compare& key_comp) noexcept : LimitedBase(key_comp){};
 
