@@ -77,7 +77,7 @@ class LimitedMap final
   using container_internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, CapacityOrOptions, KeyComp>::
       LimitedOrdered;
 
-  ~LimitedMap() noexcept = default;
+  constexpr ~LimitedMap() noexcept = default;
 
   constexpr LimitedMap() noexcept = default;
 

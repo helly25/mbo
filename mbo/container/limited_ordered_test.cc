@@ -75,7 +75,8 @@ TEST_F(LimitedOrderedTest, ConstexprData) {
 }
 
 TEST_F(LimitedOrderedTest, ConstexprNoDtor) {
-  constexpr auto kTest = LimitedOrdered<int, int, int, LimitedOptions<3, LimitedOptionsFlag::kEmptyDestructor>{}>{};
+  static constexpr auto kTest =
+      LimitedOrdered<int, int, int, LimitedOptions<3, LimitedOptionsFlag::kEmptyDestructor>{}>{};
   EXPECT_THAT(kTest, IsEmpty());
   EXPECT_THAT(kTest, SizeIs(0));
   EXPECT_THAT(kTest, CapacityIs(3));
@@ -83,7 +84,8 @@ TEST_F(LimitedOrderedTest, ConstexprNoDtor) {
 }
 
 TEST_F(LimitedOrderedTest, ConstexprRequireSortedInput) {
-  constexpr auto kTest = LimitedOrdered<int, int, int, LimitedOptions<3, LimitedOptionsFlag::kRequireSortedInput>{}>{};
+  static constexpr auto kTest =
+      LimitedOrdered<int, int, int, LimitedOptions<3, LimitedOptionsFlag::kRequireSortedInput>{}>{};
   EXPECT_THAT(kTest, IsEmpty());
   EXPECT_THAT(kTest, SizeIs(0));
   EXPECT_THAT(kTest, CapacityIs(3));

@@ -1,3 +1,7 @@
+# 0.2.16
+
+* Fix `LimitedOptionsFlag::kEmptyDestructor` use in `LimitedVector`.
+
 # 0.2.15
 
 * Added `LimitedOptions` support to `LimitedVector`.
@@ -19,7 +23,7 @@
 
 * Added `ConstScan` and `MakeConstScan`.
 * Changed all `Make*Scan` types to create intermediate adapters.
-* Made all `*Scan` and `Make*Scan` to accept `std::initializer` types. 
+* Made all `*Scan` and `Make*Scan` to accept `std::initializer` types.
 * Added support for move-only types.
 * Improved `*scan` handling of initializer_lists.
 
