@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <compare>   // IWYU pragma: keep
+#include <compare>   // IWYU pragma: keep
 #include <concepts>  // IWYU pragma: keep
 #include <initializer_list>
 #include <memory>
@@ -557,6 +558,34 @@ class LimitedOrdered {
       }
     }
     return npos;
+  }
+
+  MBO_FORCE_INLINE std::size_t index_of(const Key& key) const
+  requires(kOptimizeLess && !mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
+  {
+    std::size_t left = 0;
+    std::size_t right = size_;
+    bool less = false;  // init value does not matter
+    std::size_t diff = size_;
+    while (diff > 0) {
+      diff = (right - left) >> 1U;
+      const std::size_t pos = left + diff;
+      less = key_comp_(key, GetKey(values_[pos]));
+      if (less) {
+        right = pos;
+      } else {
+        left = pos;
+      }
+    }
+    if (less) {
+      return npos;
+    } else {
+      if (key_comp_(GetKey(values_[left]), key)) {
+        return npos;
+      } else {
+        return left;
+      }
+    }
   }
 
   MBO_ALWAYS_INLINE std::size_t index_of(const Key& key) const
