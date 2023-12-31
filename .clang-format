@@ -24,6 +24,7 @@ BreakInheritanceList: BeforeComma
 DerivePointerAlignment: false
 EmptyLineBeforeAccessModifier: Always
 FixNamespaceComments: true
+IndentPPDirectives: AfterHash
 IndentRequiresClause: false
 InsertBraces: true
 InsertNewlineAtEOF: true
@@ -36,6 +37,7 @@ MaxEmptyLinesToKeep: 1
 PackConstructorInitializers: NextLine
 PenaltyReturnTypeOnItsOwnLine: 1000
 PointerAlignment: Left
+PPIndentWidth: 1
 QualifierAlignment: Left
 ReferenceAlignment: Left
 RemoveSemicolon: true

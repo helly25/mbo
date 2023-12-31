@@ -16,7 +16,7 @@
 #define MBO_CONTAINER_INTERNAL_LIMITED_ORDERED_H_
 
 #include <algorithm>
-#include <compare>  // IWYU pragma: keep
+#include <compare>   // IWYU pragma: keep
 #include <concepts>  // IWYU pragma: keep
 #include <initializer_list>
 #include <memory>
@@ -30,19 +30,20 @@
 #include "mbo/types/traits.h"
 
 #ifdef MBO_FORCE_INLINE
-#undef MBO_FORCE_INLINE
+# undef MBO_FORCE_INLINE
 #endif
 #define MBO_FORCE_INLINE
+
 // __attribute__((always_inline))
 
 namespace mbo::container::container_internal {
 
 #ifdef LV_REQUIRE
-#undef LV_REQUIRE
+# undef LV_REQUIRE
 #endif
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define LV_REQUIRE(severity, condition) \
+#define LV_REQUIRE(severity, condition)                      \
   /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */ \
   ABSL_LOG_IF(severity, !(condition))
 
@@ -59,7 +60,7 @@ concept LimitedOrderedValid =  //
     std::move_constructible<std::remove_const_t<Key>> && std::move_constructible<Mapped>
     && LimitedOrderedValidImpl<Key, Mapped, Value>;
 
-template<typename Key, typename Mapped, typename Value, auto options, typename Compare = types::CompareLess<Key>>
+template<typename Key, typename Mapped, typename Value, auto options, typename Compare = std::less<Key>>
 requires(LimitedOrderedValid<Key, Mapped, Value>)
 class LimitedOrdered {
  protected:
@@ -67,6 +68,8 @@ class LimitedOrdered {
   using Options = decltype(MakeLimitedOptions<options>());
   static_assert(std::is_trivially_destructible_v<Value> || !Options::Has(LimitedOptionsFlag::kEmptyDestructor));
   static constexpr std::size_t Capacity = Options::kCapacity;
+
+  static constexpr bool kOptimizeLess = mbo::types::IsCompareLess<Compare> || mbo::types::IsStdLess<Compare>;
 
   struct None final {};
 
@@ -492,19 +495,26 @@ class LimitedOrdered {
 
   // NOLINTBEGIN(*-magic-numbers,cppcoreguidelines-macro-usage,readability-function-cognitive-complexity)
   MBO_FORCE_INLINE constexpr std::size_t index_of(const Key& key) const
-  requires(types::IsCompareLess<Compare> && Capacity <= kUnrollMaxCapacity)
+  requires(kOptimizeLess && Capacity <= kUnrollMaxCapacity)
   {
 #define MBO_CASE_LIMITED_POS_COMP(POS)                              \
   case POS:                                                         \
     if constexpr ((POS) >= Capacity) {                              \
       return npos;                                                  \
-    } else {                                                        \
+    } else if constexpr (mbo::types::IsCompareLess<Compare>) {      \
       if (key_comp_.Compare(key, GetKey(values_[POS].data)) == 0) { \
         return POS;                                                 \
       }                                                             \
+    } else {                                                        \
+      if (!key_comp_(key, GetKey(values_[POS].data))) {             \
+        if (key_comp_(GetKey(values_[POS].data), key)) {            \
+          return npos;                                              \
+        } else {                                                    \
+          return POS;                                               \
+        }                                                           \
+      }                                                             \
     }                                                               \
-    do /* NOLINT(cppcoreguidelines-avoid-do-while) */ {             \
-    } while (0)
+    [[fallthrough]]
     switch (size_ - 1) {
       MBO_CASE_LIMITED_POS_COMP(15);
       MBO_CASE_LIMITED_POS_COMP(14);
@@ -529,12 +539,12 @@ class LimitedOrdered {
   }  // NOLINTEND(*-magic-numbers,cppcoreguidelines-macro-usage,readability-function-cognitive-complexity)
 
   MBO_FORCE_INLINE constexpr std::size_t index_of(const Key& key) const
-  requires(types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
+  requires(kOptimizeLess && mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
   {
     std::size_t left = 0;
     std::size_t right = size_;
     while (left < right) {
-      std::size_t pos = left + ((right - left) >> 1U);
+      const std::size_t pos = left + ((right - left) >> 1U);
       auto cmp = key_comp_.Compare(key, GetKey(values_[pos]));
       if (cmp == 0) {
         return pos;
@@ -548,8 +558,36 @@ class LimitedOrdered {
     return npos;
   }
 
+  MBO_FORCE_INLINE std::size_t index_of(const Key& key) const
+  requires(kOptimizeLess && !mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
+  {
+    std::size_t left = 0;
+    std::size_t right = size_;
+    bool less = false;  // init value does not matter
+    std::size_t diff = size_;
+    while (diff > 0) {
+      diff = (right - left) >> 1U;
+      const std::size_t pos = left + diff;
+      less = key_comp_(key, GetKey(values_[pos]));
+      if (less) {
+        right = pos;
+      } else {
+        left = pos;
+      }
+    }
+    if (less) {
+      return npos;
+    } else {
+      if (key_comp_(GetKey(values_[left]), key)) {
+        return npos;
+      } else {
+        return left;
+      }
+    }
+  }
+
   MBO_FORCE_INLINE constexpr std::size_t index_of(const Key& key) const
-  requires(!types::IsCompareLess<Compare>)
+  requires(!kOptimizeLess)
   {
     const_iterator it = lower_bound(key);
     return it == end() || key_comp_(GetKey(*it), key) || key_comp_(key, GetKey(*it)) ? npos : it - begin();
@@ -570,27 +608,27 @@ class LimitedOrdered {
   }
 
   MBO_FORCE_INLINE constexpr iterator find(const Key& key) {
-    if constexpr (types::IsCompareLess<Compare>) {
+    if constexpr (kOptimizeLess) {
       std::size_t pos = index_of(key);
       return pos == npos ? end() : iterator(&values_[pos]);
-    } else {  // Not IsCompareLess
+    } else {  // Not kOptimizeLess
       iterator it = lower_bound(key);
       return it == end() || key_comp_(GetKey(*it), key) || key_comp_(key, GetKey(*it)) ? end() : it;
     }
   }
 
   MBO_FORCE_INLINE constexpr const_iterator find(const Key& key) const {
-    if constexpr (types::IsCompareLess<Compare>) {
+    if constexpr (kOptimizeLess) {
       std::size_t pos = index_of(key);
       return pos == npos ? end() : const_iterator(&values_[pos]);
-    } else {  // Not IsCompareLess
+    } else {  // Not kOptimizeLess
       const_iterator it = lower_bound(key);
       return it == end() || key_comp_(GetKey(*it), key) || key_comp_(key, GetKey(*it)) ? end() : it;
     }
   }
 
   MBO_FORCE_INLINE constexpr bool contains(const Key& key) const {
-    if constexpr (types::IsCompareLess<Compare>) {
+    if constexpr (kOptimizeLess) {
       return index_of(key) != npos;
     } else {
       return std::binary_search(begin(), end(), key, val_comp_);
@@ -884,9 +922,13 @@ class LimitedOrdered {
 
   MBO_FORCE_INLINE constexpr reverse_iterator rend() noexcept { return std::make_reverse_iterator(begin()); }
 
-  MBO_FORCE_INLINE constexpr const_reverse_iterator rend() const noexcept { return std::make_reverse_iterator(begin()); }
+  MBO_FORCE_INLINE constexpr const_reverse_iterator rend() const noexcept {
+    return std::make_reverse_iterator(begin());
+  }
 
-  MBO_FORCE_INLINE constexpr const_reverse_iterator crend() const noexcept { return std::make_reverse_iterator(cbegin()); }
+  MBO_FORCE_INLINE constexpr const_reverse_iterator crend() const noexcept {
+    return std::make_reverse_iterator(cbegin());
+  }
 
   constexpr const_pointer data() const noexcept { return &values_[0].data; }
 
@@ -937,7 +979,7 @@ class LimitedOrdered {
 }  // namespace mbo::container::container_internal
 
 #ifdef MBO_FORCE_INLINE
-#undef MBO_FORCE_INLINE
+# undef MBO_FORCE_INLINE
 #endif
 
 #endif  // MBO_CONTAINER_INTERNAL_LIMITED_ORDERED_H_

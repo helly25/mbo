@@ -61,7 +61,7 @@ namespace mbo::container {
 // addresses are not stable.
 //
 // Note that construction from char-arrays results in a container of `std::string_view` as opposed to `const char*`.
-template<typename Key, auto CapacityOrOptions, typename Compare = types::CompareLess<Key>>
+template<typename Key, auto CapacityOrOptions, typename Compare = std::less<Key>>
 requires(std::move_constructible<Key>)
 class LimitedSet final : public container_internal::LimitedOrdered<Key, Key, Key, CapacityOrOptions, Compare> {
   using LimitedBase = container_internal::LimitedOrdered<Key, Key, Key, CapacityOrOptions, Compare>;

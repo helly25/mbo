@@ -444,48 +444,78 @@ TEST_F(LimitedSetTest, CompareDifferentType) {
   EXPECT_THAT(k42v65, Ge(k42));
 }
 
-template <std::size_t Size>
-constexpr void CompareAllTheSizes() {  // NOLINT(readability-function-cognitive-complexity)
-  LimitedSet<int, Size> data;
+template<template<typename> typename Compare, std::size_t Size>
+void CompareAllTheSizes() {  // NOLINT(readability-function-cognitive-complexity)
+  LimitedSet<int, Size, Compare<int>> data;
   for (std::size_t len = 0; len < Size; ++len) {
     data.emplace(len * 100);
   }
+  std::size_t dropped = 0;
   while (!data.empty()) {
+    SCOPED_TRACE(absl::StrCat("Size: ", data.size()));
     for (std::size_t pos = 0; pos < Size + 1; ++pos) {
-      int v = 100 * static_cast<int>(pos + Size - data.size());
-      if (pos >= data.size()) {
+      const int v = static_cast<int>(100 * pos);
+      const std::size_t expected_pos = [&data, &v] {
+        for (std::size_t pos = 0; pos < data.size(); ++pos) {
+          if (data.at_index(pos) == v) {
+            return pos;
+          }
+        }
+        return data.npos;
+      }();
+      SCOPED_TRACE(absl::StrCat("Dropped: ", dropped, ", V: ", v, ", Expected: ", expected_pos));
+      if (expected_pos == data.npos) {
         ASSERT_THAT(data.index_of(v), data.npos);
         ASSERT_FALSE(data.contains(v));
         ASSERT_THAT(data.find(v), data.end());
       } else {
-        ASSERT_THAT(data.index_of(v), pos);
+        ASSERT_THAT(data.index_of(v), expected_pos);
         ASSERT_TRUE(data.contains(v));
         ASSERT_THAT(data.find(v), Ne(data.end()));
       }
     }
     data.erase(data.begin());
+    ++dropped;
   }
 }
 
-TEST_F(LimitedSetTest, CompareAllTheSizes) {
-  CompareAllTheSizes<1>();
-  CompareAllTheSizes<2>();
-  CompareAllTheSizes<3>();
-  CompareAllTheSizes<4>();
-  CompareAllTheSizes<5>();
-  CompareAllTheSizes<6>();
-  CompareAllTheSizes<7>();
-  CompareAllTheSizes<8>();
-  CompareAllTheSizes<9>();
-  CompareAllTheSizes<10>();
-  CompareAllTheSizes<11>();
-  CompareAllTheSizes<12>();
-  CompareAllTheSizes<13>();
-  CompareAllTheSizes<14>();
-  CompareAllTheSizes<15>();
-  CompareAllTheSizes<16>();
+TEST_F(LimitedSetTest, CompareAllTheSizesStdLess) {
+  CompareAllTheSizes<std::less, 1>();
+  CompareAllTheSizes<std::less, 2>();
+  CompareAllTheSizes<std::less, 3>();
+  CompareAllTheSizes<std::less, 4>();
+  CompareAllTheSizes<std::less, 5>();
+  CompareAllTheSizes<std::less, 6>();
+  CompareAllTheSizes<std::less, 7>();
+  CompareAllTheSizes<std::less, 8>();
+  CompareAllTheSizes<std::less, 9>();
+  CompareAllTheSizes<std::less, 10>();
+  CompareAllTheSizes<std::less, 11>();
+  CompareAllTheSizes<std::less, 12>();
+  CompareAllTheSizes<std::less, 13>();
+  CompareAllTheSizes<std::less, 14>();
+  CompareAllTheSizes<std::less, 15>();
+  CompareAllTheSizes<std::less, 16>();
 }
 
+TEST_F(LimitedSetTest, CompareAllTheSizesCompareLess) {
+  CompareAllTheSizes<mbo::types::CompareLess, 1>();
+  CompareAllTheSizes<mbo::types::CompareLess, 2>();
+  CompareAllTheSizes<mbo::types::CompareLess, 3>();
+  CompareAllTheSizes<mbo::types::CompareLess, 4>();
+  CompareAllTheSizes<mbo::types::CompareLess, 5>();
+  CompareAllTheSizes<mbo::types::CompareLess, 6>();
+  CompareAllTheSizes<mbo::types::CompareLess, 7>();
+  CompareAllTheSizes<mbo::types::CompareLess, 8>();
+  CompareAllTheSizes<mbo::types::CompareLess, 9>();
+  CompareAllTheSizes<mbo::types::CompareLess, 10>();
+  CompareAllTheSizes<mbo::types::CompareLess, 11>();
+  CompareAllTheSizes<mbo::types::CompareLess, 12>();
+  CompareAllTheSizes<mbo::types::CompareLess, 13>();
+  CompareAllTheSizes<mbo::types::CompareLess, 14>();
+  CompareAllTheSizes<mbo::types::CompareLess, 15>();
+  CompareAllTheSizes<mbo::types::CompareLess, 16>();
+}
 
 TEST_F(LimitedSetTest, PreSortedInput) {
   constexpr LimitedSet<int, LimitedOptions<4, LimitedOptionsFlag::kRequireSortedInput>{}> kData{0, 1, 2, 42};

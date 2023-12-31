@@ -15,11 +15,16 @@
 #ifndef MBO_TYPES_COMPARE_H_
 #define MBO_TYPES_COMPARE_H_
 
+#include <algorithm>
 #include <compare>// IWYU pragma: keep
 #include <type_traits>
 
 namespace mbo::types {
 
+// Compare less is a three-way comparator object that can be used as a drop-in
+// replacement for `std::less`. While it retains the `bool operator(l,r)` that
+// performs `less` comparison, it offers a complimentary `Compare` method which
+// performs three-way comparison in less order.
 template<std::three_way_comparable T>
 struct CompareLess {
   using value_type = T;  // NOLINT(readability-identifier-naming)
@@ -68,10 +73,19 @@ struct IsCompareLess : std::false_type {};
 template<typename T>
 struct IsCompareLess<CompareLess<T>> : std::true_type {};
 
+template<typename T>
+struct IsStdLess : std::false_type {};
+
+template<typename T>
+struct IsStdLess<std::less<T>> : std::true_type {};
+
 }  // namespace types_internal
 
 template<typename T>
 concept IsCompareLess = types_internal::IsCompareLess<T>::value;
+
+template<typename T>
+concept IsStdLess = types_internal::IsStdLess<T>::value;
 
 }  // namespace mbo::types
 

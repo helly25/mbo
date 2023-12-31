@@ -1,3 +1,7 @@
+# 0.2.18
+
+* In `LimitedSet` and `LimitedMap` use new optimized code for `std::less` and make that the default.
+
 # 0.2.17
 
 * Added template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.
