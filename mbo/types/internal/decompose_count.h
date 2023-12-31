@@ -701,9 +701,9 @@ struct DecomposeInfo final {
   static std::string Debug() {
     std::string str;
     std::string_view sep;
-#define DEBUG_ADD(f)                                                         \
-  str += std::string(sep) + #f + ": " + std::to_string(DecomposeInfo<T>::f); \
-  sep = ", "
+# define DEBUG_ADD(f)                                                         \
+   str += std::string(sep) + #f + ": " + std::to_string(DecomposeInfo<T>::f); \
+   sep = ", "
     DEBUG_ADD(kIsAggregate);
     DEBUG_ADD(kIsEmpty);
     // DEBUG_ADD(kInitializerCount);
@@ -715,7 +715,7 @@ struct DecomposeInfo final {
     // DEBUG_ADD(kCountBases);
     // DEBUG_ADD(kCountEmptyBases);
     DEBUG_ADD(kDecomposeCount);
-#undef DEBUG_ADD
+# undef DEBUG_ADD
     return str;
   }
 };
@@ -742,9 +742,9 @@ struct DecomposeInfo<T, true> final {
   static std::string Debug() {
     std::string str;
     std::string_view sep;
-#define DEBUG_ADD(f)                                                         \
-  str += std::string(sep) + #f + ": " + std::to_string(DecomposeInfo<T>::f); \
-  sep = ", "
+# define DEBUG_ADD(f)                                                         \
+   str += std::string(sep) + #f + ": " + std::to_string(DecomposeInfo<T>::f); \
+   sep = ", "
     DEBUG_ADD(kIsAggregate);
     DEBUG_ADD(kIsEmpty);
     DEBUG_ADD(kInitializerCount);
@@ -756,7 +756,7 @@ struct DecomposeInfo<T, true> final {
     DEBUG_ADD(kCountBases);
     DEBUG_ADD(kCountEmptyBases);
     DEBUG_ADD(kDecomposeCount);
-#undef DEBUG_ADD
+# undef DEBUG_ADD
     return str;
   }
 };
