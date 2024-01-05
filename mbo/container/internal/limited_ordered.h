@@ -563,7 +563,7 @@ class LimitedOrdered {
   {
     std::size_t left = 0;
     std::size_t right = size_;
-    bool less = false;  // init value does not matter
+    bool less = false;  // If `size_ == 0`, then `less = false` ensures we return `npos`.
     std::size_t diff = size_;
     while (diff > 0) {
       diff = (right - left) >> 1U;
