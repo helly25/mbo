@@ -15,8 +15,8 @@
 #ifndef MBO_TYPES_COMPARE_H_
 #define MBO_TYPES_COMPARE_H_
 
-#include <algorithm>
-#include <compare>// IWYU pragma: keep
+#include <compare>  // IWYU pragma: keep
+#include <functional>
 #include <type_traits>
 
 namespace mbo::types {
@@ -40,13 +40,13 @@ struct CompareLess {
 
   template<std::three_way_comparable_with<value_type> other_type>
   requires(!std::same_as<std::remove_cvref_t<value_type>, std::remove_cvref_t<other_type>>)
-  constexpr auto Compare(const value_type& lhs, other_type&& rhs) const noexcept {
+  constexpr auto Compare(const value_type& lhs, const other_type& rhs) const noexcept {
     return lhs <=> rhs;
   }
 
   template<std::three_way_comparable_with<value_type> other_type>
   requires(!std::same_as<std::remove_cvref_t<value_type>, std::remove_cvref_t<other_type>>)
-  constexpr auto Compare(other_type&& lhs, value_type&& rhs) const noexcept {
+  constexpr auto Compare(const other_type& lhs, const value_type& rhs) const noexcept {
     return lhs <=> rhs;
   }
 
@@ -54,13 +54,13 @@ struct CompareLess {
 
   template<std::three_way_comparable_with<value_type> other_type>
   requires(!std::same_as<std::remove_cvref_t<value_type>, std::remove_cvref_t<other_type>>)
-  constexpr bool operator()(const value_type& lhs, other_type&& rhs) const noexcept {
+  constexpr bool operator()(const value_type& lhs, const other_type& rhs) const noexcept {
     return (lhs <=> rhs) < 0;
   }
 
   template<std::three_way_comparable_with<value_type> other_type>
   requires(!std::same_as<std::remove_cvref_t<value_type>, std::remove_cvref_t<other_type>>)
-  constexpr bool operator()(other_type&& lhs, const value_type& rhs) const noexcept {
+  constexpr bool operator()(const other_type& lhs, const value_type& rhs) const noexcept {
     return (lhs <=> rhs) < 0;
   }
 };

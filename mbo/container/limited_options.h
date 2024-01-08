@@ -36,6 +36,10 @@ enum class LimitedOptionsFlag {
   // larger sets/maps, as the compiler does not need to execute the `emplace` (which requires sorting and shifting) and
   // can instead just place the elements.
   kRequireSortedInput,
+
+  // If true, then do NOT use the optimized `index_of` implementation, and also do not use `index_of` in methods like
+  // `find`.
+  kNoOptimizeIndexOf,
 };
 
 // Type used to control `LimitedSet` and `LimitedMap`.

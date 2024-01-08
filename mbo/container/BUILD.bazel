@@ -141,6 +141,20 @@ cc_test(
     ],
 )
 
+cc_binary(
+    name = "limited_set_benchmark",
+    visibility = ["//visibility:private"],
+    srcs = ["limited_set_benchmark.cc"],
+    deps = [
+        ":limited_set_cc",
+        ":limited_vector_cc",
+        "//mbo/testing:matchers_cc",
+        "@com_github_google_benchmark//:benchmark",
+        "@com_google_absl//absl/log:initialize",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
 cc_library(
     name = "limited_vector_cc",
     hdrs = ["limited_vector.h"],

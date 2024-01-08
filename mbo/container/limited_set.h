@@ -16,17 +16,17 @@
 #define MBO_CONTAINER_LIMITED_SET_H_
 
 #include <algorithm>
-#include <compare>
-#include <concepts>
+#include <compare>   // IWYU pragma: keep
+#include <concepts>  // IWYU pragma: keep
 #include <initializer_list>
-#include <memory>
-#include <new>
+#include <memory>  // IWYU pragma: keep
+#include <new>     // IWYU pragma: keep
 #include <type_traits>
 #include <utility>
 
 #include "absl/log/absl_log.h"
 #include "mbo/container/internal/limited_ordered.h"  // IWYU pragma: export
-#include "mbo/types/compare.h"
+#include "mbo/types/compare.h"                       // IWYU pragma: keep
 #include "mbo/types/traits.h"
 
 namespace mbo::container {
@@ -129,13 +129,6 @@ class LimitedSet final : public container_internal::LimitedOrdered<Key, Key, Key
   requires(std::convertible_to<OK, Key> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedSet(LimitedSet<OK, OtherN, OtherCompare>&& other) noexcept
       : LimitedBase(std::move(other)) {}
-
-  template<typename OK, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
-  constexpr LimitedSet& operator=(LimitedSet<OK, OtherN, OtherCompare>&& other) noexcept {
-    LimitedBase::operator=(other);
-    return *this;
-  }
 
   // Find and search: lower_bound, upper_bound, equal_range, find, contains, count
 
@@ -296,17 +289,6 @@ constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(
   LimitedSet<std::remove_cvref_t<Key>, N, Compare> result(key_comp);
   for (std::size_t idx = 0; idx < N; ++idx) {
     result.emplace(array[idx]);
-  }
-  return result;
-}
-
-template<typename Key, std::size_t N, typename Compare = std::less<Key>>
-constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(
-    Key (&&array)[N],
-    const Compare& key_comp = Compare()) {
-  LimitedSet<std::remove_cvref_t<Key>, N, Compare> result(key_comp);
-  for (std::size_t idx = 0; idx < N; ++idx) {
-    result.emplace(std::move(array[idx]));
   }
   return result;
 }

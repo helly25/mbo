@@ -14,15 +14,16 @@
 
 #include "mbo/container/limited_set.h"
 
-#include <iostream>
-#include <ranges>
+#include <ranges>  // IWYU pragma: keep
 #include <string>
 #include <string_view>
-#include <type_traits>
+#include <type_traits>  // IWYU pragma: keep
+#include <utility>
 
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/container/limited_options.h"
 #include "mbo/testing/matchers.h"
 
 // Clang has issues with exception tracing in ASAN, so corresponding tests must
@@ -237,7 +238,7 @@ TEST_F(LimitedSetTest, ConstructAssignFromSmaller) {
     LimitedSet<unsigned, 3> source({0U, 1U, 2U});
     LimitedSet<int, 5> target;
     ASSERT_THAT(target, IsEmpty());
-    target = std::move(source);
+    target = source;
     EXPECT_THAT(target, ElementsAre(0, 1, 2));
   }
 }
@@ -266,8 +267,8 @@ TEST_F(LimitedSetTest, ToLimitedSetStringCopy) {
 
 TEST_F(LimitedSetTest, ToLimitedSetStringMove) {
   // NOLINTBEGIN(*-avoid-c-arrays)
-  std::string array[4] = {{"0"}, {"1"}, {"2"}, {"3"}};
-  auto test = ToLimitedSet(std::move(array));
+  const std::string array[4] = {{"0"}, {"1"}, {"2"}, {"3"}};
+  auto test = ToLimitedSet(array);
   EXPECT_THAT(test, Not(IsEmpty()));
   EXPECT_THAT(test, SizeIs(4));
   EXPECT_THAT(test, CapacityIs(4));
@@ -444,9 +445,9 @@ TEST_F(LimitedSetTest, CompareDifferentType) {
   EXPECT_THAT(k42v65, Ge(k42));
 }
 
-template<template<typename> typename Compare, std::size_t Size>
-void CompareAllTheSizes() {  // NOLINT(readability-function-cognitive-complexity)
-  LimitedSet<int, Size, Compare<int>> data;
+template<std::size_t Size, template<typename> typename Compare, LimitedOptionsFlag... Flags>
+void CompareAllTheSizesFor() {  // NOLINT(readability-function-cognitive-complexity)
+  LimitedSet<int, LimitedOptions<Size, Flags...>{}, Compare<int>> data;
   for (std::size_t len = 0; len < Size; ++len) {
     data.emplace(len * 100);
   }
@@ -479,43 +480,35 @@ void CompareAllTheSizes() {  // NOLINT(readability-function-cognitive-complexity
   }
 }
 
-TEST_F(LimitedSetTest, CompareAllTheSizesStdLess) {
-  CompareAllTheSizes<std::less, 1>();
-  CompareAllTheSizes<std::less, 2>();
-  CompareAllTheSizes<std::less, 3>();
-  CompareAllTheSizes<std::less, 4>();
-  CompareAllTheSizes<std::less, 5>();
-  CompareAllTheSizes<std::less, 6>();
-  CompareAllTheSizes<std::less, 7>();
-  CompareAllTheSizes<std::less, 8>();
-  CompareAllTheSizes<std::less, 9>();
-  CompareAllTheSizes<std::less, 10>();
-  CompareAllTheSizes<std::less, 11>();
-  CompareAllTheSizes<std::less, 12>();
-  CompareAllTheSizes<std::less, 13>();
-  CompareAllTheSizes<std::less, 14>();
-  CompareAllTheSizes<std::less, 15>();
-  CompareAllTheSizes<std::less, 16>();
+template<template<typename> typename Compare, LimitedOptionsFlag Flags, std::size_t... Idx>
+void CompareAllTheSizes(const std::index_sequence<Idx...>& /*unused*/) {
+  (CompareAllTheSizesFor<Idx, Compare, Flags>(), ...);
 }
 
-TEST_F(LimitedSetTest, CompareAllTheSizesCompareLess) {
-  CompareAllTheSizes<mbo::types::CompareLess, 1>();
-  CompareAllTheSizes<mbo::types::CompareLess, 2>();
-  CompareAllTheSizes<mbo::types::CompareLess, 3>();
-  CompareAllTheSizes<mbo::types::CompareLess, 4>();
-  CompareAllTheSizes<mbo::types::CompareLess, 5>();
-  CompareAllTheSizes<mbo::types::CompareLess, 6>();
-  CompareAllTheSizes<mbo::types::CompareLess, 7>();
-  CompareAllTheSizes<mbo::types::CompareLess, 8>();
-  CompareAllTheSizes<mbo::types::CompareLess, 9>();
-  CompareAllTheSizes<mbo::types::CompareLess, 10>();
-  CompareAllTheSizes<mbo::types::CompareLess, 11>();
-  CompareAllTheSizes<mbo::types::CompareLess, 12>();
-  CompareAllTheSizes<mbo::types::CompareLess, 13>();
-  CompareAllTheSizes<mbo::types::CompareLess, 14>();
-  CompareAllTheSizes<mbo::types::CompareLess, 15>();
-  CompareAllTheSizes<mbo::types::CompareLess, 16>();
+template<template<typename> typename Compare, LimitedOptionsFlag Flags>
+void CompareAllTheSizes() {
+  CompareAllTheSizes<Compare, Flags>(std::make_index_sequence<50>());
 }
+
+// NOLINTBEGIN(google-readability-avoid-underscore-in-googletest-name)
+
+TEST_F(LimitedSetTest, CompareAllTheSizes_StdLess_Default) {
+  CompareAllTheSizes<std::less, LimitedOptionsFlag::kDefault>();
+}
+
+TEST_F(LimitedSetTest, CompareAllTheSizes_StdLess_NoOptimizeIndexOf) {
+  CompareAllTheSizes<std::less, LimitedOptionsFlag::kNoOptimizeIndexOf>();
+}
+
+TEST_F(LimitedSetTest, CompareAllTheSizes_CompareLess_Default) {
+  CompareAllTheSizes<mbo::types::CompareLess, LimitedOptionsFlag::kDefault>();
+}
+
+TEST_F(LimitedSetTest, CompareAllTheSizes_CompareLess_NoOptimizeIndexOf) {
+  CompareAllTheSizes<mbo::types::CompareLess, LimitedOptionsFlag::kNoOptimizeIndexOf>();
+}
+
+// NOLINTEND(google-readability-avoid-underscore-in-googletest-name)
 
 TEST_F(LimitedSetTest, PreSortedInput) {
   constexpr LimitedSet<int, LimitedOptions<4, LimitedOptionsFlag::kRequireSortedInput>{}> kData{0, 1, 2, 42};
