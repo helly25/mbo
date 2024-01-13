@@ -1,6 +1,10 @@
+# 0.2.17
+
+* Added template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.
+
 # 0.2.16
 
-* Fix `LimitedOptionsFlag::kEmptyDestructor` use in `LimitedVector`.
+* Fixed `LimitedOptionsFlag::kEmptyDestructor` use in `LimitedVector`.
 
 # 0.2.15
 
