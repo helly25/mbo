@@ -83,6 +83,21 @@ cc_test(
 )
 
 cc_library(
+  name = "ref_wrap_cc",
+  hdrs = ["ref_wrap.h"],
+  visibility = ["//visibility:public"],
+)
+
+cc_test(
+  name = "ref_wrap_test",
+  srcs = ["ref_wrap_test.cc"],
+  deps = [
+    ":ref_wrap_cc",
+    "@com_google_googletest//:gtest_main",
+  ]
+)
+
+cc_library(
     name = "traits_cc",
     hdrs = ["traits.h"],
     visibility = ["//visibility:public"],
