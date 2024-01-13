@@ -45,7 +45,7 @@ class Random {
  private:
   static constexpr int kRandomInit = 42;  // Benhchmarks must be repeatable.
 
-  mutable std::mt19937 mt_;
+  std::mt19937 mt_;
   std::uniform_int_distribution<int> uniform_;
 };
 
@@ -83,23 +83,61 @@ class Benchmarks {
   template<Function func>
   static void Benchmark(benchmark::State& state) {
     Random random;  // One per benchmark function instantiation means all functions use the same data.
-    const BenchmarkedContainer data = GetData(random);
-    const std::vector<int> input = GetInput(random, data);
-    int64_t items = 0;
+
+    struct TestData {
+      TestData(Random& random) : data(GetData(random)), input(GetInput(random, data)) {}
+
+      const BenchmarkedContainer data;
+      const std::vector<int> input;
+    };
+
+    static constexpr std::size_t kNumTestDataSets = 113;  // Number of test data sets.
+    const std::vector<TestData> test_data = [&] {
+      std::vector<TestData> test_data;
+      test_data.reserve(kNumTestDataSets);
+      while (test_data.size() < kNumTestDataSets) {
+        test_data.emplace_back(random);
+      }
+      return test_data;
+    }();
+    std::size_t test = 0;
+    std::size_t item = 0;
+    int64_t item_count = 0;
+    const auto* data = &test_data[0].data;
+    const auto* input = &test_data[0].input;
     // NOLINTNEXTLINE(readability-identifier-length)
     for (auto _ : state) {
       if constexpr (func == Function::kContains) {
-        benchmark::DoNotOptimize(data.contains(input[items++ % kNumTestsValues]));
+        if (HaveOrMiss != data->contains((*input)[item])) {
+          state.SkipWithError("BAD_RESULT");
+          break;  
+        }
       } else if constexpr (func == Function::kFind) {
-        benchmark::DoNotOptimize(data.find(input[items++ % kNumTestsValues]));
+        if (HaveOrMiss != (data->find((*input)[item]) != data->end())) {
+          state.SkipWithError("BAD_RESULT");
+          break;  
+        }
       } else if constexpr (func == Function::kIndexOf) {
-        benchmark::DoNotOptimize(data.index_of(input[items++ % kNumTestsValues]));
+        if (HaveOrMiss != (data->index_of((*input)[item]) != BenchmarkedContainer::npos)) {
+          state.SkipWithError("BAD_RESULT");
+          break;  
+        }
       } else {
         state.SkipWithError("NOT IMPLEMENTED");
         break;
       }
+      //state.PauseTiming();
+      ++item_count;
+      if (++item >= input->size()) {
+        item = 0;
+        ++test;
+        test %= test_data.size();
+        data = &test_data[test].data;
+        input = &test_data[test].input;
+      }
+      //state.ResumeTiming();
     }
-    state.SetItemsProcessed(items);
+    state.SetItemsProcessed(item_count);
     state.counters["Size"] = Size;
   }
 
