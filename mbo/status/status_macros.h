@@ -37,8 +37,12 @@
 //
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define MBO_RETURN_IF_ERROR(expr) \
-  if (!(expr).ok())               \
-  return absl::Status(expr)
+  do {                            \
+    auto var = (expr);            \
+    if (!var.ok()) {              \
+      return absl::Status(var);   \
+    }                             \
+  } while (0)
 
 #define _MBO_ASSIGN_OR_RETURN_IMPL_(var, res, expr) \
   auto var = (expr);                                \
