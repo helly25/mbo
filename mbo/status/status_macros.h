@@ -44,6 +44,7 @@
     }                             \
   } while (0)
 
+// PRIVATE MACRO - DO NOT USE.
 #define _MBO_ASSIGN_OR_RETURN_IMPL_(var, res, expr) \
   auto var = (expr);                                \
   if (!var.ok()) {                                  \
