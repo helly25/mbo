@@ -17,7 +17,6 @@
 
 #include <algorithm>
 #include <compare>   // IWYU pragma: keep
-#include <compare>   // IWYU pragma: keep
 #include <concepts>  // IWYU pragma: keep
 #include <initializer_list>
 #include <memory>
@@ -128,7 +127,13 @@ class LimitedOrdered {
       return val.first;
     }
 
-    MBO_ALWAYS_INLINE static constexpr const Key& GetKey(const Data& data) noexcept { return GetKey(data.data); }
+    MBO_ALWAYS_INLINE static constexpr const Key& GetKey(const Data& data) noexcept {
+      if constexpr (kKeyOnly) {
+        return data.data;
+      } else {
+        return data.data.first;
+      }
+    }
 
     constexpr ~ValueCompare() noexcept = default;
 
@@ -173,11 +178,11 @@ class LimitedOrdered {
 
     MBO_ALWAYS_INLINE constexpr explicit const_iterator(const Data* pos) noexcept : pos_(pos) {}
 
-    constexpr explicit operator reference() const noexcept { return pos_->data; }
+    MBO_ALWAYS_INLINE constexpr explicit operator reference() const noexcept { return pos_->data; }
 
-    constexpr reference operator*() const noexcept { return pos_->data; }
+    MBO_ALWAYS_INLINE constexpr reference operator*() const noexcept { return pos_->data; }
 
-    constexpr pointer operator->() const noexcept { return &pos_->data; }
+    MBO_ALWAYS_INLINE constexpr pointer operator->() const noexcept { return &pos_->data; }
 
     constexpr const_iterator& operator++() noexcept {
       ++pos_;
@@ -268,11 +273,11 @@ class LimitedOrdered {
 
     MBO_ALWAYS_INLINE constexpr explicit iterator(Data* pos) noexcept : pos_(pos) {}
 
-    constexpr explicit operator reference() const noexcept { return pos_->data; }
+    MBO_ALWAYS_INLINE constexpr explicit operator reference() const noexcept { return pos_->data; }
 
-    constexpr reference operator*() const noexcept { return pos_->data; }
+    MBO_ALWAYS_INLINE constexpr reference operator*() const noexcept { return pos_->data; }
 
-    constexpr pointer operator->() const noexcept { return &pos_->data; }
+    MBO_ALWAYS_INLINE constexpr pointer operator->() const noexcept { return &pos_->data; }
 
     constexpr explicit operator const_iterator() const noexcept { return const_iterator(pos_); }
 
@@ -467,19 +472,23 @@ class LimitedOrdered {
 
   // Find and search: lower_bound, upper_bound, equal_range, find, contains, count
 
-  constexpr iterator lower_bound(const Key& key) { return std::lower_bound(begin(), end(), key, val_comp_); }
-
-  constexpr const_iterator lower_bound(const Key& key) const {
+  MBO_ALWAYS_INLINE constexpr iterator lower_bound(const Key& key) {
     return std::lower_bound(begin(), end(), key, val_comp_);
   }
 
-  constexpr iterator upper_bound(const Key& key) { return std::upper_bound(begin(), end(), key, val_comp_); }
+  MBO_ALWAYS_INLINE constexpr const_iterator lower_bound(const Key& key) const {
+    return std::lower_bound(begin(), end(), key, val_comp_);
+  }
 
-  constexpr const_iterator upper_bound(const Key& key) const {
+  MBO_ALWAYS_INLINE constexpr iterator upper_bound(const Key& key) {
     return std::upper_bound(begin(), end(), key, val_comp_);
   }
 
-  // NOLINTBEGIN(*-magic-numbers,cppcoreguidelines-macro-usage,readability-function-cognitive-complexity)
+  MBO_ALWAYS_INLINE constexpr const_iterator upper_bound(const Key& key) const {
+    return std::upper_bound(begin(), end(), key, val_comp_);
+  }
+
+  // NOLINTBEGIN(*-magic-numbers,*-macro-usage,*-function-size,readability-function-cognitive-complexity)
   MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
   requires(kOptimizeIndexOf && Capacity <= kUnrollMaxCapacity)
   {
@@ -490,13 +499,17 @@ class LimitedOrdered {
     } else if constexpr (mbo::types::IsCompareLess<Compare>) {             \
       const auto comp = key_comp_.Compare(key, GetKey(values_[POS].data)); \
       if (comp >= 0) [[unlikely]] {                                        \
-        return comp > 0 ? npos : (POS);                                    \
+        if (comp > 0) [[likely]] {                                         \
+          return npos;                                                     \
+        } else [[unlikely]] {                                              \
+          return (POS);                                                    \
+        }                                                                  \
       }                                                                    \
     } else {                                                               \
       if (!key_comp_(key, GetKey(values_[POS].data))) [[unlikely]] {       \
         if (key_comp_(GetKey(values_[POS].data), key)) [[likely]] {        \
           return npos;                                                     \
-        } else {                                                           \
+        } else [[unlikely]] {                                              \
           return POS;                                                      \
         }                                                                  \
       }                                                                    \
@@ -539,7 +552,7 @@ class LimitedOrdered {
     }
 #undef MBO_CASE_LIMITED_POS_COMP
     return npos;
-  }  // NOLINTEND(*-magic-numbers,cppcoreguidelines-macro-usage,readability-function-cognitive-complexity)
+  }  // NOLINTEND(*-magic-numbers,*-macro-usage,*-function-size,readability-function-cognitive-complexity)
 
   MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
   requires(kOptimizeIndexOf && mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
@@ -549,7 +562,7 @@ class LimitedOrdered {
     while (left < right) [[likely]] {
       const std::size_t pos = left + ((right - left) >> 1U);
       auto cmp = key_comp_.Compare(key, GetKey(values_[pos]));
-      if (cmp < 0) {
+      if (cmp < 0) [[unlikely]] {
         right = pos;
       } else if (cmp > 0) {
         left = pos + 1;
