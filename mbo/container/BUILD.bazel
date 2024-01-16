@@ -153,6 +153,7 @@ cc_binary(
         "@com_google_absl//absl/log:initialize",
         "@com_google_absl//absl/strings",
     ],
+    tags = ["manual"],
 )
 
 cc_library(
