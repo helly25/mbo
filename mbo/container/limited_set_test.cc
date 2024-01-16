@@ -130,6 +130,7 @@ TEST_F(LimitedSetTest, MakeInitArgBasics) {
   EXPECT_THAT(test, SizeIs(3));
   EXPECT_THAT(test, CapacityIs(7));
   EXPECT_THAT(test, ElementsAre(1, 3, 5));
+  EXPECT_THAT(test.end() - test.begin(), 3);
   EXPECT_THAT(test.find(1), test.begin());
   EXPECT_THAT(test.find(1) - test.begin(), 0);
   EXPECT_THAT(test.find(3), test.begin() + 1);
@@ -139,9 +140,11 @@ TEST_F(LimitedSetTest, MakeInitArgBasics) {
   EXPECT_THAT(test.find(5) - test.begin(), 2);
   EXPECT_THAT(test.find(0), test.end());
   EXPECT_THAT(test.emplace(0), Pair(test.begin(), true));
+  EXPECT_THAT(test.end() - test.begin(), 4);
   EXPECT_THAT(test, ElementsAre(0, 1, 3, 5));
   EXPECT_THAT(test.find(2), test.end());
   EXPECT_THAT(test.emplace(2), Pair(test.begin() + 2, true));
+  EXPECT_THAT(test.end() - test.begin(), 5);
   EXPECT_THAT(test, ElementsAre(0, 1, 2, 3, 5));
   EXPECT_THAT(test.find(6), test.end());
   EXPECT_THAT(test.emplace(6), Pair(test.end(), true));
