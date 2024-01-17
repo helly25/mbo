@@ -591,38 +591,9 @@ class LimitedOrdered {
         right = pos;
       } else {
         if (diff == 0) [[unlikely]] {
-          if (key_comp_(GetKey(values_[left]), key)) [[unlikely]] {
+          if (key_comp_(GetKey(values_[left]), key)) [[likely]] {
             return npos;
-          } else {
-            return left;
-          }
-        }
-        left = pos;
-      }
-    }
-  }
-
-  MBO_ALWAYS_INLINE std::size_t index_of(const Key& key) const
-  requires(kOptimizeIndexOf && !mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
-  {
-    if (size_ == 0) {
-      return npos;
-    }
-    std::size_t left = 0;
-    std::size_t right = size_;
-    while (true) {
-      const std::size_t diff = (right - left) >> 1U;
-      const std::size_t pos = left + diff;
-      if (key_comp_(key, GetKey(values_[pos]))) [[likely]] {
-        if (diff == 0) [[unlikely]] {
-          return npos;
-        }
-        right = pos;
-      } else {
-        if (diff == 0) [[unlikely]] {
-          if (key_comp_(GetKey(values_[left]), key)) [[unlikely]] {
-            return npos;
-          } else {
+          } else [[unlikely]] {
             return left;
           }
         }
