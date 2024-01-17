@@ -40,6 +40,10 @@ enum class LimitedOptionsFlag {
   // If true, then do NOT use the optimized `index_of` implementation, and also do not use `index_of` in methods like
   // `find`.
   kNoOptimizeIndexOf,
+
+  // Tf true, then a customized `index_of` implementation will be used beyond loop unrolling. That can be particularly
+  // good for some systems in cases where the vast majority of calls to `contains`, `find` or `index_of` are non hits.
+  kCustomIndexOfBeyondUnroll,
 };
 
 // Type used to control `LimitedSet` and `LimitedMap`.

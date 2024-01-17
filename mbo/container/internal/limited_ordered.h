@@ -75,6 +75,15 @@ class LimitedOrdered {
   static constexpr std::size_t Capacity = Options::kCapacity;
 
   static constexpr bool kOptimizeIndexOf = !Options::Has(LimitedOptionsFlag::kNoOptimizeIndexOf);
+  static constexpr bool kCustomIndexOfBeyondUnroll = Options::Has(LimitedOptionsFlag::kCustomIndexOfBeyondUnroll);
+
+  static constexpr bool kKeyOnly = std::same_as<Key, Value>;  // true = set, false = map (of pairs).
+  static constexpr std::size_t kUnrollMaxCapacity = 24;       // MUST MATCH `index_of`.
+
+  // Must declare each other as friends so that we can correctly move from other.
+  template<typename OK, typename OM, typename OV, auto OtherN, typename Comp>
+  requires(LimitedOrderedValid<OK, OM, OV>)
+  friend class LimitedOrdered;
 
   struct None final {};
 
@@ -96,14 +105,6 @@ class LimitedOrdered {
     Value data;
     None none;
   };
-
-  // Must declare each other as friends so that we can correctly move from other.
-  template<typename OK, typename OM, typename OV, auto OtherN, typename Comp>
-  requires(LimitedOrderedValid<OK, OM, OV>)
-  friend class LimitedOrdered;
-
-  static constexpr bool kKeyOnly = std::same_as<Key, Value>;  // true = set, false = map (of pairs).
-  static constexpr std::size_t kUnrollMaxCapacity = 32;       // MUST MATCH `index_of`.
 
  public:
   using key_type = Key;
@@ -555,7 +556,9 @@ class LimitedOrdered {
   }  // NOLINTEND(*-magic-numbers,*-macro-usage,*-function-size,readability-function-cognitive-complexity)
 
   MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
-  requires(kOptimizeIndexOf && mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
+  requires(
+      kOptimizeIndexOf && kCustomIndexOfBeyondUnroll
+      && mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
   {
     std::size_t left = 0;
     std::size_t right = size_;
@@ -574,7 +577,9 @@ class LimitedOrdered {
   }
 
   MBO_ALWAYS_INLINE std::size_t index_of(const Key& key) const
-  requires(kOptimizeIndexOf && !mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
+  requires(
+      kOptimizeIndexOf && kCustomIndexOfBeyondUnroll
+      && !mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
   {
     if (size_ == 0) {
       return npos;
@@ -603,7 +608,7 @@ class LimitedOrdered {
   }
 
   MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
-  requires(!kOptimizeIndexOf)
+  requires(!kOptimizeIndexOf || (kOptimizeIndexOf && !kCustomIndexOfBeyondUnroll && Capacity > kUnrollMaxCapacity))
   {
     const_iterator it = lower_bound(key);
     return it == end() || key_comp_(key, GetKey(*it)) ? npos : it - begin();
