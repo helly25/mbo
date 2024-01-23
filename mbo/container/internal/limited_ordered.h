@@ -1,4 +1,4 @@
-// Copyright 2023 M. Boerger (helly25.com)
+// Copyright M. Boerger (helly25.com)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "absl/log/absl_log.h"
+#include "mbo/container/internal/limited_ordered_config.h"
 #include "mbo/container/limited_options.h"  // IWYU pragma: export
 #include "mbo/types/compare.h"              // IWYU pragma: export
 #include "mbo/types/traits.h"
@@ -69,6 +70,9 @@ template<typename Key, typename Mapped, typename Value, auto options, typename C
 requires(LimitedOrderedValid<Key, Mapped, Value>)
 class LimitedOrdered {
  protected:
+  static constexpr bool kKeyOnly = std::same_as<Key, Value>;  // true = set, false = map (of pairs).
+
+  // Size and Options management.
   static_assert(IsLimitedOptionsOrSize<decltype(options)>);
   using Options = decltype(MakeLimitedOptions<options>());
   static_assert(std::is_trivially_destructible_v<Value> || !Options::Has(LimitedOptionsFlag::kEmptyDestructor));
@@ -77,8 +81,9 @@ class LimitedOrdered {
   static constexpr bool kOptimizeIndexOf = !Options::Has(LimitedOptionsFlag::kNoOptimizeIndexOf);
   static constexpr bool kCustomIndexOfBeyondUnroll = Options::Has(LimitedOptionsFlag::kCustomIndexOfBeyondUnroll);
 
-  static constexpr bool kKeyOnly = std::same_as<Key, Value>;  // true = set, false = map (of pairs).
-  static constexpr std::size_t kUnrollMaxCapacity = 24;       // MUST MATCH `index_of`.
+  static constexpr std::size_t kUnrollMaxCapacityLimit = 32;                    // The maximum supported in code.
+  static constexpr std::size_t kUnrollMaxCapacity = kUnrollMaxCapacityDefault;  // MUST MATCH `index_of`.
+  static_assert(kUnrollMaxCapacity >= 4 && kUnrollMaxCapacity <= kUnrollMaxCapacityLimit);
 
   // Must declare each other as friends so that we can correctly move from other.
   template<typename OK, typename OM, typename OV, auto OtherN, typename Comp>
@@ -157,13 +162,15 @@ class LimitedOrdered {
        std::same_as<std::remove_cvref_t<R>, Value> ||
        std::same_as<std::remove_cvref_t<R>, Data>)
     )  // clang-format on
-    MBO_ALWAYS_INLINE constexpr bool operator()(const L& lhs, const R& rhs) const noexcept {
+    MBO_FORCE_INLINE constexpr bool operator()(const L& lhs, const R& rhs) const noexcept {
       return key_comp(GetKey(lhs), GetKey(rhs));
     }
 
     const key_compare key_comp;
   };
 
+  // NOTE: The name is misleading but must adhere to the STL: The comparator only
+  // compares the `first` part (the key) of mapped values.
   using value_compare = std::conditional_t<kKeyOnly, Compare, ValueCompare>;
 
   class const_iterator {
@@ -280,7 +287,7 @@ class LimitedOrdered {
 
     MBO_ALWAYS_INLINE constexpr pointer operator->() const noexcept { return &pos_->data; }
 
-    constexpr explicit operator const_iterator() const noexcept { return const_iterator(pos_); }
+    MBO_ALWAYS_INLINE constexpr explicit operator const_iterator() const noexcept { return const_iterator(pos_); }
 
     constexpr iterator& operator++() noexcept {
       ++pos_;
@@ -473,19 +480,19 @@ class LimitedOrdered {
 
   // Find and search: lower_bound, upper_bound, equal_range, find, contains, count
 
-  MBO_ALWAYS_INLINE constexpr iterator lower_bound(const Key& key) {
+  MBO_FORCE_INLINE constexpr iterator lower_bound(const Key& key) {
     return std::lower_bound(begin(), end(), key, val_comp_);
   }
 
-  MBO_ALWAYS_INLINE constexpr const_iterator lower_bound(const Key& key) const {
+  MBO_FORCE_INLINE constexpr const_iterator lower_bound(const Key& key) const {
     return std::lower_bound(begin(), end(), key, val_comp_);
   }
 
-  MBO_ALWAYS_INLINE constexpr iterator upper_bound(const Key& key) {
+  MBO_FORCE_INLINE constexpr iterator upper_bound(const Key& key) {
     return std::upper_bound(begin(), end(), key, val_comp_);
   }
 
-  MBO_ALWAYS_INLINE constexpr const_iterator upper_bound(const Key& key) const {
+  MBO_FORCE_INLINE constexpr const_iterator upper_bound(const Key& key) const {
     return std::upper_bound(begin(), end(), key, val_comp_);
   }
 
@@ -494,6 +501,7 @@ class LimitedOrdered {
   requires(kOptimizeIndexOf && Capacity <= kUnrollMaxCapacity)
   {
 #define MBO_CASE_LIMITED_POS_COMP(POS)                                     \
+  static_assert((POS) + 1 <= kUnrollMaxCapacityLimit);                     \
   case ((POS) + 1):                                                        \
     if constexpr ((POS) >= Capacity) {                                     \
       return npos;                                                         \
@@ -974,7 +982,7 @@ class LimitedOrdered {
     return val.first;
   }
 
-  MBO_FORCE_INLINE static constexpr const Key& GetKey(const Data& data) noexcept {
+  MBO_ALWAYS_INLINE static constexpr const Key& GetKey(const Data& data) noexcept {
     if constexpr (kKeyOnly) {
       return data.data;
     } else {
@@ -1001,6 +1009,10 @@ class LimitedOrdered {
 
 #ifdef MBO_FORCE_INLINE
 # undef MBO_FORCE_INLINE
+#endif
+
+#ifdef MBO_ALWAYS_INLINE
+# undef MBO_ALWAYS_INLINE
 #endif
 
 #endif  // MBO_CONTAINER_INTERNAL_LIMITED_ORDERED_H_

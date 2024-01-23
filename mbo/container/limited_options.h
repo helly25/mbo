@@ -53,9 +53,7 @@ struct LimitedOptions {
 
   static constexpr std::array<LimitedOptionsFlag, sizeof...(Flags)> kFlags{Flags...};
 
-  static constexpr bool Has(LimitedOptionsFlag test_flag) noexcept {
-    return std::any_of(kFlags.begin(), kFlags.end(), [test_flag](auto flag) { return test_flag == flag; });
-  }
+  static constexpr bool Has(LimitedOptionsFlag test_flag) noexcept { return ((test_flag == Flags) || ...); }
 };
 
 namespace container_internal {

@@ -94,7 +94,10 @@ cc_library(
 
 cc_library(
     name = "limited_ordered_cc",
-    hdrs = ["internal/limited_ordered.h"],
+    hdrs = [
+      "internal/limited_ordered_config.h",
+      "internal/limited_ordered.h",
+    ],
     visibility = ["//visibility:private"],
     deps = [
         ":limited_options_cc",
