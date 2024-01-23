@@ -12,7 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@bazel_skylib//rules:common_settings.bzl", "int_flag")
+load(":internal/limited_ordered_config.bzl", "limited_ordered_config_gen")
+
 package(default_visibility = ["//visibility:private"])
+
+# Create custom bazel flag `--//mbo/container:limited_ordered_max_unroll_capacity`.
+int_flag(
+  name = "limited_ordered_max_unroll_capacity",
+  build_setting_default = 16,
+)
+
+limited_ordered_config_gen(
+    name = "limited_ordered_config_gen",
+    visibility = ["//visibility:private"],
+    output = "internal/limited_ordered_config.h",
+    template = "internal/limited_ordered_config.h.in"
+)
 
 cc_library(
     name = "any_scan_cc",

@@ -25,10 +25,17 @@
 #include <utility>
 
 #include "absl/log/absl_log.h"
-#include "mbo/container/internal/limited_ordered_config.h"
 #include "mbo/container/limited_options.h"  // IWYU pragma: export
 #include "mbo/types/compare.h"              // IWYU pragma: export
 #include "mbo/types/traits.h"
+
+// If `mbo/container/internal/limited_ordered_config.h` is available, then include that. In order to
+// make indexers work, we also include the generator "...in" as a fallback.
+#if __has_include("mbo/container/internal/limited_ordered_config.h")
+# include "mbo/container/internal/limited_ordered_config.h"
+#else
+# include "mbo/container/internal/limited_ordered_config.h.in"
+#endif
 
 #ifdef MBO_FORCE_INLINE
 # undef MBO_FORCE_INLINE
