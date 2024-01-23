@@ -90,7 +90,9 @@ class LimitedOrdered {
 
   static constexpr std::size_t kUnrollMaxCapacityLimit = 32;                    // The maximum supported in code.
   static constexpr std::size_t kUnrollMaxCapacity = kUnrollMaxCapacityDefault;  // MUST MATCH `index_of`.
-  static_assert(kUnrollMaxCapacity >= 4 && kUnrollMaxCapacity <= kUnrollMaxCapacityLimit);
+  static_assert(
+      kUnrollMaxCapacity >= 4 && kUnrollMaxCapacity <= kUnrollMaxCapacityLimit,
+      "Check documentation for `mbo::container::container_internal::kUnrollMaxCapacityDefault`.");
 
   // Must declare each other as friends so that we can correctly move from other.
   template<typename OK, typename OM, typename OV, auto OtherN, typename Comp>
