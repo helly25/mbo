@@ -36,6 +36,14 @@ enum class LimitedOptionsFlag {
   // larger sets/maps, as the compiler does not need to execute the `emplace` (which requires sorting and shifting) and
   // can instead just place the elements.
   kRequireSortedInput,
+
+  // If true, then do NOT use the optimized `index_of` implementation, and also do not use `index_of` in methods like
+  // `find`.
+  kNoOptimizeIndexOf,
+
+  // Tf true, then a customized `index_of` implementation will be used beyond loop unrolling. That can be particularly
+  // good for some systems in cases where the vast majority of calls to `contains`, `find` or `index_of` are non hits.
+  kCustomIndexOfBeyondUnroll,
 };
 
 // Type used to control `LimitedSet` and `LimitedMap`.
@@ -45,9 +53,7 @@ struct LimitedOptions {
 
   static constexpr std::array<LimitedOptionsFlag, sizeof...(Flags)> kFlags{Flags...};
 
-  static constexpr bool Has(LimitedOptionsFlag test_flag) noexcept {
-    return std::any_of(kFlags.begin(), kFlags.end(), [test_flag](auto flag) { return test_flag == flag; });
-  }
+  static constexpr bool Has(LimitedOptionsFlag test_flag) noexcept { return ((test_flag == Flags) || ...); }
 };
 
 namespace container_internal {

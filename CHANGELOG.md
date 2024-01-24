@@ -1,3 +1,9 @@
+# 0.2.18
+
+* Changed `LimitedSet` and `LimitedMap`:
+  * Changed to new optimized code for `std::less` and make that the default.
+  * Added custom bazel flag `--//mbo/container:limited_ordered_max_unroll_capacity=N`. This controls the maximum capacity `N` for which `index_of` will be unrolled (defaults to 16, range [4...32], see `mbo::container::container_internal::kUnrollMaxCapacityDefault`.
+
 # 0.2.17
 
 * Added template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.

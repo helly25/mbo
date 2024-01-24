@@ -84,6 +84,13 @@ def mbo_workspace_load_modules():
         sha256 = "ad7fdba11ea011c1d925b3289cf4af2c66a352e18d4c7264392fead75e919363",
     )
 
+    github_archive(
+        name = "com_github_google_benchmark",
+        repo = "https://github.com/google/benchmark",
+        sha256 = "2aab2980d0376137f969d92848fbb68216abb07633034534fc8c65cc4e7a0e93",
+        strip_prefix = "benchmark-1.8.2",
+        tag = "v1.8.2",
+    )
 
     # hedron_compile_commands
     github_archive(

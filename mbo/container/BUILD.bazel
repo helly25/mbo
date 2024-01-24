@@ -12,7 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-package(default_visibility = ["//visibility:private"])
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@bazel_skylib//rules:common_settings.bzl", "int_flag")
+load(":internal/limited_ordered_config.bzl", "limited_ordered_config_gen")
+
+# Create custom bazel flag `--//mbo/container:limited_ordered_max_unroll_capacity`.
+int_flag(
+    name = "limited_ordered_max_unroll_capacity",
+    build_setting_default = 16,
+    visibility = ["//visibility:private"],
+)
+
+bzl_library(
+    name = "limited_ordered_config_bzl",
+    srcs = [":internal/limited_ordered_config.bzl"],
+    visibility = ["//visibility:private"],
+    deps = ["@bazel_skylib//rules:common_settings"],
+)
+
+limited_ordered_config_gen(
+    name = "limited_ordered_config_gen",
+    visibility = ["//visibility:private"],
+    output = "internal/limited_ordered_config.h",
+    template = "internal/limited_ordered_config.h.in"
+)
 
 cc_library(
     name = "any_scan_cc",
@@ -94,7 +117,10 @@ cc_library(
 
 cc_library(
     name = "limited_ordered_cc",
-    hdrs = ["internal/limited_ordered.h"],
+    hdrs = [
+      "internal/limited_ordered_config.h",
+      "internal/limited_ordered.h",
+    ],
     visibility = ["//visibility:private"],
     deps = [
         ":limited_options_cc",
@@ -139,6 +165,21 @@ cc_test(
         "@com_google_absl//absl/log:initialize",
         "@com_google_googletest//:gtest_main",
     ],
+)
+
+cc_binary(
+    name = "limited_set_benchmark",
+    visibility = ["//visibility:private"],
+    srcs = ["limited_set_benchmark.cc"],
+    deps = [
+        ":limited_set_cc",
+        ":limited_vector_cc",
+        "//mbo/testing:matchers_cc",
+        "@com_github_google_benchmark//:benchmark",
+        "@com_google_absl//absl/log:initialize",
+        "@com_google_absl//absl/strings",
+    ],
+    tags = ["manual"],
 )
 
 cc_library(

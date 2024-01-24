@@ -60,7 +60,7 @@ namespace mbo::container {
 //
 // Internally a C-array is used and elements are moved as needed. That means
 // that element addresses are not stable.
-template<typename Key, typename Value, auto CapacityOrOptions, typename KeyComp = mbo::types::CompareLess<Key>>
+template<typename Key, typename Value, auto CapacityOrOptions, typename KeyComp = std::less<Key>>
 requires(std::move_constructible<Value>)
 class LimitedMap final
     : public container_internal::LimitedOrdered<Key, Value, std::pair<const Key, Value>, CapacityOrOptions, KeyComp> {
