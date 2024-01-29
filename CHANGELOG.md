@@ -1,3 +1,9 @@
+# 0.2.19
+
+* Change `RefWrap`:
+  * Add constexpr support.
+  * Make constructor implicit.
+
 # 0.2.18
 
 * Changed `LimitedSet` and `LimitedMap`:

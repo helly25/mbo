@@ -36,37 +36,39 @@ namespace mbo::types {
 template<typename T>
 class RefWrap final {
  public:
-  ~RefWrap() noexcept = default;
+  using type = T;
 
-  RefWrap() = delete;
+  constexpr ~RefWrap() noexcept = default;
 
-  explicit RefWrap(T& ref) noexcept : ptr_(&ref) {}
+  constexpr RefWrap() = delete;
 
-  RefWrap(const RefWrap&) noexcept = default;
-  RefWrap& operator=(const RefWrap&) noexcept = default;
-  RefWrap(RefWrap&&) noexcept = default;
-  RefWrap& operator=(RefWrap&&) noexcept = default;
+  constexpr /* implicit */ RefWrap(T& ref) noexcept : ptr_(&ref) {}  // NOLINT(google-explicit-*,hicpp-explicit-*)
 
-  RefWrap& operator=(T& ref) noexcept {
+  constexpr RefWrap(const RefWrap&) noexcept = default;
+  constexpr RefWrap& operator=(const RefWrap&) noexcept = default;
+  constexpr RefWrap(RefWrap&&) noexcept = default;
+  constexpr RefWrap& operator=(RefWrap&&) noexcept = default;
+
+  constexpr RefWrap& operator=(T& ref) noexcept {
     ptr_ = &ref;
     return *this;
   }
 
-  T* get() noexcept __attribute__((returns_nonnull)) { return ptr_; }  // NOLINT(*-identifier-naming)
+  constexpr T& get() noexcept { return *ptr_; }  // NOLINT(*-identifier-naming)
 
-  const T* get() const noexcept __attribute__((returns_nonnull)) { return ptr_; }  // NOLINT(*-identifier-naming)
+  constexpr const T& get() const noexcept { return *ptr_; }  // NOLINT(*-identifier-naming)
 
-  T* operator->() noexcept __attribute__((returns_nonnull)) { return ptr_; }
+  constexpr T* operator->() noexcept __attribute__((returns_nonnull)) { return ptr_; }
 
-  const T* operator->() const noexcept __attribute__((returns_nonnull)) { return ptr_; }
+  constexpr const T* operator->() const noexcept __attribute__((returns_nonnull)) { return ptr_; }
 
-  T& operator*() noexcept { return *ptr_; }
+  constexpr T& operator*() noexcept { return *ptr_; }
 
-  const T& operator*() const noexcept { return *ptr_; }
+  constexpr const T& operator*() const noexcept { return *ptr_; }
 
-  operator T&() noexcept { return *ptr_; }  // NOLINT(*-explicit-*)
+  constexpr operator T&() noexcept { return *ptr_; }  // NOLINT(*-explicit-*)
 
-  operator const T &() const noexcept { return *ptr_; }  // NOLINT(*-explicit-*)
+  constexpr operator const T &() const noexcept { return *ptr_; }  // NOLINT(*-explicit-*)
 
   RefWrap& operator++() = delete;
   RefWrap& operator--() = delete;
@@ -76,23 +78,21 @@ class RefWrap final {
   RefWrap& operator-=(std::ptrdiff_t) = delete;
   void operator[](std::ptrdiff_t) const = delete;
 
-  auto operator<=>(const RefWrap& other) const noexcept {
+  template<std::three_way_comparable_with<T> U>
+  constexpr auto operator<=>(const RefWrap<U>& other) const noexcept {
     if (ptr_ == other.ptr_) {
       return decltype(*ptr_ <=> other)::equivalent;
     }
     return *ptr_ <=> *other.ptr_;
   }
 
-  template<typename U>
-  requires(std::three_way_comparable_with<T, U>)
-  auto operator<=>(const U& other) const noexcept {
+  template<std::three_way_comparable_with<T> U>
+  constexpr auto operator<=>(const U& other) const noexcept {
     if (ptr_ == &other) {
       return decltype(*ptr_ <=> other)::equivalent;
     }
     return *ptr_ <=> other;
   }
-
-  friend auto operator<=>(const RefWrap& lhs, const RefWrap& rhs) noexcept = default;
 
  private:
   T* ptr_;
