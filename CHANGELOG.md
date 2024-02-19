@@ -1,3 +1,7 @@
+# 0.2.19
+
+* Changed `Extender` print and stream ability to output pointers to containers.
+
 # 0.2.18
 
 * Changed `LimitedSet` and `LimitedMap`:

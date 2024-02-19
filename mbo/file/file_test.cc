@@ -26,6 +26,7 @@ namespace {
 
 namespace fs = ::std::filesystem;
 
+using ::mbo::testing::IsOk;
 using ::mbo::testing::IsOkAndHolds;
 using ::mbo::testing::StatusIs;
 using ::testing::HasSubstr;
@@ -49,6 +50,12 @@ struct FileTest : public ::testing::Test {
 TEST_F(FileTest, SetContents) {
   const fs::path tmp_file = JoinPaths(tmp_dir, "foo.txt");
   EXPECT_OK(SetContents(tmp_file.string(), "foo"));
+}
+
+TEST_F(FileTest, SetGetContentsWithZero) {
+  const fs::path tmp_file = JoinPaths(tmp_dir, "foo.txt");
+  EXPECT_THAT(SetContents(tmp_file.string(), "foo\0bar"), IsOk());
+  EXPECT_THAT(GetContents(tmp_file.string()), IsOkAndHolds("foo\0bar"));
 }
 
 TEST_F(FileTest, Readable) {

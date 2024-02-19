@@ -23,10 +23,10 @@
 #include "absl/hash/hash_testing.h"
 #include "absl/log/absl_log.h"  // IWYU pragma: keep
 #include "absl/strings/str_format.h"
-#include "mbo/types/internal/extend.h"
-#include "mbo/types/traits.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/types/internal/extend.h"
+#include "mbo/types/traits.h"
 
 namespace mbo::types {
 namespace {
@@ -81,7 +81,7 @@ struct Extend4 : public Extend<Extend4> {
   int a = 0;
   int b = 0;
   std::string c;
-  const int *ptr = nullptr;
+  const int* ptr = nullptr;
 };
 
 struct SimpleName {
@@ -109,16 +109,16 @@ class ExtendTest : public ::testing::Test {};
 #if !defined(__clang__)
 TEST_F(ExtendTest, TestDecomposeInfo) {
   using ::mbo::types::types_internal::DecomposeInfo;
-#define DEBUG_AND_TEST(Type, kExpected)                                        \
-  ABSL_LOG(INFO) << #Type << ": " << DecomposeInfo<Type>::Debug();             \
-  EXPECT_THAT(DecomposeInfo<Type>::kDecomposeCount, kExpected)
+# define DEBUG_AND_TEST(Type, kExpected)                            \
+   ABSL_LOG(INFO) << #Type << ": " << DecomposeInfo<Type>::Debug(); \
+   EXPECT_THAT(DecomposeInfo<Type>::kDecomposeCount, kExpected)
 
   DEBUG_AND_TEST(Extend4, 4);
   DEBUG_AND_TEST(SimpleName, 2);
   DEBUG_AND_TEST(SimplePerson, 2);
   DEBUG_AND_TEST(Name, 2);
   DEBUG_AND_TEST(Person, 2);
-#undef DEBUG_AND_TEST
+# undef DEBUG_AND_TEST
 }
 #endif
 
@@ -138,36 +138,32 @@ TEST_F(ExtendTest, Print) {
   {
     const Extend2 ext2{.a = 25, .b = 42};
     ASSERT_THAT(DecomposeCountV<decltype(ext2)>, 2);
-    EXPECT_THAT(ext2.ToString(),
-                Conditional(kStructNameSupport, "{.a: 25, .b: 42}", "{25, 42}"));
+    EXPECT_THAT(ext2.ToString(), Conditional(kStructNameSupport, "{.a: 25, .b: 42}", "{25, 42}"));
   }
 
   {
     const Extend4 ext4{.a = 25, .b = 42, .c = "Hello There!"};
     ASSERT_THAT(DecomposeCountV<decltype(ext4)>, 4);
     EXPECT_THAT(
-        ext4.ToString(),
-        Conditional(kStructNameSupport,
-                    R"({.a: 25, .b: 42, .c: "Hello There!", .ptr: <nullptr>})",
-                    R"({25, 42, "Hello There!", <nullptr>})"));
+        ext4.ToString(), Conditional(
+                             kStructNameSupport, R"({.a: 25, .b: 42, .c: "Hello There!", .ptr: <nullptr>})",
+                             R"({25, 42, "Hello There!", <nullptr>})"));
   }
   {
     constexpr int kVal = 1'337;
     const Extend4 ext4{.a = 25, .b = 42, .c = "Hello There!", .ptr = &kVal};
     ASSERT_THAT(DecomposeCountV<decltype(ext4)>, 4);
     EXPECT_THAT(
-        ext4.ToString(),
-        Conditional(kStructNameSupport,
-                    R"({.a: 25, .b: 42, .c: "Hello There!", .ptr: *{1337}})",
-                    R"({25, 42, "Hello There!", *{1337}})"));
+        ext4.ToString(), Conditional(
+                             kStructNameSupport, R"({.a: 25, .b: 42, .c: "Hello There!", .ptr: *{1337}})",
+                             R"({25, 42, "Hello There!", *{1337}})"));
   }
 }
 
 TEST_F(ExtendTest, NestedPrint) {
   const Person person{.name = {.first = "First", .last = "Last"}, .age = 42};
   static constexpr std::string_view kExpected =
-      kStructNameSupport ? R"({.name: {.first: "First", .last: "Last"}, .age: 42})"
-                         : R"({{"First", "Last"}, 42})";
+      kStructNameSupport ? R"({.name: {.first: "First", .last: "Last"}, .age: 42})" : R"({{"First", "Last"}, 42})";
   EXPECT_THAT(person.ToString(), kExpected);
   EXPECT_THAT(absl::StrFormat("%v", person), kExpected);
 }
@@ -176,9 +172,102 @@ TEST_F(ExtendTest, Streamable) {
   const Extend4 ext4{.a = 25, .b = 42};
   std::ostringstream ss4;
   ss4 << ext4;
-  EXPECT_THAT(ss4.str(), Conditional(kStructNameSupport,
-                                     R"({.a: 25, .b: 42, .c: "", .ptr: <nullptr>})",
-                                     R"({25, 42, "", <nullptr>})"));
+  EXPECT_THAT(
+      ss4.str(),
+      Conditional(kStructNameSupport, R"({.a: 25, .b: 42, .c: "", .ptr: <nullptr>})", R"({25, 42, "", <nullptr>})"));
+}
+
+namespace debug {
+
+int DumpStructVisitor(
+    std::size_t field_index,
+    std::string_view format,
+    std::string_view indent = {},
+    std::string_view type = {},
+    std::string_view name = {},
+    ...) {
+  std::cout << "Format: '" << format << "'";
+  std::cout << ", Indent: '" << indent << "'";
+  std::cout << ", Type: '" << type << "'";
+  std::cout << ", Name: '" << name << "'";
+  std::cout << std::endl;
+  return 0;
+}
+
+int PrintStructVisitor(
+    std::size_t field_index,
+    std::vector<std::tuple<std::string, std::string, std::string>>& fields,
+    std::string_view format,
+    std::string_view indent = {},
+    std::string_view type = {},
+    std::string_view name = {},
+    ...) {
+  char buffer[1'024];
+  int l = 0;
+  if (!format.starts_with('%')) {
+    l = snprintf(buffer, 1'023, "%s", format.data());
+  } else if (format == "%s" || format == "%s}\n") {
+    l = snprintf(buffer, 1'023, format.data(), indent.data());
+  } else if (format == "%s%s") {
+    l = snprintf(buffer, 1'023, format.data(), indent.data(), type.data());
+  } else if (format == "%s%s %s =") {
+    l = snprintf(buffer, 1'023, "%s%s %s =", indent.data(), type.data(), name.data());
+  } else if (format.starts_with("%s%s %s =")) {
+    l = snprintf(buffer, 1'023, "%s%s %s =\n", indent.data(), type.data(), name.data());
+  }
+  if (format.starts_with("%s%s %s =") && indent == "  ") {
+    fields.emplace_back(format, indent, name);
+  }
+  buffer[l] = 0;
+  std::cout << buffer;
+  return 0;
+}
+
+template<typename T>
+void Print(const T* ptr) {
+  std::size_t field_index = 0;
+  std::vector<std::tuple<std::string, std::string, std::string>> fields;
+  __builtin_dump_struct(ptr, &PrintStructVisitor, field_index, fields);
+  std::cout << std::endl;
+  for (const auto& [format, indent, name] : fields) {
+    std::cout << format << " -> " << name << std::endl;
+  }
+  field_index = 0;
+  __builtin_dump_struct(ptr, &DumpStructVisitor, field_index);
+}
+}  // namespace debug
+
+struct PersonData : Extend<PersonData> {
+  int index;
+  Person person;
+  const std::set<std::string>* data = nullptr;
+};
+
+TEST_F(ExtendTest, StreamableComplexFields) {
+  const std::set<std::string> data{"foo", "bar"};
+  PersonData person{
+      .index = 25,
+      .person =
+          {
+              .name =
+                  {
+                      .first = "Hugo",
+                      .last = "Meyer",
+                  },
+              .age = 42,
+          },
+      .data = &data,
+  };
+  std::ostringstream out;
+  out << person;
+  // NOTE: For Clang the top struct's field names are not present because the generated type names are far too long.
+  EXPECT_THAT(
+      out.str(),
+      Conditional(
+          kStructNameSupport, R"({25, {.name: {.first: "Hugo", .last: "Meyer"}, .age: 42}, *{{"bar", "foo"}}})",
+          R"({25, {{"Hugo", "Meyer"}, 42}, *{{"bar", "foo"}}})"));
+  // debug::Print(&person);
+  // debug::Print(&person.person.name);
 }
 
 TEST_F(ExtendTest, Comparable) {
@@ -198,7 +287,7 @@ TEST_F(ExtendTest, Comparable) {
     EXPECT_THAT(kTest1 <= kTest1, true);
     EXPECT_THAT(kTest1 > kTest1, false);
     EXPECT_THAT(kTest1 >= kTest1, true);
-    EXPECT_THAT(kTest1, kTest1); // sortcut for Eq, see below
+    EXPECT_THAT(kTest1, kTest1);  // sortcut for Eq, see below
     EXPECT_THAT(kTest1, Eq(kTest1));
     EXPECT_THAT(kTest1, Not(Lt(kTest1)));
     EXPECT_THAT(kTest1, Le(kTest1));
@@ -240,7 +329,7 @@ TEST_F(ExtendTest, Comparable) {
     EXPECT_THAT(kTest1 <= kTest4, true);
     EXPECT_THAT(kTest1 > kTest4, false);
     EXPECT_THAT(kTest1 >= kTest4, true);
-    EXPECT_THAT(kTest1, kTest4); // sortcut for Eq, see below
+    EXPECT_THAT(kTest1, kTest4);  // sortcut for Eq, see below
     EXPECT_THAT(kTest1, Eq(kTest4));
     EXPECT_THAT(kTest1, Not(Lt(kTest4)));
     EXPECT_THAT(kTest1, Le(kTest4));
@@ -281,8 +370,8 @@ struct PlainName {
   std::string first;
   std::string last;
 
-  template <typename H>
-  friend H AbslHashValue(H hash, const PlainName &obj) noexcept {
+  template<typename H>
+  friend H AbslHashValue(H hash, const PlainName& obj) noexcept {
     return H::combine(std::move(hash), obj.first, obj.last);
   }
 };
@@ -291,16 +380,15 @@ struct PlainPerson {
   PlainName name;
   std::size_t age = 0;
 
-  template <typename H>
-  friend H AbslHashValue(H hash, const PlainPerson &obj) noexcept {
+  template<typename H>
+  friend H AbslHashValue(H hash, const PlainPerson& obj) noexcept {
     return H::combine(std::move(hash), obj.name, obj.age);
   }
 };
 
 TEST_F(ExtendTest, Hashable) {
   const Person person{.name = {.first = "First", .last = "Last"}, .age = 42};
-  const PlainPerson plain_person{.name = {.first = "First", .last = "Last"},
-                                 .age = 42};
+  const PlainPerson plain_person{.name = {.first = "First", .last = "Last"}, .age = 42};
 
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({person, Person{}}));
 
@@ -309,12 +397,8 @@ TEST_F(ExtendTest, Hashable) {
   ASSERT_THAT((extender_internal::IsExtended<PlainName>), false);
   ASSERT_THAT((extender_internal::IsExtended<PlainPerson>), false);
   ASSERT_THAT(Person::RegisteredExtenderNames(), Contains("AbslHashable"));
-  ASSERT_THAT(Person::RegisteredExtenderNames().size(),
-              std::tuple_size_v<Person::RegisteredExtenders>);
-  ASSERT_THAT(
-      (extender_internal::HasExtender<Person,
-                                      mbo::types::extender::AbslHashable>),
-      true);
+  ASSERT_THAT(Person::RegisteredExtenderNames().size(), std::tuple_size_v<Person::RegisteredExtenders>);
+  ASSERT_THAT((extender_internal::HasExtender<Person, mbo::types::extender::AbslHashable>), true);
 
   EXPECT_THAT(absl::HashOf(person), Ne(0));
   EXPECT_THAT(absl::HashOf(person), absl::HashOf(plain_person));
@@ -326,10 +410,7 @@ TEST_F(ExtendTest, Hashable) {
   };
 
   ASSERT_THAT((extender_internal::IsExtended<NameNoDefault>), true);
-  ASSERT_THAT(
-      (extender_internal::HasExtender<NameNoDefault,
-                                      mbo::types::extender::AbslHashable>),
-      false);
+  ASSERT_THAT((extender_internal::HasExtender<NameNoDefault, mbo::types::extender::AbslHashable>), false);
 }
 
 TEST_F(ExtendTest, ExtenderNames) {
@@ -339,35 +420,28 @@ TEST_F(ExtendTest, ExtenderNames) {
 
   struct T2 : ExtendNoDefault<T2, AbslStringify, Streamable> {};
 
-  struct T3a
-      : ExtendNoDefault<T3a, AbslStringify, Comparable, Printable, Streamable> {};
+  struct T3a : ExtendNoDefault<T3a, AbslStringify, Comparable, Printable, Streamable> {};
 
-  struct T3b
-      : ExtendNoDefault<T3b, AbslStringify, Streamable, Printable, Comparable> {};
+  struct T3b : ExtendNoDefault<T3b, AbslStringify, Streamable, Printable, Comparable> {};
 
   struct T4 : Extend<T4> {};
 
-  EXPECT_THAT( // No defaults, no extras.
+  EXPECT_THAT(  // No defaults, no extras.
       T0::RegisteredExtenderNames(), IsEmpty());
-  EXPECT_THAT( // No default, only the specified extra.
-      T1::RegisteredExtenderNames(),
-      WhenSorted(ElementsAre("AbslStringify", "Printable")));
-  EXPECT_THAT( // No defaults, two extra.
-      T2::RegisteredExtenderNames(),
-      WhenSorted(ElementsAre("AbslStringify", "Streamable")));
-  EXPECT_THAT( // All defaults, no extra.
+  EXPECT_THAT(  // No default, only the specified extra.
+      T1::RegisteredExtenderNames(), WhenSorted(ElementsAre("AbslStringify", "Printable")));
+  EXPECT_THAT(  // No defaults, two extra.
+      T2::RegisteredExtenderNames(), WhenSorted(ElementsAre("AbslStringify", "Streamable")));
+  EXPECT_THAT(  // All defaults, no extra.
       T3a::RegisteredExtenderNames(),
-      WhenSorted(
-          ElementsAre("AbslStringify", "Comparable", "Printable", "Streamable")));
-  EXPECT_THAT( // All defaults, no extra.
+      WhenSorted(ElementsAre("AbslStringify", "Comparable", "Printable", "Streamable")));
+  EXPECT_THAT(  // All defaults, no extra.
       T3b::RegisteredExtenderNames(),
-      WhenSorted(
-          ElementsAre("AbslStringify", "Comparable", "Printable", "Streamable")));
-  EXPECT_THAT( // All defaults, and as extra.
+      WhenSorted(ElementsAre("AbslStringify", "Comparable", "Printable", "Streamable")));
+  EXPECT_THAT(  // All defaults, and as extra.
       T4::RegisteredExtenderNames(),
-      WhenSorted(ElementsAre("AbslHashable", "AbslStringify", "Comparable",
-                             "Printable", "Streamable")));
+      WhenSorted(ElementsAre("AbslHashable", "AbslStringify", "Comparable", "Printable", "Streamable")));
 }
 
-} // namespace
-} // namespace mbo::types
+}  // namespace
+}  // namespace mbo::types
