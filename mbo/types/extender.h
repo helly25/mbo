@@ -60,6 +60,7 @@
 #include "absl/strings/str_format.h"
 #include "mbo/types/internal/extender.h"      // IWYU pragma: export
 #include "mbo/types/internal/struct_names.h"  // IWYU pragma: keep
+#include "mbo/types/traits.h"
 #include "mbo/types/tstring.h"
 
 namespace mbo::types::extender {
@@ -160,28 +161,48 @@ struct AbslStringifyImpl : ExtenderBase {
         v);
   }
 
+  template<typename C>
+  requires(ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
+  static void OStreamValue(std::ostream& os, const C& vs) {
+    os << "{";
+    std::string_view sep;
+    for (const auto& v : vs) {
+      os << sep;
+      sep = ", ";
+      OStreamValue(os, v);
+    }
+    os << "}";
+  }
+
+  template<typename V>
+  static void OStreamValue(std::ostream& os, const V& v) {
+    if constexpr (std::is_same_v<V, std::nullptr_t>) {
+      os << absl::StreamFormat("nullptr_t");
+    } else if constexpr (std::is_pointer_v<V>) {
+      if (v) {
+        os << "*{";
+        OStreamValue(os, *v);
+        os << "}";
+      } else {
+        os << absl::StreamFormat("<nullptr>");
+      }
+    } else if constexpr (std::is_convertible_v<V, std::string_view>) {
+      os << absl::StreamFormat("\"%s\"", v);
+    } else {
+      os << absl::StreamFormat("%v", v);
+    }
+  }
+
   template<typename V>
   static void OStreamField(std::ostream& os, std::size_t idx, const V& v) {
     static constexpr auto kNames = types_internal::GetFieldNames<Type>();
     if (idx) {
       os << ", ";
     }
-    if (idx < kNames.length()) {
+    if (idx < kNames.length() && !kNames[idx].empty()) {
       os << "." << kNames[idx] << ": ";
     }
-    if constexpr (std::is_same_v<V, std::nullptr_t>) {
-      os << absl::StreamFormat("nullptr_t");
-    } else if constexpr (std::is_pointer_v<V>) {
-      if (v) {
-        os << absl::StreamFormat("*{%v}", *v);
-      } else {
-        os << absl::StreamFormat("<nullptr>");
-      }
-    } else if constexpr (std::is_convertible_v<V, std::string_view>) {
-      os << absl::StreamFormat("\"%v\"", v);
-    } else {
-      os << absl::StreamFormat("%v", v);
-    }
+    OStreamValue(os, v);
   }
 };
 

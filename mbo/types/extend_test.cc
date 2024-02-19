@@ -29,7 +29,7 @@
 #include "gtest/gtest.h"
 
 namespace mbo::types {
-namespace {
+//namespace {
 
 using ::mbo::types::extender::AbslStringify;
 using ::mbo::types::extender::Comparable;
@@ -179,6 +179,95 @@ TEST_F(ExtendTest, Streamable) {
   EXPECT_THAT(ss4.str(), Conditional(kStructNameSupport,
                                      R"({.a: 25, .b: 42, .c: "", .ptr: <nullptr>})",
                                      R"({25, 42, "", <nullptr>})"));
+}
+
+namespace debug {
+
+int DumpStructVisitor(
+    std::size_t field_index,
+    std::string_view format,
+    std::string_view indent = {},
+    std::string_view type = {},
+    std::string_view name = {},
+    ...) {
+    std::cout << "Format: '" << format << "'";
+    std::cout << ", Indent: '" << indent << "'";
+    std::cout << ", Type: '" << type << "'";
+    std::cout << ", Name: '" << name << "'";
+    std::cout << std::endl;
+    return 0;
+}
+
+int PrintStructVisitor(
+    std::size_t field_index,
+    std::vector<std::tuple<std::string, std::string, std::string>>& fields,
+    std::string_view format,
+    std::string_view indent = {},
+    std::string_view type = {},
+    std::string_view name = {},
+    ...) {
+    char buffer[1024];
+    int l = 0;
+    if (!format.starts_with('%')) {
+      l = snprintf(buffer, 1023, "%s", format.data());
+    } else if (format == "%s" || format == "%s}\n") {
+      l = snprintf(buffer, 1023, format.data(), indent.data());
+    } else if (format == "%s%s") {
+      l = snprintf(buffer, 1023, format.data(), indent.data(), type.data());
+    } else if (format == "%s%s %s =") {
+      l = snprintf(buffer, 1023, "%s%s %s =", indent.data(), type.data(), name.data());
+    } else if (format.starts_with("%s%s %s =")) {
+      l = snprintf(buffer, 1023, "%s%s %s =\n", indent.data(), type.data(), name.data());
+    }
+    if (format.starts_with("%s%s %s =") && indent == "  ") {
+      fields.emplace_back(format, indent, name);
+    }
+    buffer[l] = 0;
+    std::cout << buffer;
+    return 0;
+}
+
+template<typename T>
+void Print(const T* ptr) {
+  std::size_t field_index = 0;
+  std::vector<std::tuple<std::string, std::string, std::string>> fields;
+  __builtin_dump_struct(ptr, &PrintStructVisitor, field_index, fields);
+  std::cout << std::endl;
+  for (const auto& [format, indent, name] : fields) {
+    std::cout << format << " -> " << name << std::endl;
+  }
+  field_index = 0;
+  __builtin_dump_struct(ptr, &DumpStructVisitor, field_index);
+}
+}  // namespace debug
+
+struct PersonData : Extend<PersonData> {
+  int index;
+  Person person;
+  const std::set<std::string>* data = nullptr;
+};
+
+TEST_F(ExtendTest, StreamableComplexFields) {
+  const std::set<std::string> data{"foo", "bar"};
+  PersonData person{
+    .index = 25,
+    .person = {
+      .name = {
+        .first = "Hugo",
+        .last = "Meyer",
+      },
+      .age = 42,
+    },
+    .data = &data,
+  };
+  std::ostringstream out;
+  out << person;
+  // NOTE: For Clang the top struct's field names are not present because the generated type names are far too long.
+  EXPECT_THAT(out.str(), Conditional(kStructNameSupport,
+                                     R"({25, {.name: {.first: "Hugo", .last: "Meyer"}, .age: 42}, *{{"bar", "foo"}}})",
+                                     R"({25, {"Hugo", "Meyer"}, 42}, {"foo", "bar"}})"));
+  //debug::Print(&person);
+  //debug::Print(&person.person.name);
 }
 
 TEST_F(ExtendTest, Comparable) {
@@ -369,5 +458,5 @@ TEST_F(ExtendTest, ExtenderNames) {
                              "Printable", "Streamable")));
 }
 
-} // namespace
+//} // namespace
 } // namespace mbo::types

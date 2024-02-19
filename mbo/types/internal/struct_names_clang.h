@@ -75,9 +75,8 @@ class StructMeta {
       std::string_view /*type*/ = {},
       std::string_view name = {},
       ...) {
-    if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent.length() == 2
-        && indent.starts_with("  ")) {
-      fields[field_index++] = std::string_view(name);
+    if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent == "  ") {
+      fields[field_index++] = name;
     }
     return 0;
   }
