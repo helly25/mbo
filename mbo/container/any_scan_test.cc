@@ -46,8 +46,11 @@ namespace mbo::container {
 namespace {
 
 using ::testing::ElementsAre;
+using ::testing::IsEmpty;
+using ::testing::Not;
 using ::testing::Pair;
 using ::testing::Pointee;
+using ::testing::SizeIs;
 using ::testing::WhenSorted;
 
 static_assert(std::input_iterator<AnyScan<int, std::ptrdiff_t>::iterator>);
@@ -60,21 +63,34 @@ static_assert(!std::forward_iterator<AnyScan<int, std::ptrdiff_t>::const_iterato
 static_assert(!mbo::types::ContainerIsForwardIteratable<AnyScan<int, std::ptrdiff_t>>);
 
 struct AnyScanTest : public ::testing::Test {};
+
 struct ConstScanTest : public AnyScanTest {};
 
 template<typename T>
 std::vector<std::remove_const_t<T>> Tester(const AnyScan<T>& scan) {
-  return {scan.begin(), scan.end()};
+  std::vector<std::remove_const_t<T>> result{scan.begin(), scan.end()};
+  EXPECT_THAT(scan.size(), result.size());
+  EXPECT_THAT(scan.empty(), result.empty());
+  return result;
 }
 
 template<typename T>
 std::vector<std::remove_const_t<T>> ConstTester(const ConstScan<T>& scan) {
-  return {scan.begin(), scan.end()};
+  std::vector<std::remove_const_t<T>> result{scan.begin(), scan.end()};
+  EXPECT_THAT(scan.size(), result.size());
+  EXPECT_THAT(scan.empty(), result.empty());
+  return result;
 }
 
 TEST_F(AnyScanTest, TestInitializerList) {
+  std::initializer_list<int> empty{};
+  EXPECT_THAT(Tester<const int>(MakeAnyScan(empty)), ElementsAre());
+  EXPECT_THAT(Tester<const int>(MakeAnyScan(empty)), IsEmpty());
+  EXPECT_THAT(Tester<const int>(MakeAnyScan(empty)), SizeIs(0));
   std::initializer_list<int> data{1, 2, 3};
   EXPECT_THAT(Tester<const int>(MakeAnyScan(data)), ElementsAre(1, 2, 3));
+  EXPECT_THAT(Tester<const int>(MakeAnyScan(data)), Not(IsEmpty()));
+  EXPECT_THAT(Tester<const int>(MakeAnyScan(data)), SizeIs(3));
 }
 
 TEST_F(ConstScanTest, TestInitializerList) {
@@ -107,7 +123,8 @@ TEST_F(ConstScanTest, CallFunction) {
   EXPECT_THAT(ConstTester<Values>(MakeConstScan(std::vector<Values>{1, 2, 3})), ElementsAre(1, 2, 3));
   // const key'd
   EXPECT_THAT(ConstTester<Values>(MakeConstScan(std::set<Values>{1, 2, 3})), ElementsAre(1, 2, 3));
-  EXPECT_THAT(ConstTester<Values>(MakeConstScan(std::unordered_set<Values>{1, 2, 3})), WhenSorted(ElementsAre(1, 2, 3)));
+  EXPECT_THAT(
+      ConstTester<Values>(MakeConstScan(std::unordered_set<Values>{1, 2, 3})), WhenSorted(ElementsAre(1, 2, 3)));
 }
 
 TEST_F(AnyScanTest, CallFunctionString) {
@@ -237,7 +254,8 @@ TEST_F(AnyScanTest, MoveOnly) {
 struct ConvertingScanTest : public AnyScanTest {};
 
 template<typename T>
-std::vector<std::remove_cvref_t<T>> ConvTester(const ConvertingScan<T>& scan) {  // NOLINT(portability-std-allocator-const
+std::vector<std::remove_cvref_t<T>> ConvTester(
+    const ConvertingScan<T>& scan) {  // NOLINT(portability-std-allocator-const
   return {scan.begin(), scan.end()};
 }
 
@@ -271,6 +289,8 @@ TEST_F(ConvertingScanTest, CallFunctionWithConversion) {
 TEST_F(ConvertingScanTest, InitializerList) {
   EXPECT_THAT(ConvTester<std::string_view>({"foo", "bar"}), ElementsAre("foo", "bar"));
   EXPECT_THAT(ConvTester<std::string>({"foo", "bar"}), ElementsAre("foo", "bar"));
+  EXPECT_THAT(ConvTester<std::string>({"foo", "bar"}), SizeIs(2));
+  EXPECT_THAT(ConvTester<std::string>({"foo", "bar"}), Not(IsEmpty()));
 }
 
 TEST_F(ConvertingScanTest, StringPairs) {
@@ -305,33 +325,33 @@ TEST_F(ConvertingScanTest, StringPairs) {
   {
     EXPECT_THAT(  // pair of string_view
         (ConvTester<std::pair<std::string_view, std::string_view>>(
-          MakeConvertingScan(std::map<std::string_view, std::string_view>{{"foo", "25"}, {"bar", "42"}}))),
+            MakeConvertingScan(std::map<std::string_view, std::string_view>{{"foo", "25"}, {"bar", "42"}}))),
         ElementsAre(Pair("bar", "42"), Pair("foo", "25")));
     EXPECT_THAT(  // Same with pair of strings
         (ConvTester<std::pair<std::string, std::string>>(
-          MakeConvertingScan(std::map<std::string, std::string>{{"foo", "25"}, {"bar", "42"}}))),
+            MakeConvertingScan(std::map<std::string, std::string>{{"foo", "25"}, {"bar", "42"}}))),
         ElementsAre(Pair("bar", "42"), Pair("foo", "25")));
   }
   // map - non-const pair of const & non-const value
   {
     EXPECT_THAT(  // pair of string_view
         (ConvTester<std::pair<const std::string_view, std::string_view>>(
-          MakeConvertingScan(std::map<std::string_view, std::string_view>{{"foo", "25"}, {"bar", "42"}}))),
+            MakeConvertingScan(std::map<std::string_view, std::string_view>{{"foo", "25"}, {"bar", "42"}}))),
         ElementsAre(Pair("bar", "42"), Pair("foo", "25")));
     EXPECT_THAT(  // Same with pair of strings
         (ConvTester<std::pair<const std::string, std::string>>(
-          MakeConvertingScan(std::map<std::string, std::string>{{"foo", "25"}, {"bar", "42"}}))),
+            MakeConvertingScan(std::map<std::string, std::string>{{"foo", "25"}, {"bar", "42"}}))),
         ElementsAre(Pair("bar", "42"), Pair("foo", "25")));
   }
   // map - const pair of const & non-const value
   {
     EXPECT_THAT(  // pair of string_view
         (ConvTester<const std::pair<const std::string_view, std::string_view>>(
-          MakeConvertingScan(std::map<std::string_view, std::string_view>{{"foo", "25"}, {"bar", "42"}}))),
+            MakeConvertingScan(std::map<std::string_view, std::string_view>{{"foo", "25"}, {"bar", "42"}}))),
         ElementsAre(Pair("bar", "42"), Pair("foo", "25")));
     EXPECT_THAT(  // Same with pair of strings
         (ConvTester<const std::pair<const std::string, std::string>>(
-          MakeConvertingScan(std::map<std::string, std::string>{{"foo", "25"}, {"bar", "42"}}))),
+            MakeConvertingScan(std::map<std::string, std::string>{{"foo", "25"}, {"bar", "42"}}))),
         ElementsAre(Pair("bar", "42"), Pair("foo", "25")));
   }
 }

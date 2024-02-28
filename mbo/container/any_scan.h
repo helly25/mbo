@@ -34,7 +34,10 @@ namespace mbo::container {
 // `absl::MakeConstSpan`. And while `AnyScan` and `ConstScan` return by reference, `ConvertingScan`
 // returns by copy which allows it to convert the values of the container to the specified value.
 //
-// The Scan types supports pretty much all STL containers including `std::initializer_list`.
+// The Scan types supports pretty much all STL containers including `std::initializer_list`. Beyond
+// `begin()` and `end()` the containers must be supported by `std::empty(C)` and `std::size(C)` as
+// they provide `begin()` and `end()` calls. Those are only executed when actually called, so if
+// they are costly, then that cost only applies if needed.
 //
 // IMPORTANT: This type is INDEPENDENT of the container type that means it is possible to write
 // single functions that can take containers of any container type without needing further templates
@@ -220,12 +223,17 @@ class MakeAnyScanData {
 
   MakeAnyScanData() = delete;
 
-  explicit MakeAnyScanData(Container container) : container_(std::make_shared<Container>(std::move(container))) {}
+  constexpr explicit MakeAnyScanData(Container container) noexcept
+      : container_(std::make_shared<Container>(std::move(container))) {}
+
+  constexpr bool empty() const noexcept { return std::empty(*container_); }
+
+  constexpr std::size_t size() const noexcept { return std::size(*container_); }
 
  private:
-  Container& container() const noexcept { return *container_; }
+  constexpr Container& container() const noexcept { return *container_; }
 
-  std::shared_ptr<Container> container_;
+  const std::shared_ptr<Container> container_;
 };
 
 template<AcceptableContainer Container, ScanMode ScanModeVal>
@@ -238,10 +246,14 @@ class MakeAnyScanData<Container, ScanModeVal, false> {
 
   MakeAnyScanData() = delete;
 
-  explicit MakeAnyScanData(const Container& container) : container_(container) {}
+  constexpr explicit MakeAnyScanData(const Container& container) noexcept : container_(container) {}
+
+  constexpr bool empty() const noexcept { return std::empty(container_); }
+
+  constexpr std::size_t size() const noexcept { return std::size(container_); }
 
  private:
-  const Container& container() const noexcept { return container_; }
+  constexpr const Container& container() const noexcept { return container_; }
 
   const Container& container_;
 };
@@ -258,15 +270,16 @@ class AnyScanImpl {
   using FuncMore = std::function<bool()>;
   using FuncCurr = std::function<AccessType()>;
   using FuncNext = std::function<void()>;
+  using FuncZero = std::function<bool()>;
+  using FuncSize = std::function<std::size_t()>;
 
   struct AccessFuncs {
-    AccessFuncs(FuncSave save, FuncMore more, FuncCurr curr, FuncNext next)
-        : save(std::move(save)), more(std::move(more)), curr(std::move(curr)), next(std::move(next)) {}
-
     FuncSave save;
     FuncMore more;
     FuncCurr curr;
     FuncNext next;
+    FuncZero empty;
+    FuncSize size;
   };
 
   using FuncClone = std::function<std::shared_ptr<AccessFuncs>()>;
@@ -341,11 +354,14 @@ class AnyScanImpl {
           using IteratorValueType = decltype(*std::declval<ContainerIterator<Container>>());
           CheckCompatible<IteratorValueType, AccessType>();
           auto pos = MakeSharedIterator(data.container());
-          return std::make_shared<AccessFuncs>(
-              /* save */ [save = pos] {},
-              /* more */ [end = data.container().end(), &it = *pos]() -> bool { return it != end; },
-              /* curr */ [&it = *pos]() -> AccessType { return *it; },
-              /* next */ [&it = *pos] { ++it; });
+          return std::make_shared<AccessFuncs>(AccessFuncs{
+              .save = [save = pos] {},
+              .more = [&data = data, &it = *pos]() -> bool { return it != data.container().end(); },
+              .curr = [&it = *pos]() -> AccessType { return *it; },
+              .next = [&it = *pos] { ++it; },
+              .empty = [&data = data] { return data.empty(); },
+              .size = [&data = data] { return data.size(); },
+          });
         }) {}
 
   // For MakConvertingScan
@@ -357,11 +373,14 @@ class AnyScanImpl {
   explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
       : clone_([data = std::move(data)] {
           auto pos = MakeSharedIterator(data.container());
-          return std::make_shared<AccessFuncs>(
-              /* save */ [pos = pos] {},
-              /* more */ [end = data.container().end(), &it = *pos]() -> bool { return it != end; },
-              /* curr */ [&it = *pos]() -> AccessType { return AccessType(*it); },
-              /* next */ [&it = *pos] { ++it; });
+          return std::make_shared<AccessFuncs>(AccessFuncs{
+              .save = [pos = pos] {},
+              .more = [&data = data, &it = *pos]() -> bool { return it != data.container().end(); },
+              .curr = [&it = *pos]() -> AccessType { return AccessType(*it); },
+              .next = [&it = *pos] { ++it; },
+              .empty = [&data = data] { return data.empty(); },
+              .size = [&data = data] { return data.size(); },
+          });
         }) {}
 
   // NOLINTEND(bugprone-forwarding-reference-overload)
@@ -457,6 +476,10 @@ class AnyScanImpl {
   const_iterator cbegin() const noexcept { return const_iterator(std::move(clone_())); }
 
   const_iterator cend() const noexcept { return const_iterator(nullptr); }
+
+  bool empty() const noexcept { return clone_()->empty(); }
+
+  std::size_t size() const noexcept { return clone_()->size(); }
 
  private:
   const FuncClone clone_;

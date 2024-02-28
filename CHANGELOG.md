@@ -1,3 +1,7 @@
+# 0.2.20
+
+* Add `empty` and `size` to `AnyScan`, `ConstScan` and `ConvertingScan`.
+
 # 0.2.19
 
 * Changed `Extender` print and stream ability to output pointers to containers.
