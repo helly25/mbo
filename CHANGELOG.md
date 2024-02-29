@@ -1,3 +1,7 @@
+# 0.2.21
+
+* Optimize `AnyScan`, `ConstScan` and `ConvertingScan` by dropping clone layer. We also explicitly support multiple iterations on one object.
+
 # 0.2.20
 
 * Add `empty` and `size` to `AnyScan`, `ConstScan` and `ConvertingScan`.
