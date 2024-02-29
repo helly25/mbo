@@ -348,52 +348,24 @@ class AnyScanImpl {
   }
 
   // NOLINTBEGIN(bugprone-forwarding-reference-overload)
-  template<AcceptableContainer Container>
-  requires(kAccessByRef)
-  static AccessFuncs MakeAccessFuncs(MakeAnyScanData<Container, kScanMode> data) {
-    using IteratorValueType = decltype(*std::declval<ContainerIterator<Container>>());
-    CheckCompatible<IteratorValueType, AccessType>();
-    return {
-        .iter =
-            [data = data] {
-              auto pos = MakeSharedIterator(data.container());
-              return IterFuncs{
-                  .more = [data = data, pos = pos]() -> bool { return *pos != data.container().end(); },
-                  .curr = [&it = *pos]() -> AccessType { return *it; },
-                  .next = [&it = *pos] { ++it; },
-              };
-            },
-        .empty = [data = data] { return data.empty(); },
-        .size = [data = data] { return data.size(); },
-    };
-  }
-
-  template<AcceptableContainer Container>
-  requires(
-      !kAccessByRef  // This is the ConvertingScan constructor
-      && std::constructible_from<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>>
-      && std::constructible_from<value_type, AccessType>)
-  static AccessFuncs MakeAccessFuncs(MakeAnyScanData<Container, kScanMode> data) {
-    return {
-        // NOTE: data must be copied here!
-        .iter =
-            [data = data] {
-              auto pos = MakeSharedIterator(data.container());
-              return IterFuncs{
-                  .more = [data = data, pos = pos]() -> bool { return *pos != data.container().end(); },
-                  .curr = [&it = *pos]() -> AccessType { return AccessType(*it); },
-                  .next = [&it = *pos] { ++it; },
-              };
-            },
-        .empty = [data = data] { return data.empty(); },
-        .size = [data = data] { return data.size(); },
-    };
-  }
 
   // For MakAnyScan / MakeConstScan
   template<AcceptableContainer Container>
   requires(kAccessByRef)
-  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data) : funcs_(MakeAccessFuncs(std::move(data))) {}
+  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
+      : funcs_{
+          .iter =
+              [data = data] {
+                auto pos = MakeSharedIterator(data.container());
+                return IterFuncs{
+                    .more = [data = data, pos = pos]() -> bool { return *pos != data.container().end(); },
+                    .curr = [&it = *pos]() -> AccessType { return *it; },
+                    .next = [&it = *pos] { ++it; },
+                };
+              },
+          .empty = [data = data] { return data.empty(); },
+          .size = [data = data] { return data.size(); },
+      } {}
 
   // For MakConvertingScan
   template<AcceptableContainer Container>
@@ -401,7 +373,21 @@ class AnyScanImpl {
       !kAccessByRef  // This is the ConvertingScan constructor
       && std::constructible_from<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>>
       && std::constructible_from<value_type, AccessType>)
-  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data) : funcs_(MakeAccessFuncs(std::move(data))) {}
+  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
+      : funcs_{
+          // NOTE: data must be copied here!
+          .iter =
+              [data = data] {
+                auto pos = MakeSharedIterator(data.container());
+                return IterFuncs{
+                    .more = [data = data, pos = pos]() -> bool { return *pos != data.container().end(); },
+                    .curr = [&it = *pos]() -> AccessType { return AccessType(*it); },
+                    .next = [&it = *pos] { ++it; },
+                };
+              },
+          .empty = [data = data] { return data.empty(); },
+          .size = [data = data] { return data.size(); },
+      } {}
 
   // NOLINTEND(bugprone-forwarding-reference-overload)
 
