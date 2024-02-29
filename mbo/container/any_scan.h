@@ -260,24 +260,39 @@ class MakeAnyScanData<Container, ScanModeVal, false> {
 
 template<typename ValueType, typename DifferenceType, ScanMode ScanModeVal>
 class AnyScanImpl {
+ public:
+  using difference_type = DifferenceType;
+  using element_type = std::remove_cvref_t<ValueType>;
+  using value_type = ValueType;
+  using pointer = ValueType*;
+  using const_pointer = const ValueType*;
+  using reference = ValueType&;
+  using const_reference = const ValueType&;
+
+  AnyScanImpl() = delete;
+
  private:
   static constexpr ScanMode kScanMode = ScanModeVal;
   static constexpr bool kAccessByRef = kScanMode != ScanMode::kConverting;
 
   using AccessType = std::conditional_t<kAccessByRef, ValueType&, ValueType>;
 
-  using FuncSave = std::function<void()>;
   using FuncMore = std::function<bool()>;
   using FuncCurr = std::function<AccessType()>;
   using FuncNext = std::function<void()>;
+
+  struct IterFuncs {
+    FuncMore more;
+    FuncCurr curr;
+    FuncNext next;
+  };
+
+  using FuncIter = std::function<IterFuncs()>;
   using FuncZero = std::function<bool()>;
   using FuncSize = std::function<std::size_t()>;
 
   struct AccessFuncs {
-    FuncSave save;
-    FuncMore more;
-    FuncCurr curr;
-    FuncNext next;
+    FuncIter iter;
     FuncZero empty;
     FuncSize size;
   };
@@ -332,37 +347,53 @@ class AnyScanImpl {
     return std::shared_ptr<Iterator>(new Iterator(container.begin()));
   }
 
- public:
-  using difference_type = DifferenceType;
-  using element_type = std::remove_cvref_t<ValueType>;
-  using value_type = ValueType;
-  using pointer = ValueType*;
-  using const_pointer = const ValueType*;
-  using reference = ValueType&;
-  using const_reference = const ValueType&;
-
-  AnyScanImpl() = delete;
-
- private:
   // NOLINTBEGIN(bugprone-forwarding-reference-overload)
+  template<AcceptableContainer Container>
+  requires(kAccessByRef)
+  static AccessFuncs MakeAccessFuncs(MakeAnyScanData<Container, kScanMode> data) {
+    using IteratorValueType = decltype(*std::declval<ContainerIterator<Container>>());
+    CheckCompatible<IteratorValueType, AccessType>();
+    return {
+        .iter =
+            [data = data] {
+              auto pos = MakeSharedIterator(data.container());
+              return IterFuncs{
+                  .more = [data = data, pos = pos]() -> bool { return *pos != data.container().end(); },
+                  .curr = [&it = *pos]() -> AccessType { return *it; },
+                  .next = [&it = *pos] { ++it; },
+              };
+            },
+        .empty = [data = data] { return data.empty(); },
+        .size = [data = data] { return data.size(); },
+    };
+  }
+
+  template<AcceptableContainer Container>
+  requires(
+      !kAccessByRef  // This is the ConvertingScan constructor
+      && std::constructible_from<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>>
+      && std::constructible_from<value_type, AccessType>)
+  static AccessFuncs MakeAccessFuncs(MakeAnyScanData<Container, kScanMode> data) {
+    return {
+        // NOTE: data must be copied here!
+        .iter =
+            [data = data] {
+              auto pos = MakeSharedIterator(data.container());
+              return IterFuncs{
+                  .more = [data = data, pos = pos]() -> bool { return *pos != data.container().end(); },
+                  .curr = [&it = *pos]() -> AccessType { return AccessType(*it); },
+                  .next = [&it = *pos] { ++it; },
+              };
+            },
+        .empty = [data = data] { return data.empty(); },
+        .size = [data = data] { return data.size(); },
+    };
+  }
 
   // For MakAnyScan / MakeConstScan
   template<AcceptableContainer Container>
   requires(kAccessByRef)
-  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
-      : clone_([data = std::move(data)]() {
-          using IteratorValueType = decltype(*std::declval<ContainerIterator<Container>>());
-          CheckCompatible<IteratorValueType, AccessType>();
-          auto pos = MakeSharedIterator(data.container());
-          return std::make_shared<AccessFuncs>(AccessFuncs{
-              .save = [save = pos] {},
-              .more = [&data = data, &it = *pos]() -> bool { return it != data.container().end(); },
-              .curr = [&it = *pos]() -> AccessType { return *it; },
-              .next = [&it = *pos] { ++it; },
-              .empty = [&data = data] { return data.empty(); },
-              .size = [&data = data] { return data.size(); },
-          });
-        }) {}
+  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data) : funcs_(MakeAccessFuncs(std::move(data))) {}
 
   // For MakConvertingScan
   template<AcceptableContainer Container>
@@ -370,18 +401,7 @@ class AnyScanImpl {
       !kAccessByRef  // This is the ConvertingScan constructor
       && std::constructible_from<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>>
       && std::constructible_from<value_type, AccessType>)
-  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
-      : clone_([data = std::move(data)] {
-          auto pos = MakeSharedIterator(data.container());
-          return std::make_shared<AccessFuncs>(AccessFuncs{
-              .save = [pos = pos] {},
-              .more = [&data = data, &it = *pos]() -> bool { return it != data.container().end(); },
-              .curr = [&it = *pos]() -> AccessType { return AccessType(*it); },
-              .next = [&it = *pos] { ++it; },
-              .empty = [&data = data] { return data.empty(); },
-              .size = [&data = data] { return data.size(); },
-          });
-        }) {}
+  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data) : funcs_(MakeAccessFuncs(std::move(data))) {}
 
   // NOLINTEND(bugprone-forwarding-reference-overload)
 
@@ -396,9 +416,14 @@ class AnyScanImpl {
     using pointer = ItPointer;
     using reference = ItReference;
 
-    iterator_impl() : funcs_(nullptr) {}
+    iterator_impl()
+        : funcs_{
+            .more = [] { return false; },
+            .curr = nullptr,
+            .next = [] {},
+        } {}
 
-    explicit iterator_impl(std::shared_ptr<AccessFuncs> funcs) : funcs_(std::move(funcs)) {}
+    explicit iterator_impl(const AccessFuncs& funcs) : funcs_(funcs.iter()) {}
 
     reference operator*() const noexcept
     requires kAccessByRef
@@ -407,50 +432,53 @@ class AnyScanImpl {
       // That means we bypass any protection an iterator may have, but we can make this function
       // `noexcept` assuming the iterator is noexcept for access. On the other hand we expect that
       // out of bounds access may actually raise. So we effectively side step such exceptions.
-      ABSL_CHECK(funcs_ && funcs_->more());
-      return funcs_->curr();
+      ABSL_CHECK(funcs_.curr != nullptr && funcs_.more());
+      return funcs_.curr();
     }
 
     value_type operator*() const noexcept
     requires(!kAccessByRef)
     {
-      ABSL_CHECK(funcs_ && funcs_->more());
-      return value_type(funcs_->curr());
+      ABSL_CHECK(funcs_.curr != nullptr && funcs_.more());
+      return value_type(funcs_.curr());
     }
 
     const_pointer operator->() const noexcept
     requires kAccessByRef
     {
-      return (funcs_ && funcs_->more()) ? &funcs_->curr() : nullptr;
+      return funcs_.curr != nullptr && funcs_.more() ? &funcs_.curr() : nullptr;
     }
 
     iterator_impl& operator++() noexcept {
-      if (funcs_) {
-        funcs_->next();
-      }
+      funcs_.next();
       return *this;
     }
 
     iterator_impl operator++(int) noexcept {  // NOLINT(cert-dcl21-cpp)
       iterator_impl result = *this;
-      if (funcs_) {
-        funcs_->next();
-      }
+      funcs_.next();
       return result;
     }
 
     template<typename OE, typename OV, typename OP, typename OR>
     bool operator==(const iterator_impl<OE, OV, OP, OR>& other) const noexcept {
-      if (this == &other || funcs_ == other.funcs_) {
+      if (this == &other) {
         return true;
       }
-      if (funcs_ == nullptr && !other.funcs_->more()) {
-        return true;
+      const bool l_end = !funcs_.more();
+      const bool o_end = !other.funcs_.more();
+      // No need to also check `funcs_.curr != nullptr`, as then `more` would have returned false.
+      if (l_end || o_end) {
+        return l_end == o_end;
       }
-      if (other.funcs_ == nullptr && !funcs_->more()) {
-        return true;
+      if constexpr (kAccessByRef) {
+        // Approximate equal address means equal iterator. That is not always correct as a container
+        // might have the same element reference twice.
+        return &funcs_.curr() != &other.funcs_.curr();
+      } else {
+        // Cannot take address of rvalue temp. Comparing actual values would be incorrect.
+        return false;
       }
-      return false;
     }
 
     template<typename OE, typename OV, typename OP, typename OR>
@@ -459,30 +487,30 @@ class AnyScanImpl {
     }
 
    private:
-    std::shared_ptr<AccessFuncs> funcs_;  // Cannot be const.
+    IterFuncs funcs_;  // Cannot be const.
   };
 
   using iterator = iterator_impl<element_type, value_type, pointer, reference>;
   using const_iterator = iterator_impl<element_type, const value_type, const_pointer, const_reference>;
 
-  iterator begin() noexcept { return iterator(std::move(clone_())); }
+  iterator begin() noexcept { return iterator(funcs_); }
 
-  iterator end() noexcept { return iterator(nullptr); }
+  iterator end() noexcept { return iterator(); }
 
-  const_iterator begin() const noexcept { return const_iterator(std::move(clone_())); }
+  const_iterator begin() const noexcept { return const_iterator(funcs_); }
 
-  const_iterator end() const noexcept { return const_iterator(nullptr); }
+  const_iterator end() const noexcept { return const_iterator(); }
 
-  const_iterator cbegin() const noexcept { return const_iterator(std::move(clone_())); }
+  const_iterator cbegin() const noexcept { return const_iterator(funcs_); }
 
-  const_iterator cend() const noexcept { return const_iterator(nullptr); }
+  const_iterator cend() const noexcept { return const_iterator(); }
 
-  bool empty() const noexcept { return clone_()->empty(); }
+  bool empty() const noexcept { return funcs_.empty(); }
 
-  std::size_t size() const noexcept { return clone_()->size(); }
+  std::size_t size() const noexcept { return funcs_.size(); }
 
  private:
-  const FuncClone clone_;
+  AccessFuncs funcs_;
 };
 
 }  // namespace container_internal
