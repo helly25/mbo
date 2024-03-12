@@ -179,8 +179,9 @@ TEST_F(ExtendTest, Streamable) {
 
 namespace debug {
 
+// NOLINTBEGIN(bugprone-easily-swappable-parameters,cert-dcl50-cpp)
 int DumpStructVisitor(
-    std::size_t field_index,
+    std::size_t /*field_index*/,
     std::string_view format,
     std::string_view indent = {},
     std::string_view type = {},
@@ -190,55 +191,62 @@ int DumpStructVisitor(
   std::cout << ", Indent: '" << indent << "'";
   std::cout << ", Type: '" << type << "'";
   std::cout << ", Name: '" << name << "'";
-  std::cout << std::endl;
+  std::cout << '\n';
   return 0;
 }
 
 int PrintStructVisitor(
-    std::size_t field_index,
+    std::size_t /*field_index*/,
     std::vector<std::tuple<std::string, std::string, std::string>>& fields,
     std::string_view format,
     std::string_view indent = {},
     std::string_view type = {},
     std::string_view name = {},
     ...) {
-  char buffer[1'024];
-  int l = 0;
-  if (!format.starts_with('%')) {
-    l = snprintf(buffer, 1'023, "%s", format.data());
-  } else if (format == "%s" || format == "%s}\n") {
-    l = snprintf(buffer, 1'023, format.data(), indent.data());
-  } else if (format == "%s%s") {
-    l = snprintf(buffer, 1'023, format.data(), indent.data(), type.data());
-  } else if (format == "%s%s %s =") {
-    l = snprintf(buffer, 1'023, "%s%s %s =", indent.data(), type.data(), name.data());
-  } else if (format.starts_with("%s%s %s =")) {
-    l = snprintf(buffer, 1'023, "%s%s %s =\n", indent.data(), type.data(), name.data());
-  }
+  const std::string line = [&]() -> std::string {
+    if (!format.starts_with('%')) {
+      return std::string(format);
+    } else if (format == "%s" || format == "%s}\n") {
+      return absl::StrCat(indent, format.substr(2));
+    } else if (format == "%s%s") {
+      return absl::StrFormat("%s%s", indent.data(), type.data());
+    } else if (format == "%s%s %s =") {
+      return absl::StrFormat("%s%s %s =", indent.data(), type.data(), name.data());
+    } else if (format.starts_with("%s%s %s =")) {
+      return absl::StrFormat("%s%s %s =\n", indent.data(), type.data(), name.data());
+    } else {
+      return absl::StrFormat("Unknown format: '%s'", format);
+    }
+  }();
+  std::cout << line;
   if (format.starts_with("%s%s %s =") && indent == "  ") {
     fields.emplace_back(format, indent, name);
   }
-  buffer[l] = 0;
-  std::cout << buffer;
   return 0;
 }
 
+// NOLINTEND(bugprone-easily-swappable-parameters,cert-dcl50-cpp)
+
+// NOLINTBEGIN(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 template<typename T>
 void Print(const T* ptr) {
   std::size_t field_index = 0;
   std::vector<std::tuple<std::string, std::string, std::string>> fields;
   __builtin_dump_struct(ptr, &PrintStructVisitor, field_index, fields);
-  std::cout << std::endl;
+  std::cout << '\n';
   for (const auto& [format, indent, name] : fields) {
-    std::cout << format << " -> " << name << std::endl;
+    std::cout << format << " -> " << name << '\n';
   }
   field_index = 0;
   __builtin_dump_struct(ptr, &DumpStructVisitor, field_index);
 }
+
+// NOLINTEND(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
+
 }  // namespace debug
 
 struct PersonData : Extend<PersonData> {
-  int index;
+  int index = 0;
   Person person;
   const std::set<std::string>* data = nullptr;
 };
@@ -246,7 +254,7 @@ struct PersonData : Extend<PersonData> {
 TEST_F(ExtendTest, StreamableComplexFields) {
   const std::set<std::string> data{"foo", "bar"};
   PersonData person{
-      .index = 25,
+      .index = 25,  // NOLINT(*-magic-numbers)
       .person =
           {
               .name =
@@ -254,7 +262,7 @@ TEST_F(ExtendTest, StreamableComplexFields) {
                       .first = "Hugo",
                       .last = "Meyer",
                   },
-              .age = 42,
+              .age = 42,  // NOLINT(*-magic-numbers)
           },
       .data = &data,
   };
@@ -266,8 +274,12 @@ TEST_F(ExtendTest, StreamableComplexFields) {
       Conditional(
           kStructNameSupport, R"({25, {.name: {.first: "Hugo", .last: "Meyer"}, .age: 42}, *{{"bar", "foo"}}})",
           R"({25, {{"Hugo", "Meyer"}, 42}, *{{"bar", "foo"}}})"));
-  // debug::Print(&person);
-  // debug::Print(&person.person.name);
+  if (HasFailure()) {
+    std::cout << "Person:\n";
+    debug::Print(&person);
+    std::cout << "Person::person.name:\n";
+    debug::Print(&person.person.name);
+  }
 }
 
 TEST_F(ExtendTest, Comparable) {
