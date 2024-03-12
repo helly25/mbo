@@ -177,6 +177,8 @@ TEST_F(ExtendTest, Streamable) {
       Conditional(kStructNameSupport, R"({.a: 25, .b: 42, .c: "", .ptr: <nullptr>})", R"({25, 42, "", <nullptr>})"));
 }
 
+#if defined(__clang__)
+
 namespace debug {
 
 // NOLINTBEGIN(bugprone-easily-swappable-parameters,cert-dcl50-cpp)
@@ -245,6 +247,8 @@ void Print(const T* ptr) {
 
 }  // namespace debug
 
+#endif  // __clang__
+
 struct PersonData : Extend<PersonData> {
   int index = 0;
   Person person;
@@ -274,12 +278,14 @@ TEST_F(ExtendTest, StreamableComplexFields) {
       Conditional(
           kStructNameSupport, R"({25, {.name: {.first: "Hugo", .last: "Meyer"}, .age: 42}, *{{"bar", "foo"}}})",
           R"({25, {{"Hugo", "Meyer"}, 42}, *{{"bar", "foo"}}})"));
+#ifdef __clang__
   if (HasFailure()) {
     std::cout << "Person:\n";
     debug::Print(&person);
     std::cout << "Person::person.name:\n";
     debug::Print(&person.person.name);
   }
+#endif  // __clang__
 }
 
 TEST_F(ExtendTest, Comparable) {
