@@ -94,7 +94,7 @@ def _clang_format_impl(ctx, src, dst):
                 --sort-includes={sort_includes} \\
                 --style=file:{clang_config} \\
                 --Werror \\
-                < {src} > {dst}
+                < {src} > {dst} || (echo "CLANG($("${{CLANG_FORMAT}}" --version)) = '${{CLANG_FORMAT}}'" ; false)
             """.format(
             assume_filename = dst.short_path.removesuffix(".gen"),
             clang_format = clang_format,
