@@ -1,7 +1,7 @@
 # To debug bazel options, uncomment next line.
 # build --announce_rc
 
-startup --enable_workspace --enable_bzlmod=0
+startup --enable_bzlmod=0
 
 # Define the Apple OS
 build --apple_platform_type=macos
