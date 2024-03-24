@@ -24,13 +24,14 @@ load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("//mbo/diff:diff.bzl", "diff_test")
 
 # The `clang-format` tool is selected as follows:
-# 1) If custom bazel flag `--mbo/mope:clang_format` is set, then that value will be used.
+# 1) If custom bazel flag `--//mbo/mope:clang_format` is set, then that value will be used.
 # 2) If the custom flag is empty and this variable is a non empty string, then use its value.
 #    Otherwise use `@llvm_toolchain_llvm//:bin/clang-format`.
-# 3) If the resulting value is `clang-format-auto`, then the rule tries to find the tool:
+# 3) If the resulting value is `clang-format-auto` (or the above result is not found or not
+#    executable), then the rule tries to find the tool:
 #    a) `${LLVM_PATH}/bin/clang-format`
 #    b) `$(which "clang_format")`
-#    c) `clang-format-18` ... `clang-format-14`
+#    c) `clang-format-19` ... `clang-format-14`
 #    d) `clang-format` will lastly be picked as a fallback.
 CLANG_FORMAT_BINARY = "clang-format-auto"
 
@@ -63,7 +64,7 @@ def _clang_format_impl(ctx, src, dst):
         tools = clang_format_tool,
         command = """
             CLANG_FORMAT="{clang_format}"
-            if [ "{clang_format}" == "clang-format-auto" ]; then
+            if [ "{clang_format}" == "clang-format-auto" ] || [ -x "${{CLANG_FORMAT}}" ]; then
                 if [ -x "external/llvm_toolchain_llvm/bin/clang-format" ]; then
                     CLANG_FORMAT="external/llvm_toolchain_llvm/bin/clang-format"
                 elif [ -x "${{LLVM_PATH}}/bin/clang-format" ]; then

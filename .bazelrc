@@ -34,5 +34,6 @@ build:asan --features=asan  # https://github.com/bazelbuild/bazel/issues/6932
 build --noincompatible_enable_cc_toolchain_resolution
 
 build:clang --incompatible_enable_cc_toolchain_resolution
+build:clang --//mbo/mope:clang_format=
 build:clang --cxxopt=-gmlt
 build:clang --host_cxxopt=-gmlt
