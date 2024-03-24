@@ -20,6 +20,12 @@ mbo_workspace_load_modules()
 
 ###########################################################################
 
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+###########################################################################
+
 load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
 
 rules_foreign_cc_dependencies()
@@ -35,7 +41,7 @@ load("@toolchains_llvm//toolchain:rules.bzl", "llvm_toolchain")
 llvm_toolchain(
     name = "llvm_toolchain",
     llvm_versions = {
-        "": "17.0.6",
+        "": "17.0.4",
         "darwin-x86_64": "15.0.7",  # For Intel based macs.
     },
 )
@@ -43,12 +49,6 @@ llvm_toolchain(
 load("@llvm_toolchain//:toolchains.bzl", "llvm_register_toolchains")
 
 llvm_register_toolchains()
-
-###########################################################################
-
-#load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
-
-#bazel_skylib_workspace()
 
 ###########################################################################
 
