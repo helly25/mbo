@@ -33,7 +33,7 @@ load("//mbo/diff:diff.bzl", "diff_test")
 #    b) `$(which "clang_format")`
 #    c) `clang-format-19` ... `clang-format-14`
 #    d) `clang-format` will lastly be picked as a fallback.
-CLANG_FORMAT_BINARY = "clang-format-auto"
+CLANG_FORMAT_BINARY = ""  # Ignore clang-format from repo with: "clang-format-auto"
 
 def _get_clang_format(ctx):
     """Get the selected clang-format from `--//mbo/mope:clang_format` bazel flag."""
