@@ -276,7 +276,8 @@ TEST_F(ExtendTest, StreamableComplexFields) {
   EXPECT_THAT(
       out.str(),
       Conditional(
-          kStructNameSupport, R"({25, {.name: {.first: "Hugo", .last: "Meyer"}, .age: 42}, *{{"bar", "foo"}}})",
+          kStructNameSupport,
+          R"({.index: 25, .person: {.name: {.first: "Hugo", .last: "Meyer"}, .age: 42}, .data: *{{"bar", "foo"}}})",
           R"({25, {{"Hugo", "Meyer"}, 42}, *{{"bar", "foo"}}})"));
 #ifdef __clang__
   if (HasFailure()) {

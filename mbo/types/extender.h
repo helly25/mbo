@@ -106,8 +106,9 @@ namespace mbo::types::extender {
 // ```
 template<tstring ExtenderNameT, template<typename> typename ImplT, typename RequiredExtenderT = void>
 struct MakeExtender {
-  using ExtenderName = decltype(ExtenderNameT);
   using RequiredExtender = RequiredExtenderT;
+
+  static constexpr std::string_view GetExtenderName() { return decltype(ExtenderNameT)::str(); }
 
  private:
   // This friend is necessary to keep symbol visibility in check. But it has to

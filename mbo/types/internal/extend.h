@@ -30,14 +30,11 @@ namespace mbo::types::extender_internal {
 
 struct NoRequirement {};
 
-// Identify `Extender` classes by the fact that they have a type `ExtenderName`
-// that can be converted into a `std::string_view`.
+// Identify `Extender` classes by the fact that they have a member named
+// `kExtenderName` that can be converted into a `std::string_view`.
 template<typename MaybeExtender>
 concept IsExtender = requires {
-  typename MaybeExtender::ExtenderName;
-  //{
-  //    typename MaybeExtender::ExtenderName()
-  //  } -> std::convertible_to<std::string_view>;
+  { MaybeExtender::GetExtenderName() } -> std::convertible_to<std::string_view>;
 };
 
 template<typename T, typename... Ts>
@@ -136,7 +133,7 @@ struct ExtendImpl
   using RegisteredExtenders = std::tuple<Extender...>;
 
   static constexpr std::array<std::string_view, sizeof...(Extender)> RegisteredExtenderNames() {
-    return {Extender::ExtenderName::str()...};
+    return {Extender::GetExtenderName()...};
   }
 };
 

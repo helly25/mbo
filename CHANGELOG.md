@@ -1,3 +1,7 @@
+# 0.2.22
+
+* Change the way `mbo::types::Extend` types are constructed to support more complex and deeper nested types.
+
 # 0.2.21
 
 * Optimize `AnyScan`, `ConstScan` and `ConvertingScan` by dropping clone layer. We also explicitly support multiple iterations on one object.
