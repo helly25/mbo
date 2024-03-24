@@ -197,9 +197,19 @@ int DumpStructVisitor(
   return 0;
 }
 
-int PrintStructVisitor(
+struct StructVisitorElement {
+  std::string format;
+  std::string indent;
+  std::string type;
+  std::string name;
+  std::string line;
+};
+
+void PrintStructVisitor(
     std::size_t /*field_index*/,
-    std::vector<std::tuple<std::string, std::string, std::string>>& fields,
+    std::vector<StructVisitorElement>& fields,
+    std::size_t& max_type_length,
+    bool print,
     std::string_view format,
     std::string_view indent = {},
     std::string_view type = {},
@@ -220,27 +230,33 @@ int PrintStructVisitor(
       return absl::StrFormat("Unknown format: '%s'", format);
     }
   }();
-  std::cout << line;
-  if (format.starts_with("%s%s %s =") && indent == "  ") {
-    fields.emplace_back(format, indent, name);
+  if (print) {
+    std::cout << line;
   }
-  return 0;
+  max_type_length = std::max(max_type_length, type.length());
+  if (format.starts_with("%s%s %s =") && indent == "  ") {
+    fields.emplace_back(StructVisitorElement{.format{format}, .indent{indent}, .type{type}, .name{name}, .line = line});
+  }
 }
 
 // NOLINTEND(bugprone-easily-swappable-parameters,cert-dcl50-cpp)
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 template<typename T>
-void Print(const T* ptr) {
-  std::size_t field_index = 0;
-  std::vector<std::tuple<std::string, std::string, std::string>> fields;
-  __builtin_dump_struct(ptr, &PrintStructVisitor, field_index, fields);
+std::size_t Print(const T* ptr, bool print = false) {
+  std::size_t field_index{0};
+  std::vector<StructVisitorElement> fields;
+  std::size_t max_type_length{0};
+  __builtin_dump_struct(ptr, &PrintStructVisitor, field_index, fields, max_type_length, print);
   std::cout << '\n';
-  for (const auto& [format, indent, name] : fields) {
-    std::cout << format << " -> " << name << '\n';
+  for (const auto& field : fields) {
+    std::cout << field.format << " -> " << field.name << '\n';
   }
-  field_index = 0;
-  __builtin_dump_struct(ptr, &DumpStructVisitor, field_index);
+  if (print) {
+    field_index = 0;
+    __builtin_dump_struct(ptr, &DumpStructVisitor, field_index);
+  }
+  return max_type_length;
 }
 
 // NOLINTEND(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
@@ -280,12 +296,10 @@ TEST_F(ExtendTest, StreamableComplexFields) {
           R"({.index: 25, .person: {.name: {.first: "Hugo", .last: "Meyer"}, .age: 42}, .data: *{{"bar", "foo"}}})",
           R"({25, {{"Hugo", "Meyer"}, 42}, *{{"bar", "foo"}}})"));
 #ifdef __clang__
-  if (HasFailure()) {
-    std::cout << "Person:\n";
-    debug::Print(&person);
-    std::cout << "Person::person.name:\n";
-    debug::Print(&person.person.name);
-  }
+  std::cout << "Person:\n";
+  EXPECT_THAT(debug::Print(&person, HasFailure()), 621);
+  std::cout << "Person::person.name:\n";
+  EXPECT_THAT(debug::Print(&person.person.name, HasFailure()), 603);
 #endif  // __clang__
 }
 
@@ -459,7 +473,7 @@ TEST_F(ExtendTest, ExtenderNames) {
       WhenSorted(ElementsAre("AbslStringify", "Comparable", "Printable", "Streamable")));
   EXPECT_THAT(  // All defaults, and as extra.
       T4::RegisteredExtenderNames(),
-      WhenSorted(ElementsAre("AbslHashable", "AbslStringify", "Comparable", "Printable", "Streamable")));
+      WhenSorted(ElementsAre("AbslHashable", "AbslStringify", "Comparable", "Default", "Printable", "Streamable")));
 }
 
 }  // namespace

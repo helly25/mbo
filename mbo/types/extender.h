@@ -117,7 +117,7 @@ struct MakeExtender {
   friend struct extender_internal::UseExtender;
 
   // CRTP: Inject the base extender and provide type `ExtenderInfo`. That way an
-  // mplementation can create a typedef `Type` as follows:
+  // implementation can create a typedef `Type` as follows:
   //
   // ```c++
   //   template <typename ExtenderBase>
@@ -320,6 +320,55 @@ struct StreamableImpl : ExtenderBase {
 // This default Extender is automatically available through `mb::types::Extend`.
 struct Streamable final : MakeExtender<"Streamable"_ts, StreamableImpl, AbslStringify> {};
 
+template<typename ExtenderBase>
+struct DefaultImpl : ExtenderBase {
+  using Type = typename ExtenderBase::ExtenderInfo::Type;
+};
+
+// The default extender is a wrapper around:
+// * Streamable
+// * Printable
+// * Comparable
+// * AbslHashable
+// * AbslStringify
+struct Default final {
+  using RequiredExtender = void;
+
+  // NOTE: The list of wrapped extenders needs to be in sync with `mbo::types::extender_internal::ExtendImpl`.
+
+  template<typename ExtenderBase>
+  struct ImplT : StreamableImpl<PrintableImpl<ComparableImpl<AbslHashableImpl<AbslStringifyImpl<ExtenderBase>>>>> {};
+
+  static constexpr std::string_view GetExtenderName() { return decltype("Default"_ts)::str(); }
+
+ private:
+  // This friend is necessary to keep symbol visibility in check. But it has to
+  // be either 'struct' or 'class' and thus results in `ImplT` being a struct.
+  template<typename T, typename Extender>
+  friend struct extender_internal::UseExtender;
+
+  // CRTP: Inject the base extender and provide type `ExtenderInfo`.
+  template<typename ExtenderInfoT>
+  struct ExtenderBase : ExtenderInfoT::ExtenderBase {
+   private:
+    // List `ImplT` and all default implementations.
+    friend struct ImplT<ExtenderBase<ExtenderInfoT>>;
+    template<typename B>
+    friend struct StreamableImpl;
+    template<typename B>
+    friend struct PrintableImpl;
+    template<typename B>
+    friend struct ComparableImpl;
+    template<typename B>
+    friend struct AbslHashableImpl;
+    template<typename B>
+    friend struct AbslStringifyImpl;
+    using ExtenderInfo = ExtenderInfoT;
+  };
+
+  template<typename ExtenderInfoT>
+  struct Impl : ImplT<ExtenderBase<ExtenderInfoT>> {};
+};
 }  // namespace mbo::types::extender
 
 #endif  // MBO_TYPES_EXTENDER_H_
