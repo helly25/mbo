@@ -39,14 +39,6 @@ def mbo_workspace_load_modules():
         sha256 = "4531deccb913639c30e5c7512a054d5d875698daeb75d8cf90f284375fe7c360",
     )
 
-    # Load and configure a LLVM based C/C++ toolchain.
-    #github_archive(
-    #    name = "com_grail_bazel_toolchain",
-    #    repo = "https://github.com/grailbio/bazel-toolchain",
-    #    commit = "41ff2a05c0beff439bad7acfd564e6827e34b13b",
-    #    sha256 = "52b09a61b9a03f4e0994402243a03018a858da6a5774de898f99e344520e9a25",
-    #)
-
     http_archive(
         name = "bazel_skylib",
         sha256 = "1c531376ac7e5a180e0237938a2536de0c54d93f5c278634818e0efc952dd56c",
@@ -66,22 +58,22 @@ def mbo_workspace_load_modules():
             sha256 = "4ccdd5aafaa1bcc24181e6dd3581c3eee0354734bb9f3cb4306273ffa434b94f",
         )
 
-    # Abseil, LTS 20230125
+    # Abseil, LTS
     # Used for GoogleTest through .bazelrc "build --define absl=1"
     github_archive(
         name = "com_google_absl",
         repo = "https://github.com/abseil/abseil-cpp",
-        tag = "20230125.3",
-        sha256 = "5366d7e7fa7ba0d915014d387b66d0d002c03236448e1ba9ef98122c13b35c36",
+        tag = "20240116.1",
+        sha256 = "3c743204df78366ad2eaf236d6631d83f6bc928d1705dd0000b872e53b73dc6a",
     )
 
     # GoogleTest
     github_archive(
         name = "com_google_googletest",
         repo = "https://github.com/google/googletest",
-        strip_prefix = "googletest-1.13.0",
-        tag = "v1.13.0",
-        sha256 = "ad7fdba11ea011c1d925b3289cf4af2c66a352e18d4c7264392fead75e919363",
+        strip_prefix = "googletest-1.14.0",
+        sha256 = "8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7",
+        tag = "v1.14.0",
     )
 
     github_archive(
@@ -92,16 +84,17 @@ def mbo_workspace_load_modules():
         tag = "v1.8.2",
     )
 
-    # hedron_compile_commands
     github_archive(
         name = "hedron_compile_commands",
-        commit = "6f63be6e2ccfdb6a1f248abbb3614107106de4a9",
+        commit = "daae6f40adfa5fdb7c89684cbe4d88b691c63b2d",
         repo = "https://github.com/helly25/bazel-compile-commands-extractor",
-        sha256 = "22aa86db4c1d7c9b417f19b9a4477017d505df58eaed024e68c3452bd1a26b74",
+        sha256 = "43451a32bf271e7ba4635a07f7996d535501f066c0fe8feab04fb0c91dd5986e",
     )
-    #github_archive(
-    #    name = "hedron_compile_commands",
-    #    repo = "https://github.com/hedronvision/bazel-compile-commands-extractor",
-    #    commit = "ed994039a951b736091776d677f324b3903ef939",
-    #    sha256 = "085bde6c5212c8c1603595341ffe7133108034808d8c819f8978b2b303afc9e7",
-    #)
+
+    github_archive(
+        # Need a version > 0.10.3 to enable Clang v17.
+        name = "toolchains_llvm",
+        commit = "ade23e0e37c5308162c012a4f4224459c1c4fa22",
+        repo = "https://github.com/bazel-contrib/toolchains_llvm",
+        sha256 = "c3764286d31738c3ee73397568272ddf71f1dbd443998920358fd797022d747f",
+    )

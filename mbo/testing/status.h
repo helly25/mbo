@@ -22,6 +22,7 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/status/status_macros.h"
@@ -255,18 +256,18 @@ template<typename MessageMatcher>
 #define MBO_EXPECT_OK(expression) EXPECT_THAT(expression, mbo::testing::IsOk())
 
 #ifndef EXPECT_OK
-#define EXPECT_OK(expr) MBO_EXPECT_OK(expr)
+# define EXPECT_OK(expr) MBO_EXPECT_OK(expr)
 #elif __cplusplus >= 202'302L
-#warning "EXPECT_OK already defined"
+# warning "EXPECT_OK already defined"
 #endif
 
 #undef MBO_ASSERT_OK
 #define MBO_ASSERT_OK(expression) ASSERT_THAT(expression, mbo::testing::IsOk())
 
 #ifndef ASSERT_OK
-#define ASSERT_OK(expr) MBO_ASSERT_OK(expr)
+# define ASSERT_OK(expr) MBO_ASSERT_OK(expr)
 #elif __cplusplus >= 202'302L
-#warning "ASSERT_OK already defined"
+# warning "ASSERT_OK already defined"
 #endif
 
 #undef MBO_ASSERT_OK_AND_ASSIGN_IMPL_
@@ -281,9 +282,9 @@ template<typename MessageMatcher>
   MBO_ASSERT_OK_AND_ASSIGN_IMPL_(MBO_STATUS_MACROS_IMPL_CONCAT_(_status_or_value, __LINE__), lhs, rexpr)
 
 #ifndef ASSERT_OK_AND_ASSIGN
-#define ASSERT_OK_AND_ASSIGN(lhs, rexpr) MBO_ASSERT_OK_AND_ASSIGN(lhs, rexpr)
+# define ASSERT_OK_AND_ASSIGN(lhs, rexpr) MBO_ASSERT_OK_AND_ASSIGN(lhs, rexpr)
 #elif __cplusplus >= 202'302L
-#warning "ASSERT_OK_AND_ASSIGN already defined"
+# warning "ASSERT_OK_AND_ASSIGN already defined"
 #endif
 
 // NOLINTEND(bugprone-macro-parentheses)

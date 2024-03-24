@@ -1,3 +1,7 @@
+# 0.3
+
+* Add llvm/clang which can be triggered with `bazel ... --config=clang`.
+
 # 0.2.22
 
 * Change the way `mbo::types::Extend` types are constructed to support more complex and deeper nested types.

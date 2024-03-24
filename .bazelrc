@@ -28,3 +28,7 @@ build:asan --build_tag_filters=-no_san  # skip san targets
 build:asan --test_tag_filters=-no_san  # skip san targets
 build:asan --define san=true  # skip san targets
 build:asan --features=asan  # https://github.com/bazelbuild/bazel/issues/6932
+
+build:clang --incompatible_enable_cc_toolchain_resolution
+build:clang --cxxopt=-gmlt
+build:clang --host_cxxopt=-gmlt
