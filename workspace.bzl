@@ -92,9 +92,8 @@ def mbo_workspace_load_modules():
     )
 
     github_archive(
-        # Need a version > 0.10.3 to enable Clang v17.
         name = "toolchains_llvm",
-        commit = "ade23e0e37c5308162c012a4f4224459c1c4fa22",
+        commit = "aa779570ae8ab4cc77c8ad5d823be6707f4b1f93",
         repo = "https://github.com/bazel-contrib/toolchains_llvm",
-        sha256 = "c3764286d31738c3ee73397568272ddf71f1dbd443998920358fd797022d747f",
+        sha256 = "6bee8d99a22b9c1b872c383a50ffc14efaa88cab1afcbe6f612916120ea3e761",
     )

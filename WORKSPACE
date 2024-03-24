@@ -28,7 +28,10 @@ load("@toolchains_llvm//toolchain:rules.bzl", "llvm_toolchain")
 
 llvm_toolchain(
     name = "llvm_toolchain",
-    llvm_version = "17.0.4",
+    llvm_versions = {
+        "": "17.0.6",
+        "darwin-x86_64": "15.0.7",  # For Intel based macs.
+    },
 )
 
 load("@llvm_toolchain//:toolchains.bzl", "llvm_register_toolchains")
