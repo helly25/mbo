@@ -1,6 +1,7 @@
 # 0.2.22
 
 * Change the way `mbo::types::Extend` types are constructed to support more complex and deeper nested types.
+* Provide a new `mbo::types::extender::Default` which wraps all default extenders.
 
 # 0.2.21
 

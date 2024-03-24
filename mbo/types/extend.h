@@ -42,16 +42,7 @@ namespace mbo::types {
 // compare itself. In the above example `{"First", "Last"}` will be printed.
 // If compiled on Clang it will print `{first: "First", last: "Last"}`.
 template<typename T, typename... Extender>
-struct Extend
-    : extender_internal::ExtendImpl<
-          T,
-          // Default `Extend` functionality
-          extender::AbslStringify,
-          extender::AbslHashable,
-          extender::Comparable,
-          extender::Printable,
-          extender::Streamable,
-          Extender...> {};
+struct Extend : extender_internal::ExtendImpl<T, extender::Default, Extender...> {};
 
 // Same as `Extend` but without default extenders. This alows to control the
 // exact extender set to be used.

@@ -100,6 +100,9 @@ template<typename... Extender>
 concept ExtenderListValid =
     (IsExtender<Extender> && ... && (!HasDuplicateTypes<Extender...> && AllRequiredPresent<Extender...>));
 
+template<typename... Extenders>
+concept HasDefaultExtender = (std::is_same_v<Extenders, extender::Default> || ...);
+
 // Base Extender implementation for CRTP functionality injection.
 // This must always be present.
 template<typename T>
@@ -130,10 +133,34 @@ struct ExtendImpl
           ExtenderInfo<T, void>,  // Type seeding to inject `Type = T`.
           ExtendBase,             // CRTP functionality injection.
           Extender...> {
-  using RegisteredExtenders = std::tuple<Extender...>;
+  using RegisteredExtenders = std::conditional_t<
+      HasDefaultExtender<Extender...>,
+      std::tuple<
+          // The list of default extenders must be in sync with the implementation of `extender::Default`.
+          extender::AbslStringify,
+          extender::AbslHashable,
+          extender::Comparable,
+          extender::Printable,
+          extender::Streamable,
+          // Actual provided extenders go last:
+          Extender...>,
+      std::tuple<Extender...>>;
 
-  static constexpr std::array<std::string_view, sizeof...(Extender)> RegisteredExtenderNames() {
-    return {Extender::GetExtenderName()...};
+  static constexpr std::array<std::string_view, std::tuple_size_v<RegisteredExtenders>> RegisteredExtenderNames() {
+    if constexpr (HasDefaultExtender<Extender...>) {
+      return {
+          // The list of default extenders must be in sync with the implementation of `extender::Default`.
+          extender::AbslStringify::GetExtenderName(),
+          extender::AbslHashable::GetExtenderName(),
+          extender::Comparable::GetExtenderName(),
+          extender::Printable::GetExtenderName(),
+          extender::Streamable::GetExtenderName(),
+          // Actual provided extenders go last:
+          Extender::GetExtenderName()...,
+      };
+    } else {
+      return {Extender::GetExtenderName()...};
+    }
   }
 };
 
