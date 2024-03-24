@@ -17,10 +17,14 @@ jobs:
             ~/.cache/bazel
           key: ${{ runner.os }}-{{ env.version }}-bazel-cache
 
-      - name: Test ASAN
+      - name: Test Fastbuild
+        run: |
+          bazel test -c fastbuild //...
+
+      - name: Test Clang/ASAN
         run: |
           bazel test --config=clang --config=asan -c dbg //...
 
-      - name: Test OPT
+      - name: Test Clang/OPT
         run: |
           bazel test --config=clang -c opt //...

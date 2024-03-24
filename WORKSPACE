@@ -20,6 +20,12 @@ mbo_workspace_load_modules()
 
 ###########################################################################
 
+load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
+
+rules_foreign_cc_dependencies()
+
+###########################################################################
+
 load("@toolchains_llvm//toolchain:deps.bzl", "bazel_toolchain_dependencies")
 
 bazel_toolchain_dependencies()
