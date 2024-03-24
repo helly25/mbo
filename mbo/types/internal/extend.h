@@ -34,8 +34,7 @@ struct NoRequirement {};
 // `kExtenderName` that can be converted into a `std::string_view`.
 template<typename MaybeExtender>
 concept IsExtender = requires {
-  MaybeExtender::kExtenderName;
-  std::convertible_to<decltype(MaybeExtender::kExtenderName), std::string_view>;
+  { MaybeExtender::GetExtenderName() } -> std::convertible_to<std::string_view>;
 };
 
 template<typename T, typename... Ts>
@@ -134,7 +133,7 @@ struct ExtendImpl
   using RegisteredExtenders = std::tuple<Extender...>;
 
   static constexpr std::array<std::string_view, sizeof...(Extender)> RegisteredExtenderNames() {
-    return {Extender::kExtenderName...};
+    return {Extender::GetExtenderName()...};
   }
 };
 

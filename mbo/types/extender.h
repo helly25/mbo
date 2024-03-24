@@ -108,7 +108,7 @@ template<tstring ExtenderNameT, template<typename> typename ImplT, typename Requ
 struct MakeExtender {
   using RequiredExtender = RequiredExtenderT;
 
-  static constexpr std::string_view kExtenderName = decltype(ExtenderNameT)::str();
+  static constexpr std::string_view GetExtenderName() { return decltype(ExtenderNameT)::str(); }
 
  private:
   // This friend is necessary to keep symbol visibility in check. But it has to
