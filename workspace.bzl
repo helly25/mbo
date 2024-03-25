@@ -98,10 +98,17 @@ def mbo_workspace_load_modules():
         sha256 = "43451a32bf271e7ba4635a07f7996d535501f066c0fe8feab04fb0c91dd5986e",
     )
 
-    http_archive(
+    # Cannot yet support toolchains_llvm 1.0.0. It enables C++20 modules in a broken way.
+    github_archive(
         name = "toolchains_llvm",
-        sha256 = "e91c4361f99011a54814e1afbe5c436e0d329871146a3cd58c23a2b4afb50737",
-        strip_prefix = "toolchains_llvm-1.0.0",
-        canonical_id = "1.0.0",
-        url = "https://github.com/bazel-contrib/toolchains_llvm/releases/download/1.0.0/toolchains_llvm-1.0.0.tar.gz",
+        commit = "f9666fff585fdb53ea97ccec07ef1bc5d4aa5098",
+        repo = "https://github.com/bazel-contrib/toolchains_llvm",
+        integrity = "sha256-avzZXfOiNvw7oTvEJbmyny9Tz97qEoayYDvibYYJJW0=",
     )
+    #http_archive(
+    #    name = "toolchains_llvm",
+    #    sha256 = "",
+    #    strip_prefix = "toolchains_llvm-1.0.0",
+    #    canonical_id = "1.0.0",
+    #    url = "https://github.com/bazel-contrib/toolchains_llvm/releases/download/1.0.0/toolchains_llvm-1.0.0.tar.gz",
+    #)
