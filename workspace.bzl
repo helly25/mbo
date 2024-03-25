@@ -98,11 +98,10 @@ def mbo_workspace_load_modules():
         sha256 = "43451a32bf271e7ba4635a07f7996d535501f066c0fe8feab04fb0c91dd5986e",
     )
 
-    github_archive(
+    http_archive(
         name = "toolchains_llvm",
-        commit = "ade23e0e37c5308162c012a4f4224459c1c4fa22",
-        repo = "https://github.com/bazel-contrib/toolchains_llvm",
-        sha256 = "c3764286d31738c3ee73397568272ddf71f1dbd443998920358fd797022d747f",
-        patch_args = ["-p1"],
-        patches = ["//:llvm_distributions.patch"],
+        sha256 = "e91c4361f99011a54814e1afbe5c436e0d329871146a3cd58c23a2b4afb50737",
+        strip_prefix = "toolchains_llvm-1.0.0",
+        canonical_id = "1.0.0",
+        url = "https://github.com/bazel-contrib/toolchains_llvm/releases/download/1.0.0/toolchains_llvm-1.0.0.tar.gz",
     )
