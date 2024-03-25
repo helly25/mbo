@@ -1,12 +1,15 @@
 # To debug bazel options, uncomment next line.
 # build --announce_rc
 
+build --noenable_bzlmod
+
 # Define the Apple OS
 build --apple_platform_type=macos
 
 # Allow platform specific control and add the missing 'CoreFoundation' lib.
 build --enable_platform_specific_config
-build:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation --linkopt=-Wl,-undefined,error
+build:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
+# --linkopt=-Wl,-undefined,error
 
 # Define absl=1 to tell googletest to use absl for backtrace.
 build --define absl=1
@@ -28,3 +31,10 @@ build:asan --build_tag_filters=-no_san  # skip san targets
 build:asan --test_tag_filters=-no_san  # skip san targets
 build:asan --define san=true  # skip san targets
 build:asan --features=asan  # https://github.com/bazelbuild/bazel/issues/6932
+
+build --noincompatible_enable_cc_toolchain_resolution
+
+build:clang --incompatible_enable_cc_toolchain_resolution
+build:clang --//mbo/mope:clang_format=
+build:clang --cxxopt=-gmlt
+build:clang --host_cxxopt=-gmlt

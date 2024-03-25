@@ -17,15 +17,14 @@ jobs:
             ~/.cache/bazel
           key: ${{ runner.os }}-{{ env.version }}-bazel-cache
 
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v1
-        with:
-          version: "17.0"
-
-      - name: Test ASAN
+      - name: Test Clang/ASAN
         run: |
-          bazel test --//mbo/mope:clang_format="${LLVM_PATH}/bin/clang-format" --config=asan -c dbg //...
+          bazel test --config=clang --config=asan -c dbg //...
 
-      - name: Test OPT
+      - name: Test Clang/OPT
         run: |
-          bazel test --//mbo/mope:clang_format="${LLVM_PATH}/bin/clang-format" -c opt //...
+          bazel test --config=clang -c opt //...
+
+      - name: Test Fastbuild
+        run: |
+          CC=gcc bazel test -c fastbuild //...
