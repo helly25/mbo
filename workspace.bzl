@@ -103,4 +103,6 @@ def mbo_workspace_load_modules():
         commit = "ade23e0e37c5308162c012a4f4224459c1c4fa22",
         repo = "https://github.com/bazel-contrib/toolchains_llvm",
         sha256 = "c3764286d31738c3ee73397568272ddf71f1dbd443998920358fd797022d747f",
+        patch_args = ["-p1"],
+        patches = ["//:llvm_distributions.patch"],
     )

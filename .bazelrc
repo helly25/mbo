@@ -8,7 +8,8 @@ build --apple_platform_type=macos
 
 # Allow platform specific control and add the missing 'CoreFoundation' lib.
 build --enable_platform_specific_config
-build:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation --linkopt=-Wl,-undefined,error
+build:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
+# --linkopt=-Wl,-undefined,error
 
 # Define absl=1 to tell googletest to use absl for backtrace.
 build --define absl=1
@@ -37,3 +38,5 @@ build:clang --incompatible_enable_cc_toolchain_resolution
 build:clang --//mbo/mope:clang_format=
 build:clang --cxxopt=-gmlt
 build:clang --host_cxxopt=-gmlt
+build:clang --linkopt="-fuse-ld=lld"
+build:clang --host_linkopt="-fuse-ld=lld"
