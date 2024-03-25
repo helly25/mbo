@@ -1,4 +1,4 @@
-# Copyright 2023 M. Boerger (helly25.com)
+# Copyright M. Boerger (helly25.com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ load("//bzl:archive.bzl", "github_archive", "http_archive")
 def mbo_workspace_load_modules():
     """Loads all modules requred by the workspace."""
 
-    # 0.0.6, 2022-08-26
     http_archive(
         name = "platforms",
         urls = [
@@ -29,7 +28,7 @@ def mbo_workspace_load_modules():
         ],
         sha256 = "5308fc1d8865406a49427ba24a9ab53087f17f5266a7aabbfc28823f3916e1ca",
     )
-    # 0.0.7
+
     http_archive(
         name = "rules_license",
         urls = [
