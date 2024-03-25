@@ -25,6 +25,6 @@ jobs:
         run: |
           bazel test --config=clang -c opt //...
 
-      - name: Test Fastbuild
+      - name: Test GCC/Fastbuild
         run: |
           CC=gcc bazel test -c fastbuild //...

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2023 M. Boerger (helly25.com)
+# Copyright M. Boerger (helly25.com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
