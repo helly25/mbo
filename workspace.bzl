@@ -98,11 +98,14 @@ def mbo_workspace_load_modules():
     )
 
     # Cannot yet support toolchains_llvm 1.0.0. It enables C++20 modules in a broken way.
+    # Minimum requirements:
+    # * 2023.10.06: https://github.com/bazel-contrib/toolchains_llvm/pull/229: Move minimum supported version to Bazel
+    # * 2024.03.12: https://github.com/bazel-contrib/toolchains_llvm/pull/286: Support LLD linker for Darwin
     github_archive(
         name = "toolchains_llvm",
-        commit = "f9666fff585fdb53ea97ccec07ef1bc5d4aa5098",
+        commit = "6bca3e279afa248495a25a586dfe06949cbf05cb",  # https://github.com/bazel-contrib/toolchains_llvm/pull/286
         repo = "https://github.com/bazel-contrib/toolchains_llvm",
-        integrity = "sha256-avzZXfOiNvw7oTvEJbmyny9Tz97qEoayYDvibYYJJW0=",
+        integrity = "sha256-4syq1T8CQTyPrfxLcyo7LEHmMpkBF/tANnKbfvKPuTU=",
     )
     #http_archive(
     #    name = "toolchains_llvm",
