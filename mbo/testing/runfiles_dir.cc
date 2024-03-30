@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,17 +18,18 @@
 #include <string>
 #include <string_view>
 
-#include "tools/cpp/runfiles/runfiles.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "mbo/file/file.h"
+#include "tools/cpp/runfiles/runfiles.h"
 
 namespace mbo::testing {
 
 absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_view source_rel) {
   std::string error;
-  std::unique_ptr<bazel::tools::cpp::runfiles::Runfiles> runfiles(bazel::tools::cpp::runfiles::Runfiles::CreateForTest(&error));
+  std::unique_ptr<bazel::tools::cpp::runfiles::Runfiles> runfiles(
+      bazel::tools::cpp::runfiles::Runfiles::CreateForTest(&error));
   if (runfiles == nullptr) {
     return absl::NotFoundError("Could not determine runfiles directory.");
   }

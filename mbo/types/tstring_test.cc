@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,12 +33,12 @@ namespace {
 // NOLINTBEGIN(readability-static-accessed-through-instance)
 // NOLINTBEGIN(readability-static-definition-in-anonymous-namespace)
 
+using std::size_t;
 using ::testing::Conditional;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::SizeIs;
 using ::testing::StrEq;
-using std::size_t;
 
 static_assert(sizeof(""_ts) == 1);
 static_assert(""_ts.empty());

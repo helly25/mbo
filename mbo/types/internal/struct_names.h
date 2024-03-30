@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +22,7 @@
 
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
-#include "mbo/types/internal/struct_names_clang.h"  // IWYU pragma: keep
+# include "mbo/types/internal/struct_names_clang.h"  // IWYU pragma: keep
 
 namespace mbo::types::types_internal {
 

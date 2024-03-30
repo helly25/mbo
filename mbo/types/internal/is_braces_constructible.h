@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +23,8 @@
 namespace mbo::types::types_internal {
 
 #ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-braces"
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wmissing-braces"
 #endif
 
 struct AnyType {
@@ -119,7 +120,7 @@ template<typename T, typename... Args>
 using IsBracesConstructibleImplT = typename IsBracesConstructibleImpl<T, Args...>::type;
 
 #ifdef __clang__
-#pragma clang diagnostic pop
+# pragma clang diagnostic pop
 #endif
 
 }  // namespace mbo::types::types_internal

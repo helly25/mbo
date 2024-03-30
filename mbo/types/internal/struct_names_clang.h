@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +17,11 @@
 #define MBO_TYPES_INTERNAL_STRUCT_NAMES_CLANG_H_
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
-#include <string_view>
-#include <type_traits>
+# include <string_view>
+# include <type_traits>
 
-#include "absl/types/span.h"
-#include "mbo/types/internal/decompose_count.h"  // IWYU pragma: keep
+# include "absl/types/span.h"
+# include "mbo/types/internal/decompose_count.h"  // IWYU pragma: keep
 
 // IWYU pragma: private, include "mbo/types/internal/struct_names.h"
 

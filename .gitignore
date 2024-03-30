@@ -9,3 +9,5 @@
 # Ignore the directory in which `clangd` stores its local index.
 /.cache/
 /.vscode/
+
+MODULE.bazel

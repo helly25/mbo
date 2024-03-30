@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -110,23 +111,23 @@ class Benchmarks {
       if constexpr (func == Function::kContains) {
         if (HaveOrMiss != data->contains((*input)[item])) {
           state.SkipWithError("BAD_RESULT");
-          break;  
+          break;
         }
       } else if constexpr (func == Function::kFind) {
         if (HaveOrMiss != (data->find((*input)[item]) != data->end())) {
           state.SkipWithError("BAD_RESULT");
-          break;  
+          break;
         }
       } else if constexpr (func == Function::kIndexOf) {
         if (HaveOrMiss != (data->index_of((*input)[item]) != BenchmarkedContainer::npos)) {
           state.SkipWithError("BAD_RESULT");
-          break;  
+          break;
         }
       } else {
         state.SkipWithError("NOT IMPLEMENTED");
         break;
       }
-      //state.PauseTiming();
+      // state.PauseTiming();
       ++item_count;
       if (++item >= input->size()) {
         item = 0;
@@ -135,7 +136,7 @@ class Benchmarks {
         data = &test_data[test].data;
         input = &test_data[test].input;
       }
-      //state.ResumeTiming();
+      // state.ResumeTiming();
     }
     state.SetItemsProcessed(item_count);
     state.counters["Size"] = Size;

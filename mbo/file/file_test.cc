@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,8 +34,7 @@ using ::testing::HasSubstr;
 
 struct FileTest : public ::testing::Test {
   static std::string TestDir() {
-    const auto* const test =
-        ::testing::UnitTest::GetInstance()->current_test_info();
+    const auto* const test = ::testing::UnitTest::GetInstance()->current_test_info();
     return JoinPaths(::testing::TempDir(), test->name());
   }
 
@@ -60,9 +60,8 @@ TEST_F(FileTest, SetGetContentsWithZero) {
 
 TEST_F(FileTest, Readable) {
   EXPECT_THAT(
-      Readable(tmp_dir), StatusIs(
-                             absl::StatusCode::kFailedPrecondition,
-                             HasSubstr("Cannot open directory for reading")));
+      Readable(tmp_dir),
+      StatusIs(absl::StatusCode::kFailedPrecondition, HasSubstr("Cannot open directory for reading")));
   const fs::path tmp_file = JoinPaths(tmp_dir, "foo.txt");
   ASSERT_OK(SetContents(tmp_file, "foo"));
   EXPECT_OK(Readable(tmp_file.string()));
@@ -157,7 +156,6 @@ TEST_F(FileTest, JoinPaths) {
   EXPECT_THAT(JoinPaths("a", "/b", "x:/c", "d"), "a/b/c/d");
 #endif
 }
-
 
 TEST_F(FileTest, JoinPathsRespectAbsolute) {
   EXPECT_THAT(JoinPathsRespectAbsolute(""), "");

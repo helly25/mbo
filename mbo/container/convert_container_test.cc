@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -82,8 +83,7 @@ struct ConversionTest : public ::testing::Test {};
 
 TEST_F(ConversionTest, SameTypeFunc) {
   EXPECT_THAT(
-      std::set<int>(ConvertContainer(std::vector<int>{1, 2, 3}, [](int v) { return v * v; })),
-      ElementsAre(1, 4, 9));
+      std::set<int>(ConvertContainer(std::vector<int>{1, 2, 3}, [](int v) { return v * v; })), ElementsAre(1, 4, 9));
 }
 
 TEST_F(ConversionTest, ConversionFunc) {
@@ -93,27 +93,31 @@ TEST_F(ConversionTest, ConversionFunc) {
 }
 
 TEST_F(ConversionTest, InitializerList) {
-  EXPECT_THAT(
-      std::set<std::string>(ConvertContainer({"1", "2", "3", "4"})),
-      ElementsAre("1", "2", "3", "4"));
+  EXPECT_THAT(std::set<std::string>(ConvertContainer({"1", "2", "3", "4"})), ElementsAre("1", "2", "3", "4"));
 }
 
 class MoveOnly final {
  public:
   ~MoveOnly() = default;
   MoveOnly() = delete;
+
   explicit MoveOnly(int v) : v_(v) {}
+
   MoveOnly(const MoveOnly&) = delete;
   MoveOnly& operator=(const MoveOnly&) = delete;
   MoveOnly(MoveOnly&&) = default;
   MoveOnly& operator=(MoveOnly&&) = default;
 
-  bool operator==(const MoveOnly& other) const { return v_ == other.v_; };
-  bool operator<(const MoveOnly& other) const { return v_ < other.v_; };
+  bool operator==(const MoveOnly& other) const { return v_ == other.v_; }
+
+  bool operator<(const MoveOnly& other) const { return v_ < other.v_; }
+
   bool operator==(int other) const { return Value() == other; }
+
   bool operator<(int other) const { return Value() < other; }
 
   int Value() const { return v_; }
+
   int MovedValue() const && { return v_; }  // Used to prove an instance of `MoveOnly` was moved.
 
  private:
@@ -124,16 +128,12 @@ TEST_F(ConversionTest, InitializerListMoveOnlyConversion) {
   // This works because we never move the `MoveOnly`
   std::initializer_list<MoveOnly> values{MoveOnly(1), MoveOnly(2), MoveOnly(3)};
   auto conv = [](const MoveOnly& v) -> std::string { return absl::StrCat(v.Value()); };
-  EXPECT_THAT(
-      std::set<std::string>(ConvertContainer(values, conv)),
-      ElementsAre("1", "2", "3"));
+  EXPECT_THAT(std::set<std::string>(ConvertContainer(values, conv)), ElementsAre("1", "2", "3"));
 }
 
 TEST_F(ConversionTest, MoveOnly) {
   auto values = MakeLimitedVector(MoveOnly(1), MoveOnly(2), MoveOnly(3));
-  EXPECT_THAT(
-      std::set<MoveOnly>(ConvertContainer(std::move(values))),
-      ElementsAre(1, 2, 3));
+  EXPECT_THAT(std::set<MoveOnly>(ConvertContainer(std::move(values))), ElementsAre(1, 2, 3));
   EXPECT_THAT(values, IsEmpty());
 }
 
@@ -142,9 +142,7 @@ TEST_F(ConversionTest, MoveOnlyConvert) {
   // We even move inside the conversion func to prove we actually have an rvalue that was moved there.
   auto values = MakeLimitedVector(MoveOnly(1), MoveOnly(2), MoveOnly(3));
   auto conv = [](MoveOnly&& v) -> std::string { return absl::StrCat(std::move(v).MovedValue()); };
-  EXPECT_THAT(
-      std::set<std::string>(ConvertContainer(std::move(values), conv)),
-      ElementsAre("1", "2", "3"));
+  EXPECT_THAT(std::set<std::string>(ConvertContainer(std::move(values), conv)), ElementsAre("1", "2", "3"));
   EXPECT_THAT(values, IsEmpty());
 }
 

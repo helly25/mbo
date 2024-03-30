@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,13 +35,13 @@ static constexpr int kValueA = 25;
 static constexpr int kValueB = 42;
 
 struct TestSimple : Extend<TestSimple> {
-    int a = kValueA;
-    int b = kValueB;
+  int a = kValueA;
+  int b = kValueB;
 };
 
 struct TestString : Extend<TestString> {
-    std::string a = "25";
-    std::string b = "42";
+  std::string a = "25";
+  std::string b = "42";
 };
 
 static_assert(IsAggregate<TestSimple>, "Must be aggregate");
@@ -58,54 +59,52 @@ class NoDestructTest : public ::testing::Test {};
 
 #ifdef _LIBCPP_STD_VER
 TEST_F(NoDestructTest, ClangCheck) {
-    const std::string k_lib_cpp_std_ver = std::to_string(_LIBCPP_STD_VER);
-    EXPECT_THAT(k_lib_cpp_std_ver, Ge("20"));
+  const std::string k_lib_cpp_std_ver = std::to_string(_LIBCPP_STD_VER);
+  EXPECT_THAT(k_lib_cpp_std_ver, Ge("20"));
 }
 #endif  // _LIBCPP_STD_VER
 
 TEST_F(NoDestructTest, Test) {
-    const auto expected_simple = Conditional(kStructNameSupport, "{.a: 25, .b: 42}", "{25, 42}");
-    const auto expected_string = Conditional(kStructNameSupport, R"({.a: "25", .b: "42"})", R"({"25", "42"})");
-    EXPECT_THAT(kTestSimple.Get().ToString(), expected_simple);
-    EXPECT_THAT((*kTestSimple).ToString(), expected_simple);
-    EXPECT_THAT(kTestSimple->ToString(), expected_simple);
-    EXPECT_THAT(kTestString.Get().ToString(), expected_string);
-    EXPECT_THAT((*kTestString).ToString(), expected_string);
-    EXPECT_THAT(kTestString->ToString(), expected_string);
+  const auto expected_simple = Conditional(kStructNameSupport, "{.a: 25, .b: 42}", "{25, 42}");
+  const auto expected_string = Conditional(kStructNameSupport, R"({.a: "25", .b: "42"})", R"({"25", "42"})");
+  EXPECT_THAT(kTestSimple.Get().ToString(), expected_simple);
+  EXPECT_THAT((*kTestSimple).ToString(), expected_simple);
+  EXPECT_THAT(kTestSimple->ToString(), expected_simple);
+  EXPECT_THAT(kTestString.Get().ToString(), expected_string);
+  EXPECT_THAT((*kTestString).ToString(), expected_string);
+  EXPECT_THAT(kTestString->ToString(), expected_string);
 }
 
 static constexpr NoDestruct<TestSimple> kConstexprTest;  // NOLINT(readability-static-definition-in-anonymous-namespace)
 
 TEST_F(NoDestructTest, ConstExpr) {
-    EXPECT_THAT(kConstexprTest->a, kValueA);
-    EXPECT_THAT(kConstexprTest->b, kValueB);
+  EXPECT_THAT(kConstexprTest->a, kValueA);
+  EXPECT_THAT(kConstexprTest->b, kValueB);
 }
 
 TEST_F(NoDestructTest, Modify) {
-    static NoDestruct<TestSimple> test;
-    EXPECT_THAT(test->a, kValueA);
-    EXPECT_THAT(test->b, kValueB);
-    test->a = 3;
-    ASSERT_THAT(kValueA, Ne(3));
-    EXPECT_THAT(test->a, Ne(kValueA));
-    EXPECT_THAT(test->b, kValueB);
-    test->a = kValueA;
-    EXPECT_THAT(test->a, kValueA);
-    EXPECT_THAT(test->b, kValueB);
+  static NoDestruct<TestSimple> test;
+  EXPECT_THAT(test->a, kValueA);
+  EXPECT_THAT(test->b, kValueB);
+  test->a = 3;
+  ASSERT_THAT(kValueA, Ne(3));
+  EXPECT_THAT(test->a, Ne(kValueA));
+  EXPECT_THAT(test->b, kValueB);
+  test->a = kValueA;
+  EXPECT_THAT(test->a, kValueA);
+  EXPECT_THAT(test->b, kValueB);
 }
 
 TEST_F(NoDestructTest, NoDtorNoCopyNoMove) {
   struct NoDtor {
     NoDtor() = default;
-    ~NoDtor() {
-      ABSL_CHECK(true) << "Should not call: " << __FUNCTION__;
-    }
-    NoDtor(const NoDtor& other) : a(other.a){
-      ABSL_CHECK(true) << "Should not call: " << __FUNCTION__;
-    }
-    NoDtor(NoDtor&& other) noexcept : a(other.a){
-      ABSL_CHECK(true) << "Should not call: " << __FUNCTION__;
-    }
+
+    ~NoDtor() { ABSL_CHECK(true) << "Should not call: " << __FUNCTION__; }
+
+    NoDtor(const NoDtor& other) : a(other.a) { ABSL_CHECK(true) << "Should not call: " << __FUNCTION__; }
+
+    NoDtor(NoDtor&& other) noexcept : a(other.a) { ABSL_CHECK(true) << "Should not call: " << __FUNCTION__; }
+
     NoDtor& operator=(const NoDtor& other) noexcept {
       ABSL_CHECK(true) << "Should not call: " << __FUNCTION__;
       if (this != &other) {
@@ -113,14 +112,16 @@ TEST_F(NoDestructTest, NoDtorNoCopyNoMove) {
       }
       return *this;
     }
+
     NoDtor& operator=(NoDtor&& other) noexcept {
       ABSL_CHECK(true) << "Should not call: " << __FUNCTION__;
       a = other.a;
       return *this;
     }
-  
+
     int a = kValueA;
   };
+
   NoDestruct<NoDtor> test;
   EXPECT_THAT(test->a, kValueA);
   test->a = kValueB;
