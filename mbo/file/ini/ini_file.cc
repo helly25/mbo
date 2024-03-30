@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,7 +65,6 @@ absl::StatusOr<std::string> IniFile::GetKeyOrStatus(const GroupKey& group_key) c
   const auto value_it = group_it->second.find(key);
   if (value_it == group_it->second.end()) {
     return absl::NotFoundError(absl::StrCat("Group [", group, "] has no key '", key, "'."));
-
   }
   return value_it->second;
 }

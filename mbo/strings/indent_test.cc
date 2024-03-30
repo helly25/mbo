@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +25,9 @@ using ::testing::ElementsAre;
 
 class DropIndentTest : public ::testing::Test {};
 
-TEST_F(DropIndentTest, Empty) { EXPECT_THAT(DropIndent(""), ""); }
+TEST_F(DropIndentTest, Empty) {
+  EXPECT_THAT(DropIndent(""), "");
+}
 
 TEST_F(DropIndentTest, Single) {
   EXPECT_THAT(DropIndent("abc"), "abc");
@@ -41,8 +44,7 @@ TEST_F(DropIndentTest, EmptyLines) {
   EXPECT_THAT(DropIndentAndSplit("\n \n  "), ElementsAre("", ""));
   EXPECT_THAT(DropIndentAndSplit("\n \n 1\n  "), ElementsAre("", "1", ""));
   EXPECT_THAT(DropIndentAndSplit("\n \n  2\n  "), ElementsAre("", " 2", ""));
-  EXPECT_THAT(
-      DropIndentAndSplit("\n 1\n\n 1\n  "), ElementsAre("1", "", "1", ""));
+  EXPECT_THAT(DropIndentAndSplit("\n 1\n\n 1\n  "), ElementsAre("1", "", "1", ""));
 }
 
 TEST_F(DropIndentTest, Basic) {
@@ -54,13 +56,9 @@ TEST_F(DropIndentTest, Basic) {
 }
 
 TEST_F(DropIndentTest, NonEmptyFirst) {
-  EXPECT_THAT(DropIndentAndSplit("a\n"), ElementsAre("a", ""))
-      << "Keep first line content.";
-  EXPECT_THAT(DropIndentAndSplit(" a\n 1"), ElementsAre(" a", "1"))
-      << "Keep first line content.";
-  EXPECT_THAT(
-      DropIndentAndSplit("a\n 1\n  2\n 1\n"),
-      ElementsAre("a", "1", " 2", "1", ""))
+  EXPECT_THAT(DropIndentAndSplit("a\n"), ElementsAre("a", "")) << "Keep first line content.";
+  EXPECT_THAT(DropIndentAndSplit(" a\n 1"), ElementsAre(" a", "1")) << "Keep first line content.";
+  EXPECT_THAT(DropIndentAndSplit("a\n 1\n  2\n 1\n"), ElementsAre("a", "1", " 2", "1", ""))
       << "Keep first line content.";
 }
 

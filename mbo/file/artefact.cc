@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,7 +46,10 @@ absl::StatusOr<Artefact> Artefact::Read(std::string_view filename, const Artefac
   };
 }
 
-absl::StatusOr<Artefact> Artefact::ReadMaxLines(std::string_view filename, std::size_t max_lines, const Artefact::Options& options) {
+absl::StatusOr<Artefact> Artefact::ReadMaxLines(
+    std::string_view filename,
+    std::size_t max_lines,
+    const Artefact::Options& options) {
   const auto data = mbo::file::GetMaxLines(filename, max_lines);
   if (!data.ok()) {
     return data.status();

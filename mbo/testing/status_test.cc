@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,9 +58,7 @@ class StatusMatcherTest : public ::testing::Test {
   }
 
   template<typename Matcher, typename V>
-  static std::pair<bool, std::string> MatchAndExplain(
-      const Matcher& matcher,
-      const V& value) {
+  static std::pair<bool, std::string> MatchAndExplain(const Matcher& matcher, const V& value) {
     ::testing::StringMatchResultListener os;
     const bool result = matcher.MatchAndExplain(value, &os);
     return {result, os.str()};
@@ -82,8 +81,7 @@ TEST_F(StatusMatcherTest, IsOk) {
     EXPECT_THAT(DescribeNegation(matcher), "is not OK");
     EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(true, ""));
     EXPECT_THAT(
-        MatchAndExplain(matcher, absl::UnknownError("Message")),
-        Pair(false, "which has status UNKNOWN: 'Message'"));
+        MatchAndExplain(matcher, absl::UnknownError("Message")), Pair(false, "which has status UNKNOWN: 'Message'"));
   }
   {
     const ::testing::Matcher<absl::StatusOr<int>> matcher = IsOkMatcher();
@@ -91,8 +89,7 @@ TEST_F(StatusMatcherTest, IsOk) {
     EXPECT_THAT(DescribeNegation(matcher), "is not OK");
     EXPECT_THAT(MatchAndExplain(matcher, 42), Pair(true, ""));
     EXPECT_THAT(
-        MatchAndExplain(matcher, absl::UnknownError("Message")),
-        Pair(false, "which has status UNKNOWN: 'Message'"));
+        MatchAndExplain(matcher, absl::UnknownError("Message")), Pair(false, "which has status UNKNOWN: 'Message'"));
   }
 }
 
@@ -100,15 +97,9 @@ TEST_F(StatusMatcherTest, StatusIs) {
   EXPECT_THAT(absl::OkStatus(), StatusIs(absl::StatusCode::kOk));
   EXPECT_THAT(absl::OkStatus(), StatusIs(absl::StatusCode::kOk, ""));
   EXPECT_THAT(absl::AbortedError(""), StatusIs(absl::StatusCode::kAborted));
-  EXPECT_THAT(
-      absl::AbortedError("a-sub-c"),
-      StatusIs(absl::StatusCode::kAborted, "a-sub-c"));
-  EXPECT_THAT(
-      absl::AbortedError("a-sub-c"),
-      StatusIs(absl::StatusCode::kAborted, HasSubstr("-sub-")));
-  EXPECT_THAT(
-      absl::AbortedError("a-sub-c"),
-      StatusIs(absl::StatusCode::kAborted, Not(HasSubstr("not-a-substring"))));
+  EXPECT_THAT(absl::AbortedError("a-sub-c"), StatusIs(absl::StatusCode::kAborted, "a-sub-c"));
+  EXPECT_THAT(absl::AbortedError("a-sub-c"), StatusIs(absl::StatusCode::kAborted, HasSubstr("-sub-")));
+  EXPECT_THAT(absl::AbortedError("a-sub-c"), StatusIs(absl::StatusCode::kAborted, Not(HasSubstr("not-a-substring"))));
   absl::StatusOr<int> test;
   EXPECT_THAT(test, Not(StatusIs(absl::StatusCode::kOk)));
   test = 42;
@@ -119,17 +110,13 @@ TEST_F(StatusMatcherTest, StatusIs) {
   {
     const StatusIsMatcher matcher(absl::StatusCode::kOk, "x");
     EXPECT_THAT(Describe(matcher), "OK and the message is equal to \"x\"");
-    EXPECT_THAT(
-        DescribeNegation(matcher),
-        "not (OK and the message is equal to \"x\")");
-    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(true, ""))
-        << "Must ignore status message if Ok";
+    EXPECT_THAT(DescribeNegation(matcher), "not (OK and the message is equal to \"x\")");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(true, "")) << "Must ignore status message if Ok";
   }
   {
     const StatusIsMatcher matcher(absl::StatusCode::kOk, "");
     EXPECT_THAT(Describe(matcher), "OK and the message is equal to \"\"");
-    EXPECT_THAT(
-        DescribeNegation(matcher), "not (OK and the message is equal to \"\")");
+    EXPECT_THAT(DescribeNegation(matcher), "not (OK and the message is equal to \"\")");
     EXPECT_THAT(
         MatchAndExplain(matcher, absl::UnknownError("")),
         Pair(
@@ -145,20 +132,14 @@ TEST_F(StatusMatcherTest, StatusIs) {
   }
   {
     const StatusIsMatcher matcher(absl::StatusCode::kCancelled, "Wanted");
+    EXPECT_THAT(Describe(matcher), "CANCELLED and the message is equal to \"Wanted\"");
+    EXPECT_THAT(DescribeNegation(matcher), "not (CANCELLED and the message is equal to \"Wanted\")");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(false, "which has status OK that isn't CANCELLED"));
     EXPECT_THAT(
-        Describe(matcher), "CANCELLED and the message is equal to \"Wanted\"");
-    EXPECT_THAT(
-        DescribeNegation(matcher),
-        "not (CANCELLED and the message is equal to \"Wanted\")");
-    EXPECT_THAT(
-        MatchAndExplain(matcher, absl::OkStatus()),
-        Pair(false, "which has status OK that isn't CANCELLED"));
-    EXPECT_THAT(
-        MatchAndExplain(matcher, absl::AbortedError("Wanted")),
-        Pair(
-            false,
-            "which has status ABORTED that isn't CANCELLED "
-            "and has a matching message"));
+        MatchAndExplain(matcher, absl::AbortedError("Wanted")), Pair(
+                                                                    false,
+                                                                    "which has status ABORTED that isn't CANCELLED "
+                                                                    "and has a matching message"));
     EXPECT_THAT(
         MatchAndExplain(matcher, absl::CancelledError("Message")),
         Pair(
@@ -169,8 +150,7 @@ TEST_F(StatusMatcherTest, StatusIs) {
   {
     const StatusIsMatcher matcher(absl::StatusCode::kDataLoss, IsEmpty());
     EXPECT_THAT(Describe(matcher), "DATA_LOSS and the message is empty");
-    EXPECT_THAT(
-        DescribeNegation(matcher), "not (DATA_LOSS and the message is empty)");
+    EXPECT_THAT(DescribeNegation(matcher), "not (DATA_LOSS and the message is empty)");
     EXPECT_THAT(
         MatchAndExplain(matcher, absl::DataLossError("Message")),
         Pair(
@@ -191,39 +171,23 @@ TEST_F(StatusMatcherTest, IsOkAndHolds) {
     EXPECT_THAT(test, Not(IsOkAndHolds(_)));
   }
   {
-    const ::testing::Matcher<absl::StatusOr<int>> matcher =
-        IsOkAndHoldsMatcher<int>(42);
+    const ::testing::Matcher<absl::StatusOr<int>> matcher = IsOkAndHoldsMatcher<int>(42);
     EXPECT_THAT(Describe(matcher), "is OK and has a value that is equal to 42");
-    EXPECT_THAT(
-        DescribeNegation(matcher),
-        "isn't OK or has a value that isn't equal to 42");
-    EXPECT_THAT(
-        MatchAndExplain(matcher, absl::StatusOr<int>{42}), Pair(true, ""));
-    EXPECT_THAT(
-        MatchAndExplain(matcher, absl::StatusOr<int>{25}),
-        Pair(false, "which contains value 25"));
-    EXPECT_THAT(
-        MatchAndExplain(matcher, absl::UnknownError("")),
-        Pair(false, "which has status UNKNOWN"));
+    EXPECT_THAT(DescribeNegation(matcher), "isn't OK or has a value that isn't equal to 42");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::StatusOr<int>{42}), Pair(true, ""));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::StatusOr<int>{25}), Pair(false, "which contains value 25"));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::UnknownError("")), Pair(false, "which has status UNKNOWN"));
   }
   {
-    const ::testing::Matcher<absl::StatusOr<int>> matcher =
-        IsOkAndHolds(Ge(42));
+    const ::testing::Matcher<absl::StatusOr<int>> matcher = IsOkAndHolds(Ge(42));
     EXPECT_THAT(Describe(matcher), "is OK and has a value that is >= 42");
-    EXPECT_THAT(
-        DescribeNegation(matcher), "isn't OK or has a value that isn't >= 42");
-    EXPECT_THAT(
-        MatchAndExplain(matcher, absl::StatusOr<int>{42}), Pair(true, ""));
-    EXPECT_THAT(
-        MatchAndExplain(matcher, absl::StatusOr<int>{25}),
-        Pair(false, "which contains value 25"));
-    EXPECT_THAT(
-        MatchAndExplain(matcher, absl::UnknownError("")),
-        Pair(false, "which has status UNKNOWN"));
+    EXPECT_THAT(DescribeNegation(matcher), "isn't OK or has a value that isn't >= 42");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::StatusOr<int>{42}), Pair(true, ""));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::StatusOr<int>{25}), Pair(false, "which contains value 25"));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::UnknownError("")), Pair(false, "which has status UNKNOWN"));
   }
   {
-    const ::testing::Matcher<absl::StatusOr<std::string>> matcher =
-        IsOkAndHolds(IsEmpty());
+    const ::testing::Matcher<absl::StatusOr<std::string>> matcher = IsOkAndHolds(IsEmpty());
     EXPECT_THAT(
         MatchAndExplain(matcher, absl::StatusOr<std::string>{"25"}),
         Pair(false, "which contains value \"25\", whose size is 2"));

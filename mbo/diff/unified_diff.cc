@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -256,18 +257,19 @@ class Chunk {
  private:
   static std::string FileHeader(const file::Artefact& info, const UnifiedDiff::Options& options) {
     std::string_view name = absl::StripPrefix(info.name, options.strip_file_header_prefix);
-    return absl::StrCat(
-        info.name.empty() ? "-" : name, " ", absl::FormatTime(options.time_format, info.time, info.tz));
+    return absl::StrCat(info.name.empty() ? "-" : name, " ", absl::FormatTime(options.time_format, info.time, info.tz));
   }
 
-  static std::string SelectFileHeader(const file::Artefact& either, const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options) {
+  static std::string SelectFileHeader(
+      const file::Artefact& either,
+      const file::Artefact& lhs,
+      const file::Artefact& rhs,
+      const UnifiedDiff::Options& options) {
     switch (options.file_header_use) {
       case UnifiedDiff::Options::FileHeaderUse::kBoth:
         break;  // Do not use default, but break for this case, so it becomes the function return.
-      case UnifiedDiff::Options::FileHeaderUse::kLeft:
-        return FileHeader(lhs, options);
-      case UnifiedDiff::Options::FileHeaderUse::kRight:
-        return FileHeader(rhs, options);
+      case UnifiedDiff::Options::FileHeaderUse::kLeft: return FileHeader(lhs, options);
+      case UnifiedDiff::Options::FileHeaderUse::kRight: return FileHeader(rhs, options);
     }
     return FileHeader(either, options);
   }
@@ -311,7 +313,7 @@ class Chunk {
   }
 
   void OutputChunk() {
-    absl::Cleanup clear = [this]{ Clear(); };
+    absl::Cleanup clear = [this] { Clear(); };
     if (lhs_size_ == 0 && rhs_size_ == 0) {
       return;
     }

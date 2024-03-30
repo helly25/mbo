@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Copyright M. Boerger (helly25.com)
+# SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+# SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,8 +21,17 @@ bazel build -c opt //mbo/diff:unified_diff
 
 UNIFIED_DIFF="bazel-bin/mbo/diff/unified_diff"
 
+if [[ $(find -E . >/dev/null 2>&1) ]]; then
+  FLAGS="-P -E"
+else
+  FLAGS="-P"
+fi
+
+rm -f /tmp/header-diffs.txt
+touch /tmp/header-diffs.txt
+
 MAX_LINES=$(wc -l tools/header_cpp.txt | sed -e 's,^ *,,g' | cut -d ' ' -f 1)
-find -E . -regex '.*[.](c|cc|cpp|h|hh|hpp)([.]mope)?$' \
+find "${FLAGS}" . -regex '.*[.](c|cc|cpp|h|hh|hpp)([.]mope)?$' \
     -exec "${UNIFIED_DIFF}" \
         --file_header_use left \
         --ignore_matching_lines="^($|([^/]($|[^/])))" \
@@ -29,10 +39,10 @@ find -E . -regex '.*[.](c|cc|cpp|h|hh|hpp)([.]mope)?$' \
         {} \
         tools/header_cpp.txt > /tmp/diff-{} \
         \; \
-        > /tmp/header-diffs.txt
+        >> /tmp/header-diffs.txt
 
 MAX_LINES=$(wc -l tools/header.txt | sed -e 's,  *, ,g' | cut -d ' ' -f 2)
-find -E . -regex '.*/(.*[.](bzl|bazel)|BAZEL|WORKSPACE)$' \
+find "${FLAGS}" . -regex '.*/(.*[.](bzl|bazel)|BAZEL|WORKSPACE)$' \
     -exec "${UNIFIED_DIFF}" \
         --file_header_use left \
         --ignore_matching_lines="^($|[^#])" \
@@ -43,7 +53,7 @@ find -E . -regex '.*/(.*[.](bzl|bazel)|BAZEL|WORKSPACE)$' \
         >> /tmp/header-diffs.txt
 
 MAX_LINES=$(wc -l tools/header_sh.txt | sed -e 's,  *, ,g' | cut -d ' ' -f 2)
-find -E . -regex '.*[.](sh)$' \
+find "${FLAGS}" . -regex '.*[.](sh)$' \
     -exec "${UNIFIED_DIFF}" \
         --file_header_use left \
         --ignore_matching_lines="^($|[^#]|(#!/bin/bash$))" \

@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -127,7 +128,7 @@ void HandleQuotes(const ParseOptions& options, char chr, Quotes& quotes, std::st
 namespace {
 bool StopParsing(const ParseOptions& options, std::string_view data) {
   const char chr = data[0];
-  return absl::StrContains(options.stop_at_any_of, chr) //
+  return absl::StrContains(options.stop_at_any_of, chr)  //
          || absl::StrContains(options.split_at_any_of, chr)
          || (!options.stop_at_str.empty() && data.starts_with(options.stop_at_str));
 }

@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,10 +35,8 @@ class TupleTest : public ::testing::Test {};
 template<typename T>
 class GenTupleTest : public ::testing::Test {
  public:
-  static constexpr std::size_t kDerivedFieldCount =
-      static_cast<std::size_t>(T::kFieldCount);
-  static constexpr std::size_t kBaseFieldCount =
-      static_cast<std::size_t>(T::BaseType::kFieldCount);
+  static constexpr std::size_t kDerivedFieldCount = static_cast<std::size_t>(T::kFieldCount);
+  static constexpr std::size_t kBaseFieldCount = static_cast<std::size_t>(T::BaseType::kFieldCount);
 };
 
 TYPED_TEST_SUITE(GenTupleTest, AllConstructedTypes);
@@ -50,9 +49,7 @@ TEST_F(TupleTest, StructCtorArgCountMax) {
 }
 
 TYPED_TEST(GenTupleTest, StructCtorArgCountMax) {
-  EXPECT_THAT(
-      types_internal::StructCtorArgCountMaxV<TypeParam>,
-      TestFixture::kDerivedFieldCount + 1)
+  EXPECT_THAT(types_internal::StructCtorArgCountMaxV<TypeParam>, TestFixture::kDerivedFieldCount + 1)
       << "The field count sums all derived fields and counts each base as 1.";
 }
 
@@ -63,9 +60,7 @@ TEST_F(TupleTest, AggregateHasNonEmptyBase) {
 }
 
 TYPED_TEST(GenTupleTest, AggregateHasNonEmptyBase) {
-  EXPECT_THAT(
-      types_internal::AggregateHasNonEmptyBase<TypeParam>,
-      TestFixture::kBaseFieldCount != 0);
+  EXPECT_THAT(types_internal::AggregateHasNonEmptyBase<TypeParam>, TestFixture::kBaseFieldCount != 0);
 }
 
 TEST_F(TupleTest, StructToTupleNoDerived) {
@@ -87,8 +82,7 @@ TEST_F(TupleTest, Mixed) {
     std::string_view d;
   };
 
-  const std::tuple<int, double, std::string, std::string_view> test0 =
-      StructToTuple(Mixed{1, 2.2, "3", "4"});
+  const std::tuple<int, double, std::string, std::string_view> test0 = StructToTuple(Mixed{1, 2.2, "3", "4"});
   EXPECT_THAT(test0, std::tuple(1, 2.2, "3", "4"));
 }
 

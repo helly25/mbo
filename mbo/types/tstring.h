@@ -1,4 +1,5 @@
-// Copyright M. Boerger (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,11 +27,11 @@ namespace mbo::types {
 // NOLINTBEGIN(readability-identifier-naming)
 
 #ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wgnu-string-literal-operator-template"
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wgnu-string-literal-operator-template"
 #elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 
 // Implements type `tstring` a compile time string-literal type.
@@ -571,9 +572,9 @@ constexpr auto make_ts(const char(&str)[N]) noexcept {
   }(std::make_index_sequence<types_internal::tstring_input_len(str)>{})
 
 #ifdef __clang__
-#pragma clang diagnostic pop
+# pragma clang diagnostic pop
 #elif defined(__GNUC__)
-#pragma GCC diagnostic pop
+# pragma GCC diagnostic pop
 #endif
 
 // NOLINTEND(readability-identifier-naming)
