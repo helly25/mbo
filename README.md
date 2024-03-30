@@ -90,6 +90,10 @@ The C++ library is organized in functional groups each residing in their own dir
         * gMock-matcher `IsOkAndHolds`: Tests an absl::StatusOr for absl::OkStatus and contents.
         * gMock-Matcher `StatusIs`: Tests an absl::Status or absl::StatusOr against a specific status code and message.
         * macro `MBO_ASSERT_OK_AND_ASSIGN`: Simplifies testing with functions that return `absl::StatusOr<T>`.
+* Threading
+    * `namespace mbo::thread`
+    * mbo/thread:periodic_thread_cc, mbo/thread/periodic_thread.h
+        * class `PeriodicThread`: Runs a function periodically in its own thread.
 * Types
     * `namespace mbo::types`
     * mbo/types:cases_cc, mbo/types/cases.h

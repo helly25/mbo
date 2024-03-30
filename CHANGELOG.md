@@ -1,3 +1,8 @@
+# 0.3.1
+
+* Added threading library:
+* Added `PeriodicThread`: Runs a function periodically in its own thread.
+
 # 0.3
 
 * Add llvm/clang which can be triggered with `bazel ... --config=clang`.
