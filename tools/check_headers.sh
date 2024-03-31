@@ -21,17 +21,22 @@ bazel build -c opt //mbo/diff:unified_diff
 
 UNIFIED_DIFF="bazel-bin/mbo/diff/unified_diff"
 
-if [[ $(find -E . >/dev/null 2>&1) ]]; then
-  FLAGS="-P -E"
+if $(find -E . >/dev/null 2>&1); then
+  FLAGS=("-PE")
+  EXTRA=()
+elif $(find -E . -regextype posix-extended >/dev/null 2>&1); then
+  FLAGS=("-P")
+  EXTRA=("-regextype" "posix-extended")
 else
-  FLAGS="-P"
+  FLAGS=("-P")
+  EXTRA=()
 fi
 
 rm -f /tmp/header-diffs.txt
 touch /tmp/header-diffs.txt
 
 MAX_LINES=$(wc -l tools/header_cpp.txt | sed -e 's,^ *,,g' | cut -d ' ' -f 1)
-find "${FLAGS}" . -regex '.*[.](c|cc|cpp|h|hh|hpp)([.]mope)?$' \
+find "${FLAGS[@]}" . "${EXTRA[@]+"${EXTRA[@]}"}" -regex '.*[.](c|cc|cpp|h|hh|hpp)([.]mope)?$' \
     -exec "${UNIFIED_DIFF}" \
         --file_header_use left \
         --ignore_matching_lines="^($|([^/]($|[^/])))" \
@@ -41,8 +46,8 @@ find "${FLAGS}" . -regex '.*[.](c|cc|cpp|h|hh|hpp)([.]mope)?$' \
         \; \
         >> /tmp/header-diffs.txt
 
-MAX_LINES=$(wc -l tools/header.txt | sed -e 's,  *, ,g' | cut -d ' ' -f 2)
-find "${FLAGS}" . -regex '.*/(.*[.](bzl|bazel)|BAZEL|WORKSPACE)$' \
+MAX_LINES=$(wc -l tools/header.txt | sed -e 's,^  *,,g' | cut -d ' ' -f 1)
+find "${FLAGS}" . "${EXTRA[@]+"${EXTRA[@]}"}" -regex '.*/(.*[.](bzl|bazel)|BAZEL|WORKSPACE)$' \
     -exec "${UNIFIED_DIFF}" \
         --file_header_use left \
         --ignore_matching_lines="^($|[^#])" \
@@ -52,8 +57,8 @@ find "${FLAGS}" . -regex '.*/(.*[.](bzl|bazel)|BAZEL|WORKSPACE)$' \
         \; \
         >> /tmp/header-diffs.txt
 
-MAX_LINES=$(wc -l tools/header_sh.txt | sed -e 's,  *, ,g' | cut -d ' ' -f 2)
-find "${FLAGS}" . -regex '.*[.](sh)$' \
+MAX_LINES=$(wc -l tools/header_sh.txt | sed -e 's,^  *,,g' | cut -d ' ' -f 1)
+find "${FLAGS}" . "${EXTRA[@]+"${EXTRA[@]}"}" -regex '.*[.](sh)$' \
     -exec "${UNIFIED_DIFF}" \
         --file_header_use left \
         --ignore_matching_lines="^($|[^#]|(#!/bin/bash$))" \
@@ -63,4 +68,4 @@ find "${FLAGS}" . -regex '.*[.](sh)$' \
         \; \
         >> /tmp/header-diffs.txt
 
-patch < /tmp/header-diffs.txt
+patch -p 1 < /tmp/header-diffs.txt
