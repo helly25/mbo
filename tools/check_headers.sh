@@ -21,10 +21,10 @@ bazel build -c opt //mbo/diff:unified_diff
 
 UNIFIED_DIFF="bazel-bin/mbo/diff/unified_diff"
 
-if $(find -E . >/dev/null 2>&1); then
-  FLAGS=("-PE")
+if $(find -P -E . >/dev/null 2>&1); then
+  FLAGS=("-P" "-E")
   EXTRA=()
-elif $(find -E . -regextype posix-extended >/dev/null 2>&1); then
+elif $(find -P . -regextype posix-extended >/dev/null 2>&1); then
   FLAGS=("-P")
   EXTRA=("-regextype" "posix-extended")
 else
