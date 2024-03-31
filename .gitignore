@@ -11,3 +11,4 @@
 /.vscode/
 
 MODULE.bazel
+MODULE.bazel.lock
