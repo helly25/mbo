@@ -15,6 +15,7 @@
 
 #include "mbo/types/extend.h"
 
+#include <concepts>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -32,6 +33,7 @@
 namespace mbo::types {
 namespace {
 
+using ::mbo::types::extender::AbslHashable;
 using ::mbo::types::extender::AbslStringify;
 using ::mbo::types::extender::Comparable;
 using ::mbo::types::extender::Printable;
@@ -48,7 +50,11 @@ using ::testing::Le;
 using ::testing::Lt;
 using ::testing::Ne;
 using ::testing::Not;
+using ::testing::SizeIs;
 using ::testing::WhenSorted;
+
+static_assert(std::same_as<::mbo::types::extender::AbslStringify, ::mbo::extender::AbslStringify>);
+static_assert(std::same_as<::mbo::types::extender::Default, ::mbo::extender::Default>);
 
 struct Empty {};
 
@@ -209,7 +215,7 @@ struct StructVisitorElement {
 void PrintStructVisitor(
     std::size_t /*field_index*/,
     std::vector<StructVisitorElement>& fields,
-    std::size_t& max_type_length,
+    std::string& longest_type,
     bool print,
     std::string_view format,
     std::string_view indent = {},
@@ -234,7 +240,9 @@ void PrintStructVisitor(
   if (print) {
     std::cout << line;
   }
-  max_type_length = std::max(max_type_length, type.length());
+  if (type.length() > longest_type.length()) {
+    longest_type = type;
+  }
   if (format.starts_with("%s%s %s =") && indent == "  ") {
     fields.emplace_back(StructVisitorElement{.format{format}, .indent{indent}, .type{type}, .name{name}, .line = line});
   }
@@ -244,20 +252,16 @@ void PrintStructVisitor(
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 template<typename T>
-std::size_t Print(const T* ptr, bool print = false) {
+std::string Print(const T* ptr, bool print = false) {
+  std::string longest_type;
   std::size_t field_index{0};
   std::vector<StructVisitorElement> fields;
-  std::size_t max_type_length{0};
-  __builtin_dump_struct(ptr, &PrintStructVisitor, field_index, fields, max_type_length, print);
-  std::cout << '\n';
-  for (const auto& field : fields) {
-    std::cout << field.format << " -> " << field.name << '\n';
-  }
+  __builtin_dump_struct(ptr, &PrintStructVisitor, field_index, fields, longest_type, print);
   if (print) {
     field_index = 0;
     __builtin_dump_struct(ptr, &DumpStructVisitor, field_index);
   }
-  return max_type_length;
+  return longest_type;
 }
 
 // NOLINTEND(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
@@ -298,9 +302,9 @@ TEST_F(ExtendTest, StreamableComplexFields) {
           R"({25, {{"Hugo", "Meyer"}, 42}, *{{"bar", "foo"}}})"));
 #ifdef __clang__
   std::cout << "Person:\n";
-  EXPECT_THAT(debug::Print(&person, HasFailure()), Le(621));
+  EXPECT_THAT(debug::Print(&person), SizeIs(Le(201)));
   std::cout << "Person::person.name:\n";
-  EXPECT_THAT(debug::Print(&person.person.name, HasFailure()), Le(603));
+  EXPECT_THAT(debug::Print(&person.person.name), SizeIs(Le(195)));
 #endif  // __clang__
 }
 
@@ -426,13 +430,13 @@ TEST_F(ExtendTest, Hashable) {
 
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({person, Person{}}));
 
-  ASSERT_THAT((extender_internal::IsExtended<Name>), true);
-  ASSERT_THAT((extender_internal::IsExtended<Person>), true);
-  ASSERT_THAT((extender_internal::IsExtended<PlainName>), false);
-  ASSERT_THAT((extender_internal::IsExtended<PlainPerson>), false);
+  ASSERT_THAT((::mbo::types_internal::IsExtended<Name>), true);
+  ASSERT_THAT((::mbo::types_internal::IsExtended<Person>), true);
+  ASSERT_THAT((::mbo::types_internal::IsExtended<PlainName>), false);
+  ASSERT_THAT((::mbo::types_internal::IsExtended<PlainPerson>), false);
   ASSERT_THAT(Person::RegisteredExtenderNames(), Contains("AbslHashable"));
   ASSERT_THAT(Person::RegisteredExtenderNames().size(), std::tuple_size_v<Person::RegisteredExtenders>);
-  ASSERT_THAT((extender_internal::HasExtender<Person, mbo::types::extender::AbslHashable>), true);
+  ASSERT_THAT((::mbo::types_internal::HasExtender<Person, AbslHashable>), true);
 
   EXPECT_THAT(absl::HashOf(person), Ne(0));
   EXPECT_THAT(absl::HashOf(person), absl::HashOf(plain_person));
@@ -443,8 +447,8 @@ TEST_F(ExtendTest, Hashable) {
     std::string last;
   };
 
-  ASSERT_THAT((extender_internal::IsExtended<NameNoDefault>), true);
-  ASSERT_THAT((extender_internal::HasExtender<NameNoDefault, mbo::types::extender::AbslHashable>), false);
+  ASSERT_THAT((::mbo::types_internal::IsExtended<NameNoDefault>), true);
+  ASSERT_THAT((::mbo::types_internal::HasExtender<NameNoDefault, AbslHashable>), false);
 }
 
 TEST_F(ExtendTest, ExtenderNames) {

@@ -18,24 +18,17 @@
 
 // IWYU pragma private, include "mbo/types/extend.h"
 
-namespace mbo::types::extender_internal {
-
-// Type used to chain CRTP functionality and to inject the final type 'T'.
-template<typename T, typename ExtenderBaseT>
-struct ExtenderInfo {
-  using Type = T;
-  using ExtenderBase = ExtenderBaseT;
-};
+namespace mbo::types::types_internal {
 
 // Access to the extender implementation for constructing the CRTP chain using
 // `ExtendBuildChain`.
 // This is done via a distinct struct, so that the non specialized templates
 // can be private.
-template<typename T, typename Extender>
+template<typename ExtenderBase, typename Extender>
 struct UseExtender {
-  using type = typename Extender::template Impl<ExtenderInfo<typename T::Type, T>>;
+  using type = typename Extender::template Impl<ExtenderBase>;
 };
 
-}  // namespace mbo::types::extender_internal
+}  // namespace mbo::types::types_internal
 
 #endif  // MBO_TYPES_INTERNAL_EXTENDER_H_

@@ -43,14 +43,14 @@ namespace mbo::types {
 // compare itself. In the above example `{"First", "Last"}` will be printed.
 // If compiled on Clang it will print `{first: "First", last: "Last"}`.
 template<typename T, typename... Extender>
-struct Extend : extender_internal::ExtendImpl<T, extender::Default, Extender...> {};
+struct Extend : ::mbo::extender::Extend<T, ::mbo::types::extender::Default, Extender...> {};
 
 // Same as `Extend` but without default extenders. This alows to control the
 // exact extender set to be used.
 //
 // Example:
 // ```c++
-// struct Name : mbo::types::ExtendNoDEfault<mbo::types::extender::Comparable> {
+// struct Name : mbo::types::ExtendNoDEfault<mbo::types::Comparable> {
 //    std::string first;
 //    std::string last;
 // };
@@ -59,7 +59,7 @@ struct Extend : extender_internal::ExtendImpl<T, extender::Default, Extender...>
 // Here `Name` gets injected with all comparison operators but it will not get
 // print, stream or hash functionality.
 template<typename T, typename... Extender>
-struct ExtendNoDefault : extender_internal::ExtendImpl<T, Extender...> {};
+struct ExtendNoDefault : ::mbo::extender::Extend<T, Extender...> {};
 
 }  // namespace mbo::types
 
@@ -81,7 +81,7 @@ namespace std {
 // }
 // ```
 template<typename Extended>
-requires mbo::types::extender_internal::HasExtender<Extended, mbo::types::extender::AbslHashable>
+requires mbo::types_internal::HasExtender<Extended, mbo::types::extender::AbslHashable>
 struct hash<Extended> {  // NOLINT(cert-dcl58-cpp)
 
   std::size_t operator()(const Extended& obj) const noexcept { return absl::HashOf(obj); }

@@ -64,26 +64,27 @@
 #include "mbo/types/traits.h"                 // IWYU pragma: keep
 #include "mbo/types/tstring.h"
 
-namespace mbo::types::extender {
+namespace mbo::types {
 
-// Simplify generation of an 'Extender'. Instead of writing the whole struct
-// of struct with all necessary provisions, it is enough to provide an struct
-// for the actual implementation. E.g.:
+// Simplify generation of an 'Extender'. Instead of writing the whole template
+// struct of struct with all necessary provisions, it is enough to provide the
+// struct for the actual implementation. E.g.:
 //
 // ```c++
 //   template <typename ExtenderBase>
 //   struct MyExtenderImpl : ExtenderBase {
-//     using Type = typename ExtenderBase::ExtenderInfo::Type;
+//     using Type = typename ExtenderBase::Type;  // Important!
+//     // Implementation
 //   };
 //
 //   using MyExtender =
-//       mbo::types::extender::MakeExtender<"MyExtender"_ts, MyExtenderImpl>;
+//       mbo::types::MakeExtender<"MyExtender"_ts, MyExtenderImpl>;
 // ```
 //
 // NOTE: The implementation must be a `struct`, it cannot be a `class`.
 //
 // NOTE: If the implementation requires another Extender to be a base, then
-// the `RequiredExtender` template parameter can be set to that extender (not
+// the `RequiredExtender` template parameter can be set to that Extender (not
 // its implementation). As a result, the required Extender must be listed prior
 // to this Extender in the `Extend` template parameter list.
 // The final `MyExtender` can be a class or struct and it can be constructed
@@ -97,15 +98,15 @@ namespace mbo::types::extender {
 // ```c++
 //   template <typename ExtenderBase>
 //   struct MyExtenderImpl : ExtenderBase {
-//     using Type = typename ExtenderBase::ExtenderInfo::Type;
+//     // Implementation
 //   };
 //
-//   struct MyExtender final : mbo::types::extender::MakeExtender<
+//   struct MyExtender final : mbo::types::MakeExtender<
 //       "MyExtender"_ts,
 //       MyExtenderImpl,
-//       mbo::types::extender::Printable>;
+//       mbo::types::Printable>;
 // ```
-template<tstring ExtenderNameT, template<typename> typename ImplT, typename RequiredExtenderT = void>
+template<::mbo::types::tstring ExtenderNameT, template<typename> typename ImplT, typename RequiredExtenderT = void>
 struct MakeExtender {
   using RequiredExtender = RequiredExtenderT;
 
@@ -115,31 +116,17 @@ struct MakeExtender {
   // This friend is necessary to keep symbol visibility in check. But it has to
   // be either 'struct' or 'class' and thus results in `ImplT` being a struct.
   template<typename T, typename Extender>
-  friend struct extender_internal::UseExtender;
+  friend struct ::mbo::types::types_internal::UseExtender;
 
-  // CRTP: Inject the base extender and provide type `ExtenderInfo`. That way an
-  // implementation can create a typedef `Type` as follows:
-  //
-  // ```c++
-  //   template <typename ExtenderBase>
-  //   struct MyExtenderImpl : ExtenderBase {
-  //     using Type = typename ExtenderBase::ExtenderInfo::Type;
-  //   };
-  // ```
-  template<typename ExtenderInfoT>
-  struct ExtenderBase : ExtenderInfoT::ExtenderBase {
-   private:
-    friend struct ImplT<ExtenderBase<ExtenderInfoT>>;
-    using ExtenderInfo = ExtenderInfoT;
+  template<typename ExtenderOrActualType>
+  struct Impl : ImplT<ExtenderOrActualType> {
+    using Type = typename ExtenderOrActualType::Type;
   };
-
-  template<typename ExtenderInfoT>
-  struct Impl : ImplT<ExtenderBase<ExtenderInfoT>> {};
 };
 
 template<typename ExtenderBase>
-struct AbslStringifyImpl : ExtenderBase {
-  using Type = typename ExtenderBase::ExtenderInfo::Type;
+struct _AbslStringify : ExtenderBase {
+  using Type = typename ExtenderBase::Type;
 
   void OStreamFields(std::ostream& os) const { OStreamFieldsImpl(os, this->ToTuple()); }
 
@@ -164,7 +151,7 @@ struct AbslStringifyImpl : ExtenderBase {
   }
 
   template<typename C>
-  requires(ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
+  requires(::mbo::types::ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
   static void OStreamValue(std::ostream& os, const C& vs) {
     os << "{";
     std::string_view sep;
@@ -197,7 +184,7 @@ struct AbslStringifyImpl : ExtenderBase {
 
   template<typename V>
   static void OStreamField(std::ostream& os, std::size_t idx, const V& v) {
-    static constexpr auto kNames = types_internal::GetFieldNames<Type>();
+    static constexpr auto kNames = ::mbo::types::types_internal::GetFieldNames<Type>();
     if (idx) {
       os << ", ";
     }
@@ -208,17 +195,10 @@ struct AbslStringifyImpl : ExtenderBase {
   }
 };
 
-// Extender that injects functionality to make an `Extend`ed type work with
-// abseil format/print functions (see
-// [AbslStringify](https://abseil.io/docs/cpp/guides/format#abslstringify)).
-//
-// This default Extender is automatically available through `mb::types::Extend`.
-struct AbslStringify final : MakeExtender<"AbslStringify"_ts, AbslStringifyImpl> {};
-
 template<typename ExtenderBase>
-struct AbslHashableImpl : ExtenderBase {
+struct _AbslHashable : ExtenderBase {
  private:
-  using T = typename ExtenderBase::ExtenderInfo::Type;
+  using T = typename ExtenderBase::Type;
 
  public:
   template<typename H>
@@ -227,31 +207,10 @@ struct AbslHashableImpl : ExtenderBase {
   }
 };
 
-// Extender that injects functionality to make an `Extend`ed type work with
-// abseil hashing (and also `std::hash`).
-//
-// Example:
-// ```c++
-// struct Name : mbo::types::Extend<Name> {
-//   std::string first;
-//   std::string last;
-// };
-//
-// void demo() {
-//   const Name name{.first = "first", .last = "last"};
-//   const std::size_t hash = absl::HashOf(name);
-//   const std::size_t std_hash = std::hash<Name>{}(name);
-//   static_assert(hash == std_hash, "Must be the same");
-// }
-// ```
-//
-// This default Extender is automatically available through `mb::types::Extend`.
-struct AbslHashable final : MakeExtender<"AbslHashable"_ts, AbslHashableImpl> {};
-
 template<typename ExtenderBase>
-struct ComparableImpl : ExtenderBase {
+struct _Comparable : ExtenderBase {
  private:
-  using T = typename ExtenderBase::ExtenderInfo::Type;
+  using T = typename ExtenderBase::Type;
 
  public:
   // Define operator `<=>` on `const T&` since that is what defines the
@@ -284,47 +243,70 @@ struct ComparableImpl : ExtenderBase {
   }
 };
 
-// Extender that injects functionality to make an `Extend`ed type comparable.
-// All comparators will be injected: `<=>`, `==`, `!=`, `<`, `<=`, `>`, `>=`.
-//
-// This default Extender is automatically available through `mb::types::Extend`.
-struct Comparable final : MakeExtender<"Comparable"_ts, ComparableImpl> {};
-
 template<typename ExtenderBase>
-struct PrintableImpl : ExtenderBase {
+struct _Printable : ExtenderBase {
   std::string ToString() const {
     std::ostringstream os;
     this->OStreamFields(os);
     return os.str();
-  }  // namespace mbo::types::extender
+  }
 };
 
-// Extender that injects functionality to make an `Extend`ed type get a
-// `ToString` function which can be used to convert a type into a `std::string`.
-//
-// This default Extender is automatically available through `mb::types::Extend`.
-struct Printable final : MakeExtender<"Printable"_ts, PrintableImpl, AbslStringify> {};
-
 template<typename ExtenderBase>
-struct StreamableImpl : ExtenderBase {
-  using Type = typename ExtenderBase::ExtenderInfo::Type;
-
-  friend std::ostream& operator<<(std::ostream& os, const Type& v) {
+struct _Streamable : ExtenderBase {
+  friend std::ostream& operator<<(std::ostream& os, const ExtenderBase::Type& v) {
     v.OStreamFields(os);
     return os;
   }
 };
 
+namespace extender {
+
+// Extender that injects functionality to make an `Extend`ed type work with
+// abseil format/print functions (see
+// [AbslStringify](https://abseil.io/docs/cpp/guides/format#abslstringify)).
+//
+// This default Extender is automatically available through `mb::types::Extend`.
+struct AbslStringify final : MakeExtender<"AbslStringify"_ts, _AbslStringify> {};
+
+// Extender that injects functionality to make an `Extend`ed type work with
+// abseil hashing (and also `std::hash`).
+//
+// Example:
+// ```c++
+// struct Name : mbo::types::Extend<Name> {
+//   std::string first;
+//   std::string last;
+// };
+//
+// void demo() {
+//   const Name name{.first = "first", .last = "last"};
+//   const std::size_t hash = absl::HashOf(name);
+//   const std::size_t std_hash = std::hash<Name>{}(name);
+//   static_assert(hash == std_hash, "Must be the same");
+// }
+// ```
+//
+// This default Extender is automatically available through `mb::types::Extend`.
+struct AbslHashable final : MakeExtender<"AbslHashable"_ts, _AbslHashable> {};
+
+// Extender that injects functionality to make an `Extend`ed type comparable.
+// All comparators will be injected: `<=>`, `==`, `!=`, `<`, `<=`, `>`, `>=`.
+//
+// This default Extender is automatically available through `mb::types::Extend`.
+struct Comparable final : MakeExtender<"Comparable"_ts, _Comparable> {};
+
+// Extender that injects functionality to make an `Extend`ed type get a
+// `ToString` function which can be used to convert a type into a `std::string`.
+//
+// This default Extender is automatically available through `mb::types::Extend`.
+struct Printable final : MakeExtender<"Printable"_ts, _Printable, AbslStringify> {};
+
 // Extender that injects functionality to make an `Extend`ed type streamable.
 // This allows the type to be used directly with `std::ostream`s.
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct Streamable final : MakeExtender<"Streamable"_ts, StreamableImpl, AbslStringify> {};
-
-template<typename ExtenderBase>
-struct DefaultImpl : ExtenderBase {
-  using Type = typename ExtenderBase::ExtenderInfo::Type;
-};
+struct Streamable final : MakeExtender<"Streamable"_ts, _Streamable, AbslStringify> {};
 
 // The default extender is a wrapper around:
 // * Streamable
@@ -335,41 +317,41 @@ struct DefaultImpl : ExtenderBase {
 struct Default final {
   using RequiredExtender = void;
 
-  // NOTE: The list of wrapped extenders needs to be in sync with `mbo::types::extender_internal::ExtendImpl`.
-
-  template<typename ExtenderBase>
-  struct ImplT : StreamableImpl<PrintableImpl<ComparableImpl<AbslHashableImpl<AbslStringifyImpl<ExtenderBase>>>>> {};
-
   static constexpr std::string_view GetExtenderName() { return decltype("Default"_ts)::str(); }
 
  private:
   // This friend is necessary to keep symbol visibility in check. But it has to
   // be either 'struct' or 'class' and thus results in `ImplT` being a struct.
   template<typename T, typename Extender>
-  friend struct extender_internal::UseExtender;
+  friend struct ::mbo::types::types_internal::UseExtender;
 
-  // CRTP: Inject the base extender and provide type `ExtenderInfo`.
-  template<typename ExtenderInfoT>
-  struct ExtenderBase : ExtenderInfoT::ExtenderBase {
-   private:
-    // List `ImplT` and all default implementations.
-    friend struct ImplT<ExtenderBase<ExtenderInfoT>>;
-    template<typename B>
-    friend struct StreamableImpl;
-    template<typename B>
-    friend struct PrintableImpl;
-    template<typename B>
-    friend struct ComparableImpl;
-    template<typename B>
-    friend struct AbslHashableImpl;
-    template<typename B>
-    friend struct AbslStringifyImpl;
-    using ExtenderInfo = ExtenderInfoT;
+  // NOTE: The list of wrapped extenders needs to be in sync with `mbo::types_internal::ExtendImpl`.
+
+  template<typename E>
+  using StreamableImpl = _Streamable<E>;
+  template<typename E>
+  using PrintableImpl = _Printable<E>;
+  template<typename E>
+  using ComparableImpl = _Comparable<E>;
+  template<typename E>
+  using AbslHashableImpl = _AbslHashable<E>;
+  template<typename E>
+  using AbslStringifyImpl = _AbslStringify<E>;
+
+  template<typename ExtenderOrActualType>
+  struct Impl : StreamableImpl<PrintableImpl<ComparableImpl<AbslHashableImpl<AbslStringifyImpl<ExtenderOrActualType>>>>> {
+    using Type = ExtenderOrActualType::Type;
   };
-
-  template<typename ExtenderInfoT>
-  struct Impl : ImplT<ExtenderBase<ExtenderInfoT>> {};
 };
-}  // namespace mbo::types::extender
+
+}  // namespace extender
+
+// using namespace extender;
+
+}  // namespace mbo::types
+
+namespace mbo::extender {
+using namespace ::mbo::types::extender;
+}
 
 #endif  // MBO_TYPES_EXTENDER_H_

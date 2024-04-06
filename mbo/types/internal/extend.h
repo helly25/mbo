@@ -25,9 +25,10 @@
 
 #include "mbo/types/extender.h"
 #include "mbo/types/internal/extender.h"
+#include "mbo/types/tstring.h"
 #include "mbo/types/tuple.h"
 
-namespace mbo::types::extender_internal {
+namespace mbo::types_internal {
 
 struct NoRequirement {};
 
@@ -102,68 +103,14 @@ concept ExtenderListValid =
     (IsExtender<Extender> && ... && (!HasDuplicateTypes<Extender...> && AllRequiredPresent<Extender...>));
 
 template<typename... Extenders>
-concept HasDefaultExtender = (std::is_same_v<Extenders, extender::Default> || ...);
-
-// Base Extender implementation for CRTP functionality injection.
-// This must always be present.
-template<typename T>
-struct ExtendBaseImpl {
- protected:  // DO NOT expose anything publicly.
-  auto ToTuple() const { return StructToTuple(static_cast<const Type&>(*this)); }
-
- private:  // DO NOT expose anything publicly.
-  template<typename U, typename Extender>
-  friend struct extender_internal::UseExtender;
-  using Type = typename T::Type;  // Used for type chaining in `UseExtender`
-};
-
-// Extender for ExtendBaseImpl.
-struct ExtendBase final : extender::MakeExtender<tstring<>{}, ExtendBaseImpl> {};
+concept HasDefaultExtender = (std::is_same_v<Extenders, ::mbo::types::extender::Default> || ...);
 
 // Build CRTP chains from the Extender list.
-template<typename T, typename Extender, typename... MoreExtender>
-struct ExtendBuildChain : ExtendBuildChain<typename UseExtender<T, Extender>::type, MoreExtender...> {};
+template<typename Base, typename Extender, typename... MoreExtender>
+struct ExtendBuildChain : ExtendBuildChain<typename ::mbo::types::types_internal::UseExtender<Base, Extender>::type, MoreExtender...> {};
 
-template<typename T, typename Extender>
-struct ExtendBuildChain<T, Extender> : UseExtender<T, Extender>::type {};
-
-template<typename T, typename... Extender>
-requires ExtenderListValid<Extender...>
-struct ExtendImpl
-    : ExtendBuildChain<
-          ExtenderInfo<T, void>,  // Type seeding to inject `Type = T`.
-          ExtendBase,             // CRTP functionality injection.
-          Extender...> {
-  using RegisteredExtenders = std::conditional_t<
-      HasDefaultExtender<Extender...>,
-      std::tuple<
-          // The list of default extenders must be in sync with the implementation of `extender::Default`.
-          extender::AbslStringify,
-          extender::AbslHashable,
-          extender::Comparable,
-          extender::Printable,
-          extender::Streamable,
-          // Actual provided extenders go last:
-          Extender...>,
-      std::tuple<Extender...>>;
-
-  static constexpr std::array<std::string_view, std::tuple_size_v<RegisteredExtenders>> RegisteredExtenderNames() {
-    if constexpr (HasDefaultExtender<Extender...>) {
-      return {
-          // The list of default extenders must be in sync with the implementation of `extender::Default`.
-          extender::AbslStringify::GetExtenderName(),
-          extender::AbslHashable::GetExtenderName(),
-          extender::Comparable::GetExtenderName(),
-          extender::Printable::GetExtenderName(),
-          extender::Streamable::GetExtenderName(),
-          // Actual provided extenders go last:
-          Extender::GetExtenderName()...,
-      };
-    } else {
-      return {Extender::GetExtenderName()...};
-    }
-  }
-};
+template<typename T>
+struct ExtendBuildChain<T, void> : T {};
 
 // Determine whether type `Extended` is an `Extend`ed type.
 template<typename Extended>
@@ -187,6 +134,63 @@ concept HasExtender =
     IsExtended<Extended> && std::tuple_size_v<typename Extended::RegisteredExtenders> != 0
     && HasExtenderImpl<std::tuple_size_v<typename Extended::RegisteredExtenders>, Extended, Extender>::value;
 
-}  // namespace mbo::types::extender_internal
+}  // namespace mbo::types_internal
+
+namespace mbo::extender {
+
+// Base Extender implementation for CRTP functionality injection.
+// This must always be present.
+template<typename ActualType>
+struct ExtendBase {
+ public:
+  using Type = ActualType;  // Used for type chaining in `UseExtender`
+
+ protected:  // DO NOT expose anything publicly.
+  auto ToTuple() const { return StructToTuple(static_cast<const ActualType&>(*this)); }
+
+ private:  // DO NOT expose anything publicly.
+  template<typename U, typename Extender>
+  friend struct UseExtender;
+};
+
+template<typename T, typename... ExtenderList>
+requires ::mbo::types_internal::ExtenderListValid<ExtenderList...>
+struct Extend
+    : ::mbo::types_internal::ExtendBuildChain<
+          ExtendBase<T>,             // CRTP functionality injection.
+          ExtenderList...,
+          void  /* Sentinel to stop `ExtendBuildChain` */> {
+  using RegisteredExtenders = std::conditional_t<
+      ::mbo::types_internal::HasDefaultExtender<ExtenderList...>,
+      std::tuple<
+          // The list of default extenders must be in sync with the implementation of `types::Default`.
+          ::mbo::types::extender::AbslStringify,
+          ::mbo::types::extender::AbslHashable,
+          ::mbo::types::extender::Comparable,
+          ::mbo::types::extender::Printable,
+          ::mbo::types::extender::Streamable,
+          // Actual provided extenders go last:
+          ExtenderList...>,
+      std::tuple<ExtenderList...>>;
+
+  static constexpr std::array<std::string_view, std::tuple_size_v<RegisteredExtenders>> RegisteredExtenderNames() {
+    if constexpr (::mbo::types_internal::HasDefaultExtender<ExtenderList...>) {
+      return {
+          // The list of default extenders must be in sync with the implementation of `types::Default`.
+          ::mbo::types::extender::AbslStringify::GetExtenderName(),
+          ::mbo::types::extender::AbslHashable::GetExtenderName(),
+          ::mbo::types::extender::Comparable::GetExtenderName(),
+          ::mbo::types::extender::Printable::GetExtenderName(),
+          ::mbo::types::extender::Streamable::GetExtenderName(),
+          // Actual provided extenders go last:
+          ExtenderList::GetExtenderName()...,
+      };
+    } else {
+      return {ExtenderList::GetExtenderName()...};
+    }
+  }
+};
+
+}  // namespace extender
 
 #endif  // MBO_TYPES_INTERNAL_EXTEND_H_

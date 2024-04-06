@@ -1,11 +1,12 @@
-# 0.3
+# 0.2.23
 
 * Add llvm/clang which can be triggered with `bazel ... --config=clang`.
+* Drastically shorten generated extender names (<1/3rd)>.
 
 # 0.2.22
 
 * Change the way `mbo::types::Extend` types are constructed to support more complex and deeper nested types.
-* Provide a new `mbo::types::extender::Default` which wraps all default extenders.
+* Provide a new `mbo::extender::Default` which wraps all default extenders.
 
 # 0.2.21
 
@@ -95,8 +96,8 @@
   * Allow `LimitedOption` configuration instead of simple length specification.
     * Option to suppress calling clear in the destructor for cases where that is not a constexpr.
     * Option to require presorted input: Allows much large constexpr `LimitedSet`/`LimitedValue`.
-* Renamed `Extender::AbslFormat` to `Extender::AbslStringify` to better reflect its purpose.
-* Changed `Extender::AbslStringify` to print field names prefixed with a fot '.' (requires Clang).
+* Renamed `types::AbslFormat` to `types::AbslStringify` to better reflect its purpose.
+* Changed `types::AbslStringify` to print field names prefixed with a fot '.' (requires Clang).
 
 # 0.2.6
 
