@@ -125,7 +125,7 @@ struct MakeExtender {
 };
 
 template<typename ExtenderBase>
-struct _AbslStringify : ExtenderBase {
+struct AbslStringify_ : ExtenderBase {
   using Type = typename ExtenderBase::Type;
 
   void OStreamFields(std::ostream& os) const { OStreamFieldsImpl(os, this->ToTuple()); }
@@ -196,7 +196,7 @@ struct _AbslStringify : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct _AbslHashable : ExtenderBase {
+struct AbslHashable_ : ExtenderBase {
  private:
   using T = typename ExtenderBase::Type;
 
@@ -208,7 +208,7 @@ struct _AbslHashable : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct _Comparable : ExtenderBase {
+struct Comparable_ : ExtenderBase {
  private:
   using T = typename ExtenderBase::Type;
 
@@ -244,7 +244,7 @@ struct _Comparable : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct _Printable : ExtenderBase {
+struct Printable_ : ExtenderBase {
   std::string ToString() const {
     std::ostringstream os;
     this->OStreamFields(os);
@@ -253,7 +253,7 @@ struct _Printable : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct _Streamable : ExtenderBase {
+struct Streamable_ : ExtenderBase {
   friend std::ostream& operator<<(std::ostream& os, const ExtenderBase::Type& v) {
     v.OStreamFields(os);
     return os;
@@ -267,7 +267,7 @@ namespace extender {
 // [AbslStringify](https://abseil.io/docs/cpp/guides/format#abslstringify)).
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct AbslStringify final : MakeExtender<"AbslStringify"_ts, _AbslStringify> {};
+struct AbslStringify final : MakeExtender<"AbslStringify"_ts, AbslStringify_> {};
 
 // Extender that injects functionality to make an `Extend`ed type work with
 // abseil hashing (and also `std::hash`).
@@ -288,25 +288,25 @@ struct AbslStringify final : MakeExtender<"AbslStringify"_ts, _AbslStringify> {}
 // ```
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct AbslHashable final : MakeExtender<"AbslHashable"_ts, _AbslHashable> {};
+struct AbslHashable final : MakeExtender<"AbslHashable"_ts, AbslHashable_> {};
 
 // Extender that injects functionality to make an `Extend`ed type comparable.
 // All comparators will be injected: `<=>`, `==`, `!=`, `<`, `<=`, `>`, `>=`.
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct Comparable final : MakeExtender<"Comparable"_ts, _Comparable> {};
+struct Comparable final : MakeExtender<"Comparable"_ts, Comparable_> {};
 
 // Extender that injects functionality to make an `Extend`ed type get a
 // `ToString` function which can be used to convert a type into a `std::string`.
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct Printable final : MakeExtender<"Printable"_ts, _Printable, AbslStringify> {};
+struct Printable final : MakeExtender<"Printable"_ts, Printable_, AbslStringify> {};
 
 // Extender that injects functionality to make an `Extend`ed type streamable.
 // This allows the type to be used directly with `std::ostream`s.
 //
 // This default Extender is automatically available through `mb::types::Extend`.
-struct Streamable final : MakeExtender<"Streamable"_ts, _Streamable, AbslStringify> {};
+struct Streamable final : MakeExtender<"Streamable"_ts, Streamable_, AbslStringify> {};
 
 // The default extender is a wrapper around:
 // * Streamable
@@ -325,21 +325,10 @@ struct Default final {
   template<typename T, typename Extender>
   friend struct ::mbo::types::types_internal::UseExtender;
 
-  // NOTE: The list of wrapped extenders needs to be in sync with `mbo::types_internal::ExtendImpl`.
-
-  template<typename E>
-  using StreamableImpl = _Streamable<E>;
-  template<typename E>
-  using PrintableImpl = _Printable<E>;
-  template<typename E>
-  using ComparableImpl = _Comparable<E>;
-  template<typename E>
-  using AbslHashableImpl = _AbslHashable<E>;
-  template<typename E>
-  using AbslStringifyImpl = _AbslStringify<E>;
+  // NOTE: The list of wrapped extenders needs to be in sync with `mbo::extender::Extend`.
 
   template<typename ExtenderOrActualType>
-  struct Impl : StreamableImpl<PrintableImpl<ComparableImpl<AbslHashableImpl<AbslStringifyImpl<ExtenderOrActualType>>>>> {
+  struct Impl : Streamable_<Printable_<Comparable_<AbslHashable_<AbslStringify_<ExtenderOrActualType>>>>> {
     using Type = ExtenderOrActualType::Type;
   };
 };
@@ -350,6 +339,7 @@ struct Default final {
 
 }  // namespace mbo::types
 
+// Add a convenience namespace to clearly isolate just the extenders.
 namespace mbo::extender {
 using namespace ::mbo::types::extender;
 }
