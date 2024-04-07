@@ -41,7 +41,11 @@ namespace mbo::types {
 //
 // The struct `Name` automatically gains the ability to print, stream and
 // compare itself. In the above example `{"First", "Last"}` will be printed.
-// If compiled on Clang it will print `{first: "First", last: "Last"}`.
+// If compiled on Clang it will print `{first: "First", last: "Last"}` (see
+// AbslStringify for restrictions). Also, the field names can be suppressed
+// by adding `using NoFieldNames = void;` to the type.
+//
+// NOTE: No member may be an anonymous union or struct.
 template<typename T, typename... Extender>
 struct Extend : ::mbo::extender::Extend<T, ::mbo::types::extender::Default, Extender...> {};
 
@@ -58,6 +62,8 @@ struct Extend : ::mbo::extender::Extend<T, ::mbo::types::extender::Default, Exte
 //
 // Here `Name` gets injected with all comparison operators but it will not get
 // print, stream or hash functionality.
+//
+// NOTE: No member may be an anonymous union or struct.
 template<typename T, typename... Extender>
 struct ExtendNoDefault : ::mbo::extender::Extend<T, Extender...> {};
 

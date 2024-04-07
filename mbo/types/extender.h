@@ -125,7 +125,7 @@ struct MakeExtender {
 };
 
 template<typename ExtenderBase>
-struct AbslStringify_ : ExtenderBase {
+struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   using Type = typename ExtenderBase::Type;
 
   void OStreamFields(std::ostream& os) const { OStreamFieldsImpl(os, this->ToTuple()); }
@@ -184,19 +184,21 @@ struct AbslStringify_ : ExtenderBase {
 
   template<typename V>
   static void OStreamField(std::ostream& os, std::size_t idx, const V& v) {
-    static constexpr auto kNames = ::mbo::types::types_internal::GetFieldNames<Type>();
     if (idx) {
       os << ", ";
     }
-    if (idx < kNames.length() && !kNames[idx].empty()) {
-      os << "." << kNames[idx] << ": ";
+    if constexpr (!requires { typename Type::NoFieldNames; }) {
+      static constexpr auto kNames = ::mbo::types::types_internal::GetFieldNames<Type>();
+      if (idx < kNames.length() && !kNames[idx].empty()) {
+        os << "." << kNames[idx] << ": ";
+      }
     }
     OStreamValue(os, v);
   }
 };
 
 template<typename ExtenderBase>
-struct AbslHashable_ : ExtenderBase {
+struct AbslHashable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
  private:
   using T = typename ExtenderBase::Type;
 
@@ -208,7 +210,7 @@ struct AbslHashable_ : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct Comparable_ : ExtenderBase {
+struct Comparable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
  private:
   using T = typename ExtenderBase::Type;
 
@@ -244,7 +246,8 @@ struct Comparable_ : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct Printable_ : ExtenderBase {
+struct Printable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
+ public:
   std::string ToString() const {
     std::ostringstream os;
     this->OStreamFields(os);
@@ -253,7 +256,8 @@ struct Printable_ : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct Streamable_ : ExtenderBase {
+struct Streamable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
+ public:
   friend std::ostream& operator<<(std::ostream& os, const ExtenderBase::Type& v) {
     v.OStreamFields(os);
     return os;
@@ -267,6 +271,12 @@ namespace extender {
 // [AbslStringify](https://abseil.io/docs/cpp/guides/format#abslstringify)).
 //
 // This default Extender is automatically available through `mb::types::Extend`.
+//
+// If the compiler and the structure support `__buildtin_dump_struct` (e.g. if
+// compiled with Clang), then this automatically supports field names. However,
+// this does not work with `union`s. Further, providing field names can be
+// suppressed by providing a typename `NoFieldNames`, e.g.:
+//   `using NoFieldNames = void;`
 struct AbslStringify final : MakeExtender<"AbslStringify"_ts, AbslStringify_> {};
 
 // Extender that injects functionality to make an `Extend`ed type work with
@@ -341,7 +351,7 @@ struct Default final {
 
 // Add a convenience namespace to clearly isolate just the extenders.
 namespace mbo::extender {
-using namespace ::mbo::types::extender;
-}
+using namespace ::mbo::types::extender;  // NOLINT(google-build-using-namespace)
+}  // namespace mbo::extender
 
 #endif  // MBO_TYPES_EXTENDER_H_

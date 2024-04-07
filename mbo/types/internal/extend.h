@@ -25,8 +25,7 @@
 
 #include "mbo/types/extender.h"
 #include "mbo/types/internal/extender.h"
-#include "mbo/types/tstring.h"
-#include "mbo/types/tuple.h"
+#include "mbo/types/tuple.h"  // IWYU pragma: keep
 
 namespace mbo::types_internal {
 
@@ -107,7 +106,8 @@ concept HasDefaultExtender = (std::is_same_v<Extenders, ::mbo::types::extender::
 
 // Build CRTP chains from the Extender list.
 template<typename Base, typename Extender, typename... MoreExtender>
-struct ExtendBuildChain : ExtendBuildChain<typename ::mbo::types::types_internal::UseExtender<Base, Extender>::type, MoreExtender...> {};
+struct ExtendBuildChain
+    : ExtendBuildChain<typename ::mbo::types::types_internal::UseExtender<Base, Extender>::type, MoreExtender...> {};
 
 template<typename T>
 struct ExtendBuildChain<T, void> : T {};
@@ -157,9 +157,9 @@ template<typename T, typename... ExtenderList>
 requires ::mbo::types_internal::ExtenderListValid<ExtenderList...>
 struct Extend
     : ::mbo::types_internal::ExtendBuildChain<
-          ExtendBase<T>,             // CRTP functionality injection.
+          ExtendBase<T>,  // CRTP functionality injection.
           ExtenderList...,
-          void  /* Sentinel to stop `ExtendBuildChain` */> {
+          void /* Sentinel to stop `ExtendBuildChain` */> {
   using RegisteredExtenders = std::conditional_t<
       ::mbo::types_internal::HasDefaultExtender<ExtenderList...>,
       std::tuple<
@@ -191,6 +191,6 @@ struct Extend
   }
 };
 
-}  // namespace extender
+}  // namespace mbo::extender
 
 #endif  // MBO_TYPES_INTERNAL_EXTEND_H_

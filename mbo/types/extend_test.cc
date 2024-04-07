@@ -15,7 +15,7 @@
 
 #include "mbo/types/extend.h"
 
-#include <concepts>
+#include <concepts>  // IWYU pragma: keep
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -27,6 +27,7 @@
 #include "absl/strings/str_format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/types/extender.h"
 #include "mbo/types/internal/extend.h"
 #include "mbo/types/traits.h"
 
@@ -55,6 +56,9 @@ using ::testing::WhenSorted;
 
 static_assert(std::same_as<::mbo::types::extender::AbslStringify, ::mbo::extender::AbslStringify>);
 static_assert(std::same_as<::mbo::types::extender::Default, ::mbo::extender::Default>);
+
+static_assert(::mbo::types_internal::ExtenderListValid<::mbo::extender::Default>);
+static_assert(::mbo::types_internal::ExtenderListValid<AbslHashable, AbslStringify, Comparable, Printable, Streamable>);
 
 struct Empty {};
 
@@ -306,6 +310,66 @@ TEST_F(ExtendTest, StreamableComplexFields) {
   std::cout << "Person::person.name:\n";
   EXPECT_THAT(debug::Print(&person.person.name), SizeIs(Le(195)));
 #endif  // __clang__
+}
+
+struct WithUnion : mbo::types::Extend<WithUnion> {
+  union U {
+    int first{2};
+    int second;
+
+    template<typename Sink>
+    friend void AbslStringify(Sink& sink, const U& val) {
+      absl::Format(&sink, "%d", val.first);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    }
+  };
+
+  int first{1};
+  U second;
+  int third{3};
+};
+
+static_assert(!::mbo::types::HasUnionMember<int>);
+
+static_assert(::mbo::types::HasUnionMember<WithUnion>);
+
+struct WithAnonymousUnion {  // Cannot extend due to anonymous union
+  int first{1};
+
+  union {
+    int second{2};
+    int third;
+  };
+
+  int fourth{3};
+};
+
+// cannot decompose class type '...WithAnonymousUnion' because it has an anonymous union member
+//    auto& [a1, a2, a3] = data;
+// static_assert(::mbo::types::HasUnionMember<WithAnonymousUnion>);
+
+TEST_F(ExtendTest, StreamableWithUnion) {
+  constexpr WithUnion kTest{
+      .first = 25,
+      .second{.second = 42},
+      .third = 99,
+  };
+
+  EXPECT_THAT(kTest.ToString(), R"({25, 42, 99})");
+}
+
+struct SuppressFieldNames : ::mbo::types::Extend<SuppressFieldNames> {
+  using NoFieldNames = void;
+
+  int first{1};
+  int second{2};
+};
+
+TEST_F(ExtendTest, SuppressFieldNames) {
+  constexpr SuppressFieldNames kTest{
+      .first = 25,
+      .second = 42,
+  };
+  EXPECT_THAT(kTest.ToString(), R"({25, 42})");
 }
 
 TEST_F(ExtendTest, Comparable) {
