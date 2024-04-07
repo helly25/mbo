@@ -29,6 +29,9 @@ namespace mbo::types::types_internal {
 static constexpr bool kStructNameSupport = true;
 
 template<typename T>
+concept SupportsFieldNames = clang::SupportsFieldNames<T>;
+
+template<typename T>
 inline constexpr absl::Span<const std::string_view> GetFieldNames() {
   return clang::StructMeta<T>::GetFieldNames();
 }
@@ -40,6 +43,9 @@ inline constexpr absl::Span<const std::string_view> GetFieldNames() {
 namespace mbo::types::types_internal {
 
 static const bool kStructNameSupport = false;
+
+template<typename T>
+concept SupportsFieldNames = false;
 
 template<typename T>
 inline constexpr absl::Span<const std::string_view> GetFieldNames() {

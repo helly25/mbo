@@ -1,20 +1,21 @@
 # 0.2.23
 
-* Add llvm/clang which can be triggered with `bazel ... --config=clang`.
-* Drastically shorten generated extender names (<1/3rd)>.
+* Added llvm/clang which can be triggered with `bazel ... --config=clang`.
+* Shortened generated extender names drastically (< 1/3rd).
+* Added union member identification (enables union members for `Extend`'s printing/streaming).
 
 # 0.2.22
 
-* Change the way `mbo::types::Extend` types are constructed to support more complex and deeper nested types.
-* Provide a new `mbo::extender::Default` which wraps all default extenders.
+* Changed the way `mbo::types::Extend` types are constructed to support more complex and deeper nested types.
+* Provided a new `mbo::extender::Default` which wraps all default extenders.
 
 # 0.2.21
 
-* Optimize `AnyScan`, `ConstScan` and `ConvertingScan` by dropping clone layer. We also explicitly support multiple iterations on one object.
+* Optimized `AnyScan`, `ConstScan` and `ConvertingScan` by dropping clone layer. We also explicitly support multiple iterations on one object.
 
 # 0.2.20
 
-* Add `empty` and `size` to `AnyScan`, `ConstScan` and `ConvertingScan`.
+* Added `empty` and `size` to `AnyScan`, `ConstScan` and `ConvertingScan`.
 
 # 0.2.19
 
@@ -25,9 +26,9 @@
 * Changed `LimitedSet` and `LimitedMap`:
   * Changed to new optimized code for `std::less` and make that the default.
   * Added custom bazel flag `--//mbo/container:limited_ordered_max_unroll_capacity=N`. This controls the maximum capacity `N` for which `index_of` will be unrolled (defaults to 16, range [4...32], see `mbo::container::container_internal::kUnrollMaxCapacityDefault`.
-* Change `RefWrap`:
-  * Add constexpr support.
-  * Make constructor implicit.
+* Changed `RefWrap`:
+  * Added constexpr support.
+  * Made constructor implicit.
 
 # 0.2.17
 

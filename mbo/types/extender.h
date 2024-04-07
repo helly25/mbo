@@ -125,7 +125,7 @@ struct MakeExtender {
 };
 
 template<typename ExtenderBase>
-struct AbslStringify_ : ExtenderBase {
+struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   using Type = typename ExtenderBase::Type;
 
   void OStreamFields(std::ostream& os) const { OStreamFieldsImpl(os, this->ToTuple()); }
@@ -196,7 +196,7 @@ struct AbslStringify_ : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct AbslHashable_ : ExtenderBase {
+struct AbslHashable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
  private:
   using T = typename ExtenderBase::Type;
 
@@ -208,7 +208,7 @@ struct AbslHashable_ : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct Comparable_ : ExtenderBase {
+struct Comparable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
  private:
   using T = typename ExtenderBase::Type;
 
@@ -244,7 +244,8 @@ struct Comparable_ : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct Printable_ : ExtenderBase {
+struct Printable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
+ public:
   std::string ToString() const {
     std::ostringstream os;
     this->OStreamFields(os);
@@ -253,7 +254,8 @@ struct Printable_ : ExtenderBase {
 };
 
 template<typename ExtenderBase>
-struct Streamable_ : ExtenderBase {
+struct Streamable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
+ public:
   friend std::ostream& operator<<(std::ostream& os, const ExtenderBase::Type& v) {
     v.OStreamFields(os);
     return os;
@@ -341,7 +343,7 @@ struct Default final {
 
 // Add a convenience namespace to clearly isolate just the extenders.
 namespace mbo::extender {
-using namespace ::mbo::types::extender;
-}
+using namespace ::mbo::types::extender;  // NOLINT(google-build-using-namespace)
+}  // namespace mbo::extender
 
 #endif  // MBO_TYPES_EXTENDER_H_

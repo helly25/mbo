@@ -40,6 +40,30 @@ inline constexpr auto StructToTuple(T&& v) {
   return types_internal::DecomposeHelper<T>::ToTuple(std::forward<T>(v));
 }
 
+namespace types_internal {
+
+template<typename Tuple, std::size_t Index>
+concept IsUnionMemberAt = std::is_union_v<std::tuple_element_t<Index, Tuple>>;
+
+template<typename Tuple, typename Indices>
+struct HasUnionMemberIdxImpl;
+
+template<typename Tuple, std::size_t... kIndex>
+struct HasUnionMemberIdxImpl<Tuple, std::index_sequence<kIndex...>>
+    : std::bool_constant<(... || IsUnionMemberAt<Tuple, kIndex>)> {};
+
+template<typename Tuple>
+concept HasUnionMemberImpl = HasUnionMemberIdxImpl<Tuple, std::make_index_sequence<std::tuple_size_v<Tuple>>>::value;
+
+}  // namespace types_internal
+
+// Determine whether a type that can be converted into a `tuple` using `StructToTuple` has at least one `union` member.
+// Such types cannot be used with `__builtin_dump_struct` in a `constexpr` context.
+template<typename T>
+concept HasUnionMember =
+    ::mbo::types::CanCreateTuple<T>
+    && types_internal::HasUnionMemberImpl<decltype(::mbo::types::StructToTuple(std::declval<T>()))>;
+
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_TUPLE_H_

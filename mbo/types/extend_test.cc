@@ -15,7 +15,7 @@
 
 #include "mbo/types/extend.h"
 
-#include <concepts>
+#include <concepts>  // IWYU pragma: keep
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -27,6 +27,7 @@
 #include "absl/strings/str_format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/types/extender.h"
 #include "mbo/types/internal/extend.h"
 #include "mbo/types/traits.h"
 
@@ -55,6 +56,9 @@ using ::testing::WhenSorted;
 
 static_assert(std::same_as<::mbo::types::extender::AbslStringify, ::mbo::extender::AbslStringify>);
 static_assert(std::same_as<::mbo::types::extender::Default, ::mbo::extender::Default>);
+
+static_assert(::mbo::types_internal::ExtenderListValid<::mbo::extender::Default>);
+static_assert(::mbo::types_internal::ExtenderListValid<AbslHashable, AbslStringify, Comparable, Printable, Streamable>);
 
 struct Empty {};
 
@@ -306,6 +310,36 @@ TEST_F(ExtendTest, StreamableComplexFields) {
   std::cout << "Person::person.name:\n";
   EXPECT_THAT(debug::Print(&person.person.name), SizeIs(Le(195)));
 #endif  // __clang__
+}
+
+struct WithUnion : mbo::types::Extend<WithUnion> {
+  union U {
+    int a{0};
+    int b;
+
+    template<typename Sink>
+    friend void AbslStringify(Sink& sink, const U& u) {
+      absl::Format(&sink, "%d", u.a);
+    }
+  };
+
+  int first;
+  U second;
+  int third;
+};
+
+static_assert(!::mbo::types::HasUnionMember<int>);
+
+static_assert(::mbo::types::HasUnionMember<WithUnion>);
+
+TEST_F(ExtendTest, StreamableWithUnion) {
+  const WithUnion test{
+      .first = 25,
+      .second{.a = 42},
+      .third = 99,
+  };
+
+  EXPECT_THAT(test.ToString(), R"({25, 42, 99})");
 }
 
 TEST_F(ExtendTest, Comparable) {

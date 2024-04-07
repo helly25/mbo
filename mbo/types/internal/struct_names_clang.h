@@ -22,12 +22,17 @@
 
 # include "absl/types/span.h"
 # include "mbo/types/internal/decompose_count.h"  // IWYU pragma: keep
+# include "mbo/types/tuple.h"                     // IWYU pragma: keep
 
 // IWYU pragma: private, include "mbo/types/internal/struct_names.h"
 
 namespace mbo::types::types_internal::clang {
 
-template<typename T, bool = std::is_default_constructible_v<T> && !std::is_array_v<T>>
+template<typename T>
+concept SupportsFieldNames =
+    !::mbo::types::HasUnionMember<T> && std::is_default_constructible_v<T> && !std::is_array_v<T>;
+
+template<typename T, bool = SupportsFieldNames<T>>
 class StructMeta {
  public:
   static constexpr absl::Span<const std::string_view> GetFieldNames() { return absl::MakeSpan(kFieldNames); }
