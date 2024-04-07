@@ -314,32 +314,62 @@ TEST_F(ExtendTest, StreamableComplexFields) {
 
 struct WithUnion : mbo::types::Extend<WithUnion> {
   union U {
-    int a{0};
-    int b;
+    int first{2};
+    int second;
 
     template<typename Sink>
-    friend void AbslStringify(Sink& sink, const U& u) {
-      absl::Format(&sink, "%d", u.a);
+    friend void AbslStringify(Sink& sink, const U& val) {
+      absl::Format(&sink, "%d", val.first);  // NOLINT(cppcoreguidelines-pro-type-union-access)
     }
   };
 
-  int first;
+  int first{1};
   U second;
-  int third;
+  int third{3};
 };
 
 static_assert(!::mbo::types::HasUnionMember<int>);
 
 static_assert(::mbo::types::HasUnionMember<WithUnion>);
 
+struct WithAnonymousUnion {  // Cannot extend due to anonymous union
+  int first{1};
+
+  union {
+    int second{2};
+    int third;
+  };
+
+  int fourth{3};
+};
+
+// cannot decompose class type '...WithAnonymousUnion' because it has an anonymous union member
+//    auto& [a1, a2, a3] = data;
+// static_assert(::mbo::types::HasUnionMember<WithAnonymousUnion>);
+
 TEST_F(ExtendTest, StreamableWithUnion) {
-  const WithUnion test{
+  constexpr WithUnion kTest{
       .first = 25,
-      .second{.a = 42},
+      .second{.second = 42},
       .third = 99,
   };
 
-  EXPECT_THAT(test.ToString(), R"({25, 42, 99})");
+  EXPECT_THAT(kTest.ToString(), R"({25, 42, 99})");
+}
+
+struct SuppressFieldNames : ::mbo::types::Extend<SuppressFieldNames> {
+  using NoFieldNames = void;
+
+  int first{1};
+  int second{2};
+};
+
+TEST_F(ExtendTest, SuppressFieldNames) {
+  constexpr SuppressFieldNames kTest{
+      .first = 25,
+      .second = 42,
+  };
+  EXPECT_THAT(kTest.ToString(), R"({25, 42})");
 }
 
 TEST_F(ExtendTest, Comparable) {

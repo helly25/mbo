@@ -184,12 +184,14 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
 
   template<typename V>
   static void OStreamField(std::ostream& os, std::size_t idx, const V& v) {
-    static constexpr auto kNames = ::mbo::types::types_internal::GetFieldNames<Type>();
     if (idx) {
       os << ", ";
     }
-    if (idx < kNames.length() && !kNames[idx].empty()) {
-      os << "." << kNames[idx] << ": ";
+    if constexpr (!requires { typename Type::NoFieldNames; }) {
+      static constexpr auto kNames = ::mbo::types::types_internal::GetFieldNames<Type>();
+      if (idx < kNames.length() && !kNames[idx].empty()) {
+        os << "." << kNames[idx] << ": ";
+      }
     }
     OStreamValue(os, v);
   }
@@ -269,6 +271,12 @@ namespace extender {
 // [AbslStringify](https://abseil.io/docs/cpp/guides/format#abslstringify)).
 //
 // This default Extender is automatically available through `mb::types::Extend`.
+//
+// If the compiler and the structure support `__buildtin_dump_struct` (e.g. if
+// compiled with Clang), then this automatically supports field names. However,
+// this does not work with `union`s. Further, providing field names can be
+// suppressed by providing a typename `NoFieldNames`, e.g.:
+//   `using NoFieldNames = void;`
 struct AbslStringify final : MakeExtender<"AbslStringify"_ts, AbslStringify_> {};
 
 // Extender that injects functionality to make an `Extend`ed type work with

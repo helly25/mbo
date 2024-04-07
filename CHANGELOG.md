@@ -3,6 +3,7 @@
 * Added llvm/clang which can be triggered with `bazel ... --config=clang`.
 * Shortened generated extender names drastically (< 1/3rd).
 * Added union member identification (enables union members for `Extend`'s printing/streaming).
+* Added ability to suppress field name support in `Extend` by adding `using NoFieldNames = void;`.
 
 # 0.2.22
 
