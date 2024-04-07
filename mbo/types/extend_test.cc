@@ -358,7 +358,7 @@ TEST_F(ExtendTest, StreamableWithUnion) {
 }
 
 struct SuppressFieldNames : ::mbo::types::Extend<SuppressFieldNames> {
-  using NoFieldNames = void;
+  using MboExtendDoNotPrintFieldNames = void;
 
   int first{1};
   int second{2};
