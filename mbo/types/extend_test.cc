@@ -383,7 +383,7 @@ TEST_F(ExtendTest, StreamableWithUnion) {
 }
 
 struct SuppressFieldNames : ::mbo::types::Extend<SuppressFieldNames> {
-  using MboExtendDoNotPrintFieldNames = void;
+  using MboTypesExtendDoNotPrintFieldNames = void;
 
   int first{1};
   int second{2};
@@ -662,7 +662,7 @@ TEST_F(ExtendTest, NoDefaultConstructor) {
 }
 
 struct AbslFlatHashMapUser : Extend<AbslFlatHashMapUser> {
-  using MboExtendDoNotPrintFieldNames = void;
+  using MboTypesExtendDoNotPrintFieldNames = void;
   absl::flat_hash_map<int, std::string> flat_hash_map;
 };
 

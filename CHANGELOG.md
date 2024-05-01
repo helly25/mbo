@@ -1,3 +1,8 @@
+# 0.2.24
+
+* Improved `Extend` support.
+* Renamed `MboExtendDoNotPrintFieldNames` to `MboTypesExtendDoNotPrintFieldNames` which is the logical naming that follows the internal structure.
+
 # 0.2.23
 
 * Added llvm/clang which can be triggered with `bazel ... --config=clang`.
