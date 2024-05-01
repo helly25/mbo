@@ -573,7 +573,7 @@ TEST_F(ExtendTest, ExtenderNames) {
 template<typename T>
 struct Crtp {};  // Technically `Crtp` is not needed for the test, but we want to ensure this works with CRTP types.
 
-struct Crtp1 {  //}: Crtp<Crtp1> {
+struct Crtp1 : Crtp<Crtp1> {
   Crtp1() = delete;
 
   explicit Crtp1(int v) : value(v) {}
@@ -581,7 +581,7 @@ struct Crtp1 {  //}: Crtp<Crtp1> {
   int value{0};
 };
 
-struct Crtp2 {  //}: Crtp<Crtp2> {
+struct Crtp2 : Crtp<Crtp2> {
   Crtp2() = delete;
 
   explicit Crtp2(int v) : value(v) {}
