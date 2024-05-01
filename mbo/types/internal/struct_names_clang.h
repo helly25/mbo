@@ -28,8 +28,6 @@
 
 namespace mbo::types::types_internal::clang {
 
-constexpr std::size_t kMaxFieldNames = 200;
-
 template<typename T>
 concept SupportsFieldNames =
     !::mbo::types::HasUnionMember<T> && std::is_default_constructible_v<T> && !std::is_array_v<T>;
