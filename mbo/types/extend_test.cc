@@ -19,17 +19,26 @@
 #include <sstream>
 #include <string>
 #include <string_view>
-#include <tuple>
-#include <type_traits>
+#include <tuple>        // IWYU pragma: keep
+#include <type_traits>  // IWYU pragma: keep
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/hash/hash_testing.h"
 #include "absl/log/absl_log.h"  // IWYU pragma: keep
 #include "absl/strings/str_format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/types/extender.h"
-#include "mbo/types/internal/extend.h"
-#include "mbo/types/traits.h"
+#include "mbo/types/internal/decompose_count.h"
+#include "mbo/types/internal/extend.h"  // IWYU pragma: keep
+#include "mbo/types/traits.h"           // IWYU pragma: keep
+
+namespace std {
+template<typename Sink>
+void AbslStringify(Sink& sink, const std::pair<const int, std::string>& val) {  // NOLINT(cert-dcl58-cpp)
+  absl::Format(&sink, R"({%d, "%s"})", val.first, val.second);
+}
+}  // namespace std
 
 namespace mbo::types {
 namespace {
@@ -40,9 +49,11 @@ using ::mbo::types::extender::Comparable;
 using ::mbo::types::extender::Printable;
 using ::mbo::types::extender::Streamable;
 using ::mbo::types::types_internal::kStructNameSupport;
+using ::testing::AnyOf;
 using ::testing::Conditional;
 using ::testing::Contains;
 using ::testing::ElementsAre;
+using ::testing::EndsWith;
 using ::testing::Eq;
 using ::testing::Ge;
 using ::testing::Gt;
@@ -328,9 +339,23 @@ struct WithUnion : mbo::types::Extend<WithUnion> {
   int third{3};
 };
 
-static_assert(!::mbo::types::HasUnionMember<int>);
+static_assert(!HasUnionMember<int>);
 
-static_assert(::mbo::types::HasUnionMember<WithUnion>);
+static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<0>::value);
+static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<1>::value);
+static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<2>::value);
+static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<3>::value);
+static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<4>::value);
+static_assert(!types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<5>::value);
+static_assert(!types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<6>::value);
+static_assert(!types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<7>::value);
+static_assert(types_internal::DecomposeInfo<WithUnion>::kInitializerCount == 4);
+static_assert(types_internal::DecomposeInfo<WithUnion>::kFieldCount == 4);
+static_assert(types_internal::DecomposeInfo<WithUnion>::kCountBases == 0);
+static_assert(types_internal::DecomposeInfo<WithUnion>::kCountEmptyBases == 1);
+static_assert(types_internal::DecomposeCountImpl<WithUnion>::value == 3);
+
+static_assert(HasUnionMember<WithUnion>);
 
 struct WithAnonymousUnion {  // Cannot extend due to anonymous union
   int first{1};
@@ -358,7 +383,7 @@ TEST_F(ExtendTest, StreamableWithUnion) {
 }
 
 struct SuppressFieldNames : ::mbo::types::Extend<SuppressFieldNames> {
-  using MboExtendDoNotPrintFieldNames = void;
+  using MboTypesExtendDoNotPrintFieldNames = void;
 
   int first{1};
   int second{2};
@@ -544,6 +569,112 @@ TEST_F(ExtendTest, ExtenderNames) {
       T4::RegisteredExtenderNames(),
       WhenSorted(ElementsAre("AbslHashable", "AbslStringify", "Comparable", "Default", "Printable", "Streamable")));
 }
+
+template<typename T>
+struct Crtp {};  // Technically `Crtp` is not needed for the test, but we want to ensure this works with CRTP types.
+
+struct Crtp1 : Crtp<Crtp1> {
+  Crtp1() = delete;
+
+  explicit Crtp1(int v) : value(v) {}
+
+  int value{0};
+};
+
+struct Crtp2 : Crtp<Crtp2> {
+  Crtp2() = delete;
+
+  explicit Crtp2(int v) : value(v) {}
+
+  int value{0};
+};
+
+struct UseCrtp1 : Extend<UseCrtp1> {
+  Crtp1 crtp;
+};
+
+static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<0>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<1>::value);
+static_assert(types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<2>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<3>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<4>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<5>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<6>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<7>::value);
+
+static_assert(types_internal::AggregateInitializerCount<UseCrtp1>::value == 2);
+static_assert(types_internal::DecomposeInfo<UseCrtp1>::kInitializerCount == 2);
+
+static_assert(types_internal::DecomposeInfo<UseCrtp1>::kFieldCount == 2);
+static_assert(types_internal::DecomposeInfo<UseCrtp1>::kDecomposeCount == 1);
+static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kBadFieldCount);
+static_assert(types_internal::DecomposeInfo<UseCrtp1>::kIsAggregate);
+static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kIsEmpty);
+static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kOneNonEmptyBase);
+static_assert(types_internal::DecomposeInfo<UseCrtp1>::kOnlyEmptyBases);
+static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kOneNonEmptyBasePlusFields);
+
+static_assert(types_internal::DecomposeInfo<UseCrtp1>::kDecomposeCount == 1);
+
+struct UseCrtp2 : Extend<UseCrtp2> {
+  Crtp2 crtp;
+};
+
+struct UseBoth : Extend<UseBoth> {
+  Crtp1 crtp1;
+  Crtp2 crtp2;
+};
+
+static_assert(IsAggregate<UseBoth>);
+
+static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<0>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<1>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<2>::value);
+static_assert(types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<3>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<4>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<5>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<6>::value);
+static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<7>::value);
+
+static_assert(types_internal::IsAggregateInitializableWithNumArgs<UseBoth, 3>);
+static_assert(types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<3>::value);
+static_assert(types_internal::AggregateInitializerCount<UseBoth>::value == 3);
+static_assert(types_internal::DecomposeInfo<UseBoth>::kInitializerCount == 3);
+
+static_assert(types_internal::DecomposeInfo<UseBoth>::kFieldCount == 3);
+static_assert(!types_internal::DecomposeInfo<UseBoth>::kBadFieldCount);
+static_assert(types_internal::DecomposeInfo<UseBoth>::kIsAggregate);
+static_assert(!types_internal::DecomposeInfo<UseBoth>::kIsEmpty);
+static_assert(!types_internal::DecomposeInfo<UseBoth>::kOneNonEmptyBase);
+static_assert(types_internal::DecomposeInfo<UseBoth>::kOnlyEmptyBases);
+static_assert(!types_internal::DecomposeInfo<UseBoth>::kOneNonEmptyBasePlusFields);
+
+static_assert(types_internal::DecomposeInfo<UseBoth>::kDecomposeCount == 2);
+
+static_assert(!IsDecomposable<Crtp1>);
+static_assert(!IsDecomposable<Crtp2>);
+static_assert(IsDecomposable<UseCrtp1>);
+static_assert(IsDecomposable<UseCrtp2>);
+static_assert(IsDecomposable<UseBoth>);
+
+TEST_F(ExtendTest, NoDefaultConstructor) {
+  ABSL_LOG(ERROR) << types_internal::DecomposeInfo<UseBoth>::Debug();
+}
+
+struct AbslFlatHashMapUser : Extend<AbslFlatHashMapUser> {
+  using MboTypesExtendDoNotPrintFieldNames = void;
+  absl::flat_hash_map<int, std::string> flat_hash_map;
+};
+
+TEST_F(ExtendTest, AbseilFlatHashMapMember) {
+  const AbslFlatHashMapUser data = {
+      .flat_hash_map = {{25, "25"}, {42, "42"}},
+  };
+  EXPECT_THAT(
+      data.ToString(), AnyOf(EndsWith(R"({{25, "25"}, {42, "42"}}})"), EndsWith(R"({{42, "42"}, {25, "25"}}})")));
+}
+
+static_assert(DecomposeCountV<AbslFlatHashMapUser> == 1);
 
 }  // namespace
 }  // namespace mbo::types

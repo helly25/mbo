@@ -187,7 +187,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
     if (idx) {
       os << ", ";
     }
-    if constexpr (!requires { typename Type::MboExtendDoNotPrintFieldNames; }) {
+    if constexpr (!requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
       static constexpr auto kNames = ::mbo::types::types_internal::GetFieldNames<Type>();
       if (idx < kNames.length() && !kNames[idx].empty()) {
         os << "." << kNames[idx] << ": ";
@@ -275,8 +275,8 @@ namespace extender {
 // If the compiler and the structure support `__buildtin_dump_struct` (e.g. if
 // compiled with Clang), then this automatically supports field names. However,
 // this does not work with `union`s. Further, providing field names can be
-// suppressed by providing a typename `MboExtendDoNotPrintFieldNames`, e.g.:
-//   `using MboExtendDoNotPrintFieldNames = void;`
+// suppressed by providing a typename `MboTypesExtendDoNotPrintFieldNames`, e.g.:
+//   `using MboTypesExtendDoNotPrintFieldNames = void;`
 struct AbslStringify final : MakeExtender<"AbslStringify"_ts, AbslStringify_> {};
 
 // Extender that injects functionality to make an `Extend`ed type work with

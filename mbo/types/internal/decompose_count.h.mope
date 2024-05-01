@@ -149,6 +149,14 @@ concept IsAggregateInitializable = IsAggregate<T> && requires { T{std::declval<A
 template<IsAggregate T, typename Indices>
 struct IsAggregateInitializableFromIndices;
 
+// Attemp initialization: Simply try any type for all Indices.
+//
+// The alternative is to already consider a number of base types in the front and a then non base
+// types. This has the disadvantage that it effectively prevents `BinarySearch` from working in all
+// cases. Plus, it means that for every test we have to try a given number of base types which
+// multiplies the attempts O(N^2). Trying any type has a change to work with `BinarySearch` plus
+// `ReverseSearch`: O(log(N)) + O(N). However, that may not work in which case we will apply
+// `LinearSearch` plus `ReverseSearch` O(N) + O(N). So the chosen algorithm is O(N).
 template<IsAggregate T, std::size_t... Indices>
 struct IsAggregateInitializableFromIndices<T, std::index_sequence<Indices...>>
     : std::bool_constant<IsAggregateInitializable<T, AnyTypeN<Indices>...>> {};
@@ -170,9 +178,28 @@ struct AggregateInitializeTest {
 // On a single byte there could be 8 bit fields, so we need to multiply with 8.
 constexpr std::size_t kFieldBlowupFactor = 8;
 
+// Determine the highest number of possible initializers.
+
+template<IsAggregate T>
+struct AggregateInitializerMidCount
+    : BinarySearch<AggregateInitializeTest<T>::template IsInitializable, 0, kFieldBlowupFactor * sizeof(T) + 1> {};
+
+// The preference is to find somewhat high value as fast as possible.
+// Applying BinarySearch may however not work, as it may simply not try a workable number.
+// In the failure case, the result is 0 and we try brut force to find the first workable number.
+// From the number we found so far, we try the highest number, in reverse order (starting at End - 1).
 template<IsAggregate T>
 struct AggregateInitializerCount
-    : BinarySearch<AggregateInitializeTest<T>::template IsInitializable, 0, kFieldBlowupFactor * sizeof(T) + 1> {};
+    : ReverseSearch<
+          AggregateInitializeTest<T>::template IsInitializable,
+          std::conditional_t<
+              AggregateInitializerMidCount<T>::value != 0,
+              AggregateInitializerMidCount<T>,
+              LinearSearch<
+                  AggregateInitializeTest<T>::template IsInitializable,
+                  0,
+                  kFieldBlowupFactor * sizeof(T) + 1>>::value,
+          kFieldBlowupFactor * sizeof(T) + 1> {};
 
 template<IsAggregate T, typename Indices, typename FieldIndices>
 struct AggregateInitializeableWith;
@@ -251,7 +278,9 @@ struct OneNonEmptyBaseIndicesImpl<T, kFieldCount, std::index_sequence<kIndex...>
     : std::bool_constant<(... || OneNonEmptyBaseAt<T, kFieldCount, kIndex>::value)> {};
 
 template<typename T, std::size_t kFieldCount>
-concept OneNonEmptyBaseImpl = OneNonEmptyBaseIndicesImpl<T, kFieldCount, std::make_index_sequence<kFieldCount>>::value;
+concept OneNonEmptyBaseImpl =
+    kFieldCount != NotDecomposableImpl::value
+    && OneNonEmptyBaseIndicesImpl<T, kFieldCount, std::make_index_sequence<kFieldCount>>::value;
 
 template<typename T>
 concept OneNonEmptyBase = OneNonEmptyBaseImpl<T, AggregateFieldCountRawImpl<T>::value>;
@@ -303,7 +332,10 @@ struct OneNonEmptyBasePlusFieldsBaseCountImpl<T, kFieldCount, std::index_sequenc
 template<typename T, std::size_t kFieldCount>
 concept OneNonEmptyBasePlusFieldsBaseCount =
     kFieldCount > 0  // At least one field (non base)
-    && OneNonEmptyBasePlusFieldsBaseCountImpl<T, kFieldCount, std::make_index_sequence<kFieldCount - 1>>::value;
+    && kFieldCount
+           != NotDecomposableImpl::value  // Prevent ~0 (a.k.a -1 or max)
+               && OneNonEmptyBasePlusFieldsBaseCountImpl<T, kFieldCount, std::make_index_sequence<kFieldCount - 1>>::
+                   value;
 
 template<typename T>
 concept OneNonEmptyBasePlusFields = OneNonEmptyBasePlusFieldsBaseCount<T, AggregateFieldCountRawImpl<T>::value>;
@@ -343,7 +375,11 @@ template<IsAggregate T, bool kRequireEmpty, std::size_t kNumFields>
 struct CountBasesImpl : CountBasesIndicesImpl<T, kRequireEmpty, kNumFields, std::make_index_sequence<kNumFields>> {};
 
 template<IsAggregate T, bool kRequireEmpty>
-struct CountBases : CountBasesImpl<T, kRequireEmpty, AggregateFieldCountRawImpl<T>::value> {};
+struct CountBases
+    : std::conditional_t<
+          AggregateFieldCountRawImpl<T>::value == NotDecomposableImpl::value,
+          std::integral_constant<std::size_t, 0>,
+          CountBasesImpl<T, kRequireEmpty, AggregateFieldCountRawImpl<T>::value>> {};
 
 // Put all into once struct.
 template<typename T, bool = std::is_aggregate_v<std::remove_cvref_t<T>> && !std::is_empty_v<std::remove_cvref_t<T>>>
@@ -353,25 +389,32 @@ struct DecomposeInfo final {
   static constexpr bool kIsEmpty = std::is_empty_v<Type>;
   static constexpr std::size_t kInitializerCount = 0;
   static constexpr std::size_t kFieldCount = 0;
-  static constexpr bool kBadFieldCount = 0;
-  static constexpr bool kOneNonEmptyBase = 0;
-  static constexpr bool kOneNonEmptyBasePlusFields = 0;
+  static constexpr bool kBadFieldCount = false;
+  static constexpr bool kOneNonEmptyBase = false;
+  static constexpr bool kOneNonEmptyBasePlusFields = false;
   static constexpr std::size_t kCountBases = 0;
   static constexpr std::size_t kCountEmptyBases = 0;
   static constexpr bool kOnlyEmptyBases = true;
   static constexpr bool kDecomposable = kIsAggregate || kIsEmpty;
   static constexpr std::size_t kDecomposeCount = kDecomposable ? 0 : NotDecomposableImpl::value;
 
-  static std::string Debug() {
+  static std::string Debug() {  // NOLINT(readability-function-cognitive-complexity)
     std::string str;
     std::string_view sep;
-#define DEBUG_ADD(f)                                                         \
-  str += std::string(sep) + #f + ": " + std::to_string(DecomposeInfo<T>::f); \
-  sep = ", "
+# define DEBUG_ADD(f)                                                                             \
+   str += std::string(sep) + #f + ": "                                                            \
+          + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
+                 ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
+                 : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
+                            && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
+                        ? std::string("N/A")                                                      \
+                        : std::to_string(DecomposeInfo<T>::f)));                                  \
+   sep = ", "
     DEBUG_ADD(kIsAggregate);
     DEBUG_ADD(kIsEmpty);
     // DEBUG_ADD(kInitializerCount);
     // DEBUG_ADD(kFieldCount);
+    // DEBUG_ADD(kBadFieldCount);
     // DEBUG_ADD(kOneNonEmptyBase);
     // DEBUG_ADD(kOneNonEmptyBasePlusFields);
     // DEBUG_ADD(kOnlyEmptyBases);
@@ -379,7 +422,7 @@ struct DecomposeInfo final {
     // DEBUG_ADD(kCountBases);
     // DEBUG_ADD(kCountEmptyBases);
     DEBUG_ADD(kDecomposeCount);
-#undef DEBUG_ADD
+# undef DEBUG_ADD
     return str;
   }
 };
@@ -399,20 +442,28 @@ struct DecomposeInfo<T, true> final {
   static constexpr std::size_t kCountEmptyBases = kBadFieldCount ? 0 : CountBases<Type, true>::value;
   static constexpr bool kOnlyEmptyBases = kCountBases <= kCountEmptyBases;
   static constexpr bool kDecomposable =
-      kIsAggregate && (kIsEmpty || ((kOneNonEmptyBase || kOnlyEmptyBases) && !kOneNonEmptyBasePlusFields));
+      !kBadFieldCount && kIsAggregate
+      && (kIsEmpty || ((kOneNonEmptyBase || kOnlyEmptyBases) && !kOneNonEmptyBasePlusFields));
   static constexpr std::size_t kDecomposeCount =
       kDecomposable ? kFieldCount - kCountEmptyBases : NotDecomposableImpl::value;
 
-  static std::string Debug() {
+  static std::string Debug() {  // NOLINT(readability-function-cognitive-complexity)
     std::string str;
     std::string_view sep;
-#define DEBUG_ADD(f)                                                         \
-  str += std::string(sep) + #f + ": " + std::to_string(DecomposeInfo<T>::f); \
-  sep = ", "
+# define DEBUG_ADD(f)                                                                             \
+   str += std::string(sep) + #f + ": "                                                            \
+          + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
+                 ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
+                 : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
+                            && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
+                        ? std::string("N/A")                                                      \
+                        : std::to_string(DecomposeInfo<T>::f)));                                  \
+   sep = ", "
     DEBUG_ADD(kIsAggregate);
     DEBUG_ADD(kIsEmpty);
     DEBUG_ADD(kInitializerCount);
     DEBUG_ADD(kFieldCount);
+    DEBUG_ADD(kBadFieldCount);
     DEBUG_ADD(kOneNonEmptyBase);
     DEBUG_ADD(kOneNonEmptyBasePlusFields);
     DEBUG_ADD(kOnlyEmptyBases);
@@ -420,7 +471,7 @@ struct DecomposeInfo<T, true> final {
     DEBUG_ADD(kCountBases);
     DEBUG_ADD(kCountEmptyBases);
     DEBUG_ADD(kDecomposeCount);
-#undef DEBUG_ADD
+# undef DEBUG_ADD
     return str;
   }
 };
