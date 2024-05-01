@@ -28,6 +28,8 @@
 
 namespace mbo::types::types_internal::clang {
 
+constexpr std::size_t kMaxFieldNames = 200;
+
 template<typename T>
 concept SupportsFieldNames =
     !::mbo::types::HasUnionMember<T> && std::is_default_constructible_v<T> && !std::is_array_v<T>;
@@ -69,10 +71,6 @@ class StructMeta {
     const std::array<Uninitialized, 1> storage_;
   };
 
-  static constexpr void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
-    __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
-  }
-
   static constexpr int DumpStructVisitor(  // NOLINT(cert-dcl50-cpp)
       FieldData& fields,
       std::size_t& field_index,
@@ -82,9 +80,13 @@ class StructMeta {
       std::string_view name = {},
       ...) {
     if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent == "  ") {
-      fields[field_index++] = name;
+      fields[field_index++] = name;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
     }
     return 0;
+  }
+
+  static constexpr void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
+    __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
   }
 
   // Older compilers may not allow this to be a `constexpr`.

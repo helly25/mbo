@@ -38,14 +38,14 @@ using AnyTypeN = AnyType;
 template<typename D>
 struct AnyBaseType {
   using RawD = std::remove_cvref_t<D>;
-  template<typename T, typename = std::enable_if_t<std::is_base_of_v<std::remove_const_t<T>, RawD>>>
+  template<typename T, typename = std::enable_if_t<std::is_base_of_v<std::remove_cvref_t<T>, RawD>>>
   constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
 };
 
 template<typename D>
 struct AnyNonBaseType {
   using RawD = std::remove_cvref_t<D>;
-  template<typename T, typename = std::enable_if_t<!std::is_base_of_v<std::remove_const_t<T>, RawD>>>
+  template<typename T, typename = std::enable_if_t<!std::is_base_of_v<std::remove_cvref_t<T>, RawD>>>
   constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
 };
 
