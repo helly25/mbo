@@ -155,8 +155,7 @@ struct IsAggregateInitializableFromIndices;
 // types. This has the disadvantage that it effectively prevents `BinarySearch` from working in all
 // cases. Plus, it means that for every test we have to try a given number of base types which
 // multiplies the attempts O(N^2). Trying any type has a change to work with `BinarySearch` plus
-// `ReverseSearch`: O(log(N)) + O(N). However, that may not work in which case we will apply
-// `LinearSearch` plus `ReverseSearch` O(N) + O(N). So the chosen algorithm is O(N).
+// `ReverseSearch`: O(log(N)) + O(N) --> O(N).
 template<IsAggregate T, std::size_t... Indices>
 struct IsAggregateInitializableFromIndices<T, std::index_sequence<Indices...>>
     : std::bool_constant<IsAggregateInitializable<T, AnyTypeN<Indices>...>> {};
@@ -186,20 +185,13 @@ struct AggregateInitializerMidCount
 
 // The preference is to find somewhat high value as fast as possible.
 // Applying BinarySearch may however not work, as it may simply not try a workable number.
-// In the failure case, the result is 0 and we try brut force to find the first workable number.
+// In the failure case, the result is 0 and we will simply revert to worst case scenario for the next step.
 // From the number we found so far, we try the highest number, in reverse order (starting at End - 1).
 template<IsAggregate T>
 struct AggregateInitializerCount
     : ReverseSearch<
           AggregateInitializeTest<T>::template IsInitializable,
-          std::conditional_t<
-              AggregateInitializerMidCount<T>::value != 0,
-              AggregateInitializerMidCount<T>,
-              LinearSearch<
-                  AggregateInitializeTest<T>::template IsInitializable,
-                  0,
-                  kFieldBlowupFactor * sizeof(T) + 1,
-                  0>>::value,
+          AggregateInitializerMidCount<T>::value,
           kFieldBlowupFactor * sizeof(T) + 1,
           0> {};
 
