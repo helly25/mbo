@@ -182,7 +182,7 @@ constexpr std::size_t kFieldBlowupFactor = 8;
 
 template<IsAggregate T>
 struct AggregateInitializerMidCount
-    : BinarySearch<AggregateInitializeTest<T>::template IsInitializable, 0, kFieldBlowupFactor * sizeof(T) + 1> {};
+    : BinarySearch<AggregateInitializeTest<T>::template IsInitializable, 0, kFieldBlowupFactor * sizeof(T) + 1, 0> {};
 
 // The preference is to find somewhat high value as fast as possible.
 // Applying BinarySearch may however not work, as it may simply not try a workable number.
@@ -198,8 +198,10 @@ struct AggregateInitializerCount
               LinearSearch<
                   AggregateInitializeTest<T>::template IsInitializable,
                   0,
-                  kFieldBlowupFactor * sizeof(T) + 1>>::value,
-          kFieldBlowupFactor * sizeof(T) + 1> {};
+                  kFieldBlowupFactor * sizeof(T) + 1,
+                  0>>::value,
+          kFieldBlowupFactor * sizeof(T) + 1,
+          0> {};
 
 template<IsAggregate T, typename Indices, typename FieldIndices>
 struct AggregateInitializeableWith;

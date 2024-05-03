@@ -66,3 +66,12 @@ mope_test(
     outs = ["decompose_count.h"],
     clang_format = True,
 )
+
+cc_test(
+    name = "binary_search_test",
+    srcs = ["binary_search_test.cc"],
+    deps = [
+        ":traits_cc",
+        "@com_google_googletest//:gtest_main",
+    ]
+)
