@@ -31,7 +31,7 @@ struct Test {
   static constexpr std::size_t size() { return sizeof...(Value); }  // NOLINT(*-naming)
 
   static constexpr int at(std::size_t index, int bad = std::numeric_limits<int>::min()) {  // NOLINT(*-naming)
-    return 0 <= index && index < size() ? kValues[index] : bad;
+    return 0 <= index && index < size() ? kValues[index] : bad;  // NOLINT(*-array-index,*-redundant-expression)
   }
 };
 

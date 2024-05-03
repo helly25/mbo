@@ -349,6 +349,7 @@ struct WithUnion : mbo::types::Extend<WithUnion> {
 
 static_assert(!HasUnionMember<int>);
 
+// NOLINTBEGIN(*-magic-numbers)
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<0>::value);
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<1>::value);
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<2>::value);
@@ -362,6 +363,7 @@ static_assert(types_internal::DecomposeInfo<WithUnion>::kFieldCount == 4);
 static_assert(types_internal::DecomposeInfo<WithUnion>::kCountBases == 0);
 static_assert(types_internal::DecomposeInfo<WithUnion>::kCountEmptyBases == 1);
 static_assert(types_internal::DecomposeCountImpl<WithUnion>::value == 3);
+// NOLINTEND(*-magic-numbers)
 
 static_assert(HasUnionMember<WithUnion>);
 
@@ -637,6 +639,7 @@ struct UseBoth : Extend<UseBoth> {
 
 static_assert(IsAggregate<UseBoth>);
 
+// NOLINTBEGIN(*-magic-numbers)
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<0>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<1>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<2>::value);
@@ -645,6 +648,7 @@ static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<5>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<6>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<7>::value);
+// NOLINTEND(*-magic-numbers)
 
 static_assert(types_internal::IsAggregateInitializableWithNumArgs<UseBoth, 3>);
 static_assert(types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<3>::value);
