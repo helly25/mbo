@@ -18,6 +18,7 @@
 
 #include <cstddef>  // IWYU pragma: keep
 #include <type_traits>
+#include <variant>
 
 #include "mbo/types/internal/decompose_count.h"          // IWYU pragma: export
 #include "mbo/types/internal/is_braces_constructible.h"  // IWYU pragma: export
@@ -304,6 +305,19 @@ concept IsSameAsAnyOfRaw = types_internal::IsSameAsAnyOfRawImpl<std::remove_cvre
 // alternatives.
 template<typename SameAs, typename... Ts>
 concept NotSameAsAnyOfRaw = !IsSameAsAnyOfRaw<std::remove_cvref_t<SameAs>, Ts...>;
+
+namespace types_internal {
+
+template<typename T>
+struct IsVariantImpl : std::false_type {};
+
+template<typename... Args>
+struct IsVariantImpl<std::variant<Args...>> : std::true_type {};
+
+}  // namespace types_internal
+
+template<typename T>
+concept IsVariant = types_internal::IsVariantImpl<T>::value;
 
 }  // namespace mbo::types
 

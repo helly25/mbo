@@ -29,8 +29,8 @@
 namespace mbo::types::types_internal::clang {
 
 template<typename T>
-concept SupportsFieldNames =
-    !::mbo::types::HasUnionMember<T> && std::is_default_constructible_v<T> && !std::is_array_v<T>;
+concept SupportsFieldNames = std::is_default_constructible_v<T> && !std::is_array_v<T>  // Minimum requirement
+                             && !::mbo::types::HasUnionMember<T>;
 
 template<typename T, bool = SupportsFieldNames<T>>
 class StructMeta {
