@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "mbo/types/internal/decompose_count.h"  // IWYU pragma: export
+#include "mbo/types/traits.h"
 
 namespace mbo::types {
 
@@ -55,6 +56,20 @@ struct HasUnionMemberIdxImpl<Tuple, std::index_sequence<kIndex...>>
 template<typename Tuple>
 concept HasUnionMemberImpl = HasUnionMemberIdxImpl<Tuple, std::make_index_sequence<std::tuple_size_v<Tuple>>>::value;
 
+template<typename Tuple, std::size_t Index>
+concept IsVariantMemberAt = IsVariant<std::tuple_element_t<Index, Tuple>>;
+
+template<typename Tuple, typename Indices>
+struct HasVariantMemberIdxImpl;
+
+template<typename Tuple, std::size_t... kIndex>
+struct HasVariantMemberIdxImpl<Tuple, std::index_sequence<kIndex...>>
+    : std::bool_constant<(... || IsVariantMemberAt<Tuple, kIndex>)> {};
+
+template<typename Tuple>
+concept HasVariantMemberImpl =
+    HasVariantMemberIdxImpl<Tuple, std::make_index_sequence<std::tuple_size_v<Tuple>>>::value;
+
 }  // namespace types_internal
 
 // Determine whether a type that can be converted into a `tuple` using `StructToTuple` has at least one `union` member.
@@ -63,6 +78,13 @@ template<typename T>
 concept HasUnionMember =
     ::mbo::types::CanCreateTuple<T>
     && types_internal::HasUnionMemberImpl<decltype(::mbo::types::StructToTuple(std::declval<T>()))>;
+
+// Determine whether a type that can be converted into a `tuple` using `StructToTuple` has at least one `std::variant`
+// member.  Such types cannot be used with `__builtin_dump_struct` in a `constexpr` context.
+template<typename T>
+concept HasVariantMember =
+    ::mbo::types::CanCreateTuple<T>
+    && types_internal::HasVariantMemberImpl<decltype(::mbo::types::StructToTuple(std::declval<T>()))>;
 
 }  // namespace mbo::types
 

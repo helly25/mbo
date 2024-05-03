@@ -20,7 +20,7 @@
 # include <string_view>
 # include <type_traits>
 
-# include "absl/types/span.h"
+# include "absl/types/span.h"                     // IWYU pragma: keep
 # include "mbo/types/internal/decompose_count.h"  // IWYU pragma: keep
 # include "mbo/types/tuple.h"                     // IWYU pragma: keep
 
@@ -28,28 +28,36 @@
 
 namespace mbo::types::types_internal::clang {
 
+inline constexpr std::size_t kMaxFieldCount = 50;
+
 template<typename T>
 concept SupportsFieldNames =
-    !::mbo::types::HasUnionMember<T> && std::is_default_constructible_v<T> && !std::is_array_v<T>;
+    std::is_class_v<T> && std::is_default_constructible_v<T> && !std::is_array_v<T>  // Minimum requirement
+    && std::is_destructible_v<T>  // Type T must have a constexpr destructor. But `std::is_literal_type` is deprecated,
+    && __is_literal_type(T)       // so the internal version has to be used.
+    && !::mbo::types::HasUnionMember<T>;
 
-template<typename T, bool = SupportsFieldNames<T>>
-class StructMeta {
- public:
-  static constexpr absl::Span<const std::string_view> GetFieldNames() { return absl::MakeSpan(kFieldNames); }
+template<typename T, bool>
+class StructMeta;
 
+template<typename T>
+class StructMetaBase {
  private:
-  using FieldData = std::array<std::string_view, DecomposeCountImpl<T>::value>;
+  template<typename U, bool>
+  friend class StructMeta;
 
   class Storage final {
    private:
     union Uninitialized {
       constexpr Uninitialized() noexcept {}
 
-      constexpr ~Uninitialized() noexcept {};
+      constexpr ~Uninitialized() noexcept {}
+
       Uninitialized(const Uninitialized&) = delete;
       Uninitialized& operator=(const Uninitialized&) = delete;
       Uninitialized(Uninitialized&&) = delete;
       Uninitialized& operator=(Uninitialized&&) = delete;
+      int non{0};
       T value;
     };
 
@@ -69,31 +77,107 @@ class StructMeta {
     const std::array<Uninitialized, 1> storage_;
   };
 
+  // NOLINTBEGIN(*-swappable-parameters)
+
+  static constexpr int DumpStructFieldCounter(  // NOLINT(cert-dcl50-cpp)
+      std::size_t& field_index,
+      std::string_view format,
+      std::string_view indent = {},
+      std::string_view /*type*/ = {},
+      std::string_view /*name*/ = {},
+      ...) {
+    if (field_index < kMaxFieldCount && format.starts_with("%s%s %s =") && indent == "  ") {
+      ++field_index;
+    }
+    return 0;
+  }
+
+  // NOLINTEND(*-swappable-parameters)
+
+  static constexpr int FieldCount(const T* ptr, std::size_t& field_index) {
+    __builtin_dump_struct(ptr, &DumpStructFieldCounter, field_index);  // NOLINT(*-vararg)
+    return 0;
+  }
+
+  static constexpr std::size_t ComputeFieldCount() {
+    std::size_t field_index{0};
+    if constexpr (!std::is_empty_v<T>) {
+      Storage storage{};
+      FieldCount(&storage.Get(), field_index);
+    }
+    return field_index;
+  }
+};
+
+template<typename T, bool = SupportsFieldNames<T> && !std::is_empty_v<T>>
+class StructMeta final {
+ public:
+  static constexpr absl::Span<const std::string_view> GetFieldNames() {
+    if constexpr (std::is_empty_v<T>) {
+      return {};
+    } else {
+      return absl::MakeSpan(kFieldNames);
+    }
+  }
+
+ private:
+  static constexpr std::size_t kDecomposeCount = DecomposeCountImpl<T>::value;
+
+  struct FieldInfo {
+    std::string_view name;
+    std::string_view type;
+  };
+
+  static constexpr std::size_t kFieldCount =
+      DecomposeCondition<T> ? kDecomposeCount : StructMetaBase<T>::ComputeFieldCount();
+
+  using FieldData = std::array<FieldInfo, kFieldCount>;
+
+  // NOLINTBEGIN(*-swappable-parameters)
+
   static constexpr int DumpStructVisitor(  // NOLINT(cert-dcl50-cpp)
       FieldData& fields,
       std::size_t& field_index,
       std::string_view format,
       std::string_view indent = {},
-      std::string_view /*type*/ = {},
+      std::string_view type = {},
       std::string_view name = {},
       ...) {
     if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent == "  ") {
-      fields[field_index++] = name;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+      fields[field_index++] = {
+          // NOLINT(*-array-index)
+          .name = name,
+          .type = type,
+      };
     }
     return 0;
   }
+
+  // NOLINTEND(*-swappable-parameters)
 
   static constexpr void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
     __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
   }
 
   // Older compilers may not allow this to be a `constexpr`.
-  inline static constexpr FieldData kFieldNames = []() constexpr {
-    Storage storage{};
-    std::size_t field_index = 0;
+  inline static constexpr FieldData kFieldData = []() constexpr {
     FieldData fields;
-    Init(&storage.Get(), fields, field_index);
+    if constexpr (!std::is_empty_v<T>) {
+      typename StructMetaBase<T>::Storage storage{};
+      std::size_t field_index = 0;
+      Init(&storage.Get(), fields, field_index);
+    }
     return fields;
+  }();
+
+  inline static constexpr std::array<std::string_view, kFieldCount> kFieldNames = []() constexpr {
+    std::array<std::string_view, kFieldCount> data;
+    if constexpr (!std::is_empty_v<T>) {
+      for (std::size_t pos = 0; pos < kFieldCount; ++pos) {
+        data[pos] = kFieldData[pos].name;
+      }
+    }
+    return data;
   }();
 };
 
@@ -101,6 +185,8 @@ template<typename T>
 class StructMeta<T, false> {
  public:
   static constexpr absl::Span<const std::string_view> GetFieldNames() { return {}; }
+
+  static constexpr absl::Span<const std::string_view> GetFieldTypes() { return {}; }
 };
 
 }  // namespace mbo::types::types_internal::clang

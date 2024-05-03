@@ -137,8 +137,8 @@ cc_test(
 cc_library(
     name = "tuple_cc",
     hdrs = ["tuple.h"],
-    visibility = ["//visibility:private"],
-    deps = ["traits_cc"],
+    visibility = ["//mbo/types/internal:__pkg__"],
+    deps = [":traits_cc"],
 )
 
 cc_test(

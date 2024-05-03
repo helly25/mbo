@@ -32,12 +32,20 @@
 #include "mbo/types/internal/decompose_count.h"
 #include "mbo/types/internal/extend.h"  // IWYU pragma: keep
 #include "mbo/types/traits.h"           // IWYU pragma: keep
+#include "mbo/types/tuple.h"
 
 namespace std {
+
 template<typename Sink>
 void AbslStringify(Sink& sink, const std::pair<const int, std::string>& val) {  // NOLINT(cert-dcl58-cpp)
   absl::Format(&sink, R"({%d, "%s"})", val.first, val.second);
 }
+
+template<typename Sink, typename... Args>
+void AbslStringify(Sink& sink, const std::variant<Args...>& val) {  // NOLINT(cert-dcl58-cpp)
+  std::visit([&sink](auto&& arg) { absl::Format(&sink, "%v", arg); }, val);
+}
+
 }  // namespace std
 
 namespace mbo::types {
@@ -341,6 +349,7 @@ struct WithUnion : mbo::types::Extend<WithUnion> {
 
 static_assert(!HasUnionMember<int>);
 
+// NOLINTBEGIN(*-magic-numbers)
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<0>::value);
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<1>::value);
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<2>::value);
@@ -354,6 +363,7 @@ static_assert(types_internal::DecomposeInfo<WithUnion>::kFieldCount == 4);
 static_assert(types_internal::DecomposeInfo<WithUnion>::kCountBases == 0);
 static_assert(types_internal::DecomposeInfo<WithUnion>::kCountEmptyBases == 1);
 static_assert(types_internal::DecomposeCountImpl<WithUnion>::value == 3);
+// NOLINTEND(*-magic-numbers)
 
 static_assert(HasUnionMember<WithUnion>);
 
@@ -593,6 +603,7 @@ struct UseCrtp1 : Extend<UseCrtp1> {
   Crtp1 crtp;
 };
 
+// NOLINTBEGIN(*-magic-numbers)
 static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<0>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<1>::value);
 static_assert(types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<2>::value);
@@ -601,6 +612,7 @@ static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializabl
 static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<5>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<6>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<7>::value);
+// NOLINTEND(*-magic-numbers)
 
 static_assert(types_internal::AggregateInitializerCount<UseCrtp1>::value == 2);
 static_assert(types_internal::DecomposeInfo<UseCrtp1>::kInitializerCount == 2);
@@ -627,6 +639,7 @@ struct UseBoth : Extend<UseBoth> {
 
 static_assert(IsAggregate<UseBoth>);
 
+// NOLINTBEGIN(*-magic-numbers)
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<0>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<1>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<2>::value);
@@ -635,6 +648,7 @@ static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<5>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<6>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<7>::value);
+// NOLINTEND(*-magic-numbers)
 
 static_assert(types_internal::IsAggregateInitializableWithNumArgs<UseBoth, 3>);
 static_assert(types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<3>::value);
@@ -662,9 +676,21 @@ TEST_F(ExtendTest, NoDefaultConstructor) {
 }
 
 struct AbslFlatHashMapUser : Extend<AbslFlatHashMapUser> {
-  using MboTypesExtendDoNotPrintFieldNames = void;
   absl::flat_hash_map<int, std::string> flat_hash_map;
 };
+
+static_assert(std::is_default_constructible_v<AbslFlatHashMapUser>);
+static_assert(!std::is_trivially_default_constructible_v<AbslFlatHashMapUser>);
+static_assert(std::default_initializable<AbslFlatHashMapUser>);
+
+static_assert(std::is_destructible_v<AbslFlatHashMapUser>);
+static_assert(!std::is_trivially_destructible_v<AbslFlatHashMapUser>);
+
+static_assert(!types::HasUnionMember<AbslFlatHashMapUser>);
+static_assert(!types::HasVariantMember<AbslFlatHashMapUser>);
+
+static_assert(DecomposeCountV<AbslFlatHashMapUser> == 1);
+static_assert(!types_internal::SupportsFieldNames<AbslFlatHashMapUser>);
 
 TEST_F(ExtendTest, AbseilFlatHashMapMember) {
   const AbslFlatHashMapUser data = {
@@ -674,7 +700,21 @@ TEST_F(ExtendTest, AbseilFlatHashMapMember) {
       data.ToString(), AnyOf(EndsWith(R"({{25, "25"}, {42, "42"}}})"), EndsWith(R"({{42, "42"}, {25, "25"}}})")));
 }
 
-static_assert(DecomposeCountV<AbslFlatHashMapUser> == 1);
+struct WithVariant : Extend<WithVariant> {
+  std::variant<int, unsigned> value;
+};
+
+static_assert(types::HasVariantMember<WithVariant>);
+
+static_assert(DecomposeCountV<WithVariant> == 1);
+static_assert(types_internal::SupportsFieldNames<WithVariant> == kStructNameSupport);
+
+TEST_F(ExtendTest, VariantMember) {
+  const WithVariant data = {
+      .value = 69,
+  };
+  EXPECT_THAT(data.ToString(), Conditional(kStructNameSupport, R"({.value: 69})", R"({69})"));
+}
 
 }  // namespace
 }  // namespace mbo::types

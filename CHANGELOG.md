@@ -1,3 +1,8 @@
+# 0.2.25
+
+* Added concept `mbo::types::IsVariant`.
+* Added concept `mbo::types::HasVariantMember`.
+
 # 0.2.24
 
 * Improved `Extend` support.
