@@ -488,11 +488,11 @@ struct IsAggregateInitializableFromIndices;
 
 // Attemp initialization: Simply try any type for all Indices.
 //
-// The alternative is to already consider a number of base types in the front and a then non base
-// types. This has the disadvantage that it effectively prevents `BinarySearch` from working in all
-// cases. Plus, it means that for every test we have to try a given number of base types which
-// multiplies the attempts O(N^2). Trying any type has a change to work with `BinarySearch` plus
-// `ReverseSearch`: O(log(N)) + O(N) --> O(N).
+// The alternative is to already consider a number of base types in the front and then all non base
+// types (aka the fields). This has the disadvantage that it effectively prevents `BinarySearch`
+// from working in all cases. Plus, it means that for every test we have to try a given number of
+// base types which multiplies the attempts O(N^2). Trying any type has a chance to work with
+// `BinarySearch` plus `ReverseSearch`: O(log(N)) + O(N) --> O(N).
 template<IsAggregate T, std::size_t... Indices>
 struct IsAggregateInitializableFromIndices<T, std::index_sequence<Indices...>>
     : std::bool_constant<IsAggregateInitializable<T, AnyTypeN<Indices>...>> {};
