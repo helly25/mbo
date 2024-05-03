@@ -38,7 +38,14 @@ class StructMeta {
   static constexpr absl::Span<const std::string_view> GetFieldNames() { return absl::MakeSpan(kFieldNames); }
 
  private:
-  using FieldData = std::array<std::string_view, DecomposeCountImpl<T>::value>;
+  static constexpr std::size_t kFieldCount = DecomposeCountImpl<T>::value;
+
+  struct FieldInfo {
+    std::string_view name;
+    std::string_view type;
+  };
+
+  using FieldData = std::array<FieldInfo, kFieldCount>;
 
   class Storage final {
    private:
@@ -69,31 +76,46 @@ class StructMeta {
     const std::array<Uninitialized, 1> storage_;
   };
 
+  // NOLINTBEGIN(*-swappable-parameters)
   static constexpr int DumpStructVisitor(  // NOLINT(cert-dcl50-cpp)
       FieldData& fields,
       std::size_t& field_index,
       std::string_view format,
       std::string_view indent = {},
-      std::string_view /*type*/ = {},
+      std::string_view type = {},
       std::string_view name = {},
       ...) {
     if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent == "  ") {
-      fields[field_index++] = name;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+      fields[field_index++] = {
+          // NOLINT(*-array-index)
+          .name = name,
+          .type = type,
+      };
     }
     return 0;
   }
+
+  // NOLINTEND(*-swappable-parameters)
 
   static constexpr void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
     __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
   }
 
   // Older compilers may not allow this to be a `constexpr`.
-  inline static constexpr FieldData kFieldNames = []() constexpr {
+  inline static constexpr FieldData kFieldData = []() constexpr {
     Storage storage{};
     std::size_t field_index = 0;
     FieldData fields;
     Init(&storage.Get(), fields, field_index);
     return fields;
+  }();
+
+  inline static constexpr std::array<std::string_view, kFieldCount> kFieldNames = []() constexpr {
+    std::array<std::string_view, kFieldCount> data;
+    for (std::size_t pos = 0; pos < kFieldCount; ++pos) {
+      data[pos] = kFieldData[pos].name;
+    }
+    return data;
   }();
 };
 
@@ -101,6 +123,8 @@ template<typename T>
 class StructMeta<T, false> {
  public:
   static constexpr absl::Span<const std::string_view> GetFieldNames() { return {}; }
+
+  static constexpr absl::Span<const std::string_view> GetFieldTypes() { return {}; }
 };
 
 }  // namespace mbo::types::types_internal::clang
