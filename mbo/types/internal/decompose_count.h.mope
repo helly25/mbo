@@ -177,11 +177,14 @@ struct AggregateInitializeTest {
 // On a single byte there could be 8 bit fields, so we need to multiply with 8.
 constexpr std::size_t kFieldBlowupFactor = 8;
 
+template<typename T>
+constexpr std::size_t kMaxPossibleFields = kFieldBlowupFactor * sizeof(T);
+
 // Determine the highest number of possible initializers.
 
 template<IsAggregate T>
 struct AggregateInitializerMidCount
-    : BinarySearch<AggregateInitializeTest<T>::template IsInitializable, 0, kFieldBlowupFactor * sizeof(T) + 1, 0> {};
+    : BinarySearch<AggregateInitializeTest<T>::template IsInitializable, 0, kMaxPossibleFields<T> + 1, 0> {};
 
 // The preference is to find somewhat high value as fast as possible.
 // Applying BinarySearch may however not work, as it may simply not try a workable number.
@@ -192,7 +195,7 @@ struct AggregateInitializerCount
     : ReverseSearch<
           AggregateInitializeTest<T>::template IsInitializable,
           AggregateInitializerMidCount<T>::value,
-          kFieldBlowupFactor * sizeof(T) + 1,
+          kMaxPossibleFields<T> + 1,
           0> {};
 
 template<IsAggregate T, typename Indices, typename FieldIndices>
