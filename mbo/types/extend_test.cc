@@ -676,7 +676,6 @@ TEST_F(ExtendTest, NoDefaultConstructor) {
 }
 
 struct AbslFlatHashMapUser : Extend<AbslFlatHashMapUser> {
-  using MboTypesExtendDoNotPrintFieldNames = void;
   absl::flat_hash_map<int, std::string> flat_hash_map;
 };
 
@@ -691,7 +690,7 @@ static_assert(!types::HasUnionMember<AbslFlatHashMapUser>);
 static_assert(!types::HasVariantMember<AbslFlatHashMapUser>);
 
 static_assert(DecomposeCountV<AbslFlatHashMapUser> == 1);
-static_assert(types_internal::SupportsFieldNames<AbslFlatHashMapUser> == kStructNameSupport);
+static_assert(!types_internal::SupportsFieldNames<AbslFlatHashMapUser>);
 
 TEST_F(ExtendTest, AbseilFlatHashMapMember) {
   const AbslFlatHashMapUser data = {
@@ -707,8 +706,8 @@ struct WithVariant : Extend<WithVariant> {
 
 static_assert(types::HasVariantMember<WithVariant>);
 
-static_assert(DecomposeCountV<AbslFlatHashMapUser> == 1);
-static_assert(types_internal::SupportsFieldNames<AbslFlatHashMapUser> == kStructNameSupport);
+static_assert(DecomposeCountV<WithVariant> == 1);
+static_assert(types_internal::SupportsFieldNames<WithVariant> == kStructNameSupport);
 
 TEST_F(ExtendTest, VariantMember) {
   const WithVariant data = {

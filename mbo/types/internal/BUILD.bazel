@@ -36,7 +36,18 @@ cc_library(
     hdrs = ["struct_names.h"],
     deps = [
         ":traits_cc",
+        "//mbo/types:tuple_cc",
         "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "struct_names_test",
+    srcs = ["struct_names_test.cc"],
+    deps = [
+        ":struct_names_cc",
+        "//mbo/types:tstring_cc",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -47,7 +58,7 @@ cc_library(
         "decompose_count.h",
         "is_braces_constructible.h",
     ],
-    deps = ["cases_cc"],
+    deps = [":cases_cc"],
 )
 
 cc_library(

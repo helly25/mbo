@@ -24,7 +24,7 @@
 
 namespace mbo::types {
 
-// NOLINTBEGIN(readability-identifier-naming)
+// NOLINTBEGIN(readability-identifier-naming,readability-avoid-unconditional-preprocessor-if)
 
 #ifdef __clang__
 # pragma clang diagnostic push
@@ -577,7 +577,7 @@ constexpr auto make_ts(const char(&str)[N]) noexcept {
 # pragma GCC diagnostic pop
 #endif
 
-// NOLINTEND(readability-identifier-naming)
+// NOLINTEND(readability-identifier-naming,readability-avoid-unconditional-preprocessor-if)
 
 }  // namespace mbo::types
 
