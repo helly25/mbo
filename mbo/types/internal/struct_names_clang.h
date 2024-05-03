@@ -52,7 +52,8 @@ class StructMeta {
     union Uninitialized {
       constexpr Uninitialized() noexcept {}
 
-      constexpr ~Uninitialized() noexcept {};
+      constexpr ~Uninitialized() noexcept {}
+
       Uninitialized(const Uninitialized&) = delete;
       Uninitialized& operator=(const Uninitialized&) = delete;
       Uninitialized(Uninitialized&&) = delete;
