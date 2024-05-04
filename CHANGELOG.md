@@ -9,7 +9,6 @@
 * Added template struct `ReverseSearch` implements templated reverse linear search algorithm.
 * Added template struct `MaxSearch` implements templated linear search for last match algorithm.
 
-
 # 0.2.24
 
 * Improved `Extend` support.
