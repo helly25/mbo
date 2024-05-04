@@ -13,15 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mbo/types/internal/binary_search.h"
+#include "mbo/types/template_search.h"
 
 #include <array>
 #include <limits>
-#include <type_traits>
 
 // NOLINTBEGIN(*-magic-numbers)
 
-namespace mbo::types::types_internal {
+namespace mbo::types {
 namespace {
 
 template<int... Value>
@@ -43,15 +42,15 @@ struct IsNonZero {
 
 template<
     std::size_t Expected,
-    template<template<std::size_t> typename, std::size_t...>
+    template<template<std::size_t> typename, std::size_t Start, std::size_t End, std::size_t NotFound>
     typename Algorithm,
     template<typename>
     typename TestFunc,
     typename TestType,
     std::size_t Start = 0,
     std::size_t End = TestType::size(),
-    std::size_t... Values>
-concept TestEqual = Expected == Algorithm<TestFunc<TestType>::template TestFunc, Start, End, Values...>::value;
+    std::size_t NotFound = End>
+concept TestEqual = Expected == Algorithm<TestFunc<TestType>::template TestFunc, Start, End, NotFound>::value;
 
 // BinarySearch
 
@@ -136,6 +135,6 @@ static_assert(TestEqual<4, ReverseSearch, IsNonZero, Test<0, 2, 3, 4, 5, 0, 0>, 
 static_assert(TestEqual<99, ReverseSearch, IsNonZero, Test<0, 2, 3, 0, 0, 0, 0>, 3, 6, 99>);
 
 }  // namespace
-}  // namespace mbo::types::types_internal
+}  // namespace mbo::types
 
 // NOLINTEND(*-magic-numbers)

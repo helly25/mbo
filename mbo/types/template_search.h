@@ -13,22 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_TYPES_INTERNAL_BINARY_SEARCH_H_
-#define MBO_TYPES_INTERNAL_BINARY_SEARCH_H_
+#ifndef MBO_TYPES_TEMPLATE_SEARCH_H_
+#define MBO_TYPES_TEMPLATE_SEARCH_H_
 
 // IWYU pragma private, include "mbo/types/internal/decompose_count.h"
 
 #include <cstddef>  // IWYU pragma: keep
 #include <type_traits>
 
-namespace mbo::types::types_internal {
+namespace mbo::types {
 
 // Template `BinarySearch` - find higest value in `[Start, End[` for which `Predicate` is true.
 // Returns `NotFound` otherwise.
 // The `Predicate` must provide a boolean constant `value`.
-
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, std::size_t NotFound>
 struct BinarySearch;
+
+namespace types_internal {
 
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, std::size_t NotFound>
 using BinarySearchImpl = std::conditional_t < (Start + 1 >= End),
@@ -42,8 +43,10 @@ using BinarySearchImpl = std::conditional_t < (Start + 1 >= End),
               BinarySearch<Predicate, (Start + End) / 2, End, NotFound>,
               BinarySearch<Predicate, Start, (Start + End) / 2, NotFound>>>;
 
+}  // namespace types_internal
+
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound = End>
-struct BinarySearch : BinarySearchImpl<Predicate, Start, End, NotFound> {};
+struct BinarySearch : types_internal::BinarySearchImpl<Predicate, Start, End, NotFound> {};
 
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, std::size_t NotFound = End>
 constexpr std::size_t BinarySearchV = BinarySearch<Predicate, Start, End, NotFound>::value;
@@ -57,6 +60,8 @@ constexpr std::size_t BinarySearchV = BinarySearch<Predicate, Start, End, NotFou
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound>
 struct LinearSearch;
 
+namespace types_internal {
+
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound>
 using LinearSearchImpl = std::conditional_t<
     Start >= End,
@@ -66,8 +71,10 @@ using LinearSearchImpl = std::conditional_t<
         std::integral_constant<std::size_t, Start>,
         LinearSearch<Predicate, Start + 1, End, NotFound>>>;
 
+}  // namespace types_internal
+
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound = End>
-struct LinearSearch : LinearSearchImpl<Predicate, Start, End, NotFound> {};
+struct LinearSearch : types_internal::LinearSearchImpl<Predicate, Start, End, NotFound> {};
 
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound = End>
 constexpr std::size_t LinearSearchV = LinearSearch<Predicate, Start, End, NotFound>::value;
@@ -83,6 +90,8 @@ constexpr std::size_t LinearSearchV = LinearSearch<Predicate, Start, End, NotFou
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound>
 struct MaxSearch;
 
+namespace types_internal {
+
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound>
 using MaxSearchImpl = std::conditional_t<
     (Start >= End),
@@ -92,8 +101,10 @@ using MaxSearchImpl = std::conditional_t<
         MaxSearch<Predicate, Start + 1, End, Start>,
         std::integral_constant<std::size_t, NotFound>>>;
 
+}  // namespace types_internal
+
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound = End>
-struct MaxSearch : MaxSearchImpl<Predicate, Start, End, NotFound> {};
+struct MaxSearch : types_internal::MaxSearchImpl<Predicate, Start, End, NotFound> {};
 
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound = End>
 constexpr std::size_t MaxSearchV = MaxSearch<Predicate, Start, End, NotFound>::value;
@@ -108,6 +119,8 @@ constexpr std::size_t MaxSearchV = MaxSearch<Predicate, Start, End, NotFound>::v
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound>
 struct ReverseSearch;
 
+namespace types_internal {
+
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound>
 using ReverseSearchImpl = std::conditional_t<
     (End <= Start),
@@ -117,12 +130,14 @@ using ReverseSearchImpl = std::conditional_t<
         std::integral_constant<std::size_t, End - 1>,
         ReverseSearch<Predicate, Start, End - 1, NotFound>>>;
 
+}  // namespace types_internal
+
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound = End>
-struct ReverseSearch : ReverseSearchImpl<Predicate, Start, End, NotFound> {};
+struct ReverseSearch : types_internal::ReverseSearchImpl<Predicate, Start, End, NotFound> {};
 
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, size_t NotFound = End>
 constexpr std::size_t ReverseSearchV = ReverseSearch<Predicate, Start, End, NotFound>::value;
 
-}  // namespace mbo::types::types_internal
+}  // namespace mbo::types
 
-#endif  // MBO_TYPES_INTERNAL_BINARY_SEARCH_H_
+#endif  // MBO_TYPES_TEMPLATE_SEARCH_H_

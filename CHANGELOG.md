@@ -2,6 +2,13 @@
 
 * Added concept `mbo::types::IsVariant`.
 * Added concept `mbo::types::HasVariantMember`.
+* Fixed issue with `Extend` ability to handle struct names when compiled with Clang.
+* Fixed issue with `Extend` handling move only types when used in decompose assignment.
+* Added template struct `BinarySearch` implements templated binary search algorithm.
+* Added template struct `LinearSearch` implements templated linear search algorithm.
+* Added template struct `ReverseSearch` implements templated reverse linear search algorithm.
+* Added template struct `MaxSearch` implements templated linear search for last match algorithm.
+
 
 # 0.2.24
 

@@ -25,9 +25,9 @@
 #include <type_traits>
 #include <utility>  // IWYU pragma: keep
 
-#include "mbo/types/internal/binary_search.h"  // IWYU pragma: keep
-#include "mbo/types/internal/cases.h"          // IWYU pragma: keep
+#include "mbo/types/internal/cases.h"  // IWYU pragma: keep
 #include "mbo/types/internal/is_braces_constructible.h"
+#include "mbo/types/template_search.h"  // IWYU pragma: keep
 
 namespace mbo::types::types_internal {
 

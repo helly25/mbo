@@ -40,8 +40,8 @@ cc_library(
 
 cc_library(
     name = "extend_cc",
-    hdrs = ["extend.h"],
     srcs = ["extender.h"],
+    hdrs = ["extend.h"],
     visibility = ["//visibility:public"],
     deps = [
         ":tstring_cc",
@@ -85,18 +85,34 @@ cc_test(
 )
 
 cc_library(
-  name = "ref_wrap_cc",
-  hdrs = ["ref_wrap.h"],
-  visibility = ["//visibility:public"],
+    name = "ref_wrap_cc",
+    hdrs = ["ref_wrap.h"],
+    visibility = ["//visibility:public"],
 )
 
 cc_test(
-  name = "ref_wrap_test",
-  srcs = ["ref_wrap_test.cc"],
-  deps = [
-    ":ref_wrap_cc",
-    "@com_google_googletest//:gtest_main",
-  ]
+    name = "ref_wrap_test",
+    srcs = ["ref_wrap_test.cc"],
+    deps = [
+        ":ref_wrap_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "template_search_cc",
+    hdrs = ["template_search.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "template_search_test",
+    srcs = ["template_search_test.cc"],
+    deps = [
+        ":template_search_cc",
+        ":traits_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
 )
 
 cc_library(

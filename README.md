@@ -120,6 +120,11 @@ The C++ library is organized in functional groups each residing in their own dir
         * Mainly, this prevents calling the destructor and thus prevents termination issues (initialization order fiasco).
     * mbo/types:ref_wrap_cc, mbo/types/ref_wrap.h
         * template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.
+    * mbo/types:template_search_cc, mbo/types/template_search.h:
+        * template struct `BinarySearch` implements templated binary search algorithm.
+        * template struct `LinearSearch` implements templated linear search algorithm.
+        * template struct `ReverseSearch` implements templated reverse linear search algorithm.
+        * template struct `MaxSearch` implements templated linear search for last match algorithm.
     * mbo/types:traits_cc, mbo/types/traits.h
         * type alias `ContainerConstIteratorValueType` returned the value-type of the const_iterator of a container.
         * concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.
