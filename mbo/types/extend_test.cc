@@ -716,5 +716,44 @@ TEST_F(ExtendTest, VariantMember) {
   EXPECT_THAT(data.ToString(), Conditional(kStructNameSupport, R"({.value: 69})", R"({69})"));
 }
 
+struct MoveOnly {
+  constexpr explicit MoveOnly(int val) noexcept : value(val) {}
+
+  constexpr MoveOnly() = delete;
+  constexpr ~MoveOnly() noexcept = default;
+
+  MoveOnly(const MoveOnly&) = delete;
+  MoveOnly& operator=(const MoveOnly&) = delete;
+  MoveOnly(MoveOnly&&) noexcept = default;
+  MoveOnly& operator=(MoveOnly&&) noexcept = default;
+
+  int value{0};
+};
+
+struct UseMoveOnly : Extend<UseMoveOnly> {
+  MoveOnly move1{0};
+  MoveOnly move2{0};
+};
+
+TEST_F(ExtendTest, MoveOnlyTuple) {
+  // Verify that `ToTuple` works for `move-eligble` values as expected: ToTuple(Extend&&) -> std::tuple<T...>.
+  static constexpr int kValue1{25};
+  static constexpr int kValue2{33};
+  static constexpr int kValue3{42};
+  UseMoveOnly data{
+      .move1{MoveOnly{kValue1}},
+      .move2{MoveOnly{kValue2}},
+  };
+  auto [move1, move2] = std::move(data);
+  EXPECT_THAT(move1.value, kValue1);
+  EXPECT_THAT(move2.value, kValue2);
+
+  move1.value = kValue3;
+  EXPECT_THAT(move1.value, kValue3);
+  EXPECT_THAT(move2.value, kValue2);
+  EXPECT_THAT(data.move1.value, Ne(kValue3))
+      << "It does not matter what the value is after the move, but it must not be `kValue3`.";
+}
+
 }  // namespace
 }  // namespace mbo::types
