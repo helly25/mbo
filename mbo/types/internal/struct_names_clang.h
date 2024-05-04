@@ -57,24 +57,23 @@ class StructMetaBase {
       Uninitialized& operator=(const Uninitialized&) = delete;
       Uninitialized(Uninitialized&&) = delete;
       Uninitialized& operator=(Uninitialized&&) = delete;
-      int non{0};
       T value;
     };
 
    public:
-    constexpr Storage() noexcept { std::construct_at(&storage_[0].value); }
+    constexpr Storage() noexcept { std::construct_at(&storage_.value); }
 
-    constexpr ~Storage() noexcept { std::destroy_at(&storage_[0].value); }
+    constexpr ~Storage() noexcept { std::destroy_at(&storage_.value); }
 
     Storage(const Storage&) = delete;
     Storage& operator=(const Storage&) = delete;
     Storage(Storage&&) = delete;
     Storage& operator=(Storage&&) = delete;
 
-    constexpr const T& Get() const noexcept { return storage_[0].value; }
+    constexpr const T& Get() const noexcept { return storage_.value; }
 
    private:
-    const std::array<Uninitialized, 1> storage_;
+    const Uninitialized storage_;
   };
 
   // NOLINTBEGIN(*-swappable-parameters)
