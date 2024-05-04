@@ -54,11 +54,13 @@ cc_test(
 cc_library(
     name = "traits_cc",
     hdrs = [
-        "binary_search.h",
         "decompose_count.h",
         "is_braces_constructible.h",
     ],
-    deps = [":cases_cc"],
+    deps = [
+        ":cases_cc",
+        "//mbo/types:template_search_cc",
+    ],
 )
 
 cc_library(
@@ -76,13 +78,4 @@ mope_test(
     srcs = ["decompose_count.h.mope"],
     outs = ["decompose_count.h"],
     clang_format = True,
-)
-
-cc_test(
-    name = "binary_search_test",
-    srcs = ["binary_search_test.cc"],
-    deps = [
-        ":traits_cc",
-        "@com_google_googletest//:gtest_main",
-    ]
 )

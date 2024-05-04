@@ -26,9 +26,9 @@
 #include <type_traits>
 #include <utility>  // IWYU pragma: keep
 
-#include "mbo/types/internal/binary_search.h"  // IWYU pragma: keep
-#include "mbo/types/internal/cases.h"          // IWYU pragma: keep
+#include "mbo/types/internal/cases.h"  // IWYU pragma: keep
 #include "mbo/types/internal/is_braces_constructible.h"
+#include "mbo/types/template_search.h"  // IWYU pragma: keep
 
 namespace mbo::types::types_internal {
 
@@ -497,7 +497,7 @@ struct DecomposeHelper final {
       return std::make_tuple();
     {{#num_fields=1;max_fields}}
     } else if constexpr (kNumFields == {{num_fields}}) {
-      auto& [{{#field=1;num_fields;;', '}}a{{field}}{{/field}}] = data;
+      auto&& [{{#field=1;num_fields;;', '}}a{{field}}{{/field}}] = std::forward<U>(data);
       return std::make_tuple({{#field=1;num_fields;;', '}}a{{field}}{{/field}});
     {{/num_fields}}
     }
