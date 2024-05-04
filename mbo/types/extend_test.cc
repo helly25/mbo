@@ -707,12 +707,6 @@ struct WithVariant : Extend<WithVariant> {
 
 static_assert(types::HasVariantMember<WithVariant>);
 
-struct WithVariant : Extend<WithVariant> {
-  std::variant<int, unsigned> value;
-};
-
-static_assert(types::HasVariantMember<WithVariant>);
-
 static_assert(DecomposeCountV<WithVariant> == 1);
 static_assert(types_internal::SupportsFieldNames<WithVariant> == kStructNameSupport);
 
