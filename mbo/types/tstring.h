@@ -23,7 +23,7 @@
 #include <functional>
 #include <string_view>
 
-#include "mbo/types/hash.h"
+#include "mbo/hash/hash.h"
 
 namespace mbo::types {
 
@@ -85,10 +85,11 @@ namespace mbo::types {
 // The type has a `std::hash` specialization that does **not** match either
 // `std::hash<std::string>` nor `std::hash<std::string_view>` because that is
 // not available as constexpr (though could be implemented as such if needed).
-// The type also has an integration with Abseil Hashing which even requires
+// The type also has an integration with Abseil hashing which even requires
 // that the hash of this type is different than that of `std::string_view`.
 // Finally, the hash value used is directly available as `Hash`, but you may not
-// rely on these values.
+// rely on the exact values (and they may vary from version to version or with
+// every compilation).
 template<char... chars>
 struct tstring final {
   using value_type = const char;
@@ -384,7 +385,14 @@ struct tstring final {
     return tstring<chars..., Other...>();
   }
 
-  static constexpr uint64_t Hash() { return GetHash(str()); }
+  // Returns the value of `GetHash(str())` - so as if this was a `std::string` or `std::string`.
+  static constexpr uint64_t StringHash() { return ::mbo::hash::simple::GetHash(str()); }
+
+  // Returns the typed hash, so different from `StringHash` above.
+  static constexpr uint64_t Hash() {
+    constexpr uint64_t kTStringHashSeed = 0x423325fe9b234a3fULL;
+    return StringHash() ^ kTStringHashSeed;
+  }
 
   template<typename H>
   friend H AbslHashValue(H hash, const tstring& t_str) {

@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mbo/types/hash.h"
+#include "mbo/hash/hash.h"
 
 #include <array>
 #include <string_view>
@@ -23,8 +23,10 @@
 
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
 
-namespace mbo::types {
+namespace mbo::hash::simple {
 namespace {
+
+using ::testing::Ne;
 
 struct HashTest : ::testing::Test {};
 
@@ -32,8 +34,7 @@ TEST_F(HashTest, TestEmty) {
   constexpr std::size_t kHashEmpty = GetHash("");
   constexpr std::size_t kHashNull = GetHash(std::string_view());
   EXPECT_THAT(kHashEmpty, kHashNull);
-  // By providing non const string_view variables to `GetHash` the non constexpr version will
-  // be chosen.
+  // Force using non constexpr `GetHash` by providing a non const string_view variable.
   std::string_view sv_empty{""};  // NOLINT(*-redundant-string-init)
   std::string_view sv_null{};
   const std::size_t hash_empty = GetHash(sv_empty);
@@ -53,13 +54,17 @@ TEST_F(HashTest, Test) {
   };
   std::string_view sv;
   for (std::size_t n = 0; n < kData.size(); ++n) {
+    // Force using non constexpr `GetHash` by providing a non const string_view variable.
     sv = kData[n];
     EXPECT_THAT(GetHash(sv), kHashes[n]) << "Using the non const `string_view sv` to compute a hash should result the "
                                             "same value as the compile-time computed hash.";
+    EXPECT_THAT(GetHash(sv), Ne(0));
+    EXPECT_THAT(GetHash(sv), Ne(-1));
+    EXPECT_THAT(GetHash(sv), Ne(~0ULL));
   }
 }
 
 }  // namespace
-}  // namespace mbo::types
+}  // namespace mbo::hash::simple
 
 // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)

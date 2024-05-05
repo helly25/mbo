@@ -68,21 +68,6 @@ cc_test(
 )
 
 cc_library(
-    name = "hash_cc",
-    hdrs = ["hash.h"],
-    visibility = ["//visibility:public"],
-)
-
-cc_test(
-    name = "hash_test",
-    srcs = ["hash_test.cc"],
-    deps = [
-        ":hash_cc",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "no_destruct_cc",
     hdrs = ["no_destruct.h"],
     visibility = ["//visibility:public"],
@@ -152,7 +137,7 @@ cc_library(
     name = "tstring_cc",
     srcs = ["tstring.h"],
     hdrs = ["tstring.h"],
-    deps = [":hash_cc"],
+    deps = ["//mbo/hash:hash_cc"],
     visibility = ["//visibility:public"],
 )
 
@@ -162,6 +147,7 @@ cc_test(
     srcs = ["tstring_test.cc"],
     deps = [
         ":tstring_cc",
+        "//mbo/hash:hash_cc",
         "@com_google_absl//absl/hash:hash_testing",
         "@com_google_googletest//:gtest_main",
     ],
