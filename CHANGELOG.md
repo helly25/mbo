@@ -1,3 +1,8 @@
+# 0.2.26
+
+* Added `GetHash(std::string_view)` which is constexpr safe.
+* Added hash support to tstring.
+
 # 0.2.25
 
 * Added concept `mbo::types::IsVariant`.

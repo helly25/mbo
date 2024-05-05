@@ -115,6 +115,8 @@ The C++ library is organized in functional groups each residing in their own dir
                 * The output is a comma separated list of field values, e.g. `{ 25, 42 }`.
                 * If available (Clang 16+) this function prints field names `{ first = 25, second = 42 }`.
             * extender-struct `Streamable`: Extender that injects functionality to make an `Extend`ed type streamable. This allows the type to be used directly with `std::ostream`s.
+    * mbo/types:hash_cc, mbo/types/hash.h
+        * function `GetHash(std::string_view)`: A constexpr capable hash function.
     * mbo/types:no_destruct_cc, mbo/types/no_destruct.h
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
         * Mainly, this prevents calling the destructor and thus prevents termination issues (initialization order fiasco).

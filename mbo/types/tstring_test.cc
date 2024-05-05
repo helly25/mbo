@@ -20,8 +20,10 @@
 #include <string_view>
 #include <type_traits>
 
+#include "absl/hash/hash_testing.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/types/hash.h"
 
 namespace mbo::types {
 namespace {
@@ -36,6 +38,7 @@ namespace {
 using std::size_t;
 using ::testing::Conditional;
 using ::testing::IsEmpty;
+using ::testing::Ne;
 using ::testing::Not;
 using ::testing::SizeIs;
 using ::testing::StrEq;
@@ -652,6 +655,69 @@ TEST_F(TStringTest, FindFirstLast) {
   EXPECT_THAT(kTestA1.find_last_of('t', 5), 5);
   EXPECT_THAT(kTestA1.find_last_of('t', 4), 2);
   EXPECT_THAT(kTestA1.find_last_of('x'), tstring<>::npos);
+}
+
+TEST_F(TStringTest, StdHash) {
+  // "bar"_ts
+  constexpr tstring<'b', 'a', 'r'> kTsBar;
+  using TsBar = decltype(kTsBar);
+  const std::size_t k_bar_hash_ts = std::hash<TsBar>{}(kTsBar);
+  EXPECT_THAT(std::hash<TsBar>{}(), k_bar_hash_ts);
+  constexpr auto kBarDirectHashTs = GetHash("bar");
+  EXPECT_THAT(kBarDirectHashTs, k_bar_hash_ts);
+  std::string_view vs_bar{"bar"};
+  const auto k_bar_volatile_hash_ts = GetHash(vs_bar);
+  EXPECT_THAT(k_bar_volatile_hash_ts, kBarDirectHashTs);
+  // "foo"_ts
+  constexpr tstring<'f', 'o', 'o'> kTsFoo;
+  using TsFoo = decltype(kTsFoo);
+  const std::size_t k_foo_hash_ts = std::hash<TsFoo>{}(kTsFoo);
+  EXPECT_THAT(std::hash<TsFoo>{}(), k_foo_hash_ts);
+  constexpr auto kFooDirectHashTs = GetHash("foo");
+  EXPECT_THAT(kFooDirectHashTs, k_foo_hash_ts);
+  std::string_view vs_foo{"foo"};
+  const auto k_foo_volatile_hash_ts = GetHash(vs_foo);
+  EXPECT_THAT(k_foo_volatile_hash_ts, kFooDirectHashTs);
+  // hash("bar"_ts) != hash("foo"_ts)
+  EXPECT_THAT(k_bar_hash_ts, Ne(k_foo_hash_ts));
+  // Should **not** match std::hash of std::string and std::string_view.
+  const std::size_t k_foo_hash_string = std::hash<std::string>{}(std::string("foo"));
+  const std::size_t k_foo_hash_view = std::hash<std::string_view>{}(std::string_view("foo"));
+  EXPECT_THAT(k_foo_hash_string, k_foo_hash_view);
+  EXPECT_THAT(k_foo_hash_string, Ne(k_foo_hash_ts));
+  EXPECT_THAT(k_foo_hash_view, Ne(k_foo_hash_ts));
+  // Should **not** match std::hash of const char*.
+  const std::size_t k_foo_hash_char_ptr = std::hash<const char*>{}("foo");
+  EXPECT_THAT(k_foo_hash_char_ptr, Ne(k_foo_hash_ts));
+  EXPECT_THAT(k_foo_hash_string, Ne(k_foo_hash_char_ptr));
+  EXPECT_THAT(k_foo_hash_view, Ne(k_foo_hash_char_ptr));
+}
+
+TEST_F(TStringTest, AbseilHash) {
+  constexpr tstring<'b', 'a', 'r'> kTsBar;
+  constexpr tstring<'b', 'a', 'z'> kTsBaz;
+  constexpr tstring<'f', 'o', 'o'> kTsFoo;
+  // This cannot be based on `absl::VerifyTypeImplementsAbslHashCorrectly` directly as we have a different type per
+  // `tstring`, so we cannot create the necessary minimum of two equivalence classes. To overcome this we use them
+  // indirectly wrapped in a `std::variant` that can hold all three types. This way the Abseil helper can generate
+  // the equivalence classes. We also through in some string types of the same values.
+  using TsVar = std::variant<std::string_view, decltype(kTsBar), decltype(kTsBaz), decltype(kTsFoo)>;
+  constexpr TsVar kTsVarBar = kTsBar;
+  constexpr TsVar kTsVarBaz = kTsBaz;
+  constexpr TsVar kTsVarFoo = kTsFoo;
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly(
+      {kTsVarBar, kTsVarBaz, kTsVarFoo, TsVar("bar"), TsVar("baz"), TsVar("foo")}));
+  // All 3 are different:
+  EXPECT_THAT(absl::HashOf(kTsBar), Ne(absl::HashOf(kTsBaz)));
+  EXPECT_THAT(absl::HashOf(kTsBar), Ne(absl::HashOf(kTsFoo)));
+  EXPECT_THAT(absl::HashOf(kTsBaz), Ne(absl::HashOf(kTsFoo)));
+  // Neither matches their `std::string_view` representation.
+  EXPECT_THAT(absl::HashOf(kTsBar), Ne(absl::HashOf(decltype(kTsBar)::str())));
+  EXPECT_THAT(absl::HashOf(kTsBar), Ne(absl::HashOf(std::string_view("bar"))));
+  EXPECT_THAT(absl::HashOf(kTsBaz), Ne(absl::HashOf(decltype(kTsBaz)::str())));
+  EXPECT_THAT(absl::HashOf(kTsBaz), Ne(absl::HashOf(std::string_view("baz"))));
+  EXPECT_THAT(absl::HashOf(kTsFoo), Ne(absl::HashOf(decltype(kTsFoo)::str())));
+  EXPECT_THAT(absl::HashOf(kTsFoo), Ne(absl::HashOf(std::string_view("foo"))));
 }
 
 // NOLINTEND(readability-static-definition-in-anonymous-namespace)
