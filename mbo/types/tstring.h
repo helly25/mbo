@@ -20,7 +20,10 @@
 
 #include <array>
 #include <cstddef>  // IWYU pragma: keep
+#include <functional>
 #include <string_view>
+
+#include "mbo/types/hash.h"
 
 namespace mbo::types {
 
@@ -78,6 +81,14 @@ namespace mbo::types {
 // All access functions are `static constexpr`. Using them may require disabling
 // a lint warning ("readability-static-accessed-through-instance") or access
 // through the type: `decltype(my_tstring_var)::size()`.
+//
+// The type has a `std::hash` specialization that does **not** match either
+// `std::hash<std::string>` nor `std::hash<std::string_view>` because that is
+// not available as constexpr (though could be implemented as such if needed).
+// The type also has an integration with Abseil Hashing which even requires
+// that the hash of this type is different than that of `std::string_view`.
+// Finally, the hash value used is directly available as `Hash`, but you may not
+// rely on these values.
 template<char... chars>
 struct tstring final {
   using value_type = const char;
@@ -373,6 +384,13 @@ struct tstring final {
     return tstring<chars..., Other...>();
   }
 
+  static constexpr uint64_t Hash() { return GetHash(str()); }
+
+  template<typename H>
+  friend H AbslHashValue(H hash, const tstring& t_str) {
+    return H::combine(std::move(hash), t_str.Hash());
+  }
+
  private:
   static constexpr size_type num_chars = sizeof...(chars);
   static constexpr std::array<char, num_chars + 1> data{chars..., 0};
@@ -580,5 +598,24 @@ constexpr auto make_ts(const char(&str)[N]) noexcept {
 // NOLINTEND(readability-identifier-naming,readability-avoid-unconditional-preprocessor-if)
 
 }  // namespace mbo::types
+
+namespace std {
+
+template<char... chars>
+struct hash<const mbo::types::tstring<chars...>> {  // NOLINT(cert-dcl58-cpp)
+
+  constexpr std::size_t operator()() const noexcept {
+    // This could match the `std::hash<std::string>` and `std::hash<string_view>` hashes.
+    // But that would defeat the purpose of being computed at compile time.
+    // return std::hash<std::string_view>{}(mbo::types::tstring<chars...>::str());
+    return mbo::types::tstring<chars...>::Hash();
+  }
+
+  constexpr std::size_t operator()(const mbo::types::tstring<chars...>& /*t_str*/) const noexcept {
+    return mbo::types::tstring<chars...>::Hash();
+  }
+};
+
+}  // namespace std
 
 #endif  // MBO_TYPES_TSTRING_H_
