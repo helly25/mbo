@@ -106,6 +106,16 @@ inline constexpr uint64_t GetSimpleHash(std::string_view data) {
 
 namespace mbo::hash::simple {
 
+// NOLINTBEGIN(*-macro-usage)
+#define MBO_CONSTANT_P(expression, fallback) (fallback)
+#ifdef __has_builtin
+# if __has_builtin(__builtin_constant_p)
+#  undef MBO_CONSTANT_P
+#  define MBO_CONSTANT_P(expression, fallback) __builtin_constant_p(expression)
+# endif
+#endif
+// NOLINTEND(*-macro-usage)
+
 // A simple constexpr safe hash function.
 //
 // This function uses an optimized implementation at run-time and a constexpr safe implementation
@@ -119,17 +129,19 @@ inline constexpr uint64_t GetHash(std::string_view data) {
   constexpr uint64_t kNotSoRandom =  //
       5'008'709'998'333'326'415ULL
 #if defined(__DATE__)
-      ^ GetSimpleHash(std::string_view(__DATE__))
+      ^ (MBO_CONSTANT_P(__DATE__, 1) == 0 ? 0 : GetSimpleHash(std::string_view(__DATE__)))
 #endif
 #if defined(__TIME__)
-      ^ GetSimpleHash(std::string_view(__TIME__))
+      ^ (MBO_CONSTANT_P(__TIME__, 1) == 0 ? 0 : GetSimpleHash(std::string_view(__TIME__)))
 #endif
 #if defined(__TIMESTAMP__)
-      ^ GetSimpleHash(std::string_view(__TIMESTAMP__))
+      ^ (MBO_CONSTANT_P(__TIMESTAMP__, 1) == 0 ? 0 : GetSimpleHash(std::string_view(__TIMESTAMP__)))
 #endif
       ;
   return GetSimpleHash(data) ^ kNotSoRandom;
 }
+
+#undef MBO_CONSTANT_P  // Be gone.
 
 }  // namespace mbo::hash::simple
 
