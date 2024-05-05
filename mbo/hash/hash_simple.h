@@ -24,20 +24,15 @@
 #include <type_traits>
 
 // Namespace `mbo::hash::simple` offers a `GetHash` a constexpr safe simple hash function.
-namespace mbo::hash::simple {
+namespace mbo::hash::hash_internal {
 
-// In theory this should be a random number or at least an arbitray number that
-// changes on every program start. Howeverm this number must be constexpr.
-static constexpr uint64_t kMaybeRandom = 5'008'709'998'333'326'415ULL;
-
-// A simple constexpr safe hash function. This function uses an optimized implementation at run-time
-// and a constexpr safe implementation that yields the exact same values for compile-time usage.
-inline constexpr uint64_t GetHash(std::string_view data) {
+inline constexpr uint64_t GetSimpleHash(std::string_view data) {
   // NOLINTBEGIN(*-magic-numbers)
-  if (data.empty()) {
-    return 0x892df5cfULL ^ kMaybeRandom;  // Arbitrary number (neither 0 nor -1).
-  }
+  constexpr uint64_t kArbitrary = 5'008'709'998'333'326'415ULL;
   constexpr uint64_t kPrimeNum10k = 104'729ULL;
+  if (data.empty()) {
+    return 0x892df5cfULL ^ kArbitrary;  // Arbitrary number (neither 0 nor -1).
+  }
   // Below we use an optimized form that directly reads from memory (using`memcpy`). However, that
   // is not allowed in a constant evaluated expression (assign result to constexpr var). In order to
   // work around that limitation, we check `std::is_constant_evaluated()` and provide a slower, yet
@@ -49,7 +44,7 @@ inline constexpr uint64_t GetHash(std::string_view data) {
   //               [-Werror=tautological-compare]
   if (std::is_constant_evaluated()) {
     std::size_t len = data.length();
-    uint64_t result = kMaybeRandom;
+    uint64_t result = kArbitrary;
     std::size_t pos = 0;
     while (len >= 4) {
       uint64_t add = 0;
@@ -80,7 +75,7 @@ inline constexpr uint64_t GetHash(std::string_view data) {
   } else {
     const char* str = data.data();
     const char* end = data.end() - 3;
-    uint64_t result = kMaybeRandom;
+    uint64_t result = kArbitrary;
     uint64_t add = 0;
     while (str < end) {
       std::memcpy(&add, str, 4);
@@ -106,6 +101,47 @@ inline constexpr uint64_t GetHash(std::string_view data) {
   }
   // NOLINTEND(*-magic-numbers)
 }
+
+}  // namespace mbo::hash::hash_internal
+
+namespace mbo::hash::simple {
+
+// NOLINTBEGIN(*-macro-usage)
+#define MBO_CONSTANT_P(expression, fallback) (fallback)
+#ifdef __has_builtin
+# if __has_builtin(__builtin_constant_p)
+#  undef MBO_CONSTANT_P
+#  define MBO_CONSTANT_P(expression, fallback) __builtin_constant_p(expression)
+# endif
+#endif
+// NOLINTEND(*-macro-usage)
+
+// A simple constexpr safe hash function.
+//
+// This function uses an optimized implementation at run-time and a constexpr safe implementation
+// that yields the exact same values for compile-time usage. It uses compiler provided macros as a
+// seed generator. This means that the seed **may** vary from run to run, but there is no guarantee
+// as a dev environment (e.g. Bazel) may set these macros always to the same value.
+inline constexpr uint64_t GetHash(std::string_view data) {
+  using mbo::hash::hash_internal::GetSimpleHash;
+  // In theory this should be a random number or at least an arbitray number that
+  // changes on every program start. Howeverm this number must be constexpr.
+  constexpr uint64_t kNotSoRandom =  //
+      5'008'709'998'333'326'415ULL
+#if defined(__DATE__)
+      ^ (MBO_CONSTANT_P(__DATE__, 1) == 0 ? 0 : GetSimpleHash(std::string_view(__DATE__)))
+#endif
+#if defined(__TIME__)
+      ^ (MBO_CONSTANT_P(__TIME__, 1) == 0 ? 0 : GetSimpleHash(std::string_view(__TIME__)))
+#endif
+#if defined(__TIMESTAMP__)
+      ^ (MBO_CONSTANT_P(__TIMESTAMP__, 1) == 0 ? 0 : GetSimpleHash(std::string_view(__TIMESTAMP__)))
+#endif
+      ;
+  return GetSimpleHash(data) ^ kNotSoRandom;
+}
+
+#undef MBO_CONSTANT_P  // Be gone.
 
 }  // namespace mbo::hash::simple
 
