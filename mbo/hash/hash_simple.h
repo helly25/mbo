@@ -44,7 +44,7 @@ inline constexpr uint64_t GetSimpleHash(std::string_view data) {
   //               [-Werror=tautological-compare]
   if (std::is_constant_evaluated()) {
     std::size_t len = data.length();
-    uint64_t result = kArbitrary;
+    uint64_t result = kArbitrary + len;
     std::size_t pos = 0;
     while (len >= 4) {
       uint64_t add = 0;
@@ -52,7 +52,7 @@ inline constexpr uint64_t GetSimpleHash(std::string_view data) {
       add += static_cast<uint64_t>(data[pos++]) << 8U;
       add += static_cast<uint64_t>(data[pos++]) << 16U;
       add += static_cast<uint64_t>(data[pos++]) << 24U;
-      result = result * 6'571 + (17 * add + (add >> 16U));
+      result = result * 6'571 ^ ((17 * add + (add >> 16U)) ^ (result >> 32U));
       len -= 4;
     }
     if (len == 3) {
@@ -75,11 +75,11 @@ inline constexpr uint64_t GetSimpleHash(std::string_view data) {
   } else {
     const char* str = data.data();
     const char* end = data.end() - 3;
-    uint64_t result = kArbitrary;
+    uint64_t result = kArbitrary + data.length();
     uint64_t add = 0;
     while (str < end) {
       std::memcpy(&add, str, 4);
-      result = result * 6'571 + (17 * add + (add >> 16U));
+      result = result * 6'571 ^ ((17 * add + (add >> 16U)) ^ (result >> 32U));
       str += 4;  // NOLINT(*-pointer-arithmetic)
     }
     switch (data.length() % 4) {  // NOLINT(*-default-case)
