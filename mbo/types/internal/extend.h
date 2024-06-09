@@ -27,12 +27,12 @@
 #include "mbo/types/internal/extender.h"
 #include "mbo/types/tuple.h"  // IWYU pragma: keep
 
-namespace mbo::types_internal {
+namespace mbo::types::types_internal {
 
 struct NoRequirement {};
 
 // Identify `Extender` classes by the fact that they have a member named
-// `kExtenderName` that can be converted into a `std::string_view`.
+// `GetExtenderName()` that can be converted into a `std::string_view`.
 template<typename MaybeExtender>
 concept IsExtender = requires {
   { MaybeExtender::GetExtenderName() } -> std::convertible_to<std::string_view>;
@@ -112,10 +112,6 @@ struct ExtendBuildChain
 template<typename T>
 struct ExtendBuildChain<T, void> : T {};
 
-// Determine whether type `Extended` is an `Extend`ed type.
-template<typename Extended>
-concept IsExtended = requires { typename Extended::RegisteredExtenders; };
-
 template<std::size_t N, typename Extended, typename Extender>
 struct HasExtenderImpl
     : std::bool_constant<
@@ -134,7 +130,7 @@ concept HasExtender =
     IsExtended<Extended> && std::tuple_size_v<typename Extended::RegisteredExtenders> != 0
     && HasExtenderImpl<std::tuple_size_v<typename Extended::RegisteredExtenders>, Extended, Extender>::value;
 
-}  // namespace mbo::types_internal
+}  // namespace mbo::types::types_internal
 
 namespace mbo::extender {
 
@@ -154,14 +150,14 @@ struct ExtendBase {
 };
 
 template<typename T, typename... ExtenderList>
-requires ::mbo::types_internal::ExtenderListValid<ExtenderList...>
+requires ::mbo::types::types_internal::ExtenderListValid<ExtenderList...>
 struct Extend
-    : ::mbo::types_internal::ExtendBuildChain<
+    : ::mbo::types::types_internal::ExtendBuildChain<
           ExtendBase<T>,  // CRTP functionality injection.
           ExtenderList...,
           void /* Sentinel to stop `ExtendBuildChain` */> {
   using RegisteredExtenders = std::conditional_t<
-      ::mbo::types_internal::HasDefaultExtender<ExtenderList...>,
+      ::mbo::types::types_internal::HasDefaultExtender<ExtenderList...>,
       std::tuple<
           // The list of default extenders must be in sync with the implementation of `types::Default`.
           ::mbo::types::extender::AbslStringify,
@@ -174,7 +170,7 @@ struct Extend
       std::tuple<ExtenderList...>>;
 
   static constexpr std::array<std::string_view, std::tuple_size_v<RegisteredExtenders>> RegisteredExtenderNames() {
-    if constexpr (::mbo::types_internal::HasDefaultExtender<ExtenderList...>) {
+    if constexpr (::mbo::types::types_internal::HasDefaultExtender<ExtenderList...>) {
       return {
           // The list of default extenders must be in sync with the implementation of `types::Default`.
           ::mbo::types::extender::AbslStringify::GetExtenderName(),

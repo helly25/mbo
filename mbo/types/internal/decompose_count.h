@@ -85,377 +85,6 @@ struct AggregateHasNonEmptyBaseImpl : AggregateHasNonEmptyBaseRaw<std::remove_cv
 template<typename T>
 concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 
-#if defined(__clang__) && __clang_major__ < 17
-// ----------------------------------------------------
-
-template<typename T, size_t N, typename = void>
-struct DecomposeCount final : std::false_type {};
-
-template<typename T>
-struct DecomposeCount<T, 1, std::void_t<decltype([]() { const auto& [a1] = T(); })>> final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 2, std::void_t<decltype([]() { const auto& [a1, a2] = T(); })>> final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 3, std::void_t<decltype([]() { const auto& [a1, a2, a3] = T(); })>> final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 4, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4] = T(); })>> final
-    : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 5, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4, a5] = T(); })>> final
-    : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 6, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4, a5, a6] = T(); })>> final
-    : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 7, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4, a5, a6, a7] = T(); })>> final
-    : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 8, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4, a5, a6, a7, a8] = T(); })>> final
-    : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 9, std::void_t<decltype([]() { const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9] = T(); })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 10, std::void_t<decltype([]() {
-                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = T();
-                      })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 11, std::void_t<decltype([]() {
-                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = T();
-                      })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 12, std::void_t<decltype([]() {
-                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = T();
-                      })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 13, std::void_t<decltype([]() {
-                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = T();
-                      })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 14, std::void_t<decltype([]() {
-                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] = T();
-                      })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 15, std::void_t<decltype([]() {
-                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15] = T();
-                      })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 16, std::void_t<decltype([]() {
-                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16] = T();
-                      })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 17, std::void_t<decltype([]() {
-                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17] = T();
-                      })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<T, 18, std::void_t<decltype([]() {
-                        const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18] =
-                            T();
-                      })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    19,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19] = T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    20,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] = T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    21,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    22,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    23,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    24,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    25,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    26,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    27,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    28,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    29,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    30,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    31,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    32,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    33,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    34,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    35,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    36,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    37,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    38,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    39,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCount<
-    T,
-    40,
-    std::void_t<decltype([]() {
-      const auto& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a40] =
-          T();
-    })>>
-    final : std::true_type {};
-
-template<typename T>
-struct DecomposeCountnImpl
-    : std::integral_constant<
-          std::size_t,
-          CaseIndexImpl<
-              DecomposeCount<T, 1>,
-              DecomposeCount<T, 2>,
-              DecomposeCount<T, 3>,
-              DecomposeCount<T, 4>,
-              DecomposeCount<T, 5>,
-              DecomposeCount<T, 6>,
-              DecomposeCount<T, 7>,
-              DecomposeCount<T, 8>,
-              DecomposeCount<T, 9>,
-              DecomposeCount<T, 10>,
-              DecomposeCount<T, 11>,
-              DecomposeCount<T, 12>,
-              DecomposeCount<T, 13>,
-              DecomposeCount<T, 14>,
-              DecomposeCount<T, 15>,
-              DecomposeCount<T, 16>,
-              DecomposeCount<T, 17>,
-              DecomposeCount<T, 18>,
-              DecomposeCount<T, 19>,
-              DecomposeCount<T, 20>,
-              DecomposeCount<T, 21>,
-              DecomposeCount<T, 22>,
-              DecomposeCount<T, 23>,
-              DecomposeCount<T, 24>,
-              DecomposeCount<T, 25>,
-              DecomposeCount<T, 26>,
-              DecomposeCount<T, 27>,
-              DecomposeCount<T, 28>,
-              DecomposeCount<T, 29>,
-              DecomposeCount<T, 30>,
-              DecomposeCount<T, 31>,
-              DecomposeCount<T, 32>,
-              DecomposeCount<T, 33>,
-              DecomposeCount<T, 34>,
-              DecomposeCount<T, 35>,
-              DecomposeCount<T, 36>,
-              DecomposeCount<T, 37>,
-              DecomposeCount<T, 38>,
-              DecomposeCount<T, 39>,
-              DecomposeCount<T, 40>>::index> {};
-
-template<typename T>
-concept DecomposeConditionRaw = std::is_aggregate_v<T> && (std::is_empty_v<T> || DecomposeCountnImpl<T>::value != 0);
-
-template<typename T>
-concept DecomposeCondition = DecomposeConditionRaw<std::remove_cvref_t<T>>;
-
-template<typename T>
-struct DecomposeCountraw : std::conditional_t<DecomposeCondition<T>, DecomposeCountnImpl<T>, NotDecomposableImpl> {};
-
-template<typename T>
-struct DecomposeCountImpl : DecomposeCountraw<std::remove_cvref_t<T>> {};
-
-#else  // defined(__clang__) && __clang_major__ < 17
 // ----------------------------------------------------
 
 // From
@@ -735,15 +364,15 @@ struct DecomposeInfo final {
   static std::string Debug() {  // NOLINT(readability-function-cognitive-complexity)
     std::string str;
     std::string_view sep;
-# define DEBUG_ADD(f)                                                                             \
-   str += std::string(sep) + #f + ": "                                                            \
-          + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
-                 ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
-                 : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
-                            && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
-                        ? std::string("N/A")                                                      \
-                        : std::to_string(DecomposeInfo<T>::f)));                                  \
-   sep = ", "
+#define DEBUG_ADD(f)                                                                             \
+  str += std::string(sep) + #f + ": "                                                            \
+         + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
+                ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
+                : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
+                           && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
+                       ? std::string("N/A")                                                      \
+                       : std::to_string(DecomposeInfo<T>::f)));                                  \
+  sep = ", "
     DEBUG_ADD(kIsAggregate);
     DEBUG_ADD(kIsEmpty);
     // DEBUG_ADD(kInitializerCount);
@@ -756,7 +385,7 @@ struct DecomposeInfo final {
     // DEBUG_ADD(kCountBases);
     // DEBUG_ADD(kCountEmptyBases);
     DEBUG_ADD(kDecomposeCount);
-# undef DEBUG_ADD
+#undef DEBUG_ADD
     return str;
   }
 };
@@ -784,15 +413,15 @@ struct DecomposeInfo<T, true> final {
   static std::string Debug() {  // NOLINT(readability-function-cognitive-complexity)
     std::string str;
     std::string_view sep;
-# define DEBUG_ADD(f)                                                                             \
-   str += std::string(sep) + #f + ": "                                                            \
-          + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
-                 ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
-                 : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
-                            && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
-                        ? std::string("N/A")                                                      \
-                        : std::to_string(DecomposeInfo<T>::f)));                                  \
-   sep = ", "
+#define DEBUG_ADD(f)                                                                             \
+  str += std::string(sep) + #f + ": "                                                            \
+         + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
+                ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
+                : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
+                           && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
+                       ? std::string("N/A")                                                      \
+                       : std::to_string(DecomposeInfo<T>::f)));                                  \
+  sep = ", "
     DEBUG_ADD(kIsAggregate);
     DEBUG_ADD(kIsEmpty);
     DEBUG_ADD(kInitializerCount);
@@ -805,7 +434,7 @@ struct DecomposeInfo<T, true> final {
     DEBUG_ADD(kCountBases);
     DEBUG_ADD(kCountEmptyBases);
     DEBUG_ADD(kDecomposeCount);
-# undef DEBUG_ADD
+#undef DEBUG_ADD
     return str;
   }
 };
@@ -818,7 +447,6 @@ concept DecomposeCondition = DecomposeInfo<T>::kDecomposable;
 template<typename T>
 struct DecomposeCountImpl : std::integral_constant<std::size_t, DecomposeInfo<T>::kDecomposeCount> {};
 
-#endif  // defined(__clang__) && __clang_major__ < 17
 // ----------------------------------------------------
 
 // NOLINTBEGIN(readability-function-cognitive-complexity)

@@ -20,6 +20,14 @@
 
 namespace mbo::types::types_internal {
 
+// Determine whether type `Extended` is an `Extend`ed type.
+template<typename Extended>
+concept IsExtended = requires {
+  typename Extended::Type;
+  typename Extended::RegisteredExtenders;
+  { Extended::RegisteredExtenderNames() };
+};
+
 // Access to the extender implementation for constructing the CRTP chain using
 // `ExtendBuildChain`.
 // This is done via a distinct struct, so that the non specialized templates

@@ -108,7 +108,7 @@ that are made up of sections and values.
 calling `SetValue`.
 
 ```c++
-mbo::mope::Templaye mope;
+mbo::mope::Template mope;
 mope.SetValue("foo", "bar");
 std::string output("My {{foo}}.");
 mope.Expand(output);
@@ -120,7 +120,7 @@ times for the same `name` which becomes the section name. The section starts
 with '{{#' <name> (':' <join>)? '}}' and ends with '{{/' <name> '}};.
 
 ```c++
-mbo::mope::Templaye mope;
+mbo::mope::Template mope;
 mope.AddSectionDictinary("section")->SetValue("foo", "bar");
 mope.AddSectionDictinary("section")->SetValue("foo", "-");
 mope.AddSectionDictinary("section")->SetValue("foo", "baz");
@@ -134,7 +134,15 @@ The optional <join> value can be a quoted string or a reference. It is used to
 join the section values and won't be used if the section has fewer then 2
 elements.
 
-3) The template supports for-loops:
+3) Comments
+
+'{{#'<name>'=}}'...'{{/'<name>'}}'
+
+The section tags can have additional configurations as explained below. However,
+there is a special configuration, the empty one, which is otherwise illegal. It
+functions as a comment becasue it replaces the whole section with nothing.
+
+4) The template supports for-loops:
 
 '{{#'<name>'='<start>';'<end>(';'<step>(';'<join> )? )? '}}'...'{{/'<name>'}}'
 
@@ -151,14 +159,14 @@ This creates an automatic 'section' with a dynamic value under <name> which
 can be accessed by '{{' <name> '}}'.
 
 ```c++
-mbo::mope::Templaye mope;
+mbo::mope::Template mope;
 mope.SetValue("max", "5");
-std::string output("My {{#foo=1;max;2;"."}}{{foo}}{{/foor}}");
+std::string output("My {{#foo=1;max;2;"."}}{{foo}}{{/foo}}");
 mope.Expand(output);
 CHECK_EQ(output, "My 1.3.5.");
 ```
 
-4) The template allows to set tags from within the template. This allows to
+5) The template allows to set tags from within the template. This allows to
 provide centralized configuration values for instance to for-loops. The values
 are global but can be overwritten at any point. However, they cannot override
 template tags.
@@ -166,17 +174,17 @@ template tags.
 These are value tags with a configuration: '{{' <<name> '=' <value> '}}'
 
 ```c++
-mbo::mope::Templaye mope;
+mbo::mope::Template mope;
 std::string output(R"(
    {{foo_start=1}}
    {{foo_end=8}}
    {{foo_step=2}}
-   My {{#foo=foo_start;foo_end;foo_step;'.'}}{{foo}}{{/foor}})"R);
+   My {{#foo=foo_start;foo_end;foo_step;'.'}}{{foo}}{{/foo}})"R);
 mope.Expand(output);
 CHECK_EQ(output, "My 1.3.5.7.");
 ```
 
-5) The template supports lists:
+6) The template supports lists:
 
 '{{#' <name> '=[' <values> '] (';' <join>)? }}'...'{{/'<name>'}}'
 
@@ -188,7 +196,7 @@ CHECK_EQ(output, "My 1.3.5.7.");
               reference or a string in single (') or double quotes (").
 
 ```c++
-mbo::mope::Templaye mope;
+mbo::mope::Template mope;
 std::string output(R"({{#foo=['1,2',3\,4]}}[{{foo}}]{{/foo}})"R);
 mope.Expand(output);
 CHECK_EQ(output, "[1,2][3,4]");

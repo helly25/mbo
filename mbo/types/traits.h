@@ -319,6 +319,19 @@ struct IsVariantImpl<std::variant<Args...>> : std::true_type {};
 template<typename T>
 concept IsVariant = types_internal::IsVariantImpl<T>::value;
 
+namespace types_internal {
+
+template <typename T>
+struct is_tuple : std::false_type {};
+
+template <typename... Ts>
+struct is_tuple<std::tuple<Ts...>> : std::true_type {};
+
+}  // namespace types_internal
+
+template <typename T>
+concept IsTuple = types_internal::is_tuple<T>::value;
+
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_TRAITS_H_

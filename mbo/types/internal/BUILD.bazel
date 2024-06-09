@@ -77,5 +77,8 @@ mope_test(
     name = "decompose_count_test",
     srcs = ["decompose_count.h.mope"],
     outs = ["decompose_count.h"],
+    args = [
+      #"--set=clang_pre_17=x",
+    ],
     clang_format = True,
 )

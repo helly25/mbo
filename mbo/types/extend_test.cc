@@ -76,8 +76,8 @@ using ::testing::WhenSorted;
 static_assert(std::same_as<::mbo::types::extender::AbslStringify, ::mbo::extender::AbslStringify>);
 static_assert(std::same_as<::mbo::types::extender::Default, ::mbo::extender::Default>);
 
-static_assert(::mbo::types_internal::ExtenderListValid<::mbo::extender::Default>);
-static_assert(::mbo::types_internal::ExtenderListValid<AbslHashable, AbslStringify, Comparable, Printable, Streamable>);
+static_assert(::mbo::types::types_internal::ExtenderListValid<::mbo::extender::Default>);
+static_assert(::mbo::types::types_internal::ExtenderListValid<AbslHashable, AbslStringify, Comparable, Printable, Streamable>);
 
 struct Empty {};
 
@@ -412,11 +412,21 @@ TEST_F(ExtendTest, Comparable) {
     int a = 0;
     int b = 0;
   };
+  struct Flat {
+    int a = 0;
+    int b = 0;
+  };
 
   constexpr TestComparable kTest1{.a = 25, .b = 42};
   constexpr TestComparable kTest2{.a = 25, .b = 43};
   constexpr TestComparable kTest3{.a = 26, .b = 42};
   constexpr TestComparable kTest4{.a = 25, .b = 42};
+
+  constexpr Flat kFlat1{.a = 25, .b = 42};
+  constexpr Flat kFlat2{.a = 25, .b = 43};
+  constexpr Flat kFlat3{.a = 26, .b = 42};
+  constexpr Flat kFlat4{.a = 25, .b = 42};
+
   {
     EXPECT_THAT(kTest1 == kTest1, true);
     EXPECT_THAT(kTest1 != kTest1, false);
@@ -424,7 +434,22 @@ TEST_F(ExtendTest, Comparable) {
     EXPECT_THAT(kTest1 <= kTest1, true);
     EXPECT_THAT(kTest1 > kTest1, false);
     EXPECT_THAT(kTest1 >= kTest1, true);
-    EXPECT_THAT(kTest1, kTest1);  // sortcut for Eq, see below
+    // Same kind of comparison, just with similar type.
+    EXPECT_THAT(kTest1 == kFlat1, true);
+    EXPECT_THAT(kTest1 != kFlat1, false);
+    EXPECT_THAT(kTest1 < kFlat1, false);
+    EXPECT_THAT(kTest1 <= kFlat1, true);
+    EXPECT_THAT(kTest1 > kFlat1, false);
+    EXPECT_THAT(kTest1 >= kFlat1, true);
+    // Same kind of comparison, just with similar type, otherway round.
+    EXPECT_THAT(kFlat1 == kTest1, true);
+    EXPECT_THAT(kFlat1 != kTest1, false);
+    EXPECT_THAT(kFlat1 < kTest1, false);
+    EXPECT_THAT(kFlat1 <= kTest1, true);
+    EXPECT_THAT(kFlat1 > kTest1, false);
+    EXPECT_THAT(kFlat1 >= kTest1, true);
+    // Gmock
+    EXPECT_THAT(kTest1, kTest1);  // shortcut for Eq, see below
     EXPECT_THAT(kTest1, Eq(kTest1));
     EXPECT_THAT(kTest1, Not(Lt(kTest1)));
     EXPECT_THAT(kTest1, Le(kTest1));
@@ -438,6 +463,14 @@ TEST_F(ExtendTest, Comparable) {
     EXPECT_THAT(kTest1 <= kTest2, true);
     EXPECT_THAT(kTest1 > kTest2, false);
     EXPECT_THAT(kTest1 >= kTest2, false);
+    // Same kind of comparison, just with similar type.
+    EXPECT_THAT(kTest1 == kFlat2, false);
+    EXPECT_THAT(kTest1 != kFlat2, true);
+    EXPECT_THAT(kTest1 < kFlat2, true);
+    EXPECT_THAT(kTest1 <= kFlat2, true);
+    EXPECT_THAT(kTest1 > kFlat2, false);
+    EXPECT_THAT(kTest1 >= kFlat2, false);
+    // GMock
     EXPECT_THAT(kTest1, Not(kTest2));
     EXPECT_THAT(kTest1, Not(Eq(kTest2)));
     EXPECT_THAT(kTest1, Lt(kTest2));
@@ -452,6 +485,14 @@ TEST_F(ExtendTest, Comparable) {
     EXPECT_THAT(kTest1 <= kTest3, true);
     EXPECT_THAT(kTest1 > kTest3, false);
     EXPECT_THAT(kTest1 >= kTest3, false);
+    // Same kind of comparison, just with similar type.
+    EXPECT_THAT(kTest1 == kFlat3, false);
+    EXPECT_THAT(kTest1 != kFlat3, true);
+    EXPECT_THAT(kTest1 < kFlat3, true);
+    EXPECT_THAT(kTest1 <= kFlat3, true);
+    EXPECT_THAT(kTest1 > kFlat3, false);
+    EXPECT_THAT(kTest1 >= kFlat3, false);
+    // GMock
     EXPECT_THAT(kTest1, Not(kTest3));
     EXPECT_THAT(kTest1, Not(Eq(kTest3)));
     EXPECT_THAT(kTest1, Lt(kTest3));
@@ -466,7 +507,15 @@ TEST_F(ExtendTest, Comparable) {
     EXPECT_THAT(kTest1 <= kTest4, true);
     EXPECT_THAT(kTest1 > kTest4, false);
     EXPECT_THAT(kTest1 >= kTest4, true);
-    EXPECT_THAT(kTest1, kTest4);  // sortcut for Eq, see below
+    // Same kind of comparison, just with similar type.
+    EXPECT_THAT(kTest1 == kFlat4, true);
+    EXPECT_THAT(kTest1 != kFlat4, false);
+    EXPECT_THAT(kTest1 < kFlat4, false);
+    EXPECT_THAT(kTest1 <= kFlat4, true);
+    EXPECT_THAT(kTest1 > kFlat4, false);
+    EXPECT_THAT(kTest1 >= kFlat4, true);
+    // GMock
+    EXPECT_THAT(kTest1, kTest4);  // shortcut for Eq, see below
     EXPECT_THAT(kTest1, Eq(kTest4));
     EXPECT_THAT(kTest1, Not(Lt(kTest4)));
     EXPECT_THAT(kTest1, Le(kTest4));
@@ -529,13 +578,13 @@ TEST_F(ExtendTest, Hashable) {
 
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({person, Person{}}));
 
-  ASSERT_THAT((::mbo::types_internal::IsExtended<Name>), true);
-  ASSERT_THAT((::mbo::types_internal::IsExtended<Person>), true);
-  ASSERT_THAT((::mbo::types_internal::IsExtended<PlainName>), false);
-  ASSERT_THAT((::mbo::types_internal::IsExtended<PlainPerson>), false);
+  ASSERT_THAT((::mbo::types::types_internal::IsExtended<Name>), true);
+  ASSERT_THAT((::mbo::types::types_internal::IsExtended<Person>), true);
+  ASSERT_THAT((::mbo::types::types_internal::IsExtended<PlainName>), false);
+  ASSERT_THAT((::mbo::types::types_internal::IsExtended<PlainPerson>), false);
   ASSERT_THAT(Person::RegisteredExtenderNames(), Contains("AbslHashable"));
   ASSERT_THAT(Person::RegisteredExtenderNames().size(), std::tuple_size_v<Person::RegisteredExtenders>);
-  ASSERT_THAT((::mbo::types_internal::HasExtender<Person, AbslHashable>), true);
+  ASSERT_THAT((::mbo::types::types_internal::HasExtender<Person, AbslHashable>), true);
 
   EXPECT_THAT(absl::HashOf(person), Ne(0));
   EXPECT_THAT(absl::HashOf(person), absl::HashOf(plain_person));
@@ -546,8 +595,8 @@ TEST_F(ExtendTest, Hashable) {
     std::string last;
   };
 
-  ASSERT_THAT((::mbo::types_internal::IsExtended<NameNoDefault>), true);
-  ASSERT_THAT((::mbo::types_internal::HasExtender<NameNoDefault, AbslHashable>), false);
+  ASSERT_THAT((::mbo::types::types_internal::IsExtended<NameNoDefault>), true);
+  ASSERT_THAT((::mbo::types::types_internal::HasExtender<NameNoDefault, AbslHashable>), false);
 }
 
 TEST_F(ExtendTest, ExtenderNames) {

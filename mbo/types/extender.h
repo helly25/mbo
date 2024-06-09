@@ -63,6 +63,7 @@
 #include "mbo/types/internal/struct_names.h"  // IWYU pragma: keep
 #include "mbo/types/traits.h"                 // IWYU pragma: keep
 #include "mbo/types/tstring.h"
+#include "mbo/types/tuple.h"
 
 namespace mbo::types {
 
@@ -234,15 +235,23 @@ struct Comparable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   friend bool operator<(const T& lhs, const T& rhs) { return lhs.ToTuple() < rhs.ToTuple(); }
 
   // Define operator `<=>` on `const T&` and another type.
-  template<typename Lhs>
-  friend auto operator<=>(const Lhs& lhs, const T& rhs) {
-    return lhs <=> rhs.ToTupl();
-  }
+  template<typename Other, typename = decltype(StructToTuple(std::declval<const Other&>()))>
+  auto operator<=>(const Other& other) const { return this->ToTuple() <=> StructToTuple(other); }
 
-  template<typename Rhs>
-  friend auto operator<=>(const T& lhs, const Rhs& rhs) {
-    return lhs.ToTuple() <=> rhs;
-  }
+  template<IsTuple Other>
+  auto operator<=>(const Other& other) const { return this->ToTuple() <=> other; }
+
+  template<typename Other, typename = decltype(StructToTuple(std::declval<const Other&>()))>
+  bool operator==(const Other& other) const { return this->ToTuple() == StructToTuple(other); }
+
+  template<IsTuple Other>
+  bool operator==(const Other& other) const { return this->ToTuple() == other; }
+
+  template<typename Other, typename = decltype(StructToTuple(std::declval<const Other&>()))>
+  bool operator<(const Other& other) const { return this->ToTuple() < StructToTuple(other); }
+
+  template<IsTuple Other>
+  bool operator<(const Other& other) const { return this->ToTuple() < other; }
 };
 
 template<typename ExtenderBase>
