@@ -1,12 +1,9 @@
-# 0.2.27
+# 0.2.26
 
 * Fixed comparison of `Extend` types with other types. Requires the other type can be turned into a tuple.
 * Fixed internal consistencies.
 * Updated `mope` to allow comments by setting a section to nothing: `{{#section=}}...{{/section}}`.
 * Added concept `IsTuple` which determines whether a type is a `std::tuple`.
-
-# 0.2.26
-
 * Added `mbo::hash::simple::GetHash(std::string_view)` which is constexpr safe.
 * Added hash support to tstring.
 
