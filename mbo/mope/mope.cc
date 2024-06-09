@@ -352,6 +352,10 @@ absl::Status Template::ExpandSectionTag(const TagInfo& tag, Context& ctx, std::s
   if (RE2::FullMatch(*tag.config, *kReFor, &range.start, &range.end, &range.step, &range.join)) {
     return ExpandRangeData(tag, range, ctx, output);
   }
+  if (*tag.config == "") {
+    output = "";
+    return absl::OkStatus();
+  }
   if (!tag.config->starts_with('[')) {
     return absl::UnimplementedError(
         absl::StrCat("Tag '", tag.name, "' has unknown config format '", *tag.config, "'."));
@@ -393,7 +397,7 @@ absl::StatusOr<bool> Template::ExpandValueTag(const TagInfo& tag, Context& ctx, 
 std::optional<const Template::TagInfo> Template::FindAndConsumeTag(std::string_view& pos) {
   // Grab parts as string_view. Done in a separate block so these cannot escape.
   // They will be invalid upon the first change of `output`.
-  static constexpr LazyRE2 kTagRegex = {"({{(#?)([_a-zA-Z]\\w*)(?:([=:])((?:[^}]|[}][^}])+))?}})"};
+  static constexpr LazyRE2 kTagRegex = {"({{(#?)([_a-zA-Z]\\w*)(?:([=:])((?:[^}]|[}][^}])*))?}})"};
   std::string_view start;
   std::string_view type;
   std::string_view name;

@@ -96,19 +96,11 @@ TEST_F(TraitsTest, DecomposeCountV) {
 
   ASSERT_THAT(IsAggregate<CtorDefault>, false);
   EXPECT_THAT(IsDecomposable<CtorDefault>, false);
-#if defined(__clang__) && __clang_major__ < 17
-  EXPECT_THAT(DecomposeCountV<CtorDefault>, NotDecomposableV);
-#else
   EXPECT_THAT(DecomposeCountV<CtorDefault>, 0);
-#endif
 
   ASSERT_THAT(IsAggregate<CtorUser>, false);
   EXPECT_THAT(IsDecomposable<CtorUser>, false);
-#if defined(__clang__) && __clang_major__ < 17
-  EXPECT_THAT(DecomposeCountV<CtorUser>, NotDecomposableV);
-#else
   EXPECT_THAT(DecomposeCountV<CtorUser>, 0);
-#endif
 
   ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
   ASSERT_THAT(IsAggregate<CtorBase>, true);

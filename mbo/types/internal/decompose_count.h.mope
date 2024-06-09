@@ -86,6 +86,7 @@ struct AggregateHasNonEmptyBaseImpl : AggregateHasNonEmptyBaseRaw<std::remove_cv
 template<typename T>
 concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 
+{{#clang_pre_17=}}
 #if defined(__clang__) && __clang_major__ < 17
 // ----------------------------------------------------
 
@@ -119,6 +120,7 @@ template<typename T>
 struct DecomposeCountImpl : DecomposeCountraw<std::remove_cvref_t<T>> {};
 
 #else  // defined(__clang__) && __clang_major__ < 17
+{{/clang_pre_17}}
 // ----------------------------------------------------
 
 // From
@@ -481,7 +483,9 @@ concept DecomposeCondition = DecomposeInfo<T>::kDecomposable;
 template<typename T>
 struct DecomposeCountImpl : std::integral_constant<std::size_t, DecomposeInfo<T>::kDecomposeCount> {};
 
+{{#clang_pre_17=}}
 #endif  // defined(__clang__) && __clang_major__ < 17
+{{/clang_pre_17}}
 // ----------------------------------------------------
 
 // NOLINTBEGIN(readability-function-cognitive-complexity)
