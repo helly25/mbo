@@ -44,32 +44,23 @@ inline constexpr uint64_t GetSimpleHash(std::string_view data) {
   //               [-Werror=tautological-compare]
   if (std::is_constant_evaluated()) {
     std::size_t len = data.length();
-    uint64_t result = kArbitrary + len;
     std::size_t pos = 0;
+    uint64_t result = kArbitrary + len;
     while (len >= 4) {
       uint64_t add = 0;
-      add += static_cast<uint64_t>(data[pos++]);
-      add += static_cast<uint64_t>(data[pos++]) << 8U;
-      add += static_cast<uint64_t>(data[pos++]) << 16U;
-      add += static_cast<uint64_t>(data[pos++]) << 24U;
+      add += data[pos++];
+      add += data[pos++] << 8U;
+      add += data[pos++] << 16U;
+      add += data[pos++] << 24U;
       result = result * 6'571 ^ ((17 * add + (add >> 16U)) ^ (result >> 32U));
       len -= 4;
     }
-    if (len == 3) {
-      uint64_t add = 0;
-      add += static_cast<uint64_t>(data[pos++]);
-      add += static_cast<uint64_t>(data[pos++]) << 8U;
-      add += static_cast<uint64_t>(data[pos++]) << 16U;
-      return result * 193 + kPrimeNum10k * add;
-    } else if (len == 2) {
-      uint64_t add = 0;
-      add += static_cast<uint64_t>(data[pos++]);
-      add += static_cast<uint64_t>(data[pos++]) << 8U;
-      return result * 193 + kPrimeNum10k * add;
-    } else if (len == 1) {
-      uint64_t add = 0;
-      add += static_cast<uint64_t>(data[pos++]);
-      return result * 193 + kPrimeNum10k * add;
+    uint64_t add = 0;
+    switch (len) {
+      case 3: add += data[pos + 2] << 16U;
+      case 2: add += data[pos + 1] << 8U;
+      case 1: add += data[pos]; return result * 193 + kPrimeNum10k * add;
+      default: break;
     }
     return result;
   } else {
