@@ -159,7 +159,7 @@ class StructMeta final {
   }
 
   // Older compilers may not allow this to be a `constexpr`.
-  inline static constexpr FieldData kFieldData = []() constexpr {
+  inline static constexpr FieldData kFieldData = []() consteval {
     FieldData fields;
     if constexpr (!std::is_empty_v<T>) {
       typename StructMetaBase<T>::Storage storage{};
@@ -169,7 +169,7 @@ class StructMeta final {
     return fields;
   }();
 
-  inline static constexpr std::array<std::string_view, kFieldCount> kFieldNames = []() constexpr {
+  inline static constexpr std::array<std::string_view, kFieldCount> kFieldNames = []() consteval {
     std::array<std::string_view, kFieldCount> data;
     if constexpr (!std::is_empty_v<T>) {
       for (std::size_t pos = 0; pos < kFieldCount; ++pos) {

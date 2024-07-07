@@ -430,9 +430,11 @@ class LimitedOrdered {
   template<std::forward_iterator It>
   requires std::convertible_to<mbo::types::ForwardIteratorValueType<It>, Value>
   constexpr LimitedOrdered(It first, It last, const Compare& key_comp = Compare()) noexcept : key_comp_(key_comp) {
+#ifndef NDEBUG
     if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
       LV_REQUIRE(FATAL, std::is_sorted(first, last, key_comp_));
     }
+#endif  // NDEBUG
     while (first < last) {
       if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
         std::construct_at(&values_[size_++].data, *first);

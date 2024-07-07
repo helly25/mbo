@@ -1,3 +1,7 @@
+# 0.2.27
+
+* Changed `LimitedMap` and `LimitedSet` to not verify whether input is sorted, if they use `kRequireSortedInput` and `NDEBUG` is defined.
+
 # 0.2.26
 
 * Fixed comparison of `Extend` types with other types. Requires the other type can be turned into a tuple.
