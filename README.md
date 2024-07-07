@@ -3,7 +3,7 @@
 This C++20 library provides some general useful building blocks and integrates
 with [Google's Abseil library](https://abseil.io/).
 
-[![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml)
+The library is tested with Clang and GCC using continuous integration: [![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml). Manual testing with native Apple clang version 15.0.0 ARM is also done.
 
 The C++ library is organized in functional groups each residing in their own directory.
 
@@ -178,3 +178,18 @@ http_archive(
 ```
 
 The project is formatted with specific clang-format settings which require clang 16+ (in case of MacOs LLVM 16+ can be installed using brew).
+
+# Presentations
+
+## Practical Production-proven Constexpr API Elements
+
+Presented at [C++ On Sea 2024](https://cpponsea.uk/2024/session/practical-production-proven-constexpr-api-elements), this presentation covers the theory behind:
+* `mbo::hash::simple::GetHash`,
+* `mbo::container::LimitedVector`,
+* `mbo::container::LimitedMap`, and
+* `mbo::container::LimitedSet`.
+
+Slides are available at:
+<br/>
+<br/>
+[<img src="https://helly25.com/wp-content/uploads/2024/07/Practical-Production-proven-Constexpr-API-Elements_TitleCard-copy-980x551.png">](helly25.com/practical-production-proven-constexpr-api-elements/)
