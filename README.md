@@ -192,4 +192,4 @@ Presented at [C++ On Sea 2024](https://cpponsea.uk/2024/session/practical-produc
 Slides are available at:
 <br/>
 <br/>
-[<img src="https://helly25.com/wp-content/uploads/2024/07/Practical-Production-proven-Constexpr-API-Elements_TitleCard-copy-980x551.png">](helly25.com/practical-production-proven-constexpr-api-elements/)
+[<img src="https://helly25.com/wp-content/uploads/2024/07/Practical-Production-proven-Constexpr-API-Elements_TitleCard-copy-980x551.png">](https://helly25.com/practical-production-proven-constexpr-api-elements/)
