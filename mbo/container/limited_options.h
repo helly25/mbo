@@ -36,6 +36,7 @@ enum class LimitedOptionsFlag {
   // based constructors). This is an optimization for constexpr construction and allows the compiler to handle much
   // larger sets/maps, as the compiler does not need to execute the `emplace` (which requires sorting and shifting) and
   // can instead just place the elements.
+  // Note: If `NDEBUG` is defined, then the requirement will not be checked.
   kRequireSortedInput,
 
   // If true, then do NOT use the optimized `index_of` implementation, and also do not use `index_of` in methods like
