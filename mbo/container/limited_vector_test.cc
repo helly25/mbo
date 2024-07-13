@@ -488,6 +488,33 @@ TEST_F(LimitedVectorTest, ToLimitedVectorEmptyDtorCheck) {
   EXPECT_THAT(kData, ElementsAre(3, 5));
 }
 
+TEST_F(LimitedVectorTest, Assign1) {
+  static constexpr auto kData = [] {
+    LimitedVector<int, 4> result({1, 2, 3, 4});
+    result.assign(2, 3);
+    return result;
+  }();
+  EXPECT_THAT(kData, ElementsAre(3, 3));
+}
+
+TEST_F(LimitedVectorTest, Assign2) {
+  static constexpr auto kData = [] {
+    LimitedVector<int, 4> result({1, 2, 3, 4});
+    result.assign({5, 6});
+    return result;
+  }();
+  EXPECT_THAT(kData, ElementsAre(5, 6));
+}
+
+TEST_F(LimitedVectorTest, Assign3) {
+  static constexpr auto kData = [] {
+    LimitedVector<int, 4> result({1, 2, 3, 4});
+    result.assign({5, 6});
+    return result;
+  }();
+  EXPECT_THAT(kData, ElementsAre(5, 6));
+}
+
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace

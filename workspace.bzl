@@ -102,11 +102,13 @@ def mbo_workspace_load_modules():
     # Minimum requirements:
     # * 2023.10.06: https://github.com/bazel-contrib/toolchains_llvm/pull/229: Move minimum supported version to Bazel
     # * 2024.03.12: https://github.com/bazel-contrib/toolchains_llvm/pull/286: Support LLD linker for Darwin
+    # In order to go past version 1.0.0 we also add the actual fix:
+    # * 2024.06.06: https://github.com/bazel-contrib/toolchains_llvm/pull/337: Force Clang modules with LLVM >= 14q
     github_archive(
         name = "toolchains_llvm",
-        commit = "6bca3e279afa248495a25a586dfe06949cbf05cb",  # https://github.com/bazel-contrib/toolchains_llvm/pull/286
+        commit = "b193952cdb9dd3134f51159d820614ff32dba079",  # https://github.com/bazel-contrib/toolchains_llvm/pull/337
         repo = "https://github.com/bazel-contrib/toolchains_llvm",
-        integrity = "sha256-4syq1T8CQTyPrfxLcyo7LEHmMpkBF/tANnKbfvKPuTU=",
+        integrity = "sha256-eqCfrC/cwTsdE2+DkJQKQmxtlM8mb/nNaZSdg2H8dbk=",
     )
     #http_archive(
     #    name = "toolchains_llvm",
