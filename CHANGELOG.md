@@ -1,5 +1,6 @@
 # 0.2.27
 
+* Implemented `LimitedVector::insert`.
 * Fixed a bug in `LimitedVector::assign`.
 * Updated https://github.com/bazel-contrib/toolchains_llvm past version 1.0.0.
 * Changed `LimitedMap` and `LimitedSet` to not verify whether input is sorted, if they use `kRequireSortedInput` and `NDEBUG` is defined.
