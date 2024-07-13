@@ -236,7 +236,7 @@ class LimitedVector final {
     return *this;
   }
 
-  // Mofification: clear, resize, reserve, explace_back, push_back, pop_back, assign
+  // Mofification: clear, resize, reserve, explace_back, push_back, pop_back, assign, insert
 
   constexpr void clear() noexcept {
     while (!empty()) {
@@ -376,6 +376,59 @@ class LimitedVector final {
     }
   }
 
+  constexpr iterator insert(const_iterator pos, T&& value) {
+    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `insert` at capacity.";
+    LV_REQUIRE(FATAL, begin() <= pos && pos <= end()) << "Invalid `pos`.";
+    // Clang does not like `std::distance`. The issue is that the iterators point into the union.
+    // That makes them technically not point into an array AND that is indeed not allowed by C++.
+    const iterator dst = const_cast<iterator>(pos);
+    move_backward(dst, 1);
+    std::construct_at(&*dst, value);
+    return dst;
+  }
+
+  constexpr iterator insert(const_iterator pos, size_type count, const T& value) {
+    LV_REQUIRE(FATAL, size_ + count <= Capacity) << "Called `insert` at capacity.";
+    LV_REQUIRE(FATAL, begin() <= pos && pos <= end()) << "Invalid `pos`.";
+    const iterator dst = const_cast<iterator>(pos);
+    if (count == 0) {
+      return dst;
+    }
+    std::size_t index = move_backward(dst, count);
+    while (count) {
+      std::construct_at(&values_[index].data, value);
+      ++index;
+      --count;
+    }
+    return dst;
+  }
+
+  constexpr iterator insert(const_iterator pos, const T& value) { return insert(pos, 1, value); }
+
+  template<std::convertible_to<const_iterator> InputIt>
+  constexpr iterator insert(const_iterator pos, InputIt first, InputIt last) {
+    LV_REQUIRE(FATAL, begin() <= pos && pos <= end()) << "Invalid `pos`.";
+    LV_REQUIRE(FATAL, first <= last) << "First > Last.";
+    std::size_t count = std::distance(first, last);
+    LV_REQUIRE(FATAL, size_ + count <= Capacity) << "Called `insert` at capacity.";
+    const iterator dst = const_cast<iterator>(pos);
+    if (count == 0) {
+      return dst;
+    }
+    std::size_t index = move_backward(dst, count);
+    while (count) {
+      std::construct_at(&values_[index].data, *first);
+      ++index;
+      --count;
+      ++first;
+    }
+    return dst;
+  }
+
+  constexpr iterator insert(const_iterator pos, std::initializer_list<T> list) {
+    return insert(pos, list.begin(), list.end());
+  }
+
   // Read/write access
 
   constexpr std::size_t size() const noexcept { return size_; }
@@ -441,6 +494,16 @@ class LimitedVector final {
   constexpr const_pointer data() const noexcept { return &values_[0].data; }
 
  private:
+  constexpr std::size_t move_backward(iterator dst, std::size_t count) {
+    std::size_t pos = size_;
+    while (dst < &values_[pos].data) {
+      --pos;
+      std::construct_at(&values_[pos + count].data, std::move(values_[pos].data));
+    }
+    size_ += count;
+    return pos;
+  }
+
   std::size_t size_{0};
   // Array would be better but that does not work with ASAN builds.
   // std::array<Data, Capacity == 0 ? 1 : Capacity> values_;

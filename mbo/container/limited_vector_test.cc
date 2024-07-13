@@ -515,6 +515,122 @@ TEST_F(LimitedVectorTest, Assign3) {
   EXPECT_THAT(kData, ElementsAre(5, 6));
 }
 
+TEST_F(LimitedVectorTest, Insert1WithoutMoving) {
+  {
+    static constexpr auto kData = [] {
+      LimitedVector<int, 5> result{};
+      result.insert(result.begin(), 1);
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(1));
+  }
+  {
+    static constexpr auto kData = [] {
+      LimitedVector<int, 5> result{};
+      result.insert(result.end(), 1);
+      result.insert(result.end(), 2);
+      result.insert(result.end(), 3);
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(1, 2, 3));
+  }
+}
+
+TEST_F(LimitedVectorTest, Insert1WithMoving) {
+  {
+    static constexpr auto kData = [] {
+      LimitedVector<int, 5> result{};
+      result.insert(result.begin(), 1);
+      result.insert(result.begin(), 2);
+      result.insert(result.begin(), 3);
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(3, 2, 1));
+  }
+  {
+    static constexpr auto kData = [] {
+      LimitedVector<int, 5> result({1, 2});
+      result.insert(result.begin(), 25);
+      result.insert(&result[2], 33);
+      result.insert(result.end(), 42);
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(25, 1, 33, 2, 42));
+  }
+}
+
+TEST_F(LimitedVectorTest, Insert2) {
+  {
+    static constexpr auto kData = [] {
+      LimitedVector<int, 10> result{};
+      result.insert(result.begin(), 1, 0);
+      result.insert(result.begin(), 2, 1);
+      result.insert(result.begin(), 3, 2);
+      result.insert(result.begin(), 4, 3);
+      result.insert(result.begin(), 0, 4);
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(3, 3, 3, 3, 2, 2, 2, 1, 1, 0));
+  }
+  {
+    static constexpr auto kData = [] {
+      LimitedVector<int, 10> result{};
+      result.insert(result.end(), 1, 0);
+      result.insert(result.end(), 2, 1);
+      result.insert(result.end(), 3, 2);
+      result.insert(result.end(), 4, 3);
+      result.insert(result.end(), 0, 4);
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(0, 1, 1, 2, 2, 2, 3, 3, 3, 3));
+  }
+  {
+    static constexpr auto kData = [] {
+      LimitedVector<int, 10> result({1, 2});
+      result.insert(result.begin(), 2, 25);
+      result.insert(&result[3], 3, 33);
+      result.insert(result.end(), 3, 42);
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(25, 25, 1, 33, 33, 33, 2, 42, 42, 42));
+  }
+}
+
+TEST_F(LimitedVectorTest, Insert3) {
+  {
+    static constexpr auto kData = [] {
+      LimitedVector<int, 6> result{};
+      result.insert(result.begin(), {11});
+      result.insert(result.begin(), {21, 22});
+      result.insert(result.begin(), {31, 32, 33});
+      result.insert(result.begin(), {});
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(31, 32, 33, 21, 22, 11));
+  }
+  {
+    static constexpr auto kData = [] {
+      LimitedVector<int, 6> result{};
+      result.insert(result.end(), {11});
+      result.insert(result.end(), {21, 22});
+      result.insert(result.end(), {31, 32, 33});
+      result.insert(result.end(), {});
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(11, 21, 22, 31, 32, 33));
+  }
+  {
+    static constexpr auto kData = [] {
+      LimitedVector<int, 8> result({1, 2});
+      result.insert(result.begin(), {21, 22});
+      result.insert(&result[3], {31, 32});
+      result.insert(result.end(), {41, 42});
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(21, 22, 1, 31, 32, 2, 41, 42));
+  }
+}
+
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace
