@@ -16,8 +16,10 @@
 #ifndef MBO_CONTAINER_LIMITED_VECTOR_H_
 #define MBO_CONTAINER_LIMITED_VECTOR_H_
 
+#include <algorithm>
 #include <compare>   // IWYU pragma: keep
 #include <concepts>  // IWYU pragma: keep
+#include <cstddef>
 #include <initializer_list>
 #include <memory>
 #include <new>  // IWYU pragma: keep
@@ -361,15 +363,16 @@ class LimitedVector final {
   constexpr void assign(It begin, It end) noexcept {
     clear();
     while (begin < end) {
-      emplace_back(std::forward<mbo::types::ForwardIteratorValueType<It>>(*begin));
+      emplace_back(std::forward<mbo::types::ForwardIteratorValueType<It>>(*begin++));
     }
   }
 
   constexpr void assign(const std::initializer_list<T>& list) noexcept {
+    LV_REQUIRE(FATAL, list.size() <= Capacity) << "Called `assign` at capacity.";
     clear();
     auto it = list.begin();
     while (it < list.end()) {
-      emplace_back(std::forward<T>(*it));
+      emplace_back(*it++);
     }
   }
 
@@ -441,7 +444,7 @@ class LimitedVector final {
   std::size_t size_{0};
   // Array would be better but that does not work with ASAN builds.
   // std::array<Data, Capacity == 0 ? 1 : Capacity> values_;
-  // Add an unused sentinal, so that `end` and other functions do not cause memory issues.
+  // Add an unused sentinel, so that `end` and other functions do not cause memory issues.
   Data values_[Capacity + 1];  // NOLINT(*-avoid-c-arrays)
 };
 
