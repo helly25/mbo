@@ -105,20 +105,20 @@ class LimitedMap final
   // Constructors and assignment from other LimitMap/value types.
 
   template<std::forward_iterator It>
-  requires std::convertible_to<mbo::types::ForwardIteratorValueType<It>, KeyValueType>
+  requires std::constructible_from<KeyValueType, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedMap(It begin, It end, const KeyComp& key_comp = KeyComp()) noexcept
       : LimitedBase(begin, end, key_comp) {}
 
   constexpr LimitedMap(const std::initializer_list<KeyValueType>& list, const KeyComp& key_comp = KeyComp()) noexcept
       : LimitedBase(list, key_comp) {}
 
-  template<typename U>
-  requires(std::convertible_to<U, KeyValueType> && !std::same_as<U, KeyValueType>)
+  template<std::constructible_from<KeyValueType> U>
+  requires(!std::same_as<U, KeyValueType>)
   constexpr LimitedMap(const std::initializer_list<U>& list, const KeyComp& key_comp = KeyComp()) noexcept
       : LimitedBase(list, key_comp) {}
 
-  template<typename U, auto OtherN>
-  requires(std::convertible_to<U, KeyValueType> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<KeyValueType> U, auto OtherN>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(const std::initializer_list<U>& list) noexcept {
     LimitedBase::operator=(list);
     return *this;

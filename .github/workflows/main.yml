@@ -14,8 +14,10 @@ jobs:
           version: 4.2.1
         with:
           path: |
+            ~/.cache/bazelisk
             ~/.cache/bazel
-          key: ${{ runner.os }}-{{ env.version }}-bazel-cache-clang-asan
+            ~/.cache/bazel-cache
+          key: ${{ runner.os }}-${{ env.version }}-bazel-cache-clang-asan
 
       - name: Test Clang/ASAN
         run: |
@@ -34,8 +36,10 @@ jobs:
           version: 4.2.1
         with:
           path: |
+            ~/.cache/bazelisk
             ~/.cache/bazel
-          key: ${{ runner.os }}-{{ env.version }}-bazel-cache-clang-opt
+            ~/.cache/bazel-cache
+          key: ${{ runner.os }}-${{ env.version }}-bazel-cache-clang-opt
 
       - name: Test Clang/OPT
         run: |
@@ -54,8 +58,10 @@ jobs:
           version: 4.2.1
         with:
           path: |
+            ~/.cache/bazelisk
             ~/.cache/bazel
-          key: ${{ runner.os }}-{{ env.version }}-bazel-cache-gcc-fastbuild
+            ~/.cache/bazel-cache
+          key: ${{ runner.os }}-${{ env.version }}-bazel-cache-gcc-fastbuild
 
       - name: Test GCC/Fastbuild
         run: |
