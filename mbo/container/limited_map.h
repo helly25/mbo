@@ -105,51 +105,43 @@ class LimitedMap final
   // Constructors and assignment from other LimitMap/value types.
 
   template<std::forward_iterator It>
-  requires std::convertible_to<mbo::types::ForwardIteratorValueType<It>, KeyValueType>
+  requires std::constructible_from<KeyValueType, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedMap(It begin, It end, const KeyComp& key_comp = KeyComp()) noexcept
       : LimitedBase(begin, end, key_comp) {}
 
   constexpr LimitedMap(const std::initializer_list<KeyValueType>& list, const KeyComp& key_comp = KeyComp()) noexcept
       : LimitedBase(list, key_comp) {}
 
-  template<typename U>
-  requires(std::convertible_to<U, KeyValueType> && !std::same_as<U, KeyValueType>)
+  template<std::constructible_from<KeyValueType> U>
+  requires(!std::same_as<U, KeyValueType>)
   constexpr LimitedMap(const std::initializer_list<U>& list, const KeyComp& key_comp = KeyComp()) noexcept
       : LimitedBase(list, key_comp) {}
 
-  template<typename U, auto OtherN>
-  requires(std::convertible_to<U, KeyValueType> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<KeyValueType> U, auto OtherN>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(const std::initializer_list<U>& list) noexcept {
     LimitedBase::operator=(list);
     return *this;
   }
 
-  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
-      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, std::constructible_from<Value> OV, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedMap(const LimitedMap<OK, OV, OtherN, OtherCompare>& other) noexcept : LimitedBase(other) {}
 
-  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
-      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, std::constructible_from<Value> OV, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(const LimitedMap<OK, OV, OtherN, OtherCompare>& other) noexcept {
     LimitedBase::operator=(other);
     return *this;
   }
 
-  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
-      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, std::constructible_from<Value> OV, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedMap(LimitedMap<OK, OV, OtherN, OtherCompare>&& other) noexcept
       : LimitedBase(std::move(other)) {}
 
-  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
-      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, std::constructible_from<Value> OV, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(LimitedMap<OK, OV, OtherN, OtherCompare>&& other) noexcept {
     LimitedBase::operator=(std::move(other));
     return *this;

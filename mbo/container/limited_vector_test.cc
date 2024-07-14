@@ -536,7 +536,7 @@ TEST_F(LimitedVectorTest, Insert1WithoutMoving) {
   }
 }
 
-TEST_F(LimitedVectorTest, Insert1WithMoving) {
+TEST_F(LimitedVectorTest, Insert1Moving) {
   {
     static constexpr auto kData = [] {
       LimitedVector<int, 5> result{};
@@ -556,6 +556,40 @@ TEST_F(LimitedVectorTest, Insert1WithMoving) {
       return result;
     }();
     EXPECT_THAT(kData, ElementsAre(25, 1, 33, 2, 42));
+  }
+}
+
+TEST_F(LimitedVectorTest, Insert1ComplexType) {
+  // The test uses the non trivial type `std::string` which cannot be handled at compile time in a constexpr (in C++20).
+  // It verifies that element moving is performed correctly by employing `std::construct_at(dst, std::move(src))` in
+  // `LimitedVector::move_backward()` just as is done in `LimitedOrdered`.
+  // Each test string uses an identification char (e.g. `1`), 16 dots and a comma in order to force memory allocation.
+  static constexpr std::string_view kStr1 = "1................,";
+  static constexpr std::string_view kStr2 = "2................,";
+  static constexpr std::string_view kStr3 = "3................,";
+  static constexpr std::string_view kStrA = "A................,";
+  static constexpr std::string_view kStrB = "B................,";
+  static constexpr std::string_view kStrC = "C................,";
+  static constexpr std::string_view kStrD = "D................,";
+  {
+    static const auto kData = [] {
+      LimitedVector<std::string, 3> result{};
+      result.insert(result.begin(), kStr1);
+      result.insert(result.begin(), kStr2);
+      result.insert(result.begin(), kStr3);
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(kStr3, kStr2, kStr1));
+  }
+  {
+    static const auto kData = [] {
+      LimitedVector<std::string, 6> result(std::initializer_list<std::string_view>{kStr1, kStr2});
+      result.insert(result.begin(), kStrA);
+      result.insert(&result[2], kStrB);
+      result.insert(result.end(), std::initializer_list<std::string_view>{kStrC, kStrD});
+      return result;
+    }();
+    EXPECT_THAT(kData, ElementsAre(kStrA, kStr1, kStrB, kStr2, kStrC, kStrD));
   }
 }
 
@@ -600,10 +634,10 @@ TEST_F(LimitedVectorTest, Insert3) {
   {
     static constexpr auto kData = [] {
       LimitedVector<int, 6> result{};
-      result.insert(result.begin(), {11});
+      result.insert(result.begin(), std::initializer_list<int>{11});
       result.insert(result.begin(), {21, 22});
       result.insert(result.begin(), {31, 32, 33});
-      result.insert(result.begin(), {});
+      result.insert(result.begin(), std::initializer_list<int>{});
       return result;
     }();
     EXPECT_THAT(kData, ElementsAre(31, 32, 33, 21, 22, 11));
@@ -611,10 +645,10 @@ TEST_F(LimitedVectorTest, Insert3) {
   {
     static constexpr auto kData = [] {
       LimitedVector<int, 6> result{};
-      result.insert(result.end(), {11});
+      result.insert(result.end(), std::initializer_list<int>{11});
       result.insert(result.end(), {21, 22});
       result.insert(result.end(), {31, 32, 33});
-      result.insert(result.end(), {});
+      result.insert(result.end(), std::initializer_list<int>{});
       return result;
     }();
     EXPECT_THAT(kData, ElementsAre(11, 21, 22, 31, 32, 33));

@@ -96,38 +96,38 @@ class LimitedSet final : public container_internal::LimitedOrdered<Key, Key, Key
   // Constructors and assignment from other LimitSet/value types.
 
   template<std::forward_iterator It>
-  requires std::convertible_to<mbo::types::ForwardIteratorValueType<It>, Key>
+  requires std::constructible_from<Key, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedSet(It begin, It end, const Compare& key_comp = Compare()) noexcept
       : LimitedBase(begin, end, key_comp) {}
 
   constexpr LimitedSet(const std::initializer_list<Key>& list, const Compare& key_comp = Compare()) noexcept
       : LimitedBase(list, key_comp) {}
 
-  template<typename U>
-  requires(std::convertible_to<U, Key> && !std::same_as<U, Key>)
+  template<std::constructible_from<Key> U>
+  requires(!std::same_as<U, Key>)
   constexpr LimitedSet(const std::initializer_list<U>& list, const Compare& key_comp = Compare()) noexcept
       : LimitedBase(list, key_comp) {}
 
-  template<typename U, auto OtherN>
-  requires(std::convertible_to<U, Key> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> U, auto OtherN>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedSet& operator=(const std::initializer_list<U>& list) noexcept {
     LimitedBase::operator=(list);
     return *this;
   }
 
-  template<typename OK, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedSet(const LimitedSet<OK, OtherN, OtherCompare>& other) noexcept : LimitedBase(other) {}
 
-  template<typename OK, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedSet& operator=(const LimitedSet<OK, OtherN, OtherCompare>& other) noexcept {
     LimitedBase::operator=(other);
     return *this;
   }
 
-  template<typename OK, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedSet(LimitedSet<OK, OtherN, OtherCompare>&& other) noexcept
       : LimitedBase(std::move(other)) {}
 

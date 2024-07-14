@@ -1,3 +1,8 @@
+# 0.2.28
+
+* Improved `LimitedVector::insert` to deal better with conversions and complex types.
+* Improved `LimitedMap`, `LimitedOrdered`, `LimitedSet` and `LimitedVector` ability to handle conversions.
+
 # 0.2.27
 
 * Implemented `LimitedVector::insert`.
