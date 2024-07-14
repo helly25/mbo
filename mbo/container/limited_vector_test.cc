@@ -536,7 +536,7 @@ TEST_F(LimitedVectorTest, Insert1WithoutMoving) {
   }
 }
 
-TEST_F(LimitedVectorTest, Insert1WithMoving) {
+TEST_F(LimitedVectorTest, Insert1Moving) {
   {
     static constexpr auto kData = [] {
       LimitedVector<int, 5> result{};
@@ -559,7 +559,7 @@ TEST_F(LimitedVectorTest, Insert1WithMoving) {
   }
 }
 
-TEST_F(LimitedVectorTest, Insert1WithMovingNonConstexpr) {
+TEST_F(LimitedVectorTest, Insert1ComplexType) {
   // The test uses the non trivial type `std::string` which cannot be handled at compile time in a constexpr (in C++20).
   // It verifies that element moving is performed correctly by employing `std::construct_at(dst, std::move(src))` in
   // `LimitedVector::move_backward()` just as is done in `LimitedOrdered`.
