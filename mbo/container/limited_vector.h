@@ -182,8 +182,7 @@ class LimitedVector final {
     }
   }
 
-  template<typename U>
-  requires std::convertible_to<U, T>
+  template<std::constructible_from<T> U>
   constexpr LimitedVector(const std::initializer_list<U>& list) noexcept {
     auto it = list.begin();
     while (it < list.end()) {
@@ -191,23 +190,23 @@ class LimitedVector final {
     }
   }
 
-  template<typename U, auto OtherN>
-  requires(std::convertible_to<U, T> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
+  template<std::constructible_from<T> U, auto OtherN>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedVector& operator=(const std::initializer_list<U>& list) noexcept {
     assign(list);
     return *this;
   }
 
-  template<typename U, auto OtherN>
-  requires(std::convertible_to<U, T> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
+  template<std::constructible_from<T> U, auto OtherN>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedVector(const LimitedVector<U, OtherN>& other) noexcept {
     for (; size_ < other.size(); ++size_) {
       std::construct_at(&values_[size_].data, other.at(size_));
     }
   }
 
-  template<typename U, auto OtherN>
-  requires(std::convertible_to<U, T> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
+  template<std::constructible_from<T> U, auto OtherN>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedVector& operator=(const LimitedVector<U, OtherN>& other) noexcept {
     clear();
     for (; size_ < other.size(); ++size_) {
@@ -216,8 +215,8 @@ class LimitedVector final {
     return *this;
   }
 
-  template<typename U, auto OtherN>
-  requires(std::convertible_to<U, T> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
+  template<std::constructible_from<T> U, auto OtherN>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedVector(LimitedVector<U, OtherN>&& other) noexcept {
     for (; size_ < other.size(); ++size_) {
       std::construct_at(&values_[size_].data, std::move(other.at(size_)));
@@ -225,8 +224,8 @@ class LimitedVector final {
     other.size_ = 0;
   }
 
-  template<typename U, auto OtherN>
-  requires(std::convertible_to<U, T> && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
+  template<std::constructible_from<T> U, auto OtherN>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedVector& operator=(LimitedVector<U, OtherN>&& other) noexcept {
     clear();
     for (; size_ < other.size(); ++size_) {
@@ -376,14 +375,15 @@ class LimitedVector final {
     }
   }
 
-  constexpr iterator insert(const_iterator pos, T&& value) {
+  template<std::constructible_from<T> U>
+  constexpr iterator insert(const_iterator pos, U&& value) {
     LV_REQUIRE(FATAL, size_ < Capacity) << "Called `insert` at capacity.";
     LV_REQUIRE(FATAL, begin() <= pos && pos <= end()) << "Invalid `pos`.";
     // Clang does not like `std::distance`. The issue is that the iterators point into the union.
     // That makes them technically not point into an array AND that is indeed not allowed by C++.
     const iterator dst = const_cast<iterator>(pos);
     move_backward(dst, 1);
-    std::construct_at(&*dst, value);
+    std::construct_at(&*dst, std::forward<U>(value));
     return dst;
   }
 
@@ -425,7 +425,8 @@ class LimitedVector final {
     return dst;
   }
 
-  constexpr iterator insert(const_iterator pos, std::initializer_list<T> list) {
+  template<std::constructible_from<T> U>
+  constexpr iterator insert(const_iterator pos, std::initializer_list<U> list) {
     return insert(pos, list.begin(), list.end());
   }
 

@@ -1,7 +1,7 @@
 name: Test
 on: [push]
 jobs:
-  test:
+  test-clang-asan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -15,15 +15,47 @@ jobs:
         with:
           path: |
             ~/.cache/bazel
-          key: ${{ runner.os }}-{{ env.version }}-bazel-cache
+          key: ${{ runner.os }}-{{ env.version }}-bazel-cache-clang-asan
 
       - name: Test Clang/ASAN
         run: |
           bazel test --config=clang --config=asan -c dbg //...
 
+  test-clang-opt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Bazel cache
+        id: bazel-cache
+        uses: actions/cache@v2
+        env:
+          version: 4.2.1
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-{{ env.version }}-bazel-cache-clang-opt
+
       - name: Test Clang/OPT
         run: |
           bazel test --config=clang -c opt //...
+
+  test-gcc-fastbuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Bazel cache
+        id: bazel-cache
+        uses: actions/cache@v2
+        env:
+          version: 4.2.1
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-{{ env.version }}-bazel-cache-gcc-fastbuild
 
       - name: Test GCC/Fastbuild
         run: |

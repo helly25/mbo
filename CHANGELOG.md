@@ -1,3 +1,7 @@
+# 0.2.28
+
+* Improved `LimitedVector::insert` to deal better with conversions and complex types.
+
 # 0.2.27
 
 * Implemented `LimitedVector::insert`.
