@@ -168,7 +168,7 @@ class LimitedVector final {
   // Constructors and assignment from other LimitVector/value types.
 
   template<std::forward_iterator It>
-  requires std::convertible_to<mbo::types::ForwardIteratorValueType<It>, T>
+  requires std::constructible_from<T, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedVector(It begin, It end) noexcept {
     while (begin < end) {
       emplace_back(*begin++);
@@ -405,7 +405,8 @@ class LimitedVector final {
 
   constexpr iterator insert(const_iterator pos, const T& value) { return insert(pos, 1, value); }
 
-  template<std::convertible_to<const_iterator> InputIt>
+  template<typename InputIt>
+  requires(std::constructible_from<T, decltype(*std::declval<InputIt>())>)
   constexpr iterator insert(const_iterator pos, InputIt first, InputIt last) {
     LV_REQUIRE(FATAL, begin() <= pos && pos <= end()) << "Invalid `pos`.";
     LV_REQUIRE(FATAL, first <= last) << "First > Last.";

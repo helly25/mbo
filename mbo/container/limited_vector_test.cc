@@ -570,6 +570,7 @@ TEST_F(LimitedVectorTest, Insert1WithMovingNonConstexpr) {
   static constexpr std::string_view kStrA = "A................,";
   static constexpr std::string_view kStrB = "B................,";
   static constexpr std::string_view kStrC = "C................,";
+  static constexpr std::string_view kStrD = "D................,";
   {
     static const auto kData = [] {
       LimitedVector<std::string, 3> result{};
@@ -582,13 +583,13 @@ TEST_F(LimitedVectorTest, Insert1WithMovingNonConstexpr) {
   }
   {
     static const auto kData = [] {
-      LimitedVector<std::string, 5> result(std::initializer_list<std::string_view>{kStr1, kStr2});
+      LimitedVector<std::string, 6> result(std::initializer_list<std::string_view>{kStr1, kStr2});
       result.insert(result.begin(), kStrA);
       result.insert(&result[2], kStrB);
-      result.insert(result.end(), kStrC);
+      result.insert(result.end(), std::initializer_list<std::string_view>{kStrC, kStrD});
       return result;
     }();
-    EXPECT_THAT(kData, ElementsAre(kStrA, kStr1, kStrB, kStr2, kStrC));
+    EXPECT_THAT(kData, ElementsAre(kStrA, kStr1, kStrB, kStr2, kStrC, kStrD));
   }
 }
 
