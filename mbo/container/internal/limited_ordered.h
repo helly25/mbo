@@ -460,10 +460,13 @@ class LimitedOrdered {
     return *this;
   }
 
-  template<typename OK, typename OM, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped>
-      && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
+  template<
+      std::constructible_from<Key> OK,
+      std::constructible_from<Mapped> OM,
+      typename OV,
+      auto OtherN,
+      typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedOrdered(const LimitedOrdered<OK, OM, OV, OtherN, OtherCompare>& other) noexcept {
     for (auto it = other.begin(); it < other.end(); ++it) {
       if constexpr (kKeyOnly) {
@@ -474,10 +477,13 @@ class LimitedOrdered {
     }
   }
 
-  template<typename OK, typename OM, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped>
-      && MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
+  template<
+      std::constructible_from<Key> OK,
+      std::constructible_from<Mapped> OM,
+      typename OV,
+      auto OtherN,
+      typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedOrdered& operator=(const LimitedOrdered<OK, OM, OV, OtherN, OtherCompare>& other) noexcept {
     clear();
     for (auto it = other.begin(); it < other.end(); ++it) {
@@ -745,10 +751,13 @@ class LimitedOrdered {
     }
   }
 
-  template<typename OK, typename OM, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OM, Mapped>
-      && MakeLimitedOptions<OtherN>().kCapacity == Capacity && std::same_as<OtherCompare, Compare>)
+  template<
+      std::constructible_from<Key> OK,
+      std::constructible_from<Mapped> OM,
+      typename OV,
+      auto OtherN,
+      typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity == Capacity && std::same_as<OtherCompare, Compare>)
   constexpr void swap(LimitedOrdered<OK, OM, OV, OtherN, OtherCompare>& other) noexcept {
     std::size_t pos = 0;
     for (; pos < size_ && pos < other.size(); ++pos) {

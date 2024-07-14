@@ -5,19 +5,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Setup Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
 
       - name: Bazel cache
-        id: bazel-cache
-        uses: actions/cache@v2
-        env:
-          version: 4.2.1
+        uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/bazelisk
-            ~/.cache/bazel
-            ~/.cache/bazel-cache
-          key: ${{ runner.os }}-${{ env.version }}-bazel-cache-clang-asan
+            path: "~/.cache/bazel"
+            key: bazel-cache-clang-asan
 
       - name: Test Clang/ASAN
         run: |
@@ -27,19 +24,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Setup Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
 
       - name: Bazel cache
-        id: bazel-cache
-        uses: actions/cache@v2
-        env:
-          version: 4.2.1
+        uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/bazelisk
-            ~/.cache/bazel
-            ~/.cache/bazel-cache
-          key: ${{ runner.os }}-${{ env.version }}-bazel-cache-clang-opt
+            path: "~/.cache/bazel"
+            key: bazel-cache-clang-opt
 
       - name: Test Clang/OPT
         run: |
@@ -49,19 +43,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Setup Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
 
       - name: Bazel cache
-        id: bazel-cache
-        uses: actions/cache@v2
-        env:
-          version: 4.2.1
+        uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/bazelisk
-            ~/.cache/bazel
-            ~/.cache/bazel-cache
-          key: ${{ runner.os }}-${{ env.version }}-bazel-cache-gcc-fastbuild
+            path: "~/.cache/bazel"
+            key: bazel-cache-gcc-fastbuild
 
       - name: Test GCC/Fastbuild
         run: |

@@ -124,32 +124,24 @@ class LimitedMap final
     return *this;
   }
 
-  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
-      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, std::constructible_from<Value> OV, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedMap(const LimitedMap<OK, OV, OtherN, OtherCompare>& other) noexcept : LimitedBase(other) {}
 
-  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
-      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, std::constructible_from<Value> OV, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(const LimitedMap<OK, OV, OtherN, OtherCompare>& other) noexcept {
     LimitedBase::operator=(other);
     return *this;
   }
 
-  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
-      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, std::constructible_from<Value> OV, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedMap(LimitedMap<OK, OV, OtherN, OtherCompare>&& other) noexcept
       : LimitedBase(std::move(other)) {}
 
-  template<typename OK, typename OV, auto OtherN, typename OtherCompare>
-  requires(
-      std::convertible_to<OK, Key> && std::convertible_to<OV, Value>
-      && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, std::constructible_from<Value> OV, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedMap& operator=(LimitedMap<OK, OV, OtherN, OtherCompare>&& other) noexcept {
     LimitedBase::operator=(std::move(other));
     return *this;

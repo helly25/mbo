@@ -115,19 +115,19 @@ class LimitedSet final : public container_internal::LimitedOrdered<Key, Key, Key
     return *this;
   }
 
-  template<typename OK, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedSet(const LimitedSet<OK, OtherN, OtherCompare>& other) noexcept : LimitedBase(other) {}
 
-  template<typename OK, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr LimitedSet& operator=(const LimitedSet<OK, OtherN, OtherCompare>& other) noexcept {
     LimitedBase::operator=(other);
     return *this;
   }
 
-  template<typename OK, auto OtherN, typename OtherCompare>
-  requires(std::convertible_to<OK, Key> && MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
+  template<std::constructible_from<Key> OK, auto OtherN, typename OtherCompare>
+  requires(MakeLimitedOptions<OtherN>().kCapacity <= kCapacity)
   constexpr explicit LimitedSet(LimitedSet<OK, OtherN, OtherCompare>&& other) noexcept
       : LimitedBase(std::move(other)) {}
 
