@@ -24,7 +24,7 @@
 
 #include "absl/cleanup/cleanup.h"
 #include "absl/log/absl_log.h"
-#include "absl/strings/match.h"
+#include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
@@ -417,9 +417,34 @@ struct Select : Args... {
 };
 
 bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) const {
+  std::string tmp_lhs;
+  std::string tmp_rhs;
+  if (options_.ignore_all_space) {
+    const auto strip = [](std::string_view input) {
+      std::string out;
+      out.reserve(input.length());
+      for (char c : input) {
+        if (!absl::ascii_isspace(c)) {
+          out.push_back(c);
+        }
+      }
+      return out;
+    };
+    tmp_lhs = strip(lhs);
+    tmp_rhs = strip(rhs);
+    lhs = tmp_lhs;
+    rhs = tmp_rhs;
+  } else if (options_.ignore_consecutive_space) {
+    tmp_lhs = lhs;
+    tmp_rhs = rhs;
+    absl::RemoveExtraAsciiWhitespace(&tmp_lhs);
+    absl::RemoveExtraAsciiWhitespace(&tmp_rhs);
+    lhs = tmp_lhs;
+    rhs = tmp_rhs;
+  }
   if (options_.ignore_space_change) {
-    lhs = absl::StripAsciiWhitespace(lhs);
-    rhs = absl::StripAsciiWhitespace(rhs);
+    lhs = absl::StripTrailingAsciiWhitespace(lhs);
+    rhs = absl::StripTrailingAsciiWhitespace(rhs);
   }
   const auto str_comp =
       options_.ignore_case ? [](std::string_view lhs, std::string_view rhs) { return absl::EqualsIgnoreCase(lhs, rhs); }

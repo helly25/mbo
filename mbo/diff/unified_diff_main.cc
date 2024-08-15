@@ -54,7 +54,17 @@ ABSL_FLAG(
     true,
     "\
 Controls whether `--ignore_matching_lines` applies to full chunks (Default) or just to single lines.");
-ABSL_FLAG(bool, ignore_space_change, false, "Ignore leading and trailing whitespace changes.");
+ABSL_FLAG(
+    bool,
+    ignore_all_space,
+    false,
+    "Ignore all whitespace changes, even if one line has whitespace where the other line has none.");
+ABSL_FLAG(
+    bool,
+    ignore_consecutive_space,
+    false,
+    "Ignore all leading, trailing, and consecutive internal whitespace changes.");
+ABSL_FLAG(bool, ignore_space_change, false, "Ignore trailing whitespace changes.");
 ABSL_FLAG(std::string, file_header_use, "both", R"(Select which file header to use:
 - both: Both file names are used (left uses left file name and right uses right file name).
 - left: The left and right header both use left file name.
@@ -132,6 +142,8 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
         }
         return std::make_optional<RE2>(regex);
       }(),
+      .ignore_all_space = absl::GetFlag(FLAGS_ignore_all_space),
+      .ignore_consecutive_space = absl::GetFlag(FLAGS_ignore_consecutive_space),
       .ignore_space_change = absl::GetFlag(FLAGS_ignore_space_change),
       .skip_left_deletions = absl::GetFlag(FLAGS_skip_left_deletions),
       .strip_comments = [&]() -> mbo::diff::UnifiedDiff::StripCommentOptions {

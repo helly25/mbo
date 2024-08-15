@@ -5,4 +5,4 @@
 -b
 +a  # A comment
 +x  # X comment
- c
+ c c

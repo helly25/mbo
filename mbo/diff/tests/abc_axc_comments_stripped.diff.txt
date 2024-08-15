@@ -4,4 +4,4 @@
  a
 -b
 +x  # X comment
- c
+ c c
