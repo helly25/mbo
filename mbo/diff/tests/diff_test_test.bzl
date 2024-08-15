@@ -26,6 +26,8 @@ def diff_test_test(
         file_old,
         file_new,
         expected_diff,
+        ignore_all_space = False,
+        ignore_consecutive_space = False,
         ignore_blank_lines = False,
         ignore_case = False,
         ignore_matching_chunks = True,
@@ -39,18 +41,20 @@ def diff_test_test(
     If the test detects differences, then the output will be in `diff -du` form.
 
     Args:
-        name:                  Name of the test
-        file_old:              The old file.
-        file_new:              The new file.
-        expected_diff:         The expected diff result.
-        ignore_blank_lines:    Ignore chunks which include only blank lines.
-        ignore_case:           Whether to ignore letter case.
-        ignore_matching_chunks:Whether `ignore_matching_lines` applies to chanks or single lines.
-        ignore_matching_lines: Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
-        ignore_space_change:   Ignore leading and traling whitespace changes.
-        strip_comments:        Strip out anything starting from `strip_comments`.
-        strip_parsed_comments: Whether to parse lines when stripping comments.
-        **kwargs:              Keyword args to pass down to native rules.
+        name:                     Name of the test
+        file_old:                 The old file.
+        file_new:                 The new file.
+        expected_diff:            The expected diff result.
+        ignore_all_space:         Ignore all leading, trailing, and consecutive internal whitespace changes.
+        ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
+        ignore_blank_lines:       Ignore chunks which include only blank lines.
+        ignore_case:              Whether to ignore letter case.
+        ignore_matching_chunks:   Whether `ignore_matching_lines` applies to chanks or single lines.
+        ignore_matching_lines:    Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
+        ignore_space_change:      Ignore leading and traling whitespace changes.
+        strip_comments:           Strip out anything starting from `strip_comments`.
+        strip_parsed_comments:    Whether to parse lines when stripping comments.
+        **kwargs:                 Keyword args to pass down to native rules.
     """
     native.genrule(
         name = name + "_diff",
@@ -63,6 +67,8 @@ def diff_test_test(
         cmd = """
             $(location //mbo/diff:unified_diff) --skip_time \\
                 $(location {file_old}) $(location {file_new}) > $@ \\
+                --ignore_all_space={ignore_all_space} \\
+                --ignore_consecutive_space={ignore_consecutive_space} \\
                 --ignore_blank_lines={ignore_blank_lines} \\
                 --ignore_case={ignore_case} \\
                 --ignore_matching_chunks={ignore_matching_chunks} \\
@@ -75,6 +81,8 @@ def diff_test_test(
         """.format(
             file_old = file_old,
             file_new = file_new,
+            ignore_all_space = _bool_arg(ignore_all_space),
+            ignore_consecutive_space = _bool_arg(ignore_consecutive_space),
             ignore_blank_lines = _bool_arg(ignore_blank_lines),
             ignore_case = _bool_arg(ignore_case),
             ignore_matching_chunks = _bool_arg(ignore_matching_chunks),

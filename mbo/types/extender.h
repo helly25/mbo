@@ -236,22 +236,34 @@ struct Comparable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
 
   // Define operator `<=>` on `const T&` and another type.
   template<typename Other, typename = decltype(StructToTuple(std::declval<const Other&>()))>
-  auto operator<=>(const Other& other) const { return this->ToTuple() <=> StructToTuple(other); }
+  auto operator<=>(const Other& other) const {
+    return this->ToTuple() <=> StructToTuple(other);
+  }
 
   template<IsTuple Other>
-  auto operator<=>(const Other& other) const { return this->ToTuple() <=> other; }
+  auto operator<=>(const Other& other) const {
+    return this->ToTuple() <=> other;
+  }
 
   template<typename Other, typename = decltype(StructToTuple(std::declval<const Other&>()))>
-  bool operator==(const Other& other) const { return this->ToTuple() == StructToTuple(other); }
+  bool operator==(const Other& other) const {
+    return this->ToTuple() == StructToTuple(other);
+  }
 
   template<IsTuple Other>
-  bool operator==(const Other& other) const { return this->ToTuple() == other; }
+  bool operator==(const Other& other) const {
+    return this->ToTuple() == other;
+  }
 
   template<typename Other, typename = decltype(StructToTuple(std::declval<const Other&>()))>
-  bool operator<(const Other& other) const { return this->ToTuple() < StructToTuple(other); }
+  bool operator<(const Other& other) const {
+    return this->ToTuple() < StructToTuple(other);
+  }
 
   template<IsTuple Other>
-  bool operator<(const Other& other) const { return this->ToTuple() < other; }
+  bool operator<(const Other& other) const {
+    return this->ToTuple() < other;
+  }
 };
 
 template<typename ExtenderBase>

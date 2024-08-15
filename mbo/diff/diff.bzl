@@ -25,6 +25,8 @@ def diff_test(
         file_old,
         file_new,
         failure_message = "",
+        ignore_all_space = False,
+        ignore_consecutive_space = False,
         ignore_blank_lines = False,
         ignore_case = False,
         ignore_matching_chunks = True,
@@ -38,18 +40,20 @@ def diff_test(
     If the test detects differences, then the output will be in `diff -du` form.
 
     Args:
-        name:                  Name of the test
-        file_old:              The old file.
-        file_new:              The new file.
-        failure_message:       Additional message to log if the files don't match.
-        ignore_blank_lines:    Ignore chunks which include only blank lines.
-        ignore_case:           Whether to ignore letter case.
-        ignore_matching_chunks:Whether `ignore_matching_lines` applies to chanks or single lines.
-        ignore_matching_lines: Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
-        ignore_space_change:   Ignore leading and traling whitespace changes.
-        strip_comments:        Strip out anything starting from `strip_comments`.
-        strip_parsed_comments: Whether to parse lines when stripping comments.
-        **kwargs:              Keyword args to pass down to native rules.
+        name:                     Name of the test
+        file_old:                 The old file.
+        file_new:                 The new file.
+        failure_message:          Additional message to log if the files don't match.
+        ignore_all_space:         Ignore all leading, trailing, and consecutive internal whitespace changes.
+        ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
+        ignore_blank_lines:       Ignore chunks which include only blank lines.
+        ignore_case:              Whether to ignore letter case.
+        ignore_matching_chunks:   Whether `ignore_matching_lines` applies to chanks or single lines.
+        ignore_matching_lines:    Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
+        ignore_space_change:      Ignore traling whitespace changes.
+        strip_comments:           Strip out anything starting from `strip_comments`.
+        strip_parsed_comments:    Whether to parse lines when stripping comments.
+        **kwargs:                 Keyword args to pass down to native rules.
     """
     _diff_test(
         name = name,
@@ -60,6 +64,8 @@ def diff_test(
             "@bazel_tools//src/conditions:host_windows": True,
             "//conditions:default": False,
         }),
+        ignore_all_space = ignore_all_space,
+        ignore_consecutive_space = ignore_consecutive_space,
         ignore_blank_lines = ignore_blank_lines,
         ignore_case = ignore_case,
         ignore_matching_lines = ignore_matching_lines,
@@ -106,6 +112,8 @@ else
   exit 1
 fi
 if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
+    --ignore_all_space={ignore_all_space} \
+    --ignore_consecutive_space={ignore_consecutive_space} \
     --ignore_blank_lines={ignore_blank_lines} \
     --ignore_case={ignore_case} \
     --ignore_matching_chunks={ignore_matching_chunks} \
@@ -123,6 +131,8 @@ fi
                 failure_message = shell.quote(ctx.attr.failure_message),
                 file_old = _runfiles_path(ctx.file.file_old),
                 file_new = _runfiles_path(ctx.file.file_new),
+                ignore_all_space = _bool_arg(ctx.attr.ignore_all_space),
+                ignore_consecutive_space = _bool_arg(ctx.attr.ignore_consecutive_space),
                 ignore_blank_lines = _bool_arg(ctx.attr.ignore_blank_lines),
                 ignore_case = _bool_arg(ctx.attr.ignore_case),
                 ignore_matching_chunks = _bool_arg(ctx.attr.ignore_matching_chunks),
@@ -157,6 +167,14 @@ _diff_test = rule(
             doc = "The new (right) file of the comparison.",
             mandatory = True,
         ),
+        "ignore_all_space": attr.bool(
+            doc = "Ignore all leading, trailing, and consecutive internal whitespace changes.",
+            default = False,
+        ),
+        "ignore_consecutive_space": attr.bool(
+            doc = "Ignore all whitespace changes, even if one line has whitespace where the other line has none.",
+            default = False,
+        ),
         "ignore_blank_lines": attr.bool(
             doc = "Ignore chunks which include only blank lines.",
             default = False,
@@ -173,7 +191,7 @@ _diff_test = rule(
             doc = "Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).",
         ),
         "ignore_space_change": attr.bool(
-            doc = "Ignore leading and traling whitespace changes.",
+            doc = "Ignore traling whitespace changes.",
             default = False,
         ),
         "is_windows": attr.bool(

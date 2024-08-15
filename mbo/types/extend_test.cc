@@ -77,7 +77,8 @@ static_assert(std::same_as<::mbo::types::extender::AbslStringify, ::mbo::extende
 static_assert(std::same_as<::mbo::types::extender::Default, ::mbo::extender::Default>);
 
 static_assert(::mbo::types::types_internal::ExtenderListValid<::mbo::extender::Default>);
-static_assert(::mbo::types::types_internal::ExtenderListValid<AbslHashable, AbslStringify, Comparable, Printable, Streamable>);
+static_assert(
+    ::mbo::types::types_internal::ExtenderListValid<AbslHashable, AbslStringify, Comparable, Printable, Streamable>);
 
 struct Empty {};
 
@@ -412,6 +413,7 @@ TEST_F(ExtendTest, Comparable) {
     int a = 0;
     int b = 0;
   };
+
   struct Flat {
     int a = 0;
     int b = 0;

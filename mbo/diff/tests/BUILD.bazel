@@ -85,18 +85,45 @@ diff_test_test(
     file_new = "abc_caps.txt",
 )
 
-diff_test(
-    name = "abc_ignore_space_change_diff_test",
-    file_old = "abc.txt",
-    file_new = "abc_whitespace.txt",
-    ignore_space_change = True,
-)
-
 diff_test_test(
     name = "abc_whitespace_diff_test",
     expected_diff = "abc_whitespace.diff.txt",
     file_old = "abc.txt",
     file_new = "abc_whitespace.txt",
+)
+
+diff_test(
+    name = "abc_ignore_all_space_diff_test",
+    file_old = "abc.txt",
+    file_new = "abc_no_whitespace.txt",
+    ignore_all_space = True,
+)
+
+diff_test(
+    name = "abc_ignore_consecutive_space_diff_test",
+    file_old = "abc.txt",
+    file_new = "abc_whitespace.txt",
+    ignore_consecutive_space = True,
+)
+
+diff_test_test(
+    # The 'c c' is not the same as 'cc' (from `abc_no_whitespace`) if `ignore_consecutive_space` is
+    # used as opposed to ignore_all_space. The above case `abc_ignore_consecutive_space_diff_test`
+    # works becasue `c c` and `c  c` are the same as the latter with consecutive spaces removed is
+    # the same as the former.
+    name = "abc_ignore_all_vs_consecutive_space_diff_test",
+    expected_diff = "abc_all_vs_consecutive_space.diff.txt",
+    file_old = "abc.txt",
+    file_new = "abc_no_whitespace.txt",
+    ignore_consecutive_space = True,
+)
+
+diff_test_test(
+    name = "abc_ignore_space_change_diff_test",
+    expected_diff = "abc_ignore_space_change.diff.txt",
+    file_old = "abc.txt",
+    file_new = "abc_whitespace.txt",
+    ignore_space_change = True,
 )
 
 diff_test(
