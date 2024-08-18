@@ -5,6 +5,8 @@
 * Added diff tooling options `ignore_all_space` and `ignore_consecutive_space`.
 * Changed diff tooling options `ignore_space_change` to only ignore trailing space to match `git diff`.
 * Added `mbo::log::LogTiming` a simple timing logger.
+* Pinned Bazel version to 7.2.1.
+* Updated hedron compile commands to include a patch for pre-processed headers.
 
 # 0.2.27
 
