@@ -4,6 +4,7 @@
 * Improved `LimitedMap`, `LimitedOrdered`, `LimitedSet` and `LimitedVector` ability to handle conversions.
 * Added diff tooling options `ignore_all_space` and `ignore_consecutive_space`.
 * Changed diff tooling options `ignore_space_change` to only ignore trailing space to match `git diff`.
+* Added `mbo::log::LogTiming` a simple timing logger.
 
 # 0.2.27
 
