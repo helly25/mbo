@@ -93,9 +93,9 @@ def mbo_workspace_load_modules():
 
     github_archive(
         name = "hedron_compile_commands",
-        commit = "daae6f40adfa5fdb7c89684cbe4d88b691c63b2d",
+        commit = "6dd21b47db481a70c61698742438230e2399b639",
         repo = "https://github.com/helly25/bazel-compile-commands-extractor",
-        sha256 = "43451a32bf271e7ba4635a07f7996d535501f066c0fe8feab04fb0c91dd5986e",
+        sha256 = "348a643defa9ab34ed9cb2ed1dc54b1c4ffef1282240aa24c457ebd8385ff2d5",
     )
 
     # Cannot yet support toolchains_llvm 1.0.0. It enables C++20 modules in a broken way.

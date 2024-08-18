@@ -17,4 +17,4 @@
 
 set -e
 
-bazel run @hedron_compile_commands//:refresh_all && echo "OK" || echo "FAIL"
+bazel run @hedron_compile_commands//:refresh_all --config=clang && echo "OK" || echo "FAIL"
