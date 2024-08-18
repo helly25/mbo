@@ -54,6 +54,10 @@ The C++ library is organized in functional groups each residing in their own dir
     * `namespace mbo::hash`
     * mbo/hash:hash_cc, mbo/hash/hash.h
         * function `simple::GetHash(std::string_view)`: A constexpr capable hash function.
+* Log
+    * `namespace mbo::log`
+    * mbo/log:log_timing_cc, mbo/log/log_timing.h
+        * functoin `mbo::log::LogTiming([args])` a simple timing logger.
 * Mope
     * `namespace mbo::mope`
     * The `MOPE` templating engine. Run `bazel run //mbo/mope -- --help` for detailed documentation.
