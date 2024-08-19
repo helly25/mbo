@@ -35,6 +35,11 @@ cc_test(
     srcs = ["log_timing_test.cc"],
     deps = [
         "log_timing_cc",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/log:initialize",
+        "@com_google_absl//absl/log:scoped_mock_log",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/time",
         "@com_google_googletest//:gtest_main",
     ],
     size = "small",

@@ -48,3 +48,6 @@ Some rules for the code layout and its development.
     as possible.
   * Where possible macros should be named "{path}_{file}_{usecase}".
 * Use `std::size_t` as `size_t` **ONLY** in CC files with `using std::size_t`.
+* Flags in libraries should be prefixed with their path/namespace. E.g. the flag
+  `--mbo_log_timing_min_duration` has the prefix `mbo_log` as it is defined in
+  `mbo/log/log_timing.cc` (path `mbo/log`) and uses namespace `mbo::log`.
