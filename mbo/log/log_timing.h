@@ -20,6 +20,7 @@
 #include <source_location>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "absl/log/log.h"  // IWYU pragma: keep
 #include "absl/strings/str_cat.h"
@@ -38,7 +39,7 @@ class LogTimingImpl final {
     const std::source_location src = std::source_location::current();
   };
 
-  explicit LogTimingImpl(const LogTimingArgs& args) : args_(args) {}
+  explicit LogTimingImpl(LogTimingArgs args) : args_(std::move(args)) {}
 
   LogTimingImpl() = delete;
 
@@ -49,7 +50,7 @@ class LogTimingImpl final {
 
   template<typename T>
   LogTimingImpl&& operator<<(T&& arg) && {
-    absl::StrAppend(&message_, arg);
+    absl::StrAppend(&message_, std::forward<T>(arg));
     return std::move(*this);
   }
 
@@ -60,6 +61,8 @@ class LogTimingImpl final {
   }
 
  private:
+  friend struct StripFunctionNameTest;
+
   class Once final {
    public:
     ~Once() noexcept = default;
@@ -77,14 +80,14 @@ class LogTimingImpl final {
     bool once_ = true;
   };
 
+  static std::string StripFunctionName(std::string_view function);
+
   void Log() const;
 
   Once log_once_;
-  std::string message_ = "";
+  std::string message_;
   const LogTimingArgs args_;
 };
-
-std::string_view StripFunctionName(std::string_view function);
 
 }  // namespace log_internal
 
@@ -96,11 +99,18 @@ std::string_view StripFunctionName(std::string_view function);
 // Usage:
 //   auto done = LogTiming() << "Some log message";
 //
-// An optional `min_duration` can be specified to suppress fast scopes from being logged.
+// An optional aggregate parameter allows to control the exact behavior. That aggregate should not
+// be used by its type name and instead, be used only via direct (unnamed) aggregate initialization.
+// For example it is possble to set `min_duration` to suppress fast scopes from being logged:
 //
 //   auto done  = LogTiming({.min_duration = absl::Seconds(10)});
-inline log_internal::LogTimingImpl LogTiming(const log_internal::LogTimingImpl::LogTimingArgs& args = {}) {
-  return log_internal::LogTimingImpl(args);
+//
+// There are two flags that further control the behavior:
+// `--mbo_log_timing_min_duration`:        Duration times below this will not be logged.
+// `--mbo_log_timing_min_severity_always`: Timings with this or higher severity will be logged even
+//                                         if their duration is too short.
+[[nodiscard]] inline log_internal::LogTimingImpl LogTiming(log_internal::LogTimingImpl::LogTimingArgs args = {}) {
+  return log_internal::LogTimingImpl(std::move(args));
 }
 
 }  // namespace mbo::log

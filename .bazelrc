@@ -1,42 +1,41 @@
 # To debug bazel options, uncomment next line.
-# build --announce_rc
+# common --announce_rc
 
-build --noenable_bzlmod
+common --noenable_bzlmod
+common --noincompatible_enable_cc_toolchain_resolution
 
 # Define the Apple OS
-build --apple_platform_type=macos
+common --apple_platform_type=macos
 
 # Allow platform specific control and add the missing 'CoreFoundation' lib.
-build --enable_platform_specific_config
-build:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
+common --enable_platform_specific_config
+common:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
 # --linkopt=-Wl,-undefined,error
 
 # Define absl=1 to tell googletest to use absl for backtrace.
-build --define absl=1
+common --define absl=1
 
-build --cxxopt=-std=c++20 --host_cxxopt=-std=c++20 --cxxopt=-Werror
+common --cxxopt=-std=c++20 --host_cxxopt=-std=c++20 --cxxopt=-Werror
 test --test_output=errors
 
-build --copt=-fdiagnostics-color=always
+common --copt=-fdiagnostics-color=always
 
 # Custom --config=asan mode:
-build:asan --copt -fsanitize=address,undefined
-build:asan --linkopt -fsanitize=address,undefined
-build:asan --copt -fno-sanitize=vptr
-build:asan --linkopt -fno-sanitize=vptr
-build:asan --linkopt -ldl
-build:asan --define tcmalloc=disabled
-build:asan --define signal_trace=disabled
-build:asan --build_tag_filters=-no_san  # skip san targets
-build:asan --test_tag_filters=-no_san  # skip san targets
-build:asan --define san=true  # skip san targets
-build:asan --features=asan  # https://github.com/bazelbuild/bazel/issues/6932
+common:asan --copt -fsanitize=address,undefined
+common:asan --linkopt -fsanitize=address,undefined
+common:asan --copt -fno-sanitize=vptr
+common:asan --linkopt -fno-sanitize=vptr
+common:asan --linkopt -ldl
+common:asan --define tcmalloc=disabled
+common:asan --define signal_trace=disabled
+common:asan --build_tag_filters=-no_san  # skip san targets
+common:asan --test_tag_filters=-no_san  # skip san targets
+common:asan --define san=true  # skip san targets
+common:asan --features=asan  # https://github.com/bazelbuild/bazel/issues/6932
 
-build --noincompatible_enable_cc_toolchain_resolution
-
-build:clang --incompatible_enable_cc_toolchain_resolution
-build:clang --//mbo/mope:clang_format=
-build:clang --cxxopt=-gmlt
-build:clang --host_cxxopt=-gmlt
-build:clang --linkopt=-fuse-ld=lld
-build:clang --host_linkopt=-fuse-ld=lld
+common:clang --incompatible_enable_cc_toolchain_resolution
+common:clang --//mbo/mope:clang_format=
+common:clang --cxxopt=-gmlt
+common:clang --host_cxxopt=-gmlt
+common:clang --linkopt=-fuse-ld=lld
+common:clang --host_linkopt=-fuse-ld=lld

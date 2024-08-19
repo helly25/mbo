@@ -15,68 +15,140 @@
 
 #include "mbo/log/log_timing.h"
 
+#include <string_view>
+
 #include "absl/flags/flag.h"
 #include "absl/log/log.h"
+#include "absl/strings/str_replace.h"
 #include "absl/time/time.h"
 
 ABSL_FLAG(
     absl::Duration,
-    log_timing_min_duration,
+    mbo_log_timing_min_duration,
     absl::Seconds(2),
     "The minimum duration for a `LogTiming` statement to actually be logged.");
 
 ABSL_FLAG(
     absl::LogSeverity,
-    log_timing_min_severity_always,
+    mbo_log_timing_min_severity_always,
     absl::LogSeverity::kError,
     "The minimum severity at which the duration will be ignored.");
 
 namespace mbo::log::log_internal {
 
-std::string_view StripFunctionName(std::string_view function) {
+std::string_view ReverseFindSpaceSkipPastMatchingBrackets(std::string_view str) {
+  if (str.empty()) {
+    return str;
+  }
+  std::string_view::size_type pos = str.length() - 1;
+  std::size_t brackets = 0;
+  std::size_t angles = 0;
+  for (; pos != 0; --pos) {
+    switch (str[pos]) {
+      default: {
+        break;
+      }
+      case ')': {
+        ++brackets;
+        break;
+      }
+      case '(': {
+        --brackets;
+        break;
+      }
+      case '>': {
+        ++angles;
+        break;
+      }
+      case '<': {
+        --angles;
+        break;
+      }
+      case ' ': {
+        if (brackets == 0 && angles == 0) {
+          str.remove_prefix(pos + 1);
+          return str;
+        }
+        break;
+      }
+    }
+  }
+  return str;
+}
+
+std::string_view ReverseStripAngleBrackets(std::string_view str) {
+  if (str.empty()) {
+    return str;
+  }
+  std::string_view::size_type pos = str.length() - 1;
+  std::size_t angles = 0;
+  for (; pos != 0; --pos) {
+    switch (str[pos]) {
+      default: {
+        break;
+      }
+      case '>': {
+        ++angles;
+        break;
+      }
+      case '<': {
+        --angles;
+        if (angles == 0) {
+          str.remove_suffix(str.length() - pos);
+          return str;
+        }
+        break;
+      }
+    }
+  }
+  return str;
+}
+
+std::string LogTimingImpl::StripFunctionName(std::string_view function) {
   if (auto pos = function.rfind(')'); pos != std::string_view::npos) {
-    for (std::size_t level = 0; pos; --pos) {
+    for (std::size_t level = 0; pos != 0; --pos) {
       if (function[pos] == ')') {
         ++level;
       } else if (function[pos] == '(') {
         --level;
-        if (!level) {
+        if (level == 0) {
           static constexpr std::string_view kConversion = "operator()";
           if (function.substr(0, pos + 2).ends_with(kConversion)) {
             function.remove_suffix(function.length() - (pos + 2));
             pos -= kConversion.length();
             continue;
           }
+          if (pos > 0 && function[pos - 1] == ':') {
+            continue;
+          }
           break;
         }
       }
     }
-    function.remove_suffix(function.length() - pos);
-    if (!function.empty()) {
-      pos = function.length() - 1;
-      for (std::size_t level = 0; pos; --pos) {
-        if (function[pos] == ')') {
-          ++level;
-        } else if (function[pos] == '(') {
-          --level;
-        } else if (!level && function[pos] == ' ') {
-          function.remove_prefix(pos + 1);
-          break;
-        }
-      }
+    if (pos > 0) {
+      function.remove_suffix(function.length() - pos);
     }
+    if (function.ends_with('>')) {
+      function = ReverseStripAngleBrackets(function);
+    }
+    function = ReverseFindSpaceSkipPastMatchingBrackets(function);
   }
-  return function;
+  std::string result = absl::StrReplaceAll(
+      function, {
+                    {"::(anonymous class)::operator()()", "::[]()"},
+                    {"::(anonymous class)::operator()", "::[]()"},
+                });
+  return result;
 }
 
 void LogTimingImpl::Log() const {
-  const absl::Duration min_duration = args_.min_duration.value_or(absl::GetFlag(FLAGS_log_timing_min_duration));
+  const absl::Duration min_duration = args_.min_duration.value_or(absl::GetFlag(FLAGS_mbo_log_timing_min_duration));
   const absl::Duration duration = absl::Now() - args_.start_time;
-  if (duration < min_duration && args_.severity < absl::GetFlag(FLAGS_log_timing_min_severity_always)) {
+  if (duration < min_duration && args_.severity < absl::GetFlag(FLAGS_mbo_log_timing_min_severity_always)) {
     return;
   }
 
-  LOG(LEVEL(args_.severity)).AtLocation(args_.src.file_name(), args_.src.line())
+  LOG(LEVEL(args_.severity)).AtLocation(args_.src.file_name(), static_cast<int>(args_.src.line()))
       << "LogTiming(" << duration << " @ " << StripFunctionName(args_.src.function_name()) << ")"
       << (message_.empty() ? "" : ": ") << message_;
 }
