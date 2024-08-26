@@ -19,7 +19,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/container/btree_map.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
@@ -33,7 +32,8 @@
 #include "mbo/mope/mope.h"
 #include "mbo/status/status_macros.h"
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables,abseil-no-namespace)
+// NOLINTBEGIN(*avoid-non-const-global-variables,*abseil-no-namespace)
+
 ABSL_FLAG(std::string, template, "", "The templte input file (.tpl, .mope).");
 ABSL_FLAG(std::string, generate, "-", "The generated out file ('-' for stdout)");
 ABSL_FLAG(std::string, ini, "-", "An INI file that can be used to initialize section data.");
@@ -44,7 +44,7 @@ ABSL_FLAG(
     {},
     "A comma separated list of `name=value` pairs, used to seed the template config.");
 
-// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables,abseil-no-namespace)
+// NOLINTEND(*avoid-non-const-global-variables,*abseil-no-namespace)
 
 namespace mbo {
 
@@ -247,6 +247,6 @@ int main(int argc, char** argv) {
   if (result.ok()) {
     return 0;
   }
-  std::cerr << result << std::endl;
+  std::cerr << result << "\n";
   return 1;
 }
