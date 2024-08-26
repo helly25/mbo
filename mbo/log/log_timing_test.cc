@@ -36,7 +36,6 @@ ABSL_DECLARE_FLAG(  // NOLINT(abseil-no-namespace)
 
 namespace mbo::log::log_internal {
 
-using ::testing::_;
 using ::testing::ContainsRegex;
 using ::testing::EndsWith;
 using ::testing::HasSubstr;

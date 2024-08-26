@@ -22,6 +22,7 @@
 #include "absl/strings/str_replace.h"
 #include "absl/time/time.h"
 
+// NOLINTBEGIN(*avoid-non-const-global-variables,*abseil-no-namespace)
 ABSL_FLAG(
     absl::Duration,
     mbo_log_timing_min_duration,
@@ -33,6 +34,8 @@ ABSL_FLAG(
     mbo_log_timing_min_severity_always,
     absl::LogSeverity::kError,
     "The minimum severity at which the duration will be ignored.");
+
+// NOLINTEND(*avoid-non-const-global-variables,*abseil-no-namespace)
 
 namespace mbo::log::log_internal {
 
@@ -104,41 +107,47 @@ std::string_view ReverseStripAngleBrackets(std::string_view str) {
   return str;
 }
 
-std::string LogTimingImpl::StripFunctionName(std::string_view function) {
-  if (auto pos = function.rfind(')'); pos != std::string_view::npos) {
-    for (std::size_t level = 0; pos != 0; --pos) {
-      if (function[pos] == ')') {
-        ++level;
-      } else if (function[pos] == '(') {
-        --level;
-        if (level == 0) {
-          static constexpr std::string_view kConversion = "operator()";
-          if (function.substr(0, pos + 2).ends_with(kConversion)) {
-            function.remove_suffix(function.length() - (pos + 2));
-            pos -= kConversion.length();
-            continue;
-          }
-          if (pos > 0 && function[pos - 1] == ':') {
-            continue;
-          }
-          break;
-        }
-      }
-    }
-    if (pos > 0) {
-      function.remove_suffix(function.length() - pos);
-    }
-    if (function.ends_with('>')) {
-      function = ReverseStripAngleBrackets(function);
-    }
-    function = ReverseFindSpaceSkipPastMatchingBrackets(function);
-  }
+std::string ShortenLambdas(std::string_view function) {
   std::string result = absl::StrReplaceAll(
       function, {
                     {"::(anonymous class)::operator()()", "::[]()"},
                     {"::(anonymous class)::operator()", "::[]()"},
                 });
   return result;
+}
+
+std::string LogTimingImpl::StripFunctionName(std::string_view function) {
+  auto pos = function.rfind(')');
+  if (pos == std::string_view::npos) {
+    return std::string(function);
+  }
+  for (std::size_t level = 0; pos != 0; --pos) {
+    if (function[pos] == ')') {
+      ++level;
+    } else if (function[pos] == '(') {
+      --level;
+      if (level == 0) {
+        static constexpr std::string_view kConversion = "operator()";
+        if (function.substr(0, pos + 2).ends_with(kConversion)) {
+          function.remove_suffix(function.length() - (pos + 2));
+          pos -= kConversion.length();
+          continue;
+        }
+        if (pos > 0 && function[pos - 1] == ':') {
+          continue;
+        }
+        break;
+      }
+    }
+  }
+  if (pos > 0) {
+    function.remove_suffix(function.length() - pos);
+  }
+  if (function.ends_with('>')) {
+    function = ReverseStripAngleBrackets(function);
+  }
+  function = ReverseFindSpaceSkipPastMatchingBrackets(function);
+  return ShortenLambdas(function);
 }
 
 void LogTimingImpl::Log() const {
