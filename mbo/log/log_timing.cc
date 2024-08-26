@@ -23,6 +23,7 @@
 #include "absl/time/time.h"
 
 // NOLINTBEGIN(*avoid-non-const-global-variables,*abseil-no-namespace)
+
 ABSL_FLAG(
     absl::Duration,
     mbo_log_timing_min_duration,

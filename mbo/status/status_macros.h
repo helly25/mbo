@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <utility>
+#include <utility>  // IWYU pragma: keep
 
 #include "absl/status/status.h"    // IWYU pragma: keep
 #include "absl/status/statusor.h"  // IWYU pragma: keep
@@ -37,12 +37,12 @@
 // ```
 //
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define MBO_RETURN_IF_ERROR(expr) \
-  do {                            \
-    auto var = (expr);            \
-    if (!var.ok()) {              \
-      return absl::Status(var);   \
-    }                             \
+#define MBO_RETURN_IF_ERROR(expr)    \
+  do { /* NOLINT(*avoid-do-while) */ \
+    auto var = (expr);               \
+    if (!var.ok()) {                 \
+      return absl::Status(var);      \
+    }                                \
   } while (0)
 
 // PRIVATE MACRO - DO NOT USE.

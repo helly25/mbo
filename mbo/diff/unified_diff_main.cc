@@ -25,7 +25,6 @@
 #include "absl/flags/usage.h"
 #include "absl/log/initialize.h"
 #include "absl/log/log.h"
-#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "mbo/diff/unified_diff.h"
 #include "mbo/diff/update_absl_log_flags.h"
@@ -34,8 +33,7 @@
 #include "mbo/strings/strip.h"
 #include "re2/re2.h"
 
-// NOLINTBEGIN(abseil-no-namespace)
-// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
+// NOLINTBEGIN(*avoid-non-const-global-variables,*abseil-no-namespace)
 
 ABSL_FLAG(bool, ignore_blank_lines, false, "Ignore chunks which include only blank lines.");
 ABSL_FLAG(bool, ignore_case, false, "Whether to ignore the case of letters.");
@@ -91,8 +89,7 @@ its right will be removed and any remaining trailing line whitespace will be str
 latter form of simple substring finding, the substring will be searched for as is.");
 ABSL_FLAG(std::size_t, unified, 3, "Produces a diff with number lines of context");
 
-// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
-// NOLINTEND(abseil-no-namespace)
+// NOLINTEND(*avoid-non-const-global-variables,*abseil-no-namespace)
 
 namespace {
 
@@ -190,8 +187,7 @@ int main(int argc, char* argv[]) {
   mbo::UpdateAbslLogFlags();
   if (args.size() != 3) {  // [0] = program
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    std::cerr << "Exactly two files are required. Use: " << fs::path(argv[0]).filename().string() << " --help"
-              << std::endl;
+    std::cerr << "Exactly two files are required. Use: " << fs::path(argv[0]).filename().string() << " --help\n";
     return 1;
   }
   return Diff(args[1], args[2]);
