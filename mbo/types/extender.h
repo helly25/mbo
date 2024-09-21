@@ -365,7 +365,7 @@ namespace extender_internal {
 //  template<typename ExtenderOrActualType>
 //  using Impl : Expand<ExtenderOrActualType, ExtenderTuple>;
 #if MBO_TYPES_EXTENDER_USE_EXPAND
-template <typename... T>
+template<typename... T>
 struct Expand;
 
 template<typename Base>
@@ -379,7 +379,8 @@ struct Expand<Base, std::tuple<T>> : ::mbo::types::types_internal::UseExtender<B
 };
 
 template<typename Base, typename T, typename... U>
-struct Expand<Base, std::tuple<T, U...>> : ::mbo::types::types_internal::UseExtender<Expand<Base, std::tuple<U...>>, T>::type {};
+struct Expand<Base, std::tuple<T, U...>>
+    : ::mbo::types::types_internal::UseExtender<Expand<Base, std::tuple<U...>>, T>::type {};
 #endif
 }  // namespace extender_internal
 

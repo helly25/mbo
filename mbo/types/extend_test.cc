@@ -634,8 +634,7 @@ TEST_F(ExtendTest, NoPrint) {
 
   ASSERT_THAT((::mbo::types::types_internal::IsExtended<NameNoPrint>), true);
   EXPECT_THAT(
-      NameNoPrint::RegisteredExtenderNames(),
-      UnorderedElementsAre("AbslHashable", "AbslStringify", "Comparable"));
+      NameNoPrint::RegisteredExtenderNames(), UnorderedElementsAre("AbslHashable", "AbslStringify", "Comparable"));
   EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoPrint, Printable>), false);
   EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoPrint, Streamable>), false);
   EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoPrint, Comparable>), true);
