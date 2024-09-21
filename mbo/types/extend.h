@@ -49,23 +49,42 @@ namespace mbo::types {
 template<typename T, typename... Extender>
 struct Extend : ::mbo::extender::Extend<T, ::mbo::types::extender::Default, Extender...> {};
 
-// Same as `Extend` but without default extenders. This alows to control the
+// Same as `Extend` but without default extenders. This allows to control the
 // exact extender set to be used.
 //
 // Example:
 // ```c++
-// struct Name : mbo::types::ExtendNoDEfault<mbo::types::Comparable> {
+// struct Name : mbo::types::ExtendNoDefault<mbo::types::Comparable> {
+//    std::string first;
+//    std::string last;
+// };
+// ```
+//
+// Here `Name` gets injected with some fundamental conversion helpers but it
+// will not get print, stream, comparison or hash functionality.
+//
+// NOTE: No member may be an anonymous union or struct.
+template<typename T, typename... Extender>
+struct ExtendNoDefault : ::mbo::extender::Extend<T, Extender...> {};
+
+// Same as `Extend` but without the `Printable` and `Streamable` externder.
+// This makes it easy to customize printing and streaming, while still retaining
+// other default behavior.
+//
+// Example:
+// ```c++
+// struct Name : mbo::types::ExtendNoPrint<mbo::types::Comparable> {
 //    std::string first;
 //    std::string last;
 // };
 // ```
 //
 // Here `Name` gets injected with all comparison operators but it will not get
-// print, stream or hash functionality.
+// print, stream, comparison or hash functionality.
 //
 // NOTE: No member may be an anonymous union or struct.
 template<typename T, typename... Extender>
-struct ExtendNoDefault : ::mbo::extender::Extend<T, Extender...> {};
+struct ExtendNoPrint : ::mbo::extender::Extend<T, ::mbo::types::extender::NoPrint, Extender...> {};
 
 }  // namespace mbo::types
 

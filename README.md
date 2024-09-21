@@ -114,6 +114,7 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/types:extend_cc, mbo/types/extend.h
         * crtp-struct `Extend`: Enables extending of struct/class types with basic functionality.
         * crtp-struct `ExtendNoDefault` Like `Extend` but without default extender functionality.
+        * crtp-struct `ExtendNoPrint` Like `Extend` but without `Printable` and `Streamable` extender functionality.
         * `namespace extender`
             * extender-struct `AbslStringify`: Extender that injects functionality to make an `Extend`ed type work with abseil format/print functions.
             * extender-struct `AbslHashable`: Extender that injects functionality to make an `Extend`ed type work with abseil hashing (and also `std::hash`).
@@ -156,6 +157,8 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/types:tstring_cc, mbo/types/tstring.h
         * struct `tstring`: Implements type `tstring` a compile time string-literal type.
         * operator `operator"" _ts`: String literal support for Clang, GCC and derived compilers.
+    * mbo/types:tuple_cc, mbo/types/tuple.h
+        * template struct `mbo::types::TupleCat` which concatenates tuple types.
 
 In addition some Bazel macros are implemented that are not direct part of the library:
 

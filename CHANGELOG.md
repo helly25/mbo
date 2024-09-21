@@ -1,3 +1,10 @@
+# 0.2.29
+
+* Added crtp-struct `ExtendNoPrint` Like `Extend` but without `Printable` and `Streamable` extender functionality.
+* Added support for type `char` in extender `AbslStringify`.
+* Added `mbo::types::TupleCat` which concatenates tuple types.
+* Fixed `//mbo/log:log_timing_test` for systems with limited `std::source_location` support (e.g. MacOS).
+
 # 0.2.28
 
 * Improved `LimitedVector::insert` to deal better with conversions and complex types.

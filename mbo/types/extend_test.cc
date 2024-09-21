@@ -71,6 +71,7 @@ using ::testing::Lt;
 using ::testing::Ne;
 using ::testing::Not;
 using ::testing::SizeIs;
+using ::testing::UnorderedElementsAre;
 using ::testing::WhenSorted;
 
 static_assert(std::same_as<::mbo::types::extender::AbslStringify, ::mbo::extender::AbslStringify>);
@@ -591,14 +592,55 @@ TEST_F(ExtendTest, Hashable) {
   EXPECT_THAT(absl::HashOf(person), Ne(0));
   EXPECT_THAT(absl::HashOf(person), absl::HashOf(plain_person));
   EXPECT_THAT(absl::HashOf(person), std::hash<Person>{}(person));
+}
 
+TEST_F(ExtendTest, Default) {
+  struct NameDefault : Extend<NameDefault> {
+    std::string first;
+    std::string last;
+  };
+
+  ASSERT_THAT((::mbo::types::types_internal::IsExtended<NameDefault>), true);
+  EXPECT_THAT(
+      NameDefault::RegisteredExtenderNames(),
+      UnorderedElementsAre("AbslHashable", "AbslStringify", "Comparable", "Printable", "Streamable"));
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameDefault, Printable>), true);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameDefault, Streamable>), true);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameDefault, Comparable>), true);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameDefault, AbslHashable>), true);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameDefault, AbslStringify>), true);
+}
+
+TEST_F(ExtendTest, NoDefault) {
   struct NameNoDefault : ExtendNoDefault<NameNoDefault> {
     std::string first;
     std::string last;
   };
 
   ASSERT_THAT((::mbo::types::types_internal::IsExtended<NameNoDefault>), true);
-  ASSERT_THAT((::mbo::types::types_internal::HasExtender<NameNoDefault, AbslHashable>), false);
+  EXPECT_THAT(NameNoDefault::RegisteredExtenderNames(), IsEmpty());
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoDefault, Printable>), false);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoDefault, Streamable>), false);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoDefault, Comparable>), false);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoDefault, AbslHashable>), false);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoDefault, AbslStringify>), false);
+}
+
+TEST_F(ExtendTest, NoPrint) {
+  struct NameNoPrint : ExtendNoPrint<NameNoPrint> {
+    std::string first;
+    std::string last;
+  };
+
+  ASSERT_THAT((::mbo::types::types_internal::IsExtended<NameNoPrint>), true);
+  EXPECT_THAT(
+      NameNoPrint::RegisteredExtenderNames(),
+      UnorderedElementsAre("AbslHashable", "AbslStringify", "Comparable"));
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoPrint, Printable>), false);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoPrint, Streamable>), false);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoPrint, Comparable>), true);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoPrint, AbslHashable>), true);
+  EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoPrint, AbslStringify>), true);
 }
 
 TEST_F(ExtendTest, ExtenderNames) {
@@ -628,7 +670,7 @@ TEST_F(ExtendTest, ExtenderNames) {
       WhenSorted(ElementsAre("AbslStringify", "Comparable", "Printable", "Streamable")));
   EXPECT_THAT(  // All defaults, and as extra.
       T4::RegisteredExtenderNames(),
-      WhenSorted(ElementsAre("AbslHashable", "AbslStringify", "Comparable", "Default", "Printable", "Streamable")));
+      WhenSorted(ElementsAre("AbslHashable", "AbslStringify", "Comparable", "Printable", "Streamable")));
 }
 
 template<typename T>

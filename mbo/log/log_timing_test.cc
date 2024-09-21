@@ -36,6 +36,7 @@ ABSL_DECLARE_FLAG(  // NOLINT(abseil-no-namespace)
 
 namespace mbo::log::log_internal {
 
+using ::testing::AnyOf;
 using ::testing::ContainsRegex;
 using ::testing::EndsWith;
 using ::testing::HasSubstr;
@@ -104,12 +105,15 @@ struct LogTimingTest : StripFunctionNameTest {
 
   template<typename MessageMatcher>
   auto&& ExpectLog(absl::LogSeverity severity, MessageMatcher&& message_matcher) & {
-    return EXPECT_CALL(log, Log(severity, EndsWith(__FILE__), std::forward<MessageMatcher>(message_matcher)));
+    return EXPECT_CALL(
+        log, Log(severity, AnyOf(EndsWith(__FILE__), EndsWith("/mbo/log/log_timing.h")),
+                 std::forward<MessageMatcher>(message_matcher)));
   }
 
   template<typename MessageMatcher>
   auto&& ExpectLogConst(absl::LogSeverity severity, const MessageMatcher& message_matcher) & {
-    return EXPECT_CALL(log, Log(severity, EndsWith(__FILE__), message_matcher));
+    return EXPECT_CALL(
+        log, Log(severity, AnyOf(EndsWith(__FILE__), EndsWith("/mbo/log/log_timing.h")), message_matcher));
   }
 
   absl::ScopedMockLog log;
@@ -127,8 +131,8 @@ TEST_F(LogTimingTest, LogFormat) {
           {")", "\\)"},
       });
   Sequence sequence;
-  const std::string expected_log1 = absl::StrFormat(".*LogTiming\\([0-9:.]+[mnu]s @ %s\\)$", function);
-  const std::string expected_log2 = absl::StrFormat(".*LogTiming\\([0-9:.]+[mnu]s @ %s\\): Foo$", function);
+  const std::string expected_log1 = absl::StrFormat(".*LogTiming\\([0-9:.]+[mnu]s @ (%s)*\\)$", function);
+  const std::string expected_log2 = absl::StrFormat(".*LogTiming\\([0-9:.]+[mnu]s @ (%s)*\\): Foo$", function);
   ExpectLogConst(absl::LogSeverity::kInfo, ContainsRegex(expected_log1)).Times(1).InSequence(sequence);
   ExpectLogConst(absl::LogSeverity::kInfo, ContainsRegex(expected_log2)).Times(1).InSequence(sequence);
   (void)LogTiming();  // Manually discarding the result means, this one logs immediately.
