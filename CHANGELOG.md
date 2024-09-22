@@ -1,3 +1,7 @@
+# 0.2.30
+
+* Added formatting control for `AbslStringify` externder using struct and method `AbslStringifyFieldOptions`.
+
 # 0.2.29
 
 * Added crtp-struct `ExtendNoPrint` Like `Extend` but without `Printable` and `Streamable` extender functionality.

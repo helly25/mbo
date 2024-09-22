@@ -67,6 +67,21 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "extend_stringify_test",
+    size = "small",
+    srcs = ["extend_stringify_test.cc"],
+    deps = [
+        ":extend_cc",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/hash:hash_testing",
+        "@com_google_absl//absl/log:absl_check",
+        "@com_google_absl//absl/log:absl_log",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "no_destruct_cc",
     hdrs = ["no_destruct.h"],
