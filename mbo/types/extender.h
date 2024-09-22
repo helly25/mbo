@@ -177,7 +177,7 @@ struct AbslStringifyFieldOptions {
   std::size_t value_container_max_len = std::numeric_limits<std::size_t>::max();
 
   std::string_view value_replacement_str;    // Allows "redacted" for string values
-  std::string_view value_replacement_other;  // Allows "redacted" for string values
+  std::string_view value_replacement_other;  // Allows "redacted" for non string values
 
   // Maximum length of value (prior to escaping).
   std::string_view::size_type value_max_length{std::string_view::npos};

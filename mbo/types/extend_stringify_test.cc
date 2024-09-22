@@ -27,6 +27,9 @@
 # pragma clang diagnostic push
 # pragma clang diagnostic ignored "-Wunknown-pragmas"
 # pragma clang diagnostic ignored "-Wunused-local-typedef"
+#elif defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 
 namespace mbo::types {
@@ -212,4 +215,6 @@ TEST_F(ExtenderStringifyTest, Container) {
 
 #ifdef __clang__
 # pragma clang diagnostic pop
+#elif defined(__GNUC__)
+# pragma GCC diagnostic pop
 #endif
