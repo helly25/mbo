@@ -63,13 +63,13 @@
 
 // IWYU pragma private, include "mbo/types/extend.h"
 
+#include <limits>
 #include <sstream>
 #include <string>
 #include <string_view>
 #include <type_traits>
 
 #include "absl/hash/hash.h"  // IWYU pragma: keep
-#include "absl/strings/ascii.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
 #include "mbo/types/internal/extender.h"      // IWYU pragma: export
@@ -138,83 +138,223 @@ struct MakeExtender {
   };
 };
 
+struct AbslStringifyFieldOptions {
+  // Field options:
+  bool field_suppress = false;              // Allows to completely suppress the field.
+  std::string_view field_separator = ", ";  // Separator between two field.
+
+  // Key options:
+  enum class KeyMode {
+    kNone,  // No keys are shows. Not even `key_value_separator` will be used.
+    kNormal,
+  };
+  KeyMode key_mode{KeyMode::kNormal};
+  std::string_view key_prefix = ".";            // Prefix to key names.
+  std::string_view key_value_separator = ": ";  // Seperator between key and value.
+  std::string_view key_alternative_name{};      // Alternative name for the key.
+
+  // Value options:
+
+  // If `true` (the default), then the value is printed as is.
+  // Otherwise (`false`) all value format control is applied.
+  bool value_other_types_direct = true;
+
+  enum class EscapeMode {
+    kNone,        // Values are printed as is.
+    kCEscape,     // Values are C-escaped.
+    kCHexEscape,  // Values are C-HEX escaped.
+  };
+  EscapeMode value_escape_mode{EscapeMode::kCEscape};
+
+  std::string_view value_pointer_prefix = "*{";    // Prefix for pointer types.
+  std::string_view value_pointer_suffix = "}";     // Suffix for pointer types.
+  std::string_view value_nullptr_t = "nullptr_t";  // Value for `nullptr_t` types.
+  std::string_view value_nullptr = "<nullptr>";    // Value for `nullptr` values.
+  std::string_view value_container_prefix = "{";   // Prefix for container values.
+  std::string_view value_container_suffix = "}";   // Suffix for container values.
+
+  // Max num elements to show.
+  std::size_t value_container_max_len = std::numeric_limits<std::size_t>::max();
+
+  std::string_view value_replacement_str;    // Allows "redacted" for string values
+  std::string_view value_replacement_other;  // Allows "redacted" for string values
+
+  // Maximum length of value (prior to escaping).
+  std::string_view::size_type value_max_length{std::string_view::npos};
+  std::string_view value_cutoff_suffix = "...";  // Suffix if value gets shortened.
+
+  // Arbirary default value.
+  static constexpr AbslStringifyFieldOptions Default() noexcept { return {}; }
+
+  static constexpr AbslStringifyFieldOptions Cpp() noexcept {
+    return {
+        .key_prefix = ".",
+        .key_value_separator = " = ",
+        .value_pointer_prefix = "",
+        .value_pointer_suffix = "",
+        .value_nullptr_t = "nullptr",
+        .value_nullptr = "nullptr",
+    };
+  }
+};
+
+template<typename T>
+concept HasAbslStringifyFieldOptions = requires(const T& v, const T::Type& val) {
+  { v.AbslStringifyFieldOptions(val, std::size_t{0}, std::string_view()) } -> std::same_as<AbslStringifyFieldOptions>;
+};
+
 template<typename ExtenderBase>
 struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   using Type = typename ExtenderBase::Type;
 
-  void OStreamFields(std::ostream& os) const { OStreamFieldsImpl(os, this->ToTuple()); }
+  void OStreamFields(std::ostream& os) const {
+    OStreamFieldsImpl(os, static_cast<const Type&>(*this), this->ToTuple());
+  }
 
   template<typename Sink>
   friend void AbslStringify(Sink& sink, const Type& value) {
     std::ostringstream os;
     value.OStreamFields(os);
-    absl::Format(&sink, "%s", os.str());
+    sink.Append(os.str());
   }
 
  private:
+  // Override possibly "inherited" `AbslStringifyFieldOptions` which receives the `field_index` and
+  // the `field_name` if present (otherwise it will be an empty string).
+  static constexpr struct AbslStringifyFieldOptions GetAbslStringifyFieldOptions(
+      const ExtenderBase::Type& value,
+      std::size_t field_index,
+      std::string_view field_name) noexcept {
+    if constexpr (HasAbslStringifyFieldOptions<typename ExtenderBase::Type>) {
+      return ExtenderBase::Type::AbslStringifyFieldOptions(value, field_index, field_name);
+    } else {
+      return {};
+    }
+  }
+
   template<typename... Ts>
-  void OStreamFieldsImpl(std::ostream& os, const std::tuple<Ts...>& v) const {
+  void OStreamFieldsImpl(std::ostream& os, const Type& value, const std::tuple<Ts...>& v) const {
+    bool use_seperator = false;
     std::apply(
-        [&os](const Ts&... fields) {
+        [&os, &value, &use_seperator](const Ts&... fields) {
           os << '{';
           std::size_t idx{0};  // NOLINT(misc-const-correctness)
-          (OStreamField(os, idx++, fields), ...);
+          (OStreamField(os, value, use_seperator, idx++, fields), ...);
           os << '}';
         },
         v);
   }
 
-  template<typename C>
-  requires(::mbo::types::ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
-  static void OStreamValue(std::ostream& os, const C& vs) {
-    os << "{";
-    std::string_view sep;
-    for (const auto& v : vs) {
-      os << sep;
-      sep = ", ";
-      OStreamValue(os, v);
-    }
-    os << "}";
-  }
-
   template<typename V>
-  static void OStreamValue(std::ostream& os, const V& v) {
-    if constexpr (std::is_same_v<V, std::nullptr_t>) {
-      os << absl::StreamFormat("nullptr_t");
-    } else if constexpr (std::is_pointer_v<V>) {
-      if (v) {
-        os << "*{";
-        OStreamValue(os, *v);
-        os << "}";
-      } else {
-        os << absl::StreamFormat("<nullptr>");
-      }
-    } else if constexpr (std::is_convertible_v<V, std::string_view>) {
-      os << absl::StreamFormat("\"%s\"", v);
-    } else if constexpr (std::is_same_v<V, char>) {
-      if (absl::ascii_isprint(v)) {
-        os << "'" << v << "'";
-      } else {
-        std::string str({v});
-        os << "'" << absl::CHexEscape(str) << "'";
-      }
-    } else {
-      os << absl::StreamFormat("%v", v);
-    }
-  }
-
-  template<typename V>
-  static void OStreamField(std::ostream& os, std::size_t idx, const V& v) {
-    if (idx) {
-      os << ", ";
-    }
+  static void OStreamField(std::ostream& os, const Type& value, bool& use_seperator, std::size_t idx, const V& v) {
+    std::string_view field_name;
     if constexpr (!requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
       static constexpr auto kNames = ::mbo::types::types_internal::GetFieldNames<Type>();
       if (idx < kNames.length() && !kNames[idx].empty()) {
-        os << "." << kNames[idx] << ": ";
+        field_name = kNames[idx];
       }
     }
-    OStreamValue(os, v);
+    const auto options = GetAbslStringifyFieldOptions(value, idx, field_name);
+    if (options.field_suppress) {
+      return;
+    }
+    if (use_seperator) {
+      os << options.field_separator;
+    }
+    use_seperator = true;
+    OStreamKey(os, field_name, options);
+    OStreamValue(os, v, options);
+  }
+
+  static void OStreamKey(std::ostream& os, std::string_view key, const struct AbslStringifyFieldOptions& options) {
+    if (key.empty()) {
+      key = options.key_alternative_name;
+      if (key.empty()) {
+        return;
+      }
+    }
+    switch (options.key_mode) {
+      case AbslStringifyFieldOptions::KeyMode::kNone: return;
+      case AbslStringifyFieldOptions::KeyMode::kNormal:
+        os << options.key_prefix << key << options.key_value_separator;
+        return;
+    }
+  }
+
+  template<typename C>
+  requires(::mbo::types::ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
+  static void OStreamValue(std::ostream& os, const C& vs, const struct AbslStringifyFieldOptions& options) {
+    os << options.value_container_prefix;
+    std::string_view sep;
+    std::size_t index = 0;
+    for (const auto& v : vs) {
+      if (++index > options.value_container_max_len) {
+        break;
+      }
+      os << sep;
+      sep = ", ";
+      OStreamValue(os, v, options);
+    }
+    os << options.value_container_suffix;
+  }
+
+  template<typename V>
+  static void OStreamValue(std::ostream& os, const V& v, const struct AbslStringifyFieldOptions& options) {
+    if constexpr (types_internal::IsExtended<std::remove_cvref_t<V>>) {
+      os << absl::StreamFormat("%v", v);
+    } else if constexpr (std::is_same_v<V, std::nullptr_t>) {
+      os << options.value_nullptr_t;
+    } else if constexpr (std::is_pointer_v<V>) {
+      if (v) {
+        os << options.value_pointer_prefix;
+        OStreamValue(os, *v, options);
+        os << options.value_pointer_suffix;
+      } else {
+        os << options.value_nullptr;
+      }
+    } else if constexpr (std::same_as<V, std::string_view> || std::same_as<V, std::string>) {
+      os << '"';
+      OStreamValueStr(os, v, options);
+      os << '"';
+      // Do not attempt to invoke string conversion as that breaks this very implementation.
+      //} else if constexpr (std::is_convertible_v<V, std::string_view>) {
+    } else if constexpr (std::is_same_v<V, char>) {
+      char vv[2] = {v, '\0'};       // NOLINT(*-avoid-c-arrays)
+      std::string_view vvv(vv, 1);  // NOLINT(*-array-to-pointer-decay,*-no-array-decay)
+      os << "'";
+      OStreamValueStr(os, vvv, options);
+      os << "'";
+    } else {
+      if (options.value_other_types_direct) {
+        if (!options.value_replacement_other.empty()) {
+          os << options.value_replacement_other;
+        } else {
+          os << absl::StreamFormat("%v", v);
+        }
+      } else {
+        const std::string vv = absl::StrFormat("%v", v);
+        OStreamValueStr(os, vv, options);
+      }
+    }
+  }
+
+  static void OStreamValueStr(std::ostream& os, std::string_view v, const struct AbslStringifyFieldOptions& options) {
+    if (!options.value_replacement_str.empty()) {
+      os << options.value_replacement_str;
+      return;
+    }
+    std::string_view vvv{v};
+    if (options.value_max_length != std::string_view::npos) {
+      vvv = vvv.substr(0, options.value_max_length);
+    }
+    switch (options.value_escape_mode) {
+      case AbslStringifyFieldOptions::EscapeMode::kNone: os << vvv; break;
+      case AbslStringifyFieldOptions::EscapeMode::kCEscape: os << absl::CEscape(vvv); break;
+      case AbslStringifyFieldOptions::EscapeMode::kCHexEscape: os << absl::CHexEscape(vvv); break;
+    }
+    if (vvv.length() < v.length()) {
+      os << options.value_cutoff_suffix;
+    }
   }
 };
 
@@ -311,13 +451,40 @@ namespace extender {
 // abseil format/print functions (see
 // [AbslStringify](https://abseil.io/docs/cpp/guides/format#abslstringify)).
 //
-// This default Extender is automatically available through `mb::types::Extend`.
+// This default Extender is automatically available through `mb::types::Extend`
+// and `mbo::types::NoPrint`.
 //
 // If the compiler and the structure support `__buildtin_dump_struct` (e.g. if
 // compiled with Clang), then this automatically supports field names. However,
 // this does not work with `union`s. Further, providing field names can be
-// suppressed by providing a typename `MboTypesExtendDoNotPrintFieldNames`, e.g.:
+// suppressed by providing typename `MboTypesExtendDoNotPrintFieldNames`, e.g.:
 //   `using MboTypesExtendDoNotPrintFieldNames = void;`
+// Once presnet, the compiler will no longer generate code to fetch field names.
+//
+// Note that even if field names are disabled using the above type injection,
+// supporting field names is still manually possible, and thus indepedent of
+// compiler support if necessary using `AbslStringifyFieldOptions`, see below.
+//
+// The implementation allows for complex formatting control by implementing the
+// static member func `AbslStringifyFieldOptions(self, field_index, field_name)`
+// which must return `struct mbo::types::AbslStringifyFieldOptions`. That struct
+// contains the full documenation. While the function must technically be static
+// its first parameter is the object itself. Not that the correct type for
+// the first parameter `self` in the absence of C++23 is `Type` as provided by
+// `Extend`. Example:
+// ```
+// struct Test : mbo::types::Extend<Test> {
+//   int number;
+//   static struct mbo::types::AbslStringifyFieldOptions AbslStringifyFieldOptions(
+//       const Type& /* unused */,
+//       std::size_t field_index,
+//       std::string_view field_name) {
+//     return {
+//       .value_max_length = 42,
+//     };
+//   }
+// };
+// ```
 struct AbslStringify final : MakeExtender<"AbslStringify"_ts, AbslStringify_> {};
 
 // Extender that injects functionality to make an `Extend`ed type work with
@@ -338,13 +505,15 @@ struct AbslStringify final : MakeExtender<"AbslStringify"_ts, AbslStringify_> {}
 // }
 // ```
 //
-// This default Extender is automatically available through `mb::types::Extend`.
+// This default Extender is automatically available through `mb::types::Extend`
+// and `mbo::types::NoPrint`.
 struct AbslHashable final : MakeExtender<"AbslHashable"_ts, AbslHashable_> {};
 
 // Extender that injects functionality to make an `Extend`ed type comparable.
 // All comparators will be injected: `<=>`, `==`, `!=`, `<`, `<=`, `>`, `>=`.
 //
-// This default Extender is automatically available through `mb::types::Extend`.
+// This default Extender is automatically available through `mb::types::Extend`
+// and `mbo::types::NoPrint`.
 struct Comparable final : MakeExtender<"Comparable"_ts, Comparable_> {};
 
 // Extender that injects functionality to make an `Extend`ed type get a
