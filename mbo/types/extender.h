@@ -31,6 +31,14 @@
 //   * This is a default extender.
 //   * Requires `AbslStringify`
 //
+// * Comparable
+//
+//   * Implements all comparison operators by means of `<=>` referring to the
+//     `<=>` operator for the temporary `std::tuple` copies.
+//   * Since the comparison is implemented with templated left/right parameters,
+//     it might be necessary to provide concrete implementations for operators
+//     `==` and/or `<` for types that have no known conversion or comparison.
+//
 // * AbslStringify (default)
 //
 //   * Provides: friend void AbslStringify(Sink&, const Type& t)
@@ -38,14 +46,17 @@
 //   * Enables use of the struct with `absl::Format` library.
 //   * Required by: Printable, Streamable
 //
-// * Comparable
-//
-//   * Implements all comparison operators by means of `<=>` referring to the
-//     `<=>` operator for the temporary `std::tuple` copies.
-//
-// * Hashable
+// * AbslHashable
 //
 //   * Make the extended type hashable.
+//
+// * Default:
+//
+//    * Printable, Streamable, Comparable, AbslHashable, AbslStringify.
+//
+//  * NoPrint:
+//
+//    * Comparable, AbslHashable, AbslStringify.
 //
 #ifndef MBO_TYPES_EXTENDER_H_
 #define MBO_TYPES_EXTENDER_H_
@@ -58,6 +69,8 @@
 #include <type_traits>
 
 #include "absl/hash/hash.h"  // IWYU pragma: keep
+#include "absl/strings/ascii.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
 #include "mbo/types/internal/extender.h"      // IWYU pragma: export
 #include "mbo/types/internal/struct_names.h"  // IWYU pragma: keep
@@ -178,6 +191,13 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
       }
     } else if constexpr (std::is_convertible_v<V, std::string_view>) {
       os << absl::StreamFormat("\"%s\"", v);
+    } else if constexpr (std::is_same_v<V, char>) {
+      if (absl::ascii_isprint(v)) {
+        os << "'" << v << "'";
+      } else {
+        std::string str({v});
+        os << "'" << absl::CHexEscape(str) << "'";
+      }
     } else {
       os << absl::StreamFormat("%v", v);
     }
@@ -339,6 +359,31 @@ struct Printable final : MakeExtender<"Printable"_ts, Printable_, AbslStringify>
 // This default Extender is automatically available through `mb::types::Extend`.
 struct Streamable final : MakeExtender<"Streamable"_ts, Streamable_, AbslStringify> {};
 
+namespace extender_internal {
+// Temporarily unused: This would allow to simplify the default wrapper combos (e.g. `Default`).
+// However it also massively increases their typename lengths. Use:
+//  template<typename ExtenderOrActualType>
+//  using Impl : Expand<ExtenderOrActualType, ExtenderTuple>;
+#if MBO_TYPES_EXTENDER_USE_EXPAND
+template<typename... T>
+struct Expand;
+
+template<typename Base>
+struct Expand<Base, std::tuple<>> : Base {
+  using Type = Base::Type;
+};
+
+template<typename Base, typename T>
+struct Expand<Base, std::tuple<T>> : ::mbo::types::types_internal::UseExtender<Base, T>::type {
+  using Type = Base::Type;
+};
+
+template<typename Base, typename T, typename... U>
+struct Expand<Base, std::tuple<T, U...>>
+    : ::mbo::types::types_internal::UseExtender<Expand<Base, std::tuple<U...>>, T>::type {};
+#endif
+}  // namespace extender_internal
+
 // The default extender is a wrapper around:
 // * Streamable
 // * Printable
@@ -347,6 +392,7 @@ struct Streamable final : MakeExtender<"Streamable"_ts, Streamable_, AbslStringi
 // * AbslStringify
 struct Default final {
   using RequiredExtender = void;
+  using ExtenderTuple = std::tuple<Streamable, Printable, Comparable, AbslStringify, AbslHashable>;
 
   static constexpr std::string_view GetExtenderName() { return decltype("Default"_ts)::str(); }
 
@@ -356,10 +402,36 @@ struct Default final {
   template<typename T, typename Extender>
   friend struct ::mbo::types::types_internal::UseExtender;
 
-  // NOTE: The list of wrapped extenders needs to be in sync with `mbo::extender::Extend`.
+  // NOTE: The list of wrapped extenders needs to be in sync with `ExtenderTuple`.
 
   template<typename ExtenderOrActualType>
   struct Impl : Streamable_<Printable_<Comparable_<AbslHashable_<AbslStringify_<ExtenderOrActualType>>>>> {
+    using Type = ExtenderOrActualType::Type;
+  };
+};
+
+// This default extender is a wrapper around:
+// * NOT Streamable
+// * NOT Printable
+// * Comparable
+// * AbslHashable
+// * AbslStringify
+struct NoPrint final {
+  using RequiredExtender = void;
+  using ExtenderTuple = std::tuple<AbslHashable, AbslStringify, Comparable>;
+
+  static constexpr std::string_view GetExtenderName() { return decltype("NoPrint"_ts)::str(); }
+
+ private:
+  // This friend is necessary to keep symbol visibility in check. But it has to
+  // be either 'struct' or 'class' and thus results in `ImplT` being a struct.
+  template<typename T, typename Extender>
+  friend struct ::mbo::types::types_internal::UseExtender;
+
+  // NOTE: The list of wrapped extenders needs to be in sync with `ExtenderTuple`.
+
+  template<typename ExtenderOrActualType>
+  struct Impl : Comparable_<AbslHashable_<AbslStringify_<ExtenderOrActualType>>> {
     using Type = ExtenderOrActualType::Type;
   };
 };

@@ -322,15 +322,15 @@ concept IsVariant = types_internal::IsVariantImpl<T>::value;
 namespace types_internal {
 
 template<typename T>
-struct is_tuple : std::false_type {};
+struct IsTuple : std::false_type {};
 
 template<typename... Ts>
-struct is_tuple<std::tuple<Ts...>> : std::true_type {};
+struct IsTuple<std::tuple<Ts...>> : std::true_type {};
 
 }  // namespace types_internal
 
 template<typename T>
-concept IsTuple = types_internal::is_tuple<T>::value;
+concept IsTuple = types_internal::IsTuple<T>::value;
 
 }  // namespace mbo::types
 

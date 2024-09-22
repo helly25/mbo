@@ -86,6 +86,22 @@ concept HasVariantMember =
     ::mbo::types::CanCreateTuple<T>
     && types_internal::HasVariantMemberImpl<decltype(::mbo::types::StructToTuple(std::declval<T>()))>;
 
+namespace types_internal {
+
+template<typename... T>
+struct TupleCat;
+
+template<typename... T, typename... U>
+struct TupleCat<std::tuple<T...>, std::tuple<U...>> {
+  using type = std::tuple<T..., U...>;
+};
+
+}  // namespace types_internal
+
+// Concatenate tuples.
+template<typename T, typename U>
+using TupleCat = types_internal::TupleCat<T, U>::type;
+
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_TUPLE_H_

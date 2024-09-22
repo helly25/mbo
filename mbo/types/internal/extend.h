@@ -22,6 +22,7 @@
 #include <string_view>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include "mbo/types/extender.h"
 #include "mbo/types/internal/extender.h"
@@ -101,9 +102,6 @@ template<typename... Extender>
 concept ExtenderListValid =
     (IsExtender<Extender> && ... && (!HasDuplicateTypes<Extender...> && AllRequiredPresent<Extender...>));
 
-template<typename... Extenders>
-concept HasDefaultExtender = (std::is_same_v<Extenders, ::mbo::types::extender::Default> || ...);
-
 // Build CRTP chains from the Extender list.
 template<typename Base, typename Extender, typename... MoreExtender>
 struct ExtendBuildChain
@@ -149,6 +147,34 @@ struct ExtendBase {
   friend struct UseExtender;
 };
 
+template<typename T>
+concept HasExtenderTuple = requires { typename T::ExtenderTuple; };
+
+template<typename... T>
+struct ExtendExtenderTuple;
+
+template<>
+struct ExtendExtenderTuple<std::tuple<>> {
+  using type = std::tuple<>;
+};
+
+template<typename T>
+struct ExtendExtenderTuple<std::tuple<T>, std::true_type> {
+  using type = typename T::ExtenderTuple;
+};
+
+template<typename T>
+struct ExtendExtenderTuple<std::tuple<T>, std::false_type> {
+  using type = std::tuple<T>;
+};
+
+template<typename T, typename... U>
+struct ExtendExtenderTuple<std::tuple<T, U...>> {
+  using type = mbo::types::TupleCat<
+      typename ExtendExtenderTuple<std::tuple<T>, std::bool_constant<HasExtenderTuple<T>>>::type,
+      typename ExtendExtenderTuple<std::tuple<U...>>::type>;
+};
+
 template<typename T, typename... ExtenderList>
 requires ::mbo::types::types_internal::ExtenderListValid<ExtenderList...>
 struct Extend
@@ -156,34 +182,17 @@ struct Extend
           ExtendBase<T>,  // CRTP functionality injection.
           ExtenderList...,
           void /* Sentinel to stop `ExtendBuildChain` */> {
-  using RegisteredExtenders = std::conditional_t<
-      ::mbo::types::types_internal::HasDefaultExtender<ExtenderList...>,
-      std::tuple<
-          // The list of default extenders must be in sync with the implementation of `types::Default`.
-          ::mbo::types::extender::AbslStringify,
-          ::mbo::types::extender::AbslHashable,
-          ::mbo::types::extender::Comparable,
-          ::mbo::types::extender::Printable,
-          ::mbo::types::extender::Streamable,
-          // Actual provided extenders go last:
-          ExtenderList...>,
-      std::tuple<ExtenderList...>>;
+  using RegisteredExtenders = typename ExtendExtenderTuple<std::tuple<ExtenderList...>>::type;
 
   static constexpr std::array<std::string_view, std::tuple_size_v<RegisteredExtenders>> RegisteredExtenderNames() {
-    if constexpr (::mbo::types::types_internal::HasDefaultExtender<ExtenderList...>) {
-      return {
-          // The list of default extenders must be in sync with the implementation of `types::Default`.
-          ::mbo::types::extender::AbslStringify::GetExtenderName(),
-          ::mbo::types::extender::AbslHashable::GetExtenderName(),
-          ::mbo::types::extender::Comparable::GetExtenderName(),
-          ::mbo::types::extender::Printable::GetExtenderName(),
-          ::mbo::types::extender::Streamable::GetExtenderName(),
-          // Actual provided extenders go last:
-          ExtenderList::GetExtenderName()...,
-      };
-    } else {
-      return {ExtenderList::GetExtenderName()...};
-    }
+    return RegisteredExtenderNamesIS(std::make_index_sequence<std::tuple_size_v<RegisteredExtenders>>{});
+  }
+
+ private:
+  template<std::size_t... Idx>
+  static constexpr std::array<std::string_view, std::tuple_size_v<RegisteredExtenders>> RegisteredExtenderNamesIS(
+      std::index_sequence<Idx...> /*unused*/) {
+    return {(std::tuple_element_t<Idx, RegisteredExtenders>::GetExtenderName())...};
   }
 };
 
