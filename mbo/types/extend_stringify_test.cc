@@ -151,23 +151,26 @@ TEST_F(ExtenderStringifyTest, ValueReplacement) {
         std::size_t field_index,
         std::string_view /* unused */) {
       static constexpr std::array<std::string_view, 4> kFieldNames{
-          "one", "two", "three", "four",
+          "one",
+          "two",
+          "three",
+          "four",
       };
       return {
           .key_prefix = "",
           .key_value_separator = " = ",
           .key_alternative_name = kFieldNames[field_index],  // NOLINT(*-constant-array-index)
           .value_replacement_str = "<XX>",
-          .value_replacement_other = "<YY>"
-      };
+          .value_replacement_other = "<YY>"};
     }
   };
 
   ASSERT_TRUE(mbo::types::HasAbslStringifyFieldOptions<TestStruct>);
 
-  EXPECT_THAT(TestStruct{}.ToString(), R"({one = <YY>, two = "<XX>", three = {<YY>, <YY>, <YY>}, four = {"<XX>", "<XX>", "<XX>"}})");
+  EXPECT_THAT(
+      TestStruct{}.ToString(),
+      R"({one = <YY>, two = "<XX>", three = {<YY>, <YY>, <YY>}, four = {"<XX>", "<XX>", "<XX>"}})");
 }
-
 
 TEST_F(ExtenderStringifyTest, Container) {
   struct TestStruct : mbo::types::Extend<TestStruct> {
@@ -182,7 +185,9 @@ TEST_F(ExtenderStringifyTest, Container) {
         std::size_t field_index,
         std::string_view /* unused */) {
       static constexpr std::array<std::string_view, 3> kFieldNames{
-          "one", "two", "three",
+          "one",
+          "two",
+          "three",
       };
       return {
           .key_prefix = "",
