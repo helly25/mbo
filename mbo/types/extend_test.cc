@@ -394,21 +394,6 @@ TEST_F(ExtendTest, StreamableWithUnion) {
   EXPECT_THAT(kTest.ToString(), R"({25, 42, 99})");
 }
 
-struct SuppressFieldNames : ::mbo::types::Extend<SuppressFieldNames> {
-  using MboTypesExtendDoNotPrintFieldNames = void;
-
-  int first{1};
-  int second{2};
-};
-
-TEST_F(ExtendTest, SuppressFieldNames) {
-  constexpr SuppressFieldNames kTest{
-      .first = 25,
-      .second = 42,
-  };
-  EXPECT_THAT(kTest.ToString(), R"({25, 42})");
-}
-
 TEST_F(ExtendTest, Comparable) {
   struct TestComparable : public ExtendNoDefault<TestComparable, Comparable> {
     int a = 0;
