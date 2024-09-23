@@ -153,7 +153,9 @@ struct AbslStringifyOptions {
   KeyMode key_mode{KeyMode::kNormal};
   std::string_view key_prefix = ".";            // Prefix to key names.
   std::string_view key_suffix;                  // Suffix to key names.
+  std::string_view key_suffix;                  // Suffix to key names.
   std::string_view key_value_separator = ": ";  // Seperator between key and value.
+  std::string_view key_use_name{};              // Force name for the key.
   std::string_view key_use_name{};              // Force name for the key.
 
   // Value options:
@@ -201,7 +203,7 @@ struct AbslStringifyOptions {
   static constexpr AbslStringifyOptions AsDefault() { return {}; }
 
   // Formatting control that mostly produces C++ code.
-  static constexpr AbslStringifyOptions AsCpp() {
+  static constexpr AbslStringifyFieldOptions Cpp() noexcept {
     return {
         .key_prefix = ".",
         .key_value_separator = " = ",
@@ -213,10 +215,7 @@ struct AbslStringifyOptions {
   }
 
   // Formatting control that mostly produces JSON data.
-  //
-  // NOTE: JSON data requires field names. So unless Clang is used only with
-  // types that support field names, the `WithFieldNames` adapter must be used.
-  static constexpr AbslStringifyOptions AsJson() {
+  static constexpr AbslStringifyFieldOptions Json() noexcept {
     return {
         .key_prefix = "\"",
         .key_suffix = "\"",
@@ -227,7 +226,6 @@ struct AbslStringifyOptions {
         .value_nullptr = "0",
         .value_container_prefix = "[",
         .value_container_suffix = "]",
-        .special_pair_first_is_name = true,
     };
   }
 };
@@ -406,15 +404,11 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
     OStreamValue(os, v, name_options.second);
   }
 
-  static void OStreamKey(
-      std::ostream& os,
-      std::string_view key,
-      const AbslStringifyOptions& options,
-      bool allow_key_override = true) {
+  static void OStreamKey(std::ostream& os, std::string_view key, const struct AbslStringifyFieldOptions& options) {
     switch (options.key_mode) {
-      case AbslStringifyOptions::KeyMode::kNone: return;
-      case AbslStringifyOptions::KeyMode::kNormal:
-        if (allow_key_override && !options.key_use_name.empty()) {
+      case AbslStringifyFieldOptions::KeyMode::kNone: return;
+      case AbslStringifyFieldOptions::KeyMode::kNormal:
+        if (!options.key_use_name.empty()) {
           key = options.key_use_name;
         }
         if (key.empty()) {
@@ -463,13 +457,14 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   }
 
   template<typename V>
-  static void OStreamValue(std::ostream& os, const V& v, const AbslStringifyOptions& options) {
+  static void OStreamValue(std::ostream& os, const V& v, const struct AbslStringifyFieldOptions& options) {
     using RawV = std::remove_cvref_t<V>;
-    // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (types_internal::IsExtended<RawV>) {
       os << absl::StreamFormat("%v", v);
     } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
+    } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
       os << options.value_nullptr_t;
+    } else if constexpr (std::is_pointer_v<RawV>) {
     } else if constexpr (std::is_pointer_v<RawV>) {
       if (v) {
         os << options.value_pointer_prefix;
@@ -479,32 +474,32 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
         os << options.value_nullptr;
       }
     } else if constexpr (std::same_as<RawV, std::string_view> || std::same_as<V, std::string>) {
+    } else if constexpr (std::same_as<RawV, std::string_view> || std::same_as<V, std::string>) {
       os << '"';
       OStreamValueStr(os, v, options);
       os << '"';
       // Do not attempt to invoke string conversion as that breaks this very implementation.
       //} else if constexpr (std::is_convertible_v<V, std::string_view>) {
     } else if constexpr (std::is_same_v<RawV, char>) {
+    } else if constexpr (std::is_same_v<RawV, char>) {
       char vv[2] = {v, '\0'};       // NOLINT(*-avoid-c-arrays)
       std::string_view vvv(vv, 1);  // NOLINT(*-array-to-pointer-decay,*-no-array-decay)
       os << "'";
       OStreamValueStr(os, vvv, options);
       os << "'";
-    } else if constexpr (mbo::types::IsPair<RawV>) {
-      if constexpr (requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
-        // The presence of type `MboTypesExtendDoNotPrintFieldNames` means we must suppress names.
-        // Since we call into the same type, we can simply pass down the existing `options`.
-        OStreamFieldsImpl(os, v, std::make_tuple(v.first, v.second), options);
-      } else {
-        OStreamFieldsImpl(
-            os, v, std::make_tuple(v.first, v.second),
-            WithFieldNames(
-                options, {options.special_pair_first, options.special_pair_second},
-                AbslStringifyNameHandling::kOverwrite));
-      }
     } else if constexpr (std::is_arithmetic_v<RawV>) {
       if (options.value_replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
+      } else {
+        os << options.value_replacement_other;
+      }
+    } else {
+      if (options.value_other_types_direct) {
+        if (options.value_replacement_other.empty()) {
+          os << absl::StreamFormat("%v", v);
+        } else {
+          os << options.value_replacement_other;
+        }
       } else {
         os << options.value_replacement_other;
       }
