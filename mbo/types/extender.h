@@ -184,6 +184,14 @@ struct AbslStringifyFieldOptions {
   std::string_view::size_type value_max_length{std::string_view::npos};
   std::string_view value_cutoff_suffix = "...";  // Suffix if value gets shortened.
 
+  // Special types:
+
+  // Containers with Pairs automatically create objects where the keys are the field names.
+  // This is useful for JSON. The types are checked with `IsPairFirstStr`.
+  bool special_pair_with_names = false;
+  std::string_view special_pair_first = "first";
+  std::string_view special_pair_second = "second";
+
   // Arbirary default value.
   static constexpr AbslStringifyFieldOptions Default() noexcept { return {}; }
 
@@ -211,6 +219,7 @@ struct AbslStringifyFieldOptions {
         .value_nullptr = "0",
         .value_container_prefix = "[",
         .value_container_suffix = "]",
+        .special_pair_with_names = true,
     };
   }
 };
@@ -283,11 +292,15 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
     OStreamValue(os, v, options);
   }
 
-  static void OStreamKey(std::ostream& os, std::string_view key, const struct AbslStringifyFieldOptions& options) {
+  static void OStreamKey(
+      std::ostream& os,
+      std::string_view key,
+      const struct AbslStringifyFieldOptions& options,
+      bool allow_key_override = true) {
     switch (options.key_mode) {
       case AbslStringifyFieldOptions::KeyMode::kNone: return;
       case AbslStringifyFieldOptions::KeyMode::kNormal:
-        if (!options.key_use_name.empty()) {
+        if (allow_key_override && !options.key_use_name.empty()) {
           key = options.key_use_name;
         }
         if (key.empty()) {
@@ -301,6 +314,24 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   template<typename C>
   requires(::mbo::types::ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
   static void OStreamValue(std::ostream& os, const C& vs, const struct AbslStringifyFieldOptions& options) {
+    if constexpr (mbo::types::IsPairFirstStr<typename C::value_type>) {
+      if (options.special_pair_with_names) {
+        os << "{";
+        std::string_view sep;
+        std::size_t index = 0;
+        for (const auto& v : vs) {
+          if (++index > options.value_container_max_len) {
+            break;
+          }
+          os << sep;
+          sep = ", ";
+          OStreamKey(os, v.first, options, /*allow_key_override=*/false);
+          OStreamValue(os, v.second, options);
+        }
+        os << "}";
+        return;
+      }
+    }
     os << options.value_container_prefix;
     std::string_view sep;
     std::size_t index = 0;
@@ -318,6 +349,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   template<typename V>
   static void OStreamValue(std::ostream& os, const V& v, const struct AbslStringifyFieldOptions& options) {
     using RawV = std::remove_cvref_t<V>;
+    // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (types_internal::IsExtended<RawV>) {
       os << absl::StreamFormat("%v", v);
     } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
@@ -342,23 +374,36 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
       os << "'";
       OStreamValueStr(os, vvv, options);
       os << "'";
+    } else if constexpr (mbo::types::IsPair<RawV>) {
+      os << "{";
+      OStreamKey(os, options.special_pair_first, options, /*allow_key_override=*/false);
+      OStreamValue(os, v.first, options);
+      os << ", ";
+      OStreamKey(os, options.special_pair_second, options, /*allow_key_override=*/false);
+      OStreamValue(os, v.second, options);
+      os << "}";
     } else if constexpr (std::is_arithmetic_v<RawV>) {
       if (options.value_replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
       } else {
         os << options.value_replacement_other;
       }
-    } else {
-      if (options.value_other_types_direct) {
-        if (options.value_replacement_other.empty()) {
-          os << absl::StreamFormat("%v", v);
-        } else {
-          os << options.value_replacement_other;
-        }
+    } else {  // NOTE WHEN EXTENDING: Must always use `else if constexpr`
+      OStreamValueFallback(os, v, options);
+    }
+  }
+
+  template<typename V>
+  static void OStreamValueFallback(std::ostream& os, const V& v, const struct AbslStringifyFieldOptions& options) {
+    if (options.value_other_types_direct) {
+      if (options.value_replacement_other.empty()) {
+        os << absl::StreamFormat("%v", v);
       } else {
-        const std::string vv = absl::StrFormat("%v", v);
-        OStreamValueStr(os, vv, options);
+        os << options.value_replacement_other;
       }
+    } else {
+      const std::string vv = absl::StrFormat("%v", v);
+      OStreamValueStr(os, vv, options);
     }
   }
 
