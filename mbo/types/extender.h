@@ -226,6 +226,7 @@ struct AbslStringifyOptions {
         .value_nullptr = "0",
         .value_container_prefix = "[",
         .value_container_suffix = "]",
+        .special_pair_with_names = true,
     };
   }
 };
@@ -404,11 +405,15 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
     OStreamValue(os, v, name_options.second);
   }
 
-  static void OStreamKey(std::ostream& os, std::string_view key, const struct AbslStringifyFieldOptions& options) {
+  static void OStreamKey(
+      std::ostream& os,
+      std::string_view key,
+      const struct AbslStringifyFieldOptions& options,
+      bool allow_key_override = true) {
     switch (options.key_mode) {
       case AbslStringifyFieldOptions::KeyMode::kNone: return;
       case AbslStringifyFieldOptions::KeyMode::kNormal:
-        if (!options.key_use_name.empty()) {
+        if (allow_key_override && !options.key_use_name.empty()) {
           key = options.key_use_name;
         }
         if (key.empty()) {
@@ -459,6 +464,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   template<typename V>
   static void OStreamValue(std::ostream& os, const V& v, const struct AbslStringifyFieldOptions& options) {
     using RawV = std::remove_cvref_t<V>;
+    // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (types_internal::IsExtended<RawV>) {
       os << absl::StreamFormat("%v", v);
     } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
@@ -487,6 +493,14 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
       os << "'";
       OStreamValueStr(os, vvv, options);
       os << "'";
+    } else if constexpr (mbo::types::IsPair<RawV>) {
+      os << "{";
+      OStreamKey(os, options.special_pair_first, options, /*allow_key_override=*/false);
+      OStreamValue(os, v.first, options);
+      os << ", ";
+      OStreamKey(os, options.special_pair_second, options, /*allow_key_override=*/false);
+      OStreamValue(os, v.second, options);
+      os << "}";
     } else if constexpr (std::is_arithmetic_v<RawV>) {
       if (options.value_replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
