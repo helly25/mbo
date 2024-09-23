@@ -34,6 +34,15 @@
 #include "mbo/types/traits.h"           // IWYU pragma: keep
 #include "mbo/types/tuple.h"
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunknown-pragmas"
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#elif defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+
 namespace std {
 
 template<typename Sink>
@@ -753,6 +762,7 @@ TEST_F(ExtendTest, NoDefaultConstructor) {
 }
 
 struct AbslFlatHashMapUser : Extend<AbslFlatHashMapUser> {
+  using MboTypesExtendDoNotPrintFieldNames = void;
   absl::flat_hash_map<int, std::string> flat_hash_map;
 };
 
@@ -834,3 +844,9 @@ TEST_F(ExtendTest, MoveOnlyTuple) {
 
 }  // namespace
 }  // namespace mbo::types
+
+#ifdef __clang__
+# pragma clang diagnostic pop
+#elif defined(__GNUC__)
+# pragma GCC diagnostic pop
+#endif

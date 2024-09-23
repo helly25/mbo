@@ -71,10 +71,17 @@ struct ExtenderStringifyTest : ::testing::Test {
     return options;
   }
 
-  static Tester tester;
+  ExtenderStringifyTest() { tester = new Tester(); }
+
+  ~ExtenderStringifyTest() override {
+    delete tester;
+    tester = nullptr;
+  }
+
+  static Tester* tester;
 };
 
-ExtenderStringifyTest::Tester ExtenderStringifyTest::tester;
+ExtenderStringifyTest::Tester* ExtenderStringifyTest::tester = nullptr;
 
 TEST_F(ExtenderStringifyTest, SuppressFieldNames) {
   struct SuppressFieldNames : ::mbo::types::Extend<SuppressFieldNames> {
@@ -106,11 +113,11 @@ TEST_F(ExtenderStringifyTest, KeyNames) {
         const Type&,
         std::size_t field_index,
         std::string_view field_name) {
-      return tester.FieldOptions(field_index, field_name);
+      return tester->FieldOptions(field_index, field_name);
     }
   };
 
-  EXPECT_CALL(tester, FieldOptions(0, HasFieldName("one")))
+  EXPECT_CALL(*tester, FieldOptions(0, HasFieldName("one")))
       .WillOnce(::testing::Return(AbslStringifyFieldOptions{
           .field_suppress = false,
           .field_separator = "++",
@@ -119,7 +126,7 @@ TEST_F(ExtenderStringifyTest, KeyNames) {
           .key_value_separator = "==",
           .key_use_name = "first",
       }));
-  EXPECT_CALL(tester, FieldOptions(1, HasFieldName("two")))
+  EXPECT_CALL(*tester, FieldOptions(1, HasFieldName("two")))
       .WillOnce(::testing::Return(AbslStringifyFieldOptions{
           .field_suppress = false,
           .field_separator = "++",
@@ -128,7 +135,7 @@ TEST_F(ExtenderStringifyTest, KeyNames) {
           .key_value_separator = "==",
           .key_use_name = "second",
       }));
-  EXPECT_CALL(tester, FieldOptions(2, HasFieldName("tre")))
+  EXPECT_CALL(*tester, FieldOptions(2, HasFieldName("tre")))
       .WillOnce(::testing::Return(AbslStringifyFieldOptions{
           .field_suppress = true,
       }));

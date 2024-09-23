@@ -376,10 +376,14 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
       os << "'";
     } else if constexpr (mbo::types::IsPair<RawV>) {
       os << "{";
-      OStreamKey(os, options.special_pair_first, options, /*allow_key_override=*/false);
+      if constexpr (!requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
+        OStreamKey(os, options.special_pair_first, options, /*allow_key_override=*/false);
+      }
       OStreamValue(os, v.first, options);
       os << ", ";
-      OStreamKey(os, options.special_pair_second, options, /*allow_key_override=*/false);
+      if constexpr (!requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
+        OStreamKey(os, options.special_pair_second, options, /*allow_key_override=*/false);
+      }
       OStreamValue(os, v.second, options);
       os << "}";
     } else if constexpr (std::is_arithmetic_v<RawV>) {
