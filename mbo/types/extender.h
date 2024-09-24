@@ -203,7 +203,11 @@ struct AbslStringifyOptions {
   static constexpr AbslStringifyOptions AsDefault() { return {}; }
 
   // Formatting control that mostly produces C++ code.
-  static constexpr AbslStringifyFieldOptions Cpp() noexcept {
+  template<typename T>
+  static constexpr AbslStringifyOptions AsCpp(
+      const T& /* object */,
+      std::size_t /* field_index */,
+      std::string_view /* field_name */) {
     return {
         .key_prefix = ".",
         .key_value_separator = " = ",
@@ -215,7 +219,11 @@ struct AbslStringifyOptions {
   }
 
   // Formatting control that mostly produces JSON data.
-  static constexpr AbslStringifyFieldOptions Json() noexcept {
+  template <typename T>
+  static constexpr AbslStringifyOptions AsJson(
+      const T& /* object */,
+      std::size_t /* field_index */,
+      std::string_view /* field_name */) {
     return {
         .key_prefix = "\"",
         .key_suffix = "\"",
@@ -408,11 +416,11 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   static void OStreamKey(
       std::ostream& os,
       std::string_view key,
-      const struct AbslStringifyFieldOptions& options,
+      const AbslStringifyOptions& options,
       bool allow_key_override = true) {
     switch (options.key_mode) {
-      case AbslStringifyFieldOptions::KeyMode::kNone: return;
-      case AbslStringifyFieldOptions::KeyMode::kNormal:
+      case AbslStringifyOptions::KeyMode::kNone: return;
+      case AbslStringifyOptions::KeyMode::kNormal:
         if (allow_key_override && !options.key_use_name.empty()) {
           key = options.key_use_name;
         }
@@ -462,7 +470,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   }
 
   template<typename V>
-  static void OStreamValue(std::ostream& os, const V& v, const struct AbslStringifyFieldOptions& options) {
+  static void OStreamValue(std::ostream& os, const V& v, const AbslStringifyOptions& options) {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (types_internal::IsExtended<RawV>) {
