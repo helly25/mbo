@@ -203,11 +203,7 @@ struct AbslStringifyOptions {
   static constexpr AbslStringifyOptions AsDefault() { return {}; }
 
   // Formatting control that mostly produces C++ code.
-  template<typename T>
-  static constexpr AbslStringifyOptions AsCpp(
-      const T& /* object */,
-      std::size_t /* field_index */,
-      std::string_view /* field_name */) {
+  static constexpr AbslStringifyOptions AsCpp() {
     return {
         .key_prefix = ".",
         .key_value_separator = " = ",
@@ -219,11 +215,10 @@ struct AbslStringifyOptions {
   }
 
   // Formatting control that mostly produces JSON data.
-  template<typename T>
-  static constexpr AbslStringifyOptions AsJson(
-      const T& /* object */,
-      std::size_t /* field_index */,
-      std::string_view /* field_name */) {
+  //
+  // NOTE: JSON data requires field names. So unless Clang is used only with
+  // types that support field names, the `WithFieldNames` adapter must be used.
+  static constexpr AbslStringifyOptions AsJson() {
     return {
         .key_prefix = "\"",
         .key_suffix = "\"",
@@ -234,7 +229,7 @@ struct AbslStringifyOptions {
         .value_nullptr = "0",
         .value_container_prefix = "[",
         .value_container_suffix = "]",
-        .special_pair_with_names = true,
+        .special_pair_first_is_name = true,
     };
   }
 };
@@ -502,17 +497,17 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
       OStreamValueStr(os, vvv, options);
       os << "'";
     } else if constexpr (mbo::types::IsPair<RawV>) {
-      os << "{";
-      if constexpr (!requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
-        OStreamKey(os, options.special_pair_first, options, /*allow_key_override=*/false);
+      if constexpr (requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
+        // The presence of type `MboTypesExtendDoNotPrintFieldNames` means we must suppress names.
+        // Since we call into the same type, we can simply pass down the existing `options`.
+        OStreamFieldsImpl(os, v, std::make_tuple(v.first, v.second), options);
+      } else {
+        OStreamFieldsImpl(
+            os, v, std::make_tuple(v.first, v.second),
+            WithFieldNames(
+                options, {options.special_pair_first, options.special_pair_second},
+                AbslStringifyNameHandling::kOverwrite));
       }
-      OStreamValue(os, v.first, options);
-      os << ", ";
-      if constexpr (!requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
-        OStreamKey(os, options.special_pair_second, options, /*allow_key_override=*/false);
-      }
-      OStreamValue(os, v.second, options);
-      os << "}";
     } else if constexpr (std::is_arithmetic_v<RawV>) {
       if (options.value_replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
