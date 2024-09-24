@@ -1,6 +1,6 @@
 # 0.2.30
 
-* Added formatting control for `AbslStringify` externder using struct and method `AbslStringifyFieldOptions`.
+* Added formatting control for `AbslStringify` externder using struct and method `AbslStringifyOptions`.
 
 # 0.2.29
 
