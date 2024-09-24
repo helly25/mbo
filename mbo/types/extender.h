@@ -219,7 +219,7 @@ struct AbslStringifyOptions {
   }
 
   // Formatting control that mostly produces JSON data.
-  template <typename T>
+  template<typename T>
   static constexpr AbslStringifyOptions AsJson(
       const T& /* object */,
       std::size_t /* field_index */,
