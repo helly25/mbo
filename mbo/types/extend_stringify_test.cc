@@ -57,20 +57,6 @@ struct ExtenderStringifyTest : ::testing::Test {
     MOCK_METHOD(AbslStringifyOptions, FieldOptions, (std::size_t, std::string_view));
   };
 
-  // Adds fieldnames to the passed in options - BUT only if field names are not supported.
-  template<typename T>
-  static FuncGetAbslStringifyOptions<T> SetFieldName(
-      const FuncGetAbslStringifyOptions<T>& get_options,
-      std::vector<std::string_view> field_names) {
-    return [&get_options, &field_names](const T& v, std::size_t field_index, std::string_view field_name) {
-      auto options = get_options(v, field_index, field_name);
-      if (!kStructNameSupport || !mbo::types::types_internal::SupportsFieldNames<T>) {
-        options.key_use_name = field_index >= field_names.size() ? std::string_view{} : field_names.at(field_index);
-      }
-      return options;
-    };
-  }
-
   ExtenderStringifyTest() { tester = new Tester(); }
 
   ExtenderStringifyTest(const ExtenderStringifyTest&) noexcept = delete;
@@ -162,17 +148,13 @@ TEST_F(ExtenderStringifyTest, FieldNames) {
     int two = 25;
     int tre = 33;
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type&, std::size_t idx, std::string_view) {
-      static constexpr std::array<std::string_view, 3> kFieldNames{
-          "ONE",
-          "TWO",
-          "three",
-      };
-      return {
-          .key_prefix = "",
-          .key_value_separator = " = ",
-          .key_use_name = kFieldNames[idx],  // NOLINT(*-constant-array-index)
-      };
+    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
+      return WithFieldNames(
+          AbslStringifyOptions{
+              .key_prefix = "",
+              .key_value_separator = " = ",
+          },
+          {"ONE", "TWO", "three"}, AbslStringifyNameHandling::kOverwrite)(v, idx, name);
     }
   };
 
@@ -185,21 +167,19 @@ TEST_F(ExtenderStringifyTest, Shorten) {
   struct TestStruct : mbo::types::Extend<TestStruct> {
     std::string_view one = "1";
     std::string_view two = "22";
-    std::string_view tre = "333";
-    std::string_view fou = "4444";
-    std::string_view fiv;
+    std::string_view three = "333";
+    std::string_view four = "4444";
+    std::string_view five;
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type&, std::size_t idx, std::string_view) {
-      static constexpr std::array<std::string_view, 5> kFieldNames{
-          "one", "two", "three", "four", "five",
-      };
-      return {
-          .key_prefix = "",
-          .key_value_separator = " = ",
-          .key_use_name = kFieldNames[idx],  // NOLINT(*-constant-array-index)
-          .value_max_length = idx >= 3 && idx <= 4 ? 0U : 1U,
-          .value_cutoff_suffix = idx < 2 ? AbslStringifyOptions::AsDefault<Type>({}, 0, {}).value_cutoff_suffix : "**",
-      };
+    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
+      return WithFieldNames(
+          AbslStringifyOptions{
+              .key_prefix = "",
+              .key_value_separator = " = ",
+              .value_max_length = idx >= 3 && idx <= 4 ? 0U : 1U,
+              .value_cutoff_suffix = idx < 2 ? AbslStringifyOptions::AsDefault().value_cutoff_suffix : "**",
+          },
+          {"one", "two", "three", "four", "five"})(v, idx, name);
     }
   };
 
@@ -212,22 +192,18 @@ TEST_F(ExtenderStringifyTest, ValueReplacement) {
   struct TestStruct : mbo::types::Extend<TestStruct> {
     int one = 1;
     std::string_view two = "22";
-    std::vector<int> tre = {331, 332, 333};
-    std::vector<std::string_view> fou{"41", "42", "43"};
+    std::vector<int> three = {331, 332, 333};
+    std::vector<std::string_view> four{"41", "42", "43"};
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type&, std::size_t idx, std::string_view) {
-      static constexpr std::array<std::string_view, 4> kFieldNames{
-          "one",
-          "two",
-          "three",
-          "four",
-      };
-      return {
-          .key_prefix = "",
-          .key_value_separator = " = ",
-          .key_use_name = kFieldNames[idx],  // NOLINT(*-constant-array-index)
-          .value_replacement_str = "<XX>",
-          .value_replacement_other = "<YY>"};
+    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
+      return WithFieldNames(
+          AbslStringifyOptions{
+              .key_prefix = "",
+              .key_value_separator = " = ",
+              .value_replacement_str = "<XX>",
+              .value_replacement_other = "<YY>",
+          },
+          {"one", "two", "three", "four"})(v, idx, name);
     }
   };
 
@@ -244,20 +220,16 @@ TEST_F(ExtenderStringifyTest, Container) {
     std::vector<int> two = {};
     std::vector<int> tre = {1, 2, 3};
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type&, std::size_t idx, std::string_view) {
-      static constexpr std::array<std::string_view, 3> kFieldNames{
-          "one",
-          "two",
-          "three",
-      };
-      return {
-          .key_prefix = "",
-          .key_value_separator = " = ",
-          .key_use_name = kFieldNames[idx],  // NOLINT(*-constant-array-index)
-          .value_container_prefix = "[",
-          .value_container_suffix = "]",
-          .value_container_max_len = idx == 1 ? 0U : 2U,
-      };
+    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
+      return WithFieldNames(
+          AbslStringifyOptions{
+              .key_prefix = "",
+              .key_value_separator = " = ",
+              .value_container_prefix = "[",
+              .value_container_suffix = "]",
+              .value_container_max_len = idx == 1 ? 0U : 2U,
+          },
+          {"one", "two", "three"}, AbslStringifyNameHandling::kOverwrite)(v, idx, name);
     }
   };
 
@@ -272,7 +244,7 @@ TEST_F(ExtenderStringifyTest, Json) {
     std::string second = "nested";
 
     static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
-      return SetFieldName<Type>(AbslStringifyOptions::AsJson<Type>, {"first", "second"})(v, idx, name);
+      return WithFieldNames(AbslStringifyOptions::AsJson(), {"first", "second"})(v, idx, name);
     }
   };
 
@@ -283,7 +255,7 @@ TEST_F(ExtenderStringifyTest, Json) {
     std::vector<TestNested> four = {{.first = 25, .second = "foo"}, {.first = 42, .second = "bar"}};
 
     static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
-      return SetFieldName<Type>(AbslStringifyOptions::AsJson<Type>, {"one", "two", "three", "four"})(v, idx, name);
+      return WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name);
     }
   };
 
@@ -302,7 +274,7 @@ TEST_F(ExtenderStringifyTest, MoreTypes) {
     char four = '4';
 
     static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
-      return SetFieldName<Type>(AbslStringifyOptions::AsJson<Type>, {"one", "two", "three", "four"})(v, idx, name);
+      return WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name);
     }
   };
 
@@ -318,7 +290,7 @@ TEST_F(ExtenderStringifyTest, MoreContainers) {
     std::vector<std::pair<int, int>> three = {{5, 6}};
 
     static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
-      auto ret = SetFieldName<Type>(AbslStringifyOptions::AsJson<Type>, {"one", "two", "three", "four"})(v, idx, name);
+      auto ret = WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name);
       if (idx == 2) {
         ret.special_pair_first = "Key";
         ret.special_pair_second = "Val";
@@ -345,7 +317,7 @@ TEST_F(ExtenderStringifyTest, ContainersOfPairs) {
     std::vector<std::pair<std::string_view, int>> two = {{"c", 3}, {"d", 4}};
 
     static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
-      return SetFieldName<Type>(AbslStringifyOptions::AsJson<Type>, {"one", "two", "three", "four"})(v, idx, name);
+      return WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name);
     }
   };
 
@@ -360,10 +332,15 @@ TEST_F(ExtenderStringifyTest, PrintWithControl) {
   };
 
   const TestStruct v;
-  EXPECT_THAT(
-      v.ToString(WithFieldNames<TestStruct>(AbslStringifyOptions::AsCpp<TestStruct>, {"one"})), R"({.one = 25})");
-  EXPECT_THAT(
-      v.ToString(WithFieldNames<TestStruct>(AbslStringifyOptions::AsJson<TestStruct>, {"one"})), R"({"one": 25})");
+  EXPECT_THAT(v.ToString(WithFieldNames(AbslStringifyOptions::AsCpp(), {"one"})), R"({.one = 25})");
+  EXPECT_THAT(v.ToString(WithFieldNames(AbslStringifyOptions::AsJson(), {"one"})), R"({"one": 25})");
+  if constexpr (kStructNameSupport) {
+    EXPECT_THAT(v.ToString(AbslStringifyOptions::AsCpp()), R"({.one = 25})");
+    EXPECT_THAT(v.ToString(AbslStringifyOptions::AsJson()), R"({"one": 25})");
+  } else {
+    EXPECT_THAT(v.ToString(AbslStringifyOptions::AsCpp()), R"({25})");
+    EXPECT_THAT(v.ToString(AbslStringifyOptions::AsJson()), R"({25})");
+  }
 }
 
 // NOLINTEND(*-magic-numbers,*-named-parameter)

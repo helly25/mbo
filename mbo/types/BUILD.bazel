@@ -49,6 +49,7 @@ cc_library(
         "//mbo/types/internal:extend_cc",
         "//mbo/types/internal:struct_names_cc",
         "@com_google_absl//absl/hash",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/strings:str_format",
     ],
 )
