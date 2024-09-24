@@ -360,8 +360,10 @@ TEST_F(ExtenderStringifyTest, PrintWithControl) {
   };
 
   const TestStruct v;
-  EXPECT_THAT(v.ToString(WithFieldNames<TestStruct>(AbslStringifyOptions::AsCpp<TestStruct>, {"one"})), R"({.one = 25})");
-  EXPECT_THAT(v.ToString(WithFieldNames<TestStruct>(AbslStringifyOptions::AsJson<TestStruct>, {"one"})), R"({"one": 25})");
+  EXPECT_THAT(
+      v.ToString(WithFieldNames<TestStruct>(AbslStringifyOptions::AsCpp<TestStruct>, {"one"})), R"({.one = 25})");
+  EXPECT_THAT(
+      v.ToString(WithFieldNames<TestStruct>(AbslStringifyOptions::AsJson<TestStruct>, {"one"})), R"({"one": 25})");
 }
 
 // NOLINTEND(*-magic-numbers,*-named-parameter)
