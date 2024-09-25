@@ -83,12 +83,30 @@ using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 using ::testing::WhenSorted;
 
+// Verify the extenders are available as aliases.
 static_assert(std::same_as<::mbo::types::extender::AbslStringify, ::mbo::extender::AbslStringify>);
 static_assert(std::same_as<::mbo::types::extender::Default, ::mbo::extender::Default>);
 
-static_assert(::mbo::types::types_internal::ExtenderListValid<::mbo::extender::Default>);
-static_assert(
-    ::mbo::types::types_internal::ExtenderListValid<AbslHashable, AbslStringify, Comparable, Printable, Streamable>);
+// Verify expansion.
+static_assert(std::same_as<
+              types_internal::ExtendExtenderTupleT<std::tuple<extender::NoPrint>>,
+              std::tuple<AbslHashable, AbslStringify, Comparable>>);
+static_assert(std::same_as<
+              types_internal::ExtendExtenderTupleT<std::tuple<extender::NoPrint, Printable>>,
+              std::tuple<AbslHashable, AbslStringify, Comparable, Printable>>);
+
+// Verify order matters.
+static_assert(types_internal::ExtenderTupleValid<std::tuple<AbslStringify, Printable>>::value);
+static_assert(!types_internal::ExtenderTupleValid<std::tuple<Printable, AbslStringify>>::value);
+
+// Verify the actual short-hand tuples `Default` and `NoPrint`
+static_assert(types_internal::ExtenderTupleValid<std::tuple<extender::Default>>::value);
+static_assert(types_internal::ExtenderTupleValid<std::tuple<extender::NoPrint>>::value);
+
+// Verify lists...
+static_assert(types_internal::ExtenderListValid<extender::Default>);
+static_assert(types_internal::ExtenderListValid<AbslHashable, AbslStringify, Comparable, Printable, Streamable>);
+static_assert(types_internal::ExtenderListValid<extender::NoPrint, Printable, Streamable>);
 
 struct Empty {};
 

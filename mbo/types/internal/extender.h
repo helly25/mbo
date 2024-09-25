@@ -33,9 +33,7 @@ concept IsExtended = requires {
 // This is done via a distinct struct, so that the non specialized templates
 // can be private.
 template<typename ExtenderBase, typename Extender>
-struct UseExtender {
-  using type = typename Extender::template Impl<ExtenderBase>;
-};
+struct UseExtender : Extender::template Impl<ExtenderBase> {};
 
 }  // namespace mbo::types::types_internal
 
