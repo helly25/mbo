@@ -110,7 +110,11 @@ TEST_F(ExtenderStringifyTest, KeyNames) {
     int two = 25;
     int tre = 33;
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type&, std::size_t idx, std::string_view name) {
+    static AbslStringifyOptions GetAbslStringifyOptions(
+        const Type&,
+        std::size_t idx,
+        std::string_view name,
+        const AbslStringifyOptions& /*defaults*/) {
       return tester->FieldOptions(idx, name);
     }
   };
@@ -150,13 +154,17 @@ TEST_F(ExtenderStringifyTest, FieldNames) {
     int two = 25;
     int tre = 33;
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
+    static AbslStringifyOptions GetAbslStringifyOptions(
+        const Type& v,
+        std::size_t idx,
+        std::string_view name,
+        const AbslStringifyOptions& defaults) {
       return WithFieldNames(
           AbslStringifyOptions{
               .key_prefix = "",
               .key_value_separator = " = ",
           },
-          {"ONE", "TWO", "three"}, AbslStringifyNameHandling::kOverwrite)(v, idx, name);
+          {"ONE", "TWO", "three"}, AbslStringifyNameHandling::kOverwrite)(v, idx, name, defaults);
     }
   };
 
@@ -173,7 +181,11 @@ TEST_F(ExtenderStringifyTest, Shorten) {
     std::string_view four = "4444";
     std::string_view five;
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
+    static AbslStringifyOptions GetAbslStringifyOptions(
+        const Type& v,
+        std::size_t idx,
+        std::string_view name,
+        const AbslStringifyOptions& defaults) {
       return WithFieldNames(
           AbslStringifyOptions{
               .key_prefix = "",
@@ -181,7 +193,7 @@ TEST_F(ExtenderStringifyTest, Shorten) {
               .value_max_length = idx >= 3 && idx <= 4 ? 0U : 1U,
               .value_cutoff_suffix = idx < 2 ? AbslStringifyOptions::AsDefault().value_cutoff_suffix : "**",
           },
-          {"one", "two", "three", "four", "five"})(v, idx, name);
+          {"one", "two", "three", "four", "five"})(v, idx, name, defaults);
     }
   };
 
@@ -197,7 +209,11 @@ TEST_F(ExtenderStringifyTest, ValueReplacement) {
     std::vector<int> three = {331, 332, 333};
     std::vector<std::string_view> four{"41", "42", "43"};
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
+    static AbslStringifyOptions GetAbslStringifyOptions(
+        const Type& v,
+        std::size_t idx,
+        std::string_view name,
+        const AbslStringifyOptions& defaults) {
       return WithFieldNames(
           AbslStringifyOptions{
               .key_prefix = "",
@@ -205,7 +221,7 @@ TEST_F(ExtenderStringifyTest, ValueReplacement) {
               .value_replacement_str = "<XX>",
               .value_replacement_other = "<YY>",
           },
-          {"one", "two", "three", "four"})(v, idx, name);
+          {"one", "two", "three", "four"})(v, idx, name, defaults);
     }
   };
 
@@ -222,7 +238,11 @@ TEST_F(ExtenderStringifyTest, Container) {
     std::vector<int> two = {};
     std::vector<int> tre = {1, 2, 3};
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
+    static AbslStringifyOptions GetAbslStringifyOptions(
+        const Type& v,
+        std::size_t idx,
+        std::string_view name,
+        const AbslStringifyOptions& defaults) {
       return WithFieldNames(
           AbslStringifyOptions{
               .key_prefix = "",
@@ -231,41 +251,13 @@ TEST_F(ExtenderStringifyTest, Container) {
               .value_container_suffix = "]",
               .value_container_max_len = idx == 1 ? 0U : 2U,
           },
-          {"one", "two", "three"}, AbslStringifyNameHandling::kOverwrite)(v, idx, name);
+          {"one", "two", "three"}, AbslStringifyNameHandling::kOverwrite)(v, idx, name, defaults);
     }
   };
 
   ASSERT_TRUE(mbo::types::HasGetAbslStringifyOptions<TestStruct>);
 
   EXPECT_THAT(TestStruct{}.ToString(), R"({one = [1, 2], two = [], three = [1, 2]})");
-}
-
-TEST_F(ExtenderStringifyTest, Json) {
-  struct TestNested : mbo::types::Extend<TestNested> {
-    int first = 0;
-    std::string second = "nested";
-
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
-      return WithFieldNames(AbslStringifyOptions::AsJson(), {"first", "second"})(v, idx, name);
-    }
-  };
-
-  struct TestStruct : mbo::types::Extend<TestStruct> {
-    int one = 123;
-    std::string two = "test";
-    std::array<bool, 2> three = {false, true};
-    std::vector<TestNested> four = {{.first = 25, .second = "foo"}, {.first = 42, .second = "bar"}};
-
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
-      return WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name);
-    }
-  };
-
-  ASSERT_TRUE(mbo::types::HasGetAbslStringifyOptions<TestStruct>);
-
-  EXPECT_THAT(
-      TestStruct{}.ToString(),
-      R"({"one": 123, "two": "test", "three": [false, true], "four": [{"first": 25, "second": "foo"}, {"first": 42, "second": "bar"}]})");
 }
 
 TEST_F(ExtenderStringifyTest, MoreTypes) {
@@ -275,8 +267,12 @@ TEST_F(ExtenderStringifyTest, MoreTypes) {
     unsigned three = 3;
     char four = '4';
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
-      return WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name);
+    static AbslStringifyOptions GetAbslStringifyOptions(
+        const Type& v,
+        std::size_t idx,
+        std::string_view name,
+        const AbslStringifyOptions& defaults) {
+      return WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name, defaults);
     }
   };
 
@@ -291,8 +287,13 @@ TEST_F(ExtenderStringifyTest, MoreContainers) {
     std::map<int, int> two = {{1, 2}, {3, 4}};
     std::vector<std::pair<int, int>> three = {{5, 6}};
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
-      auto ret = WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name);
+    static AbslStringifyOptions GetAbslStringifyOptions(
+        const Type& v,
+        std::size_t idx,
+        std::string_view name,
+        const AbslStringifyOptions& defaults) {
+      auto ret =
+          WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name, defaults);
       if (idx == 2) {
         ret.special_pair_first = "Key";
         ret.special_pair_second = "Val";
@@ -313,8 +314,12 @@ TEST_F(ExtenderStringifyTest, ContainersOfPairs) {
     std::map<std::string_view, int> one = {{"a", 1}, {"b", 2}};
     std::vector<std::pair<std::string_view, int>> two = {{"c", 3}, {"d", 4}};
 
-    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
-      return WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name);
+    static AbslStringifyOptions GetAbslStringifyOptions(
+        const Type& v,
+        std::size_t idx,
+        std::string_view name,
+        const AbslStringifyOptions& defaults) {
+      return WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name, defaults);
     }
   };
 
@@ -362,6 +367,73 @@ TEST_F(ExtenderStringifyTest, NonLiteralFields) {
   EXPECT_THAT(
       TestStruct{}.ToString(),
       R"({.one = {{.first = 1, .second = 2}, {.first = 2, .second = 3}}, .two = {{.first = 3, .second = 4}}, .three = "three"})");
+}
+
+TEST_F(ExtenderStringifyTest, NestedDefaults) {
+  struct TestSub : mbo::types::Extend<TestSub> {
+    int four = 42;
+  };
+
+  struct TestStruct : mbo::types::Extend<TestStruct> {
+    int one = 11;
+    int two = 25;
+    TestSub three = {.four = 42};
+  };
+
+  const TestStruct v;
+
+  static constexpr std::string_view kExpectedDef = R"({.one: 11, .two: 25, .three: {.four: 42}})";
+  static constexpr std::string_view kExpectedCpp = R"({.one = 11, .two = 25, .three = {.four = 42}})";
+  static constexpr std::string_view kExpectedJson = R"({"one": 11, "two": 25, "three": {"four": 42}})";
+  EXPECT_THAT(v.ToString(), kExpectedDef);
+  EXPECT_THAT(v.ToString(AbslStringifyOptions::AsCpp()), kExpectedCpp);
+  EXPECT_THAT(v.ToString(AbslStringifyOptions::AsJson()), kExpectedJson);
+  EXPECT_THAT(v.ToJsonString(), kExpectedJson);
+}
+
+TEST_F(ExtenderStringifyTest, CustomNestedJson) {
+  struct TestNested : mbo::types::Extend<TestNested> {
+    int first = 0;
+    std::string second = "nested";
+
+    static AbslStringifyOptions GetAbslStringifyOptions(
+        const Type& v,
+        std::size_t idx,
+        std::string_view name,
+        const AbslStringifyOptions& defaults) {
+      return WithFieldNames(
+          AbslStringifyOptions::AsJson(), {"NESTED_1", "NESTED_2"}, AbslStringifyNameHandling::kOverwrite)(
+          v, idx, name, defaults);
+    }
+  };
+
+  struct TestStruct : mbo::types::Extend<TestStruct> {
+    int one = 123;
+    std::string two = "test";
+    std::array<bool, 2> three = {false, true};
+    std::vector<TestNested> four = {{.first = 25, .second = "foo"}, {.first = 42, .second = "bar"}};
+    std::pair<int, int> five = {25, 42};
+
+    static AbslStringifyOptions GetAbslStringifyOptions(
+        const Type& v,
+        std::size_t idx,
+        std::string_view name,
+        const AbslStringifyOptions& defaults) {
+      return WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two", "three", "four", "five"})(
+          v, idx, name, defaults);
+    }
+  };
+
+  ASSERT_TRUE(mbo::types::HasGetAbslStringifyOptions<TestStruct>);
+
+  // Keys for nested "four" should get their key names as "first" and "second" since they are not provided.
+  // No handover of concrete values to defaults should occur.
+  // BUT We want to check whether the new defaults are being picked up!
+  EXPECT_THAT(
+      TestStruct{}.ToString(),
+      R"({"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"}, {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {"first": 25, "second": 42}})");
+  //               {"one": 123, "two": "test", "three": [false, true], "four": [{"four": 25, "four": "foo"}, {"four":42,
+  //               "four": "bar"}],        "five": {"first": 25, "second": 42}}
 }
 
 // NOLINTEND(*-magic-numbers,*-named-parameter)
