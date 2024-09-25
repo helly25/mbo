@@ -124,7 +124,8 @@ The C++ library is organized in functional groups each residing in their own dir
                 * The output is a comma separated list of field values, e.g. `{ 25, 42 }`.
                 * If available (Clang 16+) this function prints field names `{ first = 25, second = 42 }`.
             * extender-struct `Streamable`: Extender that injects functionality to make an `Extend`ed type streamable. This allows the type to be used directly with `std::ostream`s.
-        * struct `AbslStringifyOptions` which can be used to control `AbslStringify` formatting.
+            * struct `AbslStringifyOptions` which can be used to control `AbslStringify` formatting.
+            * function `WithFieldNames` a format control adapter for `AbslStringify`.
     * mbo/types:no_destruct_cc, mbo/types/no_destruct.h
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
         * Mainly, this prevents calling the destructor and thus prevents termination issues (initialization order fiasco).
