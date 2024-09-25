@@ -795,7 +795,7 @@ static_assert(!types::HasUnionMember<AbslFlatHashMapUser>);
 static_assert(!types::HasVariantMember<AbslFlatHashMapUser>);
 
 static_assert(DecomposeCountV<AbslFlatHashMapUser> == 1);
-static_assert(types_internal::SupportsFieldNames<AbslFlatHashMapUser>);
+static_assert(!kStructNameSupport || types_internal::SupportsFieldNames<AbslFlatHashMapUser>);
 
 TEST_F(ExtendTest, AbseilFlatHashMapMember) {
   const AbslFlatHashMapUser data = {
