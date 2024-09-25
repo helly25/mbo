@@ -26,6 +26,7 @@
 
 #include "mbo/types/extender.h"
 #include "mbo/types/internal/extender.h"
+#include "mbo/types/traits.h"
 #include "mbo/types/tuple.h"  // IWYU pragma: keep
 
 namespace mbo::types::types_internal {
@@ -98,35 +99,88 @@ template<typename... Extenders>
 concept AllRequiredPresent =
     sizeof...(Extenders) == 0 || RequiredPresentForIndex<sizeof...(Extenders) - 1, Extenders...>::value;
 
-template<typename... Extender>
-concept ExtenderListValid =
-    (IsExtender<Extender> && ... && (!HasDuplicateTypes<Extender...> && AllRequiredPresent<Extender...>));
+// Verify a tuple of expanded extenders is valid:
+template<typename ExtenderTuple>
+struct ExtenderTupleValid;
 
-// Build CRTP chains from the Extender list.
-template<typename Base, typename Extender, typename... MoreExtender>
-struct ExtendBuildChain
-    : ExtendBuildChain<typename ::mbo::types::types_internal::UseExtender<Base, Extender>::type, MoreExtender...> {};
+template<typename... Extender>
+struct ExtenderTupleValid<std::tuple<Extender...>>
+    : std::bool_constant<(
+          IsExtender<Extender> && ... && (!HasDuplicateTypes<Extender...> && AllRequiredPresent<Extender...>))> {};
 
 template<typename T>
-struct ExtendBuildChain<T, void> : T {};
+concept HasExtenderTuple = requires { typename T::ExtenderTuple; };
 
-template<std::size_t N, typename Extended, typename Extender>
-struct HasExtenderImpl
-    : std::bool_constant<
-          std::is_same_v<
-              std::remove_cvref_t<std::tuple_element_t<N - 1, typename Extended::RegisteredExtenders>>,
-              std::remove_cvref_t<Extender>>
-          || HasExtenderImpl<N - 1, Extended, Extender>::value> {};
+// Expand an element of a extender tuple. A non tuple element becomes a tuple of the element.
+// There is also the special case of a shorthand extender which has a `ExtenderTuple` member type.
+template<typename T, bool = HasExtenderTuple<T>>
+struct ExtendExtenderTupleElemT {
+  using type = typename T::ExtenderTuple;
+};
 
-template<typename Extended, typename Extender>
-struct HasExtenderImpl<0, Extended, Extender> : std::false_type {};
+template<typename T>
+struct ExtendExtenderTupleElemT<T, false> {
+  using type = std::tuple<T>;
+};
+
+template<typename T>
+struct ExtendExtenderTupleElem {
+  using type = ExtendExtenderTupleElemT<T>::type;
+};
+
+// A tuple just is the tuple.
+template<typename... T>
+struct ExtendExtenderTupleElem<std::tuple<T...>> {
+  using type = std::tuple<T...>;
+};
+
+// Expand an actual given extender tuple
+template<typename T>
+struct ExtendExtenderTuple;
+
+// We expand the first tuple element, so if it is a tuple we keep that and otherwise we make the
+// element a tuple. That way the first element given to TupleCat is always a tuple.
+// The remainder we always recursively, so stripping one off at a time.
+// That way we push expanded to the left while processing to the left.
+// The final result is a tuple where possible direct tuple members have been inlined aka expanded.
+template<typename T, typename... U>
+struct ExtendExtenderTuple<std::tuple<T, U...>> {
+  using type = mbo::types::
+      TupleCat<typename ExtendExtenderTupleElem<T>::type, typename ExtendExtenderTuple<std::tuple<U...>>::type>;
+};
+
+template<>
+struct ExtendExtenderTuple<std::tuple<>> {
+  using type = std::tuple<>;
+};
+
+template<typename ExtenderTuple>
+using ExtendExtenderTupleT = ExtendExtenderTuple<ExtenderTuple>::type;
+
+// Check whether the expanded `ExtenderList` is valid.
+template<typename... ExtenderList>
+concept ExtenderListValid = ExtenderTupleValid<ExtendExtenderTupleT<std::tuple<ExtenderList...>>>::value;
+
+// Check whether `Extended` has `Extender`.
+template<typename Extender, typename Extended>
+struct HasExtenderImpl;
+
+template<typename Extender, typename... ExtenderList>
+struct HasExtenderImpl<Extender, std::tuple<ExtenderList...>>
+    : std::bool_constant<(std::is_same_v<Extender, std::remove_cvref_t<ExtenderList>> || ...)> {};
 
 // Determine whether type `Extended` is an `Extend`ed type that has been
 // extended with `Extender`.
 template<typename Extended, typename Extender>
-concept HasExtender =
-    IsExtended<Extended> && std::tuple_size_v<typename Extended::RegisteredExtenders> != 0
-    && HasExtenderImpl<std::tuple_size_v<typename Extended::RegisteredExtenders>, Extended, Extender>::value;
+concept HasExtender = IsExtended<Extended>
+                      && HasExtenderImpl<std::remove_cvref_t<Extender>, typename Extended::RegisteredExtenders>::value;
+
+// Build CRTP chains from the Extender list.
+template<typename Base, typename Extender, typename... MoreExtender>
+struct ExtendBuildChain : ExtendBuildChain<mbo::types::types_internal::UseExtender<Base, Extender>, MoreExtender...> {};
+
+template<typename T>
+struct ExtendBuildChain<T, void> : T {};
 
 }  // namespace mbo::types::types_internal
 
@@ -147,42 +201,16 @@ struct ExtendBase {
   friend struct UseExtender;
 };
 
-template<typename T>
-concept HasExtenderTuple = requires { typename T::ExtenderTuple; };
-
-template<typename... T>
-struct ExtendExtenderTuple;
-
-template<>
-struct ExtendExtenderTuple<std::tuple<>> {
-  using type = std::tuple<>;
-};
-
-template<typename T>
-struct ExtendExtenderTuple<std::tuple<T>, std::true_type> {
-  using type = typename T::ExtenderTuple;
-};
-
-template<typename T>
-struct ExtendExtenderTuple<std::tuple<T>, std::false_type> {
-  using type = std::tuple<T>;
-};
-
-template<typename T, typename... U>
-struct ExtendExtenderTuple<std::tuple<T, U...>> {
-  using type = mbo::types::TupleCat<
-      typename ExtendExtenderTuple<std::tuple<T>, std::bool_constant<HasExtenderTuple<T>>>::type,
-      typename ExtendExtenderTuple<std::tuple<U...>>::type>;
-};
+using types::types_internal::ExtenderListValid;
 
 template<typename T, typename... ExtenderList>
-requires ::mbo::types::types_internal::ExtenderListValid<ExtenderList...>
+requires(ExtenderListValid<ExtenderList...>)
 struct Extend
     : ::mbo::types::types_internal::ExtendBuildChain<
-          ExtendBase<T>,  // CRTP functionality injection.
-          ExtenderList...,
+          ExtendBase<T>,    // CRTP functionality injection.
+          ExtenderList...,  // NOT extended, so that shorthand forms `Default` and `NoPrint` result in short names.
           void /* Sentinel to stop `ExtendBuildChain` */> {
-  using RegisteredExtenders = typename ExtendExtenderTuple<std::tuple<ExtenderList...>>::type;
+  using RegisteredExtenders = mbo::types::types_internal::ExtendExtenderTupleT<std::tuple<ExtenderList...>>;
 
   static constexpr std::array<std::string_view, std::tuple_size_v<RegisteredExtenders>> RegisteredExtenderNames() {
     return RegisteredExtenderNamesIS(std::make_index_sequence<std::tuple_size_v<RegisteredExtenders>>{});

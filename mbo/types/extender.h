@@ -88,14 +88,13 @@ namespace mbo::types {
 // struct for the actual implementation. E.g.:
 //
 // ```c++
-//   template <typename ExtenderBase>
-//   struct MyExtenderImpl : ExtenderBase {
-//     using Type = typename ExtenderBase::Type;  // Important!
-//     // Implementation
-//   };
+// template <typename ExtenderBase>
+// struct MyExtenderImpl : ExtenderBase {
+//   using Type = typename ExtenderBase::Type;  // Important!
+//   // Implementation
+// };
 //
-//   using MyExtender =
-//       mbo::types::MakeExtender<"MyExtender"_ts, MyExtenderImpl>;
+// using MyExtender = mbo::types::MakeExtender<"MyExtender"_ts, MyExtenderImpl>;
 // ```
 //
 // NOTE: The implementation must be a `struct`, it cannot be a `class`.
@@ -121,7 +120,7 @@ namespace mbo::types {
 //   struct MyExtender final : mbo::types::MakeExtender<
 //       "MyExtender"_ts,
 //       MyExtenderImpl,
-//       mbo::types::Printable>;
+//       mbo::extender::Printable>;
 // ```
 template<::mbo::types::tstring ExtenderNameT, template<typename> typename ImplT, typename RequiredExtenderT = void>
 struct MakeExtender {
@@ -777,9 +776,16 @@ struct Expand<Base, std::tuple<T, U...>>
 // * Comparable
 // * AbslHashable
 // * AbslStringify
+// In theory this could simply be written as a tuple alias (see below). However,
+// that would create much longer types names that are very hard to read. So we
+// use a short hand instead.
+//
+// ```
+// using Default = std::tuple<AbslHashable, AbslStringify, Comparable, Printable, Streamable>;
+// ```
 struct Default final {
   using RequiredExtender = void;
-  using ExtenderTuple = std::tuple<Streamable, Printable, Comparable, AbslStringify, AbslHashable>;
+  using ExtenderTuple = std::tuple<AbslHashable, AbslStringify, Comparable, Printable, Streamable>;
 
   static constexpr std::string_view GetExtenderName() { return decltype("Default"_ts)::str(); }
 
@@ -803,6 +809,14 @@ struct Default final {
 // * Comparable
 // * AbslHashable
 // * AbslStringify
+//
+// In theory this could simply be written as a tuple alias (see below). However,
+// that would create much longer types names that are very hard to read. So we
+// use a short hand instead.
+//
+// ```
+// using NoPrint = std::tuple<AbslHashable, AbslStringify, Comparable>;
+// ```
 struct NoPrint final {
   using RequiredExtender = void;
   using ExtenderTuple = std::tuple<AbslHashable, AbslStringify, Comparable>;
