@@ -153,9 +153,7 @@ struct AbslStringifyOptions {
   KeyMode key_mode{KeyMode::kNormal};
   std::string_view key_prefix = ".";            // Prefix to key names.
   std::string_view key_suffix;                  // Suffix to key names.
-  std::string_view key_suffix;                  // Suffix to key names.
   std::string_view key_value_separator = ": ";  // Seperator between key and value.
-  std::string_view key_use_name{};              // Force name for the key.
   std::string_view key_use_name{};              // Force name for the key.
 
   // Value options:
@@ -478,9 +476,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
     if constexpr (types_internal::IsExtended<RawV>) {
       os << absl::StreamFormat("%v", v);
     } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
-    } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
       os << options.value_nullptr_t;
-    } else if constexpr (std::is_pointer_v<RawV>) {
     } else if constexpr (std::is_pointer_v<RawV>) {
       if (v) {
         os << options.value_pointer_prefix;
@@ -490,13 +486,11 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
         os << options.value_nullptr;
       }
     } else if constexpr (std::same_as<RawV, std::string_view> || std::same_as<V, std::string>) {
-    } else if constexpr (std::same_as<RawV, std::string_view> || std::same_as<V, std::string>) {
       os << '"';
       OStreamValueStr(os, v, options);
       os << '"';
       // Do not attempt to invoke string conversion as that breaks this very implementation.
       //} else if constexpr (std::is_convertible_v<V, std::string_view>) {
-    } else if constexpr (std::is_same_v<RawV, char>) {
     } else if constexpr (std::is_same_v<RawV, char>) {
       char vv[2] = {v, '\0'};       // NOLINT(*-avoid-c-arrays)
       std::string_view vvv(vv, 1);  // NOLINT(*-array-to-pointer-decay,*-no-array-decay)
@@ -518,16 +512,6 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
     } else if constexpr (std::is_arithmetic_v<RawV>) {
       if (options.value_replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
-      } else {
-        os << options.value_replacement_other;
-      }
-    } else {
-      if (options.value_other_types_direct) {
-        if (options.value_replacement_other.empty()) {
-          os << absl::StreamFormat("%v", v);
-        } else {
-          os << options.value_replacement_other;
-        }
       } else {
         os << options.value_replacement_other;
       }

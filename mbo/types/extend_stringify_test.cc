@@ -71,18 +71,6 @@ struct ExtenderStringifyTest : ::testing::Test {
     tester = nullptr;
   }
 
-  ExtenderStringifyTest() { tester = new Tester(); }
-
-  ExtenderStringifyTest(const ExtenderStringifyTest&) noexcept = delete;
-  ExtenderStringifyTest& operator=(const ExtenderStringifyTest&) noexcept = delete;
-  ExtenderStringifyTest(ExtenderStringifyTest&&) noexcept = delete;
-  ExtenderStringifyTest& operator=(ExtenderStringifyTest&&) noexcept = delete;
-
-  ~ExtenderStringifyTest() override {
-    delete tester;
-    tester = nullptr;
-  }
-
   static Tester* tester;
 };
 
