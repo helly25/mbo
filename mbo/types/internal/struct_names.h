@@ -30,6 +30,8 @@ static constexpr bool kStructNameSupport = true;
 
 template<typename T>
 concept SupportsFieldNames = clang::SupportsFieldNames<T>;
+template<typename T>
+concept SupportsFieldNamesConstexpr = clang::SupportsFieldNamesConstexpr<T>;
 
 template<typename T>
 inline constexpr absl::Span<const std::string_view> GetFieldNames() {
@@ -46,6 +48,8 @@ static const bool kStructNameSupport = false;
 
 template<typename T>
 concept SupportsFieldNames = false;
+template<typename T>
+concept SupportsFieldNamesConstexpr = false;
 
 template<typename T>
 inline constexpr absl::Span<const std::string_view> GetFieldNames() {

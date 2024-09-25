@@ -16,6 +16,7 @@
 #include <map>
 #include <set>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 #include "absl/log/absl_check.h"  // IWYU pragma: keep
@@ -40,6 +41,7 @@ namespace {
 // NOLINTBEGIN(*-magic-numbers,*-named-parameter)
 
 using ::mbo::types::types_internal::kStructNameSupport;
+using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 
 // Matcher that checks the field name matches if field names are supported, or verifies that the
@@ -299,11 +301,6 @@ TEST_F(ExtenderStringifyTest, MoreContainers) {
     }
   };
 
-  // TODO(helly25): Right now `set` and `map` prevent getting key names. Get them at runtime.
-  // if constexpr (kStructNameSupport) {
-  //  ASSERT_THAT(::mbo::types::types_internal::GetFieldNames<TestStruct>(), ElementsAre("one", "two", "three"));
-  //}
-
   ASSERT_TRUE(mbo::types::HasGetAbslStringifyOptions<TestStruct>);
 
   EXPECT_THAT(
@@ -341,6 +338,30 @@ TEST_F(ExtenderStringifyTest, PrintWithControl) {
     EXPECT_THAT(v.ToString(AbslStringifyOptions::AsCpp()), R"({25})");
     EXPECT_THAT(v.ToString(AbslStringifyOptions::AsJson()), R"({25})");
   }
+}
+
+TEST_F(ExtenderStringifyTest, NonLiteralFields) {
+  struct TestStruct : mbo::types::Extend<TestStruct> {
+    std::map<int, int> one = {{1, 2}, {2, 3}};
+    std::unordered_map<int, int> two = {{3, 4}};
+    std::string three = "three";
+
+    static AbslStringifyOptions GetAbslStringifyOptions(const Type& v, std::size_t idx, std::string_view name) {
+      return WithFieldNames(AbslStringifyOptions::AsCpp(), {"one", "two", "three"})(v, idx, name);
+    }
+  };
+
+  if constexpr (kStructNameSupport) {
+    ASSERT_THAT(types_internal::SupportsFieldNames<TestStruct>, true);
+    ASSERT_THAT(types_internal::SupportsFieldNamesConstexpr<TestStruct>, false);
+    ASSERT_THAT(::mbo::types::types_internal::GetFieldNames<TestStruct>(), ElementsAre("one", "two", "three"));
+  }
+
+  ASSERT_TRUE(mbo::types::HasGetAbslStringifyOptions<TestStruct>);
+
+  EXPECT_THAT(
+      TestStruct{}.ToString(),
+      R"({.one = {{.first = 1, .second = 2}, {.first = 2, .second = 3}}, .two = {{.first = 3, .second = 4}}, .three = "three"})");
 }
 
 // NOLINTEND(*-magic-numbers,*-named-parameter)

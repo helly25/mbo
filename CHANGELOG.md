@@ -1,6 +1,8 @@
 # 0.2.30
 
 * Added formatting control for `AbslStringify` externder using struct and method `AbslStringifyOptions`.
+* Added function `WithFieldNames` a format control adapter for `AbslStringify`.
+* Added field name support for non literal typesin Clang.
 
 # 0.2.29
 

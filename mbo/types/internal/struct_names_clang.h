@@ -34,16 +34,20 @@ template<typename T>
 concept SupportsFieldNames =
     std::is_class_v<T> && std::is_default_constructible_v<T> && !std::is_array_v<T>  // Minimum requirement
     && std::is_destructible_v<T>  // Type T must have a constexpr destructor. But `std::is_literal_type` is deprecated,
-    && __is_literal_type(T)       // so the internal version has to be used.
     && !::mbo::types::HasUnionMember<T>;
 
-template<typename T, bool>
+template<typename T>
+concept SupportsFieldNamesConstexpr =  // Constexpr capability is more restrictive.
+    SupportsFieldNames<T>              // All general requirements, plus:
+    && __is_literal_type(T);           // so the internal version has to be used.
+
+template<typename T, bool, bool>
 class StructMeta;
 
 template<typename T>
 class StructMetaBase {
  private:
-  template<typename U, bool>
+  template<typename U, bool, bool>
   friend class StructMeta;
 
   class Storage final {
@@ -108,7 +112,7 @@ class StructMetaBase {
   }
 };
 
-template<typename T, bool = SupportsFieldNames<T> && !std::is_empty_v<T>>
+template<typename T, bool = SupportsFieldNames<T> && !std::is_empty_v<T>, bool = SupportsFieldNamesConstexpr<T>>
 class StructMeta final {
  public:
   static constexpr absl::Span<const std::string_view> GetFieldNames() {
@@ -180,8 +184,82 @@ class StructMeta final {
   }();
 };
 
+// Support for non literal types requires runtime operation.
 template<typename T>
-class StructMeta<T, false> {
+class StructMeta<T, true, false> final {
+ public:
+  static absl::Span<const std::string_view> GetFieldNames() {
+    if constexpr (std::is_empty_v<T>) {
+      return {};
+    } else {
+      return absl::MakeSpan(kFieldNames);
+    }
+  }
+
+ private:
+  static constexpr std::size_t kDecomposeCount = DecomposeCountImpl<T>::value;
+
+  struct FieldInfo {
+    std::string_view name;
+    std::string_view type;
+  };
+
+  static constexpr std::size_t kFieldCount =
+      DecomposeCondition<T> ? kDecomposeCount : StructMetaBase<T>::ComputeFieldCount();
+
+  using FieldData = std::array<FieldInfo, kFieldCount>;
+
+  // NOLINTBEGIN(*-swappable-parameters)
+
+  static int DumpStructVisitor(  // NOLINT(cert-dcl50-cpp)
+      FieldData& fields,
+      std::size_t& field_index,
+      std::string_view format,
+      std::string_view indent = {},
+      std::string_view type = {},
+      std::string_view name = {},
+      ...) {
+    if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent == "  ") {
+      fields[field_index++] = {
+          // NOLINT(*-array-index)
+          .name = name,
+          .type = type,
+      };
+    }
+    return 0;
+  }
+
+  // NOLINTEND(*-swappable-parameters)
+
+  static void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
+    __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
+  }
+
+  // Older compilers may not allow this to be a `constexpr`.
+  inline static FieldData kFieldData = []() {
+    FieldData fields;
+    if constexpr (!std::is_empty_v<T>) {
+      typename StructMetaBase<T>::Storage storage{};
+      std::size_t field_index = 0;
+      Init(&storage.Get(), fields, field_index);
+    }
+    return fields;
+  }();
+
+  inline static std::array<std::string_view, kFieldCount> kFieldNames = []() {
+    std::array<std::string_view, kFieldCount> data;
+    if constexpr (!std::is_empty_v<T>) {
+      for (std::size_t pos = 0; pos < kFieldCount; ++pos) {
+        data[pos] = kFieldData[pos].name;
+      }
+    }
+    return data;
+  }();
+};
+
+// No support possible.
+template<typename T>
+class StructMeta<T, false, false> final {
  public:
   static constexpr absl::Span<const std::string_view> GetFieldNames() { return {}; }
 
