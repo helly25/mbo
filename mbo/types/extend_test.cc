@@ -34,6 +34,15 @@
 #include "mbo/types/traits.h"           // IWYU pragma: keep
 #include "mbo/types/tuple.h"
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunknown-pragmas"
+# pragma clang diagnostic ignored "-Wunused-local-typedef"
+#elif defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+
 namespace std {
 
 template<typename Sink>
@@ -392,21 +401,6 @@ TEST_F(ExtendTest, StreamableWithUnion) {
   };
 
   EXPECT_THAT(kTest.ToString(), R"({25, 42, 99})");
-}
-
-struct SuppressFieldNames : ::mbo::types::Extend<SuppressFieldNames> {
-  using MboTypesExtendDoNotPrintFieldNames = void;
-
-  int first{1};
-  int second{2};
-};
-
-TEST_F(ExtendTest, SuppressFieldNames) {
-  constexpr SuppressFieldNames kTest{
-      .first = 25,
-      .second = 42,
-  };
-  EXPECT_THAT(kTest.ToString(), R"({25, 42})");
 }
 
 TEST_F(ExtendTest, Comparable) {
@@ -768,6 +762,7 @@ TEST_F(ExtendTest, NoDefaultConstructor) {
 }
 
 struct AbslFlatHashMapUser : Extend<AbslFlatHashMapUser> {
+  using MboTypesExtendDoNotPrintFieldNames = void;
   absl::flat_hash_map<int, std::string> flat_hash_map;
 };
 
@@ -849,3 +844,9 @@ TEST_F(ExtendTest, MoveOnlyTuple) {
 
 }  // namespace
 }  // namespace mbo::types
+
+#ifdef __clang__
+# pragma clang diagnostic pop
+#elif defined(__GNUC__)
+# pragma GCC diagnostic pop
+#endif
