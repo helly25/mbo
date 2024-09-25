@@ -96,7 +96,8 @@ struct NonTrivialDtor {  // NOLINT(*-special-member-functions)
 static_assert(std::is_destructible_v<const NonTrivialDtor>);
 static_assert(!std::is_trivially_destructible_v<NonTrivialDtor>);
 
-static_assert(!SupportsFieldNames<NonTrivialDtor>);
+static_assert(SupportsFieldNames<NonTrivialDtor>);
+static_assert(!SupportsFieldNamesConstexpr<NonTrivialDtor>);
 static_assert(TestGetFieldNames<NonTrivialDtor>);
 
 #else  // defined(__clang__) && __has_builtin(__builtin_dump_struct)

@@ -354,9 +354,16 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
       // string representations by triggering Abseil stringify on them using `%v` streaming in
       // `OStreamValueFallback`.
       if constexpr (!requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
-        constexpr auto kNames = ::mbo::types::types_internal::GetFieldNames<T>();
-        if (idx < kNames.length() && !kNames[idx].empty()) {
-          field_name = kNames[idx];
+        if constexpr (::mbo::types::types_internal::SupportsFieldNamesConstexpr<T>) {
+          constexpr auto kNames = ::mbo::types::types_internal::GetFieldNames<T>();
+          if (idx < kNames.length() && !kNames[idx].empty()) {
+            field_name = kNames[idx];
+          }
+        } else {
+          /*static*/ const auto kNames = ::mbo::types::types_internal::GetFieldNames<T>();
+          if (idx < kNames.length() && !kNames[idx].empty()) {
+            field_name = kNames[idx];
+          }
         }
       }
       if constexpr (std::is_assignable_v<AbslStringifyOptions, U>) {
