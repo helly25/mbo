@@ -167,12 +167,14 @@ struct AbslStringifyOptions {
   enum class KeyMode {
     kNone,  // No keys are shows. Not even `key_value_separator` will be used.
     kNormal,
+    kNumericFallback,  // If not key is known use a numeric one from the field index.
   };
 
   friend std::ostream& operator<<(std::ostream& os, const KeyMode& value) {
     switch (value) {
       case KeyMode::kNone: break;
       case KeyMode::kNormal: return os << "KeyMode::kNormal";
+      case KeyMode::kNumericFallback: return os << "KeyMode::kNumericFallback";
     }
     return os << "KeyMode::kNone";
   }
@@ -258,6 +260,7 @@ struct AbslStringifyOptions {
   static constexpr AbslStringifyOptions AsJson() {
     return {
         .output_mode = OutputMode::kJson,
+        .key_mode = KeyMode::kNumericFallback,
         .key_prefix = "\"",
         .key_suffix = "\"",
         .key_value_separator = ": ",
@@ -391,6 +394,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
       const T& value,
       const AbslStringifyOptions& default_options,
       bool allow_field_names = !HasMboTypesExtendDoNotPrintFieldNames<T>) {
+    allow_field_names |= default_options.key_mode == AbslStringifyOptions::KeyMode::kNumericFallback;
     bool use_seperator = false;
     const auto& field_names = OStreamFieldNames(value);
     std::apply(
@@ -447,7 +451,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
         return AbslStringifyOptions::As(default_options.output_mode);
       }
     }();
-    if (OStreamFieldKey(os, use_seperator, field_name, field_options, allow_field_names)) {
+    if (OStreamFieldKey(os, use_seperator, idx, field_name, field_options, allow_field_names)) {
       OStreamValue(os, v, field_options, default_options, allow_field_names);
     }
   }
@@ -455,6 +459,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   static bool OStreamFieldKey(
       std::ostream& os,
       bool& use_seperator,
+      std::size_t idx,
       std::string_view field_name,
       const AbslStringifyOptions& field_options,
       bool allow_field_names) {
@@ -466,24 +471,28 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
     }
     use_seperator = true;
     if (allow_field_names) {
-      OStreamFieldName(os, field_name, field_options);
+      OStreamFieldName(os, idx, field_name, field_options);
     }
     return true;
   }
 
   static void OStreamFieldName(
       std::ostream& os,
+      std::size_t idx,
       std::string_view field_name,
       const AbslStringifyOptions& field_options,
       bool allow_key_override = true) {
     switch (field_options.key_mode) {
       case AbslStringifyOptions::KeyMode::kNone: return;
-      case AbslStringifyOptions::KeyMode::kNormal: {
+      case AbslStringifyOptions::KeyMode::kNormal:
+      case AbslStringifyOptions::KeyMode::kNumericFallback: {
         if (allow_key_override && !field_options.key_use_name.empty()) {
           field_name = field_options.key_use_name;
         }
         if (!field_name.empty()) {
           os << field_options.key_prefix << field_name << field_options.key_suffix << field_options.key_value_separator;
+        } else if (field_options.key_mode == AbslStringifyOptions::KeyMode::kNumericFallback) {
+          os << field_options.key_prefix << idx << field_options.key_suffix << field_options.key_value_separator;
         }
       }
     }
@@ -505,15 +514,16 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
         std::string_view sep;
         std::size_t index = 0;
         for (const auto& v : vs) {
-          if (++index > field_options.value_container_max_len) {
+          if (index >= field_options.value_container_max_len) {
             break;
           }
           os << sep;
           sep = field_options.field_separator;
           if (allow_field_names) {
-            OStreamFieldName(os, v.first, field_options, /*allow_key_override=*/false);
+            OStreamFieldName(os, index, v.first, field_options, /*allow_key_override=*/false);
           }
           OStreamValue(os, v.second, field_options, default_options, allow_field_names);
+          ++index;
         }
         os << "}";
         return;
