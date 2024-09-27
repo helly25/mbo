@@ -621,17 +621,22 @@ struct TestStructNonLiteralFields : mbo::types::Extend<TestStructNonLiteralField
   std::unordered_map<int, int> two = {{3, 4}};
   std::string three = "three";
 
-  friend auto MboTypesExtendFieldNames(const TestStructNonLiteralFields&) {
-    return std::array<std::string_view, 3>{"one", "two", "three"};
+  friend AbslStringifyOptions MboTypesExtendStringifyOptions(
+      const TestStructNonLiteralFields& v,
+      std::size_t idx,
+      std::string_view name,
+      const AbslStringifyOptions& defaults) {
+    return WithFieldNames(defaults, {"one", "two", "three"}, AbslStringifyNameHandling::kVerify)(
+        v, idx, name, defaults);
   }
 };
 
 TEST_F(ExtenderStringifyTest, NonLiteralFields) {
-  ASSERT_TRUE(SupportsFieldNames<TestStructNonLiteralFields>);
+  ASSERT_THAT(SupportsFieldNames<TestStructNonLiteralFields>, kStructNameSupport);
   ASSERT_FALSE(SupportsFieldNamesConstexpr<TestStructNonLiteralFields>);
   ASSERT_FALSE(HasMboTypesExtendDoNotPrintFieldNames<TestStructNonLiteralFields>);
-  ASSERT_TRUE(HasMboTypesExtendFieldNames<TestStructNonLiteralFields>);
-  ASSERT_FALSE(HasMboTypesExtendStringifyOptions<TestStructNonLiteralFields>);
+  ASSERT_FALSE(HasMboTypesExtendFieldNames<TestStructNonLiteralFields>);
+  ASSERT_TRUE(HasMboTypesExtendStringifyOptions<TestStructNonLiteralFields>);
 
   EXPECT_THAT(
       TestStructNonLiteralFields{}.ToString(AbslStringifyOptions::AsCpp()),
