@@ -41,10 +41,10 @@
 //
 // * AbslStringify (default)
 //
-//   * Provides: friend void AbslStringify(Sink&, const Type& t)
-//   * Provides: private void OStreamFields(std::ostream& os) const
+//   * Provides: `friend void AbslStringify(Sink&, const Type& t)`
+//   * Provides: protected `void OStreamFields(std::ostream& os, const AbslStringifyOptions&) const`
 //   * Enables use of the struct with `absl::Format` library.
-//   * Required by: Printable, Streamable
+//   * Required by: `Printable`, `Streamable`.
 //
 // * AbslHashable
 //
@@ -63,6 +63,7 @@
 
 // IWYU pragma private, include "mbo/types/extend.h"
 
+#include <concepts>  // IWYU pragma: keep
 #include <initializer_list>
 #include <limits>
 #include <sstream>
@@ -141,15 +142,41 @@ struct MakeExtender {
 };
 
 struct AbslStringifyOptions {
+  enum class OutputMode {
+    kDefault,
+    kCpp,
+    kJson,
+  };
+
+  friend std::ostream& operator<<(std::ostream& os, const OutputMode& value) {
+    switch (value) {
+      case OutputMode::kDefault: break;
+      case OutputMode::kCpp: return os << "OutpuMode::kCpp";
+      case OutputMode::kJson: return os << "OutpuMode::kJson";
+    }
+    return os << "OutpuMode::kDefault";
+  }
+
+  OutputMode output_mode = OutputMode::kDefault;
+
   // Field options:
   bool field_suppress = false;              // Allows to completely suppress the field.
-  std::string_view field_separator = ", ";  // Separator between two field.
+  std::string_view field_separator = ", ";  // Separator between two field (in front of field).
 
   // Key options:
   enum class KeyMode {
     kNone,  // No keys are shows. Not even `key_value_separator` will be used.
     kNormal,
   };
+
+  friend std::ostream& operator<<(std::ostream& os, const KeyMode& value) {
+    switch (value) {
+      case KeyMode::kNone: break;
+      case KeyMode::kNormal: return os << "KeyMode::kNormal";
+    }
+    return os << "KeyMode::kNone";
+  }
+
   KeyMode key_mode{KeyMode::kNormal};
   std::string_view key_prefix = ".";            // Prefix to key names.
   std::string_view key_suffix;                  // Suffix to key names.
@@ -165,8 +192,18 @@ struct AbslStringifyOptions {
   enum class EscapeMode {
     kNone,        // Values are printed as is.
     kCEscape,     // Values are C-escaped.
-    kCHexEscape,  // Values are C-HEX escaped.
+    kCHexEscape,  // Values are C-HEX-escaped.
   };
+
+  friend std::ostream& operator<<(std::ostream& os, const EscapeMode& value) {
+    switch (value) {
+      case EscapeMode::kNone: break;
+      case EscapeMode::kCEscape: return os << "EscapeMode::kCEscape";
+      case EscapeMode::kCHexEscape: return os << "EscapeMode::kCHexEscape";
+    }
+    return os << "EscapeMode::kNone";
+  }
+
   EscapeMode value_escape_mode{EscapeMode::kCEscape};
 
   std::string_view value_pointer_prefix = "*{";    // Prefix for pointer types.
@@ -202,7 +239,9 @@ struct AbslStringifyOptions {
 
   // Formatting control that mostly produces C++ code.
   static constexpr AbslStringifyOptions AsCpp() {
+    // TODO(helly25): These should probably return static constexpr& in C++23.
     return {
+        .output_mode = OutputMode::kCpp,
         .key_prefix = ".",
         .key_value_separator = " = ",
         .value_pointer_prefix = "",
@@ -218,6 +257,7 @@ struct AbslStringifyOptions {
   // types that support field names, the `WithFieldNames` adapter must be used.
   static constexpr AbslStringifyOptions AsJson() {
     return {
+        .output_mode = OutputMode::kJson,
         .key_prefix = "\"",
         .key_suffix = "\"",
         .key_value_separator = ": ",
@@ -230,16 +270,70 @@ struct AbslStringifyOptions {
         .special_pair_first_is_name = true,
     };
   }
+
+  static constexpr AbslStringifyOptions As(OutputMode mode) {
+    switch (mode) {
+      case OutputMode::kDefault: break;
+      case OutputMode::kCpp: return AsCpp();
+      case OutputMode::kJson: return AsJson();
+    }
+    return AsDefault();
+  }
 };
 
 template<typename T>
-concept HasGetAbslStringifyOptions = requires(const T& v) {
-  { T::GetAbslStringifyOptions(v, std::size_t{0}, std::string_view()) } -> std::same_as<AbslStringifyOptions>;
+concept IsFieldNameContainer = requires(const T& field_names) {
+  { std::size(field_names) } -> std::equality_comparable_with<std::size_t>;
+  { std::data(field_names)[1] } -> std::convertible_to<std::string_view>;
 };
+
+template<typename T>
+concept HasMboTypesExtendDoNotPrintFieldNames =
+    requires { typename std::remove_cvref_t<T>::MboTypesExtendDoNotPrintFieldNames; };
+
+// This breaks `MboTypesExtendStringifyOptions` lookup within this namespace.
+void MboTypesExtendStringifyOptions();
+
+// Identify presence for `AbslStringify` extender API extension point
+// `MboTypesExtendStringifyOptions`.
+//
+// That extension point can be used to perform fine grained control of field
+// printing.
+//
+// NOTE: Unlike `MboTypesExtendFieldNames` this extenion point cannot deal with
+// the `std::string_view` members referencing temp objects such as `std::string`
+// since no life-time extension is being applied.
+template<typename T>
+concept HasMboTypesExtendStringifyOptions = requires(const T& v) {
+  {
+    MboTypesExtendStringifyOptions(v, std::size_t{0}, std::string_view(), AbslStringifyOptions())
+  } -> std::same_as<AbslStringifyOptions>;
+};
+
+// This breaks `MboTypesExtendFieldNames` lookup within this namespace.
+void MboTypesExtendFieldNames();
+
+// Identify presence for `AbslStringify` extender API extension point
+// `MboTypesExtendFieldNames`.
+//
+// That extension point can be used to provide field names in cases where the
+// compiler does not provide or where they should be different when printed.
+//
+// The function must comply with the following requirements:
+// * The return value must be usable in:
+//   * `std::size(result)`, and
+//   * `std::data(result)`.
+// * The values must be convertible to a `std::string_view`.
+// * Temp containers of temp `std::string` values are admissible since life-time
+//   extension is being applied (unlike `MboTypesExtendStringifyOptions`).
+template<typename T>
+concept HasMboTypesExtendFieldNames =
+    requires(const T& v) { requires IsFieldNameContainer<decltype(MboTypesExtendFieldNames(v))>; };
 
 // A function type that is used to handle format control for printing and streaming.
 template<typename T>
-using FuncGetAbslStringifyOptions = std::function<AbslStringifyOptions(const T&, std::size_t, std::string_view)>;
+using FuncMboTypesExtendStringifyOptions = std::function<
+    AbslStringifyOptions(const T&, std::size_t, std::string_view, const AbslStringifyOptions& default_options)>;
 
 enum class AbslStringifyNameHandling {
   kOverwrite = 0,  // Use the provided names to override automatically determined names.
@@ -247,13 +341,14 @@ enum class AbslStringifyNameHandling {
 };
 
 template<typename T, typename ObjectType = mbo::types::types_internal::AnyType>
-concept CanProduceAbslStringifyOptions =
-    std::is_assignable_v<AbslStringifyOptions, std::invoke_result_t<T, ObjectType, std::size_t, std::string_view>>;
+concept CanProduceAbslStringifyOptions = std::is_assignable_v<
+    AbslStringifyOptions,
+    std::invoke_result_t<T, ObjectType, std::size_t, std::string_view, const AbslStringifyOptions&>>;
 
 // Concept that verifies whether `T` can be used to construct (or assign to) an
 // `AbslStringifyOptions`.
 //
-// In case of a function object it must match `FuncGetAbslStringifyOptions`.
+// In case of a function object it must match `FuncMboTypesExtendStringifyOptions`.
 // The actual `ObjectType` might not be evaluated immediately. This happens when
 // an adapter does not know the type yet if it applies type-erasure techniques
 // like `WithFieldNAmes does`. However, all concrete calls will verify their
@@ -262,72 +357,12 @@ template<typename T, typename ObjectType = mbo::types::types_internal::AnyType>
 concept IsOrCanProduceAbslStringifyOptions =
     std::is_convertible_v<T, AbslStringifyOptions> || CanProduceAbslStringifyOptions<T, ObjectType>;
 
-// Adapter that can be used to inject field names into field control.
-//
-// Parameter `field_options` must be an instance of `AbslStringifyOptions` or
-// something that can produce those. It defaults to `GetAbslStringifyOptions`
-// if available and otherwise the default `AbslStringifyOptions` will be used.
-//
-// If `field_names` is true, then the injected field names must match the actual
-// field names. Otherwise the provided `field_names` take precedence over
-// compile time determined names.
-//
-// Example:
-//
-// ```
-// struct MyType : mbo::types::Extend<MyType> {
-//   int one = 25;
-//   int two = 42;
-//
-//   static AbslStringifyOptions GetAbslStringifyOptions(
-//       const Type& v, std::size_t idx, std::string_view name) {
-//     return WithFieldNames(
-//         AbslStringifyOptions::AsJson(), {"one", "two"})(v, idx, name);
-//   }
-// };
-// ```
-template<int&... Barrier, IsOrCanProduceAbslStringifyOptions U>
-inline constexpr auto WithFieldNames(
-    const U& field_options,
-    const std::initializer_list<std::string_view>& field_names,
-    AbslStringifyNameHandling name_handling = AbslStringifyNameHandling::kVerify) {
-  // In order to provide overrides, the actual target `options` have to be created.
-  // Once those are available, the overrides can be applied.
-  return [&field_options, &field_names, name_handling]<typename T>(
-             [[maybe_unused]] const T& v, std::size_t field_index, std::string_view field_name) {
-    AbslStringifyOptions options;
-    if constexpr (std::is_assignable_v<AbslStringifyOptions, U>) {
-      options = field_options;
-    } else if constexpr (std::is_convertible_v<U, AbslStringifyOptions>) {
-      options = AbslStringifyOptions(field_options);
-    } else {
-      // Must be `CanProduceAbslStringifyOptions`
-      options = field_options(v, field_index, field_name);
-    }
-    if (field_index < field_names.size()) {
-      options.key_use_name = *(field_names.begin() + field_index);
-      if (name_handling == AbslStringifyNameHandling::kVerify && types_internal::SupportsFieldNames<T>) {
-        ABSL_CHECK_EQ(field_name, options.key_use_name) << "Bad field_name injection for field #" << field_index;
-      }
-    }
-    return options;
-  };
-}
-
 template<typename ExtenderBase>
 struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   using Type = typename ExtenderBase::Type;
 
-  // Stream the type to `os` with control via `field_options`.
-  //
-  // Parameter `field_options` must be an instance of `AbslStringifyOptions` or
-  // something that can produce those. It defaults to `GetAbslStringifyOptions`
-  // if available and otherwise the default `AbslStringifyOptions` will be used.
-  template<typename U = FuncGetAbslStringifyOptions<Type>>
-  requires(IsOrCanProduceAbslStringifyOptions<U, Type>)
-  void OStreamFields(std::ostream& os, const U& field_options = FuncGetAbslStringifyOptions<Type>(nullptr)) const {
-    OStreamFieldsImpl(os, static_cast<const Type&>(*this), this->ToTuple(), field_options);
-  }
+  template<typename Other>
+  friend struct AbslStringify_;
 
   template<typename Sink>
   friend void AbslStringify(Sink& sink, const Type& value) {
@@ -336,187 +371,226 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
     sink.Append(os.str());
   }
 
- private:
-  template<typename... Ts, int&... Barrier, typename U, typename T>
-  requires(IsOrCanProduceAbslStringifyOptions<U, T>)
-  static void OStreamFieldsImpl(std::ostream& os, const T& value, const std::tuple<Ts...>& v, const U& field_options) {
-    bool use_seperator = false;
-    const auto get_field_options =
-        [&value, &field_options](std::size_t idx) constexpr -> std::pair<std::string_view, AbslStringifyOptions> {
-      (void)value;  // Convince the compiler this is necessary. Unfortunately we cannot use `[[maybe_unused]]`.
-      std::string_view field_name;
-      // In the if below, type `MboTypesExtendDoNotPrintFieldNames` must be checked on `Type`, and
-      // not the methods template parameter. That is we allow arbitrary sub-fields to be processed
-      // here, but we cannot rely on those to be extends. If they actually are extends, then they
-      // will be processed with their own handlers becasue we will deep down convert such fields to
-      // string representations by triggering Abseil stringify on them using `%v` streaming in
-      // `OStreamValueFallback`.
-      if constexpr (!requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
-        if constexpr (::mbo::types::types_internal::SupportsFieldNamesConstexpr<T>) {
-          constexpr auto kNames = ::mbo::types::types_internal::GetFieldNames<T>();
-          if (idx < kNames.length() && !kNames[idx].empty()) {
-            field_name = kNames[idx];
-          }
-        } else {
-          /*static*/ const auto kNames = ::mbo::types::types_internal::GetFieldNames<T>();
-          if (idx < kNames.length() && !kNames[idx].empty()) {
-            field_name = kNames[idx];
-          }
-        }
-      }
-      if constexpr (std::is_assignable_v<AbslStringifyOptions, U>) {
-        return std::make_pair(field_name, field_options);
-      } else if constexpr (std::is_convertible_v<U, AbslStringifyOptions>) {
-        return std::make_pair(field_name, AbslStringifyOptions(field_options));
-      } else {
-        if constexpr (std::is_same_v<std::remove_cvref_t<U>, FuncGetAbslStringifyOptions<T>>) {
-          // A function can be a nullptr...
-          if (field_options != nullptr) {
-            return std::make_pair(field_name, field_options(value, idx, field_name));
-          }
-        } else if constexpr (CanProduceAbslStringifyOptions<U, T>) {
-          // ... but a function object otherwise cannot.
-          return std::make_pair(field_name, field_options(value, idx, field_name));
-        }
-        // Final fallback solutions...
-        if constexpr (HasGetAbslStringifyOptions<T>) {
-          return std::make_pair(field_name, T::GetAbslStringifyOptions(value, idx, field_name));
-        } else {
-          return std::make_pair(field_name, AbslStringifyOptions{});
-        }
-      }
-    };
-    std::apply(
-        [&os, &use_seperator, &get_field_options](const Ts&... fields) {
-          os << '{';
-          std::size_t idx{0};
-          (OStreamField(os, use_seperator, fields, get_field_options(idx++)), ...);
-          os << '}';
-        },
-        v);
+ protected:
+  // Stream the type to `os` with control via `field_options`.
+  void OStreamFields(std::ostream& os, const AbslStringifyOptions& default_options = {}) const {
+    OStreamFieldsStatic(os, static_cast<const Type&>(*this), default_options);
   }
 
-  template<typename V>
+  static void OStreamFieldsStatic(std::ostream& os, const Type& value, const AbslStringifyOptions& default_options) {
+    // It is not allowed to deny field name printing but provide filed names.
+    static_assert(!(HasMboTypesExtendDoNotPrintFieldNames<Type> && HasMboTypesExtendFieldNames<Type>));
+
+    OStreamFieldsImpl(os, value, default_options);
+  }
+
+ private:
+  template<int&... Barrier, typename T>
+  static void OStreamFieldsImpl(
+      std::ostream& os,
+      const T& value,
+      const AbslStringifyOptions& default_options,
+      bool allow_field_names = !HasMboTypesExtendDoNotPrintFieldNames<T>) {
+    bool use_seperator = false;
+    const auto& field_names = OStreamFieldNames(value);
+    std::apply(
+        [&](const auto&... fields) {
+          os << '{';
+          std::size_t idx{0};
+          (OStreamField(os, use_seperator, value, fields, idx++, field_names, default_options, allow_field_names), ...);
+          os << '}';
+        },
+        [&value]() {
+          if constexpr (types_internal::IsExtended<T>) {
+            return value.ToTuple();
+          } else {
+            return value;  // works for pair and tuple.
+          }
+        }());
+  }
+
+  template<typename T>
+  static auto OStreamFieldNames(const T& value) {
+    // In the if below, type `MboTypesExtendDoNotPrintFieldNames` is checked on `T` and not `Type`.
+    // That means that once we leave Extend types, it is less likely that the type is still present
+    // in sub-types and thus key printing would be enabled in such sub-types. However, the functions
+    // keep track of that state in `allow_field_names`. So the worst to happen is that unnecessary
+    // calls to fetch field names occur.
+    if constexpr (HasMboTypesExtendDoNotPrintFieldNames<T>) {
+      return std::array<std::string_view, 0>{};
+    } else if constexpr (HasMboTypesExtendFieldNames<T>) {
+      return MboTypesExtendFieldNames(value);
+    } else {
+      // Works for both constexpr and static/const aka compile-time and run-time cases.
+      return ::mbo::types::types_internal::GetFieldNames<T>();  // T not Type
+    }
+  }
+
+  template<typename T, typename V, typename FieldNames>
   static void OStreamField(
       std::ostream& os,
       bool& use_seperator,
+      const T& value,
       const V& v,
-      const std::pair<std::string_view, AbslStringifyOptions>& name_options) {
-    if (name_options.second.field_suppress) {
-      return;
+      std::size_t idx,
+      const FieldNames& field_names,
+      const AbslStringifyOptions& default_options,
+      bool allow_field_names) {
+    std::string_view field_name;
+    if (allow_field_names && idx < std::size(field_names)) {
+      field_name = std::data(field_names)[idx];
     }
-    if (use_seperator) {
-      os << name_options.second.field_separator;
+    const auto& field_options = [&]() {
+      if constexpr (HasMboTypesExtendStringifyOptions<T>) {
+        return MboTypesExtendStringifyOptions(value, idx, field_name, default_options);
+      } else {
+        return AbslStringifyOptions::As(default_options.output_mode);
+      }
+    }();
+    if (OStreamFieldKey(os, use_seperator, field_name, field_options, allow_field_names)) {
+      OStreamValue(os, v, field_options, default_options, allow_field_names);
     }
-    use_seperator = true;
-    OStreamKey(os, name_options.first, name_options.second);
-    OStreamValue(os, v, name_options.second);
   }
 
-  static void OStreamKey(
+  static bool OStreamFieldKey(
       std::ostream& os,
-      std::string_view key,
-      const AbslStringifyOptions& options,
+      bool& use_seperator,
+      std::string_view field_name,
+      const AbslStringifyOptions& field_options,
+      bool allow_field_names) {
+    if (field_options.field_suppress) {
+      return false;
+    }
+    if (use_seperator) {
+      os << field_options.field_separator;
+    }
+    use_seperator = true;
+    if (allow_field_names) {
+      OStreamFieldName(os, field_name, field_options);
+    }
+    return true;
+  }
+
+  static void OStreamFieldName(
+      std::ostream& os,
+      std::string_view field_name,
+      const AbslStringifyOptions& field_options,
       bool allow_key_override = true) {
-    switch (options.key_mode) {
+    switch (field_options.key_mode) {
       case AbslStringifyOptions::KeyMode::kNone: return;
-      case AbslStringifyOptions::KeyMode::kNormal:
-        if (allow_key_override && !options.key_use_name.empty()) {
-          key = options.key_use_name;
+      case AbslStringifyOptions::KeyMode::kNormal: {
+        if (allow_key_override && !field_options.key_use_name.empty()) {
+          field_name = field_options.key_use_name;
         }
-        if (key.empty()) {
-          return;
+        if (!field_name.empty()) {
+          os << field_options.key_prefix << field_name << field_options.key_suffix << field_options.key_value_separator;
         }
-        os << options.key_prefix << key << options.key_suffix << options.key_value_separator;
-        return;
+      }
     }
   }
 
   template<typename C>
   requires(::mbo::types::ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
-  static void OStreamValue(std::ostream& os, const C& vs, const AbslStringifyOptions& options) {
+  static void OStreamValue(
+      std::ostream& os,
+      const C& vs,
+      const AbslStringifyOptions& field_options,
+      const AbslStringifyOptions& default_options,
+      bool allow_field_names) {
     if constexpr (mbo::types::IsPairFirstStr<typename C::value_type>) {
-      if (options.special_pair_first_is_name) {
+      if (field_options.special_pair_first_is_name) {
         // Each pair element of the container `vs` is an element whose key is the `first` member and
         // whose value is the `second` member.
         os << "{";
         std::string_view sep;
         std::size_t index = 0;
         for (const auto& v : vs) {
-          if (++index > options.value_container_max_len) {
+          if (++index > field_options.value_container_max_len) {
             break;
           }
           os << sep;
-          sep = ", ";
-          OStreamKey(os, v.first, options, /*allow_key_override=*/false);
-          OStreamValue(os, v.second, options);
+          sep = field_options.field_separator;
+          if (allow_field_names) {
+            OStreamFieldName(os, v.first, field_options, /*allow_key_override=*/false);
+          }
+          OStreamValue(os, v.second, field_options, default_options, allow_field_names);
         }
         os << "}";
         return;
       }
     }
-    os << options.value_container_prefix;
+    os << field_options.value_container_prefix;
     std::string_view sep;
     std::size_t index = 0;
     for (const auto& v : vs) {
-      if (++index > options.value_container_max_len) {
+      if (++index > field_options.value_container_max_len) {
         break;
       }
       os << sep;
-      sep = ", ";
-      OStreamValue(os, v, options);
+      sep = field_options.field_separator;
+      OStreamValue(os, v, field_options, default_options, allow_field_names);
     }
-    os << options.value_container_suffix;
+    os << field_options.value_container_suffix;
   }
 
   template<typename V>
-  static void OStreamValue(std::ostream& os, const V& v, const AbslStringifyOptions& options) {
+  static void OStreamValue(
+      std::ostream& os,
+      const V& v,
+      const AbslStringifyOptions& field_options,
+      const AbslStringifyOptions& default_options,
+      bool allow_field_names) {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (types_internal::IsExtended<RawV>) {
-      os << absl::StreamFormat("%v", v);
+      RawV::OStreamFieldsStatic(os, v, default_options);
     } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
-      os << options.value_nullptr_t;
+      os << field_options.value_nullptr_t;
     } else if constexpr (std::is_pointer_v<RawV>) {
       if (v) {
-        os << options.value_pointer_prefix;
-        OStreamValue(os, *v, options);
-        os << options.value_pointer_suffix;
+        os << field_options.value_pointer_prefix;
+        OStreamValue(os, *v, field_options, default_options, allow_field_names);
+        os << field_options.value_pointer_suffix;
       } else {
-        os << options.value_nullptr;
+        os << field_options.value_nullptr;
       }
-    } else if constexpr (std::same_as<RawV, std::string_view> || std::same_as<V, std::string>) {
-      os << '"';
-      OStreamValueStr(os, v, options);
-      os << '"';
-      // Do not attempt to invoke string conversion as that breaks this very implementation.
-      //} else if constexpr (std::is_convertible_v<V, std::string_view>) {
-    } else if constexpr (std::is_same_v<RawV, char>) {
-      char vv[2] = {v, '\0'};       // NOLINT(*-avoid-c-arrays)
-      std::string_view vvv(vv, 1);  // NOLINT(*-array-to-pointer-decay,*-no-array-decay)
-      os << "'";
-      OStreamValueStr(os, vvv, options);
-      os << "'";
     } else if constexpr (mbo::types::IsPair<RawV>) {
-      if constexpr (requires { typename Type::MboTypesExtendDoNotPrintFieldNames; }) {
-        // The presence of type `MboTypesExtendDoNotPrintFieldNames` means we must suppress names.
-        // Since we call into the same type, we can simply pass down the existing `options`.
-        OStreamFieldsImpl(os, v, std::make_tuple(v.first, v.second), options);
-      } else {
-        OStreamFieldsImpl(
-            os, v, std::make_tuple(v.first, v.second),
-            WithFieldNames(
-                options, {options.special_pair_first, options.special_pair_second},
-                AbslStringifyNameHandling::kOverwrite));
+      if constexpr (!HasMboTypesExtendFieldNames<RawV> && !HasMboTypesExtendStringifyOptions<RawV>) {
+        if (!field_options.special_pair_first.empty() || !field_options.special_pair_second.empty()) {
+          const std::array<std::string_view, 2> field_names{
+              field_options.special_pair_first,
+              field_options.special_pair_second,
+          };
+          bool use_seperator = false;
+          os << "{";
+          OStreamField(os, use_seperator, v, v.first, 0, field_names, default_options, allow_field_names);
+          OStreamField(os, use_seperator, v, v.second, 1, field_names, default_options, allow_field_names);
+          os << "}";
+          return;
+        }
       }
+      OStreamFieldsImpl(os, v, default_options, allow_field_names);
+    } else if constexpr (std::is_same_v<RawV, char> || std::is_same_v<RawV, unsigned char>) {
+      os << "'";
+      std::string_view vv{reinterpret_cast<const char*>(&v), 1};  // NOLINT(*-type-reinterpret-cast)
+      OStreamValueStr(os, vv, field_options);
+      os << "'";
     } else if constexpr (std::is_arithmetic_v<RawV>) {
-      if (options.value_replacement_other.empty()) {
+      if (field_options.value_replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
       } else {
-        os << options.value_replacement_other;
+        os << field_options.value_replacement_other;
       }
+    } else if constexpr (
+        std::same_as<RawV, std::string_view> || std::same_as<V, std::string>
+        || (std::is_convertible_v<V, std::string_view> && !absl::HasAbslStringify<V>::value)) {
+      // Do not attempt to invoke string conversion for AbslStringify supported types as that breaks
+      // this very implementation.
+      os << '"';
+      OStreamValueStr(os, v, field_options);
+      os << '"';
     } else {  // NOTE WHEN EXTENDING: Must always use `else if constexpr`
-      OStreamValueFallback(os, v, options);
+      OStreamValueFallback(os, v, field_options);
     }
   }
 
@@ -630,15 +704,15 @@ struct Printable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   // Produce a string based on control via `field_options`.
   //
   // Parameter `field_options` must be an instance of `AbslStringifyOptions` or
-  // something that can produce those. It defaults to `GetAbslStringifyOptions`
+  // something that can produce those. It defaults to `MboTypesExtendStringifyOptions`
   // if available and otherwise the default `AbslStringifyOptions` will be used.
-  template<typename U = FuncGetAbslStringifyOptions<T>>
-  requires(IsOrCanProduceAbslStringifyOptions<U, T>)
-  std::string ToString(const U& field_options = FuncGetAbslStringifyOptions<T>(nullptr)) const {
+  std::string ToString(const AbslStringifyOptions& default_options = {}) const {
     std::ostringstream os;
-    this->OStreamFields(os, field_options);
+    this->OStreamFields(os, default_options);
     return os.str();
   }
+
+  std::string ToJsonString() const { return ToString(AbslStringifyOptions::AsJson()); }
 };
 
 template<typename ExtenderBase>
@@ -670,20 +744,32 @@ namespace extender {
 // supporting field names is still manually possible, and thus indepedent of
 // compiler support if necessary using `AbslStringifyOptions`, see below.
 //
+// Field names are automatically provided if the active compiler supports this
+// (e.g. Clang). In absence (or to override them) the field names can be provied
+// using the ADL extension point `void MboTypesExtendFieldNames(const Type&)`.
+//
 // The implementation allows for complex formatting control by implementing the
-// static member func `AbslStringifyOptions(self, field_index, field_name)`
+// ADL fiend method  `AbslStringifyOptions(self, field_index, field_name)`
 // which must return `struct mbo::types::AbslStringifyOptions`. That struct
 // contains the full documenation. While the function must technically be static
 // its first parameter is the object itself. Not that the correct type for
 // the first parameter `self` in the absence of C++23 is `Type` as provided by
-// `Extend`. Example:
-// ```
-// struct Test : mbo::types::Extend<Test> {
+// `Extend`.
+//
+// Example:
+// ```c++
+// struct TestType : mbo::types::Extend<TestType> {
 //   int number;
-//   static mbo::types::AbslStringifyOptions GetAbslStringifyOptions(
-//       const Type& /* unused */,
+//
+//   friend auto MboTypesExtendFieldNames(const TestType& /* unused */) {
+//     return std::array<std::string_view, 1>({"number"});
+//   }
+//
+//   friend mbo::types::AbslStringifyOptions MboTypesExtendStringifyOptions(
+//       const TestType& /* unused */,
 //       std::size_t field_index,
-//       std::string_view field_name) {
+//       std::string_view field_name,
+//       const AbslStringifyOptions& default_options) {
 //     return {
 //       .value_max_length = 42,
 //     };
@@ -696,6 +782,7 @@ struct AbslStringify final : MakeExtender<"AbslStringify"_ts, AbslStringify_> {}
 // abseil hashing (and also `std::hash`).
 //
 // Example:
+//
 // ```c++
 // struct Name : mbo::types::Extend<Name> {
 //   std::string first;
@@ -721,26 +808,25 @@ struct AbslHashable final : MakeExtender<"AbslHashable"_ts, AbslHashable_> {};
 // and `mbo::types::NoPrint`.
 struct Comparable final : MakeExtender<"Comparable"_ts, Comparable_> {};
 
-// Extender that injects functionality to make an `Extend`ed type get a
+// Extender that injects functionality to make an `Extend`ed type add a
 // `ToString` function which can be used to convert a type into a `std::string`.
 //
-// The `ToString` function takes an optional functor to produces field options
-// of type `AbslStringifyOptions`. This allows for instance to generate Json
-// formatting:
+// The `ToString` function takes an optional arg `field_options` of type
+// `AbslStringifyOptions`. This allows for instance to generate Json formatting:
 //
-// ```
+// ```c++
 // struct MyType : mbo::types::Extend<MyType> {
 //   int one = 25;
 //   int two = 42;
+//
+//   friend auto MboTypesExtendFieldNames(const MyType& /* unused */) {
+//     return std::array<std::string_view, 2>{"one", "two"};
+//   }
 // };
 //
 // const TestStruct value;
 //
-// #ifdef __clang__
-//   value.ToString(AbslStringifyOptions::AsCpp()));
-// #else
-//   value.ToString(WithFieldNames(AbslStringifyOptions::AsJson(), {"one", "two"}));
-// #endif
+// value.ToString(AbslStringifyOptions::AsJson()));
 // ```
 //
 // This default Extender is automatically available through `mb::types::Extend`.
@@ -787,7 +873,7 @@ struct Expand<Base, std::tuple<T, U...>>
 // that would create much longer types names that are very hard to read. So we
 // use a short hand instead.
 //
-// ```
+// ```c++
 // using Default = std::tuple<AbslHashable, AbslStringify, Comparable, Printable, Streamable>;
 // ```
 struct Default final {
@@ -821,7 +907,7 @@ struct Default final {
 // that would create much longer types names that are very hard to read. So we
 // use a short hand instead.
 //
-// ```
+// ```c++
 // using NoPrint = std::tuple<AbslHashable, AbslStringify, Comparable>;
 // ```
 struct NoPrint final {
@@ -843,6 +929,68 @@ struct NoPrint final {
     using Type = ExtenderOrActualType::Type;
   };
 };
+
+// Adapter (not Extender) that injects field names into field control.
+//
+// Parameter `field_options` must be an instance of `AbslStringifyOptions` or
+// something that can produce those. It defaults to `MboTypesExtendStringifyOptions`
+// if available and otherwise the default `AbslStringifyOptions` will be used.
+//
+// If `field_names` is true, then the injected field names must match the actual
+// field names. Otherwise the provided `field_names` take precedence over
+// compile time determined names.
+//
+// NOTE: If the field names are constants and all that needs to be done is to
+// provide field names, then `MboTypesExtendFieldNames` is a much better API
+// extension point.
+//
+//
+// Example:
+//
+// ```c++
+// struct MyType : mbo::types::Extend<MyType> {
+//   int one = 25;
+//   int two = 42;
+//
+//   friend AbslStringifyOptions MboTypesExtendStringifyOptions(
+//       const Type& v, std::size_t idx, std::string_view name, const AbslStringifyOptions& default_options) {
+//     return WithFieldNames(
+//         AbslStringifyOptions::As(mode), {"one", "two"})(v, idx, name, default_options);
+//   }
+// };
+// ```
+template<
+    IsOrCanProduceAbslStringifyOptions FieldOptions,
+    IsFieldNameContainer FieldNames = std::initializer_list<std::string_view>>
+inline constexpr auto WithFieldNames(
+    const FieldOptions& field_options,
+    const FieldNames& field_names,
+    AbslStringifyNameHandling name_handling = AbslStringifyNameHandling::kVerify) {
+  // In order to provide overrides, the actual target `options` have to be created.
+  // Once those are available, the overrides can be applied.
+  return [&field_options, &field_names, name_handling]<typename T>(
+             [[maybe_unused]] const T& v, std::size_t field_index, std::string_view field_name,
+             [[maybe_unused]] const AbslStringifyOptions& default_options) {
+    AbslStringifyOptions options = [&] {
+      if constexpr (std::is_assignable_v<AbslStringifyOptions, FieldOptions>) {
+        return field_options;
+      } else if constexpr (std::is_convertible_v<FieldOptions, AbslStringifyOptions>) {
+        return AbslStringifyOptions(field_options);
+      } else {
+        // Must be `CanProduceAbslStringifyOptions`
+        return field_options(v, field_index, field_name, default_options);
+      }
+    }();
+    if (field_index >= std::size(field_names)) {
+      return options;
+    }
+    options.key_use_name = std::data(field_names)[field_index];  // NOLINT(*-pointer-arithmetic)
+    if (name_handling == AbslStringifyNameHandling::kVerify && types_internal::SupportsFieldNames<T>) {
+      ABSL_CHECK_EQ(field_name, options.key_use_name) << "Bad field_name injection for field #" << field_index;
+    }
+    return options;
+  };
+}
 
 }  // namespace extender
 

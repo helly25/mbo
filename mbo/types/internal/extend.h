@@ -26,8 +26,8 @@
 
 #include "mbo/types/extender.h"
 #include "mbo/types/internal/extender.h"
-#include "mbo/types/traits.h"
-#include "mbo/types/tuple.h"  // IWYU pragma: keep
+#include "mbo/types/traits.h"  // IWYU pragma: keep
+#include "mbo/types/tuple.h"   // IWYU pragma: keep
 
 namespace mbo::types::types_internal {
 
