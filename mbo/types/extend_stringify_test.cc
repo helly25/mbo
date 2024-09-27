@@ -39,7 +39,7 @@
 # pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 
-// namespace mbo::types {
+// Not using namespace mbo::types {
 namespace {
 
 // NOLINTBEGIN(*-magic-numbers,*-named-parameter)
@@ -52,7 +52,8 @@ using ::mbo::types::HasMboTypesExtendDoNotPrintFieldNames;
 using ::mbo::types::HasMboTypesExtendFieldNames;
 using ::mbo::types::HasMboTypesExtendStringifyOptions;
 using ::mbo::types::types_internal::kStructNameSupport;
-using ::testing::ElementsAre;
+using ::mbo::types::types_internal::SupportsFieldNames;
+using ::mbo::types::types_internal::SupportsFieldNamesConstexpr;
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 
@@ -609,21 +610,39 @@ TEST_F(ExtenderStringifyTest, CustomNestedJson) {
   EXPECT_THAT(
       TestStructCustomNestedJson{}.ToString(),
       R"({"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"}, {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {.first: 25, .second: 42}})");
-  //               "{"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"},
-  //               {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {"first": 25, "second": 42}}"
 
-  //               "{"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"},
-  //               {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {.first: 25, .second: 42}}"
   EXPECT_THAT(
       TestStructCustomNestedJson{}.ToString(AbslStringifyOptions::AsJson()),
       R"({"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"}, {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {"first": 25, "second": 42}})");
+}
+
+struct TestStructNonLiteralFields : mbo::types::Extend<TestStructNonLiteralFields> {
+  std::map<int, int> one = {{1, 2}, {2, 3}};
+  std::unordered_map<int, int> two = {{3, 4}};
+  std::string three = "threeX";
+
+  friend auto MboTypesExtendFieldNames(const TestStructNonLiteralFields&) {
+    return std::array<std::string_view, 3>{"one", "two", "three"};
+  }
+};
+
+TEST_F(ExtenderStringifyTest, NonLiteralFields) {
+  ASSERT_TRUE(SupportsFieldNames<TestStructNonLiteralFields>);
+  ASSERT_FALSE(SupportsFieldNamesConstexpr<TestStructNonLiteralFields>);
+  ASSERT_FALSE(HasMboTypesExtendDoNotPrintFieldNames<TestStructNonLiteralFields>);
+  ASSERT_TRUE(HasMboTypesExtendFieldNames<TestStructNonLiteralFields>);
+  ASSERT_FALSE(HasMboTypesExtendStringifyOptions<TestStructNonLiteralFields>);
+
+  EXPECT_THAT(
+      TestStructNonLiteralFields{}.ToString(AbslStringifyOptions::AsCpp()),
+      R"({.one = {{.first = 1, .second = 2}, {.first = 2, .second = 3}}, .two = {{.first = 3, .second = 4}}, .three = "three"})");
 }
 
 // NOLINTEND(*-magic-numbers,*-named-parameter)
 
 }  // namespace
 
-//}  // namespace mbo::types
+// Not using namespace mbo::types
 
 #ifdef __clang__
 # pragma clang diagnostic pop

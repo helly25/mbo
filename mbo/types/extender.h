@@ -421,6 +421,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
     } else if constexpr (HasMboTypesExtendFieldNames<T>) {
       return MboTypesExtendFieldNames(value);
     } else {
+      // Works for both constexpr and static/const aka compile-time and run-time cases.
       return ::mbo::types::types_internal::GetFieldNames<T>();  // T not Type
     }
   }

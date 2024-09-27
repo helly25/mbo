@@ -1,6 +1,6 @@
 # 0.2.30
 
-* Added formatting control for `AbslStringify` externder using `AbslStringifyOptions`.
+* Added formatting control for `AbslStringify` externder using struct `AbslStringifyOptions`.
 * Added `AbslStringify` ADL API extension entry points `MboTypesExtendStringifyOptions` and `MboTypesExtendStringifyOptions`.
 * Added function `extender::WithFieldNames` a format control adapter for `AbslStringify`.
 * Added field name support for non literal types in Clang.
