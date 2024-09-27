@@ -569,6 +569,28 @@ TEST_F(ExtenderStringifyTest, NestedDefaults) {
   }
 }
 
+TEST_F(ExtenderStringifyTest, NestedJsonNumericFallback) {
+  struct TestSub : Extend<TestSub> {
+    int four = 42;
+
+    using MboTypesExtendDoNotPrintFieldNames = void;
+  };
+
+  struct TestStruct : Extend<TestStruct> {
+    int one = 11;
+    int two = 25;
+    TestSub three = {.four = 42};
+
+    using MboTypesExtendDoNotPrintFieldNames = void;
+  };
+
+  static constexpr std::string_view kExpectedCpp = R"({11, 25, {42}})";
+  static constexpr std::string_view kExpectedJson = R"({"0": 11, "1": 25, "2": {"0": 42}})";
+  EXPECT_THAT(TestStruct{}.ToString(AbslStringifyOptions::AsCpp()), kExpectedCpp);
+  EXPECT_THAT(TestStruct{}.ToString(AbslStringifyOptions::AsJson()), kExpectedJson);
+  EXPECT_THAT(TestStruct{}.ToJsonString(), kExpectedJson);
+}
+
 struct TestStructCustomNestedJsonNested : Extend<TestStructCustomNestedJsonNested> {
   int first = 0;
   std::string second = "nested";

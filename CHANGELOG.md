@@ -4,6 +4,7 @@
 * Added `AbslStringify` ADL API extension entry points `MboTypesExtendStringifyOptions` and `MboTypesExtendStringifyOptions`.
 * Added function `extender::WithFieldNames` a format control adapter for `AbslStringify`.
 * Added field name support for non literal types in Clang.
+* Added numeric field name (aka key) support and enforced for Json output.
 
 # 0.2.29
 
