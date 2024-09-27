@@ -541,7 +541,7 @@ TEST_F(ExtenderStringifyTest, PrintWithControl) {
     EXPECT_THAT(v.ToString(AbslStringifyOptions::AsJson()), R"({"one": 25})");
   } else {
     EXPECT_THAT(v.ToString(AbslStringifyOptions::AsCpp()), R"({25})");
-    EXPECT_THAT(v.ToString(AbslStringifyOptions::AsJson()), R"({"0", 25})");
+    EXPECT_THAT(v.ToString(AbslStringifyOptions::AsJson()), R"({"0": 25})");
   }
 }
 
