@@ -619,7 +619,7 @@ TEST_F(ExtenderStringifyTest, CustomNestedJson) {
 struct TestStructNonLiteralFields : mbo::types::Extend<TestStructNonLiteralFields> {
   std::map<int, int> one = {{1, 2}, {2, 3}};
   std::unordered_map<int, int> two = {{3, 4}};
-  std::string three = "threeX";
+  std::string three = "three";
 
   friend auto MboTypesExtendFieldNames(const TestStructNonLiteralFields&) {
     return std::array<std::string_view, 3>{"one", "two", "three"};
