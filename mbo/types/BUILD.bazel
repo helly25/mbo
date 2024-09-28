@@ -142,6 +142,7 @@ cc_library(
     hdrs = ["stringify.h"],
     deps = [
         ":traits_cc",
+        ":tuple_extras_cc",
         "//mbo/types/internal:extender_cc",
         "//mbo/types/internal:struct_names_cc",
     ],
@@ -156,6 +157,7 @@ cc_test(
     ],
     deps = [
         ":stringify_cc",
+        ":tuple_extras_cc",
         "//mbo/container:limited_vector_cc",
         "//mbo/types/internal:struct_names_cc",
         "@com_google_absl//absl/container:flat_hash_map",

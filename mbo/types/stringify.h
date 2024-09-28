@@ -35,6 +35,7 @@
 #include "mbo/types/internal/extender.h"      // IWYU pragma: keep
 #include "mbo/types/internal/struct_names.h"  // IWYU pragma: keep
 #include "mbo/types/traits.h"                 // IWYU pragma: keep
+#include "mbo/types/tuple_extras.h"
 
 namespace mbo::types {
 

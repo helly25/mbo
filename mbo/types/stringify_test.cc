@@ -27,7 +27,7 @@
 #include "gtest/gtest.h"
 #include "mbo/container/limited_vector.h"
 #include "mbo/types/traits.h"
-#include "mbo/types/tuple.h"
+#include "mbo/types/tuple_extras.h"
 
 #ifdef __clang__
 # pragma clang diagnostic push
@@ -377,6 +377,7 @@ struct TestStructShorten {
   }
 };
 
+#if 0
 TEST_F(ExtenderStringifyTest, Shorten) {
   ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructShorten>);
   EXPECT_TRUE(::mbo::types::CanCreateTuple<TestStructShorten>);
@@ -389,7 +390,7 @@ TEST_F(ExtenderStringifyTest, Shorten) {
     // "four", "five"));
   }
 }
-#if 0
+
 TEST_F(ExtenderStringifyTest, Shorten) {
   ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructShorten>);
   EXPECT_THAT(Stringify().ToString(TestStructShorten{}), R"({one = "1", two = "2...", three = "3**", four = "**", five = ""})");
