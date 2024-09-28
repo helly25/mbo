@@ -124,8 +124,6 @@ The C++ library is organized in functional groups each residing in their own dir
                 * The output is a comma separated list of field values, e.g. `{ 25, 42 }`.
                 * If available (Clang 16+) this function prints field names `{ .first = 25, .second = 42 }`.
             * extender-struct `Streamable`: Extender that injects functionality to make an `Extend`ed type streamable. This allows the type to be used directly with `std::ostream`s.
-            * function `WithFieldNames` a format control adapter for `AbslStringify`.
-        * struct `AbslStringifyOptions` which can be used to control `AbslStringify` formatting.
     * mbo/types:no_destruct_cc, mbo/types/no_destruct.h
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
         * Mainly, this prevents calling the destructor and thus prevents termination issues (initialization order fiasco).
@@ -136,6 +134,10 @@ The C++ library is organized in functional groups each residing in their own dir
         * template struct `LinearSearch` implements templated linear search algorithm.
         * template struct `ReverseSearch` implements templated reverse linear search algorithm.
         * template struct `MaxSearch` implements templated linear search for last match algorithm.
+    * mbo/types:stringify_cc, mbo/types/stringify.h
+        * function `Stringify` a format control adapter for `Stringify`.
+        * function `StringifyWithFieldNames` a format control adapter for `Stringify`.
+        * struct `StringifyOptions` which can be used to control `Stringify` formatting.
     * mbo/types:traits_cc, mbo/types/traits.h
         * type alias `ContainerConstIteratorValueType` returned the value-type of the const_iterator of a container.
         * concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.

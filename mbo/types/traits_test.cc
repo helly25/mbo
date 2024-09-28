@@ -24,6 +24,8 @@
 namespace mbo::types {
 namespace {
 
+// NOLINTBEGIN(*-runtime-int)
+
 using ::mbo::types::types_internal::AnyBaseType;
 using ::mbo::types::types_internal::AnyType;
 using std::size_t;
@@ -32,7 +34,12 @@ using ::testing::Ne;
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::mbo::types::types_internal::test_types;
 
-class TraitsTest : public ::testing::Test {};
+struct TraitsTest : ::testing::Test {
+  template<typename T>
+  static std::string DecomposeInfo() {
+    return absl::StrCat("  DecomposeInfo: {\n", mbo::types::types_internal::DecomposeInfo<T>::Debug("\n    "), "  \n}");
+  }
+};
 
 template<IsSameAsAnyOfRaw<int, short> T>
 constexpr bool Tester() noexcept {
@@ -124,12 +131,42 @@ struct MadMix {
   int a = 0;
   std::string b;
   char c[5]{};  // NOLINT(*-magic-numbers,*-avoid-c-arrays)
+
+  std::string Print() const {
+    std::string_view str(static_cast<const char*>(&c[0]), sizeof(c));
+    return absl::StrCat("{.a=", a, ", .b=\"", b, "\", .c={", str, "}}");
+  }
 };
 
 TEST_F(TraitsTest, DecomposeMadMix) {
   ASSERT_THAT(IsAggregate<MadMix>, true);
   EXPECT_THAT(IsDecomposable<MadMix>, true);
-  EXPECT_THAT(DecomposeCountV<MadMix>, 3);
+  EXPECT_THAT(DecomposeCountV<MadMix>, 3)
+      << "  Note: With some restrictions the type can be xreated with up to 7 initializers.\n"
+      << "        However C++ does not actually like it and the example results in an error:\n"
+      << "        Bad example:\n"
+      << "          MadMix{42, \"hallo\", '1', '2', '3', '4', '5'};\n"
+      << "          error: suggest braces around initialization of subobject [-Werror,-Wmissing-braces]";
+  EXPECT_THAT((MadMix{42, "hallo", {'1', '2', '3', '4', '5'}}).Print(), R"({.a=42, .b="hallo", .c={12345}})");
+}
+
+struct StructWithStrings {
+  std::string_view one = "1";
+  std::string_view two = "22";
+  std::string_view three = "333";
+  std::string_view four = "4444";
+  std::string_view five;
+};
+
+TEST_F(TraitsTest, StructWithStrings) {
+  using namespace ::mbo::types::types_internal;  // NOLINT(*-build-using-namespace)
+  using T = StructWithStrings;
+  EXPECT_THAT(DecomposeCountV<T>, 5) << DecomposeInfo<T>();
+  EXPECT_THAT((AggregateFieldInitializerCount<T, 0>::value), 2);
+  EXPECT_THAT((AggregateFieldInitializerCount<T, 1>::value), 2);
+  EXPECT_THAT((AggregateFieldInitializerCount<T, 2>::value), 2);
+  EXPECT_THAT((DetectSpecial<AggregateFieldInitializerCount<T, 0>::value, 5 - 0>::value), 2);
+  EXPECT_THAT((DetectSpecial<AggregateFieldInitializerCount<T, 1>::value, 5 - 1>::value), 2);
 }
 
 TYPED_TEST(GenTraitsTest, DecomposeCountV) {
@@ -217,6 +254,8 @@ TYPED_TEST(GenTraitsTest, IsBracesContructibleGenerateDerived) {
   EXPECT_THAT((IsBracesConstructibleV<Type, AnyBaseType<Type>, AnyType, AnyType, int>), kDerived >= 3);
   EXPECT_THAT((IsBracesConstructibleV<Type, AnyBaseType<Type>, AnyType, AnyType, AnyType>), kDerived >= 3);
 }
+
+// NOLINTEND(*-runtime-int)
 
 }  // namespace
 }  // namespace mbo::types

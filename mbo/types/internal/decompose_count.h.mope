@@ -386,51 +386,6 @@ struct DecomposeInfo final {
   using Type = std::remove_cvref_t<T>;
   static constexpr bool kIsAggregate = std::is_aggregate_v<Type>;
   static constexpr bool kIsEmpty = std::is_empty_v<Type>;
-  static constexpr std::size_t kInitializerCount = 0;
-  static constexpr std::size_t kFieldCount = 0;
-  static constexpr bool kBadFieldCount = false;
-  static constexpr bool kOneNonEmptyBase = false;
-  static constexpr bool kOneNonEmptyBasePlusFields = false;
-  static constexpr std::size_t kCountBases = 0;
-  static constexpr std::size_t kCountEmptyBases = 0;
-  static constexpr bool kOnlyEmptyBases = true;
-  static constexpr bool kDecomposable = kIsAggregate || kIsEmpty;
-  static constexpr std::size_t kDecomposeCount = kDecomposable ? 0 : NotDecomposableImpl::value;
-
-  static std::string Debug() {  // NOLINT(readability-function-cognitive-complexity)
-    std::string str;
-    std::string_view sep;
-# define DEBUG_ADD(f)                                                                             \
-   str += std::string(sep) + #f + ": "                                                            \
-          + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
-                 ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
-                 : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
-                            && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
-                        ? std::string("N/A")                                                      \
-                        : std::to_string(DecomposeInfo<T>::f)));                                  \
-   sep = ", "
-    DEBUG_ADD(kIsAggregate);
-    DEBUG_ADD(kIsEmpty);
-    // DEBUG_ADD(kInitializerCount);
-    // DEBUG_ADD(kFieldCount);
-    // DEBUG_ADD(kBadFieldCount);
-    // DEBUG_ADD(kOneNonEmptyBase);
-    // DEBUG_ADD(kOneNonEmptyBasePlusFields);
-    // DEBUG_ADD(kOnlyEmptyBases);
-    DEBUG_ADD(kDecomposable);
-    // DEBUG_ADD(kCountBases);
-    // DEBUG_ADD(kCountEmptyBases);
-    DEBUG_ADD(kDecomposeCount);
-# undef DEBUG_ADD
-    return str;
-  }
-};
-
-template<typename T>
-struct DecomposeInfo<T, true> final {
-  using Type = std::remove_cvref_t<T>;
-  static constexpr bool kIsAggregate = std::is_aggregate_v<Type>;
-  static constexpr bool kIsEmpty = std::is_empty_v<Type>;
   static constexpr std::size_t kInitializerCount = AggregateInitializerCount<Type>::value;
   static constexpr std::size_t kFieldCount = AggregateFieldCountRawImpl<Type>::value;
   static constexpr bool kBadFieldCount =
@@ -446,7 +401,7 @@ struct DecomposeInfo<T, true> final {
   static constexpr std::size_t kDecomposeCount =
       kDecomposable ? kFieldCount - kCountEmptyBases : NotDecomposableImpl::value;
 
-  static std::string Debug() {  // NOLINT(readability-function-cognitive-complexity)
+  static std::string Debug(std::string_view separator = ", ") {  // NOLINT(readability-function-cognitive-complexity)
     std::string str;
     std::string_view sep;
 # define DEBUG_ADD(f)                                                                             \
@@ -457,7 +412,7 @@ struct DecomposeInfo<T, true> final {
                             && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
                         ? std::string("N/A")                                                      \
                         : std::to_string(DecomposeInfo<T>::f)));                                  \
-   sep = ", "
+   sep = separator
     DEBUG_ADD(kIsAggregate);
     DEBUG_ADD(kIsEmpty);
     DEBUG_ADD(kInitializerCount);
@@ -469,6 +424,51 @@ struct DecomposeInfo<T, true> final {
     DEBUG_ADD(kDecomposable);
     DEBUG_ADD(kCountBases);
     DEBUG_ADD(kCountEmptyBases);
+    DEBUG_ADD(kDecomposeCount);
+# undef DEBUG_ADD
+    return str;
+  }
+};
+
+template<typename T>
+struct DecomposeInfo<T, false> final {
+  using Type = std::remove_cvref_t<T>;
+  static constexpr bool kIsAggregate = std::is_aggregate_v<Type>;
+  static constexpr bool kIsEmpty = std::is_empty_v<Type>;
+  static constexpr std::size_t kInitializerCount = 0;
+  static constexpr std::size_t kFieldCount = 0;
+  static constexpr bool kBadFieldCount = false;
+  static constexpr bool kOneNonEmptyBase = false;
+  static constexpr bool kOneNonEmptyBasePlusFields = false;
+  static constexpr std::size_t kCountBases = 0;
+  static constexpr std::size_t kCountEmptyBases = 0;
+  static constexpr bool kOnlyEmptyBases = true;
+  static constexpr bool kDecomposable = kIsAggregate || kIsEmpty;
+  static constexpr std::size_t kDecomposeCount = kDecomposable ? 0 : NotDecomposableImpl::value;
+
+  static std::string Debug(std::string_view separator = ", ") {  // NOLINT(readability-function-cognitive-complexity)
+    std::string str;
+    std::string_view sep;
+# define DEBUG_ADD(f)                                                                             \
+   str += std::string(sep) + #f + ": "                                                            \
+          + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
+                 ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
+                 : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
+                            && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
+                        ? std::string("N/A")                                                      \
+                        : std::to_string(DecomposeInfo<T>::f)));                                  \
+   sep = separator
+    DEBUG_ADD(kIsAggregate);
+    DEBUG_ADD(kIsEmpty);
+    // DEBUG_ADD(kInitializerCount);
+    // DEBUG_ADD(kFieldCount);
+    // DEBUG_ADD(kBadFieldCount);
+    // DEBUG_ADD(kOneNonEmptyBase);
+    // DEBUG_ADD(kOneNonEmptyBasePlusFields);
+    // DEBUG_ADD(kOnlyEmptyBases);
+    DEBUG_ADD(kDecomposable);
+    // DEBUG_ADD(kCountBases);
+    // DEBUG_ADD(kCountEmptyBases);
     DEBUG_ADD(kDecomposeCount);
 # undef DEBUG_ADD
     return str;

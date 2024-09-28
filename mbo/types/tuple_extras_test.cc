@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mbo/types/tuple.h"
+#include "mbo/types/tuple_extras.h"
 
 #include <cstddef>  // IWYU pragma: keep
 #include <string>
@@ -22,6 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/types/internal/decompose_count.h"
 #include "mbo/types/internal/test_types.h"
 
 namespace mbo::types {

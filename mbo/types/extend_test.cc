@@ -780,7 +780,7 @@ TEST_F(ExtendTest, NoDefaultConstructor) {
 }
 
 struct AbslFlatHashMapUser : Extend<AbslFlatHashMapUser> {
-  using MboTypesExtendDoNotPrintFieldNames = void;
+  using MboTypesStringifyDoNotPrintFieldNames = void;
   absl::flat_hash_map<int, std::string> flat_hash_map;
 };
 

@@ -39,13 +39,30 @@ cc_library(
 )
 
 cc_library(
+    name = "extender_cc",
+    hdrs = ["extender.h"],
+    visibility = [":__subpackages__"],
+    deps = [
+        ":stringify_cc",
+        ":tstring_cc",
+        ":tuple_extras_cc",
+        "//mbo/types/internal:extender_cc",
+        "//mbo/types/internal:struct_names_cc",
+        "@com_google_absl//absl/hash",
+        "@com_google_absl//absl/log:absl_check",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_library(
     name = "extend_cc",
-    srcs = ["extender.h"],
     hdrs = ["extend.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":extender_cc",
+        ":stringify_cc",
         ":tstring_cc",
-        ":tuple_cc",
+        ":tuple_extras_cc",
         "//mbo/types/internal:extend_cc",
         "//mbo/types/internal:struct_names_cc",
         "@com_google_absl//absl/hash",
@@ -78,6 +95,7 @@ cc_test(
     deps = [
         ":extend_cc",
         "//mbo/container:limited_vector_cc",
+        "//mbo/types/internal:struct_names_cc",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/hash:hash_testing",
         "@com_google_absl//absl/log:absl_check",
@@ -120,6 +138,36 @@ cc_test(
 )
 
 cc_library(
+    name = "stringify_cc",
+    hdrs = ["stringify.h"],
+    deps = [
+        ":traits_cc",
+        "//mbo/types/internal:extender_cc",
+        "//mbo/types/internal:struct_names_cc",
+    ],
+)
+
+cc_test(
+    name = "stringify_test",
+    size = "small",
+    srcs = ["stringify_test.cc"],
+    copts = [
+        "-ftemplate-depth=5000",
+    ],
+    deps = [
+        ":stringify_cc",
+        "//mbo/container:limited_vector_cc",
+        "//mbo/types/internal:struct_names_cc",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/hash:hash_testing",
+        "@com_google_absl//absl/log:absl_check",
+        "@com_google_absl//absl/log:absl_log",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "template_search_cc",
     hdrs = ["template_search.h"],
     visibility = ["//visibility:public"],
@@ -139,7 +187,10 @@ cc_library(
     name = "traits_cc",
     hdrs = ["traits.h"],
     visibility = ["//visibility:public"],
-    deps = ["//mbo/types/internal:traits_cc"],
+    deps = [
+        ":tuple_cc",
+        "//mbo/types/internal:traits_cc",
+    ],
 )
 
 cc_test(
@@ -177,15 +228,25 @@ cc_library(
     name = "tuple_cc",
     hdrs = ["tuple.h"],
     visibility = ["//visibility:public"],
-    deps = [":traits_cc"],
+)
+
+cc_library(
+    name = "tuple_extras_cc",
+    hdrs = ["tuple_extras.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":traits_cc",
+        ":tuple_cc",
+    ],
 )
 
 cc_test(
-    name = "tuple_test",
+    name = "tuple_extras_test",
     size = "small",
-    srcs = ["tuple_test.cc"],
+    srcs = ["tuple_extras_test.cc"],
     deps = [
         ":tuple_cc",
+        ":tuple_extras_cc",
         "//mbo/types/internal:test_types_cc",
         "@com_google_googletest//:gtest_main",
     ],
