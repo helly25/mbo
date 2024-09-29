@@ -135,9 +135,15 @@ The C++ library is organized in functional groups each residing in their own dir
         * template struct `ReverseSearch` implements templated reverse linear search algorithm.
         * template struct `MaxSearch` implements templated linear search for last match algorithm.
     * mbo/types:stringify_cc, mbo/types/stringify.h
-        * function `Stringify` a format control adapter for `Stringify`.
+        * class `Stringify` a utility to convert structs into strings.
         * function `StringifyWithFieldNames` a format control adapter for `Stringify`.
         * struct `StringifyOptions` which can be used to control `Stringify` formatting.
+        * API extension point type `MboTypesStringifySupport` which enables `Stringify` support even if not otherwise enabled (disables Abseil stringify support in `Stringify`).
+        * API extension point type `MboTypesStringifyDoNotPrintFieldNames` which if present disables field names in `Stringify`.
+        * API extension point function `MboTypesStringifyFieldNames` which adds field names to `Stringify`.
+        * API extension point function `MboTypesStringifyOptions` which adds full format control to `Stringify`.
+    * mbo/types:stringify_ostream_cc, mbo/types/stringify_ostream.h
+        * operator `std::ostream& operator<<(std::ostream&, const MboTypesStringifySupport auto& v)` - conditioanl automatic ostream support for structs using `Stringify`.
     * mbo/types:traits_cc, mbo/types/traits.h
         * type alias `ContainerConstIteratorValueType` returned the value-type of the const_iterator of a container.
         * concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.

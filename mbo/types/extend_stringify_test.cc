@@ -47,7 +47,7 @@ namespace {
 using ::mbo::types::Extend;
 using ::mbo::types::HasMboTypesStringifyDoNotPrintFieldNames;
 using ::mbo::types::HasMboTypesStringifyFieldNames;
-using ::mbo::types::HasMboTypesStringifyStringifyOptions;
+using ::mbo::types::HasMboTypesStringifyOptions;
 using ::mbo::types::StringifyNameHandling;
 using ::mbo::types::StringifyOptions;
 using ::mbo::types::StringifyWithFieldNames;
@@ -97,7 +97,7 @@ TEST_F(ExtenderStringifyTest, AllExtensionApiPointsAbsent) {
 
   EXPECT_FALSE(HasMboTypesStringifyDoNotPrintFieldNames<TestStruct>);
   EXPECT_FALSE(HasMboTypesStringifyFieldNames<TestStruct>);
-  EXPECT_FALSE(HasMboTypesStringifyStringifyOptions<TestStruct>);
+  EXPECT_FALSE(HasMboTypesStringifyOptions<TestStruct>);
 }
 
 TEST_F(ExtenderStringifyTest, SuppressFieldNames) {
@@ -110,7 +110,7 @@ TEST_F(ExtenderStringifyTest, SuppressFieldNames) {
 
   ASSERT_TRUE(HasMboTypesStringifyDoNotPrintFieldNames<SuppressFieldNames>);
   EXPECT_FALSE(HasMboTypesStringifyFieldNames<SuppressFieldNames>);
-  EXPECT_FALSE(HasMboTypesStringifyStringifyOptions<SuppressFieldNames>);
+  EXPECT_FALSE(HasMboTypesStringifyOptions<SuppressFieldNames>);
   EXPECT_THAT(SuppressFieldNames{}.ToString(), R"({25, "42"})")
       << "  NOTE: Here no compiler should print any field name.";
 }
@@ -126,7 +126,7 @@ TEST_F(ExtenderStringifyTest, AddFieldNames) {
   // Proves the straight forward type: a `std::array<std::string, N>` works.
   ASSERT_FALSE(HasMboTypesStringifyDoNotPrintFieldNames<AddFieldNames>);
   ASSERT_TRUE(HasMboTypesStringifyFieldNames<AddFieldNames>);
-  ASSERT_FALSE(HasMboTypesStringifyStringifyOptions<AddFieldNames>);
+  ASSERT_FALSE(HasMboTypesStringifyOptions<AddFieldNames>);
   EXPECT_THAT(AddFieldNames{}.ToString(), R"({.1: 25, .2: "42"})")
       << "  NOTE: Here we inject the field names and override any possibly compiler provided names.";
 }
@@ -142,7 +142,7 @@ TEST_F(ExtenderStringifyTest, AddFieldVectorOfString) {
   // This test proves that conversion from temp strings works through lifetime extension.
   ASSERT_FALSE(HasMboTypesStringifyDoNotPrintFieldNames<AddFieldVectorOfString>);
   ASSERT_TRUE(HasMboTypesStringifyFieldNames<AddFieldVectorOfString>);
-  ASSERT_FALSE(HasMboTypesStringifyStringifyOptions<AddFieldVectorOfString>);
+  ASSERT_FALSE(HasMboTypesStringifyOptions<AddFieldVectorOfString>);
   EXPECT_THAT(AddFieldVectorOfString{}.ToString(), R"({.1: 25, .2: "42"})")
       << "  NOTE: Here we inject the field names and override any possibly compiler provided names.";
 }
@@ -160,7 +160,7 @@ TEST_F(ExtenderStringifyTest, AddFieldNamesLimitedVector) {
   // Proves other types can be compatible.
   ASSERT_FALSE(HasMboTypesStringifyDoNotPrintFieldNames<AddFieldNamesLimitedVector>);
   ASSERT_TRUE(HasMboTypesStringifyFieldNames<AddFieldNamesLimitedVector>);
-  ASSERT_FALSE(HasMboTypesStringifyStringifyOptions<AddFieldNamesLimitedVector>);
+  ASSERT_FALSE(HasMboTypesStringifyOptions<AddFieldNamesLimitedVector>);
   EXPECT_THAT(AddFieldNamesLimitedVector{}.ToString(), R"({.1: 25, .2: "42"})")
       << "  NOTE: Here we inject the field names and override any possibly compiler provided names.";
 }
@@ -187,7 +187,7 @@ TEST_F(ExtenderStringifyTest, FieldOptions) {
   // * field `tre` will be fully suppressed.
   ASSERT_FALSE(HasMboTypesStringifyDoNotPrintFieldNames<TestStructFieldOptions>);
   ASSERT_FALSE(HasMboTypesStringifyFieldNames<TestStructFieldOptions>);
-  ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructFieldOptions>);
+  ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructFieldOptions>);
 
   EXPECT_CALL(*tester, FieldOptions(0, HasFieldName("one")))
       .WillOnce(::testing::Return(StringifyOptions{
@@ -238,7 +238,7 @@ TEST_F(ExtenderStringifyTest, FieldNames) {
   // Unlike test `FieldOptions` here we first fetch the field names which override compiler provided ones.
   ASSERT_FALSE(HasMboTypesStringifyDoNotPrintFieldNames<TestStructFieldNames>);
   ASSERT_TRUE(HasMboTypesStringifyFieldNames<TestStructFieldNames>);
-  ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructFieldNames>);
+  ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructFieldNames>);
 
   // 1st ToString call.
   EXPECT_CALL(*tester, FieldNames()).WillOnce(::testing::Return(std::vector<std::string>{"First", "Second", "Third"}));
@@ -319,7 +319,7 @@ TEST_F(ExtenderStringifyTest, DoNotPrintFieldNames) {
   // Unlike test `FieldOptions` here we first fetch the field names which override compiler provided ones.
   ASSERT_TRUE(HasMboTypesStringifyDoNotPrintFieldNames<TestStructDoNotPrintFieldNames>);
   ASSERT_FALSE(HasMboTypesStringifyFieldNames<TestStructDoNotPrintFieldNames>);
-  ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructDoNotPrintFieldNames>);
+  ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructDoNotPrintFieldNames>);
 
   EXPECT_CALL(*tester, FieldOptions(0, IsEmpty()))
       .WillOnce(::testing::Return(StringifyOptions{
@@ -369,7 +369,7 @@ struct TestStructShorten : Extend<TestStructShorten> {
 };
 
 TEST_F(ExtenderStringifyTest, Shorten) {
-  ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructShorten>);
+  ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructShorten>);
   EXPECT_THAT(TestStructShorten{}.ToString(), R"({one = "1", two = "2...", three = "3**", four = "**", five = ""})");
 }
 
@@ -396,7 +396,7 @@ struct TestStructValueReplacement : Extend<TestStructValueReplacement> {
 };
 
 TEST_F(ExtenderStringifyTest, ValueReplacement) {
-  ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructValueReplacement>);
+  ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructValueReplacement>);
   EXPECT_THAT(
       TestStructValueReplacement{}.ToString(),
       R"({one = <YY>, two = "<XX>", three = {<YY>, <YY>, <YY>}, four = {"<XX>", "<XX>", "<XX>"}})");
@@ -425,7 +425,7 @@ struct TestStructContainer : Extend<TestStructContainer> {
 };
 
 TEST_F(ExtenderStringifyTest, Container) {
-  ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructContainer>);
+  ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructContainer>);
   EXPECT_THAT(TestStructContainer{}.ToString(), R"({one = [1, 2], two = [], three = [1, 2]})");
 }
 
@@ -443,7 +443,7 @@ struct TestStructMoreTypes : Extend<TestStructMoreTypes> {
 
 TEST_F(ExtenderStringifyTest, MoreTypes) {
   ASSERT_TRUE(HasMboTypesStringifyFieldNames<TestStructMoreTypes>);
-  ASSERT_FALSE(HasMboTypesStringifyStringifyOptions<TestStructMoreTypes>);
+  ASSERT_FALSE(HasMboTypesStringifyOptions<TestStructMoreTypes>);
   EXPECT_THAT(TestStructMoreTypes{}.ToString(), R"({.one: 1.1, .two: 2.2, .three: 3, .four: '4', .five: '5'})");
 }
 
@@ -468,7 +468,7 @@ struct TestStructMoreContainers : Extend<TestStructMoreContainers> {
 };
 
 TEST_F(ExtenderStringifyTest, MoreContainers) {
-  ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructMoreContainers>);
+  ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructMoreContainers>);
   EXPECT_THAT(
       TestStructMoreContainers{}.ToString(),
       R"({"one": [1, 2], "two": [{.first: 1, .second: 2}, {.first: 3, .second: 4}], "three": [{.Key: 5, .Val: 6}]})")
@@ -504,7 +504,7 @@ struct TestStructMoreContainersWithDirectFieldNames : Extend<TestStructMoreConta
 
 TEST_F(ExtenderStringifyTest, MoreContainersWithDirectFieldNames) {
   static_assert(!HasMboTypesStringifyDoNotPrintFieldNames<TestStructMoreContainersWithDirectFieldNames>);
-  static_assert(HasMboTypesStringifyStringifyOptions<TestStructMoreContainersWithDirectFieldNames>);
+  static_assert(HasMboTypesStringifyOptions<TestStructMoreContainersWithDirectFieldNames>);
   static_assert(HasMboTypesStringifyFieldNames<decltype(TestStructMoreContainersWithDirectFieldNames{})>);
   EXPECT_TRUE(HasMboTypesStringifyFieldNames<decltype(TestStructMoreContainersWithDirectFieldNames{})>);
   EXPECT_THAT(MboTypesStringifyFieldNames(TestStructMoreContainersWithDirectFieldNames{}), ElementsAre("1", "2", "3"));
@@ -527,7 +527,7 @@ struct TestStructContainersOfPairs : Extend<TestStructContainersOfPairs> {
 };
 
 TEST_F(ExtenderStringifyTest, ContainersOfPairs) {
-  ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructContainersOfPairs>);
+  ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructContainersOfPairs>);
   EXPECT_THAT(TestStructContainersOfPairs{}.ToString(), R"({"one": {"a": 1, "b": 2}, "two": {"c": 3, "d": 4}})");
 }
 
@@ -625,7 +625,7 @@ struct TestStructCustomNestedJson : Extend<TestStructCustomNestedJson> {
 };
 
 TEST_F(ExtenderStringifyTest, CustomNestedJson) {
-  ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructCustomNestedJson>);
+  ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructCustomNestedJson>);
 
   // Keys for nested "four" should get their key names as "first" and "second" since they are not provided.
   // No handover of concrete values to defaults should occur.
@@ -659,7 +659,7 @@ TEST_F(ExtenderStringifyTest, NonLiteralFields) {
   ASSERT_FALSE(SupportsFieldNamesConstexpr<TestStructNonLiteralFields>);
   ASSERT_FALSE(HasMboTypesStringifyDoNotPrintFieldNames<TestStructNonLiteralFields>);
   ASSERT_FALSE(HasMboTypesStringifyFieldNames<TestStructNonLiteralFields>);
-  ASSERT_TRUE(HasMboTypesStringifyStringifyOptions<TestStructNonLiteralFields>);
+  ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructNonLiteralFields>);
 
   EXPECT_THAT(
       TestStructNonLiteralFields{}.ToString(StringifyOptions::AsCpp()),

@@ -1,12 +1,14 @@
 # 0.2.30
 
-* Added function `Stringify` which can  turn arbitrary structs into strings.
+* Added class `Stringify` which can turn arbitrary structs into strings.
 * Added formatting control for `AbslStringify` externder using struct `StringifyOptions`.
-* Added `AbslStringify` ADL API extension entry points `MboTypesStringifyOptions` and `MboTypesStringifyOptions`.
+* Added API extension point type `MboTypesStringifySupport` which enables `Stringify` support even if not otherwise enabled (disables Abseil stringify support in `Stringify`).
+* Added API extension point type `MboTypesStringifyDoNotPrintFieldNames` which if present disables field names in `Stringify`.
+* Added `AbslStringify` ADL API extension entry points `MboTypesStringifyFieldNames` and `MboTypesStringifyOptions`.
 * Added function `StringifyWithFieldNames` a format control adapter for `AbslStringify`.
 * Added field name support for non literal types in Clang.
 * Added numeric field name (aka key) support and enforced for Json output.
-* Changed API extension point `MboTypesStringifyDoNotPrintFieldNames` to `MboTypesStringifyDoNotPrintFieldNames` (old kept for BC for now).
+* Added rule `mbo/types:stringify_ostream_cc` and header `mbo/types/stringify_ostream.h` for automatic ostream support using `Stringify`.
 
 # 0.2.29
 

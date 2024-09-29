@@ -201,7 +201,9 @@ struct AggregateFieldCounterImpl
     : AggregateFieldCounterImpl<
           T,
           kInitializerCount,
-          kFieldIndex + DetectSpecial<AggregateFieldInitializerCount<T, kFieldIndex>::value, kInitializerCount>::value,
+          kFieldIndex
+              + DetectSpecial<AggregateFieldInitializerCount<T, kFieldIndex>::value, kInitializerCount - kFieldIndex>::
+                  value,
           kFieldCount + 1> {};
 
 template<IsAggregate T, std::size_t kInitializerCount, std::size_t kFieldIndex, std::size_t kFieldCount>
@@ -362,8 +364,12 @@ struct DecomposeInfo final {
   static constexpr bool kDecomposable =
       !kBadFieldCount && kIsAggregate
       && (kIsEmpty || ((kOneNonEmptyBase || kOnlyEmptyBases) && !kOneNonEmptyBasePlusFields));
-  static constexpr std::size_t kDecomposeCount =
-      kDecomposable ? kFieldCount - kCountEmptyBases : NotDecomposableImpl::value;
+  static constexpr std::size_t kDecomposeCount =  // First check whether T is composable
+      kDecomposable
+          ? (kCountBases + kCountEmptyBases == 0  // If it is, then check whether there are any bases.
+                 ? kInitializerCount
+                 : kFieldCount - kCountEmptyBases)
+          : NotDecomposableImpl::value;
 
   static std::string Debug(std::string_view separator = ", ") {  // NOLINT(readability-function-cognitive-complexity)
     std::string str;

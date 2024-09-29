@@ -193,8 +193,10 @@ template<typename T>
 concept Has_DEPRECATED_MboTypesExtendDoNotPrintFieldNames =
     requires { typename std::remove_cvref_t<T>::MboTypesExtendDoNotPrintFieldNames; };
 
+// Whether Stringify should suppress field names.
 template<typename T>
 concept HasMboTypesStringifyDoNotPrintFieldNames = Has_DEPRECATED_MboTypesExtendDoNotPrintFieldNames<T> || requires {
+  // TODO(helly25): Drop `Has_DEPRECATED_MboTypesExtendDoNotPrintFieldNames`, see above
   typename std::remove_cvref_t<T>::MboTypesStringifyDoNotPrintFieldNames;
 };
 
@@ -211,7 +213,7 @@ void MboTypesStringifyOptions();
 // the `std::string_view` members referencing temp objects such as `std::string`
 // since no life-time extension is being applied.
 template<typename T>
-concept HasMboTypesStringifyStringifyOptions = requires(const T& v) {
+concept HasMboTypesStringifyOptions = requires(const T& v) {
   {
     MboTypesStringifyOptions(v, std::size_t{0}, std::string_view(), StringifyOptions())
   } -> std::same_as<StringifyOptions>;
@@ -236,6 +238,23 @@ void MboTypesStringifyFieldNames();
 template<typename T>
 concept HasMboTypesStringifyFieldNames =
     requires(const T& v) { requires IsFieldNameContainer<decltype(MboTypesStringifyFieldNames(v))>; };
+
+// Whether Stringify should automatically take affect if `T` is used as a sub field in a Stringify invocation.
+// Otherwise the subfield needs its own support for printing (e.g. Abseil stringify support).
+//
+// Note that this takes precendence and thus disables Abseil stringify support in `Stringify`.
+//
+// This gets triggered by:
+// * Presence of a type named `MboTypesStringifySupport`,
+// * `T` qualifies for `HasMboTypesStringifyDoNotPrintFieldNames`,
+// * `T` qualifies for `HasMboTypesStringifyFieldNames`, or
+// * `T` qualified for `HasMboTypesStringifyOptions`,
+template<typename T>
+concept HasMboTypesStringifySupport =               //
+    HasMboTypesStringifyDoNotPrintFieldNames<T> ||  // type `MboTypesStringifyDoNotPrintFieldNames`
+    HasMboTypesStringifyFieldNames<T> ||            // function `MboTypesStringifyFieldNames`
+    HasMboTypesStringifyOptions<T> ||               // function `MboTypesStringifyOptions`
+    requires { typename std::remove_cvref_t<T>::MboTypesStringifySupport; };
 
 // A function type that is used to handle format control for printing and streaming.
 template<typename T>
@@ -266,24 +285,30 @@ concept IsOrCanProduceStringifyOptions =
 
 class Stringify {
  public:
+  static Stringify AsCpp() { return Stringify(StringifyOptions::AsCpp()); }
+
+  static Stringify AsJson() { return Stringify(StringifyOptions::AsJson()); }
+
   explicit Stringify(const StringifyOptions& default_options = {}) : default_options_(default_options) {}
 
   explicit Stringify(const StringifyOptions::OutputMode output_mode)
       : default_options_(StringifyOptions::As(output_mode)) {}
 
-  template<typename Type>
-  std::string ToString(const Type& value) {
+  template<typename T>
+  requires(std::is_aggregate_v<T>)
+  std::string ToString(const T& value) {
     std::ostringstream os;
-    Stream<Type>(os, value);
+    Stream<T>(os, value);
     return os.str();
   }
 
-  template<typename Type>
-  void Stream(std::ostream& os, const Type& value) {
+  template<typename T>
+  requires(std::is_aggregate_v<T>)
+  void Stream(std::ostream& os, const T& value) {
     // It is not allowed to deny field name printing but provide filed names.
-    static_assert(!(HasMboTypesStringifyDoNotPrintFieldNames<Type> && HasMboTypesStringifyFieldNames<Type>));
+    static_assert(!(HasMboTypesStringifyDoNotPrintFieldNames<T> && HasMboTypesStringifyFieldNames<T>));
 
-    StreamFieldsImpl<Type>(os, value);
+    StreamFieldsImpl<T>(os, value);
   }
 
  private:
@@ -339,7 +364,7 @@ class Stringify {
       field_name = std::data(field_names)[idx];
     }
     const auto& field_options = [&]() {
-      if constexpr (HasMboTypesStringifyStringifyOptions<T>) {
+      if constexpr (HasMboTypesStringifyOptions<T>) {
         return MboTypesStringifyOptions(value, idx, field_name, default_options_);
       } else {
         return StringifyOptions::As(default_options_.output_mode);
@@ -432,11 +457,15 @@ class Stringify {
     os << field_options.value_container_suffix;
   }
 
+  template<typename T>
+  static constexpr bool kUseStringify = types_internal::IsExtended<T> || HasMboTypesStringifySupport<T>
+                                        || (std::is_aggregate_v<T> && !absl::HasAbslStringify<T>::value);
+
   template<typename V>
   void StreamValue(std::ostream& os, const V& v, const StringifyOptions& field_options, bool allow_field_names) {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
-    if constexpr (types_internal::IsExtended<RawV>) {
+    if constexpr (kUseStringify<RawV>) {
       Stream(os, v);
     } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
       os << field_options.value_nullptr_t;
@@ -449,7 +478,7 @@ class Stringify {
         os << field_options.value_nullptr;
       }
     } else if constexpr (mbo::types::IsPair<RawV>) {
-      if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyStringifyOptions<RawV>) {
+      if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyOptions<RawV>) {
         if (!field_options.special_pair_first.empty() || !field_options.special_pair_second.empty()) {
           const std::array<std::string_view, 2> field_names{
               field_options.special_pair_first,
@@ -547,9 +576,11 @@ class Stringify {
 //   int two = 42;
 //
 //   friend StringifyOptions MboTypesStringifyOptions(
-//       const Type& v, std::size_t idx, std::string_view name, const StringifyOptions& default_options) {
+//       const MyType& v, std::size_t idx, std::string_view name,
+//       const mbo::types::StringifyOptions& default_options) {
 //     return StringifyWithFieldNames(
-//         StringifyOptions::As(mode), {"one", "two"})(v, idx, name, default_options);
+//         StringifyOptions::AsDefault(),
+//         {"one", "two"})(v, idx, name, default_options);
 //   }
 // };
 // ```
@@ -566,12 +597,12 @@ inline constexpr auto StringifyWithFieldNames(
              [[maybe_unused]] const T& v, std::size_t field_index, std::string_view field_name,
              [[maybe_unused]] const StringifyOptions& default_options) {
     StringifyOptions options = [&] {
-      if constexpr (std::is_assignable_v<StringifyOptions, FieldOptions>) {
-        return field_options;
-      } else if constexpr (std::is_convertible_v<FieldOptions, StringifyOptions>) {
+      if constexpr (
+          std::is_assignable_v<StringifyOptions, FieldOptions>
+          || std::is_convertible_v<FieldOptions, StringifyOptions>) {
         return StringifyOptions(field_options);
       } else {
-        // Must be `CanProduceStringifyOptions`
+        // Here `field_options` must be `CanProduceStringifyOptions`
         return field_options(v, field_index, field_name, default_options);
       }
     }();
@@ -579,10 +610,8 @@ inline constexpr auto StringifyWithFieldNames(
       return options;
     }
     options.key_use_name = std::data(field_names)[field_index];  // NOLINT(*-pointer-arithmetic)
-    if constexpr (types_internal::IsExtended<T>) {
-      if (name_handling == StringifyNameHandling::kVerify && types_internal::SupportsFieldNames<T>) {
-        ABSL_CHECK_EQ(field_name, options.key_use_name) << "Bad field_name injection for field #" << field_index;
-      }
+    if (types_internal::SupportsFieldNames<T> && name_handling == StringifyNameHandling::kVerify) {
+      ABSL_CHECK_EQ(field_name, options.key_use_name) << "Bad field_name injection for field #" << field_index;
     }
     return options;
   };
