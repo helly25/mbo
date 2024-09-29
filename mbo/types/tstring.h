@@ -76,7 +76,7 @@ namespace mbo::types {
 // The type can be accessed as a `std::string_view` using static function `str`.
 //
 // Instances can be compared against anything that can be compared against a
-// std::string_view`. They can be (eplicitly) converted into `std::string_view`.
+// `std::string_view`. They can be (eplicitly) converted into `std::string_view`.
 //
 // All access functions are `static constexpr`. Using them may require disabling
 // a lint warning ("readability-static-accessed-through-instance") or access
