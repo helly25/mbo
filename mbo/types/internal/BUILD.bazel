@@ -23,10 +23,18 @@ cc_library(
 )
 
 cc_library(
+    name = "extender_cc",
+    hdrs = ["extender.h"],
+)
+
+cc_library(
     name = "extend_cc",
-    hdrs = [
-        "extend.h",
-        "extender.h",
+    hdrs = ["extend.h"],
+    deps = [
+        ":extender_cc",
+        "//mbo/types:extender_cc",
+        "//mbo/types:traits_cc",
+        "//mbo/types:tuple_cc",
     ],
 )
 
@@ -36,7 +44,7 @@ cc_library(
     hdrs = ["struct_names.h"],
     deps = [
         ":traits_cc",
-        "//mbo/types:tuple_cc",
+        "//mbo/types:tuple_extras_cc",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -60,6 +68,7 @@ cc_library(
     deps = [
         ":cases_cc",
         "//mbo/types:template_search_cc",
+        "//mbo/types:tuple_cc",
     ],
 )
 

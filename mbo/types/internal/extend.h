@@ -199,6 +199,7 @@ struct ExtendBase {
  private:  // DO NOT expose anything publicly.
   template<typename U, typename Extender>
   friend struct UseExtender;
+  friend class mbo::types::Stringify;
 };
 
 using types::types_internal::ExtenderListValid;

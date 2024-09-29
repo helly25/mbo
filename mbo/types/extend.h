@@ -43,7 +43,7 @@ namespace mbo::types {
 // compare itself. In the above example `{"First", "Last"}` will be printed.
 // If compiled on Clang it will print `{first: "First", last: "Last"}` (see
 // AbslStringify for restrictions). Also, the field names can be suppressed
-// by adding `using MboTypesExtendDoNotPrintFieldNames = void;` to the type.
+// by adding `using MboTypesStringifyDoNotPrintFieldNames = void;` to the type.
 //
 // NOTE: No member may be an anonymous union or struct.
 template<typename T, typename... Extender>

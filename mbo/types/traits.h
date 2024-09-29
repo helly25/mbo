@@ -22,6 +22,7 @@
 
 #include "mbo/types/internal/decompose_count.h"          // IWYU pragma: export
 #include "mbo/types/internal/is_braces_constructible.h"  // IWYU pragma: export
+#include "mbo/types/tuple.h"                             // IWYU pragma: export
 
 namespace mbo::types {
 
@@ -328,19 +329,6 @@ struct IsVariantImpl<std::variant<Args...>> : std::true_type {};
 
 template<typename T>
 concept IsVariant = types_internal::IsVariantImpl<T>::value;
-
-namespace types_internal {
-
-template<typename T>
-struct IsTuple : std::false_type {};
-
-template<typename... Ts>
-struct IsTuple<std::tuple<Ts...>> : std::true_type {};
-
-}  // namespace types_internal
-
-template<typename T>
-concept IsTuple = types_internal::IsTuple<T>::value;
 
 }  // namespace mbo::types
 

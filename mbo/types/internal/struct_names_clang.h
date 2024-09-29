@@ -22,7 +22,7 @@
 
 # include "absl/types/span.h"                     // IWYU pragma: keep
 # include "mbo/types/internal/decompose_count.h"  // IWYU pragma: keep
-# include "mbo/types/tuple.h"                     // IWYU pragma: keep
+# include "mbo/types/tuple_extras.h"              // IWYU pragma: keep
 
 // IWYU pragma: private, include "mbo/types/internal/struct_names.h"
 

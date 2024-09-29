@@ -16,75 +16,22 @@
 #ifndef MBO_TYPES_TUPLE_H_
 #define MBO_TYPES_TUPLE_H_
 
-#include <utility>
-
-#include "mbo/types/internal/decompose_count.h"  // IWYU pragma: export
-#include "mbo/types/traits.h"
+#include <tuple>
 
 namespace mbo::types {
 
-// Requires aggregates that have no or only empty base classes, see
-// https://en.cppreference.com/w/cpp/language/aggregate_initialization.
-//
-// There could be additional requirements:
-// - on `std::default_initializable<T>`: but that is technically not necessary.
-// - on `!types_internal::StructHasNonEmptyBase<T>`:
-template<typename T>
-concept CanCreateTuple = types_internal::DecomposeCondition<T>;
-
-// Constructs a tuple from any eligible struct `T`
-//
-// The resulting tuple is made up of references!
-template<typename T>
-requires CanCreateTuple<T>
-inline constexpr auto StructToTuple(T&& v) {
-  return types_internal::DecomposeHelper<T>::ToTuple(std::forward<T>(v));
-}
-
 namespace types_internal {
 
-template<typename Tuple, std::size_t Index>
-concept IsUnionMemberAt = std::is_union_v<std::tuple_element_t<Index, Tuple>>;
+template<typename T>
+struct IsTuple : std::false_type {};
 
-template<typename Tuple, typename Indices>
-struct HasUnionMemberIdxImpl;
-
-template<typename Tuple, std::size_t... kIndex>
-struct HasUnionMemberIdxImpl<Tuple, std::index_sequence<kIndex...>>
-    : std::bool_constant<(... || IsUnionMemberAt<Tuple, kIndex>)> {};
-
-template<typename Tuple>
-concept HasUnionMemberImpl = HasUnionMemberIdxImpl<Tuple, std::make_index_sequence<std::tuple_size_v<Tuple>>>::value;
-
-template<typename Tuple, std::size_t Index>
-concept IsVariantMemberAt = IsVariant<std::tuple_element_t<Index, Tuple>>;
-
-template<typename Tuple, typename Indices>
-struct HasVariantMemberIdxImpl;
-
-template<typename Tuple, std::size_t... kIndex>
-struct HasVariantMemberIdxImpl<Tuple, std::index_sequence<kIndex...>>
-    : std::bool_constant<(... || IsVariantMemberAt<Tuple, kIndex>)> {};
-
-template<typename Tuple>
-concept HasVariantMemberImpl =
-    HasVariantMemberIdxImpl<Tuple, std::make_index_sequence<std::tuple_size_v<Tuple>>>::value;
+template<typename... Ts>
+struct IsTuple<std::tuple<Ts...>> : std::true_type {};
 
 }  // namespace types_internal
 
-// Determine whether a type that can be converted into a `tuple` using `StructToTuple` has at least one `union` member.
-// Such types cannot be used with `__builtin_dump_struct` in a `constexpr` context.
 template<typename T>
-concept HasUnionMember =
-    ::mbo::types::CanCreateTuple<T>
-    && types_internal::HasUnionMemberImpl<decltype(::mbo::types::StructToTuple(std::declval<T>()))>;
-
-// Determine whether a type that can be converted into a `tuple` using `StructToTuple` has at least one `std::variant`
-// member.  Such types cannot be used with `__builtin_dump_struct` in a `constexpr` context.
-template<typename T>
-concept HasVariantMember =
-    ::mbo::types::CanCreateTuple<T>
-    && types_internal::HasVariantMemberImpl<decltype(::mbo::types::StructToTuple(std::declval<T>()))>;
+concept IsTuple = types_internal::IsTuple<T>::value;
 
 namespace types_internal {
 
@@ -98,9 +45,13 @@ struct TupleCat<std::tuple<T...>, std::tuple<U...>> {
 
 }  // namespace types_internal
 
-// Concatenate tuples.
-template<typename T, typename U>
+// Concatenate tuples (both `T` and `U` must be tuples).
+template<IsTuple T, IsTuple U>
 using TupleCat = types_internal::TupleCat<T, U>::type;
+
+// Append type `U` to tuple `T` (type `U` can be a tuple).
+template<IsTuple T, typename U>
+using TupleAdd = TupleCat<T, std::tuple<U>>;
 
 }  // namespace mbo::types
 
