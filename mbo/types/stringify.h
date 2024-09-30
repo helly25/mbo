@@ -528,7 +528,7 @@ class Stringify {
     }
   }
 
-  const StringifyOptions& default_options_;
+  const StringifyOptions default_options_;
 };
 
 // Adapter (not Extender) that injects field names into field control.
