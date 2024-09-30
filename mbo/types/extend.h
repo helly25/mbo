@@ -18,6 +18,7 @@
 
 #include "mbo/types/extender.h"         // IWYU pragma: export
 #include "mbo/types/internal/extend.h"  // IWYU pragma: export
+#include "mbo/types/internal/extender.h"
 
 namespace mbo::types {
 
@@ -85,6 +86,10 @@ struct ExtendNoDefault : ::mbo::extender::Extend<T, Extender...> {};
 // NOTE: No member may be an anonymous union or struct.
 template<typename T, typename... Extender>
 struct ExtendNoPrint : ::mbo::extender::Extend<T, ::mbo::types::extender::NoPrint, Extender...> {};
+
+// Determine whether type `Extended` is an `Extend`ed type.
+template<typename Extended>
+concept IsExtended = types_internal::IsExtended<Extended>;
 
 }  // namespace mbo::types
 

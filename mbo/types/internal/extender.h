@@ -18,14 +18,72 @@
 
 // IWYU pragma private, include "mbo/types/extend.h"
 
-namespace mbo::types::types_internal {
+#include <array>
+#include <concepts>  // IWYU pragma: keep
+#include <string_view>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+#include "mbo/types/tuple.h"  // IWYU pragma: keep
+
+namespace mbo::types {
+
+class Stringify;
+
+namespace types_internal {
+
+// Base Extender implementation for CRTP functionality injection.
+// This must always be present.
+template<typename ActualType>
+struct ExtendBase {
+ private:
+  // Struct `AnyBaseExtender` is a private member as it can confuse conversions throughout the code.
+  struct AnyBaseExtender {
+    template<typename U>
+    operator U() const noexcept {  // NOLINT(*-explicit-con*)
+      return {};
+    }
+  };
+
+ public:
+  using Type = ActualType;  // Used for type chaining in `UseExtender`
+
+  // Construct from tuple.
+  // The tuple elements must match the field types or the field types must allow conversion.
+  template<typename... Args>
+  requires std::constructible_from<Type, AnyBaseExtender, Args...>
+  static Type ConstructFromTuple(std::tuple<Args...>&& args) {  // NOLINT(*-param-not-moved)
+    return std::apply(ConstructFromArgs<Args...>, std::forward<std::tuple<Args...>>(args));
+  }
+
+  // Construct from separate arguments.
+  // The arguments must match the field types or the field types must allow conversion.
+  template<typename... Args>
+  requires std::constructible_from<Type, AnyBaseExtender, Args...>
+  static Type ConstructFromArgs(Args&&... args) {
+    return Type{AnyBaseExtender{}, std::forward<Args>(args)...};
+  }
+
+ protected:  // DO NOT expose anything publicly.
+  auto ToTuple() const { return StructToTuple(static_cast<const ActualType&>(*this)); }
+
+ private:  // DO NOT expose anything publicly.
+  template<typename U, typename Extender>
+  friend struct UseExtender;
+  friend class mbo::types::Stringify;
+};
 
 // Determine whether type `Extended` is an `Extend`ed type.
 template<typename Extended>
 concept IsExtended = requires {
   typename Extended::Type;
   typename Extended::RegisteredExtenders;
-  { Extended::RegisteredExtenderNames() };
+  requires std::is_base_of_v<ExtendBase<typename Extended::Type>, Extended>;
+  requires mbo::types::IsTuple<typename Extended::RegisteredExtenders>;
+  {
+    Extended::RegisteredExtenderNames()
+  } -> std::same_as<std::array<std::string_view, std::tuple_size_v<typename Extended::RegisteredExtenders>>>;
 };
 
 // Access to the extender implementation for constructing the CRTP chain using
@@ -35,6 +93,7 @@ concept IsExtended = requires {
 template<typename ExtenderBase, typename Extender>
 struct UseExtender : Extender::template Impl<ExtenderBase> {};
 
-}  // namespace mbo::types::types_internal
+}  // namespace types_internal
+}  // namespace mbo::types
 
 #endif  // MBO_TYPES_INTERNAL_EXTENDER_H_

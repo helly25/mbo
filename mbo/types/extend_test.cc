@@ -594,10 +594,10 @@ TEST_F(ExtendTest, Hashable) {
 
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({person, Person{}}));
 
-  ASSERT_THAT((::mbo::types::types_internal::IsExtended<Name>), true);
-  ASSERT_THAT((::mbo::types::types_internal::IsExtended<Person>), true);
-  ASSERT_THAT((::mbo::types::types_internal::IsExtended<PlainName>), false);
-  ASSERT_THAT((::mbo::types::types_internal::IsExtended<PlainPerson>), false);
+  ASSERT_THAT((::mbo::types::IsExtended<Name>), true);
+  ASSERT_THAT((::mbo::types::IsExtended<Person>), true);
+  ASSERT_THAT((::mbo::types::IsExtended<PlainName>), false);
+  ASSERT_THAT((::mbo::types::IsExtended<PlainPerson>), false);
   ASSERT_THAT(Person::RegisteredExtenderNames(), Contains("AbslHashable"));
   ASSERT_THAT(Person::RegisteredExtenderNames().size(), std::tuple_size_v<Person::RegisteredExtenders>);
   ASSERT_THAT((::mbo::types::types_internal::HasExtender<Person, AbslHashable>), true);
@@ -613,7 +613,7 @@ TEST_F(ExtendTest, Default) {
     std::string last;
   };
 
-  ASSERT_THAT((::mbo::types::types_internal::IsExtended<NameDefault>), true);
+  ASSERT_THAT((::mbo::types::IsExtended<NameDefault>), true);
   EXPECT_THAT(
       NameDefault::RegisteredExtenderNames(),
       UnorderedElementsAre("AbslHashable", "AbslStringify", "Comparable", "Printable", "Streamable"));
@@ -630,7 +630,7 @@ TEST_F(ExtendTest, NoDefault) {
     std::string last;
   };
 
-  ASSERT_THAT((::mbo::types::types_internal::IsExtended<NameNoDefault>), true);
+  ASSERT_THAT((::mbo::types::IsExtended<NameNoDefault>), true);
   EXPECT_THAT(NameNoDefault::RegisteredExtenderNames(), IsEmpty());
   EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoDefault, Printable>), false);
   EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoDefault, Streamable>), false);
@@ -645,7 +645,7 @@ TEST_F(ExtendTest, NoPrint) {
     std::string last;
   };
 
-  ASSERT_THAT((::mbo::types::types_internal::IsExtended<NameNoPrint>), true);
+  ASSERT_THAT((::mbo::types::IsExtended<NameNoPrint>), true);
   EXPECT_THAT(
       NameNoPrint::RegisteredExtenderNames(), UnorderedElementsAre("AbslHashable", "AbslStringify", "Comparable"));
   EXPECT_THAT((::mbo::types::types_internal::HasExtender<NameNoPrint, Printable>), false);
