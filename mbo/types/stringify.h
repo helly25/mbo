@@ -267,7 +267,8 @@ class Stringify {
 
   static Stringify AsJson() noexcept { return Stringify(StringifyOptions::AsJson()); }
 
-  explicit Stringify(const StringifyOptions& default_options = {}) : default_options_(default_options) {}
+  explicit Stringify(const StringifyOptions& default_options = StringifyOptions::AsDefault())
+      : default_options_(default_options) {}
 
   explicit Stringify(const StringifyOptions::OutputMode output_mode)
       : default_options_(StringifyOptions::As(output_mode)) {}
@@ -528,7 +529,7 @@ class Stringify {
     }
   }
 
-  const StringifyOptions default_options_;
+  const StringifyOptions& default_options_;
 };
 
 // Adapter (not Extender) that injects field names into field control.
