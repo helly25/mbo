@@ -196,7 +196,7 @@ template<typename T, typename... ExtenderList>
 requires(ExtenderListValid<ExtenderList...>)
 struct Extend<T, std::tuple<ExtenderList...>>
     : ::mbo::types::types_internal::ExtendBuildChain<
-          mbo::types::types_internal::ExtendBase<T>,  // CRTP functionality injection.
+          mbo::types::ExtendBase<T>,  // CRTP functionality injection.
           ExtenderList...,  // NOT extended, so that shorthand forms `Default` and `NoPrint` result in short names.
           void /* Sentinel to stop `ExtendBuildChain` */> {
   using RegisteredExtenders = mbo::types::types_internal::ExtendExtenderTupleT<std::tuple<ExtenderList...>>;

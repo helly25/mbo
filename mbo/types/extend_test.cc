@@ -355,9 +355,9 @@ TEST_F(ExtendTest, StreamableComplexFields) {
           R"({25, {{"Hugo", "Meyer"}, 42}, *{{"bar", "foo"}}})"));
 #ifdef __clang__
   std::cout << "Person:\n";
-  EXPECT_THAT(debug::Print(&person), SizeIs(Le(201)));
+  EXPECT_THAT(debug::Print(&person), SizeIs(Le(198)));
   std::cout << "Person::person.name:\n";
-  EXPECT_THAT(debug::Print(&person.person.name), SizeIs(Le(195)));
+  EXPECT_THAT(debug::Print(&person.person.name), SizeIs(Le(192)));
 #endif  // __clang__
 }
 

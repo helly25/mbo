@@ -29,10 +29,6 @@
 
 namespace mbo::types {
 
-class Stringify;
-
-namespace types_internal {
-
 // Base Extender implementation for CRTP functionality injection.
 // This must always be present.
 template<typename ActualType>
@@ -71,8 +67,10 @@ struct ExtendBase {
  private:  // DO NOT expose anything publicly.
   template<typename U, typename Extender>
   friend struct UseExtender;
-  friend class mbo::types::Stringify;
+  friend class Stringify;
 };
+
+namespace types_internal {
 
 // Determine whether type `Extended` is an `Extend`ed type.
 //
