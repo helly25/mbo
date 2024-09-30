@@ -189,14 +189,18 @@ namespace mbo::extender {
 
 using types::types_internal::ExtenderListValid;
 
+template<typename T, typename ExtenderList>
+struct Extend;
+
 template<typename T, typename... ExtenderList>
 requires(ExtenderListValid<ExtenderList...>)
-struct Extend
+struct Extend<T, std::tuple<ExtenderList...>>
     : ::mbo::types::types_internal::ExtendBuildChain<
           mbo::types::types_internal::ExtendBase<T>,  // CRTP functionality injection.
           ExtenderList...,  // NOT extended, so that shorthand forms `Default` and `NoPrint` result in short names.
           void /* Sentinel to stop `ExtendBuildChain` */> {
   using RegisteredExtenders = mbo::types::types_internal::ExtendExtenderTupleT<std::tuple<ExtenderList...>>;
+  using UnexpandedExtenders = std::tuple<ExtenderList...>;
 
   static constexpr std::array<std::string_view, std::tuple_size_v<RegisteredExtenders>> RegisteredExtenderNames() {
     return RegisteredExtenderNamesIS(std::make_index_sequence<std::tuple_size_v<RegisteredExtenders>>{});

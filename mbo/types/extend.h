@@ -16,6 +16,8 @@
 #ifndef MBO_TYPES_EXTEND_H_
 #define MBO_TYPES_EXTEND_H_
 
+#include <type_traits>
+
 #include "mbo/types/extender.h"         // IWYU pragma: export
 #include "mbo/types/internal/extend.h"  // IWYU pragma: export
 #include "mbo/types/internal/extender.h"
@@ -48,7 +50,7 @@ namespace mbo::types {
 //
 // NOTE: No member may be an anonymous union or struct.
 template<typename T, typename... Extender>
-struct Extend : ::mbo::extender::Extend<T, ::mbo::types::extender::Default, Extender...> {};
+struct Extend : ::mbo::extender::Extend<T, std::tuple<::mbo::types::extender::Default, Extender...>> {};
 
 // Same as `Extend` but without default extenders. This allows to control the
 // exact extender set to be used.
@@ -66,7 +68,7 @@ struct Extend : ::mbo::extender::Extend<T, ::mbo::types::extender::Default, Exte
 //
 // NOTE: No member may be an anonymous union or struct.
 template<typename T, typename... Extender>
-struct ExtendNoDefault : ::mbo::extender::Extend<T, Extender...> {};
+struct ExtendNoDefault : ::mbo::extender::Extend<T, std::tuple<Extender...>> {};
 
 // Same as `Extend` but without the `Printable` and `Streamable` externder.
 // This makes it easy to customize printing and streaming, while still retaining
@@ -85,11 +87,16 @@ struct ExtendNoDefault : ::mbo::extender::Extend<T, Extender...> {};
 //
 // NOTE: No member may be an anonymous union or struct.
 template<typename T, typename... Extender>
-struct ExtendNoPrint : ::mbo::extender::Extend<T, ::mbo::types::extender::NoPrint, Extender...> {};
+struct ExtendNoPrint : ::mbo::extender::Extend<T, std::tuple<::mbo::types::extender::NoPrint, Extender...>> {};
 
-// Determine whether type `Extended` is an `Extend`ed type.
-template<typename Extended>
-concept IsExtended = types_internal::IsExtended<Extended>;
+// Determine whether type `T` is an `Extend`ed type.
+//
+// Unfortunately we cannot reconstruct the type and use that in std::same_as to verify that it is the same as the input.
+// But we can check that there is a base that was constructed from the original (unexpanded) set of extenders.
+template<typename T>
+concept IsExtended =
+    types_internal::IsExtended<T>
+    && std::is_base_of_v<::mbo::extender::Extend<typename T::Type, typename T::UnexpandedExtenders>, T>;
 
 }  // namespace mbo::types
 

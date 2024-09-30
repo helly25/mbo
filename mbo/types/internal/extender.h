@@ -75,12 +75,16 @@ struct ExtendBase {
 };
 
 // Determine whether type `Extended` is an `Extend`ed type.
+//
+// This is an incomplete concept and the public version `mbo::types::IsExtended` should be used.
 template<typename Extended>
 concept IsExtended = requires {
   typename Extended::Type;
   typename Extended::RegisteredExtenders;
+  typename Extended::UnexpandedExtenders;
   requires std::is_base_of_v<ExtendBase<typename Extended::Type>, Extended>;
   requires mbo::types::IsTuple<typename Extended::RegisteredExtenders>;
+  requires mbo::types::IsTuple<typename Extended::UnexpandedExtenders>;
   {
     Extended::RegisteredExtenderNames()
   } -> std::same_as<std::array<std::string_view, std::tuple_size_v<typename Extended::RegisteredExtenders>>>;
