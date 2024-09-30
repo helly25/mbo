@@ -496,7 +496,6 @@ struct DecomposeCountImpl : std::integral_constant<std::size_t, DecomposeInfo<T>
 
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 
-template<typename T>
 struct DecomposeHelper final {
   DecomposeHelper() = delete;
 

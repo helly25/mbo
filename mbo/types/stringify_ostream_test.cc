@@ -42,6 +42,78 @@ TEST_F(StringifyOstreamTest, OStream) {
   EXPECT_THAT(os.str(), Conditional(kStructNameSupport, R"({.one: 11, .two: 25})", R"({11, 25})"));
 }
 
+TEST_F(StringifyOstreamTest, Nested) {
+  struct TestSub {
+    int sub = 77;
+    // This does not need an type annotation, as it is being picked up automatically.
+  };
+
+  struct TestStruct {
+    int one = 11;
+    TestSub two;
+
+    using MboTypesStringifySupport = void;
+  };
+
+  std::stringstream os;
+  os << TestStruct{};
+  EXPECT_THAT(os.str(), Conditional(kStructNameSupport, R"({.one: 11, .two: {.sub: 77}})", R"({11, {77}})"));
+}
+
+namespace existing_o_stream_operator {
+struct TestSub {
+  int sub = 77;
+};
+
+struct TestStruct {
+  int one = 11;
+  TestSub two;
+
+  friend std::ostream& operator<<(std::ostream& os, const TestStruct& v) {
+    return os << "TestStruct{one=" << v.one << "}";
+  }
+
+  using MboTypesStringifySupport = void;
+};
+
+TEST_F(StringifyOstreamTest, ExistingOStreamOperator) {
+  std::stringstream os;
+  os << TestStruct{};
+  EXPECT_THAT(os.str(), R"(TestStruct{one=11})") << "  Note: No `TestSub` at all.";
+}
+}  // namespace existing_o_stream_operator
+
+namespace existing_absl_stringify {
+struct TestSub {
+  int sub = 77;
+
+  template<typename Sink>
+  friend void AbslStringify(Sink& sink, const TestSub& v) {
+    absl::Format(&sink, "TestSub{sub=%d}", v.sub);
+  }
+};
+
+struct TestStruct {
+  int one = 11;
+  TestSub two;
+
+  template<typename Sink>
+  friend void AbslStringify(Sink& sink, const TestStruct& /*v*/) {
+    sink.Append("NOT USED");
+  }
+
+  using MboTypesStringifySupport = void;
+};
+
+TEST_F(StringifyOstreamTest, ExistingAbslStringify) {
+  std::stringstream os;
+  os << TestStruct{};
+  EXPECT_THAT(
+      os.str(), Conditional(kStructNameSupport, R"({.one: 11, .two: TestSub{sub=77}})", R"({11, TestSub{sub=77}})"))
+      << "  Note: AbslStringify in TestStruct ignored since Stringify has higher precendence.";
+}
+}  // namespace existing_absl_stringify
+
 // NOLINTEND(*-magic-numbers,*-named-parameter)
 
 }  // namespace
