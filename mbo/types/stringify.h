@@ -135,44 +135,21 @@ struct StringifyOptions {
   std::string_view special_pair_second = "second";
 
   // Arbirary default value.
-  static constexpr StringifyOptions AsDefault() { return {}; }
+  static const StringifyOptions& AsDefault() noexcept;
 
   // Formatting control that mostly produces C++ code.
-  static constexpr StringifyOptions AsCpp() {
-    // TODO(helly25): These should probably return static constexpr& in C++23.
-    return {
-        .output_mode = OutputMode::kCpp,
-        .key_prefix = ".",
-        .key_value_separator = " = ",
-        .value_pointer_prefix = "",
-        .value_pointer_suffix = "",
-        .value_nullptr_t = "nullptr",
-        .value_nullptr = "nullptr",
-    };
-  }
+  static const StringifyOptions& AsCpp() noexcept;
 
   // Formatting control that mostly produces JSON data.
   //
   // NOTE: JSON data requires field names. So unless Clang is used only with
-  // types that support field names, the `StringifyWithFieldNames` adapter must be used.
-  static constexpr StringifyOptions AsJson() {
-    return {
-        .output_mode = OutputMode::kJson,
-        .key_mode = KeyMode::kNumericFallback,
-        .key_prefix = "\"",
-        .key_suffix = "\"",
-        .key_value_separator = ": ",
-        .value_pointer_prefix = "",
-        .value_pointer_suffix = "",
-        .value_nullptr_t = "0",
-        .value_nullptr = "0",
-        .value_container_prefix = "[",
-        .value_container_suffix = "]",
-        .special_pair_first_is_name = true,
-    };
-  }
+  // types that support field names, they must be provided by an extension API
+  // point: `MboTypesStringifyFieldNames` or `MboTypesStringifyOptions`, the
+  // latter possibly with the `StringifyWithFieldNames` adapter. Alternatively,
+  // numeric field names will be generated as a last resort.
+  static const StringifyOptions& AsJson() noexcept;
 
-  static constexpr StringifyOptions As(OutputMode mode) {
+  static const StringifyOptions& As(OutputMode mode) noexcept {
     switch (mode) {
       case OutputMode::kDefault: break;
       case OutputMode::kCpp: return AsCpp();
@@ -201,7 +178,7 @@ concept HasMboTypesStringifyDoNotPrintFieldNames = Has_DEPRECATED_MboTypesExtend
 };
 
 // This breaks `MboTypesStringifyOptions` lookup within this namespace.
-void MboTypesStringifyOptions();
+void MboTypesStringifyOptions();  // Has no implementation!
 
 // Identify presence for `AbslStringify` extender API extension point
 // `MboTypesStringifyOptions`.
@@ -220,7 +197,7 @@ concept HasMboTypesStringifyOptions = requires(const T& v) {
 };
 
 // This breaks `MboTypesStringifyFieldNames` lookup within this namespace.
-void MboTypesStringifyFieldNames();
+void MboTypesStringifyFieldNames();  // Has no implementation!
 
 // Identify presence for `AbslStringify` extender API extension point
 // `MboTypesStringifyFieldNames`.
@@ -283,20 +260,22 @@ template<typename T, typename ObjectType = mbo::types::types_internal::AnyType>
 concept IsOrCanProduceStringifyOptions =
     std::is_convertible_v<T, StringifyOptions> || CanProduceStringifyOptions<T, ObjectType>;
 
+// Class `Stringify` implements the conversion of any aggregate into a string.
 class Stringify {
  public:
-  static Stringify AsCpp() { return Stringify(StringifyOptions::AsCpp()); }
+  static Stringify AsCpp() noexcept { return Stringify(StringifyOptions::AsCpp()); }
 
-  static Stringify AsJson() { return Stringify(StringifyOptions::AsJson()); }
+  static Stringify AsJson() noexcept { return Stringify(StringifyOptions::AsJson()); }
 
-  explicit Stringify(const StringifyOptions& default_options = {}) : default_options_(default_options) {}
+  explicit Stringify(const StringifyOptions& default_options = StringifyOptions::AsDefault())
+      : default_options_(default_options) {}
 
   explicit Stringify(const StringifyOptions::OutputMode output_mode)
       : default_options_(StringifyOptions::As(output_mode)) {}
 
   template<typename T>
   requires(std::is_aggregate_v<T>)
-  std::string ToString(const T& value) {
+  std::string ToString(const T& value) const {
     std::ostringstream os;
     Stream<T>(os, value);
     return os.str();
@@ -304,7 +283,7 @@ class Stringify {
 
   template<typename T>
   requires(std::is_aggregate_v<T>)
-  void Stream(std::ostream& os, const T& value) {
+  void Stream(std::ostream& os, const T& value) const {
     // It is not allowed to deny field name printing but provide filed names.
     static_assert(!(HasMboTypesStringifyDoNotPrintFieldNames<T> && HasMboTypesStringifyFieldNames<T>));
 
@@ -316,10 +295,10 @@ class Stringify {
   void StreamFieldsImpl(
       std::ostream& os,
       const T& value,
-      bool allow_field_names = !HasMboTypesStringifyDoNotPrintFieldNames<T>) {
+      bool allow_field_names = !HasMboTypesStringifyDoNotPrintFieldNames<T>) const {
     allow_field_names |= default_options_.key_mode == StringifyOptions::KeyMode::kNumericFallback;
     bool use_seperator = false;
-    const auto& field_names = StreamFieldNames(value);
+    const auto& field_names = GetFieldNames(value);
     std::apply(
         [&](const auto&... fields) {
           os << '{';
@@ -339,7 +318,7 @@ class Stringify {
   }
 
   template<typename T>
-  auto StreamFieldNames(const T& value) {
+  static auto GetFieldNames(const T& value) {
     if constexpr (HasMboTypesStringifyDoNotPrintFieldNames<T>) {
       return std::array<std::string_view, 0>{};
     } else if constexpr (HasMboTypesStringifyFieldNames<T>) {
@@ -358,7 +337,7 @@ class Stringify {
       const Field& field,
       std::size_t idx,
       const FieldNames& field_names,
-      bool allow_field_names) {
+      bool allow_field_names) const {
     std::string_view field_name;
     if (allow_field_names && idx < std::size(field_names)) {
       field_name = std::data(field_names)[idx];
@@ -419,7 +398,7 @@ class Stringify {
 
   template<typename C>
   requires(::mbo::types::ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
-  void StreamValue(std::ostream& os, const C& vs, const StringifyOptions& field_options, bool allow_field_names) {
+  void StreamValue(std::ostream& os, const C& vs, const StringifyOptions& field_options, bool allow_field_names) const {
     if constexpr (mbo::types::IsPairFirstStr<typename C::value_type>) {
       if (field_options.special_pair_first_is_name) {
         // Each pair element of the container `vs` is an element whose key is the `first` member and
@@ -462,7 +441,7 @@ class Stringify {
                                         || (std::is_aggregate_v<T> && !absl::HasAbslStringify<T>::value);
 
   template<typename V>
-  void StreamValue(std::ostream& os, const V& v, const StringifyOptions& field_options, bool allow_field_names) {
+  void StreamValue(std::ostream& os, const V& v, const StringifyOptions& field_options, bool allow_field_names) const {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (kUseStringify<RawV>) {
@@ -550,7 +529,7 @@ class Stringify {
     }
   }
 
-  const StringifyOptions default_options_;
+  const StringifyOptions& default_options_;
 };
 
 // Adapter (not Extender) that injects field names into field control.

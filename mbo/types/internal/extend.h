@@ -19,6 +19,7 @@
 // IWYU pragma private, include "mbo/types/extend.h"
 
 #include <array>
+#include <concepts>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -190,8 +191,33 @@ namespace mbo::extender {
 // This must always be present.
 template<typename ActualType>
 struct ExtendBase {
+ private:
+  // Struct `AnyBaseExtender` is a private member as it can confuse conversions throughout the code.
+  struct AnyBaseExtender {
+    template<typename U>
+    operator U() const noexcept {  // NOLINT(*-explicit-con*)
+      return {};
+    }
+  };
+
  public:
   using Type = ActualType;  // Used for type chaining in `UseExtender`
+
+  // Construct from tuple.
+  // The tuple elements must match the field types or the field types must allow conversion.
+  template<typename... Args>
+  requires std::constructible_from<Type, AnyBaseExtender, Args...>
+  static Type ConstructFromTuple(std::tuple<Args...>&& args) {  // NOLINT(*-param-not-moved)
+    return std::apply(ConstructFromArgs<Args...>, std::forward<std::tuple<Args...>>(args));
+  }
+
+  // Construct from separate arguments.
+  // The arguments must match the field types or the field types must allow conversion.
+  template<typename... Args>
+  requires std::constructible_from<Type, AnyBaseExtender, Args...>
+  static Type ConstructFromArgs(Args&&... args) {
+    return Type{AnyBaseExtender{}, std::forward<Args>(args)...};
+  }
 
  protected:  // DO NOT expose anything publicly.
   auto ToTuple() const { return StructToTuple(static_cast<const ActualType&>(*this)); }

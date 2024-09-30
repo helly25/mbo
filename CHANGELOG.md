@@ -9,6 +9,7 @@
 * Added field name support for non literal types in Clang.
 * Added numeric field name (aka key) support and enforced for Json output.
 * Added rule `mbo/types:stringify_ostream_cc` and header `mbo/types/stringify_ostream.h` for automatic ostream support using `Stringify`.
+* Added static constructors `Extend::ConstructFromTuple` and `Extend::ConstructFromArgs`.
 
 # 0.2.29
 

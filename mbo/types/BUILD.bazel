@@ -139,6 +139,7 @@ cc_test(
 
 cc_library(
     name = "stringify_cc",
+    srcs = ["stringify.cc"],
     hdrs = ["stringify.h"],
     deps = [
         ":traits_cc",

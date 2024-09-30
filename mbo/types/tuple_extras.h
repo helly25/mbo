@@ -38,7 +38,7 @@ concept CanCreateTuple = types_internal::DecomposeCondition<T>;
 template<typename T>
 requires CanCreateTuple<T>
 inline constexpr auto StructToTuple(T&& v) {
-  return types_internal::DecomposeHelper<T>::ToTuple(std::forward<T>(v));
+  return types_internal::DecomposeHelper::ToTuple(std::forward<T>(v));
 }
 
 namespace types_internal {

@@ -191,6 +191,7 @@ TEST_F(ExtendTest, Test) {
   ASSERT_THAT(std::is_default_constructible_v<Extend2>, true);
   ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<Extend2>, false);
   ASSERT_THAT(DecomposeCountV<Extend2>, 2);
+  ASSERT_THAT((std::same_as<Extend2, Extend2::Type>), true);
 }
 
 TEST_F(ExtendTest, Print) {
@@ -832,12 +833,16 @@ struct MoveOnly {
   MoveOnly(MoveOnly&&) noexcept = default;
   MoveOnly& operator=(MoveOnly&&) noexcept = default;
 
+  bool operator==(const MoveOnly& other) const noexcept { return value == other; }
+
+  bool operator==(int other) const noexcept { return value == other; }
+
   int value{0};
 };
 
 struct UseMoveOnly : Extend<UseMoveOnly> {
-  MoveOnly move1{0};
-  MoveOnly move2{0};
+  MoveOnly one{0};
+  MoveOnly two{0};
 };
 
 TEST_F(ExtendTest, MoveOnlyTuple) {
@@ -846,8 +851,8 @@ TEST_F(ExtendTest, MoveOnlyTuple) {
   static constexpr int kValue2{33};
   static constexpr int kValue3{42};
   UseMoveOnly data{
-      .move1{MoveOnly{kValue1}},
-      .move2{MoveOnly{kValue2}},
+      .one{MoveOnly{kValue1}},
+      .two{MoveOnly{kValue2}},
   };
   auto [move1, move2] = std::move(data);
   EXPECT_THAT(move1.value, kValue1);
@@ -856,8 +861,90 @@ TEST_F(ExtendTest, MoveOnlyTuple) {
   move1.value = kValue3;
   EXPECT_THAT(move1.value, kValue3);
   EXPECT_THAT(move2.value, kValue2);
-  EXPECT_THAT(data.move1.value, Ne(kValue3))
+  EXPECT_THAT(data.one.value, Ne(kValue3))
       << "It does not matter what the value is after the move, but it must not be `kValue3`.";
+}
+
+TEST_F(ExtendTest, FromTupleToVariants) {
+  struct TestStruct : Extend<TestStruct> {
+    std::variant<int, std::string, std::string_view> one;
+    std::variant<int, std::string, std::string_view> two;
+  };
+
+  static constexpr int kInt1{25};
+  static constexpr int kInt2{33};
+  static constexpr std::string_view kStr1{"a"};
+  static constexpr std::string_view kStr2{"b"};
+  {
+    const auto val1 = TestStruct::ConstructFromTuple(std::make_tuple(kInt1, kInt2));
+    static_assert((std::same_as<std::remove_cvref_t<decltype(val1)>, TestStruct>));
+    EXPECT_THAT(val1.one, kInt1);
+    EXPECT_THAT(val1.two, kInt2);
+  }
+  {
+    const auto val2 = TestStruct::ConstructFromTuple(std::make_tuple(kStr1, kStr2));
+    static_assert((std::same_as<std::remove_cvref_t<decltype(val2)>, TestStruct>));
+    EXPECT_THAT(val2.one, kStr1);
+    EXPECT_THAT(val2.two, kStr2);
+  }
+  {
+    const auto val3 = TestStruct::ConstructFromTuple(std::make_tuple(kInt1, kStr2));
+    static_assert((std::same_as<std::remove_cvref_t<decltype(val3)>, TestStruct>));
+    EXPECT_THAT(val3.one, kInt1);
+    EXPECT_THAT(val3.two, kStr2);
+  }
+  {
+    const auto val4 = TestStruct::ConstructFromTuple(std::make_tuple(kStr1, kInt2));
+    static_assert((std::same_as<std::remove_cvref_t<decltype(val4)>, TestStruct>));
+    EXPECT_THAT(val4.one, kStr1);
+    EXPECT_THAT(val4.two, kInt2);
+  }
+}
+
+TEST_F(ExtendTest, FromTupleToStrings) {
+  struct TestStruct : Extend<TestStruct> {
+    std::string one;
+    std::string two;
+  };
+
+  // TODO(helly25): This should work as test `FromTupleToConversions` where `static constexpr std::string_view` converts
+  // to the string fields.
+  const std::string str1{"a"};
+  const std::string str2{"b"};
+  {
+    const auto val1 = TestStruct::ConstructFromTuple(std::make_tuple(str1, str2));
+    static_assert((std::same_as<std::remove_cvref_t<decltype(val1)>, TestStruct>));
+    EXPECT_THAT(val1.one, str1);
+    EXPECT_THAT(val1.two, str2);
+  }
+  {
+    const auto val2 = TestStruct::ConstructFromArgs(str1, str2);
+    static_assert((std::same_as<std::remove_cvref_t<decltype(val2)>, TestStruct>));
+    EXPECT_THAT(val2.one, str1);
+    EXPECT_THAT(val2.two, str2);
+  }
+}
+
+TEST_F(ExtendTest, MoveOnlyFromTuple) {
+  static constexpr int kInt1{25};
+  static constexpr int kInt2{33};
+  // TODO(helly25): Cases 1 and 3 entail a conversion from int to MoveOnly which does not work yet.
+  // const auto val1 = UseMoveOnly::FromTuple(std::make_tuple(kInt1, kInt2));
+  // static_assert((std::same_as<std::remove_cvref_t<decltype(val1)>, UseMoveOnly>));
+  {
+    const auto val2 = UseMoveOnly::ConstructFromTuple(std::make_tuple(MoveOnly(kInt1), MoveOnly(kInt2)));
+    static_assert((std::same_as<std::remove_cvref_t<decltype(val2)>, UseMoveOnly>));
+    EXPECT_THAT(val2.one, kInt1);
+    EXPECT_THAT(val2.two, kInt2);
+  }
+  // const auto val3 = UseMoveOnly::FromArgs(kValue1, kValue2);
+  // static_assert((std::same_as<std::remove_cvref_t<decltype(val3)>, UseMoveOnly>));
+  {
+    const auto val4 = UseMoveOnly::ConstructFromArgs(MoveOnly(kInt1), MoveOnly(kInt2));
+    static_assert((std::same_as<std::remove_cvref_t<decltype(val4)>, UseMoveOnly>));
+    EXPECT_THAT(val4.one, kInt1);
+    EXPECT_THAT(val4.two, kInt2);
+  }
 }
 
 }  // namespace
