@@ -90,7 +90,11 @@ mope_test(
     srcs = ["decompose_count.h.mope"],
     outs = ["decompose_count.h"],
     args = [
-      #"--set=clang_pre_17=x",
+        # For Clang we can enable OverloadSets. For GCC we have to disable it.
+        # We can identifify the compiler with a `#if...` but decide here whether
+        # we want to add the Clang specific part at all.
+        # See details in mbo/types/internal/decompose_count.h.mope
+        "--set=use_clang=enable",
     ],
     clang_format = True,
 )
