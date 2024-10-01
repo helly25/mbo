@@ -187,57 +187,20 @@ struct ExtendBuildChain<T, void> : T {};
 
 namespace mbo::extender {
 
-// Base Extender implementation for CRTP functionality injection.
-// This must always be present.
-template<typename ActualType>
-struct ExtendBase {
- private:
-  // Struct `AnyBaseExtender` is a private member as it can confuse conversions throughout the code.
-  struct AnyBaseExtender {
-    template<typename U>
-    operator U() const noexcept {  // NOLINT(*-explicit-con*)
-      return {};
-    }
-  };
-
- public:
-  using Type = ActualType;  // Used for type chaining in `UseExtender`
-
-  // Construct from tuple.
-  // The tuple elements must match the field types or the field types must allow conversion.
-  template<typename... Args>
-  requires std::constructible_from<Type, AnyBaseExtender, Args...>
-  static Type ConstructFromTuple(std::tuple<Args...>&& args) {  // NOLINT(*-param-not-moved)
-    return std::apply(ConstructFromArgs<Args...>, std::forward<std::tuple<Args...>>(args));
-  }
-
-  // Construct from separate arguments.
-  // The arguments must match the field types or the field types must allow conversion.
-  template<typename... Args>
-  requires std::constructible_from<Type, AnyBaseExtender, Args...>
-  static Type ConstructFromArgs(Args&&... args) {
-    return Type{AnyBaseExtender{}, std::forward<Args>(args)...};
-  }
-
- protected:  // DO NOT expose anything publicly.
-  auto ToTuple() const { return StructToTuple(static_cast<const ActualType&>(*this)); }
-
- private:  // DO NOT expose anything publicly.
-  template<typename U, typename Extender>
-  friend struct UseExtender;
-  friend class mbo::types::Stringify;
-};
-
 using types::types_internal::ExtenderListValid;
+
+template<typename T, typename ExtenderList>
+struct Extend;
 
 template<typename T, typename... ExtenderList>
 requires(ExtenderListValid<ExtenderList...>)
-struct Extend
+struct Extend<T, std::tuple<ExtenderList...>>
     : ::mbo::types::types_internal::ExtendBuildChain<
-          ExtendBase<T>,    // CRTP functionality injection.
+          mbo::types::ExtendBase<T>,  // CRTP functionality injection.
           ExtenderList...,  // NOT extended, so that shorthand forms `Default` and `NoPrint` result in short names.
           void /* Sentinel to stop `ExtendBuildChain` */> {
   using RegisteredExtenders = mbo::types::types_internal::ExtendExtenderTupleT<std::tuple<ExtenderList...>>;
+  using UnexpandedExtenders = std::tuple<ExtenderList...>;
 
   static constexpr std::array<std::string_view, std::tuple_size_v<RegisteredExtenders>> RegisteredExtenderNames() {
     return RegisteredExtenderNamesIS(std::make_index_sequence<std::tuple_size_v<RegisteredExtenders>>{});
