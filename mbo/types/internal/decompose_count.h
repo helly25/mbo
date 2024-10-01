@@ -38,6 +38,8 @@ concept IsAggregate = std::is_aggregate_v<std::remove_cvref_t<T>>;
 
 struct NotDecomposableImpl : std::integral_constant<std::size_t, std::numeric_limits<std::size_t>::max()> {};
 
+constexpr std::size_t kDecomposeCountUndef = NotDecomposableImpl::value;
+
 inline constexpr std::size_t kMaxSupportedFieldCount = 50;
 
 template<typename T, std::size_t MaxArgs, typename... Args>
@@ -106,8 +108,6 @@ template<typename... Ts>
 auto MakeOverloadedSet(Ts&&... v) {
   return OverloadSet<Ts...>(std::forward<Ts>(v)...);
 }
-
-constexpr std::size_t kDecomposeCountUndef = std::numeric_limits<std::size_t>::max();
 
 template<typename T>
 auto DecomposeCountFunc(T&& v) {
@@ -306,24 +306,27 @@ auto DecomposeCountFunc(T&& v) {
                   { overload_set(std::declval<T>()) };
                 }) {
     return overload_set(std::forward<T>(v));
-  } else if constexpr (std::is_aggregate_v<T>) {
+  } else if constexpr (std::is_aggregate_v<T> && std::is_empty_v<T>) {
     return std::integral_constant<std::size_t, 0>{};
   } else {
-    return std::integral_constant<std::size_t, std::numeric_limits<std::size_t>::max()>{};
+    return std::integral_constant<std::size_t, kDecomposeCountUndef>{};
   }
 }
 
 template<typename T>
-using DecomposeCountT = decltype(DecomposeCountFunc(std::declval<T>()));
+struct DecomposeCountImpl : decltype(DecomposeCountFunc(std::declval<T>())) {};
+
+template<>
+struct DecomposeCountImpl<void> : std::integral_constant<std::size_t, kDecomposeCountUndef> {};
+
+// template<typename T>
+// constexpr std::size_t DecomposeCountV = DecomposeCountImpl<T>::value;
 
 template<typename T>
-constexpr std::size_t DecomposeCountV = DecomposeCountT<T>::value;
+concept DecomposeCondition = (DecomposeCountImpl<T>::value != kDecomposeCountUndef);
 
-template<typename T>
-concept DecomposeCondition = (DecomposeCountV<T> != kDecomposeCountUndef);
-
-template<typename T>
-struct DecomposeCountImpl : DecomposeCountT<T> {};
+// template<typename T>
+// struct DecomposeCountImpl : DecomposeCountT<T> {};
 
 #else  // defined(__clang__)
 // ----------------------------------------------------

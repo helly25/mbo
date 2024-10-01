@@ -380,6 +380,7 @@ struct WithUnion : mbo::types::Extend<WithUnion> {
 static_assert(!HasUnionMember<int>);
 
 // NOLINTBEGIN(*-magic-numbers)
+#ifndef __clang__
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<0>::value);
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<1>::value);
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<2>::value);
@@ -393,6 +394,7 @@ static_assert(types_internal::DecomposeInfo<WithUnion>::kFieldCount == 4);
 static_assert(types_internal::DecomposeInfo<WithUnion>::kCountBases == 0);
 static_assert(types_internal::DecomposeInfo<WithUnion>::kCountEmptyBases == 1);
 static_assert(types_internal::DecomposeCountImpl<WithUnion>::value == 3);
+#endif
 // NOLINTEND(*-magic-numbers)
 
 static_assert(HasUnionMember<WithUnion>);
@@ -709,6 +711,7 @@ struct UseCrtp1 : Extend<UseCrtp1> {
   Crtp1 crtp;
 };
 
+#ifndef __clang__
 // NOLINTBEGIN(*-magic-numbers)
 static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<0>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<1>::value);
@@ -733,6 +736,7 @@ static_assert(types_internal::DecomposeInfo<UseCrtp1>::kOnlyEmptyBases);
 static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kOneNonEmptyBasePlusFields);
 
 static_assert(types_internal::DecomposeInfo<UseCrtp1>::kDecomposeCount == 1);
+#endif
 
 struct UseCrtp2 : Extend<UseCrtp2> {
   Crtp2 crtp;
@@ -745,6 +749,7 @@ struct UseBoth : Extend<UseBoth> {
 
 static_assert(IsAggregate<UseBoth>);
 
+#ifndef __clang__
 // NOLINTBEGIN(*-magic-numbers)
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<0>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<1>::value);
@@ -770,6 +775,7 @@ static_assert(types_internal::DecomposeInfo<UseBoth>::kOnlyEmptyBases);
 static_assert(!types_internal::DecomposeInfo<UseBoth>::kOneNonEmptyBasePlusFields);
 
 static_assert(types_internal::DecomposeInfo<UseBoth>::kDecomposeCount == 2);
+#endif
 
 static_assert(!IsDecomposable<Crtp1>);
 static_assert(!IsDecomposable<Crtp2>);
@@ -777,9 +783,11 @@ static_assert(IsDecomposable<UseCrtp1>);
 static_assert(IsDecomposable<UseCrtp2>);
 static_assert(IsDecomposable<UseBoth>);
 
+#ifndef __clang__
 TEST_F(ExtendTest, NoDefaultConstructor) {
   ABSL_LOG(ERROR) << types_internal::DecomposeInfo<UseBoth>::Debug();
 }
+#endif
 
 struct AbslFlatHashMapUser : Extend<AbslFlatHashMapUser> {
   using MboTypesStringifyDoNotPrintFieldNames = void;
