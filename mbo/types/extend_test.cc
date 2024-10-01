@@ -895,7 +895,7 @@ TEST_F(ExtendTest, FromTupleToVariants) {
     EXPECT_THAT(val3.two, kStr2);
   }
   {
-    const auto val4 = TestStruct::ConstructFromTuple(std::make_tuple(kStr1, kInt2));
+    const auto val4 = TestStruct::ConstructFromArgs(kStr1, kInt2);
     static_assert((std::same_as<std::remove_cvref_t<decltype(val4)>, TestStruct>));
     EXPECT_THAT(val4.one, kStr1);
     EXPECT_THAT(val4.two, kInt2);

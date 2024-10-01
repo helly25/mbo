@@ -19,7 +19,7 @@
 // IWYU pragma private, include "mbo/types/extend.h"
 
 #include <array>
-#include <concepts>
+#include <concepts>  // IWYU pragma: keep
 #include <string_view>
 #include <tuple>
 #include <type_traits>
