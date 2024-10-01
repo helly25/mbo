@@ -335,7 +335,7 @@ concept IsVariant = types_internal::IsVariantImpl<T>::value;
 //
 // This is used in mbo::types::Extend<...>::ConstructFrom{Tuple|Args}.
 //
-// See: https://godbolt.org/z/Wjq38PP6n
+// See: https://godbolt.org/z/3nnsG6bEb
 template<typename T, typename... Args>
 concept IsConstructibleWithEmptyBaseAndArgs = requires(Args&&... args) {
   { T{{}, {std::forward<Args>(args)}...} };

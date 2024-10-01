@@ -18,9 +18,9 @@
 
 #include <type_traits>
 
-#include "mbo/types/extender.h"         // IWYU pragma: export
-#include "mbo/types/internal/extend.h"  // IWYU pragma: export
-#include "mbo/types/internal/extender.h"
+#include "mbo/types/extender.h"           // IWYU pragma: export
+#include "mbo/types/internal/extend.h"    // IWYU pragma: export
+#include "mbo/types/internal/extender.h"  // IWYU pragma: export
 
 namespace mbo::types {
 
@@ -42,11 +42,24 @@ namespace mbo::types {
 // std::cout << Name{.first = "First", .last = "Last"} << std::endl;
 // ```
 //
-// The struct `Name` automatically gains the ability to print, stream and
-// compare itself. In the above example `{"First", "Last"}` will be printed.
+// The struct `Name` automatically gains the ability to print, stream, compare
+// and hash itself. In the above example `{"First", "Last"}` will be printed.
 // If compiled on Clang it will print `{first: "First", last: "Last"}` (see
-// AbslStringify for restrictions). Also, the field names can be suppressed
-// by adding `using MboTypesStringifyDoNotPrintFieldNames = void;` to the type.
+// Stringify and AbslStringify for restrictions). Also, the field names can be
+// suppressed by adding `using MboTypesStringifyDoNotPrintFieldNames = void;`
+// to the type.
+//
+// Additional base operations:
+// * `static ConstructFromArgs`:  Construct the type from an argument list.
+// * `static ConstructFromTuple`: Construct the type from a tuple.
+//
+// Additional API extension points, common to all `Extend`ed types:
+// * type `MboTypesStringifyDoNotPrintFieldNames,
+// * function `MboTypesStringifyFieldNames`, and
+// * function `MboTypesStringifyOptions`.
+//
+// NOTE: The `Stringify` extension API point `MboTypesStringifySupport` is not
+// allowed here.
 //
 // NOTE: No member may be an anonymous union or struct.
 template<typename T, typename... Extender>

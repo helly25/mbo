@@ -31,7 +31,11 @@
 namespace mbo::types {
 
 // Base Extender implementation for CRTP functionality injection.
-// This must always be present.
+//
+// This must be the base of every `Extend`ed struct's CRTP chain.
+//
+// This is only not in the internal namespace `types_internal` to shorten the
+// resulting type names.
 template<typename ActualType>
 struct ExtendBase {
   using Type = ActualType;  // Used for type chaining in `UseExtender`
@@ -53,7 +57,9 @@ struct ExtendBase {
   }
 
  protected:  // DO NOT expose anything publicly.
-  auto ToTuple() const { return StructToTuple(static_cast<const ActualType&>(*this)); }
+  auto ToTuple() const & { return StructToTuple(static_cast<const ActualType&>(*this)); }
+
+  auto ToTuple() && { return StructToTuple(std::move(*this)); }
 
  private:  // DO NOT expose anything publicly.
   template<typename U, typename Extender>
