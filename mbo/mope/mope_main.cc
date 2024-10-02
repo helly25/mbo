@@ -45,11 +45,10 @@ ABSL_FLAG(
     set,
     {},
     "A comma separated list of `name=value` pairs, used to seed the template config. "
-    "The name is split by colons into sections and final section key. Global context "
-    "variables can be set with an empty section, e.g. `--set=:config=42` creates a "
-    "global setting `config` with value `42` that is valid globall including all "
-    "nested sections. The flag `--set=section:name=text` creates a value `name` in "
-    "the section `section` with value `text`.");
+    "The name is split by colons into sections and final section key. Global context variables can "
+    "be set with an empty section, e.g. `--set=:config=42` creates a setting `config` with value "
+    "`42` that is valid globally including all nested sections. The flag `--set=section:name=text` "
+    "creates a value `name` in the section `section` with value `text`.");
 
 // NOLINTEND(*avoid-non-const-global-variables,*abseil-no-namespace)
 
@@ -114,6 +113,12 @@ Args:
   --set=(key=val,)+       List of comma separated `key`, `value` pairs used to
                           set simple values. If key contains a `:`, then a sub
                           section will be created with the left part of the key.
+                          Global context variables can be set with an empty
+                          section, e.g. `--set=:config=42` creates a setting
+                          `config` with value `42` that is valid globally
+                          including all nested sections.
+                          The flag `--set=section:name=text` creates a value
+                          `name` in the section `section` with value `text`.
   --ini=<filename>        An optional INI file that can be used to configure
                           the template data, see below.
 
