@@ -40,7 +40,7 @@ concept IsAggregate = std::is_aggregate_v<std::remove_cvref_t<T>>;
 
 struct NotDecomposableImpl : std::integral_constant<std::size_t, std::numeric_limits<std::size_t>::max()> {};
 
-constexpr std::size_t kDecomposeCountUndef = NotDecomposableImpl::value;
+constexpr std::size_t kNotDecomposableValue = NotDecomposableImpl::value;
 
 inline constexpr std::size_t kMaxSupportedFieldCount = 50;
 
@@ -91,6 +91,9 @@ concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 
 {{#use_clang}}
 #if defined(__clang__)
+
+#define MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET 1
+
 // ----------------------------------------------------
 // This version implements the somewhat known Overloadset solution with additioanl identification of
 // non admissible types. This works well for Clang compilers but fails to compile (even) in GCC 14.
@@ -122,7 +125,7 @@ auto DecomposeCountFunc(T&& v) {
     } else {
         // Note that we could enable `std::is_aggregate_v<T> && std::is_empty_v<T>` to return 0 for
         // empty, but we are not returning field counts here. We are retuning decompose counts here.
-        return std::integral_constant<std::size_t, kDecomposeCountUndef>{};
+        return std::integral_constant<std::size_t, kNotDecomposableValue>{};
     }
 };
 
@@ -130,10 +133,10 @@ template<typename T>
 struct DecomposeCountImpl: decltype(DecomposeCountFunc(std::declval<T>())) {};
 
 template<>
-struct DecomposeCountImpl<void>: std::integral_constant<std::size_t, kDecomposeCountUndef> {};
+struct DecomposeCountImpl<void>: std::integral_constant<std::size_t, kNotDecomposableValue> {};
 
 template<typename T>
-concept DecomposeCondition = (DecomposeCountImpl<T>::value != kDecomposeCountUndef);
+concept DecomposeCondition = (DecomposeCountImpl<T>::value != kNotDecomposableValue);
 
 // Put all into once struct.
 template<typename T>
@@ -143,7 +146,7 @@ struct DecomposeInfo final {
   static constexpr bool kIsEmpty = std::is_empty_v<Type>;
   static constexpr std::size_t kFieldCount = std::is_empty_v<Type> ? 0 : DecomposeCountImpl<Type>::value;
   static constexpr std::size_t kDecomposeCount = DecomposeCountImpl<Type>::value;
-  static constexpr bool kDecomposable = (kIsAggregate && !kIsEmpty) && (kDecomposeCount != kDecomposeCountUndef);
+  static constexpr bool kDecomposable = (kIsAggregate && !kIsEmpty) && (kDecomposeCount != kNotDecomposableValue);
 
   static std::string Debug(std::string_view separator = ", ") {
     std::string str;

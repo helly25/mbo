@@ -37,11 +37,7 @@ using namespace ::mbo::types::types_internal::test_types;
 struct TraitsTest : ::testing::Test {
   template<typename T>
   static std::string DecomposeInfo() {
-#ifdef __clang__
-    return "";
-#else
     return absl::StrCat("  DecomposeInfo: {\n", mbo::types::types_internal::DecomposeInfo<T>::Debug("\n    "), "  \n}");
-#endif
   }
 };
 
@@ -169,13 +165,13 @@ TEST_F(TraitsTest, StructWithStrings) {
   using namespace ::mbo::types::types_internal;  // NOLINT(*-build-using-namespace)
   using T = StructWithStrings;
   EXPECT_THAT(DecomposeCountV<T>, 5) << DecomposeInfo<T>();
-#ifndef __clang__
+#ifndef MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
   EXPECT_THAT((AggregateFieldInitializerCount<T, 0>::value), 2);
   EXPECT_THAT((AggregateFieldInitializerCount<T, 1>::value), 2);
   EXPECT_THAT((AggregateFieldInitializerCount<T, 2>::value), 2);
   EXPECT_THAT((DetectSpecial<AggregateFieldInitializerCount<T, 0>::value, 5 - 0>::value), 2);
   EXPECT_THAT((DetectSpecial<AggregateFieldInitializerCount<T, 1>::value, 5 - 1>::value), 2);
-#endif
+#endif  // MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
 }
 
 TYPED_TEST(GenTraitsTest, DecomposeCountV) {
