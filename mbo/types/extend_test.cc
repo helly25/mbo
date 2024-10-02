@@ -952,6 +952,14 @@ TEST_F(ExtendTest, MoveOnlyFromTuple) {
   }
 }
 
+TEST_F(ExtendTest, EmptyExtend) {
+  struct Empty : Extend<Empty> {};
+
+  ASSERT_TRUE((std::same_as<decltype(StructToTuple(Empty{})), std::tuple<>>));
+  ASSERT_TRUE(CanCreateTuple<Empty>);
+  ASSERT_FALSE(CanCreateTuple<Empty&>);
+}
+
 }  // namespace
 }  // namespace mbo::types
 

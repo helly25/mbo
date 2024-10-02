@@ -39,7 +39,7 @@ concept CanCreateTuple = types_internal::DecomposeCondition<T> || (std::is_aggre
 //
 // The resulting tuple is made up of references!
 template<typename T>
-requires CanCreateTuple<T>
+requires CanCreateTuple<std::remove_cvref_t<T>>
 inline constexpr auto StructToTuple(T&& v) {
   return types_internal::DecomposeHelper::ToTuple(std::forward<T>(v));
 }
