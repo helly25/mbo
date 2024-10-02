@@ -327,8 +327,19 @@ struct IsVariantImpl<std::variant<Args...>> : std::true_type {};
 
 }  // namespace types_internal
 
+// Determine whether `T` is a `std::variant<...>` type.
 template<typename T>
 concept IsVariant = types_internal::IsVariantImpl<T>::value;
+
+// Determines whether `T` can be constructed from an empty base and `Args`.
+//
+// This is used in mbo::types::Extend<...>::ConstructFrom{Tuple|Args}.
+//
+// See: https://godbolt.org/z/3nnsG6bEb
+template<typename T, typename... Args>
+concept IsConstructibleWithEmptyBaseAndArgs = requires(Args&&... args) {
+  { T{{}, {std::forward<Args>(args)}...} };
+};
 
 }  // namespace mbo::types
 
