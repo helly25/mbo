@@ -1,0 +1,8 @@
+Start: {{config_start}}
+End:   {{config_end}}
+Step:  {{config_step}}
+Join:  '{{config_join}}'
+{{#section}}
+List:  {{#list=config_start;config_end;config_step;config_join}}{{list}}{{/list}}
+Nested:{{#list=config_start;config_end;config_step;'|'}}{{#inner=list;config_end;config_step;','}}{{inner}}{{/inner}}{{/list}}
+{{/section}}

@@ -25,9 +25,17 @@
 #include "absl/container/node_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "mbo/container/any_scan.h"
 #include "mbo/types/extend.h"
 
 namespace mbo::mope {
+
+template<class... Ts>
+struct overloaded : Ts... {
+  using Ts::operator()...;
+};
+template<class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
 
 // MOPE: Mope Over Pump Ends - Is a simple templating system.
 //
@@ -55,6 +63,9 @@ class Template {
 
   // Expands the template `output` in-place.
   absl::Status Expand(std::string& output) const;
+  absl::Status Expand(
+      std::string& output,
+      mbo::container::ConvertingScan<std::pair<std::string_view, std::string_view>> context_data) const;
 
  private:
   enum class TagType {
@@ -103,6 +114,16 @@ class Template {
   // to have a matching `Expand(const TagInfo<Data-Type>&, std::string*)`.
   using Data = std::variant<TagData<Section>, TagData<Range>, TagData<std::string>>;
   using DataMap = absl::node_hash_map<std::string, Data>;
+
+  friend std::ostream& operator<<(std::ostream& os, const Data& data) {
+    std::visit(
+        overloaded{
+            [&os](const TagData<Section>& arg) { os << "Section"; },
+            [&os](const TagData<Range>& arg) { os << "Range"; },
+            [&os](const TagData<std::string>& arg) { os << "String: '" << arg.data << "'"; }},
+        data);
+    return os;
+  }
 
   struct Context {
     DataMap data;

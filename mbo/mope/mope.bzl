@@ -291,7 +291,7 @@ def mope_test(
         name: Name of the resulting test_suite
         srcs: The mope template(s).
         outs: The corresponding golden generated files.
-        data: additional data files (e.g. INI files).ß
+        data: additional data files (e.g. INI files).
         clang_format: Whether to apply clang-fromat to the generated results.
         args: Arguments to pass to the mope tool.
         **kwargs: Other args (e.g. tags, visibility).

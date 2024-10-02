@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("//mbo/mope:mope.bzl", "mope_test")
+
+package(default_visibility = ["//visibility:private"])
+
+mope_test(
+    name = "mope_control_values_test",
+    srcs = ["control_values.mope"],
+    outs = ["control_values.golden"],
+    args = [
+        "--set=config_start=12,config_end=42,config_step=10,config_join=+",
+    ],
+)
+
+mope_test(
+    name = "section_as_condition_disabled_test",
+    srcs = ["section_as_condition_disabled.mope"],
+    outs = ["section_as_condition_disabled.golden"],
+    args = [
+        # Here `section` is disabled because it has not data.
+        "--set=config_start=25,config_end=42,config_step=10,config_join=+",
+    ],
+)
+
+mope_test(
+    name = "section_as_condition_enabled_test",
+    srcs = ["section_as_condition_enabled.mope"],
+    outs = ["section_as_condition_enabled.golden"],
+    args = [
+        # Here `section` is enabled becuase it has one value `enabled` (even though it is empty).
+        # Must use global config here ':config_start' as opposed to 'config_start' due to use of sections.
+        "--set=section:enabled,:config_start=25,:config_end=42,:config_step=10,:config_join=+",
+    ],
+)
+
+mope_test(
+    name = "mope_section_values_test",
+    srcs = ["section_values.mope"],
+    outs = ["section_values.golden"],
+    args = [
+        "--set=section:word=There,section:word=be,section:word=Dragons!",
+    ],
+)

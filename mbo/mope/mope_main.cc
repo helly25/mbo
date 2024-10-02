@@ -19,9 +19,11 @@
 #include <utility>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
+#include "absl/log/absl_log.h"
 #include "absl/log/globals.h"
 #include "absl/log/initialize.h"
 #include "absl/status/status.h"
@@ -42,7 +44,12 @@ ABSL_FLAG(
     std::vector<std::string>,
     set,
     {},
-    "A comma separated list of `name=value` pairs, used to seed the template config.");
+    "A comma separated list of `name=value` pairs, used to seed the template config. "
+    "The name is split by colons into sections and final section key. Global context "
+    "variables can be set with an empty section, e.g. `--set=:config=42` creates a "
+    "global setting `config` with value `42` that is valid globall including all "
+    "nested sections. The flag `--set=section:name=text` creates a value `name` in "
+    "the section `section` with value `text`.");
 
 // NOLINTEND(*avoid-non-const-global-variables,*abseil-no-namespace)
 
@@ -57,9 +64,28 @@ absl::Status Process(const Options& opts) {
   auto input = mbo::file::Artefact::Read(opts.template_name);
   mbo::mope::Template mope_template;
   // Add `--set` flag values.
+  absl::flat_hash_map<std::string, std::string> context_data;
   for (const auto& set_kv : absl::GetFlag(FLAGS_set)) {
-    const std::pair<std::string_view, std::string_view> kv = absl::StrSplit(set_kv, '=');
-    MBO_RETURN_IF_ERROR(mope_template.SetValue(kv.first, kv.second));
+    const auto [names, value] = std::pair<std::string_view, std::string_view>(absl::StrSplit(set_kv, '='));
+    std::vector<std::string_view> section_names = absl::StrSplit(names, ':');
+    const std::string_view key = section_names.back();
+    if (key.empty()) {
+      return absl::InvalidArgumentError("No part of the key in `--set=<key>=<value>` may be empty if split by ':'.");
+    }
+    section_names.pop_back();
+    if (section_names.size() == 1 && section_names[0].empty()) {
+      context_data[key].assign(value);  // Global context_data
+    } else {
+      auto section = &mope_template;
+      for (std::string_view section_name : section_names) {
+        if (section_name.empty()) {
+          return absl::InvalidArgumentError(
+              "No part of the key in `--set=<key>=<value>` may be empty if split by ':'.");
+        }
+        MBO_ASSIGN_OR_RETURN(section, section->AddSection(section_name));
+      }
+      MBO_RETURN_IF_ERROR(section->SetValue(key, value));
+    }
   }
   // Read `--ini` file if present.
   const std::string ini_filename = absl::GetFlag(FLAGS_ini);
@@ -67,7 +93,7 @@ absl::Status Process(const Options& opts) {
     MBO_RETURN_IF_ERROR(mope::ReadIniToTemlate(ini_filename, mope_template));
   }
   // Expand the template.
-  MBO_RETURN_IF_ERROR(mope_template.Expand(input->data));
+  MBO_RETURN_IF_ERROR(mope_template.Expand(input->data, mbo::container::MakeConvertingScan(context_data)));
   if (opts.generate_name.empty() || opts.generate_name == "-") {
     std::cout << input->data;
     return absl::OkStatus();
@@ -86,7 +112,8 @@ Args:
   --generate=<file.out>   Path to output file. This defaults to '-'- which
                           results in using stdout as output.
   --set=(key=val,)+       List of comma separated `key`, `value` pairs used to
-                          set simple values.
+                          set simple values. If key contains a `:`, then a sub
+                          section will be created with the left part of the key.
   --ini=<filename>        An optional INI file that can be used to configure
                           the template data, see below.
 
@@ -133,6 +160,14 @@ CHECK_EQ(output, "My bar-baz.");
 The optional <join> value can be a quoted string or a reference. It is used to
 join the section values and won't be used if the section has fewer then 2
 elements.
+
+A template section will be stripped if no section values have been created.
+
+2.1) A section can function as an area that can be enabled or disabled via
+command line flag `--set` - if nothing else sets any section value. In that case
+not providing a value on the command line will result in stripping the section.
+However, if any value is set, it will be shown. So `--set=section:enable` will
+enable the section `section`.
 
 3) Comments
 

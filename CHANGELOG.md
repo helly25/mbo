@@ -10,6 +10,8 @@
 * Added numeric field name (aka key) support and enforced for Json output.
 * Added rule `mbo/types:stringify_ostream_cc` and header `mbo/types/stringify_ostream.h` for automatic ostream support using `Stringify`.
 * Added static constructors `Extend::ConstructFromTuple` and `Extend::ConstructFromArgs`.
+* Fixed a bug where Mope did not correctly enable and disable sections.
+* Added documentation and tests on how to use a mope's `--set` flag to enable/disable sections.
 
 # 0.2.29
 

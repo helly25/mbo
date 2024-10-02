@@ -329,11 +329,16 @@ absl::Status Template::ExpandSectionTag(const TagInfo& tag, Context& ctx, std::s
   if (!tag.config.has_value()) {
     const Data* found_data_ptr = Lookup(tag.name, ctx);
     if (found_data_ptr == nullptr) {
+      output.clear();
       return absl::OkStatus();
     }
     const auto* section = std::get_if<TagData<Section>>(found_data_ptr);
     if (section == nullptr) {
       return absl::InvalidArgumentError(absl::StrCat("Section tag '", tag.name, "' has no dictionary."));
+    }
+    if (section->data.dictionary.empty()) {
+      output.clear();
+      return absl::OkStatus();
     }
     static constexpr mbo::strings::ParseOptions kOptions{
         .remove_quotes = true,
@@ -476,6 +481,16 @@ absl::Status Template::ExpandInternal(Context& ctx, std::string& output) const {
 
 absl::Status Template::Expand(std::string& output) const {
   Context ctx;
+  return ExpandInternal(ctx, output);
+}
+
+absl::Status Template::Expand(
+    std::string& output,
+    mbo::container::ConvertingScan<std::pair<std::string_view, std::string_view>> context_data) const {
+  Context ctx;
+  for (auto [name, value] : context_data) {
+    MBO_RETURN_IF_ERROR(SetValueInternal(name, value, false, ctx.data));
+  }
   return ExpandInternal(ctx, output);
 }
 
