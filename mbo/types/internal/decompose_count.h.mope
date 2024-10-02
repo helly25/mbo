@@ -94,7 +94,7 @@ concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 // This version implements the somewhat known Overloadset solution with additioanl identification of
 // non admissible types. This works well for Clang compilers but fails to compile (even) in GCC 14.
 // For the GCC issue refer to: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=92402
-// For the basic mechanism see: https://godbolt.org/z/j4bosjjWY
+// For the basic mechanism see: https://godbolt.org/z/Ejada5YEE
 
 template<typename... Ts>
 struct OverloadSet : Ts... {
