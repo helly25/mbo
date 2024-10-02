@@ -92,11 +92,7 @@ struct StringifyTest : ::testing::Test {
 
   template<typename T>
   static std::string DecomposeInfo() {
-#ifdef __clang__
-    return "";
-#else
     return absl::StrCat("  DecomposeInfo: {\n", mbo::types::types_internal::DecomposeInfo<T>::Debug("\n    "), "  \n}");
-#endif
   }
 
   static Tester* tester;

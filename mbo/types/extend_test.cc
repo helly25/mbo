@@ -165,21 +165,19 @@ struct Person : Extend<Person> {
 
 class ExtendTest : public ::testing::Test {};
 
-#if !defined(__clang__)
 TEST_F(ExtendTest, TestDecomposeInfo) {
   using ::mbo::types::types_internal::DecomposeInfo;
-# define DEBUG_AND_TEST(Type, kExpected)                            \
-   ABSL_LOG(INFO) << #Type << ": " << DecomposeInfo<Type>::Debug(); \
-   EXPECT_THAT(DecomposeInfo<Type>::kDecomposeCount, kExpected)
+#define DEBUG_AND_TEST(Type, kExpected)                            \
+  ABSL_LOG(INFO) << #Type << ": " << DecomposeInfo<Type>::Debug(); \
+  EXPECT_THAT(DecomposeInfo<Type>::kDecomposeCount, kExpected)
 
   DEBUG_AND_TEST(Extend4, 4);
   DEBUG_AND_TEST(SimpleName, 2);
   DEBUG_AND_TEST(SimplePerson, 2);
   DEBUG_AND_TEST(Name, 2);
   DEBUG_AND_TEST(Person, 2);
-# undef DEBUG_AND_TEST
+#undef DEBUG_AND_TEST
 }
-#endif
 
 #if defined(__clang__)
 static_assert(kStructNameSupport);
@@ -783,11 +781,9 @@ static_assert(IsDecomposable<UseCrtp1>);
 static_assert(IsDecomposable<UseCrtp2>);
 static_assert(IsDecomposable<UseBoth>);
 
-#ifndef __clang__
 TEST_F(ExtendTest, NoDefaultConstructor) {
   ABSL_LOG(ERROR) << types_internal::DecomposeInfo<UseBoth>::Debug();
 }
-#endif
 
 struct AbslFlatHashMapUser : Extend<AbslFlatHashMapUser> {
   using MboTypesStringifyDoNotPrintFieldNames = void;

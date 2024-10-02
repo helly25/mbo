@@ -1,3 +1,7 @@
+# 0.3.0.a1
+
+* Changed: `DecomposeCount` to never return 0 (an empty aggregate cannot be decomposed using structured bindings).
+
 # 0.2.30
 
 * Added class `Stringify` which can turn arbitrary structs into strings.

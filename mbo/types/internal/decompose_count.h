@@ -306,9 +306,9 @@ auto DecomposeCountFunc(T&& v) {
                   { overload_set(std::declval<T>()) };
                 }) {
     return overload_set(std::forward<T>(v));
-  } else if constexpr (std::is_aggregate_v<T> && std::is_empty_v<T>) {
-    return std::integral_constant<std::size_t, 0>{};
   } else {
+    // Note that we could enable `std::is_aggregate_v<T> && std::is_empty_v<T>` to return 0 for
+    // empty, but we are not returning field counts here. We are retuning decompose counts here.
     return std::integral_constant<std::size_t, kDecomposeCountUndef>{};
   }
 }
@@ -319,14 +319,40 @@ struct DecomposeCountImpl : decltype(DecomposeCountFunc(std::declval<T>())) {};
 template<>
 struct DecomposeCountImpl<void> : std::integral_constant<std::size_t, kDecomposeCountUndef> {};
 
-// template<typename T>
-// constexpr std::size_t DecomposeCountV = DecomposeCountImpl<T>::value;
-
 template<typename T>
 concept DecomposeCondition = (DecomposeCountImpl<T>::value != kDecomposeCountUndef);
 
-// template<typename T>
-// struct DecomposeCountImpl : DecomposeCountT<T> {};
+// Put all into once struct.
+template<typename T>
+struct DecomposeInfo final {
+  using Type = std::remove_cvref_t<T>;
+  static constexpr bool kIsAggregate = std::is_aggregate_v<Type>;
+  static constexpr bool kIsEmpty = std::is_empty_v<Type>;
+  static constexpr std::size_t kFieldCount = std::is_empty_v<Type> ? 0 : DecomposeCountImpl<Type>::value;
+  static constexpr std::size_t kDecomposeCount = DecomposeCountImpl<Type>::value;
+  static constexpr bool kDecomposable = (kIsAggregate && !kIsEmpty) && (kDecomposeCount != kDecomposeCountUndef);
+
+  static std::string Debug(std::string_view separator = ", ") {
+    std::string str;
+    std::string_view sep;
+# define DEBUG_ADD(f)                                                                             \
+   str += std::string(sep) + #f + ": "                                                            \
+          + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
+                 ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
+                 : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
+                            && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
+                        ? std::string("N/A")                                                      \
+                        : std::to_string(DecomposeInfo<T>::f)));                                  \
+   sep = separator
+    DEBUG_ADD(kIsAggregate);
+    DEBUG_ADD(kIsEmpty);
+    DEBUG_ADD(kFieldCount);
+    DEBUG_ADD(kDecomposable);
+    DEBUG_ADD(kDecomposeCount);
+# undef DEBUG_ADD
+    return str;
+  }
+};
 
 #else  // defined(__clang__)
 // ----------------------------------------------------
@@ -605,9 +631,8 @@ struct DecomposeInfo final {
   static constexpr std::size_t kCountBases = kBadFieldCount ? 0 : CountBases<Type, false>::value;
   static constexpr std::size_t kCountEmptyBases = kBadFieldCount ? 0 : CountBases<Type, true>::value;
   static constexpr bool kOnlyEmptyBases = kCountBases <= kCountEmptyBases;
-  static constexpr bool kDecomposable =
-      !kBadFieldCount && kIsAggregate
-      && (kIsEmpty || ((kOneNonEmptyBase || kOnlyEmptyBases) && !kOneNonEmptyBasePlusFields));
+  static constexpr bool kDecomposable = !kBadFieldCount && kIsAggregate && !kIsEmpty
+                                        && ((kOneNonEmptyBase || kOnlyEmptyBases) && !kOneNonEmptyBasePlusFields);
   static constexpr std::size_t kDecomposeCount =  // First check whether T is composable
       kDecomposable
           ? (kCountBases + kCountEmptyBases == 0  // If it is, then check whether there are any bases.
@@ -657,7 +682,7 @@ struct DecomposeInfo<T, false> final {
   static constexpr std::size_t kCountBases = 0;
   static constexpr std::size_t kCountEmptyBases = 0;
   static constexpr bool kOnlyEmptyBases = true;
-  static constexpr bool kDecomposable = kIsAggregate || kIsEmpty;
+  static constexpr bool kDecomposable = kIsAggregate && !kIsEmpty;
   static constexpr std::size_t kDecomposeCount = kDecomposable ? 0 : NotDecomposableImpl::value;
 
   static std::string Debug(std::string_view separator = ", ") {  // NOLINT(readability-function-cognitive-complexity)
@@ -707,7 +732,8 @@ struct DecomposeHelper final {
 
   template<typename U>
   static constexpr auto ToTuple(U&& data) noexcept {
-    constexpr auto kNumFields = DecomposeCountImpl<U>::value;
+    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<U> && std::is_empty_v<U>;
+    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<U>::value;
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {
@@ -894,7 +920,8 @@ struct DecomposeHelper final {
 
   template<typename U>
   static constexpr auto ToTuple(U& data) noexcept {
-    constexpr auto kNumFields = DecomposeCountImpl<U>::value;
+    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<U> && std::is_empty_v<U>;
+    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<U>::value;
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {
@@ -1077,7 +1104,8 @@ struct DecomposeHelper final {
 
   template<typename U>
   static constexpr auto ToTuple(const U& data) noexcept {
-    constexpr auto kNumFields = DecomposeCountImpl<U>::value;
+    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<U> && std::is_empty_v<U>;
+    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<U>::value;
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {

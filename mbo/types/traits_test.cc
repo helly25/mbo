@@ -107,20 +107,20 @@ TEST_F(TraitsTest, DecomposeCountV) {
 
   ASSERT_THAT(IsAggregate<CtorDefault>, false);
   EXPECT_THAT(IsDecomposable<CtorDefault>, false);
-  EXPECT_THAT(DecomposeCountV<CtorDefault>, AnyOf(0, NotDecomposableV));  // TODO(helly25): Fix: NotDecomposableV);
+  EXPECT_THAT(DecomposeCountV<CtorDefault>, NotDecomposableV);
 
   ASSERT_THAT(IsAggregate<CtorUser>, false);
   EXPECT_THAT(IsDecomposable<CtorUser>, false);
-  EXPECT_THAT(DecomposeCountV<CtorUser>, AnyOf(0, NotDecomposableV));  // TODO(helly25): Fix: NotDecomposableV);
+  EXPECT_THAT(DecomposeCountV<CtorUser>, NotDecomposableV);
 
   ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
   ASSERT_THAT(IsAggregate<CtorBase>, true);
   EXPECT_THAT(IsDecomposable<CtorBase>, false);
-  EXPECT_THAT(DecomposeCountV<CtorBase>, 0);
+  EXPECT_THAT(DecomposeCountV<CtorBase>, NotDecomposableV);
 
   ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
   EXPECT_THAT(IsDecomposable<Empty>, false);
-  EXPECT_THAT(DecomposeCountV<Empty>, AnyOf(0, NotDecomposableV));
+  EXPECT_THAT(DecomposeCountV<Empty>, NotDecomposableV);
 
   ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
   EXPECT_THAT(IsDecomposable<Base1>, true);
@@ -182,7 +182,8 @@ TYPED_TEST(GenTraitsTest, DecomposeCountV) {
   using Type = TypeParam;
   constexpr std::size_t kBase = TestFixture::kBaseFieldCount;
   constexpr std::size_t kDerived = TestFixture::kDerivedFieldCount;
-  EXPECT_THAT(DecomposeCountV<Type>, kBase && kDerived ? NotDecomposableV : kBase + kDerived);
+  EXPECT_THAT(
+      DecomposeCountV<Type>, (kBase && kDerived) || (kBase + kDerived == 0) ? NotDecomposableV : kBase + kDerived);
 }
 
 TEST_F(TraitsTest, IsBracesContructible) {
