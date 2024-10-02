@@ -1,0 +1,6 @@
+Start: 25
+End:   42
+Step:  10
+Join:  '+'
+List:  25+35
+Nested:25,35|35

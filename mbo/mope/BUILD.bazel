@@ -48,10 +48,12 @@ cc_library(
     srcs = ["mope.cc"],
     hdrs = ["mope.h"],
     deps = [
+        "//mbo/container:any_scan_cc",
         "//mbo/types:extend_cc",
         "//mbo/status:status_macros_cc",
         "//mbo/strings:parse_cc",
         "@com_google_absl//absl/cleanup",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:node_hash_map",
         "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/log:absl_log",
