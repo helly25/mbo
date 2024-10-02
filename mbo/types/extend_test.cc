@@ -165,21 +165,19 @@ struct Person : Extend<Person> {
 
 class ExtendTest : public ::testing::Test {};
 
-#if !defined(__clang__)
 TEST_F(ExtendTest, TestDecomposeInfo) {
   using ::mbo::types::types_internal::DecomposeInfo;
-# define DEBUG_AND_TEST(Type, kExpected)                            \
-   ABSL_LOG(INFO) << #Type << ": " << DecomposeInfo<Type>::Debug(); \
-   EXPECT_THAT(DecomposeInfo<Type>::kDecomposeCount, kExpected)
+#define DEBUG_AND_TEST(Type, kExpected)                            \
+  ABSL_LOG(INFO) << #Type << ": " << DecomposeInfo<Type>::Debug(); \
+  EXPECT_THAT(DecomposeInfo<Type>::kDecomposeCount, kExpected)
 
   DEBUG_AND_TEST(Extend4, 4);
   DEBUG_AND_TEST(SimpleName, 2);
   DEBUG_AND_TEST(SimplePerson, 2);
   DEBUG_AND_TEST(Name, 2);
   DEBUG_AND_TEST(Person, 2);
-# undef DEBUG_AND_TEST
+#undef DEBUG_AND_TEST
 }
-#endif
 
 #if defined(__clang__)
 static_assert(kStructNameSupport);
@@ -380,6 +378,7 @@ struct WithUnion : mbo::types::Extend<WithUnion> {
 static_assert(!HasUnionMember<int>);
 
 // NOLINTBEGIN(*-magic-numbers)
+#ifndef MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<0>::value);
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<1>::value);
 static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<2>::value);
@@ -393,6 +392,7 @@ static_assert(types_internal::DecomposeInfo<WithUnion>::kFieldCount == 4);
 static_assert(types_internal::DecomposeInfo<WithUnion>::kCountBases == 0);
 static_assert(types_internal::DecomposeInfo<WithUnion>::kCountEmptyBases == 1);
 static_assert(types_internal::DecomposeCountImpl<WithUnion>::value == 3);
+#endif  // MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
 // NOLINTEND(*-magic-numbers)
 
 static_assert(HasUnionMember<WithUnion>);
@@ -709,6 +709,7 @@ struct UseCrtp1 : Extend<UseCrtp1> {
   Crtp1 crtp;
 };
 
+#ifndef MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
 // NOLINTBEGIN(*-magic-numbers)
 static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<0>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<1>::value);
@@ -733,6 +734,7 @@ static_assert(types_internal::DecomposeInfo<UseCrtp1>::kOnlyEmptyBases);
 static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kOneNonEmptyBasePlusFields);
 
 static_assert(types_internal::DecomposeInfo<UseCrtp1>::kDecomposeCount == 1);
+#endif  // MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
 
 struct UseCrtp2 : Extend<UseCrtp2> {
   Crtp2 crtp;
@@ -745,6 +747,7 @@ struct UseBoth : Extend<UseBoth> {
 
 static_assert(IsAggregate<UseBoth>);
 
+#ifndef MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
 // NOLINTBEGIN(*-magic-numbers)
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<0>::value);
 static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<1>::value);
@@ -770,6 +773,7 @@ static_assert(types_internal::DecomposeInfo<UseBoth>::kOnlyEmptyBases);
 static_assert(!types_internal::DecomposeInfo<UseBoth>::kOneNonEmptyBasePlusFields);
 
 static_assert(types_internal::DecomposeInfo<UseBoth>::kDecomposeCount == 2);
+#endif  // MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
 
 static_assert(!IsDecomposable<Crtp1>);
 static_assert(!IsDecomposable<Crtp2>);
@@ -946,6 +950,14 @@ TEST_F(ExtendTest, MoveOnlyFromTuple) {
     EXPECT_THAT(val4.one, kInt1);
     EXPECT_THAT(val4.two, kInt2);
   }
+}
+
+TEST_F(ExtendTest, EmptyExtend) {
+  struct Empty : Extend<Empty> {};
+
+  ASSERT_TRUE((std::same_as<decltype(StructToTuple(Empty{})), std::tuple<>>));
+  ASSERT_TRUE(CanCreateTuple<Empty>);
+  ASSERT_FALSE(CanCreateTuple<Empty&>);
 }
 
 }  // namespace

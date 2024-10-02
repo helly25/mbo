@@ -16,6 +16,8 @@
 #ifndef MBO_TYPES_INTERNAL_DECOMPOSE_COUNT_H_
 #define MBO_TYPES_INTERNAL_DECOMPOSE_COUNT_H_
 
+// Max fields: 40
+
 // IWYU pragma private, include "mbo/types/traits.h"
 
 #include <limits>
@@ -37,6 +39,8 @@ template<typename T>
 concept IsAggregate = std::is_aggregate_v<std::remove_cvref_t<T>>;
 
 struct NotDecomposableImpl : std::integral_constant<std::size_t, std::numeric_limits<std::size_t>::max()> {};
+
+constexpr std::size_t kNotDecomposableValue = NotDecomposableImpl::value;
 
 inline constexpr std::size_t kMaxSupportedFieldCount = 50;
 
@@ -85,6 +89,277 @@ struct AggregateHasNonEmptyBaseImpl : AggregateHasNonEmptyBaseRaw<std::remove_cv
 template<typename T>
 concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 
+#if defined(__clang__)
+
+# define MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET 1
+
+// ----------------------------------------------------
+// This version implements the somewhat known Overloadset solution with additioanl identification of
+// non admissible types. This works well for Clang compilers but fails to compile (even) in GCC 14.
+// For the GCC issue refer to: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=92402
+// For the basic mechanism see: https://godbolt.org/z/Ejada5YEE
+
+template<typename... Ts>
+struct OverloadSet : Ts... {
+  explicit OverloadSet(Ts&&... v) : Ts(std::move(v))... {}
+
+  using Ts::operator()...;
+  // Unfortunately we cannot use an alternative fallback using `...` arg here:
+  // auto operator()(...) const { return std::integral_constant<std::size_t, 0>{}; };
+  // but in the below we can use further `constexpr if ...`.
+};
+
+template<typename... Ts>
+auto MakeOverloadedSet(Ts&&... v) {
+  return OverloadSet<Ts...>(std::forward<Ts>(v)...);
+}
+
+template<typename T>
+auto DecomposeCountFunc(T&& v) {
+  auto fn1 = [](auto&& v) -> decltype(({
+    auto&& [a1] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 1>{};
+  })) { return {}; };
+  auto fn2 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 2>{};
+  })) { return {}; };
+  auto fn3 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 3>{};
+  })) { return {}; };
+  auto fn4 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 4>{};
+  })) { return {}; };
+  auto fn5 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 5>{};
+  })) { return {}; };
+  auto fn6 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 6>{};
+  })) { return {}; };
+  auto fn7 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 7>{};
+  })) { return {}; };
+  auto fn8 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 8>{};
+  })) { return {}; };
+  auto fn9 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 9>{};
+  })) { return {}; };
+  auto fn10 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 10>{};
+  })) { return {}; };
+  auto fn11 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 11>{};
+  })) { return {}; };
+  auto fn12 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 12>{};
+  })) { return {}; };
+  auto fn13 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 13>{};
+  })) { return {}; };
+  auto fn14 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 14>{};
+  })) { return {}; };
+  auto fn15 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 15>{};
+  })) { return {}; };
+  auto fn16 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 16>{};
+  })) { return {}; };
+  auto fn17 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17] = std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 17>{};
+  })) { return {}; };
+  auto fn18 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 18>{};
+  })) { return {}; };
+  auto fn19 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 19>{};
+  })) { return {}; };
+  auto fn20 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 20>{};
+  })) { return {}; };
+  auto fn21 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 21>{};
+  })) { return {}; };
+  auto fn22 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 22>{};
+  })) { return {}; };
+  auto fn23 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 23>{};
+  })) { return {}; };
+  auto fn24 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 24>{};
+  })) { return {}; };
+  auto fn25 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 25>{};
+  })) { return {}; };
+  auto fn26 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 26>{};
+  })) { return {}; };
+  auto fn27 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 27>{};
+  })) { return {}; };
+  auto fn28 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 28>{};
+  })) { return {}; };
+  auto fn29 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 29>{};
+  })) { return {}; };
+  auto fn30 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 30>{};
+  })) { return {}; };
+  auto fn31 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 31>{};
+  })) { return {}; };
+  auto fn32 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 32>{};
+  })) { return {}; };
+  auto fn33 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 33>{};
+  })) { return {}; };
+  auto fn34 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 34>{};
+  })) { return {}; };
+  auto fn35 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 35>{};
+  })) { return {}; };
+  auto fn36 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 36>{};
+  })) { return {}; };
+  auto fn37 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 37>{};
+  })) { return {}; };
+  auto fn38 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 38>{};
+  })) { return {}; };
+  auto fn39 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 39>{};
+  })) { return {}; };
+  auto fn40 = [](auto&& v) -> decltype(({
+    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a40] =
+        std::forward<decltype(v)>(v);
+    std::integral_constant<std::size_t, 40>{};
+  })) { return {}; };
+  auto overload_set = MakeOverloadedSet(
+      std::move(fn1), std::move(fn2), std::move(fn3), std::move(fn4), std::move(fn5), std::move(fn6), std::move(fn7),
+      std::move(fn8), std::move(fn9), std::move(fn10), std::move(fn11), std::move(fn12), std::move(fn13),
+      std::move(fn14), std::move(fn15), std::move(fn16), std::move(fn17), std::move(fn18), std::move(fn19),
+      std::move(fn20), std::move(fn21), std::move(fn22), std::move(fn23), std::move(fn24), std::move(fn25),
+      std::move(fn26), std::move(fn27), std::move(fn28), std::move(fn29), std::move(fn30), std::move(fn31),
+      std::move(fn32), std::move(fn33), std::move(fn34), std::move(fn35), std::move(fn36), std::move(fn37),
+      std::move(fn38), std::move(fn39), std::move(fn40));
+  if constexpr (requires {
+                  { overload_set(std::declval<T>()) };
+                }) {
+    return overload_set(std::forward<T>(v));
+  } else {
+    // Note that we could enable `std::is_aggregate_v<T> && std::is_empty_v<T>` to return 0 for
+    // empty, but we are not returning field counts here. We are retuning decompose counts here.
+    return std::integral_constant<std::size_t, kNotDecomposableValue>{};
+  }
+}
+
+template<typename T>
+struct DecomposeCountImpl : decltype(DecomposeCountFunc(std::declval<T>())) {};
+
+template<>
+struct DecomposeCountImpl<void> : std::integral_constant<std::size_t, kNotDecomposableValue> {};
+
+template<typename T>
+concept DecomposeCondition = (DecomposeCountImpl<T>::value != kNotDecomposableValue);
+
+// Put all into once struct.
+template<typename T>
+struct DecomposeInfo final {
+  using Type = std::remove_cvref_t<T>;
+  static constexpr bool kIsAggregate = std::is_aggregate_v<Type>;
+  static constexpr bool kIsEmpty = std::is_empty_v<Type>;
+  static constexpr std::size_t kFieldCount = std::is_empty_v<Type> ? 0 : DecomposeCountImpl<Type>::value;
+  static constexpr std::size_t kDecomposeCount = DecomposeCountImpl<Type>::value;
+  static constexpr bool kDecomposable = (kIsAggregate && !kIsEmpty) && (kDecomposeCount != kNotDecomposableValue);
+
+  static std::string Debug(std::string_view separator = ", ") {
+    std::string str;
+    std::string_view sep;
+# define DEBUG_ADD(f)                                                                             \
+   str += std::string(sep) + #f + ": "                                                            \
+          + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
+                 ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
+                 : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
+                            && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
+                        ? std::string("N/A")                                                      \
+                        : std::to_string(DecomposeInfo<T>::f)));                                  \
+   sep = separator
+    DEBUG_ADD(kIsAggregate);
+    DEBUG_ADD(kIsEmpty);
+    DEBUG_ADD(kFieldCount);
+    DEBUG_ADD(kDecomposable);
+    DEBUG_ADD(kDecomposeCount);
+# undef DEBUG_ADD
+    return str;
+  }
+};
+
+#else  // defined(__clang__)
 // ----------------------------------------------------
 
 // From
@@ -92,6 +367,8 @@ concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 //
 // Unlike Clang 16, GCC does not understand `decltype` of a lmbda performing
 // structured-bindings, e.g.: `decltype([]() { const auto& [a0] = T(); }`.
+// GCC further has a bug with primary lamda expressions in a decltype:
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=92402
 //
 // Thus GCC needs to count initializers and fields and base classes.
 // The core idea of identifying the actual number of values a struct
@@ -361,9 +638,8 @@ struct DecomposeInfo final {
   static constexpr std::size_t kCountBases = kBadFieldCount ? 0 : CountBases<Type, false>::value;
   static constexpr std::size_t kCountEmptyBases = kBadFieldCount ? 0 : CountBases<Type, true>::value;
   static constexpr bool kOnlyEmptyBases = kCountBases <= kCountEmptyBases;
-  static constexpr bool kDecomposable =
-      !kBadFieldCount && kIsAggregate
-      && (kIsEmpty || ((kOneNonEmptyBase || kOnlyEmptyBases) && !kOneNonEmptyBasePlusFields));
+  static constexpr bool kDecomposable = !kBadFieldCount && kIsAggregate && !kIsEmpty
+                                        && ((kOneNonEmptyBase || kOnlyEmptyBases) && !kOneNonEmptyBasePlusFields);
   static constexpr std::size_t kDecomposeCount =  // First check whether T is composable
       kDecomposable
           ? (kCountBases + kCountEmptyBases == 0  // If it is, then check whether there are any bases.
@@ -374,15 +650,15 @@ struct DecomposeInfo final {
   static std::string Debug(std::string_view separator = ", ") {  // NOLINT(readability-function-cognitive-complexity)
     std::string str;
     std::string_view sep;
-#define DEBUG_ADD(f)                                                                             \
-  str += std::string(sep) + #f + ": "                                                            \
-         + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
-                ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
-                : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
-                           && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
-                       ? std::string("N/A")                                                      \
-                       : std::to_string(DecomposeInfo<T>::f)));                                  \
-  sep = separator
+# define DEBUG_ADD(f)                                                                             \
+   str += std::string(sep) + #f + ": "                                                            \
+          + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
+                 ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
+                 : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
+                            && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
+                        ? std::string("N/A")                                                      \
+                        : std::to_string(DecomposeInfo<T>::f)));                                  \
+   sep = separator
     DEBUG_ADD(kIsAggregate);
     DEBUG_ADD(kIsEmpty);
     DEBUG_ADD(kInitializerCount);
@@ -395,7 +671,7 @@ struct DecomposeInfo final {
     DEBUG_ADD(kCountBases);
     DEBUG_ADD(kCountEmptyBases);
     DEBUG_ADD(kDecomposeCount);
-#undef DEBUG_ADD
+# undef DEBUG_ADD
     return str;
   }
 };
@@ -413,21 +689,21 @@ struct DecomposeInfo<T, false> final {
   static constexpr std::size_t kCountBases = 0;
   static constexpr std::size_t kCountEmptyBases = 0;
   static constexpr bool kOnlyEmptyBases = true;
-  static constexpr bool kDecomposable = kIsAggregate || kIsEmpty;
+  static constexpr bool kDecomposable = kIsAggregate && !kIsEmpty;
   static constexpr std::size_t kDecomposeCount = kDecomposable ? 0 : NotDecomposableImpl::value;
 
   static std::string Debug(std::string_view separator = ", ") {  // NOLINT(readability-function-cognitive-complexity)
     std::string str;
     std::string_view sep;
-#define DEBUG_ADD(f)                                                                             \
-  str += std::string(sep) + #f + ": "                                                            \
-         + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
-                ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
-                : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
-                           && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
-                       ? std::string("N/A")                                                      \
-                       : std::to_string(DecomposeInfo<T>::f)));                                  \
-  sep = separator
+# define DEBUG_ADD(f)                                                                             \
+   str += std::string(sep) + #f + ": "                                                            \
+          + (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, bool>               \
+                 ? std::string(DecomposeInfo<T>::f ? "Yes" : "No")                                \
+                 : (std::same_as<std::remove_cvref_t<decltype(DecomposeInfo<T>::f)>, std::size_t> \
+                            && DecomposeInfo<T>::f == NotDecomposableImpl::value                  \
+                        ? std::string("N/A")                                                      \
+                        : std::to_string(DecomposeInfo<T>::f)));                                  \
+   sep = separator
     DEBUG_ADD(kIsAggregate);
     DEBUG_ADD(kIsEmpty);
     // DEBUG_ADD(kInitializerCount);
@@ -440,7 +716,7 @@ struct DecomposeInfo<T, false> final {
     // DEBUG_ADD(kCountBases);
     // DEBUG_ADD(kCountEmptyBases);
     DEBUG_ADD(kDecomposeCount);
-#undef DEBUG_ADD
+# undef DEBUG_ADD
     return str;
   }
 };
@@ -453,6 +729,7 @@ concept DecomposeCondition = DecomposeInfo<T>::kDecomposable;
 template<typename T>
 struct DecomposeCountImpl : std::integral_constant<std::size_t, DecomposeInfo<T>::kDecomposeCount> {};
 
+#endif  // defined(__clang__)
 // ----------------------------------------------------
 
 // NOLINTBEGIN(readability-function-cognitive-complexity)
@@ -462,7 +739,8 @@ struct DecomposeHelper final {
 
   template<typename U>
   static constexpr auto ToTuple(U&& data) noexcept {
-    constexpr auto kNumFields = DecomposeCountImpl<U>::value;
+    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<U> && std::is_empty_v<U>;
+    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<U>::value;
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {
@@ -649,7 +927,8 @@ struct DecomposeHelper final {
 
   template<typename U>
   static constexpr auto ToTuple(U& data) noexcept {
-    constexpr auto kNumFields = DecomposeCountImpl<U>::value;
+    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<U> && std::is_empty_v<U>;
+    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<U>::value;
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {
@@ -832,7 +1111,8 @@ struct DecomposeHelper final {
 
   template<typename U>
   static constexpr auto ToTuple(const U& data) noexcept {
-    constexpr auto kNumFields = DecomposeCountImpl<U>::value;
+    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<U> && std::is_empty_v<U>;
+    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<U>::value;
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {

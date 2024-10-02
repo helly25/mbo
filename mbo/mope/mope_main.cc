@@ -27,6 +27,7 @@
 #include "absl/log/globals.h"
 #include "absl/log/initialize.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "mbo/file/artefact.h"
 #include "mbo/file/file.h"

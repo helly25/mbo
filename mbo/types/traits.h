@@ -36,6 +36,13 @@ concept IsAggregate = types_internal::IsAggregate<T>;
 // Requirements:
 // * T is an aggregate.
 // * T has no or only empty base classes.
+// * Has at least one field.
+//
+// This templated constant does not answer whether a tuple can be constructed,
+// because en empty tuple can be created for an empty aggregate, but the latter
+// cannot be decomposed with structured bindings.
+//
+// The empty aggregate to empty tuple can be checked with `CanCreateTuple`.
 template<typename T>
 inline constexpr std::size_t DecomposeCountV = types_internal::DecomposeCountImpl<T>::value;
 

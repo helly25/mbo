@@ -12,6 +12,8 @@
 * Added static constructors `Extend::ConstructFromTuple` and `Extend::ConstructFromArgs`.
 * Fixed a bug where Mope did not correctly enable and disable sections.
 * Added documentation and tests on how to use a mope's `--set` flag to enable/disable sections.
+* Fixed a bug with `DecomposeCount`. It must never return 0 (an empty aggregate cannot be decomposed using structured bindings).
+* Changed Clang to use more reliable overload sets (they cannot be used in GCC).
 
 # 0.2.29
 

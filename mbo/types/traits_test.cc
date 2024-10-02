@@ -28,7 +28,7 @@ namespace {
 
 using ::mbo::types::types_internal::AnyBaseType;
 using ::mbo::types::types_internal::AnyType;
-using std::size_t;
+using ::testing::AnyOf;
 using ::testing::Ne;
 
 // NOLINTNEXTLINE(google-build-using-namespace)
@@ -64,8 +64,8 @@ TEST_F(TraitsTest, Concepts) {
 
 template<typename TestType>
 struct GenTraitsTest : public ::testing::Test {
-  static constexpr size_t kDerivedFieldCount = static_cast<size_t>(TestType::kFieldCount);
-  static constexpr size_t kBaseFieldCount = static_cast<size_t>(TestType::BaseType::kFieldCount);
+  static constexpr std::size_t kDerivedFieldCount = static_cast<std::size_t>(TestType::kFieldCount);
+  static constexpr std::size_t kBaseFieldCount = static_cast<std::size_t>(TestType::BaseType::kFieldCount);
 };
 
 TYPED_TEST_SUITE(GenTraitsTest, AllConstructedTypes);
@@ -103,20 +103,20 @@ TEST_F(TraitsTest, DecomposeCountV) {
 
   ASSERT_THAT(IsAggregate<CtorDefault>, false);
   EXPECT_THAT(IsDecomposable<CtorDefault>, false);
-  EXPECT_THAT(DecomposeCountV<CtorDefault>, 0);
+  EXPECT_THAT(DecomposeCountV<CtorDefault>, NotDecomposableV);
 
   ASSERT_THAT(IsAggregate<CtorUser>, false);
   EXPECT_THAT(IsDecomposable<CtorUser>, false);
-  EXPECT_THAT(DecomposeCountV<CtorUser>, 0);
+  EXPECT_THAT(DecomposeCountV<CtorUser>, NotDecomposableV);
 
   ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
   ASSERT_THAT(IsAggregate<CtorBase>, true);
   EXPECT_THAT(IsDecomposable<CtorBase>, false);
-  EXPECT_THAT(DecomposeCountV<CtorBase>, 0);
+  EXPECT_THAT(DecomposeCountV<CtorBase>, NotDecomposableV);
 
   ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
   EXPECT_THAT(IsDecomposable<Empty>, false);
-  EXPECT_THAT(DecomposeCountV<Empty>, ::testing::AnyOf(0, NotDecomposableV));
+  EXPECT_THAT(DecomposeCountV<Empty>, NotDecomposableV);
 
   ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<CtorBase>, false);
   EXPECT_THAT(IsDecomposable<Base1>, true);
@@ -165,18 +165,21 @@ TEST_F(TraitsTest, StructWithStrings) {
   using namespace ::mbo::types::types_internal;  // NOLINT(*-build-using-namespace)
   using T = StructWithStrings;
   EXPECT_THAT(DecomposeCountV<T>, 5) << DecomposeInfo<T>();
+#ifndef MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
   EXPECT_THAT((AggregateFieldInitializerCount<T, 0>::value), 2);
   EXPECT_THAT((AggregateFieldInitializerCount<T, 1>::value), 2);
   EXPECT_THAT((AggregateFieldInitializerCount<T, 2>::value), 2);
   EXPECT_THAT((DetectSpecial<AggregateFieldInitializerCount<T, 0>::value, 5 - 0>::value), 2);
   EXPECT_THAT((DetectSpecial<AggregateFieldInitializerCount<T, 1>::value, 5 - 1>::value), 2);
+#endif  // MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
 }
 
 TYPED_TEST(GenTraitsTest, DecomposeCountV) {
   using Type = TypeParam;
-  constexpr size_t kBase = TestFixture::kBaseFieldCount;
-  constexpr size_t kDerived = TestFixture::kDerivedFieldCount;
-  EXPECT_THAT(DecomposeCountV<Type>, kBase && kDerived ? NotDecomposableV : kBase + kDerived);
+  constexpr std::size_t kBase = TestFixture::kBaseFieldCount;
+  constexpr std::size_t kDerived = TestFixture::kDerivedFieldCount;
+  EXPECT_THAT(
+      DecomposeCountV<Type>, (kBase && kDerived) || (kBase + kDerived == 0) ? NotDecomposableV : kBase + kDerived);
 }
 
 TEST_F(TraitsTest, IsBracesContructible) {
@@ -211,8 +214,8 @@ TYPED_TEST(GenTraitsTest, IsAggregate) {
 
 TYPED_TEST(GenTraitsTest, IsBracesContructibleGenerateDerived) {
   using Type = TypeParam;
-  constexpr size_t kBase = TestFixture::kBaseFieldCount;
-  constexpr size_t kDerived = TestFixture::kDerivedFieldCount;
+  constexpr std::size_t kBase = TestFixture::kBaseFieldCount;
+  constexpr std::size_t kDerived = TestFixture::kDerivedFieldCount;
 
   EXPECT_THAT(IsBracesConstructibleV<Type>, true);
   EXPECT_THAT((IsBracesConstructibleV<Type, void>), false);
