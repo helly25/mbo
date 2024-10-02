@@ -16,6 +16,8 @@
 #ifndef MBO_TYPES_INTERNAL_DECOMPOSE_COUNT_H_
 #define MBO_TYPES_INTERNAL_DECOMPOSE_COUNT_H_
 
+// Max fields: 40
+
 // IWYU pragma private, include "mbo/types/traits.h"
 
 #include <limits>
@@ -362,6 +364,8 @@ struct DecomposeInfo final {
 //
 // Unlike Clang 16, GCC does not understand `decltype` of a lmbda performing
 // structured-bindings, e.g.: `decltype([]() { const auto& [a0] = T(); }`.
+// GCC further has a bug with primary lamda expressions in a decltype:
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=92402
 //
 // Thus GCC needs to count initializers and fields and base classes.
 // The core idea of identifying the actual number of values a struct
