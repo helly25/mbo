@@ -89,9 +89,12 @@ struct AggregateHasNonEmptyBaseImpl : AggregateHasNonEmptyBaseRaw<std::remove_cv
 template<typename T>
 concept AggregateHasNonEmptyBase = AggregateHasNonEmptyBaseImpl<T>::value;
 
-#if defined(__clang__)
+// OverloadSets (see below) are the preferred solution but it requires Clang and can confuse ClangD.
+#if defined(__clang__) && !defined(IS_CLANGD)
 
-# define MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET 1
+constexpr bool kMboTypesDecomposeCountUseOverloadSet = true;
+
+# define MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOAD_SET 1
 
 // ----------------------------------------------------
 // This version implements the somewhat known Overloadset solution with additioanl identification of
@@ -360,6 +363,7 @@ struct DecomposeInfo final {
 };
 
 #else  // defined(__clang__)
+constexpr bool kMboTypesDecomposeCountUseOverloadSet = false;
 // ----------------------------------------------------
 
 // From
@@ -739,8 +743,10 @@ struct DecomposeHelper final {
 
   template<typename U>
   static constexpr auto ToTuple(U&& data) noexcept {
-    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<U> && std::is_empty_v<U>;
-    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<U>::value;
+    using UR = std::remove_cvref_t<U>;
+    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<UR> && std::is_empty_v<UR>;
+    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<UR>::value;
+    static_assert(kNumFields != kNotDecomposableValue);
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {
@@ -927,8 +933,10 @@ struct DecomposeHelper final {
 
   template<typename U>
   static constexpr auto ToTuple(U& data) noexcept {
-    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<U> && std::is_empty_v<U>;
-    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<U>::value;
+    using UR = std::remove_cvref_t<U>;
+    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<UR> && std::is_empty_v<UR>;
+    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<UR>::value;
+    static_assert(kNumFields != kNotDecomposableValue);
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {
@@ -1111,8 +1119,10 @@ struct DecomposeHelper final {
 
   template<typename U>
   static constexpr auto ToTuple(const U& data) noexcept {
-    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<U> && std::is_empty_v<U>;
-    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<U>::value;
+    using UR = std::remove_cvref_t<U>;
+    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<UR> && std::is_empty_v<UR>;
+    constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<UR>::value;
+    static_assert(kNumFields != kNotDecomposableValue);
     if constexpr (kNumFields == 0) {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {
