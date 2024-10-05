@@ -32,7 +32,7 @@
 #include "mbo/types/internal/decompose_count.h"
 #include "mbo/types/internal/extend.h"  // IWYU pragma: keep
 #include "mbo/types/traits.h"           // IWYU pragma: keep
-#include "mbo/types/tuple.h"
+#include "mbo/types/tuple.h"            // IWYU pragma: keep
 
 #ifdef __clang__
 # pragma clang diagnostic push
@@ -59,6 +59,8 @@ void AbslStringify(Sink& sink, const std::variant<Args...>& val) {  // NOLINT(ce
 
 namespace mbo::types {
 namespace {
+
+// NOLINTBEGIN(*-magic-numbers)
 
 using ::mbo::types::extender::AbslHashable;
 using ::mbo::types::extender::AbslStringify;
@@ -330,7 +332,7 @@ struct PersonData : Extend<PersonData> {
 TEST_F(ExtendTest, StreamableComplexFields) {
   const std::set<std::string> data{"foo", "bar"};
   PersonData person{
-      .index = 25,  // NOLINT(*-magic-numbers)
+      .index = 25,
       .person =
           {
               .name =
@@ -338,7 +340,7 @@ TEST_F(ExtendTest, StreamableComplexFields) {
                       .first = "Hugo",
                       .last = "Meyer",
                   },
-              .age = 42,  // NOLINT(*-magic-numbers)
+              .age = 42,
           },
       .data = &data,
   };
@@ -375,27 +377,26 @@ struct WithUnion : mbo::types::Extend<WithUnion> {
   int third{3};
 };
 
-static_assert(!HasUnionMember<int>);
+TEST_F(ExtendTest, StaticTests) {
+  static_assert(!HasUnionMember<int>);
+  static_assert(HasUnionMember<WithUnion>);
 
-// NOLINTBEGIN(*-magic-numbers)
-#ifndef MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
-static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<0>::value);
-static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<1>::value);
-static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<2>::value);
-static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<3>::value);
-static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<4>::value);
-static_assert(!types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<5>::value);
-static_assert(!types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<6>::value);
-static_assert(!types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<7>::value);
-static_assert(types_internal::DecomposeInfo<WithUnion>::kInitializerCount == 4);
-static_assert(types_internal::DecomposeInfo<WithUnion>::kFieldCount == 4);
-static_assert(types_internal::DecomposeInfo<WithUnion>::kCountBases == 0);
-static_assert(types_internal::DecomposeInfo<WithUnion>::kCountEmptyBases == 1);
-static_assert(types_internal::DecomposeCountImpl<WithUnion>::value == 3);
-#endif  // MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
-// NOLINTEND(*-magic-numbers)
-
-static_assert(HasUnionMember<WithUnion>);
+#if !MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOAD_SET
+  static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<0>::value);
+  static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<1>::value);
+  static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<2>::value);
+  static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<3>::value);
+  static_assert(types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<4>::value);
+  static_assert(!types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<5>::value);
+  static_assert(!types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<6>::value);
+  static_assert(!types_internal::AggregateInitializeTest<WithUnion>::IsInitializable<7>::value);
+  static_assert(types_internal::DecomposeInfo<WithUnion>::kInitializerCount == 4);
+  static_assert(types_internal::DecomposeInfo<WithUnion>::kFieldCount == 4);
+  static_assert(types_internal::DecomposeInfo<WithUnion>::kCountBases == 0);
+  static_assert(types_internal::DecomposeInfo<WithUnion>::kCountEmptyBases == 1);
+  static_assert(types_internal::DecomposeCountImpl<WithUnion>::value == 3);
+#endif  // !MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOAD_SET
+}
 
 struct WithAnonymousUnion {  // Cannot extend due to anonymous union
   int first{1};
@@ -709,33 +710,6 @@ struct UseCrtp1 : Extend<UseCrtp1> {
   Crtp1 crtp;
 };
 
-#ifndef MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
-// NOLINTBEGIN(*-magic-numbers)
-static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<0>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<1>::value);
-static_assert(types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<2>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<3>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<4>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<5>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<6>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<7>::value);
-// NOLINTEND(*-magic-numbers)
-
-static_assert(types_internal::AggregateInitializerCount<UseCrtp1>::value == 2);
-static_assert(types_internal::DecomposeInfo<UseCrtp1>::kInitializerCount == 2);
-
-static_assert(types_internal::DecomposeInfo<UseCrtp1>::kFieldCount == 2);
-static_assert(types_internal::DecomposeInfo<UseCrtp1>::kDecomposeCount == 1);
-static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kBadFieldCount);
-static_assert(types_internal::DecomposeInfo<UseCrtp1>::kIsAggregate);
-static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kIsEmpty);
-static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kOneNonEmptyBase);
-static_assert(types_internal::DecomposeInfo<UseCrtp1>::kOnlyEmptyBases);
-static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kOneNonEmptyBasePlusFields);
-
-static_assert(types_internal::DecomposeInfo<UseCrtp1>::kDecomposeCount == 1);
-#endif  // MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
-
 struct UseCrtp2 : Extend<UseCrtp2> {
   Crtp2 crtp;
 };
@@ -747,39 +721,62 @@ struct UseBoth : Extend<UseBoth> {
 
 static_assert(IsAggregate<UseBoth>);
 
-#ifndef MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
-// NOLINTBEGIN(*-magic-numbers)
-static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<0>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<1>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<2>::value);
-static_assert(types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<3>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<4>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<5>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<6>::value);
-static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<7>::value);
-// NOLINTEND(*-magic-numbers)
+TEST_F(ExtendTest, StaticTestsCrtpInCrtp) {
+#if !MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOAD_SET
+  static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<0>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<1>::value);
+  static_assert(types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<2>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<3>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<4>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<5>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<6>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseCrtp1>::IsInitializable<7>::value);
 
-static_assert(types_internal::IsAggregateInitializableWithNumArgs<UseBoth, 3>);
-static_assert(types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<3>::value);
-static_assert(types_internal::AggregateInitializerCount<UseBoth>::value == 3);
-static_assert(types_internal::DecomposeInfo<UseBoth>::kInitializerCount == 3);
+  static_assert(types_internal::AggregateInitializerCount<UseCrtp1>::value == 2);
+  static_assert(types_internal::DecomposeInfo<UseCrtp1>::kInitializerCount == 2);
 
-static_assert(types_internal::DecomposeInfo<UseBoth>::kFieldCount == 3);
-static_assert(!types_internal::DecomposeInfo<UseBoth>::kBadFieldCount);
-static_assert(types_internal::DecomposeInfo<UseBoth>::kIsAggregate);
-static_assert(!types_internal::DecomposeInfo<UseBoth>::kIsEmpty);
-static_assert(!types_internal::DecomposeInfo<UseBoth>::kOneNonEmptyBase);
-static_assert(types_internal::DecomposeInfo<UseBoth>::kOnlyEmptyBases);
-static_assert(!types_internal::DecomposeInfo<UseBoth>::kOneNonEmptyBasePlusFields);
+  static_assert(types_internal::DecomposeInfo<UseCrtp1>::kFieldCount == 2);
+  static_assert(types_internal::DecomposeInfo<UseCrtp1>::kDecomposeCount == 1);
+  static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kBadFieldCount);
+  static_assert(types_internal::DecomposeInfo<UseCrtp1>::kIsAggregate);
+  static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kIsEmpty);
+  static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kOneNonEmptyBase);
+  static_assert(types_internal::DecomposeInfo<UseCrtp1>::kOnlyEmptyBases);
+  static_assert(!types_internal::DecomposeInfo<UseCrtp1>::kOneNonEmptyBasePlusFields);
 
-static_assert(types_internal::DecomposeInfo<UseBoth>::kDecomposeCount == 2);
-#endif  // MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOADSET
+  static_assert(types_internal::DecomposeInfo<UseCrtp1>::kDecomposeCount == 1);
 
-static_assert(!IsDecomposable<Crtp1>);
-static_assert(!IsDecomposable<Crtp2>);
-static_assert(IsDecomposable<UseCrtp1>);
-static_assert(IsDecomposable<UseCrtp2>);
-static_assert(IsDecomposable<UseBoth>);
+  static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<0>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<1>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<2>::value);
+  static_assert(types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<3>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<4>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<5>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<6>::value);
+  static_assert(!types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<7>::value);
+
+  static_assert(types_internal::IsAggregateInitializableWithNumArgs<UseBoth, 3>);
+  static_assert(types_internal::AggregateInitializeTest<UseBoth>::IsInitializable<3>::value);
+  static_assert(types_internal::AggregateInitializerCount<UseBoth>::value == 3);
+  static_assert(types_internal::DecomposeInfo<UseBoth>::kInitializerCount == 3);
+
+  static_assert(types_internal::DecomposeInfo<UseBoth>::kFieldCount == 3);
+  static_assert(!types_internal::DecomposeInfo<UseBoth>::kBadFieldCount);
+  static_assert(types_internal::DecomposeInfo<UseBoth>::kIsAggregate);
+  static_assert(!types_internal::DecomposeInfo<UseBoth>::kIsEmpty);
+  static_assert(!types_internal::DecomposeInfo<UseBoth>::kOneNonEmptyBase);
+  static_assert(types_internal::DecomposeInfo<UseBoth>::kOnlyEmptyBases);
+  static_assert(!types_internal::DecomposeInfo<UseBoth>::kOneNonEmptyBasePlusFields);
+
+  static_assert(types_internal::DecomposeInfo<UseBoth>::kDecomposeCount == 2);
+#endif  // !MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOAD_SET
+
+  static_assert(!IsDecomposable<Crtp1>);
+  static_assert(!IsDecomposable<Crtp2>);
+  static_assert(IsDecomposable<UseCrtp1>);
+  static_assert(IsDecomposable<UseCrtp2>);
+  static_assert(IsDecomposable<UseBoth>);
+}
 
 TEST_F(ExtendTest, NoDefaultConstructor) {
   ABSL_LOG(ERROR) << types_internal::DecomposeInfo<UseBoth>::Debug();
@@ -959,6 +956,8 @@ TEST_F(ExtendTest, EmptyExtend) {
   ASSERT_TRUE(CanCreateTuple<Empty>);
   ASSERT_FALSE(CanCreateTuple<Empty&>);
 }
+
+// NOLINTEND(*-magic-numbers)
 
 }  // namespace
 }  // namespace mbo::types

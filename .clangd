@@ -1,6 +1,8 @@
 Diagnostics:
     UnusedIncludes: Strict
 
+CompileFlags:
+  Add: -DIS_CLANGD
 ---
 If:
     PathMatch: .*_test.cc

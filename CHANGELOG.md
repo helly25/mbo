@@ -1,3 +1,7 @@
+# 0.2.31
+
+* Prevent clangd indexing issues with ``DecomposeCount` implementation.
+
 # 0.2.30
 
 * Added class `Stringify` which can turn arbitrary structs into strings.
