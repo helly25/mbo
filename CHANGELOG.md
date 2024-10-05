@@ -1,6 +1,6 @@
 # 0.2.31
 
-* Prevent clangd indexing issues with ``DecomposeCount` implementation.
+* Prevent clangd indexing issues with `DecomposeCount` implementation.
 
 # 0.2.30
 
