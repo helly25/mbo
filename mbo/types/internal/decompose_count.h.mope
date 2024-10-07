@@ -567,7 +567,7 @@ struct DecomposeHelper final {
     {{#num_fields=1;max_fields}}
     } else if constexpr (kNumFields == {{num_fields}}) {
       auto&& [{{#field=1;num_fields;;', '}}a{{field}}{{/field}}] = std::forward<U>(data);
-      return std::make_tuple({{#field=1;num_fields;;', '}}a{{field}}{{/field}});
+      return std::make_tuple({{#field=1;num_fields;;', '}}std::forward<decltype(a{{field}})>(a{{field}}){{/field}});
     {{/num_fields}}
     }
   }

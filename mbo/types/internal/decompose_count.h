@@ -751,183 +751,431 @@ struct DecomposeHelper final {
       return std::make_tuple();
     } else if constexpr (kNumFields == 1) {
       auto&& [a1] = std::forward<U>(data);
-      return std::make_tuple(a1);
+      return std::make_tuple(std::forward<decltype(a1)>(a1));
     } else if constexpr (kNumFields == 2) {
       auto&& [a1, a2] = std::forward<U>(data);
-      return std::make_tuple(a1, a2);
+      return std::make_tuple(std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2));
     } else if constexpr (kNumFields == 3) {
       auto&& [a1, a2, a3] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3));
     } else if constexpr (kNumFields == 4) {
       auto&& [a1, a2, a3, a4] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4));
     } else if constexpr (kNumFields == 5) {
       auto&& [a1, a2, a3, a4, a5] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5));
     } else if constexpr (kNumFields == 6) {
       auto&& [a1, a2, a3, a4, a5, a6] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6));
     } else if constexpr (kNumFields == 7) {
       auto&& [a1, a2, a3, a4, a5, a6, a7] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7));
     } else if constexpr (kNumFields == 8) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8));
     } else if constexpr (kNumFields == 9) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9));
     } else if constexpr (kNumFields == 10) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10));
     } else if constexpr (kNumFields == 11) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11));
     } else if constexpr (kNumFields == 12) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12));
     } else if constexpr (kNumFields == 13) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13));
     } else if constexpr (kNumFields == 14) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14));
     } else if constexpr (kNumFields == 15) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15));
     } else if constexpr (kNumFields == 16) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16));
     } else if constexpr (kNumFields == 17) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17));
     } else if constexpr (kNumFields == 18) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18] = std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18));
     } else if constexpr (kNumFields == 19) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19] =
           std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19));
     } else if constexpr (kNumFields == 20) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] =
           std::forward<U>(data);
-      return std::make_tuple(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
+      return std::make_tuple(
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20));
     } else if constexpr (kNumFields == 21) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21));
     } else if constexpr (kNumFields == 22) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22));
     } else if constexpr (kNumFields == 23) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23));
     } else if constexpr (kNumFields == 24) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23,
-          a24);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24));
     } else if constexpr (kNumFields == 25) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25));
     } else if constexpr (kNumFields == 26) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26));
     } else if constexpr (kNumFields == 27) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27));
     } else if constexpr (kNumFields == 28) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28));
     } else if constexpr (kNumFields == 29) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29));
     } else if constexpr (kNumFields == 30) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30));
     } else if constexpr (kNumFields == 31) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30, a31);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30),
+          std::forward<decltype(a31)>(a31));
     } else if constexpr (kNumFields == 32) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30, a31, a32);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30),
+          std::forward<decltype(a31)>(a31), std::forward<decltype(a32)>(a32));
     } else if constexpr (kNumFields == 33) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30, a31, a32, a33);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30),
+          std::forward<decltype(a31)>(a31), std::forward<decltype(a32)>(a32), std::forward<decltype(a33)>(a33));
     } else if constexpr (kNumFields == 34) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30, a31, a32, a33, a34);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30),
+          std::forward<decltype(a31)>(a31), std::forward<decltype(a32)>(a32), std::forward<decltype(a33)>(a33),
+          std::forward<decltype(a34)>(a34));
     } else if constexpr (kNumFields == 35) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30),
+          std::forward<decltype(a31)>(a31), std::forward<decltype(a32)>(a32), std::forward<decltype(a33)>(a33),
+          std::forward<decltype(a34)>(a34), std::forward<decltype(a35)>(a35));
     } else if constexpr (kNumFields == 36) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30),
+          std::forward<decltype(a31)>(a31), std::forward<decltype(a32)>(a32), std::forward<decltype(a33)>(a33),
+          std::forward<decltype(a34)>(a34), std::forward<decltype(a35)>(a35), std::forward<decltype(a36)>(a36));
     } else if constexpr (kNumFields == 37) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30),
+          std::forward<decltype(a31)>(a31), std::forward<decltype(a32)>(a32), std::forward<decltype(a33)>(a33),
+          std::forward<decltype(a34)>(a34), std::forward<decltype(a35)>(a35), std::forward<decltype(a36)>(a36),
+          std::forward<decltype(a37)>(a37));
     } else if constexpr (kNumFields == 38) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30),
+          std::forward<decltype(a31)>(a31), std::forward<decltype(a32)>(a32), std::forward<decltype(a33)>(a33),
+          std::forward<decltype(a34)>(a34), std::forward<decltype(a35)>(a35), std::forward<decltype(a36)>(a36),
+          std::forward<decltype(a37)>(a37), std::forward<decltype(a38)>(a38));
     } else if constexpr (kNumFields == 39) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30),
+          std::forward<decltype(a31)>(a31), std::forward<decltype(a32)>(a32), std::forward<decltype(a33)>(a33),
+          std::forward<decltype(a34)>(a34), std::forward<decltype(a35)>(a35), std::forward<decltype(a36)>(a36),
+          std::forward<decltype(a37)>(a37), std::forward<decltype(a38)>(a38), std::forward<decltype(a39)>(a39));
     } else if constexpr (kNumFields == 40) {
       auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a40] =
           std::forward<U>(data);
       return std::make_tuple(
-          a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24,
-          a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a40);
+          std::forward<decltype(a1)>(a1), std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+          std::forward<decltype(a4)>(a4), std::forward<decltype(a5)>(a5), std::forward<decltype(a6)>(a6),
+          std::forward<decltype(a7)>(a7), std::forward<decltype(a8)>(a8), std::forward<decltype(a9)>(a9),
+          std::forward<decltype(a10)>(a10), std::forward<decltype(a11)>(a11), std::forward<decltype(a12)>(a12),
+          std::forward<decltype(a13)>(a13), std::forward<decltype(a14)>(a14), std::forward<decltype(a15)>(a15),
+          std::forward<decltype(a16)>(a16), std::forward<decltype(a17)>(a17), std::forward<decltype(a18)>(a18),
+          std::forward<decltype(a19)>(a19), std::forward<decltype(a20)>(a20), std::forward<decltype(a21)>(a21),
+          std::forward<decltype(a22)>(a22), std::forward<decltype(a23)>(a23), std::forward<decltype(a24)>(a24),
+          std::forward<decltype(a25)>(a25), std::forward<decltype(a26)>(a26), std::forward<decltype(a27)>(a27),
+          std::forward<decltype(a28)>(a28), std::forward<decltype(a29)>(a29), std::forward<decltype(a30)>(a30),
+          std::forward<decltype(a31)>(a31), std::forward<decltype(a32)>(a32), std::forward<decltype(a33)>(a33),
+          std::forward<decltype(a34)>(a34), std::forward<decltype(a35)>(a35), std::forward<decltype(a36)>(a36),
+          std::forward<decltype(a37)>(a37), std::forward<decltype(a38)>(a38), std::forward<decltype(a39)>(a39),
+          std::forward<decltype(a40)>(a40));
     }
   }
 

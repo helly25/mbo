@@ -58,7 +58,10 @@ struct StringifyOptions {
   OutputMode output_mode = OutputMode::kDefault;
 
   // Field options:
-  bool field_suppress = false;              // Allows to completely suppress the field.
+  bool field_suppress = false;              // Allows complete suppression of the field.
+  bool field_suppress_nullptr = false;      // Allows complete suppression of nullptr field values.
+  bool field_suppress_nullopt = false;      // Allows complete suppression of nullopt field values.
+  bool field_suppress_disabled = false;     // Allows complete suppression of disabled fields.
   std::string_view field_separator = ", ";  // Separator between two field (in front of field).
 
   // Key options:
@@ -106,12 +109,17 @@ struct StringifyOptions {
 
   EscapeMode value_escape_mode{EscapeMode::kCEscape};
 
-  std::string_view value_pointer_prefix = "*{";    // Prefix for pointer types.
-  std::string_view value_pointer_suffix = "}";     // Suffix for pointer types.
-  std::string_view value_nullptr_t = "nullptr_t";  // Value for `nullptr_t` types.
-  std::string_view value_nullptr = "<nullptr>";    // Value for `nullptr` values.
-  std::string_view value_container_prefix = "{";   // Prefix for container values.
-  std::string_view value_container_suffix = "}";   // Suffix for container values.
+  std::string_view value_pointer_prefix = "*{";         // Prefix for pointer types.
+  std::string_view value_pointer_suffix = "}";          // Suffix for pointer types.
+  std::string_view value_smart_ptr_prefix = "{";        // Prefix for smart pointer types.
+  std::string_view value_smart_ptr_suffix = "}";        // Suffix for smart pointer types.
+  std::string_view value_nullptr_t = "std::nullptr_t";  // Value for `nullptr_t` types.
+  std::string_view value_nullptr = "<nullptr>";         // Value for `nullptr` values.
+  std::string_view value_optional_prefix = "{";         // Prefix for optional types.
+  std::string_view value_optional_suffix = "}";         // Suffix for optional types.
+  std::string_view value_nullopt = "std::nullopt";      // Value for `nullopt` values.
+  std::string_view value_container_prefix = "{";        // Prefix for container values.
+  std::string_view value_container_suffix = "}";        // Suffix for container values.
 
   // Max num elements to show.
   std::size_t value_container_max_len = std::numeric_limits<std::size_t>::max();
@@ -186,18 +194,48 @@ void MboTypesStringifyOptions();  // Has no implementation!
 // That extension point can be used to perform fine grained control of field
 // printing.
 //
-// NOTE: Unlike `MboTypesStringifyFieldNames` this extenion point cannot deal with
-// the `std::string_view` members referencing temp objects such as `std::string`
-// since no life-time extension is being applied.
+// NOTE: Unlike `MboTypesStringifyFieldNames` this extenion point cannot deal
+// with `std::string_view` members referencing temp objects such as `std::string`
+// since life-time extension CANNOT be applied as we always go via the actual
+// `std::strig_view` fields.
+//
+// The return value can be `StringifyOptions` or `const StringifyOptions&` where
+// the latter is preferred. However, when used with `StringifyWithFieldNames`
+// the return value must be `StringifyOptions` (by copy).
+//
+// The implementation must therefore match one of the following:
+// ```
+// const StringifyOptions& Func(const T&, std::size_t, std::string_view, const StringifyOptions& default_options);
+// StringifyOptions Alternative(const T&, std::size_t, std::string_view, const StringifyOptions& default_options);
+// ```
 template<typename T>
 concept HasMboTypesStringifyOptions = requires(const T& v) {
   {
     MboTypesStringifyOptions(v, std::size_t{0}, std::string_view(), StringifyOptions())
-  } -> std::same_as<StringifyOptions>;
+  } -> IsSameAsRaw<StringifyOptions>;
 };
 
 // This breaks `MboTypesStringifyFieldNames` lookup within this namespace.
 void MboTypesStringifyFieldNames();  // Has no implementation!
+
+// Extension API point that disables printing for tagged types.
+//
+// Use this sparingly because it actually completely prevents any output from
+// such types. If a field of a type tagged this way receives `StringifyOptions`
+// with `field_suppress_disabled` set true, then there will be no output for the
+// field at all. Otherwise the field name will be shown with a special marker
+// `/* MboTypesStringifyDisable */`.
+//
+// If `Stringify` is used on a type tagged this way and the default options have
+// `field_suppress_disabled` then there for consistency there will be no output
+// at all.
+//
+// NOTE: The presence of a type named `MboTypesStringifyDisable` does not by
+// itself enable `Stringify` for that type. However it can break any automatic
+// call-chain and be used in parallel to `MboTypesStringifySupport` or CRTP
+// types using `mbo::types::Extend`.
+template<typename T>
+concept HasMboTypesStringifyDisable = requires { typename T::MboTypesStringifyDisable; };
 
 // Identify presence for `AbslStringify` extender API extension point
 // `MboTypesStringifyFieldNames`.
@@ -211,7 +249,7 @@ void MboTypesStringifyFieldNames();  // Has no implementation!
 //   * `std::data(result)`.
 // * The values must be convertible to a `std::string_view`.
 // * Temp containers of temp `std::string` values are admissible since life-time
-//   extension is being applied (unlike `MboTypesStringifyOptions`).
+//   extension is being applied.
 template<typename T>
 concept HasMboTypesStringifyFieldNames =
     requires(const T& v) { requires IsFieldNameContainer<decltype(MboTypesStringifyFieldNames(v))>; };
@@ -233,11 +271,6 @@ concept HasMboTypesStringifySupport =               //
     HasMboTypesStringifyOptions<T> ||               // function `MboTypesStringifyOptions`
     requires { typename std::remove_cvref_t<T>::MboTypesStringifySupport; };
 
-// A function type that is used to handle format control for printing and streaming.
-template<typename T>
-using FuncMboTypesStringifyOptions =
-    std::function<StringifyOptions(const T&, std::size_t, std::string_view, const StringifyOptions& default_options)>;
-
 enum class StringifyNameHandling {
   kOverwrite = 0,  // Use the provided names to override automatically determined names.
   kVerify = 1,     // Verify that the provided name matches the detrmined if possible.
@@ -251,11 +284,13 @@ concept CanProduceStringifyOptions = std::is_assignable_v<
 // Concept that verifies whether `T` can be used to construct (or assign to) an
 // `StringifyOptions`.
 //
-// In case of a function object it must match `FuncMboTypesStringifyOptions`.
 // The actual `ObjectType` might not be evaluated immediately. This happens when
 // an adapter does not know the type yet if it applies type-erasure techniques
-// like `WithFieldNAmes does`. However, all concrete calls will verify their
+// like `WithFieldNames` does. However, all concrete calls will verify their
 // factual object type.
+//
+// Read more about producing `StringifyOptions` in the documnetation for
+// `MboTypesStringifyOptions` and `HasMboTypesStringifyOptions`.
 template<typename T, typename ObjectType = mbo::types::types_internal::AnyType>
 concept IsOrCanProduceStringifyOptions =
     std::is_convertible_v<T, StringifyOptions> || CanProduceStringifyOptions<T, ObjectType>;
@@ -292,6 +327,20 @@ class Stringify {
 
  private:
   template<typename T>
+  requires(HasMboTypesStringifyDisable<T>)
+  void StreamFieldsImpl(
+      std::ostream& os,
+      const T& /*value*/,
+      bool /*allow_field_names*/ = !HasMboTypesStringifyDoNotPrintFieldNames<T>) const {
+    if (!default_options_.field_suppress_disabled) {
+      os << "{/*MboTypesStringifyDisable*/}";
+    }
+    // Otherwise no output! Streaming `"{}"` would also be possible, but not streaming anything is
+    // is inline with what field streaming does.
+  }
+
+  template<typename T>
+  requires(!HasMboTypesStringifyDisable<T>)
   void StreamFieldsImpl(
       std::ostream& os,
       const T& value,
@@ -329,6 +378,14 @@ class Stringify {
     }
   }
 
+  enum class SpecialFieldValue {
+    kNoSuppress = 0,
+    kNormal,
+    kIsNullptr,
+    kIsNullopt,
+    kStringifyDisabled,
+  };
+
   template<typename T, typename Field, typename FieldNames>
   void StreamField(
       std::ostream& os,
@@ -349,7 +406,21 @@ class Stringify {
         return StringifyOptions::As(default_options_.output_mode);
       }
     }();
-    if (StreamFieldKey(os, use_seperator, idx, field_name, field_options, allow_field_names)) {
+    using RawField = std::remove_cvref_t<Field>;
+    const SpecialFieldValue is_special = [&field] {
+      (void)field;
+      if constexpr (std::is_pointer_v<RawField> || IsSmartPtr<RawField>) {
+        return field == nullptr ? SpecialFieldValue::kIsNullptr : SpecialFieldValue::kNoSuppress;
+      } else if constexpr (std::is_same_v<RawField, std::nullptr_t>) {
+        return SpecialFieldValue::kIsNullptr;
+      } else if constexpr (IsOptional<RawField>) {
+        return field == std::nullopt ? SpecialFieldValue::kIsNullopt : SpecialFieldValue::kNoSuppress;
+      } else if constexpr (HasMboTypesStringifyDisable<RawField>) {
+        return SpecialFieldValue::kStringifyDisabled;
+      }
+      return SpecialFieldValue::kNormal;
+    }();
+    if (StreamFieldKey(os, use_seperator, idx, field_name, field_options, allow_field_names, is_special)) {
       StreamValue(os, field, field_options, allow_field_names);
     }
   }
@@ -360,9 +431,30 @@ class Stringify {
       std::size_t idx,
       std::string_view field_name,
       const StringifyOptions& field_options,
-      bool allow_field_names) {
-    if (field_options.field_suppress) {
-      return false;
+      bool allow_field_names,
+      SpecialFieldValue is_special) {
+    switch (is_special) {
+      case SpecialFieldValue::kNoSuppress: break;
+      case SpecialFieldValue::kNormal:
+        if (field_options.field_suppress) {
+          return false;
+        }
+        break;
+      case SpecialFieldValue::kIsNullptr:
+        if (field_options.field_suppress_nullptr) {
+          return false;
+        }
+        break;
+      case SpecialFieldValue::kIsNullopt:
+        if (field_options.field_suppress_nullopt) {
+          return false;
+        }
+        break;
+      case SpecialFieldValue::kStringifyDisabled:
+        if (field_options.field_suppress_disabled) {
+          return false;
+        }
+        break;
     }
     if (use_seperator) {
       os << field_options.field_separator;
@@ -444,10 +536,20 @@ class Stringify {
   void StreamValue(std::ostream& os, const V& v, const StringifyOptions& field_options, bool allow_field_names) const {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
-    if constexpr (kUseStringify<RawV>) {
+    if constexpr (HasMboTypesStringifyDisable<RawV>) {
+      os << "{/*MboTypesStringifyDisable*/}";
+    } else if constexpr (kUseStringify<RawV>) {
       Stream(os, v);
     } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
       os << field_options.value_nullptr_t;
+    } else if constexpr (IsSmartPtr<RawV>) {
+      if (v) {
+        os << field_options.value_smart_ptr_prefix;
+        StreamValue(os, *v, field_options, allow_field_names);
+        os << field_options.value_smart_ptr_suffix;
+      } else {
+        os << field_options.value_nullptr;
+      }
     } else if constexpr (std::is_pointer_v<RawV>) {
       if (v) {
         os << field_options.value_pointer_prefix;
@@ -455,6 +557,14 @@ class Stringify {
         os << field_options.value_pointer_suffix;
       } else {
         os << field_options.value_nullptr;
+      }
+    } else if constexpr (mbo::types::IsOptional<RawV>) {
+      if (v.has_value()) {
+        os << field_options.value_optional_prefix;
+        StreamValue(os, *v, field_options, allow_field_names);
+        os << field_options.value_optional_suffix;
+      } else {
+        os << field_options.value_nullopt;
       }
     } else if constexpr (mbo::types::IsPair<RawV>) {
       if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyOptions<RawV>) {
