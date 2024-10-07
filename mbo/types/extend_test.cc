@@ -16,6 +16,7 @@
 #include "mbo/types/extend.h"
 
 #include <concepts>  // IWYU pragma: keep
+#include <memory>    // IWYU pragma: keep
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -74,6 +75,7 @@ using ::testing::Contains;
 using ::testing::ElementsAre;
 using ::testing::EndsWith;
 using ::testing::Eq;
+using ::testing::FieldsAre;
 using ::testing::Ge;
 using ::testing::Gt;
 using ::testing::IsEmpty;
@@ -81,7 +83,9 @@ using ::testing::Le;
 using ::testing::Lt;
 using ::testing::Ne;
 using ::testing::Not;
+using ::testing::Pointee;
 using ::testing::SizeIs;
+using ::testing::StrEq;
 using ::testing::UnorderedElementsAre;
 using ::testing::WhenSorted;
 
@@ -955,6 +959,18 @@ TEST_F(ExtendTest, EmptyExtend) {
   ASSERT_TRUE((std::same_as<decltype(StructToTuple(Empty{})), std::tuple<>>));
   ASSERT_TRUE(CanCreateTuple<Empty>);
   ASSERT_FALSE(CanCreateTuple<Empty&>);
+}
+
+TEST_F(ExtendTest, SmartPtr) {
+  struct T : Extend<T> {
+    using MboTypesStringifyDoNotPrintFieldNames = void;
+    std::unique_ptr<std::string> ups;
+  };
+
+  T val{.ups = std::make_unique<std::string>("foo")};
+
+  EXPECT_THAT(StructToTuple(val), FieldsAre(Pointee(StrEq("foo"))));
+  EXPECT_THAT(StructToTuple(std::move(val)), FieldsAre(Pointee(StrEq("foo"))));
 }
 
 // NOLINTEND(*-magic-numbers)

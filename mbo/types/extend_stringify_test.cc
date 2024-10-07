@@ -13,7 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstddef>
 #include <map>
+#include <memory>
 #include <set>
 #include <string_view>
 #include <unordered_map>
@@ -26,6 +28,7 @@
 #include "mbo/container/limited_vector.h"
 #include "mbo/types/extend.h"
 #include "mbo/types/extender.h"
+#include "mbo/types/stringify.h"
 
 #ifdef __clang__
 # pragma clang diagnostic push
@@ -55,7 +58,10 @@ using ::mbo::types::types_internal::kStructNameSupport;
 using ::mbo::types::types_internal::SupportsFieldNames;
 using ::mbo::types::types_internal::SupportsFieldNamesConstexpr;
 using ::testing::ElementsAre;
+using ::testing::FieldsAre;
 using ::testing::IsEmpty;
+using ::testing::Pointee;
+using ::testing::StrEq;
 
 // Matcher that checks the field name matches if field names are supported, or verifies that the
 // passed field_name is in fact empty.
@@ -664,6 +670,101 @@ TEST_F(ExtenderStringifyTest, NonLiteralFields) {
   EXPECT_THAT(
       TestStructNonLiteralFields{}.ToString(StringifyOptions::AsCpp()),
       R"({.one = {{.first = 1, .second = 2}, {.first = 2, .second = 3}}, .two = {{.first = 3, .second = 4}}, .three = "three"})");
+}
+
+struct TestExtApiCombo : mbo::types::Extend<TestExtApiCombo> {
+  std::string one = "Once";
+
+  friend constexpr auto MboTypesStringifyFieldNames(const TestExtApiCombo& /* unused */) {
+    return std::array<std::string_view, 1>{"one"};
+  }
+
+  friend const StringifyOptions& MboTypesStringifyOptions(
+      const TestExtApiCombo& v,
+      std::size_t idx,
+      std::string_view name,
+      const StringifyOptions& defaults) {
+    return StringifyOptions::AsCpp();
+  }
+};
+
+TEST_F(ExtenderStringifyTest, TestExtApiCombo) {
+  EXPECT_THAT(TestExtApiCombo{}.ToString(), R"({.one = "Once"})");
+}
+
+struct TestSmartPtr : Extend<TestSmartPtr> {
+  friend auto MboTypesStringifyFieldNames(const T&) {
+    return std::array<std::string_view, 5>{"ups", "upn", "psv", "pn", "npt"};
+  }
+
+  static constexpr std::string_view kInit = "global";
+
+  std::unique_ptr<std::string> ups;
+  const std::unique_ptr<std::string> upn;
+  const std::string_view* psv = &kInit;
+  const int* pn = nullptr;
+  const std::nullptr_t npt;
+};
+
+TEST_F(ExtenderStringifyTest, TestSmartPtr) {
+  TestSmartPtr val{.ups = std::make_unique<std::string>("foo")};
+
+  EXPECT_THAT(
+      val.ToString(), R"({.ups: {"foo"}, .upn: <nullptr>, .psv: *{"global"}, .pn: <nullptr>, .npt: std::nullptr_t})");
+  EXPECT_THAT(
+      val.ToString(StringifyOptions::AsCpp()),
+      R"({.ups = {"foo"}, .upn = nullptr, .psv = "global", .pn = nullptr, .npt = nullptr})");
+  EXPECT_THAT(val.ToString(StringifyOptions::AsJson()), R"({"ups": "foo", "psv": "global"})");
+
+  TestSmartPtr val2{.ups = nullptr};
+  EXPECT_THAT(val2.ToString(StringifyOptions::AsJson()), R"({"psv": "global"})");
+}
+
+struct TestOptional : Extend<TestOptional> {
+  friend auto MboTypesStringifyFieldNames(const T&) { return std::array<std::string_view, 2>{"opt", "none"}; }
+
+  std::optional<std::string_view> opt = "foo";
+  const std::optional<std::string> none;
+};
+
+TEST_F(ExtenderStringifyTest, TestOptional) {
+  TestOptional val{};
+
+  EXPECT_THAT(val.ToString(), R"({.opt: {"foo"}, .none: std::nullopt})");
+  EXPECT_THAT(val.ToString(StringifyOptions::AsCpp()), R"({.opt = {"foo"}, .none = std::nullopt})");
+  EXPECT_THAT(val.ToString(StringifyOptions::AsJson()), R"({"opt": "foo"})");
+}
+
+struct TestStringifyDisable : Extend<TestStringifyDisable> {
+  struct Sub {
+    using MboTypesStringifyDisable = void;
+
+    int one = 42;
+  };
+
+  struct None {
+    using MboTypesStringifySupport = void;
+    using MboTypesStringifyDisable = void;
+
+    int one = 42;
+  };
+
+  friend auto MboTypesStringifyFieldNames(const T&) { return std::array<std::string_view, 1>{"sub"}; }
+
+  Sub sub;
+};
+
+TEST_F(ExtenderStringifyTest, TestStringifyDisable) {
+  const TestStringifyDisable val{};
+
+  EXPECT_THAT(val.ToString(), R"({.sub: {/*MboTypesStringifyDisable*/}})");
+  EXPECT_THAT(val.ToString(StringifyOptions::AsCpp()), R"({.sub = {/*MboTypesStringifyDisable*/}})");
+  EXPECT_THAT(val.ToString(StringifyOptions::AsJson()), R"({})");
+
+  const TestStringifyDisable::None none{};
+  EXPECT_THAT(mbo::types::Stringify().ToString(none), R"({/*MboTypesStringifyDisable*/})");
+  EXPECT_THAT(mbo::types::Stringify::AsCpp().ToString(none), R"({/*MboTypesStringifyDisable*/})");
+  EXPECT_THAT(mbo::types::Stringify::AsJson().ToString(none), R"()");
 }
 
 // NOLINTEND(*-magic-numbers,*-named-parameter)

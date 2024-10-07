@@ -17,6 +17,8 @@
 #define MBO_TYPES_TRAITS_H_
 
 #include <cstddef>  // IWYU pragma: keep
+#include <memory>
+#include <optional>
 #include <type_traits>
 #include <variant>
 
@@ -309,7 +311,9 @@ concept IsSameAsAnyOfRawImpl = (std::same_as<SameAs, std::remove_cvref_t<Ts>> ||
 
 }  // namespace types_internal
 
-// Test whetehr a type is one of a list of types. The following example takes any form of `int`
+// Test whetehr `SameAs` is one of a list of types `Ts` after removing `const`, `volatile` or `&`.
+//
+// Example: The following example takes any form of `int`
 // or `unsigned` where `const`, `volatile` or `&` are removed. So an `int*` would not be acceptable.
 //
 // ```
@@ -323,6 +327,10 @@ concept IsSameAsAnyOfRaw = types_internal::IsSameAsAnyOfRawImpl<std::remove_cvre
 // alternatives.
 template<typename SameAs, typename... Ts>
 concept NotSameAsAnyOfRaw = !IsSameAsAnyOfRaw<std::remove_cvref_t<SameAs>, Ts...>;
+
+// Test whether two types are identical after removing `const`, `volatile` or `&`.
+template<typename SameAs, typename T>
+concept IsSameAsRaw = IsSameAsAnyOfRaw<SameAs, T>;
 
 namespace types_internal {
 
@@ -346,6 +354,29 @@ concept IsVariant = types_internal::IsVariantImpl<T>::value;
 template<typename T, typename... Args>
 concept IsConstructibleWithEmptyBaseAndArgs = requires(Args&&... args) {
   { T{{}, {std::forward<Args>(args)}...} };
+};
+
+template<typename T>
+struct IsSmartPtrImpl : std::false_type {};
+
+template<typename T>
+struct IsSmartPtrImpl<std::shared_ptr<T>> : std::true_type {};
+
+template<typename T>
+struct IsSmartPtrImpl<std::unique_ptr<T>> : std::true_type {};
+
+template<typename T>
+struct IsSmartPtrImpl<std::weak_ptr<T>> : std::true_type {};
+
+// Identify smart pointers (`std::unique_ptr`, `std::shared_ptr`, `std::weak_ptr`).
+// Can be exptended by providing additional specicializations for `IsSmartPtrImpl`.
+template<typename T>
+concept IsSmartPtr = IsSmartPtrImpl<T>::value;
+
+template<typename T>
+concept IsOptional = requires {
+  typename T::value_type;
+  requires std::same_as<std::optional<typename T::value_type>, T>;
 };
 
 }  // namespace mbo::types

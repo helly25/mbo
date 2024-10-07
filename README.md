@@ -160,8 +160,11 @@ The C++ library is organized in functional groups each residing in their own dir
         * concept `IsDecomposable` determines whether a type can be used in static-bindings.
         * concept `IsInitializerList` determines whether a type is `std::initializer<T> type.
         * concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
+        * concept `IsOptional` determines whether a type is a `std::optional`.
         * concept `IsPair` determines whether a type is a `std::pair`.
         * concept `IsSameAsAnyOfRaw` / `NotSameAsAnyOfRaw` which determine whether type is one of a list of types.
+        * concept `IsSmartPtr` determines whether a type is a `std::shared_ptr`, `std::unique_ptr` or `std::weak_ptr`.
+          * Can be extended with other smart pointers through `IsSmartPtrImpl`.
         * concept `IsTuple` determines whether a type is a `std::tuple`.
         * concept `IsVariant` determines whether a type is a `std::variant` type.
     * mbo/types:tstring_cc, mbo/types/tstring.h

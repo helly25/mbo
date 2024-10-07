@@ -1,3 +1,13 @@
+# 0.2.32
+
+* Add support for smart pointer types in `Stringify`.
+* Add support for std::optional in `Stringify`.
+* Add builtin ability to suppress `nullptr` and `nullopt` field values (in particular for Json output).
+* Add support for move only decomposing in `StructToTuple`.
+* Add (extendable) concept `IsSmartPtr`.
+* Add concept `IsOptional`.
+* Add extension API type `MboTypesStringifyDisable` which can be used to suppress printing.
+
 # 0.2.31
 
 * Prevent clangd indexing issues with `DecomposeCount` implementation.
