@@ -1,3 +1,7 @@
+# 0.2.33
+
+* Improve `MBO_RETURN_IF_ERROR` to correctly accept StatusOr expressions independently of their implementation.
+
 # 0.2.32
 
 * Add support for smart pointer types in `Stringify`.

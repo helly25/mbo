@@ -13,10 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef MBO_TYPES_STATUS_STATUS_MACROS_H_
+#define MBO_TYPES_STATUS_STATUS_MACROS_H_
+
 #include <utility>  // IWYU pragma: keep
 
 #include "absl/status/status.h"    // IWYU pragma: keep
 #include "absl/status/statusor.h"  // IWYU pragma: keep
+#include "mbo/status/status.h"     // IWYU pragma: export
 
 // Macro that allows to return from a non-OkStatus in a single line.
 // This is pure syntactical sugar for readability:
@@ -37,12 +41,12 @@
 // ```
 //
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define MBO_RETURN_IF_ERROR(expr)    \
-  do { /* NOLINT(*avoid-do-while) */ \
-    auto var = (expr);               \
-    if (!var.ok()) {                 \
-      return absl::Status(var);      \
-    }                                \
+#define MBO_RETURN_IF_ERROR(expr)                                      \
+  do {                 /* NOLINT(*avoid-do-while) */                   \
+    auto var = (expr); /* NOLINT(*-unnecessary-copy-initialization) */ \
+    if (!var.ok()) {                                                   \
+      return mbo::status::ToStatus(var);                               \
+    }                                                                  \
   } while (0)
 
 // PRIVATE MACRO - DO NOT USE.
@@ -80,3 +84,5 @@
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define MBO_ASSIGN_OR_RETURN(res, expr) \
   _MBO_ASSIGN_OR_RETURN_IMPL_(_MBO_VAR_CAT_(_status_or_macro_var_, __LINE__), res, expr)
+
+#endif  // MBO_TYPES_STATUS_STATUS_MACROS_H_
