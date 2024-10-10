@@ -69,13 +69,18 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `ReadIniToTemplate`: Helper to initialize a mope Template from an INI file.
     * mbo/mope:mope_bzl, mbo/mope/mope.bzl
         * bzl-rule `mope`: A rule that expands a mope template file.
-        * bazl-macro `mope_test`: A test rule that compares mope template expansion against golden files. This
+        * bzl-macro `mope_test`: A test rule that compares mope template expansion against golden files. This
           supports `clang-format` and thus can be used for source-code generation and verification.
 * Status
     * `namespace mbo::status`
+    * mbo/status:status_builder_cc, mbo/status/status_builder.h
+        * class `StatusBuilder` which allows to extend the message of an `absl::Status`.
+    * mbo/status:status_cc, mbo/status/status.h
+        * function `GetStatus` allows to convert types to an `absl::Status`.
     * mbo/status:status_macros_cc, mbo/status/status_macros.h
-        * macro `MBO_RETURN_IF_ERROR`: Macro that simplifies handling functions returning `absl::Status`.
         * macro `MBO_ASSIGN_OR_RETURN`: Macro that simplifies handling functions returning `absl::StatusOr<T>`.
+        * macro `MBO_MOVE_TO_OR_RETURN`: Macro that simplifies handling functions returning `absl::StatusOr<T>` where the result requires commas, in particular structured bindings.
+        * macro `MBO_RETURN_IF_ERROR`: Macro that simplifies handling functions returning `absl::Status` or `absl::StausOr<T>`.
 * Strings
     * `namespace mbo::strings`
     * mbo/strings:indent_cc, mbo/strings/indent.h
@@ -96,10 +101,13 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/testing:matchers_cc, mbo/testing/matchers.h
         * gMock-Matcher `CapacityIs` which checks the capacity of a container.
     * mbo/testing:status_cc, mbo/testing/status.h
-        * gMock-matcher `IsOk`: Tests whether an absl::Status or absl::StatusOr is absl::OkStatus.
-        * gMock-matcher `IsOkAndHolds`: Tests an absl::StatusOr for absl::OkStatus and contents.
-        * gMock-Matcher `StatusIs`: Tests an absl::Status or absl::StatusOr against a specific status code and message.
+        * gMock-matcher `IsOk`: Tests whether an `absl::Status` or `absl::StatusOr` is `absl::OkStatus`.
+        * gMock-matcher `IsOkAndHolds`: Tests an `absl::StatusOr` for `absl::OkStatus` and contents.
+        * gMock-matcher `StatusIs`: Tests an `absl::Status` or `absl::StatusOr` against a specific status code and message.
+        * gmock-matcher `StatusHasPayload`: Tests whether an `absl::Status` or `absl::StatusOr` payload map has any payload, a specific payload url, or a payload url with specific content.
+        * gmock-matcher `StatusPayloads` Tests whether an `absl::Status` or `absl::StatusOr` payload map matches.
         * macro `MBO_ASSERT_OK_AND_ASSIGN`: Simplifies testing with functions that return `absl::StatusOr<T>`.
+        * macro `MBO_ASSERT_OK_AND_ASSIGN_TO`: Simplifies testing with functions that return `absl::StatusOr<T>` where the result requires commas, in particular structured bindings.
 * Types
     * `namespace mbo::types`
     * mbo/types:cases_cc, mbo/types/cases.h
@@ -116,7 +124,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * crtp-struct `ExtendNoDefault` Like `Extend` but without default extender functionality.
         * crtp-struct `ExtendNoPrint` Like `Extend` but without `Printable` and `Streamable` extender functionality.
         * `namespace extender`
-            * extender-struct `AbslStringify`: Extender that injects functionality to make an `Extend`ed type work with abseil format/print functions.
+            * extender-struct `AbslStringify`: Extender that injects functionality to make an `Extend`ed type work with abseil format/print functions. See `Stringify` for various API extension points.
             * extender-struct `AbslHashable`: Extender that injects functionality to make an `Extend`ed type work with abseil hashing (and also `std::hash`).
             * extender-struct `Comparable`: Extender that injects functionality to make an `Extend`ed type comparable. All comparators will be injected: `<=>`, `==`, `!=`, `<`, `<=`, `>`, `>=`.
             * extender-struct `Printable`:
@@ -139,6 +147,8 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `StringifyWithFieldNames` a format control adapter for `Stringify`.
         * struct `StringifyOptions` which can be used to control `Stringify` formatting.
         * API extension point type `MboTypesStringifySupport` which enables `Stringify` support even if not otherwise enabled (disables Abseil stringify support in `Stringify`).
+        * API extension point type `MboTypesStringifyDisable` which disables `Stringify` support. This allows to prevent
+        complex classes (and more importantly fields of complex types) from being printed/streamed using `Stringify`
         * API extension point type `MboTypesStringifyDoNotPrintFieldNames` which if present disables field names in `Stringify`.
         * API extension point function `MboTypesStringifyFieldNames` which adds field names to `Stringify`.
         * API extension point function `MboTypesStringifyOptions` which adds full format control to `Stringify`.
