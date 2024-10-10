@@ -1,16 +1,22 @@
 # 0.2.33
 
-* Improve `MBO_RETURN_IF_ERROR` to correctly accept StatusOr expressions independently of their implementation.
+* Improved `MBO_RETURN_IF_ERROR` to correctly accept `absl::StatusOr` expressions independently of their implementation.
+* Added `mbo::status::StatusBuilder` which allows to modify the message of an `absl::Status`.
+* Added `mbo::status::GetStatus` which allows to convert its argument to an `absl::Status` if supported.
+* Added macro `MBO_MOVE_TO_OR_RETURN` which can assign to structured binadings and other complex types.
+* Added macro `MBO_ASSERT_OK_AND_ASSIGN_TO` which can assign to structured binadings and other complex types.
+* Added matcher `mbo::testing::StatusHasPayload` that matches presence of any, a specific payload url, or a payload url with specific content.
+* Added matcher `mbo::testing::StatusPayloads` that matches against `Status`/`StatusOr<>` payload maps.
 
 # 0.2.32
 
-* Add support for smart pointer types in `Stringify`.
-* Add support for std::optional in `Stringify`.
-* Add builtin ability to suppress `nullptr` and `nullopt` field values (in particular for Json output).
-* Add support for move only decomposing in `StructToTuple`.
-* Add (extendable) concept `IsSmartPtr`.
-* Add concept `IsOptional`.
-* Add extension API type `MboTypesStringifyDisable` which can be used to suppress printing.
+* Added support for smart pointer types in `Stringify`.
+* Added support for std::optional in `Stringify`.
+* Added builtin ability to suppress `nullptr` and `nullopt` field values (in particular for Json output).
+* Added support for move only decomposing in `StructToTuple`.
+* Added (extendable) concept `IsSmartPtr`.
+* Added concept `IsOptional`.
+* Added extension API type `MboTypesStringifyDisable` which can be used to suppress printing.
 
 # 0.2.31
 

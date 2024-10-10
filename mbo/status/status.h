@@ -23,18 +23,25 @@
 
 namespace mbo::status {
 
-inline absl::Status ToStatus(absl::Status v) {
+// Conversion of any `absl::Status` or `absl::StatusOr<T>` to an `absl::Status`.
+inline absl::Status GetStatus(absl::Status v) {
   return v;
 }
 
 template<typename T>
-inline absl::Status ToStatus(const absl::StatusOr<T>& v) {
+inline absl::Status GetStatus(const absl::StatusOr<T>& v) {
   return v.status();
 }
 
 template<typename T>
-inline absl::Status ToStatus(absl::StatusOr<T>&& v) {
+inline absl::Status GetStatus(absl::StatusOr<T>&& v) {
   return std::move(v).status();
+}
+
+template<typename T>
+requires(std::constructible_from<::absl::Status, T> || std::convertible_to<T, absl::Status>)
+inline ::absl::Status GetStatus(T&& status) {
+  return absl::Status(std::forward<decltype(status)>(status));
 }
 
 }  // namespace mbo::status

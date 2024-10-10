@@ -33,12 +33,12 @@ TEST_F(StatusTest, StatusToStatus) {
   {
     const absl::Status status;
     EXPECT_THAT(status, IsOk());
-    EXPECT_THAT(ToStatus(status), IsOk());
+    EXPECT_THAT(GetStatus(status), IsOk());
   }
   {
     const absl::Status status = absl::CancelledError();
     EXPECT_THAT(status, StatusIs(absl::StatusCode::kCancelled));
-    EXPECT_THAT(ToStatus(status), StatusIs(absl::StatusCode::kCancelled));
+    EXPECT_THAT(GetStatus(status), StatusIs(absl::StatusCode::kCancelled));
   }
 }
 
@@ -46,12 +46,12 @@ TEST_F(StatusTest, StatusMoveToStatus) {
   {
     absl::Status status;
     EXPECT_THAT(status, IsOk());
-    EXPECT_THAT(ToStatus(std::move(status)), IsOk());
+    EXPECT_THAT(GetStatus(std::move(status)), IsOk());
   }
   {
     absl::Status status = absl::CancelledError();
     EXPECT_THAT(status, StatusIs(absl::StatusCode::kCancelled));
-    EXPECT_THAT(ToStatus(std::move(status)), StatusIs(absl::StatusCode::kCancelled));
+    EXPECT_THAT(GetStatus(std::move(status)), StatusIs(absl::StatusCode::kCancelled));
   }
 }
 
@@ -59,12 +59,12 @@ TEST_F(StatusTest, StatusOrToStatus) {
   {
     const absl::StatusOr<int> status_or(1);
     EXPECT_THAT(status_or, IsOk());
-    EXPECT_THAT(ToStatus(status_or), IsOk());
+    EXPECT_THAT(GetStatus(status_or), IsOk());
   }
   {
     const absl::StatusOr<int> status_or = absl::CancelledError();
     EXPECT_THAT(status_or, StatusIs(absl::StatusCode::kCancelled));
-    EXPECT_THAT(ToStatus(status_or), StatusIs(absl::StatusCode::kCancelled));
+    EXPECT_THAT(GetStatus(status_or), StatusIs(absl::StatusCode::kCancelled));
   }
 }
 
@@ -72,12 +72,12 @@ TEST_F(StatusTest, StatusOrMoveToStatus) {
   {
     absl::StatusOr<int> status_or(1);
     EXPECT_THAT(status_or, IsOk());
-    EXPECT_THAT(ToStatus(std::move(status_or)), IsOk());
+    EXPECT_THAT(GetStatus(std::move(status_or)), IsOk());
   }
   {
     absl::StatusOr<int> status_or = absl::CancelledError();
     EXPECT_THAT(status_or, StatusIs(absl::StatusCode::kCancelled));
-    EXPECT_THAT(ToStatus(std::move(status_or)), StatusIs(absl::StatusCode::kCancelled));
+    EXPECT_THAT(GetStatus(std::move(status_or)), StatusIs(absl::StatusCode::kCancelled));
   }
 }
 }  // namespace
