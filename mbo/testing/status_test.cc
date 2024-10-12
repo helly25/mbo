@@ -305,9 +305,10 @@ TEST_F(StatusMatcherTest, MessagesOfStatusHasPayload) {
 TEST_F(StatusMatcherTest, StatusPayloads) {
   {
     EXPECT_THAT(absl::OkStatus(), StatusPayloads(IsEmpty()));
-    absl::Status status = absl::CancelledError();
-    EXPECT_THAT(absl::OkStatus(), StatusPayloads(IsEmpty()));
     EXPECT_THAT(absl::OkStatus(), StatusPayloads(SizeIs(0)));
+    absl::Status status = absl::CancelledError();
+    EXPECT_THAT(status, StatusPayloads(IsEmpty()));
+    EXPECT_THAT(status, StatusPayloads(SizeIs(0)));
     status.SetPayload("url", absl::Cord("1"));
     EXPECT_THAT(status, StatusPayloads(SizeIs(1)));
     EXPECT_THAT(status, StatusPayloads(ElementsAre(Pair("url", "1"))));
