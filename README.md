@@ -107,7 +107,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * gmock-matcher `StatusHasPayload`: Tests whether an `absl::Status` or `absl::StatusOr` payload map has any payload, a specific payload url, or a payload url with specific content.
         * gmock-matcher `StatusPayloads` Tests whether an `absl::Status` or `absl::StatusOr` payload map matches.
         * macro `MBO_ASSERT_OK_AND_ASSIGN`: Simplifies testing with functions that return `absl::StatusOr<T>`.
-        * macro `MBO_ASSERT_OK_AND_ASSIGN_TO`: Simplifies testing with functions that return `absl::StatusOr<T>` where the result requires commas, in particular structured bindings.
+        * macro `MBO_ASSERT_OK_AND_MOVE_TO`: Simplifies testing with functions that return `absl::StatusOr<T>` where the result requires commas, in particular structured bindings.
 * Types
     * `namespace mbo::types`
     * mbo/types:cases_cc, mbo/types/cases.h
