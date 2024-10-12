@@ -205,7 +205,7 @@ TEST_F(StatusMatcherTest, AssertOkAndAssign) {
 
 TEST_F(StatusMatcherTest, AssertOkAndAssignTo) {
   absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
-  MBO_ASSERT_OK_AND_ASSIGN_TO(status_or, auto [first, second]);
+  MBO_ASSERT_OK_AND_MOVE_TO(status_or, auto [first, second]);
   EXPECT_THAT(std::make_pair(first, second), Pair(25, 17));
 }
 

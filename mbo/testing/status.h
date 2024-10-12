@@ -441,7 +441,7 @@ inline ::testing::PolymorphicMatcher<testing_internal::StatusPayloads> StatusPay
 
 #undef MBO_PRIVATE_TESTING_STATUS_ASSERT_OK_AND_ASSIGN_
 #undef MBO_ASSERT_OK_AND_ASSIGN
-#undef MBO_ASSERT_OK_AND_ASSIGN_TO
+#undef MBO_ASSERT_OK_AND_MOVE_TO
 
 // PRIVATE macro, do not use.
 #define MBO_PRIVATE_TESTING_STATUS_ASSERT_OK_AND_ASSIGN_(statusor, expression, ...) \
@@ -452,19 +452,19 @@ inline ::testing::PolymorphicMatcher<testing_internal::StatusPayloads> StatusPay
 // Macro that verifies `expression` is OK and assigns its `value` by move to `targets`, where target
 // can be a declaration. Example:
 // ```
-// ASSERT_OK_OR_ASSIGN(const std::string result, StringOrStatus());
+// MBO_ASSERT_OK_AND_ASSIGN(const std::string result, StringOrStatus());
 // ```
 #define MBO_ASSERT_OK_AND_ASSIGN(target, expression) \
   MBO_PRIVATE_TESTING_STATUS_ASSERT_OK_AND_ASSIGN_(  \
       MBO_PRIVATE_TESTING_STATUS_CONCAT_(_status_or_value, __LINE__), expression, target)
 
-// Variant of `ASSERT_OK_OR_ASSIGN` that allows to assign to complex types, in particular to
+// Variant of `MBO_ASSERT_OK_AND_ASSIGN` that allows to assign to complex types, in particular to
 // structured bindings. Example:
 // ```
-// ASSERT_OK_AND_ASSIGN_TO(PairOrStatus(), const auto [first, second]);
+// MBO_ASSERT_OK_AND_MOVE_TO(PairOrStatus(), const auto [first, second]);
 // ```
-#define MBO_ASSERT_OK_AND_ASSIGN_TO(expression, ...) \
-  MBO_PRIVATE_TESTING_STATUS_ASSERT_OK_AND_ASSIGN_(  \
+#define MBO_ASSERT_OK_AND_MOVE_TO(expression, ...)  \
+  MBO_PRIVATE_TESTING_STATUS_ASSERT_OK_AND_ASSIGN_( \
       MBO_PRIVATE_TESTING_STATUS_CONCAT_(_status_or_value, __LINE__), expression, __VA_ARGS__)
 
 #ifndef ASSERT_OK_AND_ASSIGN

@@ -4,7 +4,7 @@
 * Added `mbo::status::StatusBuilder` which allows to modify the message of an `absl::Status`.
 * Added `mbo::status::GetStatus` which allows to convert its argument to an `absl::Status` if supported.
 * Added macro `MBO_MOVE_TO_OR_RETURN` which can assign to structured binadings and other complex types.
-* Added macro `MBO_ASSERT_OK_AND_ASSIGN_TO` which can assign to structured binadings and other complex types.
+* Added macro `MBO_ASSERT_OK_AND_MOVE_TO` which can assign to structured binadings and other complex types.
 * Added matcher `mbo::testing::StatusHasPayload` that matches presence of any, a specific payload url, or a payload url with specific content.
 * Added matcher `mbo::testing::StatusPayloads` that matches against `Status`/`StatusOr<>` payload maps.
 
