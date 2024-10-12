@@ -15,15 +15,20 @@
 
 #include "mbo/status/status_macros.h"
 
+#include <utility>
+
 #include "absl/cleanup/cleanup.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/status/status_builder.h"
 #include "mbo/testing/status.h"
 
 namespace mbo::status {
 namespace {
+
+// NOLINTBEGIN(*-magic-numbers)
 
 using ::mbo::testing::IsOk;
 using ::mbo::testing::StatusIs;
@@ -98,6 +103,16 @@ TEST_F(StatusMacrosTest, StatusOrMoveToStatus) {
   }
 }
 
+TEST_F(StatusMacrosTest, ReturnIfErrorAppend) {
+  auto test = [](absl::Status status, std::string_view prefix = "<Prefix>",
+                 std::string_view suffix = "<Suffix>") -> absl::Status {
+    MBO_RETURN_IF_ERROR(status).SetPrepend() << prefix << StatusBuilder::Append << suffix;
+    return absl::OkStatus();
+  };
+  EXPECT_THAT(test(absl::OkStatus()), IsOk());
+  EXPECT_THAT(test(absl::UnknownError("<Error>")), StatusIs(absl::StatusCode::kUnknown, "<Prefix><Error><Suffix>"));
+}
+
 TEST_F(StatusMacrosTest, AssignOrReturn) {
   {
     absl::StatusOr<int> status_or(1);
@@ -110,6 +125,32 @@ TEST_F(StatusMacrosTest, AssignOrReturn) {
     EXPECT_THAT(TestAssignOrReturn(std::move(status_or), 1), StatusIs(absl::StatusCode::kCancelled));
   }
 }
+
+TEST_F(StatusMacrosTest, MboReturnOrAssignTo) {
+  absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
+  EXPECT_THAT(TestAssignOrReturn(status_or, std::make_pair(25, 17)), IsOk());
+  const auto test = []<typename T>(absl::StatusOr<std::pair<T, T>> status_or, const std::pair<T, T>& expected) {
+    MBO_MOVE_TO_OR_RETURN(status_or, auto [first, second]);
+    EXPECT_THAT(first, expected.first);
+    EXPECT_THAT(second, expected.second);
+    return absl::OkStatus();
+  };
+  EXPECT_THAT(test(status_or, std::make_pair(25, 17)), IsOk());
+}
+
+TEST_F(StatusMacrosTest, MboReturnOrAssignToWithCommaInExpression) {
+  // Comma in left side expression: We are using `std::make_pair(expected.first, expected.second)` in the macro.
+  const auto test2 = []<typename T>(const std::pair<T, T>& expected) -> absl::Status {
+    using P = std::pair<T, T>;
+    MBO_MOVE_TO_OR_RETURN(absl::StatusOr<P>(std::make_pair(expected.first, expected.second)), auto [first, second]);
+    EXPECT_THAT(first, expected.first);
+    EXPECT_THAT(second, expected.second);
+    return absl::OkStatus();
+  };
+  EXPECT_THAT(test2(std::make_pair(25, 17)), IsOk());
+}
+
+// NOLINTEND(*-magic-numbers)
 
 }  // namespace
 }  // namespace mbo::status

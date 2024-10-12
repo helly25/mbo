@@ -35,11 +35,14 @@ using ::mbo::testing::testing_internal::IsOkAndHoldsMatcher;
 using ::mbo::testing::testing_internal::IsOkMatcher;
 using ::mbo::testing::testing_internal::StatusIsMatcher;
 using ::testing::_;
+using ::testing::ElementsAre;
 using ::testing::Ge;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
+using ::testing::Key;
 using ::testing::Not;
 using ::testing::Pair;
+using ::testing::SizeIs;
 
 class StatusMatcherTest : public ::testing::Test {
  public:
@@ -191,6 +194,207 @@ TEST_F(StatusMatcherTest, IsOkAndHolds) {
     EXPECT_THAT(
         MatchAndExplain(matcher, absl::StatusOr<std::string>{"25"}),
         Pair(false, "which contains value \"25\", whose size is 2"));
+  }
+}
+
+TEST_F(StatusMatcherTest, AssertOkAndAssign) {
+  absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
+  MBO_ASSERT_OK_AND_ASSIGN(auto res, status_or);
+  EXPECT_THAT(res, Pair(25, 17));
+}
+
+TEST_F(StatusMatcherTest, AssertOkAndAssignTo) {
+  absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
+  MBO_ASSERT_OK_AND_ASSIGN_TO(status_or, auto [first, second]);
+  EXPECT_THAT(std::make_pair(first, second), Pair(25, 17));
+}
+
+TEST_F(StatusMatcherTest, StatusHasPayload) {
+  {
+    EXPECT_THAT(absl::OkStatus(), Not(StatusHasPayload()));
+    absl::Status status = absl::CancelledError();
+    EXPECT_THAT(status, Not(StatusHasPayload()));
+    status.SetPayload("url", absl::Cord("content"));
+    EXPECT_THAT(status, StatusHasPayload());
+    EXPECT_THAT(status, StatusHasPayload("url"));
+    EXPECT_THAT(status, Not(StatusHasPayload("other")));
+    EXPECT_THAT(status, StatusHasPayload("url", "content"));
+    EXPECT_THAT(status, Not(StatusHasPayload("other", "")));
+    EXPECT_THAT(status, StatusHasPayload("url", Not("other")));
+    EXPECT_THAT(status, StatusHasPayload("url", HasSubstr("tent")));
+    EXPECT_THAT(status, Not(StatusHasPayload("url", "other")));
+  }
+  {
+    EXPECT_THAT(absl::StatusOr<int>(1), Not(StatusHasPayload()));
+    EXPECT_THAT(absl::StatusOr<int>(absl::CancelledError()), Not(StatusHasPayload()));
+    const absl::StatusOr<int> status_or = [] {
+      absl::Status status = absl::CancelledError();
+      status.SetPayload("url", absl::Cord("content"));
+      return status;
+    }();
+    EXPECT_THAT(status_or, StatusHasPayload());
+    EXPECT_THAT(status_or, StatusHasPayload("url"));
+  }
+}
+
+TEST_F(StatusMatcherTest, MessagesOfStatusHasPayload) {
+  const absl::Status status_url_content = [] {
+    absl::Status status = absl::CancelledError();
+    status.SetPayload("url", absl::Cord("content"));
+    return status;
+  }();
+  const absl::Status status_url_other = [] {
+    absl::Status status = absl::CancelledError();
+    status.SetPayload("url", absl::Cord("other"));
+    return status;
+  }();
+  const absl::Status status_abc_content = [] {
+    absl::Status status = absl::CancelledError();
+    status.SetPayload("abc", absl::Cord("content"));
+    status.SetPayload("def", absl::Cord("content"));
+    return status;
+  }();
+  {
+    const ::testing::Matcher<absl::Status> matcher = StatusHasPayload();
+    EXPECT_THAT(Describe(matcher), "has any payload");
+    EXPECT_THAT(DescribeNegation(matcher), "has no payload");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(false, "which has OK status (and no payload)"));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::CancelledError()), Pair(false, "which has no payload"));
+    EXPECT_THAT(MatchAndExplain(matcher, status_url_content), Pair(true, "which has 1 payload"));
+    EXPECT_THAT(MatchAndExplain(matcher, status_abc_content), Pair(true, "which has 2 payloads"));
+  }
+  {
+    const ::testing::Matcher<absl::StatusOr<int>> matcher = StatusHasPayload();
+    EXPECT_THAT(Describe(matcher), "has any payload");
+    EXPECT_THAT(DescribeNegation(matcher), "has no payload");
+  }
+  {
+    const ::testing::Matcher<absl::Status> matcher = StatusHasPayload("url");
+    EXPECT_THAT(Describe(matcher), "has a payload at url 'url'");
+    EXPECT_THAT(DescribeNegation(matcher), "has no payload at url 'url'");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(false, "which has OK status (and no payload)"));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::CancelledError()), Pair(false, "which has no payload"));
+    EXPECT_THAT(MatchAndExplain(matcher, status_url_content), Pair(true, "which has a payload at url 'url'"));
+    EXPECT_THAT(MatchAndExplain(matcher, status_url_other), Pair(true, "which has a payload at url 'url'"));
+    EXPECT_THAT(MatchAndExplain(matcher, status_abc_content), Pair(false, "which has 2 payloads"));
+  }
+  {
+    const ::testing::Matcher<absl::Status> matcher = StatusHasPayload("url", "content");
+    EXPECT_THAT(Describe(matcher), "has a payload at url 'url' that is equal to \"content\"");
+    EXPECT_THAT(DescribeNegation(matcher), "has no payload at url 'url' or one that isn't equal to \"content\"");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(false, "which has OK status (and no payload)"));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::CancelledError()), Pair(false, "which has no payload"));
+    EXPECT_THAT(MatchAndExplain(matcher, status_url_content), Pair(true, "which has a matching payload at url 'url'"));
+    EXPECT_THAT(
+        MatchAndExplain(matcher, status_url_other), Pair(false, "which has a non-matching payload at url 'url'"));
+    EXPECT_THAT(MatchAndExplain(matcher, status_abc_content), Pair(false, "which has 2 payloads"));
+  }
+  {
+    const ::testing::Matcher<absl::Status> matcher = StatusHasPayload("url", HasSubstr("tent"));
+    EXPECT_THAT(Describe(matcher), "has a payload at url 'url' that has substring \"tent\"");
+    EXPECT_THAT(DescribeNegation(matcher), "has no payload at url 'url' or one that has no substring \"tent\"");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(false, "which has OK status (and no payload)"));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::CancelledError()), Pair(false, "which has no payload"));
+    EXPECT_THAT(MatchAndExplain(matcher, status_url_content), Pair(true, "which has a matching payload at url 'url'"));
+    EXPECT_THAT(
+        MatchAndExplain(matcher, status_url_other), Pair(false, "which has a non-matching payload at url 'url'"));
+    EXPECT_THAT(MatchAndExplain(matcher, status_abc_content), Pair(false, "which has 2 payloads"));
+  }
+}
+
+TEST_F(StatusMatcherTest, StatusPayloads) {
+  {
+    EXPECT_THAT(absl::OkStatus(), StatusPayloads(IsEmpty()));
+    EXPECT_THAT(absl::OkStatus(), StatusPayloads(SizeIs(0)));
+    absl::Status status = absl::CancelledError();
+    EXPECT_THAT(status, StatusPayloads(IsEmpty()));
+    EXPECT_THAT(status, StatusPayloads(SizeIs(0)));
+    status.SetPayload("url", absl::Cord("1"));
+    EXPECT_THAT(status, StatusPayloads(SizeIs(1)));
+    EXPECT_THAT(status, StatusPayloads(ElementsAre(Pair("url", "1"))));
+    EXPECT_THAT(status, StatusPayloads(ElementsAre(Not(Pair("bad", "bad")))));
+    EXPECT_THAT(status, StatusPayloads(Not(ElementsAre(Pair("bad", "bad")))));
+    EXPECT_THAT(status, Not(StatusPayloads(ElementsAre(Pair("bad", "bad")))));
+    status.SetPayload("abc", absl::Cord("2"));
+    EXPECT_THAT(status, StatusPayloads(SizeIs(2)));
+    EXPECT_THAT(status, StatusPayloads(ElementsAre(Key("abc"), Key("url"))));
+    EXPECT_THAT(status, StatusPayloads(ElementsAre(Pair("abc", "2"), Pair("url", "1"))));
+    EXPECT_THAT(status, Not(StatusPayloads(ElementsAre(Pair("abc", "2"), Pair("url", "0")))));
+  }
+  {
+    EXPECT_THAT(absl::StatusOr<int>(1), StatusPayloads(IsEmpty()));
+    EXPECT_THAT(absl::StatusOr<int>(absl::CancelledError()), StatusPayloads(IsEmpty()));
+    const absl::StatusOr<int> status_or = [] {
+      absl::Status status = absl::CancelledError();
+      status.SetPayload("url", absl::Cord("content"));
+      return status;
+    }();
+    EXPECT_THAT(status_or, StatusPayloads(ElementsAre(Pair("url", "content"))));
+  }
+}
+
+TEST_F(StatusMatcherTest, MessagesOfStatusPayloads) {
+  const absl::Status status_url_content = [] {
+    absl::Status status = absl::CancelledError();
+    status.SetPayload("url", absl::Cord("content"));
+    return status;
+  }();
+  const absl::Status status_abc_another = [] {
+    absl::Status status = absl::CancelledError();
+    status.SetPayload("abc", absl::Cord("another"));
+    status.SetPayload("url", absl::Cord("content"));
+    return status;
+  }();
+  const absl::Status status_abc_content = [] {
+    absl::Status status = absl::CancelledError();
+    status.SetPayload("abc", absl::Cord("another"));
+    status.SetPayload("def", absl::Cord("texting"));
+    return status;
+  }();
+  {
+    const ::testing::Matcher<absl::Status> matcher = StatusPayloads(IsEmpty());
+    EXPECT_THAT(Describe(matcher), "has a payloads map that is empty");
+    EXPECT_THAT(DescribeNegation(matcher), "has a payloads map that isn't empty");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(true, "which has OK status (and no payload)"));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::CancelledError()), Pair(true, "which has no payload"));
+    EXPECT_THAT(
+        MatchAndExplain(matcher, status_url_content),
+        Pair(false, "which has a non-matching payload map whose size is 1"));
+    EXPECT_THAT(
+        MatchAndExplain(matcher, status_abc_content),
+        Pair(false, "which has a non-matching payload map whose size is 2"));
+  }
+  {
+    const ::testing::Matcher<absl::Status> matcher =
+        StatusPayloads(ElementsAre(Pair("abc", "another"), Pair("url", "content")));
+    EXPECT_THAT(
+        Describe(matcher),
+        "has a payloads map that has 2 elements where\n"
+        "element #0 has a first field that is equal to \"abc\", and has a second field that is equal to \"another\",\n"
+        "element #1 has a first field that is equal to \"url\", and has a second field that is equal to \"content\"");
+    EXPECT_THAT(
+        DescribeNegation(matcher),
+        "has a payloads map that doesn't have 2 elements, or\n"
+        "element #0 has a first field that isn't equal to \"abc\", or has a second field that isn't equal to "
+        "\"another\", or\n"
+        "element #1 has a first field that isn't equal to \"url\", or has a second field that isn't equal to "
+        "\"content\"");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(false, "which has OK status (and no payload)"));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::CancelledError()), Pair(false, "which has no payload"));
+    EXPECT_THAT(
+        MatchAndExplain(matcher, status_url_content),
+        Pair(false, "which has a non-matching payload map which has 1 element"));
+    EXPECT_THAT(
+        MatchAndExplain(matcher, status_abc_content),
+        Pair(
+            false,
+            "which has a non-matching payload map whose element #1 doesn't match, whose first field does not match"));
+    EXPECT_THAT(
+        MatchAndExplain(matcher, status_abc_another),
+        Pair(
+            true,
+            "which has a matching payload map whose element #0 matches, whose both fields match,\n"
+            "and whose element #1 matches, whose both fields match"));
   }
 }
 
