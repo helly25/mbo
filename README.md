@@ -100,6 +100,7 @@ The C++ library is organized in functional groups each residing in their own dir
     * `namespace mbo::testing`
     * mbo/testing:matchers_cc, mbo/testing/matchers.h
         * gMock-Matcher `CapacityIs` which checks the capacity of a container.
+        * gmock-matcher `WhenTransformedBy` which allows to compare containers after transforming them. This sometimes allows for much more concise comparisons where a golden expectation is already available that only differs in a simple transformation.
     * mbo/testing:status_cc, mbo/testing/status.h
         * gMock-matcher `IsOk`: Tests whether an `absl::Status` or `absl::StatusOr` is `absl::OkStatus`.
         * gMock-matcher `IsOkAndHolds`: Tests an `absl::StatusOr` for `absl::OkStatus` and contents.
