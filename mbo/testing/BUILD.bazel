@@ -19,10 +19,21 @@ cc_library(
     name = "matchers_cc",
     hdrs = ["matchers.h"],
     deps = [
-        "@com_google_absl//absl/strings",
+        "//mbo/types:traits_cc",
         "@com_google_googletest//:gtest",
     ],
     visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "matchers_test",
+    srcs = ["matchers_test.cc"],
+    deps = [
+        ":matchers_cc",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+    size = "small",
 )
 
 cc_library(

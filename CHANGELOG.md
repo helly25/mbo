@@ -1,3 +1,7 @@
+# 0.2.34
+
+* Added `mbo::testing::WhenTransformedBy` which allows to compare containers after transforming them.
+
 # 0.2.33
 
 * Improved `MBO_RETURN_IF_ERROR` to correctly accept `absl::StatusOr` expressions independently of their implementation.
