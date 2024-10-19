@@ -17,17 +17,19 @@
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 
-def _limited_ordered_config_gen_impl(ctx):
+def _config_gen_impl(ctx):
     limited_ordered_max_unroll_capacity = ctx.attr._limited_ordered_max_unroll_capacity[BuildSettingInfo].value
+    require_throws = ctx.attr._require_throws[BuildSettingInfo].value
     ctx.actions.expand_template(
         template = ctx.file.template,
         output = ctx.outputs.output,
         substitutions = {
             "kUnrollMaxCapacityDefault = 16;": "kUnrollMaxCapacityDefault = " + repr(limited_ordered_max_unroll_capacity) + ";",
+            "kRequireThrows = false;": "kRequireThrows = " + repr(require_throws).lower() + ";",
         },
     )
 
-limited_ordered_config_gen = rule(
+config_gen = rule(
     attrs = {
         "output": attr.output(
             mandatory = True,
@@ -36,7 +38,8 @@ limited_ordered_config_gen = rule(
             allow_single_file = True,
             mandatory = True,
         ),
-        "_limited_ordered_max_unroll_capacity": attr.label(default = Label("//mbo/container:limited_ordered_max_unroll_capacity")),
+        "_limited_ordered_max_unroll_capacity": attr.label(default = Label("//mbo/config:limited_ordered_max_unroll_capacity")),
+        "_require_throws": attr.label(default = Label("//mbo/config:require_throws")),
     },
-    implementation = _limited_ordered_config_gen_impl,
+    implementation = _config_gen_impl,
 )

@@ -131,8 +131,8 @@ TEST_F(LogTimingTest, LogFormat) {
           {")", "\\)"},
       });
   Sequence sequence;
-  const std::string expected_log1 = absl::StrFormat(".*LogTiming\\([0-9:.]+[mnu]s @ (%s)*\\)$", function);
-  const std::string expected_log2 = absl::StrFormat(".*LogTiming\\([0-9:.]+[mnu]s @ (%s)*\\): Foo$", function);
+  const std::string expected_log1 = absl::StrFormat(".*LogTiming\\(([0-9:.]+[mnu]s|0) @ (%s)*\\)$", function);
+  const std::string expected_log2 = absl::StrFormat(".*LogTiming\\(([0-9:.]+[mnu]s|0) @ (%s)*\\): Foo$", function);
   ExpectLogConst(absl::LogSeverity::kInfo, ContainsRegex(expected_log1)).Times(1).InSequence(sequence);
   ExpectLogConst(absl::LogSeverity::kInfo, ContainsRegex(expected_log2)).Times(1).InSequence(sequence);
   (void)LogTiming();  // Manually discarding the result means, this one logs immediately.

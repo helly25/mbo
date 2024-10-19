@@ -25,15 +25,11 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/log/absl_log.h"
 #include "mbo/container/internal/limited_ordered.h"  // IWYU pragma: export
 #include "mbo/types/compare.h"                       // IWYU pragma: keep
 #include "mbo/types/traits.h"
 
 namespace mbo::container {
-
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define LV_REQUIRE(severity, condition) ABSL_LOG_IF(severity, !(condition))
 
 // NOLINTBEGIN(readability-identifier-naming)
 
@@ -297,8 +293,6 @@ constexpr LimitedSet<std::remove_cvref_t<Key>, N, Compare> ToLimitedSet(
 // NOLINTEND(*-avoid-c-arrays)
 
 // NOLINTEND(readability-identifier-naming)
-
-#undef LV_REQUIRE
 
 }  // namespace mbo::container
 

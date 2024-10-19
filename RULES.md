@@ -54,3 +54,5 @@ Some rules for the code layout and its development.
 * Flags in libraries should be prefixed with their path/namespace. E.g. the flag
   `--mbo_log_timing_min_duration` has the prefix `mbo_log` as it is defined in
   `mbo/log/log_timing.cc` (path `mbo/log`) and uses namespace `mbo::log`.
+* API changes that are not backwards compatible should not occur in minor version changes.
+* Undocumented and private/internal APIs may be changed in any way at any time.

@@ -26,20 +26,12 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/log/absl_log.h"
+#include "mbo/config/config.h"
+#include "mbo/config/require.h"
 #include "mbo/container/limited_options.h"  // IWYU pragma: export
 #include "mbo/types/traits.h"
 
 namespace mbo::container {
-
-#ifdef LV_REQUIRE
-# undef LV_REQUIRE
-#endif
-
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define LV_REQUIRE(severity, condition)                      \
-  /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */ \
-  ABSL_LOG_IF(severity, !(condition))
 
 // NOLINTBEGIN(readability-identifier-naming)
 
@@ -76,6 +68,8 @@ class LimitedVector final {
   using Options = decltype(MakeLimitedOptions<CapacityOrOptions>());
   // static_assert(std::is_trivially_destructible_v<T> || Options::Has(LimitedOptionsFlag::kEmptyDestructor));
   static constexpr std::size_t Capacity = Options::kCapacity;
+
+  static constexpr bool kRequireThrows = ::mbo::config::kRequireThrows;
 
   union Data {
     constexpr Data() noexcept : none{} {}
@@ -252,8 +246,8 @@ class LimitedVector final {
     }
   }
 
-  constexpr void reserve(std::size_t size) noexcept {
-    LV_REQUIRE(FATAL, size <= Capacity) << "Cannot reserve beyond capacity.";
+  constexpr void reserve(std::size_t size) noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(size <= Capacity, "Cannot reserve beyond capacity.");
   }
 
   constexpr void shrink_to_fit() noexcept {
@@ -280,9 +274,9 @@ class LimitedVector final {
   }
 
   template<typename... Args>
-  constexpr iterator emplace(const_iterator pos, Args&&... args) noexcept {
-    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `emplace` at capacity.";
-    LV_REQUIRE(FATAL, &values_[0].data <= pos && pos <= &values_[size_].data) << "Invalid `pos`";
+  constexpr iterator emplace(const_iterator pos, Args&&... args) noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `emplace` at capacity.");
+    MBO_CONFIG_REQUIRE(&values_[0].data <= pos && pos <= &values_[size_].data, "Invalid `pos`.");
     iterator dst = end();
     for (; dst > pos; --dst) {
       *dst = std::move(*std::prev(dst));
@@ -292,9 +286,9 @@ class LimitedVector final {
     return dst;
   }
 
-  constexpr iterator erase(const_iterator pos) noexcept {
+  constexpr iterator erase(const_iterator pos) noexcept(!kRequireThrows) {
     // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)
-    LV_REQUIRE(FATAL, &values_[0].data <= pos && pos < &values_[size_].data) << "Invalid `pos`";
+    MBO_CONFIG_REQUIRE(&values_[0].data <= pos && pos < &values_[size_].data, "Invalid `pos`.");
     auto dst = const_cast<iterator>(pos);
     --size_;
     std::destroy_at(dst);
@@ -305,10 +299,10 @@ class LimitedVector final {
     // NOLINTEND(cppcoreguidelines-pro-type-const-cast)
   }
 
-  constexpr iterator erase(const_iterator first, const_iterator last) noexcept {
+  constexpr iterator erase(const_iterator first, const_iterator last) noexcept(!kRequireThrows) {
     // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)
-    LV_REQUIRE(FATAL, &values_[0].data <= first && first <= last && last <= &values_[size_].data)
-        << "Invalid `first` or `last`";
+    MBO_CONFIG_REQUIRE(
+        &values_[0].data <= first && first <= last && last <= &values_[size_].data, "Invalid `first` or `last`.");
     std::size_t deleted = 0;
     for (const_iterator it = first; it < last; ++it) {
       std::destroy_at(it);
@@ -325,29 +319,29 @@ class LimitedVector final {
   }
 
   template<typename... Args>
-  constexpr reference emplace_back(Args&&... args) noexcept {
-    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `emplace_back` at capacity.";
+  constexpr reference emplace_back(Args&&... args) noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `emplace_back` at capacity.");
     auto& data_ref{values_[size_++]};
     std::construct_at(&data_ref.data, std::forward<Args>(args)...);
     return data_ref.data;
   }
 
-  constexpr reference push_back(T&& val) noexcept {
-    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `push_back` at capacity.";
+  constexpr reference push_back(T&& val) noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `push_back` at capacity.");
     auto& data_ref{values_[size_++]};
-    std::construct_at(&data_ref.data, std::forward<T>(val));
+    std::construct_at(&data_ref.data, std::move(val));
     return data_ref.data;
   }
 
-  constexpr reference push_back(const T& val) noexcept {
-    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `push_back` at capacity.";
+  constexpr reference push_back(const T& val) noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `push_back` at capacity.");
     auto& data_ref{values_[size_++]};
     std::construct_at(&data_ref.data, val);
     return data_ref.data;
   }
 
-  constexpr void pop_back() noexcept {
-    LV_REQUIRE(FATAL, size_ > 0) << "No element to pop.";
+  constexpr void pop_back() noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(size_ > 0, "No element to pop.");
     std::destroy_at(&values_[--size_].data);
   }
 
@@ -366,8 +360,8 @@ class LimitedVector final {
     }
   }
 
-  constexpr void assign(const std::initializer_list<T>& list) noexcept {
-    LV_REQUIRE(FATAL, list.size() <= Capacity) << "Called `assign` at capacity.";
+  constexpr void assign(const std::initializer_list<T>& list) noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(list.size() <= Capacity, "Called `assign` at capacity.");
     clear();
     auto it = list.begin();
     while (it < list.end()) {
@@ -377,25 +371,25 @@ class LimitedVector final {
 
   template<std::constructible_from<T> U>
   constexpr iterator insert(const_iterator pos, U&& value) {
-    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `insert` at capacity.";
-    LV_REQUIRE(FATAL, begin() <= pos && pos <= end()) << "Invalid `pos`.";
+    MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `insert` at capacity.");
+    MBO_CONFIG_REQUIRE(begin() <= pos && pos <= end(), "Invalid `pos`.");
     // Clang does not like `std::distance`. The issue is that the iterators point into the union.
     // That makes them technically not point into an array AND that is indeed not allowed by C++.
-    const iterator dst = const_cast<iterator>(pos);
+    const auto dst = const_cast<iterator>(pos);  // NOLINT(cppcoreguidelines-pro-type-const-cast)
     move_backward(dst, 1);
     std::construct_at(&*dst, std::forward<U>(value));
     return dst;
   }
 
   constexpr iterator insert(const_iterator pos, size_type count, const T& value) {
-    LV_REQUIRE(FATAL, size_ + count <= Capacity) << "Called `insert` at capacity.";
-    LV_REQUIRE(FATAL, begin() <= pos && pos <= end()) << "Invalid `pos`.";
-    const iterator dst = const_cast<iterator>(pos);
+    MBO_CONFIG_REQUIRE(size_ + count <= Capacity, "Called `insert` at capacity.");
+    MBO_CONFIG_REQUIRE(begin() <= pos && pos <= end(), "Invalid `pos`.");
+    const auto dst = const_cast<iterator>(pos);  // NOLINT(cppcoreguidelines-pro-type-const-cast)
     if (count == 0) {
       return dst;
     }
     std::size_t index = move_backward(dst, count);
-    while (count) {
+    while (count > 0) {
       std::construct_at(&values_[index].data, value);
       ++index;
       --count;
@@ -408,11 +402,11 @@ class LimitedVector final {
   template<typename InputIt>
   requires(std::constructible_from<T, decltype(*std::declval<InputIt>())>)
   constexpr iterator insert(const_iterator pos, InputIt first, InputIt last) {
-    LV_REQUIRE(FATAL, begin() <= pos && pos <= end()) << "Invalid `pos`.";
-    LV_REQUIRE(FATAL, first <= last) << "First > Last.";
+    MBO_CONFIG_REQUIRE(begin() <= pos && pos <= end(), "Invalid `pos`.");
+    MBO_CONFIG_REQUIRE(first <= last, "First > Last.");
     std::size_t count = std::distance(first, last);
-    LV_REQUIRE(FATAL, size_ + count <= Capacity) << "Called `insert` at capacity.";
-    const iterator dst = const_cast<iterator>(pos);
+    MBO_CONFIG_REQUIRE(size_ + count <= Capacity, "Called `insert` at capacity.");
+    const auto dst = const_cast<iterator>(pos);  // NOLINT(*-pro-type-const-cast)
     if (count == 0) {
       return dst;
     }
@@ -473,23 +467,23 @@ class LimitedVector final {
 
   constexpr const_reverse_iterator crend() const noexcept { return std::make_reverse_iterator(cbegin()); }
 
-  constexpr reference operator[](std::size_t index) noexcept {
-    LV_REQUIRE(FATAL, index < size_) << "Access past size.";
+  constexpr reference operator[](std::size_t index) noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(index < size_, "Access past size.");
     return values_[index].data;
   }
 
-  constexpr reference at(std::size_t index) noexcept {
-    LV_REQUIRE(FATAL, index < size_) << "Access past size.";
+  constexpr reference at(std::size_t index) noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(index < size_, "Access past size.");
     return values_[index].data;
   }
 
-  constexpr const_reference operator[](std::size_t index) const noexcept {
-    LV_REQUIRE(FATAL, index < size_) << "Access past size.";
+  constexpr const_reference operator[](std::size_t index) const noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(index < size_, "Access past size.");
     return values_[index].data;
   }
 
-  constexpr const_reference at(std::size_t index) const noexcept {
-    LV_REQUIRE(FATAL, index < size_) << "Access past size.";
+  constexpr const_reference at(std::size_t index) const noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(index < size_, "Access past size.");
     return values_[index].data;
   }
 
@@ -571,7 +565,7 @@ inline constexpr auto MakeLimitedVector(It&& begin, It&& end) noexcept {
 
 template<std::size_t N, typename T, LimitedOptionsFlag... Flags>
 inline constexpr auto MakeLimitedVector(const std::initializer_list<T>& data) {
-  LV_REQUIRE(FATAL, data.size() <= N) << "Too many initlizer values.";
+  MBO_CONFIG_REQUIRE(data.size() <= N, "Too many initlizer values.");
   return LimitedVector<T, LimitedOptions<N, Flags...>{}>(data);
 }
 
@@ -630,8 +624,6 @@ constexpr LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> T
 // NOLINTEND(*-avoid-c-arrays)
 
 // NOLINTEND(readability-identifier-naming)
-
-#undef LV_REQUIRE
 
 }  // namespace mbo::container
 

@@ -7,6 +7,13 @@ The library is tested with Clang and GCC using continuous integration: [![Test](
 
 The C++ library is organized in functional groups each residing in their own directory.
 
+* Config
+    * `namespace mbo::config`
+    * mbo/config:config_cc, mbo/config/config.h
+        * Custom Bazel flag `--//mbo/config:limited_ordered_max_unroll_capacity` which controls the maximum unroll size for `LimitedOrdered` and thus `LimitedMap` and `LimitedSet`.
+        * Custom Bazel flag `--//mbo/config:require_throws` which controls whether `MBO_CONFIG_REQUIRE` throw exceptions or use crash logging (the default `False` or `0`). This mostly affects containers.
+    * mbo/config:require_cc, mbo/config/require.h
+        * Marcos `MBO_CONFIG_REQUIRE(condition, message)` which allows to check a `condition` and either throw an exception or crash with Abseil FATAL logging. The behavior is controlled by `--//mbo/config:require_throws`.
 * Container
     * `namespace mbo::container`
     * mbo/container:any_scan_cc, mbo/container/any_scan.h
