@@ -26,7 +26,6 @@
 #include <utility>
 
 #include "absl/log/absl_log.h"  // IWYU pragma: keep
-#include "mbo/config/config.h"
 #include "mbo/config/require.h"
 #include "mbo/container/limited_options.h"  // IWYU pragma: export
 #include "mbo/types/compare.h"              // IWYU pragma: export
@@ -61,7 +60,7 @@ concept LimitedOrderedValid =  //
 
 template<typename Key, typename Mapped, typename Value, auto options, typename Compare = std::less<Key>>
 requires(LimitedOrderedValid<Key, Mapped, Value>)
-class LimitedOrdered {
+class [[nodiscard]] LimitedOrdered {
  protected:
   static constexpr bool kKeyOnly = std::same_as<Key, Value>;  // true = set, false = map (of pairs).
 
@@ -418,11 +417,9 @@ class LimitedOrdered {
   requires std::constructible_from<Value, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedOrdered(It first, It last, const Compare& key_comp = Compare()) noexcept(!kRequireThrows)
       : key_comp_(key_comp) {
-#ifndef NDEBUG
     if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
       MBO_CONFIG_REQUIRE(std::is_sorted(first, last, key_comp_), "Flag `kRequireSortedInput` violated.");
     }
-#endif  // NDEBUG
     while (first < last) {
       if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
         std::construct_at(&values_[size_++].data, *first);

@@ -111,6 +111,8 @@ cc_test(
     srcs = ["limited_ordered_test.cc"],
     deps = [
         ":limited_ordered_cc",
+        "//mbo/config:config_cc",
+        "//mbo/config:require_cc",
         "//mbo/testing:matchers_cc",
         "@com_google_absl//absl/log:initialize",
         "@com_google_googletest//:gtest_main",
