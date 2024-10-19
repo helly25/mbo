@@ -13,32 +13,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_CONTAINER_INTERNAL_LIMITED_ORDERED_CONFIG_H_
-#define MBO_CONTAINER_INTERNAL_LIMITED_ORDERED_CONFIG_H_
+#ifndef MBO_CONFIG_CONFIG_H_
+#define MBO_CONFIG_CONFIG_H_
 
 #include <cstddef>
 
 namespace mbo::config {
 
-// The maximum unroll capacity for `LimitedOrdered` based containers: `LimitedSet` and `LimitedMap`.
+// The maximum unroll capacity for `LimitedOrdered` based containers: `LimitedMap` and `LimitedSet`.
 // Beyond unrolling 32 comparison steps, unrolling has deminishing returns for any architecture.
 // The acceptable range is [4..32].
 //
-// For an Apple M2-Max and an AMD Epyc 7000 CPU, 24 turned out to be a good compromise in micro benchmarks.
+// For Apple M2-Max and AMD Epyc 7000 CPU, 24 appeared to be a good compromise in micro benchmarks.
 //
 // For complex code inlining + unrolling might become problematic for larger values.
 //
-// The exact value is controlled by the custom bazel flag `--//mbo/container:limited_ordered_max_unroll_capacity`.
+// This is controlled by the custom Bazel flag `--//mbo/config:limited_ordered_max_unroll_capacity`.
 // When the library is built as a dependency (e.g. as `com_helly25_mbo`), then the flag becomes
-// `--@com_helly_25//mbo/container:limited_ordered_max_unroll_capacity`.
+// `--@com_helly_25//mbo/config:limited_ordered_max_unroll_capacity`.
 static constexpr std::size_t kUnrollMaxCapacityDefault = 16;
 
-// Config macro `MBO_CONFIG_REQUIRE_THROWS` controls whether container requirement violations
-// result in throwing a `std::runtime_error` or a `ABSL_LOG_IF` (the latter (0) being the default).
+// Configuration that controls whether container requirement violations result in throwing a
+// `std::runtime_error` or crashing using `ABSL_LOG_IF` (the latter being the default).
 //
 // When exceptions are used then the affected functions cannot be declared `noexcept`.
+//
+// This is controlled by custom Bazel `--//mbo/config:require_throws`.
+// When the library is built as a dependency (e.g. as `com_helly25_mbo`), then the flag becomes
+// `--@com_helly_25//mbo/config:require_throws` (defaults to `False` / `0`).
 static constexpr bool kRequireThrows = false;
 
 }  // namespace mbo::config
 
-#endif  // MBO_CONTAINER_INTERNAL_LIMITED_ORDERED_CONFIG_H_
+#endif  // MBO_CONFIG_CONFIG_H_
