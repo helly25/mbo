@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_CONTAINER_INTERNAL_REQUIRE_H_
-#define MBO_CONTAINER_INTERNAL_REQUIRE_H_
+#ifndef MBO_CONFIG_REQUIRE_H_
+#define MBO_CONFIG_REQUIRE_H_
 
 #include <stdexcept>  // IWYU pragma: keep
 
@@ -47,4 +47,4 @@
 
 // NOLINTEND(cppcoreguidelines-macro-usage)
 
-#endif  // MBO_CONTAINER_INTERNAL_REQUIRE_H_
+#endif  // MBO_CONFIG_REQUIRE_H_

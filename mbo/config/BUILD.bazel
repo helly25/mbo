@@ -17,7 +17,7 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "int_flag")
 load(":internal/config.bzl", "config_gen")
 
-# Create custom bazel flag `--//mbo/container:limited_ordered_max_unroll_capacity`.
+# Create custom bazel flag `--//mbo/config:limited_ordered_max_unroll_capacity`.
 int_flag(
     name = "limited_ordered_max_unroll_capacity",
     build_setting_default = 16,
