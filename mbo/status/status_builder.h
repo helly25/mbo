@@ -42,7 +42,7 @@ class StatusBuilder final {
   StatusBuilder() noexcept = default;
 
   explicit StatusBuilder(absl::Status status)
-      : data_(status.ok() ? nullptr : std::make_unique<Data>(std::move(status))) {}
+      : data_(status.ok() ? nullptr : std::unique_ptr<Data>(new Data{.status = std::move(status)})) {}
 
   template<typename T>
   explicit StatusBuilder(const absl::StatusOr<T>& status) : StatusBuilder(status.status()) {}
