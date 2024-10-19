@@ -18,7 +18,7 @@
 
 #include <cstddef>
 
-namespace mbo::container::container_internal {
+namespace mbo::config {
 
 // The maximum unroll capacity for `LimitedOrdered` based containers: `LimitedSet` and `LimitedMap`.
 // Beyond unrolling 32 comparison steps, unrolling has deminishing returns for any architecture.
@@ -33,6 +33,12 @@ namespace mbo::container::container_internal {
 // `--@com_helly_25//mbo/container:limited_ordered_max_unroll_capacity`.
 static constexpr std::size_t kUnrollMaxCapacityDefault = 16;
 
-}  // namespace mbo::container::container_internal
+// Config macro `MBO_CONFIG_REQUIRE_THROWS` controls whether container requirement violations
+// result in throwing a `std::runtime_error` or a `ABSL_LOG_IF` (the latter (0) being the default).
+//
+// When exceptions are used then the affected functions cannot be declared `noexcept`.
+static constexpr bool kRequireThrows = false;
+
+}  // namespace mbo::config
 
 #endif  // MBO_CONTAINER_INTERNAL_LIMITED_ORDERED_CONFIG_H_

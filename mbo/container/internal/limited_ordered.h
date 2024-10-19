@@ -25,18 +25,11 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/log/absl_log.h"
+#include "absl/log/absl_log.h"  // IWYU pragma: keep
+#include "mbo/config/require.h"
 #include "mbo/container/limited_options.h"  // IWYU pragma: export
 #include "mbo/types/compare.h"              // IWYU pragma: export
 #include "mbo/types/traits.h"
-
-// If `mbo/container/internal/limited_ordered_config.h` is available, then include that. In order to
-// make indexers work, we also include the generator "...in" as a fallback.
-#if __has_include("mbo/container/internal/limited_ordered_config.h")
-# include "mbo/container/internal/limited_ordered_config.h"
-#else
-# include "mbo/container/internal/limited_ordered_config.h.in"
-#endif
 
 #ifdef MBO_FORCE_INLINE
 # undef MBO_FORCE_INLINE
@@ -51,15 +44,6 @@
 #define MBO_ALWAYS_INLINE __attribute__((always_inline))
 
 namespace mbo::container::container_internal {
-
-#ifdef LV_REQUIRE
-# undef LV_REQUIRE
-#endif
-
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define LV_REQUIRE(severity, condition)                      \
-  /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */ \
-  ABSL_LOG_IF(severity, !(condition))
 
 // NOLINTBEGIN(readability-identifier-naming)
 
@@ -76,7 +60,7 @@ concept LimitedOrderedValid =  //
 
 template<typename Key, typename Mapped, typename Value, auto options, typename Compare = std::less<Key>>
 requires(LimitedOrderedValid<Key, Mapped, Value>)
-class LimitedOrdered {
+class [[nodiscard]] LimitedOrdered {
  protected:
   static constexpr bool kKeyOnly = std::same_as<Key, Value>;  // true = set, false = map (of pairs).
 
@@ -89,11 +73,13 @@ class LimitedOrdered {
   static constexpr bool kOptimizeIndexOf = !Options::Has(LimitedOptionsFlag::kNoOptimizeIndexOf);
   static constexpr bool kCustomIndexOfBeyondUnroll = Options::Has(LimitedOptionsFlag::kCustomIndexOfBeyondUnroll);
 
-  static constexpr std::size_t kUnrollMaxCapacityLimit = 32;                    // The maximum supported in code.
-  static constexpr std::size_t kUnrollMaxCapacity = kUnrollMaxCapacityDefault;  // MUST MATCH `index_of`.
+  static constexpr std::size_t kUnrollMaxCapacityLimit = 32;  // The maximum supported in code.
+  static constexpr std::size_t kUnrollMaxCapacity = ::mbo::config::kUnrollMaxCapacityDefault;  // MUST MATCH `index_of`.
   static_assert(
       kUnrollMaxCapacity >= 4 && kUnrollMaxCapacity <= kUnrollMaxCapacityLimit,
-      "Check documentation for `mbo::container::container_internal::kUnrollMaxCapacityDefault`.");
+      "Check documentation for `::mbo::config::kUnrollMaxCapacityDefault`.");
+
+  static constexpr bool kRequireThrows = ::mbo::config::kRequireThrows;
 
   // Must declare each other as friends so that we can correctly move from other.
   template<typename OK, typename OM, typename OV, auto OtherN, typename Comp>
@@ -429,12 +415,11 @@ class LimitedOrdered {
 
   template<std::forward_iterator It>
   requires std::constructible_from<Value, mbo::types::ForwardIteratorValueType<It>>
-  constexpr LimitedOrdered(It first, It last, const Compare& key_comp = Compare()) noexcept : key_comp_(key_comp) {
-#ifndef NDEBUG
+  constexpr LimitedOrdered(It first, It last, const Compare& key_comp = Compare()) noexcept(!kRequireThrows)
+      : key_comp_(key_comp) {
     if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
-      LV_REQUIRE(FATAL, std::is_sorted(first, last, key_comp_));
+      MBO_CONFIG_REQUIRE(std::is_sorted(first, last, key_comp_), "Flag `kRequireSortedInput` violated.");
     }
-#endif  // NDEBUG
     while (first < last) {
       if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
         std::construct_at(&values_[size_++].data, *first);
@@ -782,13 +767,13 @@ class LimitedOrdered {
   }
 
   template<typename... Args>
-  constexpr std::pair<iterator, bool> emplace(Args&&... args) noexcept {
+  constexpr std::pair<iterator, bool> emplace(Args&&... args) noexcept(!kRequireThrows) {
     Value new_val(std::forward<Args>(args)...);
     const iterator dst = lower_bound(GetKey(new_val));
     if (dst != end() && !key_comp_(GetKey(*dst), GetKey(new_val)) && !key_comp_(GetKey(new_val), GetKey(*dst))) {
       return std::make_pair(dst, false);
     }
-    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `emplace` at capacity.";
+    MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
       std::construct_at(&*next, std::move(*std::prev(next)));
     }
@@ -799,8 +784,8 @@ class LimitedOrdered {
 
   template<typename It>
   requires IsIterator<It>::value
-  constexpr iterator erase(It pos) noexcept {
-    LV_REQUIRE(FATAL, begin() <= pos && pos < end()) << "Invalid `pos`";
+  constexpr iterator erase(It pos) noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(begin() <= pos && pos < end(), "Invalid `pos`.");
     auto dst = to_iterator(pos);
     --size_;
     std::destroy_at(&*dst);
@@ -810,8 +795,8 @@ class LimitedOrdered {
     return pos > end() ? end() : to_iterator(pos);
   }
 
-  constexpr iterator erase(const_iterator first, const_iterator last) noexcept {
-    LV_REQUIRE(FATAL, begin() <= first && first <= last && last <= end()) << "Invalid `first` or `last`";
+  constexpr iterator erase(const_iterator first, const_iterator last) noexcept(!kRequireThrows) {
+    MBO_CONFIG_REQUIRE(begin() <= first && first <= last && last <= end(), "Invalid `first` or `last`.");
     std::size_t deleted = 0;
     for (const_iterator it = first; it < last; ++it) {
       std::destroy_at(it);
@@ -876,7 +861,7 @@ class LimitedOrdered {
       dst->second = Mapped(args...);
       return std::make_pair(dst, false);
     }
-    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `try_emplace` at capacity.";
+    MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `try_emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
       std::construct_at(&*next, std::move(*std::prev(next)));
     }
@@ -895,7 +880,7 @@ class LimitedOrdered {
       dst->second = Mapped(args...);
       return std::make_pair(dst, false);
     }
-    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `try_emplace` at capacity.";
+    MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `try_emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
       std::construct_at(&*next, std::move(*std::prev(next)));
     }
@@ -914,7 +899,7 @@ class LimitedOrdered {
       dst->second = std::forward<V>(value);
       return std::make_pair(dst, false);
     }
-    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `insert_or_assign` at capacity.";
+    MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `insert_or_assign` at capacity.");
     for (iterator next = end(); next > dst; --next) {
       std::construct_at(&*next, std::move(*std::prev(next)));
     }
@@ -931,7 +916,7 @@ class LimitedOrdered {
       dst->second = std::forward<V>(value);
       return std::make_pair(dst, false);
     }
-    LV_REQUIRE(FATAL, size_ < Capacity) << "Called `emplace` at capacity.";
+    MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
       std::construct_at(&*next, std::move(*std::prev(next)));
     }
@@ -1023,8 +1008,6 @@ class LimitedOrdered {
 };
 
 // NOLINTEND(readability-identifier-naming)
-
-#undef LV_REQUIRE
 
 }  // namespace mbo::container::container_internal
 

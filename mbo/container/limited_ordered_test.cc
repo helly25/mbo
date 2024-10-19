@@ -23,6 +23,7 @@
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/config/require.h"  // IWYU pragma: keep
 #include "mbo/testing/matchers.h"
 
 namespace mbo::container {
@@ -30,6 +31,7 @@ namespace {
 
 // NOLINTBEGIN(*-magic-numbers)
 
+using ::mbo::config::kRequireThrows;
 using ::mbo::container::container_internal::LimitedOrdered;
 using ::mbo::testing::CapacityIs;
 using ::testing::ElementsAre;
@@ -86,11 +88,38 @@ TEST_F(LimitedOrderedTest, ConstexprNoDtor) {
 
 TEST_F(LimitedOrderedTest, ConstexprRequireSortedInput) {
   static constexpr auto kTest =
-      LimitedOrdered<int, int, int, LimitedOptions<3, LimitedOptionsFlag::kRequireSortedInput>{}>{};
-  EXPECT_THAT(kTest, IsEmpty());
-  EXPECT_THAT(kTest, SizeIs(0));
+      LimitedOrdered<int, int, int, LimitedOptions<3, LimitedOptionsFlag::kRequireSortedInput>{}>{1, 2, 3};
+  EXPECT_THAT(kTest, Not(IsEmpty()));
+  EXPECT_THAT(kTest, SizeIs(3));
   EXPECT_THAT(kTest, CapacityIs(3));
-  EXPECT_THAT(kTest, ElementsAre());
+  EXPECT_THAT(kTest, ElementsAre(1, 2, 3));
+}
+
+void DoTestConstexprRequireSortedInputThrows() {
+  constexpr auto kOptions = LimitedOptions<3, LimitedOptionsFlag::kRequireSortedInput>{};
+  const std::vector<int> v{1, 3, 2};
+  const auto container = LimitedOrdered<int, int, int, kOptions>{v.begin(), v.end()};
+  EXPECT_THAT(container, SizeIs(3));
+}
+
+TEST_F(LimitedOrderedTest, ConstexprRequireSortedInputThrows) {
+  if constexpr (kRequireThrows) {
+    bool caught = false;
+    try {
+      // Passing the value list direvtly into the constructor of `LimitedOrdered` results in a compile time exception.
+      // That exception cannot be tested here, so the values are being passed at run-time using a vector. That allows
+      // to catch and examine the excption.
+      DoTestConstexprRequireSortedInputThrows();
+    } catch (const std::runtime_error& error) {
+      caught = true;
+      EXPECT_THAT(error.what(), ::testing::HasSubstr("std::is_sorted(first, last, key_comp_)"));
+    } catch (...) {
+      ADD_FAILURE() << "Wrong exception type.";
+    }
+    ASSERT_TRUE(caught);
+  } else {
+    ASSERT_DEATH(DoTestConstexprRequireSortedInputThrows(), "Flag `kRequireSortedInput` violated.");
+  }
 }
 
 // NOLINTEND(*-magic-numbers)

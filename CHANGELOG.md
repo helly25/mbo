@@ -1,6 +1,8 @@
 # 0.2.34
 
 * Added `mbo::testing::WhenTransformedBy` which allows to compare containers after transforming them.
+* Added custom Bazel flag `--//mbo/config:require_throws` which controls whether `MBO_CONFIG_REQUIRE` throw exceptions or use crash logging (the default `False` or `0`). This mostly affects containers.
+* Added custom Bazel flag `--//mbo/config:limited_ordered_max_unroll_capacity`. This was undocumented as `--//mbo/container:limited_ordered_max_unroll_capacity` until now. It controls the maximum unroll size for LimitedOrdered/Map/Set.
 
 # 0.2.33
 

@@ -13,31 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("@bazel_skylib//rules:common_settings.bzl", "int_flag")
-load(":internal/limited_ordered_config.bzl", "limited_ordered_config_gen")
-
-# Create custom bazel flag `--//mbo/container:limited_ordered_max_unroll_capacity`.
-int_flag(
-    name = "limited_ordered_max_unroll_capacity",
-    build_setting_default = 16,
-    visibility = ["//visibility:private"],
-)
-
-bzl_library(
-    name = "limited_ordered_config_bzl",
-    srcs = [":internal/limited_ordered_config.bzl"],
-    visibility = ["//visibility:private"],
-    deps = ["@bazel_skylib//rules:common_settings"],
-)
-
-limited_ordered_config_gen(
-    name = "limited_ordered_config_gen",
-    visibility = ["//visibility:private"],
-    output = "internal/limited_ordered_config.h",
-    template = "internal/limited_ordered_config.h.in"
-)
-
 cc_library(
     name = "any_scan_cc",
     hdrs = ["any_scan.h"],
@@ -118,13 +93,12 @@ cc_library(
 
 cc_library(
     name = "limited_ordered_cc",
-    hdrs = [
-      "internal/limited_ordered_config.h",
-      "internal/limited_ordered.h",
-    ],
+    hdrs = ["internal/limited_ordered.h"],
     visibility = ["//visibility:private"],
     deps = [
         ":limited_options_cc",
+        "//mbo/config:config_cc",
+        "//mbo/config:require_cc",
         "//mbo/types:compare_cc",
         "//mbo/types:traits_cc",
         "@com_google_absl//absl/log:absl_log",
@@ -137,6 +111,8 @@ cc_test(
     srcs = ["limited_ordered_test.cc"],
     deps = [
         ":limited_ordered_cc",
+        "//mbo/config:config_cc",
+        "//mbo/config:require_cc",
         "//mbo/testing:matchers_cc",
         "@com_google_absl//absl/log:initialize",
         "@com_google_googletest//:gtest_main",
@@ -189,6 +165,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":limited_options_cc",
+        "//mbo/config:require_cc",
         "//mbo/types:traits_cc",
         "@com_google_absl//absl/log:absl_log",
     ],

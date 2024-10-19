@@ -31,7 +31,6 @@ namespace {
 
 // NOLINTBEGIN(*-magic-numbers)
 
-using ::testing::_;
 using ::testing::ElementsAre;
 using ::testing::Ge;
 using ::testing::IsEmpty;

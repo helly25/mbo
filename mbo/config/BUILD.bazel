@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "int_flag")
+load(":internal/config.bzl", "config_gen")
+
+# Create custom bazel flag `--//mbo/container:limited_ordered_max_unroll_capacity`.
+int_flag(
+    name = "limited_ordered_max_unroll_capacity",
+    build_setting_default = 16,
+    visibility = ["//visibility:private"],
+)
+
+# Create custom bazel flag `--//mbo/config:require_throws`.
+bool_flag(
+    name = "require_throws",
+    build_setting_default = False,
+    visibility = ["//visibility:private"],
+)
+
+bzl_library(
+    name = "config_bzl",
+    srcs = [":internal/config.bzl"],
+    visibility = ["//visibility:private"],
+    deps = ["@bazel_skylib//rules:common_settings"],
+)
+
+config_gen(
+    name = "config_gen",
+    visibility = ["//visibility:private"],
+    output = "config.h",
+    template = "internal/config.h.in",
+)
+
+cc_library(
+    name = "config_cc",
+    hdrs = ["config.h"],
+    visibility = ["//mbo:__subpackages__"],
+)
+
+cc_library(
+    name = "require_cc",
+    hdrs = ["require.h"],
+    deps = [
+        ":config_cc",
+        "@com_google_absl//absl/log:absl_log",
+    ],
+    visibility = ["//mbo:__subpackages__"],
+)
