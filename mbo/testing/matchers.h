@@ -138,7 +138,6 @@ class WhenTransformedByMatcher {
       if constexpr (kShowMaxElements > 0) {
         *listener << " is {";
         std::size_t index = 0;
-        ;
         for (const auto& v : transformed) {
           if (index++ > 0) {
             *listener << ", ";
@@ -182,10 +181,19 @@ class WhenTransformedByMatcher {
 // EXPECT_THAT(numbers, WhenTransformedBy([](int v) { return absl::StrCat(v); }, ElementsAre(strs)));
 // ```
 //
+// More practical: Instead of using `Key` for every value in `ElementsAre` when checking a mapped
+// container's keys, you can transform the input to just return the keys and then compare:
+// ```
+//  const std::map<int, int> map{{1, 2}, {3, 4}};
+//  EXPECT_THAT(
+//      map,
+//      WhenTransformedBy([](const std::pair<int, int>& v) { return v.first; }), ElementsAre(1, 2));
+// ```
+//
 // The internal comparison will always be performed on a `std::vector` whose elements are the result
 // type of the `transformer`. This means that the resultign elements are exactly in the order of the
 // default iteration of the argument. The matcher adapter `WhenSorted` or unordered versions of the
-// standard contaienr matchers work as expected.
+// standard container matchers work as expected.
 template<typename Transformer, typename ContainerMatcher>
 inline auto WhenTransformedBy(const Transformer& transformer, const ContainerMatcher& container_matcher) {
   return testing_internal::WhenTransformedByMatcher(transformer, container_matcher);

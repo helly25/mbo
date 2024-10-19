@@ -18,8 +18,10 @@
 #include <map>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
+#include "absl/strings/numbers.h"
 #include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -37,6 +39,7 @@ using ::testing::Key;
 using ::testing::Not;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
+using ::testing::UnorderedElementsAreArray;
 using ::testing::WhenSorted;
 
 class MatcherTest : public ::testing::Test {
@@ -91,16 +94,19 @@ TEST_F(MatcherTest, CapacityIsDescriptions) {
   }
 }
 
-TEST_F(MatcherTest, WhenTransformedSameType) {
+TEST_F(MatcherTest, WhenTransformedBySameType) {
   {
-    const std::set<int> set{1, 2};
-    EXPECT_THAT(set, WhenTransformedBy([](int v) { return v + 2; }, ElementsAre(3, 4)));
-  }
-  {
+    // std::vector: int -> int
     const std::vector<int> set{1, 2};
     EXPECT_THAT(set, WhenTransformedBy([](int v) { return v + 2; }, ElementsAre(3, 4)));
   }
   {
+    // std::set: int -> int
+    const std::set<int> set{1, 2};
+    EXPECT_THAT(set, WhenTransformedBy([](int v) { return v + 2; }, ElementsAre(3, 4)));
+  }
+  {
+    // std::map: (const int, int) -> (const int, int)
     const std::map<int, int> map{{1, 2}, {3, 4}};
     EXPECT_THAT(
         map, WhenTransformedBy(
@@ -109,21 +115,25 @@ TEST_F(MatcherTest, WhenTransformedSameType) {
   }
 }
 
-TEST_F(MatcherTest, WhenTransformedConversion) {
+TEST_F(MatcherTest, WhenTransformedByConversion) {
   {
-    std::set<int> set{1, 2};
-    EXPECT_THAT(set, WhenTransformedBy([](int v) { return absl::StrCat(v + 2); }, ElementsAre("3", "4")));
-  }
-  {
+    // std::vector: int -> std::string
     std::vector<int> set{1, 2};
     EXPECT_THAT(set, WhenTransformedBy([](int v) { return absl::StrCat(v + 2); }, ElementsAre("3", "4")));
   }
   {
+    // std::set: int -> std::string
+    std::set<int> set{1, 2};
+    EXPECT_THAT(set, WhenTransformedBy([](int v) { return absl::StrCat(v + 2); }, ElementsAre("3", "4")));
+  }
+  {
+    // std::vector: int -> (int, int)
     std::vector<int> set{1, 2};
     EXPECT_THAT(
         set, WhenTransformedBy([](int v) { return std::make_pair(v, v + 2); }, ElementsAre(Pair(1, 3), Pair(2, 4))));
   }
   {
+    // std::map: (int, int) -> (std::string, std::string)
     const std::map<int, int> map{{1, 2}, {3, 4}};
     EXPECT_THAT(
         map,
@@ -132,27 +142,66 @@ TEST_F(MatcherTest, WhenTransformedConversion) {
             ElementsAre(Pair("2", "1"), Pair("4", "3"))));
   }
   {
+    // std::map(int, int) -> (std::string, std::string)
+    // Only comparing Keys
     const std::map<int, int> map{{1, 2}, {3, 4}};
     EXPECT_THAT(
         map,
         WhenTransformedBy(
             [](const std::pair<int, int>& v) { return std::make_pair(absl::StrCat(v.second), absl::StrCat(v.first)); },
             ElementsAre(Key("2"), Key("4"))));
+    // std::map(int, int) -> key=int
+    EXPECT_THAT(map, WhenTransformedBy([](const std::pair<int, int>& v) { return v.first; }, ElementsAre(1, 3)));
   }
   {
+    // std::map(int, int) -> std::string
     const std::map<int, int> map{{1, 2}, {3, 4}};
     EXPECT_THAT(
         map, WhenTransformedBy(
                  [](const std::pair<int, int>& v) { return absl::StrCat(v.first + v.second); }, ElementsAre("3", "7")));
   }
   {
+    // `WhenSorted` and `Unordered*`
     const std::vector<int> vector{4, 1, 2, 3, 0};
     EXPECT_THAT(vector, WhenTransformedBy([](int v) { return v; }, UnorderedElementsAre(0, 1, 2, 3, 4)));
     EXPECT_THAT(vector, WhenTransformedBy([](int v) { return v; }, WhenSorted(ElementsAre(0, 1, 2, 3, 4))));
   }
+  {
+    const std::map<std::string, std::string> map{{"1", "2"}, {"3", "4"}};
+    EXPECT_THAT(  // std::map: (std::string, std::string) -> (int, int)
+        map, WhenTransformedBy(
+                 [](const std::pair<std::string, std::string>& v) {
+                   std::pair<int, int> result;
+                   (void)absl::SimpleAtoi(v.first, &result.second);
+                   (void)absl::SimpleAtoi(v.second, &result.first);
+                   return result;
+                 },
+                 UnorderedElementsAre(Pair(2, 1), Pair(4, 3))));
+    EXPECT_THAT(  // std::map: (std::string, std::string) -> Modified copy(std::string, std::string)
+        map, WhenTransformedBy(
+                 [](std::pair<std::string, std::string> v) {
+                   std::swap(v.first, v.second);
+                   return v;
+                 },
+                 UnorderedElementsAre(Pair("2", "1"), Pair("4", "3"))));
+  }
 }
 
-TEST_F(MatcherTest, WhenTransformedDescriptions) {
+TEST_F(MatcherTest, WhenTransformedByMoveOnly) {
+  {
+    std::set<std::unique_ptr<std::string>> set;
+    set.emplace(std::make_unique<std::string>("foo"));
+    set.emplace(std::make_unique<std::string>("bar"));
+    const std::vector<std::string_view> vector{"bar", "foo"};
+    EXPECT_THAT(  // std::set: std::unique_ptr<std::string> -> std::string == std::string_view
+        set, WhenTransformedBy(
+                 [](const std::unique_ptr<std::string>& str) { return *str; }, UnorderedElementsAreArray(vector)));
+    // Reverse is not possible as no container matcher will take a reference to a container of move-only values.
+    // In fact all container matchers are copying the elements.
+  }
+}
+
+TEST_F(MatcherTest, WhenTransformedByDescriptions) {
   {
     const ::testing::Matcher<std::vector<int>> matcher = WhenTransformedBy([](int) { return 0; }, IsEmpty());
     EXPECT_THAT(Describe(matcher), "when transformed is empty");
