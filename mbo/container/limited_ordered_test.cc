@@ -112,7 +112,7 @@ TEST_F(LimitedOrderedTest, ConstexprRequireSortedInputThrows) {
       DoTestConstexprRequireSortedInputThrows();
     } catch (const std::runtime_error& error) {
       caught = true;
-      EXPECT_THAT(error.what(), ::testing::HasSubstr("std::is_sorted(first, last, key_comp_)"));
+      EXPECT_THAT(error.what(), ::testing::HasSubstr("Required (std::is_sorted(first, last, key_comp_))"));
     } catch (...) {
       ADD_FAILURE() << "Wrong exception type.";
     }
