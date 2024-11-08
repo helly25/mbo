@@ -15,6 +15,7 @@
 
 #include "mbo/types/required.h"
 
+#include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -26,6 +27,7 @@ namespace {
 // NOLINTBEGIN(*-magic-numbers)
 
 using ::testing::Ge;
+using ::testing::IsEmpty;
 using ::testing::Le;
 using ::testing::Not;
 using ::testing::Pair;
@@ -93,6 +95,37 @@ TEST_F(RequiredTest, Pair) {
   EXPECT_THAT(*req, Pair(42, 99));
   EXPECT_THAT(req->first, 42);
   EXPECT_THAT(req->second, 99);
+}
+
+TEST_F(RequiredTest, PairByArgs) {
+  Required<std::pair<int, int>> req(std::in_place, 25, 33);
+  EXPECT_THAT(*req, Pair(25, 33));
+  EXPECT_THAT(req->first, 25);
+  EXPECT_THAT(req->second, 33);
+  req.emplace(42, 99);
+  EXPECT_THAT(*req, Pair(42, 99));
+  EXPECT_THAT(req->first, 42);
+  EXPECT_THAT(req->second, 99);
+}
+
+struct NoDefCtor {
+  NoDefCtor() = delete;
+
+  explicit NoDefCtor(int v) : value(v) {}
+
+  bool operator==(int v) const { return v == value; }
+
+  int value;
+};
+
+TEST_F(RequiredTest, NoDefCtor) {
+  Required<NoDefCtor> req(25);
+  EXPECT_THAT(*req, 25);
+}
+
+TEST_F(RequiredTest, DefCtor) {
+  Required<std::string> req;
+  EXPECT_THAT(*req, IsEmpty());
 }
 
 // NOLINTEND(*-magic-numbers)

@@ -41,13 +41,17 @@ class Required {
  public:
   using type = T;
 
-  Required() = delete;
+  Required() = default;
 
   constexpr explicit Required(T v) : value_(std::move(v)) {}
 
-  template<std::convertible_to<T> U>
-  requires(!std::same_as<T, U>)
+  template<typename U>
+  requires(std::constructible_from<T, U> && !std::same_as<T, U>)
   constexpr explicit Required(U&& v) : value_(std::forward<U>(v)) {}
+
+  template<typename... Args>
+  requires(std::constructible_from<T, Args...>)
+  constexpr explicit Required(std::in_place_t, Args&&... args) : value_(std::forward<Args>(args)...) {}
 
   constexpr Required& emplace(T v) {  // NOLINT(readability-identifier-naming)
     value_.~T();
@@ -55,11 +59,11 @@ class Required {
     return *this;
   }
 
-  template<std::convertible_to<T> U>
-  requires(!std::same_as<T, U>)
-  constexpr Required& emplace(U&& v) {  // NOLINT(readability-identifier-naming)
+  template<typename... Args>
+  requires(std::constructible_from<T, Args...>)
+  constexpr Required& emplace(Args&&... args) {  // NOLINT(readability-identifier-naming)
     value_.~T();
-    new (&value_) T(std::forward<U>(v));
+    new (&value_) T(std::forward<Args>(args)...);
     return *this;
   }
 
