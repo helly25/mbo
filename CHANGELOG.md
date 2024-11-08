@@ -1,3 +1,7 @@
+# 0.2.35
+
+* Added `mbo::types::Required` which is similar to `RefWrap` but stores the actual type (and unlike `std::optional` cannot be reset).
+
 # 0.2.34
 
 * Added `mbo::testing::WhenTransformedBy` which allows to compare containers after transforming them.

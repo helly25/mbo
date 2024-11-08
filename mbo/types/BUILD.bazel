@@ -138,6 +138,21 @@ cc_test(
 )
 
 cc_library(
+    name = "required_cc",
+    hdrs = ["required.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "required_test",
+    srcs = ["required_test.cc"],
+    deps = [
+        ":required_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "stringify_cc",
     srcs = ["stringify.cc"],
     hdrs = ["stringify.h"],

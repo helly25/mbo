@@ -16,7 +16,7 @@
 #ifndef MBO_TESTING_MATCHERS_H_
 #define MBO_TESTING_MATCHERS_H_
 
-#include <concepts>
+#include <concepts>  // IWYU pragma: keep
 #include <type_traits>
 
 #include "gmock/gmock-matchers.h"
