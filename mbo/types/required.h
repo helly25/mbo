@@ -24,15 +24,15 @@ namespace mbo::types {
 
 // Template class `Required<T>` is a wrapper around a type `T`. The value can be
 // replaced without using assign or move-assign operators. Instead the wrapper
-// will call the destructor and then in-place construct the wrapper value using
+// will call the destructor and then in-place construct the wrapped value using
 // the type's move constructor.
 //
-// In other words the reson for this type is he rare case where a type `T` that
-// follows the rule of 0/3/5 and of the 4 ctor/assignments only allows for
-// move-construction all while (say a test) needs to be implemented with assign.
+// In other words the reson for this type is the rare case where a variable of a
+// type `T` needs to be assigned (say for a test) while the type follows the
+// rule of 0/3/5 but only allows move-construction.
 //
-// The type is similar to `std::optional` only it cannot be `std::nullopt`.
-// The type is however closer to `RefWrap`.
+// The type is similar to `RefWrap` and `std::optional` (only it cannot be
+// `std::nullopt`).
 //
 // The wrapper is not implemented itself as a wrapper or specialization of STL
 // type `std::optional` due to its overhead.
@@ -51,7 +51,7 @@ class Required {
 
   template<typename... Args>
   requires(std::constructible_from<T, Args...>)
-  constexpr explicit Required(std::in_place_t, Args&&... args) : value_(std::forward<Args>(args)...) {}
+  constexpr explicit Required(std::in_place_t /*unused*/, Args&&... args) : value_(std::forward<Args>(args)...) {}
 
   constexpr Required& emplace(T v) {  // NOLINT(readability-identifier-naming)
     value_.~T();
