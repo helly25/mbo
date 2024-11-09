@@ -36,6 +36,35 @@ namespace mbo::types {
 //
 // The wrapper is not implemented itself as a wrapper or specialization of STL
 // type `std::optional` due to its overhead.
+//
+// Example:
+// ```
+// template<typename T>
+// struct MoveOnly {
+//  ~MoveOnly() = default;
+//  MoveOnly() = default;
+//  MoveOnly(T data) : data(std::move(data)) {}
+//
+//  MoveOnly(const MoveOnly&) = delete;
+//  MoveOnly& operator=(const MoveOnly&) = delete;
+//  MoveOnly(MoveOnly&&) noexcept = default;
+//  MoveOnly& operator=(const MoveOnly&&) = delete;
+//
+//  const T data;
+// };
+//
+// struct User {
+//   Required<MoveOnly<std::string>> data;
+// };
+//
+// User user("foo");
+//
+// // If `User.data` was a plain `MoveOnly` type, then data would not be assignable.
+// // However, it is wrapper as a `Required` which guarantees initialized presence,
+// // and allows updating via assign.
+//
+// user.data.emplace("bar");
+// ```
 template<typename T>
 class Required {
  public:
