@@ -1,9 +1,6 @@
-# 0.2.35
-
-* Added `mbo::types::Required` which is similar to `RefWrap` but stores the actual type (and unlike `std::optional` cannot be reset).
-
 # 0.2.34
 
+* Added `mbo::types::Required` which is similar to `RefWrap` but stores the actual type (and unlike `std::optional` cannot be reset).
 * Added `mbo::testing::WhenTransformedBy` which allows to compare containers after transforming them.
 * Added custom Bazel flag `--//mbo/config:require_throws` which controls whether `MBO_CONFIG_REQUIRE` throw exceptions or use crash logging (the default `False` or `0`). This mostly affects containers.
 * Added custom Bazel flag `--//mbo/config:limited_ordered_max_unroll_capacity`. This was undocumented as `--//mbo/container:limited_ordered_max_unroll_capacity` until now (though listed in the changelog). It controls the maximum unroll size for LimitedOrdered/Map/Set.
