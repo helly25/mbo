@@ -108,24 +108,56 @@ TEST_F(RequiredTest, PairByArgs) {
   EXPECT_THAT(req->second, 99);
 }
 
-struct NoDefCtor {
-  NoDefCtor() = delete;
-
-  explicit NoDefCtor(int v) : value(v) {}
-
-  bool operator==(int v) const { return v == value; }
-
-  int value;
-};
+TEST_F(RequiredTest, DefCtor) {
+  Required<std::string> req;
+  EXPECT_THAT(*req, IsEmpty());
+}
 
 TEST_F(RequiredTest, NoDefCtor) {
+  struct NoDefCtor {
+    NoDefCtor() = delete;
+
+    explicit NoDefCtor(int v) : value(v) {}
+
+    bool operator==(int v) const noexcept { return v == value; }
+
+    int value;
+  };
+
   Required<NoDefCtor> req(25);
   EXPECT_THAT(*req, 25);
 }
 
-TEST_F(RequiredTest, DefCtor) {
-  Required<std::string> req;
-  EXPECT_THAT(*req, IsEmpty());
+template<typename T>
+struct MoveOnly {
+  ~MoveOnly() = default;
+  MoveOnly() = delete;
+
+  explicit MoveOnly(T v) : value(std::move(v)) {}
+
+  MoveOnly(const MoveOnly&) = delete;
+  MoveOnly& operator=(const MoveOnly&) = delete;
+  MoveOnly(MoveOnly&&) noexcept = default;
+  MoveOnly& operator=(MoveOnly&&) = delete;
+
+  bool operator==(const T& v) const noexcept { return v == value; }
+
+  const T value;
+};
+
+TEST_F(RequiredTest, MoveOnly) {
+  {
+    Required<MoveOnly<int>> req(25);
+    EXPECT_THAT(*req, 25);
+    req.emplace(42);
+    EXPECT_THAT(*req, 42);
+  }
+  {
+    Required<MoveOnly<std::string>> req("Good Morning America!");
+    EXPECT_THAT(*req, "Good Morning America!");
+    req.emplace("Good Evening Germany!");
+    EXPECT_THAT(*req, "Good Evening Germany!");
+  }
 }
 
 // NOLINTEND(*-magic-numbers)
