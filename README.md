@@ -145,6 +145,9 @@ The C++ library is organized in functional groups each residing in their own dir
         * Mainly, this prevents calling the destructor and thus prevents termination issues (initialization order fiasco).
     * mbo/types:ref_wrap_cc, mbo/types/ref_wrap.h
         * template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.
+    * mbo/types:required_cc, mbo/types/required.h
+        * template-type `Required<T>`: similar to `RefWrap` but stores the actual type (and unlike `std::optional` cannot be reset).
+
     * mbo/types:template_search_cc, mbo/types/template_search.h:
         * template struct `BinarySearch` implements templated binary search algorithm.
         * template struct `LinearSearch` implements templated linear search algorithm.
