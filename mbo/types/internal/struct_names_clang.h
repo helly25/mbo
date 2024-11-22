@@ -32,14 +32,15 @@ inline constexpr std::size_t kMaxFieldCount = 50;
 
 template<typename T>
 concept SupportsFieldNames =
-    std::is_class_v<T> && std::is_default_constructible_v<T> && !std::is_array_v<T>  // Minimum requirement
+    std::is_class_v<T> && !std::is_array_v<T>  // Minimum requirement
     && std::is_destructible_v<T>  // Type T must have a constexpr destructor. But `std::is_literal_type` is deprecated,
-    && !::mbo::types::HasUnionMember<T>;
+    && !::mbo::types::HasUnionMember<T>;  // Unions are problematic as they do not use the same fields (and thus names).
 
 template<typename T>
-concept SupportsFieldNamesConstexpr =  // Constexpr capability is more restrictive.
-    SupportsFieldNames<T>              // All general requirements, plus:
-    && __is_literal_type(T);           // so the internal version has to be used.
+concept SupportsFieldNamesConstexpr =      // Constexpr capability is more restrictive.
+    SupportsFieldNames<T>                  // All general requirements, plus:
+    && std::is_default_constructible_v<T>  // Warning will use actual uninitialized memory when retrieving field names.
+    && __is_literal_type(T);               // so the internal version has to be used.
 
 template<typename T, bool, bool>
 class StructMeta;
@@ -61,13 +62,23 @@ class StructMetaBase {
       Uninitialized& operator=(const Uninitialized&) = delete;
       Uninitialized(Uninitialized&&) = delete;
       Uninitialized& operator=(Uninitialized&&) = delete;
+
+      unsigned temp{};
       T value;
     };
 
    public:
-    constexpr Storage() noexcept { std::construct_at(&storage_.value); }
+    constexpr Storage() noexcept {
+      if constexpr (std::is_default_constructible_v<T>) {
+        std::construct_at(&storage_.value);
+      }
+    }
 
-    constexpr ~Storage() noexcept { std::destroy_at(&storage_.value); }
+    constexpr ~Storage() noexcept {
+      if constexpr (std::is_default_constructible_v<T>) {
+        std::destroy_at(&storage_.value);
+      }
+    }
 
     Storage(const Storage&) = delete;
     Storage& operator=(const Storage&) = delete;

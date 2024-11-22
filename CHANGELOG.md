@@ -1,3 +1,7 @@
+# 0.2.35
+
+* Added ability to retrieve field names for structs without default constructor (e.g. due to reference fields).
+
 # 0.2.34
 
 * Added `mbo::types::Required` which is similar to `RefWrap` but stores the actual type (and unlike `std::optional` cannot be reset).
