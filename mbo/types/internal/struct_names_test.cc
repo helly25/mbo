@@ -58,11 +58,21 @@ struct Two {
 static_assert(SupportsFieldNames<Two>);
 static_assert(TestGetFieldNames<Two, "first"_ts, "second"_ts>);
 
-struct NoDefaultConstructor {
-  NoDefaultConstructor() = delete;
+struct DefaultConstructorDeleted {
+  DefaultConstructorDeleted() = delete;
 };
 
-static_assert(!SupportsFieldNames<NoDefaultConstructor>);
+static_assert(!std::is_default_constructible_v<DefaultConstructorDeleted>);
+static_assert(SupportsFieldNames<DefaultConstructorDeleted>);
+
+struct NoDefaultConstructor {
+  int& ref;
+  int val;
+};
+
+static_assert(!std::is_default_constructible_v<NoDefaultConstructor>);
+static_assert(SupportsFieldNames<NoDefaultConstructor>);
+static_assert(TestGetFieldNames<NoDefaultConstructor, "ref"_ts, "val"_ts>);
 
 struct NoDestructor {  // NOLINT(*-special-member-functions)
   constexpr NoDestructor() = default;
