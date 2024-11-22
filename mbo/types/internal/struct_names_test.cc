@@ -19,10 +19,16 @@
 #include <type_traits>
 #include <utility>
 
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "mbo/types/tstring.h"
 
 namespace mbo::types::types_internal {
 namespace {
+
+using ::testing::ElementsAre;
+
+struct StructNamesTest : ::testing::Test {};
 
 template<typename T, std::size_t N, std::array<const char*, N> Names, typename Indices>
 struct GetFieldNamesAreImpl;
@@ -72,7 +78,11 @@ struct NoDefaultConstructor {
 
 static_assert(!std::is_default_constructible_v<NoDefaultConstructor>);
 static_assert(SupportsFieldNames<NoDefaultConstructor>);
-static_assert(TestGetFieldNames<NoDefaultConstructor, "ref"_ts, "val"_ts>);
+
+TEST_F(StructNamesTest, StructWithoutDefaultConstructor) {
+  // This cannot be done at compile time.
+  EXPECT_THAT(GetFieldNames<NoDefaultConstructor>(), ElementsAre("ref", "val"));
+}
 
 struct NoDestructor {  // NOLINT(*-special-member-functions)
   constexpr NoDestructor() = default;
