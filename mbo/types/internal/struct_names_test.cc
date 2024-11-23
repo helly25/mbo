@@ -71,6 +71,10 @@ struct DefaultConstructorDeleted {
 static_assert(!std::is_default_constructible_v<DefaultConstructorDeleted>);
 static_assert(SupportsFieldNames<DefaultConstructorDeleted>);
 
+# ifndef IS_CLANGD
+// The indexer takes aim at how field names are `looked up` from uninitialized
+// memory and reliably crashes here. So this piece is disabled for the indexer.
+
 struct NoDefaultConstructor {
   int& ref;
   int val;
@@ -83,6 +87,7 @@ TEST_F(StructNamesTest, StructWithoutDefaultConstructor) {
   // This cannot be done at compile time.
   EXPECT_THAT(GetFieldNames<NoDefaultConstructor>(), ElementsAre("ref", "val"));
 }
+# endif  // IS_CLANGD
 
 struct NoDestructor {  // NOLINT(*-special-member-functions)
   constexpr NoDestructor() = default;

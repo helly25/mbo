@@ -71,6 +71,8 @@ class StructMetaBase {
     constexpr Storage() noexcept {
       if constexpr (std::is_default_constructible_v<T>) {
         std::construct_at(&storage_.value);
+      } else {
+        memset(&storage_.value, 0, sizeof(T));
       }
     }
 
