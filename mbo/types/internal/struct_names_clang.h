@@ -17,6 +17,7 @@
 #define MBO_TYPES_INTERNAL_STRUCT_NAMES_CLANG_H_
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
+# include <cstring>
 # include <string_view>
 # include <type_traits>
 
@@ -63,7 +64,7 @@ class StructMetaBase {
       Uninitialized(Uninitialized&&) = delete;
       Uninitialized& operator=(Uninitialized&&) = delete;
 
-      unsigned temp{};
+      char temp[sizeof(T)] = {0};  // NOLINT(*-avoid-c-arrays)
       T value;
     };
 
@@ -72,7 +73,8 @@ class StructMetaBase {
       if constexpr (std::is_default_constructible_v<T>) {
         std::construct_at(&storage_.value);
       } else {
-        memset(&storage_.value, 0, sizeof(T));
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        memset(const_cast<char*>(&storage_.temp[0]), 0, sizeof(T));
       }
     }
 
