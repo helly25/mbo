@@ -51,10 +51,10 @@ struct StripCommentArgs {
   bool strip_trailing_whitespace = true;
 };
 
-std::string StripComments(std::string_view input, StripCommentArgs args);
+std::string StripComments(std::string_view input, const StripCommentArgs& args);
 
 // This is the single line version of `StripComments`.
-std::string_view StripLineComments(std::string_view line, StripCommentArgs args);
+std::string_view StripLineComments(std::string_view line, const StripCommentArgs& args);
 
 // Similar to `StripComment`, this function can strip out comments. However, this variant supports
 // per line parsing to in order to support single or double quotes. This can be enabled by providing
@@ -69,10 +69,10 @@ struct StripParsedCommentArgs {
   bool strip_trailing_whitespace = true;
 };
 
-absl::StatusOr<std::string> StripParsedComments(std::string_view input, StripParsedCommentArgs args);
+absl::StatusOr<std::string> StripParsedComments(std::string_view input, const StripParsedCommentArgs& args);
 
 // This is the single line version of `StripParsedComments`.
-absl::StatusOr<std::string> StripParsedLineComments(std::string_view line, StripParsedCommentArgs args);
+absl::StatusOr<std::string> StripParsedLineComments(std::string_view line, const StripParsedCommentArgs& args);
 
 }  // namespace mbo::strings
 

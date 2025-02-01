@@ -96,6 +96,8 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/strings:parse_cc, mbo/strings/parse.h
         * function `ParseString`: Parses strings respecting C++ and custom escapes as well as quotes (all configurable).
         * function `ParseStringList`: Parses and splits strings respecting C++ and custom escapes as well as quotes (all configurable).
+    * mbo/strings:split_cc, mbo/strings/split.h
+        * struct `mbo::strings::AtLast`: Allows `absl::StrSplit' to split on the last occurrence of a separator.
     * mbo/strings:strip_cc, mbo/strings/strip.h
         * struct `StripCommentsArgs`: Arguments for `StripComments` and `StripLineComments`.
         * function `StripComments`: Strips comments from lines.
@@ -147,12 +149,6 @@ The C++ library is organized in functional groups each residing in their own dir
         * template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.
     * mbo/types:required_cc, mbo/types/required.h
         * template-type `Required<T>`: similar to `RefWrap` but stores the actual type (and unlike `std::optional` cannot be reset).
-
-    * mbo/types:template_search_cc, mbo/types/template_search.h:
-        * template struct `BinarySearch` implements templated binary search algorithm.
-        * template struct `LinearSearch` implements templated linear search algorithm.
-        * template struct `ReverseSearch` implements templated reverse linear search algorithm.
-        * template struct `MaxSearch` implements templated linear search for last match algorithm.
     * mbo/types:stringify_cc, mbo/types/stringify.h
         * class `Stringify` a utility to convert structs into strings.
         * function `StringifyWithFieldNames` a format control adapter for `Stringify`.
@@ -181,13 +177,20 @@ The C++ library is organized in functional groups each residing in their own dir
         * concept `IsDecomposable` determines whether a type can be used in static-bindings.
         * concept `IsInitializerList` determines whether a type is `std::initializer<T> type.
         * concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
-        * concept `IsOptional` determines whether a type is a `std::optional`.
-        * concept `IsPair` determines whether a type is a `std::pair`.
+        * concept `IsOptional` determines whether a type is a `std::optional` type.
+        * concept `IsPair` determines whether a type is a `std::pair` type.
+        * concept `IsSet` determines whether a type is a `std::set` type.
         * concept `IsSameAsAnyOfRaw` / `NotSameAsAnyOfRaw` which determine whether type is one of a list of types.
         * concept `IsSmartPtr` determines whether a type is a `std::shared_ptr`, `std::unique_ptr` or `std::weak_ptr`.
           * Can be extended with other smart pointers through `IsSmartPtrImpl`.
-        * concept `IsTuple` determines whether a type is a `std::tuple`.
+        * concept `IsTuple` determines whether a type is a `std::tuple` type.
         * concept `IsVariant` determines whether a type is a `std::variant` type.
+        * concept `IsVector` determines whether a type is a `std::vector` type.
+    * mbo/types:template_search_cc, mbo/types/template_search.h:
+        * template struct `BinarySearch` implements templated binary search algorithm.
+        * template struct `LinearSearch` implements templated linear search algorithm.
+        * template struct `ReverseSearch` implements templated reverse linear search algorithm.
+        * template struct `MaxSearch` implements templated linear search for last match algorithm.
     * mbo/types:tstring_cc, mbo/types/tstring.h
         * struct `tstring`: Implements type `tstring` a compile time string-literal type.
         * operator `operator"" _ts`: String literal support for Clang, GCC and derived compilers.

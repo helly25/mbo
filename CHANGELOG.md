@@ -1,3 +1,10 @@
+# 0.2.36
+
+* Added struct `mbo::strings::AtLast` which allows `absl::StrSplit' to split on the last occurrence of a separator.
+* Added concept `mbo::types::IsSet`.
+* Added concept `mbo::types::IsVector`.
+* Fixed concept `mbo::types::IsPair` and `mbo::types::IsPairFirstString` to not remove cvref.
+
 # 0.2.35
 
 * Added ability to retrieve field names for structs without default constructor (e.g. due to reference fields).

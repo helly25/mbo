@@ -63,6 +63,22 @@ cc_test(
 )
 
 cc_library(
+    name = "split_cc",
+    hdrs = ["split.h"],
+)
+
+cc_test(
+    name = "split_test",
+    srcs = ["split_test.cc"],
+    deps = [
+        ":split_cc",
+        "//mbo/types:traits_cc",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "strip_cc",
     srcs = ["strip.cc"],
     hdrs = ["strip.h"],

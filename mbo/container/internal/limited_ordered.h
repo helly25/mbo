@@ -50,7 +50,7 @@ namespace mbo::container::container_internal {
 template<typename Key, typename Mapped, typename Value>
 concept LimitedOrderedValidImpl =
     std::same_as<std::remove_const_t<Key>, std::remove_const_t<Value>>
-    || (mbo::types::IsPair<Value>
+    || (mbo::types::IsPair<std::remove_const_t<Value>>
         && std::same_as<std::remove_const_t<Key>, std::remove_const_t<typename Value::first_type>>);
 
 template<typename Key, typename Mapped, typename Value>
