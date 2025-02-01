@@ -305,7 +305,7 @@ template<
     auto N,
     std::forward_iterator It,
     typename KComp = types::CompareLess<typename mbo::types::ForwardIteratorValueType<It>::first_type>>
-requires(types::IsPair<typename mbo::types::ForwardIteratorValueType<It>>)
+requires(types::IsPair<std::remove_cvref_t<typename mbo::types::ForwardIteratorValueType<It>>>)
 inline constexpr auto MakeLimitedMap(It begin, It end, const KComp& key_comp = KComp()) noexcept {
   using KV = mbo::types::ForwardIteratorValueType<It>;
   return LimitedMap<typename KV::first_type, typename KV::second_type, N, KComp>(begin, end, key_comp);
@@ -332,10 +332,8 @@ inline constexpr auto MakeLimitedMap() noexcept {
 }
 
 // NOLINTBEGIN(*-avoid-c-arrays)
-template<
-    types::IsPair KV,
-    std::size_t N,
-    typename KComp = types::CompareLess<typename std::remove_cvref_t<KV>::first_type>>
+template<typename KV, std::size_t N, typename KComp = types::CompareLess<typename std::remove_cvref_t<KV>::first_type>>
+requires(types::IsPair<std::remove_cvref_t<KV>>)
 constexpr auto ToLimitedMap(KV (&array)[N], const KComp& key_comp = KComp()) {
   LimitedMap<typename std::remove_cvref_t<KV>::first_type, typename std::remove_cvref_t<KV>::second_type, N, KComp>
       result(key_comp);
@@ -345,10 +343,8 @@ constexpr auto ToLimitedMap(KV (&array)[N], const KComp& key_comp = KComp()) {
   return result;
 }
 
-template<
-    types::IsPair KV,
-    std::size_t N,
-    typename KComp = types::CompareLess<typename std::remove_cvref_t<KV>::first_type>>
+template<typename KV, std::size_t N, typename KComp = types::CompareLess<typename std::remove_cvref_t<KV>::first_type>>
+requires(types::IsPair<std::remove_cvref_t<KV>>)
 constexpr auto ToLimitedMap(KV (&&array)[N], const KComp& key_comp = KComp()) {
   LimitedMap<typename std::remove_cvref_t<KV>::first_type, typename std::remove_cvref_t<KV>::second_type, N, KComp>
       result(key_comp);
@@ -359,7 +355,7 @@ constexpr auto ToLimitedMap(KV (&&array)[N], const KComp& key_comp = KComp()) {
 }
 
 template<typename K, typename V, std::size_t N, typename KComp = types::CompareLess<K>>
-requires(!types::IsPair<K>)
+requires(!types::IsPair<std::remove_cvref_t<K>>)
 constexpr auto ToLimitedMap(std::pair<K, V> (&array)[N], const KComp& key_comp = KComp()) {
   LimitedMap<K, V, N, KComp> result(key_comp);
   for (std::size_t idx = 0; idx < N; ++idx) {
@@ -369,7 +365,7 @@ constexpr auto ToLimitedMap(std::pair<K, V> (&array)[N], const KComp& key_comp =
 }
 
 template<typename K, typename V, std::size_t N, typename KComp = types::CompareLess<K>>
-requires(!types::IsPair<K>)
+requires(!types::IsPair<std::remove_cvref_t<K>>)
 constexpr auto ToLimitedMap(std::pair<K, V> (&&array)[N], const KComp& key_comp = KComp()) {
   LimitedMap<K, V, N, KComp> result(key_comp);
   for (std::size_t idx = 0; idx < N; ++idx) {

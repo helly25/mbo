@@ -63,6 +63,8 @@ CheckOptions:
     value:           'NULL'
   - key:             performance-unnecessary-value-param.AllowedTypes
     value:           'absl::Status;absl::StatusOr;std::string_view'
+  - key:             readability-function-cognitive-complexity.Threshold
+    value:           '25'
   - key:             readability-braces-around-statements.ShortStatementLines
     value:           '1'
   - key:             readability-identifier-length.IgnoredLoopCounterNames

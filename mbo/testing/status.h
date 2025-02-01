@@ -446,7 +446,7 @@ inline ::testing::PolymorphicMatcher<testing_internal::StatusPayloads> StatusPay
 // PRIVATE macro, do not use.
 #define MBO_PRIVATE_TESTING_STATUS_ASSERT_OK_AND_ASSIGN_(statusor, expression, ...) \
   auto statusor = (expression);                                                     \
-  ASSERT_TRUE(statusor.ok());                                                       \
+  ASSERT_OK(statusor);                                                              \
   __VA_ARGS__ = std::move(statusor).value()
 
 // Macro that verifies `expression` is OK and assigns its `value` by move to `targets`, where target

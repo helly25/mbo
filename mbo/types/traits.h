@@ -16,11 +16,18 @@
 #ifndef MBO_TYPES_TRAITS_H_
 #define MBO_TYPES_TRAITS_H_
 
-#include <cstddef>  // IWYU pragma: keep
+#include <concepts>  // IWYU pragma: keep
+#include <cstddef>   // IWYU pragma: keep
+#include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <optional>
+#include <set>
+#include <string_view>
 #include <type_traits>
+#include <utility>
 #include <variant>
+#include <vector>
 
 #include "mbo/types/internal/decompose_count.h"          // IWYU pragma: export
 #include "mbo/types/internal/is_braces_constructible.h"  // IWYU pragma: export
@@ -289,19 +296,28 @@ template<typename T>
 concept IsPair = requires(T pair) {
   typename T::first_type;
   typename T::second_type;
-  requires std::is_same_v<std::remove_reference_t<decltype(pair.first)>, typename T::first_type>;
-  requires std::is_same_v<std::remove_reference_t<decltype(pair.second)>, typename T::second_type>;
-  requires std::same_as<std::remove_const_t<T>, std::pair<typename T::first_type, typename T::second_type>>;
+  requires std::same_as<T, std::pair<typename T::first_type, typename T::second_type>>;
 };
 
 template<typename T>
-concept IsPairFirstStr = requires(T pair) {
+concept IsPairFirstStr = IsPair<T> && requires(T pair) {
   typename T::first_type;
-  typename T::second_type;
   requires std::is_convertible_v<typename T::first_type, std::string_view>;
-  requires std::is_same_v<std::remove_reference_t<decltype(pair.first)>, typename T::first_type>;
-  requires std::is_same_v<std::remove_reference_t<decltype(pair.second)>, typename T::second_type>;
-  requires std::same_as<std::remove_const_t<T>, std::pair<typename T::first_type, typename T::second_type>>;
+};
+
+template<typename T>
+concept IsSet = requires {
+  typename T::value_type;
+  typename T::key_type;
+  typename T::allocator_type;
+  requires std::same_as<T, std::set<typename T::value_type, typename T::key_type, typename T::allocator_type>>;
+};
+
+template<typename T>
+concept IsVector = requires {
+  typename T::value_type;
+  typename T::allocator_type;
+  requires std::same_as<T, std::vector<typename T::value_type, typename T::allocator_type>>;
 };
 
 namespace types_internal {
@@ -311,7 +327,7 @@ concept IsSameAsAnyOfRawImpl = (std::same_as<SameAs, std::remove_cvref_t<Ts>> ||
 
 }  // namespace types_internal
 
-// Test whetehr `SameAs` is one of a list of types `Ts` after removing `const`, `volatile` or `&`.
+// Test whether `SameAs` is one of a list of types `Ts` after removing `const`, `volatile` or `&`.
 //
 // Example: The following example takes any form of `int`
 // or `unsigned` where `const`, `volatile` or `&` are removed. So an `int*` would not be acceptable.

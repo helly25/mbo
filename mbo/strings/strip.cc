@@ -20,7 +20,7 @@
 
 namespace mbo::strings {
 
-std::string_view StripLineComments(std::string_view line, StripCommentArgs args) {
+std::string_view StripLineComments(std::string_view line, const StripCommentArgs& args) {
   const auto pos = line.find(args.comment_start);
   if (pos != std::string_view::npos) {
     line = line.substr(0, pos);
@@ -31,13 +31,13 @@ std::string_view StripLineComments(std::string_view line, StripCommentArgs args)
   return line;
 }
 
-std::string StripComments(std::string_view input, StripCommentArgs args) {
+std::string StripComments(std::string_view input, const StripCommentArgs& args) {
   return absl::StrJoin(absl::StrSplit(input, '\n'), "\n", [&](std::string* out, std::string_view line) {
     absl::StrAppend(out, StripLineComments(line, args));
   });
 }
 
-absl::StatusOr<std::string> StripParsedLineComments(std::string_view line, StripParsedCommentArgs args) {
+absl::StatusOr<std::string> StripParsedLineComments(std::string_view line, const StripParsedCommentArgs& args) {
   auto line_or = ParseString(args.parse, line);
   if (!line_or.ok()) {
     return absl::InvalidArgumentError(absl::StrCat("Cannot parse input."));
@@ -49,7 +49,7 @@ absl::StatusOr<std::string> StripParsedLineComments(std::string_view line, Strip
   return std::string(line);
 }
 
-absl::StatusOr<std::string> StripParsedComments(std::string_view input, StripParsedCommentArgs args) {
+absl::StatusOr<std::string> StripParsedComments(std::string_view input, const StripParsedCommentArgs& args) {
   absl::Status error = absl::OkStatus();
   std::string result_str =
       absl::StrJoin(absl::StrSplit(input, '\n'), "\n", [&](std::string* out, std::string_view line) {

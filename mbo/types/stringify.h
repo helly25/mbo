@@ -491,7 +491,7 @@ class Stringify {
   template<typename C>
   requires(::mbo::types::ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
   void StreamValue(std::ostream& os, const C& vs, const StringifyOptions& field_options, bool allow_field_names) const {
-    if constexpr (mbo::types::IsPairFirstStr<typename C::value_type>) {
+    if constexpr (mbo::types::IsPairFirstStr<std::remove_cvref_t<typename C::value_type>>) {
       if (field_options.special_pair_first_is_name) {
         // Each pair element of the container `vs` is an element whose key is the `first` member and
         // whose value is the `second` member.
