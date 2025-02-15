@@ -1,7 +1,7 @@
 # To debug bazel options, uncomment next line.
 # common --announce_rc
 
-common --noenable_bzlmod
+common --enable_bzlmod
 common --noincompatible_enable_cc_toolchain_resolution
 
 # Define the Apple OS

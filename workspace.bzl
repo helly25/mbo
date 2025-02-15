@@ -49,6 +49,13 @@ def mbo_workspace_load_modules():
     )
 
     http_archive(
+        name = "bazel_features",
+        sha256 = "95fb3cfd11466b4cad6565e3647a76f89886d875556a4b827c021525cb2482bb",
+        strip_prefix = "bazel_features-1.25.0",
+        url = "https://github.com/bazel-contrib/bazel_features/releases/download/v1.25.0/bazel_features-v1.25.0.tar.gz",
+    )
+
+    http_archive(
         name = "rules_foreign_cc",
         sha256 = "476303bd0f1b04cc311fc258f1708a5f6ef82d3091e53fd1977fa20383425a6a",
         strip_prefix = "rules_foreign_cc-0.10.1",
@@ -98,17 +105,28 @@ def mbo_workspace_load_modules():
         sha256 = "348a643defa9ab34ed9cb2ed1dc54b1c4ffef1282240aa24c457ebd8385ff2d5",
     )
 
+    github_archive(
+        name = "com_google_protobuf",
+        repo = "https://github.com/protocolbuffers/protobuf",
+        commit = "b407e8416e3893036aee5af9a12bd9b6a0e2b2e6", # v29.3
+        integrity = "sha256-VZElRjOEM/RlpVLp7wmTDGO562lwU5N0FokM/4OoYi0=",
+    )
+
     # Cannot yet support toolchains_llvm 1.0.0. It enables C++20 modules in a broken way.
     # Minimum requirements:
     # * 2023.10.06: https://github.com/bazel-contrib/toolchains_llvm/pull/229: Move minimum supported version to Bazel
     # * 2024.03.12: https://github.com/bazel-contrib/toolchains_llvm/pull/286: Support LLD linker for Darwin
+    # * 2025.01.22: https://github.com/bazel-contrib/toolchains_llvm/pull/446: Verion 1.3.0:
+    #     b3c96d2dbc698eab752366bbe747e2a7df7fa504 / sha256-ZDefpvZja99JcCg37NO4dkdH11yN2zMrx2D77sWlWug=
+    # * 2025.02.15: https://github.com/bazel-contrib/toolchains_llvm/pull/461: Add LLVM 19.1.4...19.1.7:
+    #     0bd3bff40ab51a8e744ccddfd24f311a9df81c2d / sha256-YpBdoaSAXSatJwLcB2yzuZw5Ls/h5+dcWip+h+pVdUo=
     # In order to go past version 1.0.0 we also add the actual fix:
     # * 2024.06.06: https://github.com/bazel-contrib/toolchains_llvm/pull/337: Force Clang modules with LLVM >= 14q
     github_archive(
         name = "toolchains_llvm",
-        commit = "b193952cdb9dd3134f51159d820614ff32dba079",  # https://github.com/bazel-contrib/toolchains_llvm/pull/337
+        commit = "0bd3bff40ab51a8e744ccddfd24f311a9df81c2d",
         repo = "https://github.com/bazel-contrib/toolchains_llvm",
-        integrity = "sha256-eqCfrC/cwTsdE2+DkJQKQmxtlM8mb/nNaZSdg2H8dbk=",
+        integrity = "sha256-YpBdoaSAXSatJwLcB2yzuZw5Ls/h5+dcWip+h+pVdUo=",
     )
     #http_archive(
     #    name = "toolchains_llvm",
