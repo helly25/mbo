@@ -77,7 +77,7 @@ def mbo_workspace_load_modules():
     github_archive(
         name = "com_google_absl",
         repo = "https://github.com/abseil/abseil-cpp",
-        tag = "20250127.0",
+        tag = "20240116.1",
         sha256 = "3c743204df78366ad2eaf236d6631d83f6bc928d1705dd0000b872e53b73dc6a",
     )
 
