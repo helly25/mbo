@@ -1,10 +1,12 @@
-# 0.2.36
+# 0.3
 
 * Added struct `mbo::strings::AtLast` which allows `absl::StrSplit' to split on the last occurrence of a separator.
 * Added concept `mbo::types::IsSet`.
 * Added concept `mbo::types::IsVector`.
 * Fixed concept `mbo::types::IsPair` and `mbo::types::IsPairFirstString` to not remove cvref.
 * Fixed function `mbo::file::SetContents` to explicitly use binary mode.
+* Added bazelmod support.
+* Updated Clang to 19.1.7 (17.0.4 still ok).
 
 # 0.2.35
 
