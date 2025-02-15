@@ -322,7 +322,7 @@ auto DecomposeCountFunc(T&& v) {
 }
 
 template<typename T>
-struct DecomposeCountImpl : decltype(DecomposeCountFunc(std::declval<T>())) {};
+struct DecomposeCountImpl : decltype(DecomposeCountFunc(std::declval<T>())) /**/ {};
 
 template<>
 struct DecomposeCountImpl<void> : std::integral_constant<std::size_t, kNotDecomposableValue> {};
@@ -645,7 +645,7 @@ struct DecomposeInfo final {
   static constexpr bool kDecomposable = !kBadFieldCount && kIsAggregate && !kIsEmpty
                                         && ((kOneNonEmptyBase || kOnlyEmptyBases) && !kOneNonEmptyBasePlusFields);
   static constexpr std::size_t kDecomposeCount =  // First check whether T is composable
-      kDecomposable
+      kDecomposable                               // format-NL
           ? (kCountBases + kCountEmptyBases == 0  // If it is, then check whether there are any bases.
                  ? kInitializerCount
                  : kFieldCount - kCountEmptyBases)
