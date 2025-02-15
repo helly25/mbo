@@ -4,6 +4,7 @@
 * Added concept `mbo::types::IsSet`.
 * Added concept `mbo::types::IsVector`.
 * Fixed concept `mbo::types::IsPair` and `mbo::types::IsPairFirstString` to not remove cvref.
+* Fixed function `mbo::file::SetContents` to explicitly use binary mode.
 
 # 0.2.35
 

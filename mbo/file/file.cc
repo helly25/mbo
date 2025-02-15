@@ -45,16 +45,12 @@ std::filesystem::path NormalizePath(const std::filesystem::path& path) {
 absl::Status SetContents(const std::filesystem::path& file_name, std::string_view content) {
   std::ofstream ofs;
   ofs.exceptions(static_cast<std::ios_base::iostate>(0));
-  ofs.open(file_name, std::ios_base::out | std::ios_base::trunc);
+  ofs.open(file_name, std::ios_base::binary | std::ios_base::trunc);
   if (!ofs) {
     return absl::UnknownError(absl::StrFormat("Unable to open file: '%s'", file_name));
   }
 
   ofs << content;
-  if (!ofs) {
-    return absl::UnknownError(absl::StrFormat("Unable to write to file: '%s'", file_name));
-  }
-
   ofs.close();
   if (!ofs) {
     return absl::UnknownError(absl::StrFormat("Unable to write to file: '%s'", file_name));
