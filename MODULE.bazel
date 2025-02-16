@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module(name = "helly25_mbo", version = "0.3.0", repo_name = "com_helly25_mbo")
+module(name = "helly25_mbo", version = "0.3.0")
 
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "rules_cc", version = "0.0.17")
