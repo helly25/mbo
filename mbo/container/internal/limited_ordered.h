@@ -626,16 +626,12 @@ class [[nodiscard]] LimitedOrdered {
   }
 
   MBO_FORCE_INLINE constexpr value_type& at_index(size_type pos) {
-    if (pos >= size_) {
-      throw std::out_of_range("Out of rage");
-    }
+    MBO_CONFIG_REQUIRE(pos < size_, "Out of range");
     return values_[pos].data;
   }
 
   MBO_FORCE_INLINE constexpr const value_type& at_index(size_type pos) const {
-    if (pos >= size_) {
-      throw std::out_of_range("Out of rage");
-    }
+    MBO_CONFIG_REQUIRE(pos < size_, "Out of range");
     return values_[pos].data;
   }
 
