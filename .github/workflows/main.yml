@@ -48,7 +48,8 @@ jobs:
 
       - name: Test Clang 17
         run: |
-          sed -i '' -e 's,llvm_version = ".*",llvm_version = "17.0.4",g' MODULE.bazel
+          sed -e 's,llvm_version = ".*",llvm_version = "17.0.4",g' MODULE.bazel > MODULE.bazel.bak
+          mv MODULE.bazel.bak MODULE.bazel
           bazel test --config=clang -c fastbuild //...
 
   test-clang-opt:
