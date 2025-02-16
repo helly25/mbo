@@ -31,6 +31,26 @@ jobs:
         run: |
           bazel test --config=clang --config=asan -c dbg //...
 
+  test-clang-17-asan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Bazel cache
+        uses: actions/cache@v4
+        with:
+            path: "~/.cache/bazel"
+            key: bazel-cache-clang-opt
+
+      - name: Test Clang 17/ASAN
+        run: |
+          sed -i '' -e 's,llvm_version = ".*",llvm_version = "17.0.4",g' MODULE.bazel
+          bazel test --config=clang --config=asan -c dbg //...
+
   test-clang-opt:
     runs-on: ubuntu-latest
     steps:
