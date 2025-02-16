@@ -529,21 +529,25 @@ TEST_F(LimitedSetTest, AtIndex) {
 }
 
 TEST_F(LimitedSetTest, AtIndexNonExistingThrows) {
+  static constexpr auto kTest = LimitedSet<int, 2>{25, 42};
+  if constexpr (!::mbo::config::kRequireThrows) {
+    ASSERT_DEATH(kTest.at_index(3), "Out of range");
+  } else {
 #if !HAS_ADDRESS_SANITIZER
-  // Disabled due to https://github.com/google/sanitizers/issues/749
-  const bool caught = []() {
-    static constexpr auto kTest = LimitedSet<int, 2>{25, 42};
-    try {
-      kTest.at_index(3);
-    } catch (const std::out_of_range&) {
-      return true;
-    } catch (...) {
+    // Disabled due to https://github.com/google/sanitizers/issues/749
+    const bool caught = [&]() {
+      try {
+        kTest.at_index(3);
+      } catch (const std::out_of_range&) {
+        return true;
+      } catch (...) {
+        return false;
+      }
       return false;
-    }
-    return false;
-  }();
-  ASSERT_TRUE(caught);
+    }();
+    ASSERT_TRUE(caught);
 #endif
+  }
 }
 
 // NOLINTEND(*-magic-numbers)

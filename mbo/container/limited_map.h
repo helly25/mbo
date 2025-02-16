@@ -25,6 +25,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "mbo/config/require.h"
 #include "mbo/container/internal/limited_ordered.h"
 #include "mbo/types/compare.h"
 #include "mbo/types/traits.h"
@@ -147,17 +148,13 @@ class LimitedMap final
 
   constexpr Value& at(const Key& key) {
     auto it = find(key);
-    if (it == end()) {
-      throw std::out_of_range("Out of rage");
-    }
+    MBO_CONFIG_REQUIRE(it != end(), "Out of range");
     return it->second;
   }
 
   constexpr const Value& at(const Key& key) const {
     auto it = find(key);
-    if (it == end()) {
-      throw std::out_of_range("Out of rage");
-    }
+    MBO_CONFIG_REQUIRE(it != end(), "Out of range");
     return it->second;
   }
 

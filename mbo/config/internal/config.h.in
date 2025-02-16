@@ -30,7 +30,7 @@ namespace mbo::config {
 //
 // This is controlled by the custom Bazel flag `--//mbo/config:limited_ordered_max_unroll_capacity`.
 // When the library is built as a dependency (e.g. as `com_helly25_mbo`), then the flag becomes
-// `--@com_helly_25//mbo/config:limited_ordered_max_unroll_capacity`.
+// `--@com_helly25_mbo//mbo/config:limited_ordered_max_unroll_capacity`.
 static constexpr std::size_t kUnrollMaxCapacityDefault = 16;
 
 // Configuration that controls whether container requirement violations result in throwing a
@@ -40,7 +40,7 @@ static constexpr std::size_t kUnrollMaxCapacityDefault = 16;
 //
 // This is controlled by custom Bazel `--//mbo/config:require_throws`.
 // When the library is built as a dependency (e.g. as `com_helly25_mbo`), then the flag becomes
-// `--@com_helly_25//mbo/config:require_throws` (defaults to `False` / `0`).
+// `--@com_helly25_mbo//mbo/config:require_throws` (defaults to `False` / `0`).
 static constexpr bool kRequireThrows = false;
 
 }  // namespace mbo::config

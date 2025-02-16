@@ -229,21 +229,25 @@ TEST_F(LimitedMapTest, Update) {
 }
 
 TEST_F(LimitedMapTest, UpdateNonExistingThrows) {
+  auto test = LimitedMap<int, int, 2>();
+  if constexpr (!::mbo::config::kRequireThrows) {
+    ASSERT_DEATH(test.at(25) = 42, "Out of range");
+  } else {
 #if !HAS_ADDRESS_SANITIZER
-  // Disabled due to https://github.com/google/sanitizers/issues/749
-  const bool caught = []() {
-    auto test = LimitedMap<int, int, 2>();
-    try {
-      test.at(25) = 42;
-    } catch (const std::out_of_range&) {
-      return true;
-    } catch (...) {
+    // Disabled due to https://github.com/google/sanitizers/issues/749
+    const bool caught = [&]() {
+      try {
+        test.at(25) = 42;
+      } catch (const std::out_of_range&) {
+        return true;
+      } catch (...) {
+        return false;
+      }
       return false;
-    }
-    return false;
-  }();
-  ASSERT_TRUE(caught);
+    }();
+    ASSERT_TRUE(caught);
 #endif
+  }
 }
 
 TEST_F(LimitedMapTest, AtIndex) {
@@ -256,21 +260,25 @@ TEST_F(LimitedMapTest, AtIndex) {
 }
 
 TEST_F(LimitedMapTest, AtIndexNonExistingThrows) {
+  static constexpr auto kTest = LimitedMap<int, int, 2>{{1, 2}, {3, 4}};
+  if constexpr (!::mbo::config::kRequireThrows) {
+    ASSERT_DEATH(kTest.at_index(3), "Out of range");
+  } else {
 #if !HAS_ADDRESS_SANITIZER
-  // Disabled due to https://github.com/google/sanitizers/issues/749
-  const bool caught = []() {
-    static constexpr auto kTest = LimitedMap<int, int, 2>{{1, 2}, {3, 4}};
-    try {
-      kTest.at_index(3);
-    } catch (const std::out_of_range&) {
-      return true;
-    } catch (...) {
+    // Disabled due to https://github.com/google/sanitizers/issues/749
+    const bool caught = [&]() {
+      try {
+        kTest.at_index(3);
+      } catch (const std::out_of_range&) {
+        return true;
+      } catch (...) {
+        return false;
+      }
       return false;
-    }
-    return false;
-  }();
-  ASSERT_TRUE(caught);
+    }();
+    ASSERT_TRUE(caught);
 #endif
+  }
 }
 
 TEST_F(LimitedMapTest, ConstructAssignFromSmaller) {
