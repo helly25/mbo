@@ -31,7 +31,7 @@ jobs:
         run: |
           bazel test --config=clang --config=asan -c dbg //...
 
-  test-clang-17-asan:
+  test-clang-17:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -44,12 +44,12 @@ jobs:
         uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: bazel-cache-clang-opt
+            key: bazel-cache-clang-17
 
-      - name: Test Clang 17/ASAN
+      - name: Test Clang 17
         run: |
           sed -i '' -e 's,llvm_version = ".*",llvm_version = "17.0.4",g' MODULE.bazel
-          bazel test --config=clang --config=asan -c dbg //...
+          bazel test --config=clang -c fastbuild //...
 
   test-clang-opt:
     runs-on: ubuntu-latest
