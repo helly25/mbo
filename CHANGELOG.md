@@ -1,3 +1,23 @@
+# 0.3.1
+
+* Added function `mbo::strings::BigNumber`: Convert integral number to string with thousands separator.
+* Added function `mbo::strings::BigNumberLen`: Calculate required string length for `BigNumer`.
+* Added glob functionality:
+  * Added struct `mbo::file::Glob2Re2Options`: Control conversion of a [glob pattern](https://man7.org/linux/man-pages/man7/glob.7.html) into a [RE2 pattern](https://github.com/google/re2/wiki/Syntax).
+  * Added struct `mbo::file::GlobEntry`: Stores data for a single globbed entry (file, dir, etc.).
+  * Added struct `mbo::file::GlobOptions`: Options for functions `Glob2Re2` and `Glob2Re2Expression`.
+  * Added enum `mbo::file::GlobEntryAction`: Allows GlobEntryFunc to control further glob progression.
+  * Added type `mbo::file::GlobEntryFunc`: Callback for acceptable glob entries.
+  * Added function `mbo::file::GlobRe2`: Performs recursive glob functionality using a RE2 pattern.
+  * Added function `mbo::file::Glob`: Performs recursive glob functionality using a `fnmatch` style pattern.
+  * Added program `glob`: A recursive glob, see `glob --help`.
+* WORKSPACE support:
+  * Added rules_python and brought back com_google_protobuf support.
+* Fixed `RunfilesDir/OrDie` to use environment variable `TEST_WORKSPACE` if present.
+* Fixed formatting issue with `mbo/types/internal/decompose_count.h`.
+* Downgraded Clang from 19.1.7 to 19.1.6.
+* Updated GitHub workflow to test both Bazel flavors.
+
 # 0.3.0
 
 * Added struct `mbo::strings::AtLast` which allows `absl::StrSplit' to split on the last occurrence of a separator.

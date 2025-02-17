@@ -50,3 +50,48 @@ cc_test(
     ],
     size = "small",
 )
+
+cc_library(
+    name = "glob_cc",
+    srcs = ["glob.cc"],
+    hdrs = ["glob.h"],
+    deps = [
+        "//mbo/status:status_macros_cc",
+        "//mbo/strings:split_cc",
+        "//mbo/types:extend_cc",
+        "@com_google_absl//absl/algorithm",
+        "@com_google_absl//absl/container:btree",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_googlesource_code_re2//:re2",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "glob_test",
+    srcs = ["glob_test.cc"],
+    deps = [
+        ":glob_cc",
+        "//mbo/testing:status_cc",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+        "@com_googlesource_code_re2//:re2",
+    ],
+    size = "small",
+)
+
+cc_binary(
+    name = "glob",
+    srcs = ["glob_main.cc"],
+    deps = [
+        ":glob_cc",
+        "//mbo/strings:numbers_cc",
+        "@com_google_absl//absl/status",
+    ]
+)

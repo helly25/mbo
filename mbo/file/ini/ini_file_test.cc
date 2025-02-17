@@ -38,9 +38,7 @@ using ::testing::SizeIs;
 namespace fs = std::filesystem;
 
 struct IniFileTest : ::testing::Test {
-  static std::string SrcDir(std::string_view src_rel) {
-    return mbo::testing::RunfilesDirOrDie("com_helly25_mbo", src_rel);
-  }
+  static std::string SrcDir(std::string_view src_rel) { return mbo::testing::RunfilesDirOrDie("helly25_mbo", src_rel); }
 
   static std::string TmpDir() { return ::testing::TempDir(); }
 };

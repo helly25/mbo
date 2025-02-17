@@ -15,6 +15,7 @@
 
 #include "mbo/testing/runfiles_dir.h"
 
+#include <cstdlib>
 #include <string>
 #include <string_view>
 
@@ -25,15 +26,25 @@
 #include "tools/cpp/runfiles/runfiles.h"
 
 namespace mbo::testing {
+namespace {
+std::string SafeStr(const char* str, std::string_view default_str) {
+  if (str) {
+    return std::string(str);
+  }
+  return std::string(default_str);
+}
+}  // namespace
 
 absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_view source_rel) {
+  const std::string workspace_env = SafeStr(getenv("TEST_WORKSPACE"), workspace);
+
   std::string error;
   std::unique_ptr<bazel::tools::cpp::runfiles::Runfiles> runfiles(
       bazel::tools::cpp::runfiles::Runfiles::CreateForTest(&error));
   if (runfiles == nullptr) {
     return absl::NotFoundError("Could not determine runfiles directory.");
   }
-  return runfiles->Rlocation(mbo::file::JoinPaths(workspace, source_rel));
+  return runfiles->Rlocation(mbo::file::JoinPaths(workspace_env, source_rel));
 }
 
 std::string RunfilesDirOrDie(std::string_view workspace, std::string_view source_rel) {
