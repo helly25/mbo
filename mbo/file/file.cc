@@ -13,9 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This implementation avoids C++ STL to due to exceptions and instead
-// uses POSIX APIs.
-
 #include "mbo/file/file.h"
 
 #include <chrono>

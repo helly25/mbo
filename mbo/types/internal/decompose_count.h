@@ -448,11 +448,14 @@ struct AggregateInitializerCount
 template<IsAggregate T, typename Indices, typename FieldIndices>
 struct AggregateInitializeableWith;
 
+// clang-format off
 template<IsAggregate T, std::size_t... kIndices, std::size_t... kFieldIndices>
     struct AggregateInitializeableWith<T, std::index_sequence<kIndices...>, std::index_sequence<kFieldIndices...>>
     : std::bool_constant < requires {
   T{std::declval<AnyTypeN<kIndices>>()..., {std::declval<AnyNonBaseTypeN<kFieldIndices, T>>()...}};
 } > {};
+
+// clang-format on
 
 template<typename T, std::size_t N, std::size_t M>
 concept AggregateFieldAtInitializeableWithImpl =

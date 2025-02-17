@@ -105,11 +105,18 @@ def mbo_workspace_load_modules():
         sha256 = "348a643defa9ab34ed9cb2ed1dc54b1c4ffef1282240aa24c457ebd8385ff2d5",
     )
 
-    github_archive(
+    http_archive(
+        name = "rules_python",
+        sha256 = "9c6e26911a79fbf510a8f06d8eedb40f412023cf7fa6d1461def27116bff022c",
+        strip_prefix = "rules_python-1.1.0",
+        url = "https://github.com/bazelbuild/rules_python/releases/download/1.1.0/rules_python-1.1.0.tar.gz",
+    )
+
+    http_archive(
         name = "com_google_protobuf",
-        repo = "https://github.com/protocolbuffers/protobuf",
-        commit = "b407e8416e3893036aee5af9a12bd9b6a0e2b2e6", # v29.3
-        integrity = "sha256-VZElRjOEM/RlpVLp7wmTDGO562lwU5N0FokM/4OoYi0=",
+        sha256 = "008a11cc56f9b96679b4c285fd05f46d317d685be3ab524b2a310be0fbad987e",
+        strip_prefix = "protobuf-29.3",
+        url = "https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protobuf-29.3.tar.gz",
     )
 
     # Cannot yet support toolchains_llvm 1.0.0. It enables C++20 modules in a broken way.
@@ -121,7 +128,7 @@ def mbo_workspace_load_modules():
     # * 2025.02.15: https://github.com/bazel-contrib/toolchains_llvm/pull/461: Add LLVM 19.1.4...19.1.7:
     #     0bd3bff40ab51a8e744ccddfd24f311a9df81c2d / sha256-YpBdoaSAXSatJwLcB2yzuZw5Ls/h5+dcWip+h+pVdUo=
     # In order to go past version 1.0.0 we also add the actual fix:
-    # * 2024.06.06: https://github.com/bazel-contrib/toolchains_llvm/pull/337: Force Clang modules with LLVM >= 14q
+    # * 2024.06.06: https://github.com/bazel-contrib/toolchains_llvm/pull/337: Force Clang modules with LLVM >= 14
     github_archive(
         name = "toolchains_llvm",
         commit = "0bd3bff40ab51a8e744ccddfd24f311a9df81c2d",

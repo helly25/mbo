@@ -55,6 +55,15 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `NormalizePath`: Normalizes a path.
         * function `Readable`: Returns whether a file is readable or an absl::Status error.
         * function `SetContents`: Writes contents to a file.
+    * mbo/file:glob_cc, mbo/file/glob.h
+        * struct `mbo::file::Glob2Re2Options`: Control conversion of a [glob pattern](https://man7.org/linux/man-pages/man7/glob.7.html) into a [RE2 pattern](https://github.com/google/re2/wiki/Syntax).
+        * struct `mbo::file::GlobEntry`: Stores data for a single globbed entry (file, dir, etc.).
+        * struct `mbo::file::GlobOptions`: Options for functions `Glob2Re2` and `Glob2Re2Expression`.
+        * enum `mbo::file::GlobEntryAction`: Allows GlobEntryFunc to control further glob progression.
+        * type `mbo::file::GlobEntryFunc`: Callback for acceptable glob entries.
+        * function `mbo::file::GlobRe2`: Performs recursive glob functionality using a RE2 pattern.
+        * function `mbo::file::Glob`: Performs recursive glob functionality using a `fnmatch` style pattern.
+        * program `glob`: A recursive glob, see `glob --help`.
     * mbo/file/ini:ini_file_cc, mbo/file/ini/ini_file.h
         * class `IniFile`: A simple INI file reader.
 * Hash
@@ -93,6 +102,9 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/strings:indent_cc, mbo/strings/indent.h
         * function `DropIndent`: Converts a raw-string text block as if it had no indent.
         * function `DropIndentAndSplit`: Variant of `DropIndent` that returns the result as lines.
+    * mbo/strings:numbers_cc, mbo/strings/numbers.h
+        * Added function `mbo::strings::BigNumber`: Convert integral number to string with thousands separator.
+        * Added function `mbo::strings::BigNumberLen`: Calculate required string length for `BigNumer`.
     * mbo/strings:parse_cc, mbo/strings/parse.h
         * function `ParseString`: Parses strings respecting C++ and custom escapes as well as quotes (all configurable).
         * function `ParseStringList`: Parses and splits strings respecting C++ and custom escapes as well as quotes (all configurable).
@@ -215,7 +227,7 @@ The project only comes with a Bazel BUILD.bazel file and can be added to other B
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
-  name = "com_helly25_proto",
+  name = "com_helly25_mbo",
   url = "https://github.com/helly25/mbo/archive/refs/heads/main.tar.gz",
   # See https://github.com/helly25/mbo/releases for releases.
 )

@@ -29,7 +29,7 @@ jobs:
 
       - name: Test Clang/ASAN
         run: |
-          bazel test --config=clang --config=asan -c dbg //...
+          bazel test --enable_bzlmod --noenable_workspace --config=clang --config=asan -c dbg //...
 
   test-clang-17:
     runs-on: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
         run: |
           sed -e 's,llvm_version = ".*",llvm_version = "17.0.4",g' MODULE.bazel > MODULE.bazel.bak
           mv MODULE.bazel.bak MODULE.bazel
-          bazel test --config=clang -c fastbuild //...
+          bazel test --enable_bzlmod --noenable_workspace --config=clang -c fastbuild //...
 
   test-clang-opt:
     runs-on: ubuntu-latest
@@ -69,7 +69,7 @@ jobs:
 
       - name: Test Clang/OPT
         run: |
-          bazel test --config=clang -c opt //...
+          bazel test --enable_bzlmod --noenable_workspace --config=clang -c opt //...
 
   test-gcc-fastbuild:
     runs-on: ubuntu-latest
@@ -88,4 +88,5 @@ jobs:
 
       - name: Test GCC/Fastbuild
         run: |
-          CC=gcc bazel test -c fastbuild //...
+          # Use WORKSPACE
+          CC=gcc bazel test --noenable_bzlmod --enable_workspace -c fastbuild //...

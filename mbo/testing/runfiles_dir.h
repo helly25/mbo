@@ -24,8 +24,7 @@
 namespace mbo::testing {
 
 // Returns bazel_tools's `RLocation`.
-// Set `workspace` to the Workspace name (as stated in file `WORKSPACE`).
-// Set `source_rel` to a file or directory relative to the workspace root.
+// If environment variable `WORKSPACE` is present then `workspace` will be ignored.
 absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_view source_rel);
 std::string RunfilesDirOrDie(std::string_view workspace, std::string_view source_rel);
 

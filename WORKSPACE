@@ -36,7 +36,15 @@ rules_foreign_cc_dependencies()
 
 ###########################################################################
 
+load("@rules_python//python:repositories.bzl", "py_repositories")
+
+py_repositories()
+
+###########################################################################
+
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
 
 ###########################################################################
 
@@ -48,7 +56,7 @@ load("@toolchains_llvm//toolchain:rules.bzl", "llvm_toolchain")
 
 llvm_toolchain(
     name = "llvm_toolchain",
-    llvm_version = "19.1.7",
+    llvm_version = "19.1.6",
 )
 
 load("@llvm_toolchain//:toolchains.bzl", "llvm_register_toolchains")
