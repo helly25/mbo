@@ -15,8 +15,10 @@
 
 #ifndef MBO_TYPES_INTERNAL_STRUCT_NAMES_CLANG_H_
 #define MBO_TYPES_INTERNAL_STRUCT_NAMES_CLANG_H_
+
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
+# include <atomic>  // IWYU pragma: keep
 # include <cstring>
 # include <string_view>
 # include <type_traits>
@@ -235,8 +237,7 @@ class StructMeta<T, true, false> final {
       std::string_view name = {},
       ...) {
     if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent == "  ") {
-      fields[field_index++] = {
-          // NOLINT(*-array-index)
+      fields[field_index++] /* NOLINT(*-array-index) */ = {
           .name = name,
           .type = type,
       };
@@ -251,7 +252,7 @@ class StructMeta<T, true, false> final {
   }
 
   // Older compilers may not allow this to be a `constexpr`.
-  inline static FieldData kFieldData = []() {
+  inline static const FieldData kFieldData = []() {
     FieldData fields;
     if constexpr (!std::is_empty_v<T>) {
       typename StructMetaBase<T>::Storage storage{};
@@ -261,10 +262,16 @@ class StructMeta<T, true, false> final {
     return fields;
   }();
 
-  inline static std::array<std::string_view, kFieldCount> kFieldNames = []() {
+  inline static const auto kFieldNames = []() {
     std::array<std::string_view, kFieldCount> data;
     if constexpr (!std::is_empty_v<T>) {
-      for (std::size_t pos = 0; pos < kFieldCount; ++pos) {
+# if __has_feature(address_sanitizer)
+      // In ASAN mode we need to carefully copy the data. Using atomic indexing does it.
+      std::atomic_size_t pos = 0;
+# else
+      std::size_t pos = 0;
+# endif
+      for (; pos < kFieldCount; ++pos) {
         data[pos] = kFieldData[pos].name;
       }
     }
