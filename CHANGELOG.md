@@ -17,6 +17,7 @@
 * Fixed formatting issue with `mbo/types/internal/decompose_count.h`.
 * Downgraded Clang from 19.1.7 to 19.1.6.
 * Updated GitHub workflow to test both Bazel flavors.
+* Fixed issue in with struct names generation when compiling with Clang in mode ASAN.
 
 # 0.3.0
 
