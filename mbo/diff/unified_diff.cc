@@ -256,7 +256,13 @@ class Chunk {
 
  private:
   static std::string FileHeader(const file::Artefact& info, const UnifiedDiff::Options& options) {
-    std::string_view name = absl::StripPrefix(info.name, options.strip_file_header_prefix);
+    std::string_view name;
+    if (options.strip_file_header_prefix.find_first_of(".*?()[]|") == std::string::npos) {
+      name = absl::StripPrefix(info.name, options.strip_file_header_prefix);
+    } else {
+      name = info.name;
+      RE2::Consume(&name, options.strip_file_header_prefix);
+    }
     return absl::StrCat(info.name.empty() ? "-" : name, " ", absl::FormatTime(options.time_format, info.time, info.tz));
   }
 

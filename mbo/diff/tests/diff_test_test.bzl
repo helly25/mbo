@@ -75,7 +75,7 @@ def diff_test_test(
                 --ignore_matching_lines={ignore_matching_lines} \\
                 --ignore_space_change={ignore_space_change} \\
                 --strip_comments={strip_comments} \\
-                --strip_file_header_prefix="external/com_helly25_mbo/" \\
+                --strip_file_header_prefix="external/(com_)?helly25_mbo[^/]*/" \\
                 --strip_parsed_comments={strip_parsed_comments} \\
                 || true
         """.format(

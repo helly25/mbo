@@ -26,6 +26,14 @@ bazel_dep(name = "googletest", version = "1.16.0", repo_name = "com_google_googl
 bazel_dep(name = "google_benchmark", version = "1.9.1", repo_name = "com_github_google_benchmark")
 # In Bazelmod we do not need to specify the protobuf version yet.
 # bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
+
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+git_override(
+    module_name = "hedron_compile_commands",
+    commit = "6dd21b47db481a70c61698742438230e2399b639",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+)
+
 bazel_dep(name = "toolchains_llvm", version = "1.3.0")
 
 git_override(
@@ -34,11 +42,11 @@ git_override(
     commit = "e831f94a8b7f3a39391f5822adcab8e4d443c03b", # Add more tools by default (#463)
 )
 
-llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 
 llvm.toolchain(
     name = "llvm_toolchain_llvm",
     llvm_version = "19.1.6",
 )
 use_repo(llvm, "llvm_toolchain_llvm")
-register_toolchains("@llvm_toolchain_llvm//:all")
+register_toolchains("@llvm_toolchain_llvm//:all", dev_dependency = True)

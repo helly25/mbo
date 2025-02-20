@@ -194,11 +194,12 @@ def _gen_name_base_no_ext(file):
 
 def _build_relative(ctx, file):
     path = "/".join(ctx.build_file_path.split("/")[:-1])
-    return file.short_path.removeprefix("../com_helly25_mbo/").removeprefix(path).removeprefix("/")
+    res = path + "/" + file.basename
+    return res
 
 def _mope_rule_impl(ctx):
     srcs = {_template_base_no_ext(src): src for src in ctx.files.srcs}
-    outs = {_gen_name_base_no_ext(out): ctx.actions.declare_file(_build_relative(ctx, out)) for out in ctx.outputs.outs}
+    outs = {_gen_name_base_no_ext(out): out for out in ctx.outputs.outs}
     inis = {_base_no_ext(ini): ini.path for ini in ctx.files.data if ini.extension == "ini"}
     if srcs.keys() != outs.keys():
         fail("Files in `srcs` and `outs` do not match on basenames without extensions.")

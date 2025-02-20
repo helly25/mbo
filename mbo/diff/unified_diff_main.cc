@@ -76,7 +76,9 @@ ABSL_FLAG(
     std::string,
     strip_file_header_prefix,
     "",
-    "If this is a prefix to a filename in the header, then remove from header.");
+    "\
+If this is a prefix to a filename in the header, then remove from filename in header. This can be \
+a regular expression (https://github.com/google/re2/wiki/Syntax).");
 ABSL_FLAG(
     bool,
     strip_parsed_comments,
