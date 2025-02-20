@@ -18,6 +18,8 @@
 * Downgraded Clang from 19.1.7 to 19.1.6.
 * Updated GitHub workflow to test both Bazel flavors.
 * Fixed issue in with struct names generation when compiling with Clang in mode ASAN.
+* Added ability for unified_diff tool flag `--strip_file_header_prefix` to accept re2 expressions.
+* Fixed various issues for bazelmod based builds.
 
 # 0.3.0
 
