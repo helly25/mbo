@@ -42,9 +42,11 @@ cc_library(
     hdrs = ["runfiles_dir.h"],
     deps = [
         "//mbo/file:file_cc",
+        "//mbo/status:status_macros_cc",
         "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status:status",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
         "@bazel_tools//tools/cpp/runfiles",
     ],
     testonly = True,
