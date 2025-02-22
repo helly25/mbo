@@ -25,7 +25,7 @@ package(default_visibility = ["//visibility:private"])
 # Otherwise the value should be the absolute file location of `clang-format`.
 string_flag(
     name = "clang_format",
-    build_setting_default = "clang-format-auto",
+    build_setting_default = "",
     visibility = ["//visibility:public"],
 )
 
