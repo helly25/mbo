@@ -24,9 +24,18 @@
 namespace mbo::testing {
 
 // Returns bazel_tools's `RLocation`.
-// If environment variable `WORKSPACE` is present then `workspace` will be ignored.
+// If environment variable `TEST_WORKSPACE` is present then `workspace` will be ignored.
 absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_view source_rel);
 std::string RunfilesDirOrDie(std::string_view workspace, std::string_view source_rel);
+
+// The single parameter variants understand relative path, but also bazel labels.
+// If a source starts with '@' then it is assumed to be an absolute label. The function will split
+// the source at the first '//' to separate workspace and relative source.
+// If a source starts with '//', then it is assumed to be curren workspace rooted source.
+// In either case above the first ':' in the resulting source will be replaced with '/'.
+// Otherwise the source is assumed to be a plain file path.
+absl::StatusOr<std::string> RunfilesDir(std::string_view source);
+std::string RunfilesDirOrDie(std::string_view source);
 
 }  // namespace mbo::testing
 

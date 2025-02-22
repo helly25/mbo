@@ -41,6 +41,7 @@ cc_test(
     "//mbo/file:file_cc",
     "//mbo/testing:runfiles_dir_cc",
     "//mbo/testing:status_cc",
+    "@com_google_absl//absl/log:initialize",
     "@com_google_googletest//:gtest_main",
   ],
 )

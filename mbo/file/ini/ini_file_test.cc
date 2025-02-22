@@ -19,6 +19,7 @@
 #include <string>
 #include <string_view>
 
+#include "absl/log/initialize.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/diff/unified_diff.h"
@@ -38,15 +39,17 @@ using ::testing::SizeIs;
 namespace fs = std::filesystem;
 
 struct IniFileTest : ::testing::Test {
-  static std::string SrcDir(std::string_view src_rel) { return mbo::testing::RunfilesDirOrDie("helly25_mbo", src_rel); }
+  static void SetUpTestSuite() { absl::InitializeLog(); }
+
+  static std::string SrcDir(std::string_view src_rel) { return mbo::testing::RunfilesDirOrDie(src_rel); }
 
   static std::string TmpDir() { return ::testing::TempDir(); }
 };
 
 TEST_F(IniFileTest, TestGolden) {
-  const std::string dir = SrcDir("mbo/file/ini/tests");
+  const fs::path test_ini = SrcDir("@com_helly25_mbo//mbo/file/ini:tests/test.ini");
   std::map<std::string, std::pair<std::string, std::string>> tests;
-  for (const auto& entry : fs::directory_iterator{dir}) {
+  for (const auto& entry : fs::directory_iterator{test_ini.parent_path()}) {
     std::string_view filename = entry.path().native();
     if (entry.path().extension() == ".ini") {
       tests[entry.path().stem().native()].first = filename;

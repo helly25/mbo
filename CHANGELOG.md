@@ -20,6 +20,8 @@
 * Fixed issue in with struct names generation when compiling with Clang in mode ASAN.
 * Added ability for unified_diff tool flag `--strip_file_header_prefix` to accept re2 expressions.
 * Fixed various issues for bazelmod based builds.
+* Improved `mbo::testing::RunfilesDir/OrDie` to support a single param variant that understands bazel labels. Further add support for other repos than the current one by reading the repo mapping.
+* Fixed `//mbo/file/ini:ini_file_test` to be able to pass when run as remote repository.
 
 # 0.3.0
 

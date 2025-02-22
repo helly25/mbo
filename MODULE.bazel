@@ -17,7 +17,7 @@
 module(name = "helly25_mbo", version = "0.3.0", repo_name = "com_helly25_mbo")
 
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
-bazel_dep(name = "rules_cc", version = "0.0.17")
+bazel_dep(name = "rules_cc", version = "0.1.1")
 bazel_dep(name = "platforms", version = "0.0.11")
 
 bazel_dep(name = "abseil-cpp", version = "20250127.0", repo_name = "com_google_absl")
