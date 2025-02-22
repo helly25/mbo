@@ -99,9 +99,10 @@ class [[nodiscard]] LimitedOrdered {
     constexpr ~Data() noexcept
     requires(std::is_trivially_destructible_v<Value>)
     = default;
+
     ~Data() noexcept
     requires(!std::is_trivially_destructible_v<Value>)
-    {};
+    {}
 
     Value data;
     None none;
@@ -378,7 +379,8 @@ class [[nodiscard]] LimitedOrdered {
   }
 
   constexpr LimitedOrdered() noexcept = default;
-  constexpr explicit LimitedOrdered(const Compare& key_comp) noexcept : key_comp_(key_comp){};
+
+  constexpr explicit LimitedOrdered(const Compare& key_comp) noexcept : key_comp_(key_comp) {}
 
   constexpr LimitedOrdered(const LimitedOrdered& other) noexcept {
     for (; size_ < other.size_; ++size_) {

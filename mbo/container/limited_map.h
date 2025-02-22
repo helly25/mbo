@@ -79,7 +79,7 @@ class LimitedMap final
 
   constexpr LimitedMap() noexcept = default;
 
-  constexpr explicit LimitedMap(const KeyComp& key_comp) noexcept : LimitedBase(key_comp){};
+  constexpr explicit LimitedMap(const KeyComp& key_comp) noexcept : LimitedBase(key_comp) {}
 
   constexpr LimitedMap(const LimitedMap& other) noexcept : LimitedBase(other) {}
 

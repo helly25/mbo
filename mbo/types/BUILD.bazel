@@ -123,6 +123,30 @@ cc_test(
 )
 
 cc_library(
+    name = "container_proxy_cc",
+    hdrs = ["container_proxy.h"],
+)
+
+cc_library(
+    name = "opaque_cc",
+    hdrs = ["opaque.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":container_proxy_cc",
+        "@com_google_absl//absl/hash",
+    ],
+)
+
+cc_test(
+    name = "opaque_test",
+    srcs = ["opaque_test.cc"],
+    deps = [
+        ":opaque_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "ref_wrap_cc",
     hdrs = ["ref_wrap.h"],
     visibility = ["//visibility:public"],

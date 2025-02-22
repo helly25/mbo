@@ -355,18 +355,18 @@ class AnyScanImpl {
   requires(kAccessByRef)
   explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
       : funcs_{
-          .iter =
-              [data = data] {
-                auto pos = MakeSharedIterator(data.container());
-                return IterFuncs{
-                    .more = [data = data, pos = pos]() -> bool { return *pos != data.container().end(); },
-                    .curr = [&it = *pos]() -> AccessType { return *it; },
-                    .next = [&it = *pos] { ++it; },
-                };
-              },
-          .empty = [data = data] { return data.empty(); },
-          .size = [data = data] { return data.size(); },
-      } {}
+            .iter =
+                [data = data] {
+                  auto pos = MakeSharedIterator(data.container());
+                  return IterFuncs{
+                      .more = [data = data, pos = pos]() -> bool { return *pos != data.container().end(); },
+                      .curr = [&it = *pos]() -> AccessType { return *it; },
+                      .next = [&it = *pos] { ++it; },
+                  };
+                },
+            .empty = [data = data] { return data.empty(); },
+            .size = [data = data] { return data.size(); },
+        } {}
 
   // For MakConvertingScan
   template<AcceptableContainer Container>
@@ -376,19 +376,19 @@ class AnyScanImpl {
       && std::constructible_from<value_type, AccessType>)
   explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
       : funcs_{
-          // NOTE: data must be copied here!
-          .iter =
-              [data = data] {
-                auto pos = MakeSharedIterator(data.container());
-                return IterFuncs{
-                    .more = [data = data, pos = pos]() -> bool { return *pos != data.container().end(); },
-                    .curr = [&it = *pos]() -> AccessType { return AccessType(*it); },
-                    .next = [&it = *pos] { ++it; },
-                };
-              },
-          .empty = [data = data] { return data.empty(); },
-          .size = [data = data] { return data.size(); },
-      } {}
+            // NOTE: data must be copied here!
+            .iter =
+                [data = data] {
+                  auto pos = MakeSharedIterator(data.container());
+                  return IterFuncs{
+                      .more = [data = data, pos = pos]() -> bool { return *pos != data.container().end(); },
+                      .curr = [&it = *pos]() -> AccessType { return AccessType(*it); },
+                      .next = [&it = *pos] { ++it; },
+                  };
+                },
+            .empty = [data = data] { return data.empty(); },
+            .size = [data = data] { return data.size(); },
+        } {}
 
   // NOLINTEND(bugprone-forwarding-reference-overload)
 
@@ -405,10 +405,10 @@ class AnyScanImpl {
 
     iterator_impl()
         : funcs_{
-            .more = [] { return false; },
-            .curr = nullptr,
-            .next = [] {},
-        } {}
+              .more = [] { return false; },
+              .curr = nullptr,
+              .next = [] {},
+          } {}
 
     explicit iterator_impl(const AccessFuncs& funcs) : funcs_(funcs.iter()) {}
 
@@ -510,8 +510,8 @@ class AnyScan : public container_internal::AnyScanImpl<ValueType, DifferenceType
  public:
   AnyScan(const std::initializer_list<ValueType>& data)
       : AnyScanImpl(
-          container_internal::MakeAnyScanData<std::initializer_list<ValueType>, container_internal::ScanMode::kAny>(
-              data)) {}
+            container_internal::MakeAnyScanData<std::initializer_list<ValueType>, container_internal::ScanMode::kAny>(
+                data)) {}
 
   template<::mbo::types::ContainerHasInputIterator Container>
   requires(std::constructible_from<ValueType, typename std::remove_cvref_t<Container>::value_type>)
@@ -533,8 +533,8 @@ class ConstScan
  public:
   ConstScan(const std::initializer_list<ValueType>& data)
       : AnyScanImpl(
-          container_internal::MakeAnyScanData<std::initializer_list<ValueType>, container_internal::ScanMode::kConst>(
-              data)) {}
+            container_internal::MakeAnyScanData<std::initializer_list<ValueType>, container_internal::ScanMode::kConst>(
+                data)) {}
 
   template<container_internal::AcceptableContainer Container>
   requires(std::constructible_from<const ValueType, typename std::remove_cvref_t<Container>::value_type>)
@@ -556,8 +556,8 @@ class ConvertingScan
  public:
   ConvertingScan(const std::initializer_list<ValueType>& data)
       : AnyScanImpl(
-          container_internal::
-              MakeAnyScanData<std::initializer_list<ValueType>, container_internal::ScanMode::kConverting>(data)) {}
+            container_internal::
+                MakeAnyScanData<std::initializer_list<ValueType>, container_internal::ScanMode::kConverting>(data)) {}
 
   template<container_internal::AcceptableContainer Container>
   requires(std::constructible_from<ValueType, typename std::remove_cvref_t<Container>::value_type>)

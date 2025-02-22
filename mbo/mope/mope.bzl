@@ -65,13 +65,21 @@ def _clang_format_impl(ctx, src, dst):
         tools = clang_format_tool,
         command = """
             CLANG_FORMAT="{clang_format}"
-            if [ "{clang_format}" == "clang-format-auto" ] || [ -x "${{CLANG_FORMAT}}" ]; then
+            if [ "{clang_format}" == "clang-format-auto" ] || [ ! -x "${{CLANG_FORMAT}}" ]; then
                 if [ -x "external/llvm_toolchain_llvm/bin/clang-format" ]; then
                     CLANG_FORMAT="external/llvm_toolchain_llvm/bin/clang-format"
                 elif [ -x "${{LLVM_PATH}}/bin/clang-format" ]; then
                     CLANG_FORMAT="${{LLVM_PATH}}/bin/clang-format"
                 elif [ $(which "clang_format") ]; then
                     CLANG_FORMAT="clang_format"
+                elif [ $(which "clang-format-23") ]; then
+                    CLANG_FORMAT="clang-format-23"
+                elif [ $(which "clang-format-22") ]; then
+                    CLANG_FORMAT="clang-format-22"
+                elif [ $(which "clang-format-21") ]; then
+                    CLANG_FORMAT="clang-format-21"
+                elif [ $(which "clang-format-20") ]; then
+                    CLANG_FORMAT="clang-format-20"
                 elif [ $(which "clang-format-19") ]; then
                     CLANG_FORMAT="clang-format-19"
                 elif [ $(which "clang-format-18") ]; then
@@ -121,7 +129,7 @@ _clang_format_common_attrs = {
     ),
     "_clang_format_tool": attr.string(
         doc = "The target of the clang-format executable.",
-        default = CLANG_FORMAT_BINARY if type(CLANG_FORMAT_BINARY) == "string" else "clang-format",
+        default = CLANG_FORMAT_BINARY if type(CLANG_FORMAT_BINARY) == "string" else "clang-format-auto",
     ) if CLANG_FORMAT_BINARY else attr.label(
         doc = "The target of the clang-format executable.",
         default = Label("@llvm_toolchain_llvm//:bin/clang-format"),
