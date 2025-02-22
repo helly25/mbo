@@ -69,7 +69,7 @@ class LimitedSet final : public container_internal::LimitedOrdered<Key, Key, Key
 
   constexpr ~LimitedSet() noexcept = default;
 
-  constexpr explicit LimitedSet(const Compare& key_comp) noexcept : LimitedBase(key_comp){};
+  constexpr explicit LimitedSet(const Compare& key_comp) noexcept : LimitedBase(key_comp) {}
 
   constexpr LimitedSet(const LimitedSet& other) noexcept : LimitedBase(other) {}
 

@@ -141,6 +141,8 @@ The C++ library is organized in functional groups each residing in their own dir
         * meta-type `IfTrueThenVoid`: Helper type to inject default cases and to ensure the required type expansion is always possible.
     * mbo/types:compare_cc, mbo/types/compare.h
         * comparator `mbo::types::CompareLess` which is compatible to std::Less but allows container optimizations.
+    * mbo/types:container_proxy_cc, mbo/types/container_proxy.h
+        * struct `mbo::types::ContainerProxy` which allows to add container access to other types including smart pointers of containers.
     * mbo/types:extend_cc, mbo/types/extend.h
         * crtp-struct `Extend`: Enables extending of struct/class types with basic functionality.
         * crtp-struct `ExtendNoDefault` Like `Extend` but without default extender functionality.
@@ -157,6 +159,10 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/types:no_destruct_cc, mbo/types/no_destruct.h
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
         * Mainly, this prevents calling the destructor and thus prevents termination issues (initialization order fiasco).
+    * mbo/types:opaque_cc, mbo/types/opaque.h
+        * struct `mbo::types::OpaquePtr` an opaque alternative to `std::unique_ptr` which works with forward declared types.
+        * struct `mbo::types::OpaqueValue` an `OpaquePtr` with direct access, comparison and hashing which will not allow a nullptr.
+        * struct `mbo::types::OpaqueContainer` an `OpaqueValue` with direct container access.
     * mbo/types:ref_wrap_cc, mbo/types/ref_wrap.h
         * template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.
     * mbo/types:required_cc, mbo/types/required.h

@@ -457,8 +457,8 @@ struct MakeTstringLiteralHelper {
   // NOLINTBEGIN(google-explicit-constructor)
   constexpr MakeTstringLiteralHelper(const char (&str)[N]) noexcept
       : MakeTstringLiteralHelper(
-          std::string_view{str, Length(N)},
-          std::make_integer_sequence<std::size_t, Length(N)>()) {}
+            std::string_view{str, Length(N)},
+            std::make_integer_sequence<std::size_t, Length(N)>()) {}
 
   // NOLINTEND(google-explicit-constructor)
   // NOLINTEND(*-avoid-c-arrays)

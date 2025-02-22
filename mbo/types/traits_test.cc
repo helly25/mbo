@@ -81,7 +81,7 @@ struct CtorDefault {
 };
 
 struct CtorUser {
-  CtorUser(){};  // NOLINT(*-use-equals-default)
+  CtorUser() {}  // NOLINT(*-use-equals-default)
 };
 
 struct CtorBase : CtorUser {};
