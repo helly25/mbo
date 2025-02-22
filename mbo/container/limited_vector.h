@@ -85,7 +85,7 @@ class LimitedVector final {
 
     constexpr ~Data() noexcept
     requires(!std::is_trivially_destructible_v<T>)
-    {};
+    {}
 
     None none;
     T data;

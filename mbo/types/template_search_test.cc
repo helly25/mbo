@@ -42,10 +42,12 @@ struct IsNonZero {
 
 template<
     std::size_t Expected,
-    template<template<std::size_t> typename, std::size_t Start, std::size_t End, std::size_t NotFound>
-    typename Algorithm,
-    template<typename>
-    typename TestFunc,
+    template<
+        template<std::size_t> typename,
+        std::size_t Start,
+        std::size_t End,
+        std::size_t NotFound> typename Algorithm,
+    template<typename> typename TestFunc,
     typename TestType,
     std::size_t Start = 0,
     std::size_t End = TestType::size(),

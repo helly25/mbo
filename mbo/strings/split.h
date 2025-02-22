@@ -24,7 +24,7 @@ namespace mbo::strings {
 // Modifier for `absl::StrSplit` that creates at most two parts separated by 'sep'.
 class AtLast {
  public:
-  explicit AtLast(char sep) : sep_(sep){};
+  explicit AtLast(char sep) : sep_(sep) {}
 
   std::string_view Find(std::string_view text, std::size_t pos) const {
     std::size_t next_pos = text.substr(pos).rfind(sep_);
