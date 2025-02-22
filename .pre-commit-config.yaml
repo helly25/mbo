@@ -8,12 +8,14 @@ repos:
     exclude: |
           (?x)(
             ^mbo/diff/tests/abc_whitespace.*$|
+            ^mbo/diff/tests/numbers_blanks.*|
             .*[]].patch
           )
   - id: trailing-whitespace
     exclude: |
           (?x)(
             ^mbo/diff/tests/abc_whitespace.*$|
+            ^mbo/diff/tests/numbers_blanks.*|
             .*[.]patch
           )
 
