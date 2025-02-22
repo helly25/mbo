@@ -22,6 +22,11 @@
 * Fixed various issues for bazelmod based builds.
 * Improved `mbo::testing::RunfilesDir/OrDie` to support a single param variant that understands bazel labels. Further add support for other repos than the current one by reading the repo mapping.
 * Fixed `//mbo/file/ini:ini_file_test` to be able to pass when run as remote repository.
+* Added struct `mbo::types::ContainerProxy` which allows to add container access to other types including smart pointers of containers.
+* Added struct `mbo::types::OpaquePtr` an opaque alternative to `std::unique_ptr` which works with forward declared types.
+* Added struct `mbo::types::OpaqueValue` an `OpaquePtr` with direct access, comparison and hashing which will not allow a nullptr.
+* Added struct `mbo::types::OpaqueContainer` an `OpaqueValue` with direct container access.
+* Changed pre-commit to use clang-format 19.1.6.
 
 # 0.3.0
 
