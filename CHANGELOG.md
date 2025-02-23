@@ -1,4 +1,4 @@
-# 0.3.1
+# 0.4.0
 
 * Added function `mbo::strings::BigNumber`: Convert integral number to string with thousands separator.
 * Added function `mbo::strings::BigNumberLen`: Calculate required string length for `BigNumer`.
@@ -27,6 +27,8 @@
 * Added struct `mbo::types::OpaqueValue` an `OpaquePtr` with direct access, comparison and hashing which will not allow a nullptr.
 * Added struct `mbo::types::OpaqueContainer` an `OpaqueValue` with direct container access.
 * Changed pre-commit to use clang-format 19.1.6.
+* Added ability to construct Extended types from conversions (`ConstructFromConversions`).
+* Removed support for type marker `MboTypesExtendDoNotPrintFieldNames`.
 
 # 0.3.0
 

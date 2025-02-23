@@ -2,7 +2,7 @@ diff --git a/MODULE.bazel b/MODULE.bazel
 index c298a32..658794e 100644
 --- a/MODULE.bazel
 +++ b/MODULE.bazel
-@@ -18,8 +18,8 @@ module(name = "helly25_mbo", version = "0.3.0", repo_name = "com_helly25_mbo")
+@@ -18,8 +18,8 @@ module(name = "helly25_mbo", version = "0.4.0", repo_name = "com_helly25_mbo")
  
  # For local development we include LLVM and Hedron-Compile-Commands.
  # For bazelmod usage these have to be provided by the main module - if necessary.
@@ -17,10 +17,10 @@ diff --git a/mbo/mope/mope.bzl b/mbo/mope/mope.bzl
 index d80d788..7aeac41 100644
 --- a/mbo/mope/mope.bzl
 +++ b/mbo/mope/mope.bzl
-@@ -34,7 +34,7 @@ load("//mbo/diff:diff.bzl", "diff_test")
- #    b) `$(which "clang_format")`
- #    c) `clang-format-19` ... `clang-format-14`
- #    d) If even (d) fails, then we will just copy the file.
+@@ -35,7 +35,7 @@ load("//mbo/diff:diff.bzl", "diff_test")
+ #    c) `$(which "clang_format")`
+ #    d) `clang-format-23` ... `clang-format-15`, `clang-format`
+ #    e) If even (d) fails, then we will just copy the file.
 -_CLANG_FORMAT_BINARY = ""  # Ignore clang-format from repo with: "clang-format-auto"
 +_CLANG_FORMAT_BINARY = "clang-format-auto"  # Ignore clang-format from repo with: "clang-format-auto"
  

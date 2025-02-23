@@ -30,10 +30,11 @@ load("//mbo/diff:diff.bzl", "diff_test")
 #    Otherwise use `@llvm_toolchain_llvm//:bin/clang-format`.
 # 3) If the resulting value is `clang-format-auto` (or the above result is not found or not
 #    executable), then the rule tries to find the tool:
-#    a) `${LLVM_PATH}/bin/clang-format`
-#    b) `$(which "clang_format")`
-#    c) `clang-format-19` ... `clang-format-14`
-#    d) If even (d) fails, then we will just copy the file.
+#    a) clang-format found through `toolchains_llvm` in bazel's external directory
+#    b) `${LLVM_PATH}/bin/clang-format` (requires additional patching to pass down the environment variable).
+#    c) `$(which "clang_format")`
+#    d) `clang-format-23` ... `clang-format-15`, `clang-format`
+#    e) If even (d) fails, then we will just copy the file.
 _CLANG_FORMAT_BINARY = ""  # Ignore clang-format from repo with: "clang-format-auto"
 
 def _get_clang_format(ctx):
@@ -68,13 +69,16 @@ def _clang_format_impl(ctx, src, dst):
             CLANG_FORMAT="{clang_format}"
             if [ "{clang_format}" == "clang-format-auto" ] || [ ! -x "${{CLANG_FORMAT}}" ]; then
                 declare -a CLANG_FORMAT_LOCATIONS=(
+                    # Bazel workspaces
                     "external/llvm_toolchain_llvm/bin/clang-format"
                     "external/llvm_toolchain/bin/clang-format"
+                    # Bazel modules < 8
                     "external/toolchains_llvm~~llvm~llvm_toolchain_llvm/bin/clang-format"
                     "external/toolchains_llvm~~llvm~llvm_toolchain_llvm_llvm/bin/clang-format"
+                    # Bazel modules >= 8
                     "external/toolchains_llvm++llvm+llvm_toolchain_llvm/bin/clang-format"
                     "external/toolchains_llvm++llvm+llvm_toolchain_llvm_llvm/bin/clang-format"
-                    "${{LLVM_PATH}}/bin/clang-format"
+                    "${{LLVM_PATH}}/bin/clang-format"  # Requires additional env var pass through.
                     "$(which clang-format-23)"
                     "$(which clang-format-22)"
                     "$(which clang-format-21)"

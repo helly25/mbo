@@ -29,8 +29,7 @@ namespace mbo::diff {
 
 // Creates the unified line-by-line diff between `lhs_text` and `rhs_text`.
 //
-// `lhs_name` and `rhs_name` are used as the file names in the diff headers,
-// `context_size` is ignored (TODO implement).
+// `lhs_name` and `rhs_name` are used as the file names in the diff headers.
 //
 // If left and right are identical, returns an empty string.
 //
