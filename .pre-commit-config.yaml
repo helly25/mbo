@@ -19,6 +19,36 @@ repos:
             .*[.]patch
           )
 
+- repo: local
+  hooks:
+  - id: mope-uses-external-clang
+    name: mope-uses-external-clang
+    description: |
+      File //mbo/mope/mope.bzl can be configured to find clang-format automatically.
+      However, the repo version must set `_CLANG_FORMAT_BINARY = ""` so that it uses
+      the repo provided version which does not work for Bazel module use.
+    language: pygrep
+    entry: _CLANG_FORMAT_BINARY\s+=\s+"[^"]+"
+    files: mbo/mope/mope.bzl
+  - id: uncomment-bazelmod-includes
+    name: uncomment-bazelmod-includes
+    description: |
+      The repo version of MODULE.bazel may not have commented out includes.
+    language: pygrep
+    entry: \s*#\s*include
+    files: MODULE.bazel
+  - id: bazelmod-patch-applies
+    name: bazelmod-patch-applies
+    description: |
+      The patch in bazelmod/bazelmod.patch can be applied
+    language: system
+    entry: patch
+    args: ["-p1", "--dry-run", "-i", "bazelmod/bazelmod.patch"]
+    pass_filenames: False
+    types: [text]
+
+
+
 - repo: https://github.com/pre-commit/mirrors-clang-format
   rev: v19.1.6
   hooks:

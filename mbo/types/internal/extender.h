@@ -27,6 +27,7 @@
 
 #include "mbo/types/traits.h"  // IWYU pragma: keep
 #include "mbo/types/tuple.h"   // IWYU pragma: keep
+#include "mbo/types/tuple_extras.h"
 
 namespace mbo::types {
 
@@ -56,12 +57,31 @@ struct ExtendBase {
     return Type{{}, std::forward<Args>(args)...};
   }
 
+  // Construct from separate arguments that must be convertible (1:1 in order) to the field types.
+  // Effectively calling `T(FieldType<N>(args<N>)...)`.
+  template<typename... Args>
+  requires TupleFieldsConstructible<
+      std::tuple<Args...>,
+      decltype(std::declval<const ExtendBase<ActualType>&>().ToTuple())>
+  static Type ConstructFromConversions(Args&&... args) {
+    return ConstructFromConversionsImpl(
+        std::make_index_sequence<sizeof...(Args)>{}, std::make_tuple(std::forward<Args>(args)...));
+  }
+
  protected:  // DO NOT expose anything publicly.
   auto ToTuple() const & { return StructToTuple(static_cast<const ActualType&>(*this)); }
 
   auto ToTuple() && { return StructToTuple(std::move(*this)); }
 
  private:  // DO NOT expose anything publicly.
+  template<std::size_t... Idx, typename... Args>
+  static Type ConstructFromConversionsImpl(std::index_sequence<Idx...>, std::tuple<Args...>&& args) {
+    using FieldTypes = decltype(std::declval<const ExtendBase<ActualType>&>().ToTuple());
+    using ArgTypes = std::tuple<Args...>;
+    return ConstructFromArgs(std::remove_cvref_t<std::tuple_element_t<Idx, FieldTypes>>(
+        std::forward<std::tuple_element_t<Idx, ArgTypes>>(std::get<Idx>(args)))...);
+  }
+
   template<typename U, typename Extender>
   friend struct UseExtender;
   friend class Stringify;

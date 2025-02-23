@@ -89,6 +89,25 @@ concept HasVariantMember =
     ::mbo::types::CanCreateTuple<T>
     && types_internal::HasVariantMemberImpl<decltype(::mbo::types::StructToTuple(std::declval<T>()))>;
 
+namespace types_internal {
+
+template<typename Fields, typename Args, typename IS>
+struct TupleFieldsConstructibleImpl;
+
+template<typename Fields, typename Args, std::size_t... Idx>
+struct TupleFieldsConstructibleImpl<Fields, Args, std::index_sequence<Idx...>>
+    : std::bool_constant<(
+          std::constructible_from<std::tuple_element_t<Idx, Fields>, std::tuple_element_t<Idx, Args>> && ...)> {};
+
+}  // namespace types_internal
+
+// Determine whether each element in `Fields` can be constructed from their `Args` counterpart.
+template<typename Fields, typename Args>
+concept TupleFieldsConstructible =
+    IsTuple<Fields> && IsTuple<Args> && std::tuple_size_v<Fields> == std::tuple_size_v<Args>
+    && types_internal::TupleFieldsConstructibleImpl<Fields, Args, std::make_index_sequence<std::tuple_size_v<Fields>>>::
+        value;
+
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_TUPLE_EXTRAS_H_

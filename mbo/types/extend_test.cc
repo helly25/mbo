@@ -913,8 +913,6 @@ TEST_F(ExtendTest, FromTupleToStrings) {
     std::string two;
   };
 
-  // TODO(helly25): This should work as test `FromTupleToConversions` where `static constexpr std::string_view` converts
-  // to the string fields.
   const std::string str1{"a"};
   const std::string str2{"b"};
   {
@@ -931,12 +929,26 @@ TEST_F(ExtendTest, FromTupleToStrings) {
   }
 }
 
+TEST_F(ExtendTest, FromConversions) {
+  // You cannot directly initialize a std::string field with a std::string_view value, a conversion is needed.
+  struct TestStruct : Extend<TestStruct> {
+    std::string one;
+    std::string two;
+  };
+
+  constexpr std::string_view sv1{"aa"};
+  constexpr std::string_view sv2{"bb"};
+  {
+    const auto val2 = TestStruct::ConstructFromConversions(sv1, sv2);
+    static_assert((std::same_as<std::remove_cvref_t<decltype(val2)>, TestStruct>));
+    EXPECT_THAT(val2.one, sv1);
+    EXPECT_THAT(val2.two, sv2);
+  }
+}
+
 TEST_F(ExtendTest, MoveOnlyFromTuple) {
   static constexpr int kInt1{25};
   static constexpr int kInt2{33};
-  // TODO(helly25): Cases 1 and 3 entail a conversion from int to MoveOnly which does not work yet.
-  // const auto val1 = UseMoveOnly::FromTuple(std::make_tuple(kInt1, kInt2));
-  // static_assert((std::same_as<std::remove_cvref_t<decltype(val1)>, UseMoveOnly>));
   {
     const auto val2 = UseMoveOnly::ConstructFromTuple(std::make_tuple(MoveOnly(kInt1), MoveOnly(kInt2)));
     static_assert((std::same_as<std::remove_cvref_t<decltype(val2)>, UseMoveOnly>));

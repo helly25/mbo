@@ -173,17 +173,10 @@ concept IsFieldNameContainer = requires(const T& field_names) {
   { std::data(field_names)[1] } -> std::convertible_to<std::string_view>;
 };
 
-// TODO(helly25): Drop in version 0.3.0+
-template<typename T>
-concept Has_DEPRECATED_MboTypesExtendDoNotPrintFieldNames =
-    requires { typename std::remove_cvref_t<T>::MboTypesExtendDoNotPrintFieldNames; };
-
 // Whether Stringify should suppress field names.
 template<typename T>
-concept HasMboTypesStringifyDoNotPrintFieldNames = Has_DEPRECATED_MboTypesExtendDoNotPrintFieldNames<T> || requires {
-  // TODO(helly25): Drop `Has_DEPRECATED_MboTypesExtendDoNotPrintFieldNames`, see above
-  typename std::remove_cvref_t<T>::MboTypesStringifyDoNotPrintFieldNames;
-};
+concept HasMboTypesStringifyDoNotPrintFieldNames =
+    requires { typename std::remove_cvref_t<T>::MboTypesStringifyDoNotPrintFieldNames; };
 
 // This breaks `MboTypesStringifyOptions` lookup within this namespace.
 void MboTypesStringifyOptions();  // Has no implementation!
