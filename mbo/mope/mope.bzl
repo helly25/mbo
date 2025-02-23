@@ -33,8 +33,8 @@ load("//mbo/diff:diff.bzl", "diff_test")
 #    a) `${LLVM_PATH}/bin/clang-format`
 #    b) `$(which "clang_format")`
 #    c) `clang-format-19` ... `clang-format-14`
-#    d) `clang-format` will lastly be picked as a fallback.
-CLANG_FORMAT_BINARY = ""  # Ignore clang-format from repo with: "clang-format-auto"
+#    d) If even (d) fails, then we will just copy the file.
+_CLANG_FORMAT_BINARY = ""  # Ignore clang-format from repo with: "clang-format-auto"
 
 def _get_clang_format(ctx):
     """Get the selected clang-format from `--//mbo/mope:clang_format` bazel flag."""
@@ -54,11 +54,12 @@ def _clang_format_impl(ctx, src, dst):
     Returns:
       The output file.
     """
+    execution_requirements = {"no-sandbox": "1"} if _CLANG_FORMAT_BINARY else {}
     clang_config = ctx.files._clang_format_config[0]
-    clang_format_tool = [] if CLANG_FORMAT_BINARY else [ctx.executable._clang_format_tool]
+    clang_format_tool = [] if _CLANG_FORMAT_BINARY else [ctx.executable._clang_format_tool]
     clang_format = _get_clang_format(ctx)
     if not clang_format:
-        clang_format = ctx.attr._clang_format_tool if CLANG_FORMAT_BINARY else ctx.executable._clang_format_tool.path
+        clang_format = ctx.attr._clang_format_tool if _CLANG_FORMAT_BINARY else ctx.executable._clang_format_tool.path
     ctx.actions.run_shell(
         outputs = [dst],
         inputs = [src, clang_config] + clang_format_tool,
@@ -66,44 +67,47 @@ def _clang_format_impl(ctx, src, dst):
         command = """
             CLANG_FORMAT="{clang_format}"
             if [ "{clang_format}" == "clang-format-auto" ] || [ ! -x "${{CLANG_FORMAT}}" ]; then
-                if [ -x "external/llvm_toolchain_llvm/bin/clang-format" ]; then
-                    CLANG_FORMAT="external/llvm_toolchain_llvm/bin/clang-format"
-                elif [ -x "${{LLVM_PATH}}/bin/clang-format" ]; then
-                    CLANG_FORMAT="${{LLVM_PATH}}/bin/clang-format"
-                elif [ $(which "clang_format") ]; then
-                    CLANG_FORMAT="clang_format"
-                elif [ $(which "clang-format-23") ]; then
-                    CLANG_FORMAT="clang-format-23"
-                elif [ $(which "clang-format-22") ]; then
-                    CLANG_FORMAT="clang-format-22"
-                elif [ $(which "clang-format-21") ]; then
-                    CLANG_FORMAT="clang-format-21"
-                elif [ $(which "clang-format-20") ]; then
-                    CLANG_FORMAT="clang-format-20"
-                elif [ $(which "clang-format-19") ]; then
-                    CLANG_FORMAT="clang-format-19"
-                elif [ $(which "clang-format-18") ]; then
-                    CLANG_FORMAT="clang-format-18"
-                elif [ $(which "clang-format-17") ]; then
-                    CLANG_FORMAT="clang-format-17"
-                elif [ $(which "clang-format-16") ]; then
-                    CLANG_FORMAT="clang-format-16"
-                elif [ $(which "clang-format-15") ]; then
-                    CLANG_FORMAT="clang-format-15"
-                elif [ $(which "clang-format-14") ]; then
-                    CLANG_FORMAT="clang-format-14"
-                else
-                    CLANG_FORMAT="clang-format"
-                fi;
+                declare -a CLANG_FORMAT_LOCATIONS=(
+                    "external/llvm_toolchain_llvm/bin/clang-format"
+                    "external/llvm_toolchain/bin/clang-format"
+                    "external/toolchains_llvm~~llvm~llvm_toolchain_llvm/bin/clang-format"
+                    "external/toolchains_llvm~~llvm~llvm_toolchain_llvm_llvm/bin/clang-format"
+                    "external/toolchains_llvm++llvm+llvm_toolchain_llvm/bin/clang-format"
+                    "external/toolchains_llvm++llvm+llvm_toolchain_llvm_llvm/bin/clang-format"
+                    "${{LLVM_PATH}}/bin/clang-format"
+                    "$(which clang-format-23)"
+                    "$(which clang-format-22)"
+                    "$(which clang-format-21)"
+                    "$(which clang-format-20)"
+                    "$(which clang-format-19)"
+                    "$(which clang-format-18)"
+                    "$(which clang-format-17)"
+                    "$(which clang-format-16)"
+                    "$(which clang-format-15)"
+                    "$(which clang_format)"
+                )
+                CLANG_FORMAT=
+                for CLANG_FORMAT_LOCATION in "${{CLANG_FORMAT_LOCATIONS[@]}}"; do
+                    if [ -x "${{CLANG_FORMAT_LOCATION}}" ]; then
+                        CLANG_FORMAT="${{CLANG_FORMAT_LOCATION}}"
+                        echo "INFO: ClangFormat: $(${{CLANG_FORMAT}} --version): ${{CLANG_FORMAT}}"
+                        break
+                    fi
+                done
             fi;
-            # Must cat (<), so that --assume-filename works, so that incldue order gets correct.
-            ${{CLANG_FORMAT}} \\
-                --assume-filename={assume_filename} \\
-                --fallback-style={fallback_style} \\
-                --sort-includes={sort_includes} \\
-                --style=file:{clang_config} \\
-                --Werror \\
-                < {src} > {dst} || (echo "CLANG($("${{CLANG_FORMAT}}" --version)) = '${{CLANG_FORMAT}}'" ; false)
+            if [ -n "${{CLANG_FORMAT}}" ]; then
+                # Must cat (<), so that --assume-filename works, so that incldue order gets correct.
+                ${{CLANG_FORMAT}} \\
+                    --assume-filename={assume_filename} \\
+                    --fallback-style={fallback_style} \\
+                    --sort-includes={sort_includes} \\
+                    --style=file:{clang_config} \\
+                    --Werror \\
+                    < {src} > {dst} || (echo "CLANG($("${{CLANG_FORMAT}}" --version)) = '${{CLANG_FORMAT}}'" ; false)
+            else
+                echo "WARNING: No clang-format found for: {dst}" > /dev/stderr
+                cp {src} {dst}
+            fi;
             """.format(
             assume_filename = dst.short_path.removesuffix(".gen"),
             clang_format = clang_format,
@@ -113,6 +117,7 @@ def _clang_format_impl(ctx, src, dst):
             sort_includes = "1" if ctx.attr.sort_includes else "0",
             src = src.path,
         ),
+        execution_requirements = execution_requirements,
         mnemonic = "ClangFormat",
         progress_message = "Clang-Format on file: %s" % (src.path),
         use_default_shell_env = True,
@@ -129,8 +134,8 @@ _clang_format_common_attrs = {
     ),
     "_clang_format_tool": attr.string(
         doc = "The target of the clang-format executable.",
-        default = CLANG_FORMAT_BINARY if type(CLANG_FORMAT_BINARY) == "string" else "clang-format-auto",
-    ) if CLANG_FORMAT_BINARY else attr.label(
+        default = _CLANG_FORMAT_BINARY or "clang-format-auto",
+    ) if _CLANG_FORMAT_BINARY else attr.label(
         doc = "The target of the clang-format executable.",
         default = Label("@llvm_toolchain_llvm//:bin/clang-format"),
         allow_single_file = True,

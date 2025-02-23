@@ -5,9 +5,19 @@ repos:
   - id: check-merge-conflict
   - id: check-yaml
   - id: end-of-file-fixer
-    exclude: ^mbo/diff/tests/numbers_blanks.*$
+    exclude: |
+          (?x)(
+            ^mbo/diff/tests/abc_whitespace.*$|
+            ^mbo/diff/tests/numbers_blanks.*|
+            .*[]].patch
+          )
   - id: trailing-whitespace
-    exclude: ^mbo/diff/tests/abc_whitespace.*$
+    exclude: |
+          (?x)(
+            ^mbo/diff/tests/abc_whitespace.*$|
+            ^mbo/diff/tests/numbers_blanks.*|
+            .*[.]patch
+          )
 
 - repo: https://github.com/pre-commit/mirrors-clang-format
   rev: v19.1.6
