@@ -40,3 +40,5 @@ common:clang --cxxopt=-gmlt
 common:clang --host_cxxopt=-gmlt
 common:clang --linkopt=-fuse-ld=lld
 common:clang --host_linkopt=-fuse-ld=lld
+
+common:github_ci_macos --repository_cache=~/.cache/bazel/repo-cache/ --output_user_root=~/.cache/bazel
