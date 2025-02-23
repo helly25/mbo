@@ -120,5 +120,7 @@ jobs:
       - name: Test native/Fastbuild
         run: |
           # Use WORKSPACE
+
+          # Set the output cache to the same value Linux is using, so we can safely use the same in actions/cache
           CACHE_ROOT=~/.cache/bazel
           bazel --output_user_root="${CACHE_ROOT}" test --repository_cache="${CACHE_ROOT}/repo-cache" --noenable_bzlmod --enable_workspace -c fastbuild //...
