@@ -120,4 +120,5 @@ jobs:
       - name: Test native/Fastbuild
         run: |
           # Use WORKSPACE
-          bazel test --noenable_bzlmod --enable_workspace --config=github_ci_macos -c fastbuild //...
+          CACHE_ROOT=~/.cache/bazel
+          bazel --output_user_root="${CACHE_ROOT}" test --repository_cache="${CACHE_ROOT}/repo-cache" --noenable_bzlmod --enable_workspace -c fastbuild //...
