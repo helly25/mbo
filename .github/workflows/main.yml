@@ -12,7 +12,7 @@ jobs:
       - uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
 
-  test-clang-asan:
+  test-ubuntu-clang-asan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,13 +25,13 @@ jobs:
         uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: bazel-cache-clang-asan
+            key: bazel-cache-ubuntu-clang-asan
 
       - name: Test Clang/ASAN
         run: |
           bazel test --enable_bzlmod --noenable_workspace --config=clang --config=asan -c dbg //...
 
-  test-clang-17:
+  test-ubuntu-clang-17:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -44,15 +44,16 @@ jobs:
         uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: bazel-cache-clang-17
+            key: bazel-cache-ubuntu-clang-17
 
       - name: Test Clang 17
         run: |
-          sed -e 's,llvm_version = ".*",llvm_version = "17.0.4",g' MODULE.bazel > MODULE.bazel.bak
-          mv MODULE.bazel.bak MODULE.bazel
+          CONTROL_FILE=bazelmod/llvm.MODULE.bazel
+          sed -e 's,llvm_version = ".*",llvm_version = "17.0.4",g' "${CONTROL_FILE}" > "${CONTROL_FILE}.bak"
+          mv "${CONTROL_FILE}.bak" "${CONTROL_FILE}"
           bazel test --enable_bzlmod --noenable_workspace --config=clang -c fastbuild //...
 
-  test-clang-opt:
+  test-ubuntu-clang-opt:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -65,13 +66,13 @@ jobs:
         uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: bazel-cache-clang-opt
+            key: bazel-cache-ubuntu-clang-opt
 
       - name: Test Clang/OPT
         run: |
           bazel test --enable_bzlmod --noenable_workspace --config=clang -c opt //...
 
-  test-gcc-fastbuild:
+  test-ubuntu-gcc-fastbuild:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -84,9 +85,29 @@ jobs:
         uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: bazel-cache-gcc-fastbuild
+            key: bazel-cache-ubuntu-gcc-fastbuild
 
       - name: Test GCC/Fastbuild
         run: |
           # Use WORKSPACE
           CC=gcc bazel test --noenable_bzlmod --enable_workspace -c fastbuild //...
+
+  test-macos-native-fastbuild:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Bazel cache
+        uses: actions/cache@v4
+        with:
+            path: "~/.cache/bazel"
+            key: bazel-cache-macos-native-fastbuild
+
+      - name: Test native/Fastbuild
+        run: |
+          # Use WORKSPACE
+          bazel test --noenable_bzlmod --enable_workspace -c fastbuild //...
