@@ -40,14 +40,12 @@ repos:
   - id: bazelmod-patch-applies
     name: bazelmod-patch-applies
     description: |
-      The patch in bazelmod/bazelmod.patch can be applied
+      The patch in .bcr/patches/bazelmod.patch can be applied
     language: system
     entry: patch
-    args: ["-p1", "--dry-run", "-i", "bazelmod/bazelmod.patch"]
+    args: ["-p1", "--dry-run", "-fi", ".bcr/patches/bazelmod.patch"]
     pass_filenames: False
     types: [text]
-
-
 
 - repo: https://github.com/pre-commit/mirrors-clang-format
   rev: v19.1.6
