@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Rules mope() and mope(test).
+"""Rules mope() and mope_test().
 
 * Rule `mope` takes one or more `srcs` and produces matching `outs`.
 
