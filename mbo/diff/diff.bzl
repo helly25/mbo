@@ -156,22 +156,18 @@ fi
 _diff_test = rule(
     attrs = {
         "failure_message": attr.string(),
-        "file_old": attr.label(
-            allow_single_file = True,
-            doc = "The old (left) file of the comparison.",
-            mandatory = True,
-        ),
         "file_new": attr.label(
             allow_single_file = True,
             doc = "The new (right) file of the comparison.",
             mandatory = True,
         ),
+        "file_old": attr.label(
+            allow_single_file = True,
+            doc = "The old (left) file of the comparison.",
+            mandatory = True,
+        ),
         "ignore_all_space": attr.bool(
             doc = "Ignore all leading, trailing, and consecutive internal whitespace changes.",
-            default = False,
-        ),
-        "ignore_consecutive_space": attr.bool(
-            doc = "Ignore all whitespace changes, even if one line has whitespace where the other line has none.",
             default = False,
         ),
         "ignore_blank_lines": attr.bool(
@@ -180,6 +176,10 @@ _diff_test = rule(
         ),
         "ignore_case": attr.bool(
             doc = "Whether to ignore letter case.",
+            default = False,
+        ),
+        "ignore_consecutive_space": attr.bool(
+            doc = "Ignore all whitespace changes, even if one line has whitespace where the other line has none.",
             default = False,
         ),
         "ignore_matching_chunks": attr.bool(

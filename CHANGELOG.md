@@ -1,3 +1,7 @@
+# 0.4.1
+
+* Added load statements for all cc_binary, cc_library, cc_test functions in all bazel files.
+
 # 0.4.0
 
 * Added function `mbo::strings::BigNumber`: Convert integral number to string with thousands separator.

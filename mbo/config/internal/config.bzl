@@ -24,8 +24,8 @@ def _config_gen_impl(ctx):
         template = ctx.file.template,
         output = ctx.outputs.output,
         substitutions = {
-            "kUnrollMaxCapacityDefault = 16;": "kUnrollMaxCapacityDefault = " + repr(limited_ordered_max_unroll_capacity) + ";",
             "kRequireThrows = false;": "kRequireThrows = " + repr(require_throws).lower() + ";",
+            "kUnrollMaxCapacityDefault = 16;": "kUnrollMaxCapacityDefault = " + repr(limited_ordered_max_unroll_capacity) + ";",
         },
     )
 

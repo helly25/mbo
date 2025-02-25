@@ -128,9 +128,18 @@ def _clang_format_impl(ctx, src, dst):
     )
 
 _clang_format_common_attrs = {
+    "sort_includes": attr.bool(
+        doc = "Passes --sort-includes to clang-tidy tool if True.",
+        default = True,
+    ),
     "_clang_fallback_style": attr.string(
         doc = "The fllback stype to pass to clang-format, e.g. 'None' or 'Google'.",
         default = "Google",
+    ),
+    "_clang_format_config": attr.label(
+        doc = "The `.clang-format` file.",
+        default = Label("//:clang-format"),
+        allow_single_file = [".clang-format"],
     ),
     "_clang_format_flag": attr.label(
         doc = "The flag for the clang-format executable.",
@@ -145,15 +154,6 @@ _clang_format_common_attrs = {
         allow_single_file = True,
         executable = True,
         cfg = "exec",
-    ),
-    "_clang_format_config": attr.label(
-        doc = "The `.clang-format` file.",
-        default = Label("//:clang-format"),
-        allow_single_file = [".clang-format"],
-    ),
-    "sort_includes": attr.bool(
-        doc = "Passes --sort-includes to clang-tidy tool if True.",
-        default = True,
     ),
 }
 
