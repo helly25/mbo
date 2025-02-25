@@ -16,32 +16,35 @@
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
-  name = "ini_file_cc",
-  srcs = ["ini_file.cc"],
-  hdrs = ["ini_file.h"],
-  deps = [
-    "//mbo/file:file_cc",
-    "//mbo/status:status_macros_cc",
-    "@com_google_absl//absl/container:btree",
-    "@com_google_absl//absl/log:absl_log",
-    "@com_google_absl//absl/status",
-    "@com_google_absl//absl/status:statusor",
-  ],
-  visibility = ["//visibility:public"],
+    name = "ini_file_cc",
+    srcs = ["ini_file.cc"],
+    hdrs = ["ini_file.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mbo/file:file_cc",
+        "//mbo/status:status_macros_cc",
+        "@com_google_absl//absl/container:btree",
+        "@com_google_absl//absl/log:absl_log",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+    ],
 )
 
 cc_test(
-  name = "ini_file_test",
-  srcs = ["ini_file_test.cc"],
-  data = glob(["tests/*.golden", "tests/*.ini"]),
-  deps = [
-    "ini_file_cc",
-    "//mbo/diff:unified_diff_cc",
-    "//mbo/file:artefact_cc",
-    "//mbo/file:file_cc",
-    "//mbo/testing:runfiles_dir_cc",
-    "//mbo/testing:status_cc",
-    "@com_google_absl//absl/log:initialize",
-    "@com_google_googletest//:gtest_main",
-  ],
+    name = "ini_file_test",
+    srcs = ["ini_file_test.cc"],
+    data = glob([
+        "tests/*.golden",
+        "tests/*.ini",
+    ]),
+    deps = [
+        "ini_file_cc",
+        "//mbo/diff:unified_diff_cc",
+        "//mbo/file:artefact_cc",
+        "//mbo/file:file_cc",
+        "//mbo/testing:runfiles_dir_cc",
+        "//mbo/testing:status_cc",
+        "@com_google_absl//absl/log:initialize",
+        "@com_google_googletest//:gtest_main",
+    ],
 )

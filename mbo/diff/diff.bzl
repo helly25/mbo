@@ -76,7 +76,6 @@ def diff_test(
         **kwargs
     )
 
-
 def _runfiles_path(f):
     if f.root.path:
         return f.path[len(f.root.path) + 1:]  # generated file

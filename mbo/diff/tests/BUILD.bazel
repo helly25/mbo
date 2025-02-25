@@ -22,87 +22,87 @@ package(default_visibility = ["//visibility:private"])
 bzl_library(
     name = "diff_test_test_bzl",
     srcs = ["diff_test_test.bzl"],
+    visibility = ["//visibility:private"],
     deps = [
         "//mbo/diff:diff_bzl",
         "@bazel_skylib//lib:shell",
     ],
-    visibility = ["//visibility:private"],
 )
 
 diff_test(
     name = "diff_equal_test",
-    file_old = "abc.txt",
     file_new = "abc.txt",
+    file_old = "abc.txt",
 )
 
 diff_test_test(
     name = "abc_axc_diff_test",
     expected_diff = "abc_axc.diff.txt",
-    file_old = "abc.txt",
     file_new = "axc.txt",
+    file_old = "abc.txt",
 )
 
 diff_test(
     name = "diff_ignore_matching_lines_test",
-    file_old = "abc.txt",
     file_new = "axc.txt",
+    file_old = "abc.txt",
     ignore_matching_lines = "[bx]",
 )
 
 diff_test(
     name = "abc_comments_equal_test",
-    file_old = "abc.txt",
     file_new = "abc_comments.txt",
-    strip_comments = '#',
+    file_old = "abc.txt",
+    strip_comments = "#",
 )
 
 diff_test_test(
     name = "abc_axc_comments_diff_test",
     expected_diff = "abc_axc_comments.diff.txt",
-    file_old = "abc.txt",
     file_new = "axc_comments.txt",
+    file_old = "abc.txt",
 )
 
 diff_test_test(
     name = "abc_axc_comments_stripped_diff_test",
     expected_diff = "abc_axc_comments_stripped.diff.txt",
-    file_old = "abc.txt",
     file_new = "axc_comments.txt",
+    file_old = "abc.txt",
     strip_comments = "#",
 )
 
 diff_test(
     name = "abc_ignore_case_diff_test",
-    file_old = "abc.txt",
     file_new = "abc_caps.txt",
+    file_old = "abc.txt",
     ignore_case = True,
 )
 
 diff_test_test(
     name = "abc_caps_diff_test",
     expected_diff = "abc_caps.diff.txt",
-    file_old = "abc.txt",
     file_new = "abc_caps.txt",
+    file_old = "abc.txt",
 )
 
 diff_test_test(
     name = "abc_whitespace_diff_test",
     expected_diff = "abc_whitespace.diff.txt",
-    file_old = "abc.txt",
     file_new = "abc_whitespace.txt",
+    file_old = "abc.txt",
 )
 
 diff_test(
     name = "abc_ignore_all_space_diff_test",
-    file_old = "abc.txt",
     file_new = "abc_no_whitespace.txt",
+    file_old = "abc.txt",
     ignore_all_space = True,
 )
 
 diff_test(
     name = "abc_ignore_consecutive_space_diff_test",
-    file_old = "abc.txt",
     file_new = "abc_whitespace.txt",
+    file_old = "abc.txt",
     ignore_consecutive_space = True,
 )
 
@@ -113,37 +113,37 @@ diff_test_test(
     # the same as the former.
     name = "abc_ignore_all_vs_consecutive_space_diff_test",
     expected_diff = "abc_all_vs_consecutive_space.diff.txt",
-    file_old = "abc.txt",
     file_new = "abc_no_whitespace.txt",
+    file_old = "abc.txt",
     ignore_consecutive_space = True,
 )
 
 diff_test_test(
     name = "abc_ignore_space_change_diff_test",
     expected_diff = "abc_ignore_space_change.diff.txt",
-    file_old = "abc.txt",
     file_new = "abc_whitespace.txt",
+    file_old = "abc.txt",
     ignore_space_change = True,
 )
 
 diff_test(
     name = "numbers_ignore_blank_lines_diff_test",
-    file_old = "numbers.txt",
     file_new = "numbers_blanks.txt",
+    file_old = "numbers.txt",
     ignore_blank_lines = True,
 )
 
 diff_test_test(
     name = "numbers_blanks_diff_test",
     expected_diff = "numbers_blanks.diff.txt",
-    file_old = "numbers.txt",
     file_new = "numbers_blanks.txt",
+    file_old = "numbers.txt",
 )
 
 diff_test_test(
     name = "numbers_blnanks_plus_diff_test",
     expected_diff = "numbers_blanks_plus.diff.txt",
-    file_old = "numbers.txt",
     file_new = "numbers_blanks_plus.txt",
+    file_old = "numbers.txt",
     ignore_blank_lines = True,
 )

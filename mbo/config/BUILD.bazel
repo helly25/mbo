@@ -40,9 +40,9 @@ bzl_library(
 
 config_gen(
     name = "config_gen",
-    visibility = ["//visibility:private"],
     output = "config.h",
     template = "internal/config.h.in",
+    visibility = ["//visibility:private"],
 )
 
 cc_library(
@@ -54,9 +54,9 @@ cc_library(
 cc_library(
     name = "require_cc",
     hdrs = ["require.h"],
+    visibility = ["//mbo:__subpackages__"],
     deps = [
         ":config_cc",
         "@com_google_absl//absl/log:absl_log",
     ],
-    visibility = ["//mbo:__subpackages__"],
 )

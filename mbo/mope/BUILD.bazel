@@ -33,6 +33,7 @@ cc_library(
     name = "ini_cc",
     srcs = ["ini.cc"],
     hdrs = ["ini.h"],
+    visibility = ["//visibility:public"],
     deps = [
         ":mope_cc",
         "//mbo/file/ini:ini_file_cc",
@@ -40,18 +41,18 @@ cc_library(
         "@com_google_absl//absl/container:btree",
         "@com_google_absl//absl/strings",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "mope_cc",
     srcs = ["mope.cc"],
     hdrs = ["mope.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "//mbo/container:any_scan_cc",
-        "//mbo/types:extend_cc",
         "//mbo/status:status_macros_cc",
         "//mbo/strings:parse_cc",
+        "//mbo/types:extend_cc",
         "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:node_hash_map",
@@ -63,7 +64,6 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_googlesource_code_re2//:re2",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_binary(
@@ -94,6 +94,6 @@ mope_test(
 bzl_library(
     name = "mope_bzl",
     srcs = ["mope.bzl"],
-    deps = ["//mbo/diff:diff_bzl"],
     visibility = ["//visibility:public"],
+    deps = ["//mbo/diff:diff_bzl"],
 )

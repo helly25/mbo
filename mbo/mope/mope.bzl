@@ -265,7 +265,7 @@ _mope_attrs = {
     ),
     "outs": attr.output_list(
         doc = "List of generated file(s). This must match srcs by matching the basenames without extensions (" +
-                "e.g. a template `foo.cc.tpl` must have an output `foo.cc`).",
+              "e.g. a template `foo.cc.tpl` must have an output `foo.cc`).",
         mandatory = True,
     ),
     "srcs": attr.label_list(
@@ -301,8 +301,7 @@ def mope_test(
         data = [],
         clang_format = False,
         args = [],
-        **kwargs
-    ):
+        **kwargs):
     """Run mope over all `srcs` and compare the results with `outs`.
 
     Args:

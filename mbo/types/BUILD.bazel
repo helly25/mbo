@@ -271,8 +271,8 @@ cc_library(
     name = "tstring_cc",
     srcs = ["tstring.h"],
     hdrs = ["tstring.h"],
-    deps = ["//mbo/hash:hash_cc"],
     visibility = ["//visibility:public"],
+    deps = ["//mbo/hash:hash_cc"],
 )
 
 cc_test(

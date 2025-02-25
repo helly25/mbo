@@ -31,30 +31,31 @@ cc_library(
     name = "file_cc",
     srcs = ["file.cc"],
     hdrs = ["file.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/time",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(
     name = "file_test",
+    size = "small",
     srcs = ["file_test.cc"],
     deps = [
         "file_cc",
         "//mbo/testing:status_cc",
         "@com_google_googletest//:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
     name = "glob_cc",
     srcs = ["glob.cc"],
     hdrs = ["glob.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "//mbo/status:status_macros_cc",
         "//mbo/strings:split_cc",
@@ -69,11 +70,11 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_googlesource_code_re2//:re2",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(
     name = "glob_test",
+    size = "small",
     srcs = ["glob_test.cc"],
     deps = [
         ":glob_cc",
@@ -83,7 +84,6 @@ cc_test(
         "@com_google_googletest//:gtest_main",
         "@com_googlesource_code_re2//:re2",
     ],
-    size = "small",
 )
 
 cc_binary(
@@ -93,5 +93,5 @@ cc_binary(
         ":glob_cc",
         "//mbo/strings:numbers_cc",
         "@com_google_absl//absl/status",
-    ]
+    ],
 )
