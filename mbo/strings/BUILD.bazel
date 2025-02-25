@@ -13,26 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
     name = "indent_cc",
     srcs = ["indent.cc"],
     hdrs = ["indent.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/strings",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(
     name = "indent_test",
+    size = "small",
     srcs = ["indent_test.cc"],
     deps = [
         "indent_cc",
         "@com_google_googletest//:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -58,6 +60,7 @@ cc_library(
     name = "parse_cc",
     srcs = ["parse.cc"],
     hdrs = ["parse.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "//mbo/status:status_macros_cc",
         "@com_google_absl//absl/log:absl_check",
@@ -65,11 +68,11 @@ cc_library(
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(
     name = "parse_test",
+    size = "small",
     srcs = ["parse_test.cc"],
     deps = [
         ":parse_cc",
@@ -78,7 +81,6 @@ cc_test(
         "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -102,14 +104,14 @@ cc_library(
     name = "strip_cc",
     srcs = ["strip.cc"],
     hdrs = ["strip.h"],
-    deps =[
+    visibility = ["//visibility:public"],
+    deps = [
         ":parse_cc",
         "//mbo/status:status_macros_cc",
         "//mbo/testing:status_cc",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(

@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
 cc_library(
     name = "any_scan_cc",
     hdrs = ["any_scan.h"],
@@ -146,8 +148,9 @@ cc_test(
 
 cc_binary(
     name = "limited_set_benchmark",
-    visibility = ["//visibility:private"],
     srcs = ["limited_set_benchmark.cc"],
+    tags = ["manual"],
+    visibility = ["//visibility:private"],
     deps = [
         ":limited_set_cc",
         ":limited_vector_cc",
@@ -156,7 +159,6 @@ cc_binary(
         "@com_google_absl//absl/log:initialize",
         "@com_google_absl//absl/strings",
     ],
-    tags = ["manual"],
 )
 
 cc_library(

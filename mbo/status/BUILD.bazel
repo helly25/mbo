@@ -13,18 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
     name = "status_builder_cc",
     srcs = ["status_builder.cc"],
     hdrs = ["status_builder.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(
@@ -42,11 +44,11 @@ cc_test(
 cc_library(
     name = "status_cc",
     hdrs = ["status.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(
@@ -64,13 +66,13 @@ cc_test(
 cc_library(
     name = "status_macros_cc",
     hdrs = ["status_macros.h"],
+    visibility = ["//visibility:public"],
     deps = [
         ":status_builder_cc",
         ":status_cc",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("//mbo/mope:mope.bzl", "mope_test")
 
 package(default_visibility = ["//mbo/types:__pkg__"])
@@ -94,7 +95,7 @@ mope_test(
         # We can identifify the compiler with a `#if...` but decide here whether
         # we want to add the Clang specific part at all.
         # See details in mbo/types/internal/decompose_count.h.mope
-        "--set=use_clang:enabled,:max_fields=40"
+        "--set=use_clang:enabled,:max_fields=40",
     ],
     clang_format = True,
 )

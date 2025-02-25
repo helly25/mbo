@@ -14,6 +14,7 @@
 # limitations under the License.
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -83,8 +84,8 @@ cc_test(
 bzl_library(
     name = "diff_bzl",
     srcs = ["diff.bzl"],
+    visibility = ["//visibility:public"],
     deps = [
         "@bazel_skylib//lib:shell",
     ],
-    visibility = ["//visibility:public"],
 )

@@ -13,49 +13,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
     name = "matchers_cc",
     hdrs = ["matchers.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "//mbo/types:traits_cc",
         "@com_google_googletest//:gtest",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(
     name = "matchers_test",
+    size = "small",
     srcs = ["matchers_test.cc"],
     deps = [
         ":matchers_cc",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
     name = "runfiles_dir_cc",
+    testonly = True,
     srcs = ["runfiles_dir.cc"],
     hdrs = ["runfiles_dir.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "//mbo/file:file_cc",
         "//mbo/status:status_macros_cc",
+        "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/log:absl_check",
-        "@com_google_absl//absl/status:status",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
-        "@bazel_tools//tools/cpp/runfiles",
     ],
-    testonly = True,
-    visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "status_cc",
     hdrs = ["status.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "//mbo/status:status_cc",
         "//mbo/status:status_macros_cc",
@@ -64,11 +67,11 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(
     name = "status_test",
+    size = "small",
     srcs = ["status_test.cc"],
     deps = [
         ":status_cc",
@@ -76,5 +79,4 @@ cc_test(
         "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
-    size = "small",
 )

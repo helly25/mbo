@@ -15,23 +15,26 @@
 
 """Package that contains logging related functionality."""
 
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
     name = "log_timing_cc",
     srcs = ["log_timing.cc"],
     hdrs = ["log_timing.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/time",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(
     name = "log_timing_test",
+    size = "small",
     srcs = ["log_timing_test.cc"],
     deps = [
         "log_timing_cc",
@@ -42,5 +45,4 @@ cc_test(
         "@com_google_absl//absl/time",
         "@com_google_googletest//:gtest_main",
     ],
-    size = "small",
 )
