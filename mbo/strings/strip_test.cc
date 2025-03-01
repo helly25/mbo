@@ -15,6 +15,10 @@
 
 #include "mbo/strings/strip.h"
 
+#include <string>
+#include <string_view>
+#include <utility>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/status/status_macros.h"
@@ -23,9 +27,36 @@
 namespace mbo::strings {
 namespace {
 
-using mbo::testing::IsOkAndHolds;
+using ::mbo::testing::IsOkAndHolds;
+using ::testing::Pair;
 
 struct StripTest : public ::testing::Test {};
+
+TEST_F(StripTest, ConsumePrefix) {
+  auto test_prefix = [](std::string text, std::string_view prefix) {
+    return std::pair<bool, std::string>{ConsumePrefix(text, prefix), text};
+  };
+  EXPECT_THAT(test_prefix("", ""), Pair(true, ""));
+  EXPECT_THAT(test_prefix("", "foo"), Pair(false, ""));
+  EXPECT_THAT(test_prefix("foo", "foo"), Pair(true, ""));
+  EXPECT_THAT(test_prefix("foo", "oo"), Pair(false, "foo"));
+  EXPECT_THAT(test_prefix("foo", ""), Pair(true, "foo"));
+  EXPECT_THAT(test_prefix("foo", "fooo"), Pair(false, "foo"));
+  EXPECT_THAT(test_prefix("foobar", "foo"), Pair(true, "bar"));
+}
+
+TEST_F(StripTest, ConsumeSuffix) {
+  const auto test_suffix = [](std::string text, std::string_view suffix) {
+    return std::pair<bool, std::string>{ConsumeSuffix(text, suffix), text};
+  };
+  EXPECT_THAT(test_suffix("", ""), Pair(true, ""));
+  EXPECT_THAT(test_suffix("", "foo"), Pair(false, ""));
+  EXPECT_THAT(test_suffix("foo", "foo"), Pair(true, ""));
+  EXPECT_THAT(test_suffix("foo", "f"), Pair(false, "foo"));
+  EXPECT_THAT(test_suffix("foo", ""), Pair(true, "foo"));
+  EXPECT_THAT(test_suffix("foo", "fooo"), Pair(false, "foo"));
+  EXPECT_THAT(test_suffix("foobar", "bar"), Pair(true, "foo"));
+}
 
 TEST_F(StripTest, Simple) {
   // clang-format off
