@@ -37,13 +37,22 @@ repos:
     language: pygrep
     entry: \s*#\s*include
     files: MODULE.bazel
-  - id: bazelmod-patch-applies
-    name: bazelmod-patch-applies
+  - id: bcr-bazelmod-patch-applies
+    name: bcr-bazelmod-patch-applies
     description: |
       The patch in .bcr/patches/bazelmod.patch can be applied
     language: system
     entry: patch
     args: ["-p1", "--dry-run", "-fi", ".bcr/patches/bazelmod.patch"]
+    pass_filenames: False
+    types: [text]
+  - id: github-bazelmod-patch-applies
+    name: github-bazelmod-patch-applies
+    description: |
+      The patch in .github/workflows/bazelmod.patch can be applied
+    language: system
+    entry: patch
+    args: ["-p1", "--dry-run", "-fi", ".github/workflows/bazelmod.patch"]
     pass_filenames: False
     types: [text]
 

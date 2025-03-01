@@ -24,6 +24,24 @@
 
 namespace mbo::strings {
 
+// Like `absl::ConsumePrefix` but works for `std::string`.
+[[nodiscard]] inline bool ConsumePrefix(std::string& text, std::string_view prefix) {
+  if (!text.starts_with(prefix)) {
+    return false;
+  }
+  text.erase(0, prefix.size());
+  return true;
+}
+
+// Like `absl::ConsumeSuffix` but works for `std::string`.
+[[nodiscard]] inline bool ConsumeSuffix(std::string& text, std::string_view suffix) {
+  if (!text.ends_with(suffix)) {
+    return false;
+  }
+  text.resize(text.size() - suffix.size());
+  return true;
+}
+
 // Splits the given `input` into multiple lines and then per line removes anything starting from
 // `comment_start` to the end of the line.
 //

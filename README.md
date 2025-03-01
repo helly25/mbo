@@ -111,6 +111,9 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/strings:split_cc, mbo/strings/split.h
         * struct `mbo::strings::AtLast`: Allows `absl::StrSplit' to split on the last occurrence of a separator.
     * mbo/strings:strip_cc, mbo/strings/strip.h
+        * function `ConsumePrefix`: Removes a prefix from a `std::string` (like `absl::ConsumePrefix`).
+        * Function `ConsumeSuffix`: Removes a suffix from a `std::string` (like `absl::ConsumeSuffix`).
+
         * struct `StripCommentsArgs`: Arguments for `StripComments` and `StripLineComments`.
         * function `StripComments`: Strips comments from lines.
         * function `StripLineComments`: Strips comments from a single line.
