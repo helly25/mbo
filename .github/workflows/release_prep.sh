@@ -49,7 +49,7 @@ SHA256="$(shasum -a 256 "${ARCHIVE}" | awk '{print $1}')"
 echo "Version ${TAG}, see [changelog](https://github.com/helly25/mbo/blob/${TAG}/CHANGELOG.md)"
 
 # Print Changelog
-cat CHANGELOG.md | awk '/#/{f+=1;if(f>1)exit} !/#/{print}'
+cat CHANGELOG.md | awk '/^#/{f+=1;if(f>1)exit} !/^#/{print}'
 
 cat << EOF
 # For Bazel WORKSPACE
