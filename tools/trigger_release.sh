@@ -14,3 +14,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+set -euo pipefail
+
+BAZELMOD_VERSION="$(cat MODULE.bazel | sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p'|head -n1)"
+CHANGELOG_VERSION="$(cat CHANGELOG.md | sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p'|head -n1)"
+
+if [ "${BAZELMOD_VERSION}" != "${CHANGELOG_VERSION}" ]; then
+  echo "ERROR: MODULE.bazel (${BAZELMOD_VERSION}) != CHANGELOG.md (${CHANGELOG_VERSION})."
+  exit 1
+fi
+
+VERSION="${BAZELMOD_VERSION}"
+
+grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
+
+git tag -s -a "${VERSION}"
+git push origin --tags
