@@ -81,6 +81,11 @@ jobs:
         run: |
           declare -a BAZEL_INIT=()
           declare -a BAZEL_ARGS=()
+          if [ "${{ matrix.os }}" == "macos-latest" ]; then
+            CACHE_ROOT=~/.cache/bazel
+            BAZEL_INIT+=("--output_user_root=${CACHE_ROOT}")
+            BAZEL_ARGS+=("--repository_cache=${CACHE_ROOT}/repo-cache")
+          fi
           if [ "${{ matrix.bazel_config }}" == "asan" ]; then
             BAZEL_ARGS+=("-c" "dbg" "--config=asan")
           fi
@@ -95,9 +100,6 @@ jobs:
             sed -e 's,llvm_version = ".*",llvm_version = "${{ matrix.llvm_version }}",g' "${CONTROL_FILE}" > "${CONTROL_FILE}.new"
             mv "${CONTROL_FILE}.new" "${CONTROL_FILE}"
           fi
-          if [ "${{ matrix.os }}" == "macos-latest" ]; then
-            CACHE_ROOT=~/.cache/bazel
-            BAZEL_INIT+="--output_user_root=${CACHE_ROOT}"
-            BAZEL_ARGS+="--repository_cache=${CACHE_ROOT}/repo-cache"
-          fi
+          echo "Init: ${BAZEL_INIT[@]}"
+          echo "Args: ${BAZEL_ARGS[@]}"
           bazel "${BAZEL_INIT[@]}" test --enable_bzlmod --noenable_workspace --config=clang "${BAZEL_ARGS[@]}" //...
