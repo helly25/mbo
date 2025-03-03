@@ -2,6 +2,8 @@
 
 * Tweaked automated release tooling.
 * Use matrix for merge testing that verifies various GCC and Clang setups.
+* Fixed `mbo::types::ContainerProxy` for GCC opt builds (issue with aliasing interpretation).
+* Added `mbo::strings::StripPrefix` and `mbo::strings::StripSuffix` for temp `std::string&&`.
 
 # 0.4.1
 

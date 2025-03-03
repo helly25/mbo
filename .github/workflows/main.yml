@@ -46,7 +46,7 @@ jobs:
           bazel test --noenable_bzlmod --enable_workspace -c ${{ matrix.bazel_mode }} //...
 
   test:
-    needs: [pre-commit, test-gcc]
+    needs: [pre-commit] #, test-gcc]
     continue-on-error: true
     strategy:
       matrix:
@@ -105,4 +105,5 @@ jobs:
             OUTPUT_USE_ROOT=
             REPOSITORY_CACHE=
           fi
+          echo "bazel ${OUTPUT_USE_ROOT} test --enable_bzlmod --noenable_workspace ${REPOSITORY_CACHE} --config=clang ${BAZEL_MODE} ${BAZEL_CONFIG} //...""
           bazel ${OUTPUT_USE_ROOT} test --enable_bzlmod --noenable_workspace ${REPOSITORY_CACHE} --config=clang ${BAZEL_MODE} ${BAZEL_CONFIG} //...
