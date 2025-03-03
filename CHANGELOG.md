@@ -1,3 +1,7 @@
+# 0.4.2
+
+* Tweaked automated release tooling.
+
 # 0.4.1
 
 * Added load statements for all cc_binary, cc_library, cc_test functions in all bazel files.

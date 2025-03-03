@@ -9,7 +9,7 @@ repos:
           (?x)(
             ^mbo/diff/tests/abc_whitespace.*$|
             ^mbo/diff/tests/numbers_blanks.*|
-            .*[]].patch
+            .*[.]patch
           )
   - id: trailing-whitespace
     exclude: |
@@ -55,6 +55,15 @@ repos:
     args: ["-p1", "--dry-run", "-fi", ".github/workflows/bazelmod.patch"]
     pass_filenames: False
     types: [text]
+  - id: compare-versions
+    name: compare-versions
+    description: |
+      Compare the versions in CHANGELOG.md and MODULES.bazel.
+    language: system
+    entry: .pre-commit/check_version.sh
+    pass_filenames: False
+    types: [text]
+
 
 - repo: https://github.com/keith/pre-commit-buildifier
   rev: 8.0.1

@@ -226,11 +226,15 @@ In addition some Bazel macros are implemented that are not direct part of the li
 
 # Installation and requirements
 
-This repository requires a C++20 compiler (in case of MacOS XCode 15 is needed).
+This repository requires a C++20 compiler (in case of MacOS XCode 15 is needed). This is done so that newer features like `std::source_location` can be used.
 
-This is done so that newer features like `std::source_location` can be used.
+The project only comes with a Bazel BUILD.bazel file and can be added to other Bazel projects.
 
-The project only comes with a Bazel BUILD.bazel file and can be added to other Bazel projects. Checkout [Releases](https://github.com/helly25/mbo/releases) or use head ref as follows:
+The project is formatted with specific clang-format settings which require clang 16+ (in case of MacOs LLVM 16+ can be installed using brew). For simplicity in dev mode the project pulls the appropriate clang tools and can be compiled with those tools using `bazel [build|test] --config=clang ...`.
+
+## WORKSPACE
+
+Checkout [Releases](https://github.com/helly25/mbo/releases) or use head ref as follows:
 
 ```
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
@@ -242,7 +246,13 @@ http_archive(
 )
 ```
 
-The project is formatted with specific clang-format settings which require clang 16+ (in case of MacOs LLVM 16+ can be installed using brew).
+## MODULES.bazel
+
+Check [Releases](https://github.com/helly25/mbo/releases) for details. All that is needed is a `bazel_dep` instruction with the correct version.
+
+```
+bazel_dep(name = "helly25_mbo", version = "0.0.0")
+```
 
 # Presentations
 

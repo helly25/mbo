@@ -11,7 +11,6 @@ common --apple_platform_type=macos
 # Allow platform specific control and add the missing 'CoreFoundation' lib.
 common --enable_platform_specific_config
 common:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
-# --linkopt=-Wl,-undefined,error
 
 # Define absl=1 to tell googletest to use absl for backtrace.
 common --define absl=1

@@ -27,7 +27,7 @@ if [ "${BAZELMOD_VERSION}" != "${TAG}" ]; then
   exit 1
 fi
 if [ "${CHANGELOG_VERSION}" != "${TAG}" ]; then
-  echo "ERROR: Tag = '${TAG}' does not match version = '${CHANGELOG_VERSION}' in WORKSPACE."
+  echo "ERROR: Tag = '${TAG}' does not match version = '${CHANGELOG_VERSION}' in CHANGELOG.md."
   exit 1
 fi
 
@@ -36,8 +36,7 @@ fi
 
 # Apply patches
 for patch in "${PATCHES[@]}"; do
-  echo "Patching ${patch}."
-  patch -p 1 <"${patch}"
+  patch -s -p 1 <"${patch}" >
 done
 
 # Build the archive
@@ -46,33 +45,34 @@ git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}"
 SHA256="$(shasum -a 256 "${ARCHIVE}" | awk '{print $1}')"
 
 # Print header
-echo "Version ${TAG}, see [changelog](https://github.com/helly25/mbo/blob/${TAG}/CHANGELOG.md)"
+echo "# Version ${TAG}"
+echo "## [Changelog](https://github.com/helly25/${PACKAGE_NAME}/blob/${TAG}/CHANGELOG.md)"
 
 # Print Changelog
 cat CHANGELOG.md | awk '/^#/{f+=1;if(f>1)exit} !/^#/{print}'
 
 cat << EOF
-# For Bazel WORKSPACE
+## For Bazel WORKSPACE
 
 \`\`\`
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
   name = "${WORKSPACE_NAME}",
-  url = "https://github.com/helly25/mbo/releases/download/${TAG}/${ARCHIVE}",
+  url = "https://github.com/helly25/${PACKAGE_NAME}/releases/download/${TAG}/${ARCHIVE}",
   sha256 = "${SHA256}",
 )
 \`\`\`
 
-# For Bazel MODULES.bazel
+## For Bazel MODULES.bazel
 
 \`\`\`
 bazel_dep(name = "${BAZELMOD_NAME}", version = "${TAG}")
 \`\`\`
 
-## Using the provided LLVM
+### Using the provided LLVM
 
-Copy [llvm.MODULE.bazel](https://github.com/helly25/mbo/blob/main/bazelmod/llvm.MODULE.bazel) to your repository's root directory and add the following line to your MODULES.bazel file or paste the whole contents into it.
+Copy [llvm.MODULE.bazel](https://github.com/helly25/${PACKAGE_NAME}/blob/main/bazelmod/llvm.MODULE.bazel) to your repository's root directory and add the following line to your MODULES.bazel file or paste the whole contents into it.
 
 \`\`\`
 include("//:llvm.MODULE.bazel")
