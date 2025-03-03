@@ -36,7 +36,8 @@ fi
 
 # Apply patches
 for patch in "${PATCHES[@]}"; do
-  patch -s -p 1 <"${patch}" >
+  echo "Patching ${patch}."
+  patch -s -p 1 <"${patch}"
 done
 
 # Build the archive
