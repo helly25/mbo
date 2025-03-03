@@ -19,6 +19,7 @@ jobs:
         os: [ubuntu-latest]
         compiler: [gcc]
         gcc_version: [11, 12, 13]
+        bazel_mode: [opt]
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -31,19 +32,18 @@ jobs:
       - uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: ${{ runner.os }}-gcc_opt-${{github.ref}}-${{ github.sha }}
+            key: ${{ matrix.os }}-${{ matrix.compiler }}${ matrix.gcc_version }}${{ matrix.bazel_mode }}-${{github.ref}}-${{ github.sha }}
             restore-keys: |
-                ${{ runner.os }}-gcc_opt-${{github.ref}}-
-                ${{ runner.os }}-gcc_opt-refs/heads/main-
-                ${{ runner.os }}-gcc_opt-
+                ${{ matrix.os }}-${{ matrix.compiler }}${ matrix.gcc_version }}${{ matrix.bazel_mode }}-${{github.ref}}-
+                ${{ matrix.os }}-${{ matrix.compiler }}${ matrix.gcc_version }}${{ matrix.bazel_mode }}-refs/heads/main-
+                ${{ matrix.os }}-${{ matrix.compiler }}${ matrix.gcc_version }}${{ matrix.bazel_mode }}-
 
       - name: Test
         run: |
           # Use WORKSPACE
-          echo "CC: ${CC}, CXX: ${CXX}"
-          ${CC} --version
-          ${CXX} --version
-          bazel test --noenable_bzlmod --enable_workspace -c opt //...
+          CC=/usr/local/bin/gcc
+          CXX=/usr/local/bin/g++
+          bazel test --noenable_bzlmod --enable_workspace -c ${{ matrix.bazel_mode }} //...
 
   test:
     needs: [pre-commit, test-ubuntu-gcc-opt]
