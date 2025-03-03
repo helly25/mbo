@@ -12,9 +12,8 @@ jobs:
       - uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
 
-  test-ubuntu-gcc-opt:
+  test-gcc:
     needs: pre-commit
-    continue-on-error: true
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -33,22 +32,21 @@ jobs:
       - uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: ${{ matrix.os }}-${{ matrix.compiler }}${ matrix.gcc_version }}${{ matrix.bazel_mode }}-${{github.ref}}-${{ github.sha }}
+            key: ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-${{github.ref}}-${{ github.sha }}
             restore-keys: |
-                ${{ matrix.os }}-${{ matrix.compiler }}${ matrix.gcc_version }}${{ matrix.bazel_mode }}-${{github.ref}}-
-                ${{ matrix.os }}-${{ matrix.compiler }}${ matrix.gcc_version }}${{ matrix.bazel_mode }}-refs/heads/main-
-                ${{ matrix.os }}-${{ matrix.compiler }}${ matrix.gcc_version }}${{ matrix.bazel_mode }}-
+                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-${{github.ref}}-
+                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-refs/heads/main-
+                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-
 
       - name: Test
         run: |
           # Use WORKSPACE
           export CC=/usr/local/bin/gcc
           export CXX=/usr/local/bin/g++
-          ${CC} --version
           bazel test --noenable_bzlmod --enable_workspace -c ${{ matrix.bazel_mode }} //...
 
   test:
-    needs: [pre-commit, test-ubuntu-gcc-opt]
+    needs: [pre-commit, test-gcc]
     continue-on-error: true
     strategy:
       matrix:

@@ -1,6 +1,7 @@
 # 0.4.2
 
 * Tweaked automated release tooling.
+* Use matrix for merge testing that verifies various GCC and Clang setups.
 
 # 0.4.1
 
