@@ -67,9 +67,15 @@ struct ContainerProxy : T {
   using C = std::remove_cvref_t<Container>;
   using CC = const C;
 
-  constexpr auto& Get() { return (static_cast<T*>(this)->*GetMutable)(); }
+  constexpr auto& Get() {
+    T* self = static_cast<T*>(this);
+    return (self->*GetMutable)();
+  }
 
-  constexpr const auto& Get() const { return (static_cast<const T*>(this)->*GetConst)(); }
+  constexpr const auto& Get() const {
+    const T* self = static_cast<const T*>(this);
+    return (self->*GetConst)();
+  }
 
  public:
   using size_type = typename C::size_type;
