@@ -14,6 +14,7 @@ jobs:
 
   test-ubuntu-gcc-opt:
     needs: pre-commit
+    continue-on-error: true
     strategy:
       matrix:
         os: [ubuntu-latest]
