@@ -81,7 +81,6 @@ jobs:
         run: |
           declare -a BAZEL_INIT=()
           declare -a BAZEL_ARGS=()
-          bazel test --enable_bzlmod --noenable_workspace --config=clang --config=asan -c dbg //...
           if [ "${{ matrix.bazel_config }}" == "asan" ]; then
             BAZEL_ARGS+=("-c" "dbg" "--config=asan")
           fi
@@ -101,6 +100,4 @@ jobs:
             BAZEL_INIT+="--output_user_root=${CACHE_ROOT}"
             BAZEL_ARGS+="--repository_cache=${CACHE_ROOT}/repo-cache"
           fi
-          echo "Init: ${BAZEL_INIT[@]}"
-          echo "Args: ${BAZEL_ARGS[@]}"
           bazel "${BAZEL_INIT[@]}" test --enable_bzlmod --noenable_workspace --config=clang "${BAZEL_ARGS[@]}" //...
