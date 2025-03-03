@@ -14,10 +14,20 @@ jobs:
 
   test-ubuntu-gcc-opt:
     needs: pre-commit
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        compiler: [gcc]
+        gcc_version: [11, 12, 13]
+
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: bazelbuild/setup-bazelisk@v3
+      - uses: egor-tensin/setup-gcc@v1
+        with:
+          version: ${{ matrix.gcc_version }}
+          platform: x64
       - uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
@@ -27,10 +37,13 @@ jobs:
                 ${{ runner.os }}-gcc_opt-refs/heads/main-
                 ${{ runner.os }}-gcc_opt-
 
-      - name: Test GCC/Workspace/Opt
+      - name: Test
         run: |
           # Use WORKSPACE
-          CC=gcc bazel test --noenable_bzlmod --enable_workspace -c opt //...
+          echo "CC: ${CC}, CXX: ${CXX}"
+          ${CC} --version
+          ${CXX} --version
+          bazel test --noenable_bzlmod --enable_workspace -c opt //...
 
   test:
     needs: [pre-commit, test-ubuntu-gcc-opt]
