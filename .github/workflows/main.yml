@@ -82,16 +82,16 @@ jobs:
           declare -a BAZEL_INIT=()
           declare -a BAZEL_ARGS=()
           bazel test --enable_bzlmod --noenable_workspace --config=clang --config=asan -c dbg //...
-          if [ "${{ matrix.bazel_config}}" == "asan" ]; then
+          if [ "${{ matrix.bazel_config }}" == "asan" ]; then
             BAZEL_ARGS+=("-c" "dbg" "--config=asan")
           fi
-          if [ "${{ matrix.bazel_config}}" == "opt" ]; then
+          if [ "${{ matrix.bazel_config }}" == "opt" ]; then
             BAZEL_ARGS+=("-c" "opt")
           fi
-          if [ "${{ matrix.bazel_config}}" == "fastbuild" ]; then
+          if [ "${{ matrix.bazel_config }}" == "fastbuild" ]; then
             BAZEL_ARGS+=("-c" "fastbuild")
           fi
-          if [ "${{ matrix.llvm_version}}" != "19.1.6" ]; then
+          if [ "${{ matrix.llvm_version }}" != "19.1.6" ]; then
             CONTROL_FILE=bazelmod/llvm.MODULE.bazel
             sed -e 's,llvm_version = ".*",llvm_version = "${{ matrix.llvm_version }}",g' "${CONTROL_FILE}" > "${CONTROL_FILE}.new"
             mv "${CONTROL_FILE}.new" "${CONTROL_FILE}"
@@ -101,4 +101,6 @@ jobs:
             BAZEL_INIT+="--output_user_root=${CACHE_ROOT}"
             BAZEL_ARGS+="--repository_cache=${CACHE_ROOT}/repo-cache"
           fi
+          echo "Init: ${BAZEL_INIT[@]}"
+          echo "Args: ${BAZEL_ARGS[@]}"
           bazel "${BAZEL_INIT[@]}" test --enable_bzlmod --noenable_workspace --config=clang "${BAZEL_ARGS[@]}" //...
