@@ -46,7 +46,7 @@ jobs:
           bazel test --noenable_bzlmod --enable_workspace -c ${{ matrix.bazel_mode }} //...
 
   test:
-    needs: [pre-commit] #, test-gcc]
+    needs: [pre-commit, test-gcc]
     continue-on-error: true
     strategy:
       matrix:
@@ -100,6 +100,4 @@ jobs:
             sed -e 's,llvm_version = ".*",llvm_version = "${{ matrix.llvm_version }}",g' "${CONTROL_FILE}" > "${CONTROL_FILE}.new"
             mv "${CONTROL_FILE}.new" "${CONTROL_FILE}"
           fi
-          echo "Init: ${BAZEL_INIT[@]}"
-          echo "Args: ${BAZEL_ARGS[@]}"
           bazel "${BAZEL_INIT[@]}" test --enable_bzlmod --noenable_workspace --config=clang "${BAZEL_ARGS[@]}" //...
