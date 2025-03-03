@@ -18,7 +18,7 @@
 load("//bzl:archive.bzl", "github_archive", "http_archive")
 
 # buildifier: disable=unnamed-macro
-def mbo_workspace_load_modules():
+def workspace_load_modules():
     """Loads all modules requred by the workspace."""
 
     http_archive(

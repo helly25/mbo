@@ -12,115 +12,92 @@ jobs:
       - uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
 
-  test-ubuntu-clang-asan:
-    runs-on: ubuntu-latest
+  test-gcc:
+    needs: pre-commit
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        compiler: [gcc]
+        gcc_version: [11, 12, 13]
+        bazel_mode: [opt]
+
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bazelisk
-        uses: bazelbuild/setup-bazelisk@v3
-
-      - name: Bazel cache
-        uses: actions/cache@v4
+      - uses: actions/checkout@v4
+      - uses: bazelbuild/setup-bazelisk@v3
+      - uses: egor-tensin/setup-gcc@v1
+        with:
+          version: ${{ matrix.gcc_version }}
+          platform: x64
+      - uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: ${{ runner.os }}-clang_asan-${{ github.sha }}
+            key: ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-${{github.ref}}-${{ github.sha }}
             restore-keys: |
-                ${{ runner.os }}-clang_asan-
+                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-${{github.ref}}-
+                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-refs/heads/main-
+                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-
 
-      - name: Test Clang/ASAN
-        run: |
-          bazel test --enable_bzlmod --noenable_workspace --config=clang --config=asan -c dbg //...
-
-  test-ubuntu-clang-17:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bazelisk
-        uses: bazelbuild/setup-bazelisk@v3
-
-      - name: Bazel cache
-        uses: actions/cache@v4
-        with:
-            path: "~/.cache/bazel"
-            key: ${{ runner.os }}-clang_17-${{ github.sha }}
-            restore-keys: |
-                ${{ runner.os }}-clang_17-
-
-      - name: Test Clang 17
-        run: |
-          CONTROL_FILE=bazelmod/llvm.MODULE.bazel
-          sed -e 's,llvm_version = ".*",llvm_version = "17.0.4",g' "${CONTROL_FILE}" > "${CONTROL_FILE}.bak"
-          mv "${CONTROL_FILE}.bak" "${CONTROL_FILE}"
-          bazel test --enable_bzlmod --noenable_workspace --config=clang -c fastbuild //...
-
-  test-ubuntu-clang-opt:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bazelisk
-        uses: bazelbuild/setup-bazelisk@v3
-
-      - name: Bazel cache
-        uses: actions/cache@v4
-        with:
-            path: "~/.cache/bazel"
-            key: ${{ runner.os }}-clang_opt-${{ github.sha }}
-            restore-keys: |
-                ${{ runner.os }}-clang_opt-
-
-      - name: Test Clang/OPT
-        run: |
-          bazel test --enable_bzlmod --noenable_workspace --config=clang -c opt //...
-
-  test-ubuntu-gcc-fastbuild:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bazelisk
-        uses: bazelbuild/setup-bazelisk@v3
-
-      - name: Bazel cache
-        uses: actions/cache@v4
-        with:
-            path: "~/.cache/bazel"
-            key: ${{ runner.os }}-gcc_fastbuild-${{ github.sha }}
-            restore-keys: |
-                ${{ runner.os }}-gcc_fastbuild-
-
-      - name: Test GCC/Fastbuild
+      - name: Test
         run: |
           # Use WORKSPACE
-          CC=gcc bazel test --noenable_bzlmod --enable_workspace -c fastbuild //...
+          export CC=/usr/local/bin/gcc
+          export CXX=/usr/local/bin/g++
+          bazel test --noenable_bzlmod --enable_workspace -c ${{ matrix.bazel_mode }} //...
 
-  test-macos-native-fastbuild:
-    runs-on: macos-latest
+  test:
+    needs: [pre-commit, test-gcc]
+    continue-on-error: true
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        compiler: [clang]
+        llvm_version: [19.1.6, 17.0.4]
+        bazel_config: [asan, opt, fastbuild]
+        exclude:
+          - os: macos-latest
+            bazel_config: asan
+          - os: macos-latest
+            bazel_config: fastbuild
+          - llvm_version: 17.0.4
+            bazel_config: asan
+          - llvm_version: 17.0.4
+            bazel_config: fastbuild
+
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bazelisk
-        uses: bazelbuild/setup-bazelisk@v3
-
-      - name: Bazel cache
-        uses: actions/cache@v4
+      - uses: actions/checkout@v4
+      - uses: bazelbuild/setup-bazelisk@v3
+      - uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: ${{ runner.os }}-native_fastbuild-${{ github.sha }}
+            key: ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.llvm_version }}${{ matrix.bazel_config }}-${{github.ref}}-${{ github.sha }}
             restore-keys: |
-                ${{ runner.os }}-native_fastbuild-
+                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.llvm_version }}${{ matrix.bazel_config }}-${{github.ref}}-
+                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.llvm_version }}${{ matrix.bazel_config }}-refs/heads/main-
+                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.llvm_version }}${{ matrix.bazel_config }}-
 
-      - name: Test native/Fastbuild
+      - name: Test
         run: |
-          # Use WORKSPACE
-
-          # Set the output cache to the same value Linux is using, so we can safely use the same in actions/cache
-          CACHE_ROOT=~/.cache/bazel
-          bazel --output_user_root="${CACHE_ROOT}" test --repository_cache="${CACHE_ROOT}/repo-cache" --noenable_bzlmod --enable_workspace -c fastbuild //...
+          declare -a BAZEL_INIT=()
+          declare -a BAZEL_ARGS=()
+          if [ "${{ matrix.os }}" == "macos-latest" ]; then
+            CACHE_ROOT=~/.cache/bazel
+            BAZEL_INIT+=("--output_user_root=${CACHE_ROOT}")
+            BAZEL_ARGS+=("--repository_cache=${CACHE_ROOT}/repo-cache")
+          fi
+          if [ "${{ matrix.bazel_config }}" == "asan" ]; then
+            BAZEL_ARGS+=("-c" "dbg" "--config=asan")
+          fi
+          if [ "${{ matrix.bazel_config }}" == "opt" ]; then
+            BAZEL_ARGS+=("-c" "opt")
+          fi
+          if [ "${{ matrix.bazel_config }}" == "fastbuild" ]; then
+            BAZEL_ARGS+=("-c" "fastbuild")
+          fi
+          if [ "${{ matrix.llvm_version }}" != "19.1.6" ]; then
+            CONTROL_FILE=bazelmod/llvm.MODULE.bazel
+            sed -e 's,llvm_version = ".*",llvm_version = "${{ matrix.llvm_version }}",g' "${CONTROL_FILE}" > "${CONTROL_FILE}.new"
+            mv "${CONTROL_FILE}.new" "${CONTROL_FILE}"
+          fi
+          bazel "${BAZEL_INIT[@]}" test --enable_bzlmod --noenable_workspace --config=clang "${BAZEL_ARGS[@]}" //...

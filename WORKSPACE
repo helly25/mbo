@@ -15,12 +15,12 @@
 
 workspace(name = "com_helly25_mbo")
 
-load(":workspace.bzl", "mbo_workspace_load_modules")
+load(":workspace.bzl", "workspace_load_modules")
 
 #load("@bazel_features//:deps.bzl", "bazel_features_deps")
 #bazel_features_deps()
 
-mbo_workspace_load_modules()
+workspace_load_modules()
 
 ###########################################################################
 

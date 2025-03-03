@@ -33,6 +33,13 @@ namespace mbo::strings {
   return true;
 }
 
+[[nodiscard]] inline std::string StripPrefix(std::string&& text, std::string_view prefix) {
+  if (text.starts_with(prefix)) {
+    text.erase(0, prefix.size());
+  }
+  return std::move(text);
+}
+
 // Like `absl::ConsumeSuffix` but works for `std::string`.
 [[nodiscard]] inline bool ConsumeSuffix(std::string& text, std::string_view suffix) {
   if (!text.ends_with(suffix)) {
@@ -40,6 +47,13 @@ namespace mbo::strings {
   }
   text.resize(text.size() - suffix.size());
   return true;
+}
+
+[[nodiscard]] inline std::string StripSuffix(std::string&& text, std::string_view suffix) {
+  if (text.ends_with(suffix)) {
+    text.resize(text.size() - suffix.size());
+  }
+  return std::move(text);
 }
 
 // Splits the given `input` into multiple lines and then per line removes anything starting from

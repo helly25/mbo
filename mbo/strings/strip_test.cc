@@ -34,7 +34,10 @@ struct StripTest : public ::testing::Test {};
 
 TEST_F(StripTest, ConsumePrefix) {
   auto test_prefix = [](std::string text, std::string_view prefix) {
-    return std::pair<bool, std::string>{ConsumePrefix(text, prefix), text};
+    std::string stripped = StripPrefix(std::string{text}, prefix);
+    bool consumed = ConsumePrefix(text, prefix);
+    EXPECT_THAT(stripped, text);
+    return std::pair<bool, std::string>{consumed, text};
   };
   EXPECT_THAT(test_prefix("", ""), Pair(true, ""));
   EXPECT_THAT(test_prefix("", "foo"), Pair(false, ""));
@@ -47,7 +50,10 @@ TEST_F(StripTest, ConsumePrefix) {
 
 TEST_F(StripTest, ConsumeSuffix) {
   const auto test_suffix = [](std::string text, std::string_view suffix) {
-    return std::pair<bool, std::string>{ConsumeSuffix(text, suffix), text};
+    std::string stripped = StripSuffix(std::string{text}, suffix);
+    bool consumed = ConsumeSuffix(text, suffix);
+    EXPECT_THAT(stripped, text);
+    return std::pair<bool, std::string>{consumed, text};
   };
   EXPECT_THAT(test_suffix("", ""), Pair(true, ""));
   EXPECT_THAT(test_suffix("", "foo"), Pair(false, ""));
