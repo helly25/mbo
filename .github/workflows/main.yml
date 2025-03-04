@@ -18,40 +18,25 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
+        bazel_mode: [bzlmod]
         compiler: [gcc]
         gcc_version: [11, 12, 13]
-        bazel_mode: [opt]
+        bazel_config: [opt]
 
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: bazelbuild/setup-bazelisk@v3
-      - uses: egor-tensin/setup-gcc@v1
-        with:
-          version: ${{ matrix.gcc_version }}
-          platform: x64
-      - uses: actions/cache@v4
-        with:
-            path: "~/.cache/bazel"
-            key: ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-${{github.ref}}-${{ github.sha }}
-            restore-keys: |
-                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-${{github.ref}}-
-                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-refs/heads/main-
-                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.gcc_version }}${{ matrix.bazel_mode }}-
+    uses: ./.github/workflows/test.yml
+    with:
+      os: ${{ matrix.os }}
+      bazel_mode: ${{ matrix.bazel_mode }}
+      compiler: ${{ matrix.compiler }}
+      gcc_version: ${{ matrix.gcc_version }}
+      bazel_config: ${{ matrix.bazel_config }}
 
-      - name: Test
-        run: |
-          # Use WORKSPACE
-          export CC=/usr/local/bin/gcc
-          export CXX=/usr/local/bin/g++
-          bazel test --noenable_bzlmod --enable_workspace -c ${{ matrix.bazel_mode }} //...
-
-  test:
+  test_clang:
     needs: [pre-commit, test-gcc]
-    continue-on-error: true
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
+        bazel_mode: [bzlmod]
         compiler: [clang]
         llvm_version: [19.1.6, 17.0.4]
         bazel_config: [asan, opt, fastbuild]
@@ -65,40 +50,10 @@ jobs:
           - llvm_version: 17.0.4
             bazel_config: fastbuild
 
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: bazelbuild/setup-bazelisk@v3
-      - uses: actions/cache@v4
-        with:
-            path: "~/.cache/bazel"
-            key: ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.llvm_version }}${{ matrix.bazel_config }}-${{github.ref}}-${{ github.sha }}
-            restore-keys: |
-                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.llvm_version }}${{ matrix.bazel_config }}-${{github.ref}}-
-                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.llvm_version }}${{ matrix.bazel_config }}-refs/heads/main-
-                ${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.llvm_version }}${{ matrix.bazel_config }}-
-
-      - name: Test
-        run: |
-          declare -a BAZEL_INIT=()
-          declare -a BAZEL_ARGS=()
-          if [ "${{ matrix.os }}" == "macos-latest" ]; then
-            CACHE_ROOT=~/.cache/bazel
-            BAZEL_INIT+=("--output_user_root=${CACHE_ROOT}")
-            BAZEL_ARGS+=("--repository_cache=${CACHE_ROOT}/repo-cache")
-          fi
-          if [ "${{ matrix.bazel_config }}" == "asan" ]; then
-            BAZEL_ARGS+=("-c" "dbg" "--config=asan")
-          fi
-          if [ "${{ matrix.bazel_config }}" == "opt" ]; then
-            BAZEL_ARGS+=("-c" "opt")
-          fi
-          if [ "${{ matrix.bazel_config }}" == "fastbuild" ]; then
-            BAZEL_ARGS+=("-c" "fastbuild")
-          fi
-          if [ "${{ matrix.llvm_version }}" != "19.1.6" ]; then
-            CONTROL_FILE=bazelmod/llvm.MODULE.bazel
-            sed -e 's,llvm_version = ".*",llvm_version = "${{ matrix.llvm_version }}",g' "${CONTROL_FILE}" > "${CONTROL_FILE}.new"
-            mv "${CONTROL_FILE}.new" "${CONTROL_FILE}"
-          fi
-          bazel "${BAZEL_INIT[@]}" test --enable_bzlmod --noenable_workspace --config=clang "${BAZEL_ARGS[@]}" //...
+    uses: ./.github/workflows/test.yml
+    with:
+      os: ${{ matrix.os }}
+      bazel_mode: ${{ matrix.bazel_mode }}
+      compiler: ${{ matrix.compiler }}
+      llvm_version: ${{ matrix.llvm_version }}
+      bazel_config: ${{ matrix.bazel_config }}

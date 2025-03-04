@@ -3,10 +3,6 @@ name: Reusable Test Runner
 on:
   workflow_call:
     inputs:
-      test-name:
-        required: true
-        type: string
-
       os:
         description: 'The operating system the tests will be run on.'
         type: string
