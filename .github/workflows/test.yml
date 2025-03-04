@@ -1,0 +1,93 @@
+name: Reusable Test Runner
+
+on:
+  workflow_call:
+    inputs:
+      continue-on-error:
+        description: 'Whether to continue on error (e.g. prevent parallel matrix operations to stop).'
+        type: boolean
+        default: false
+      os:
+        description: 'The operating system the tests will be run on.'
+        type: string
+        default: ubuntu-latest
+      bazel_mode:
+        description: 'The Bazel operation mode (bzlmod, workspace).'
+        type: string
+        default: bzlmod
+      compiler:
+        description: 'The compiler to use (clang, gcc).'
+        type: string
+        default: clang
+      llvm_version:
+        description: 'The LLVM version to use. This is only for compiler=clang and will be ignored otherwise.'
+        type: string
+        default: 19.1.6
+      gcc_version:
+        description: 'The GCC version to use. This is only for compiler=gcc and will be ignored otherwise (e.g. 11, 12, 13).'
+        type: string
+        default: '11'
+      bazel_config:
+        description: 'The way how Bazel should operate compilation and tests, one of (asan, fastbuild, opt).'
+        type: string
+        default: opt
+
+jobs:
+  test:
+    runs-on: ${{ inputs.os }}
+    continue-on-error: ${{ inputs.continue-on-error }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bazelbuild/setup-bazelisk@v3
+      - uses: egor-tensin/setup-gcc@v1
+        if: ${{ inputs.compiler == 'gcc' }}
+        with:
+          version: ${{ inputs.gcc_version }}
+          platform: x64
+      - uses: actions/cache@v4
+        with:
+            path: "~/.cache/bazel"
+            key: ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-${{github.ref}}-${{ github.sha }}
+            restore-keys: |
+                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-${{github.ref}}-
+                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-refs/heads/main-
+                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-
+      - run: |
+          declare -a BAZEL_INIT=()
+          declare -a BAZEL_ARGS=()
+          if [ "${{ inputs.os }}" == "macos-latest" ]; then
+            CACHE_ROOT=~/.cache/bazel
+            BAZEL_INIT+=("--output_user_root=${CACHE_ROOT}")
+            BAZEL_ARGS+=("--repository_cache=${CACHE_ROOT}/repo-cache")
+          fi
+          if [ "${{ inputs.bazel_mode}}" == "workspace" ]; then
+            BAZEL_ARGS+=("--noenable_bzlmod" "--enable_workspace")
+          elif [ "${{ inputs.bazel_mode}}" == "bzlmod" ]; then
+            BAZEL_ARGS+=("--enable_bzlmod" "--noenable_workspace")
+          else
+            echo "ERROR: Matrix/Input var 'bazel_mode' must be one of [bzlmod, workspace]."
+            exit 1
+          fi
+          if [ "${{ inputs.compiler }}" == "clang" ]; then
+            BAZEL_ARGS+=("--config=clang")
+            if [ "${{ inputs.llvm_version }}" != "19.1.6" ]; then
+              CONTROL_FILE=bazelmod/llvm.MODULE.bazel
+              sed -e 's,llvm_version = ".*",llvm_version = "${{ inputs.llvm_version }}",g' "${CONTROL_FILE}" > "${CONTROL_FILE}.new"
+              mv "${CONTROL_FILE}.new" "${CONTROL_FILE}"
+            fi
+          elif [ "${{ inputs.compiler}}" == "gcc" ]; then
+            export CC=/usr/local/bin/gcc
+            export CXX=/usr/local/bin/g++
+          else
+            echo "ERROR: Matrix/Input var 'compiler' must be one of [clang, gcc]."
+          fi
+          if [ "${{ inputs.bazel_config }}" == "asan" ]; then
+            BAZEL_ARGS+=("-c" "dbg" "--config=asan")
+          elif [ "${{ inputs.bazel_config }}" == "fastbuild" ]; then
+            BAZEL_ARGS+=("-c" "fastbuild")
+          elif [ "${{ inputs.bazel_config }}" == "opt" ]; then
+            BAZEL_ARGS+=("-c" "opt")
+          else
+            echo "ERROR: Matrix/Input var 'bazel_config' must be one of [asan, fastbuild, opt]."
+          fi
+          bazel "${BAZEL_INIT[@]}" test "${BAZEL_ARGS[@]}" //...
