@@ -30,7 +30,6 @@ on:
 
 jobs:
   test:
-    name: Test
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
