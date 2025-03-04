@@ -68,7 +68,7 @@ jobs:
             echo "ERROR: Matrix/Input var 'bazel_mode' must be one of [bzlmod, workspace]."
             exit 1
           fi
-          if [ "${{ inputs.compiler }} " == "clang" ]; then
+          if [ "${{ inputs.compiler }}" == "clang" ]; then
             BAZEL_ARGS+=("--config=clang")
             if [ "${{ inputs.llvm_version }}" != "19.1.6" ]; then
               CONTROL_FILE=bazelmod/llvm.MODULE.bazel
