@@ -22,11 +22,11 @@ on:
       llvm_version:
         description: 'The LLVM version to use. This is only for compiler=clang and will be ignored otherwise.'
         type: string
-        default: 19.1.6
+        default: ''
       gcc_version:
         description: 'The GCC version to use. This is only for compiler=gcc and will be ignored otherwise (e.g. 11, 12, 13).'
         type: string
-        default: '11'
+        default: ''
       bazel_config:
         description: 'The way how Bazel should operate compilation and tests, one of (asan, fastbuild, opt).'
         type: string
@@ -47,11 +47,11 @@ jobs:
       - uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-${{github.ref}}-${{ github.sha }}
+            key: ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-${{github.ref}}-${{ github.sha }}
             restore-keys: |
-                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-${{github.ref}}-
-                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-refs/heads/main-
-                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-
+                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-${{github.ref}}-
+                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-refs/heads/main-
+                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-
       - run: |
           declare -a BAZEL_INIT=()
           declare -a BAZEL_ARGS=()
