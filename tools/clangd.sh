@@ -17,6 +17,36 @@
 
 set -euo pipefail
 
+# The script is meant to be a VSCode wrapper to automatically find the provided
+# clangd. There is a one-time setup: `tools/clangd.sh --setup`.
+
+function die() {
+  echo "ERROR: ${@}"
+  exit 1
+}
+
+if [ ${#} -ge 1 ] && [ "${1}" == "--setup" ]; then
+  if [ "$(realpath "${0}")" != "$(realpath "tools/clangd.sh")" ]; then
+    die "Script must be executed from project base directory."
+  fi
+  if [ -r ".vscode/settings.json" ]; then
+    if [ -z "$(which jq)" ]; then
+      die "The setup requires 'jq'."
+    fi
+    cp .vscode/settings.json .vscode/settings.json.bak
+    if jq -r '."clangd.path" |= "tools/clangd.sh"' .vscode/settings.json.bak > .vscode/settings.json; then
+      rm .vscode/settings.json.bak
+      exit 0
+    else
+      mv .vscode/settings.json.bak .vscode/settings.json
+      die "Script setup failed."
+    fi
+  else
+    cat < <(echo '{\n  "clangd.path": "tools/clangd.sh"\n}') > .vscode/settings.json
+  fi
+  exit 0
+fi
+
 declare -a CLANGD_LOCATIONS=(
   # Bazelmod 8+
   "bazel-bin/external/toolchains_llvm++llvm+llvm_toolchain_llvm_llvm/bin/clangd"
@@ -47,4 +77,4 @@ for CLANGD in "${CLANGD_LOCATIONS[@]}"; do
   fi
 done
 
-die "No clangd was found"
+die "No clangd was found!"
