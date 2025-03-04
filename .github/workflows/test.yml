@@ -3,6 +3,10 @@ name: Reusable Test Runner
 on:
   workflow_call:
     inputs:
+      continue-on-error:
+        description: 'Whether to continue on error (e.g. prevent parallel matrix operations to stop).'
+        type: boolean
+        default: false
       os:
         description: 'The operating system the tests will be run on.'
         type: string
@@ -31,10 +35,12 @@ on:
 jobs:
   test:
     runs-on: ${{ inputs.os }}
+    continue-on-error: ${{ inputs.continue-on-error }}
     steps:
       - uses: actions/checkout@v4
       - uses: bazelbuild/setup-bazelisk@v3
       - uses: egor-tensin/setup-gcc@v1
+        if: ${{ inputs.compiler == 'gcc' }}
         with:
           version: ${{ inputs.gcc_version }}
           platform: x64
