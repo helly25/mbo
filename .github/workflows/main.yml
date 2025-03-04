@@ -58,3 +58,23 @@ jobs:
       compiler: ${{ matrix.compiler }}
       llvm_version: ${{ matrix.llvm_version }}
       bazel_config: ${{ matrix.bazel_config }}
+
+  test-bcr:
+    needs: [pre-commit, test-gcc, test-clang]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        bazel_mode: [bzlmod]
+        compiler: [clang]
+        llvm_version: [19.1.6]
+        bazel_config: [opt]
+        module_versions: [0.4.2]
+
+    uses: ./.github/workflows/test.yml
+    with:
+      continue-on-error: true
+      os: ${{ matrix.os }}
+      bazel_mode: ${{ matrix.bazel_mode }}
+      compiler: ${{ matrix.compiler }}
+      llvm_version: ${{ matrix.llvm_version }}
+      bazel_config: ${{ matrix.bazel_config }}

@@ -31,6 +31,10 @@ on:
         description: 'The way how Bazel should operate compilation and tests, one of (asan, fastbuild, opt).'
         type: string
         default: opt
+      module_version:
+        description: 'Version string for the MODULE.$ver.bazel to be copied from the bzlmod directory.'
+        type: string
+        default: ''
 
 jobs:
   test:
@@ -47,11 +51,11 @@ jobs:
       - uses: actions/cache@v4
         with:
             path: "~/.cache/bazel"
-            key: ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-${{github.ref}}-${{ github.sha }}
+            key: ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}${{ inputs.module_version }}-${{github.ref}}-${{ github.sha }}
             restore-keys: |
-                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-${{github.ref}}-
-                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-refs/heads/main-
-                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}-
+                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}${{ inputs.module_version }}-${{github.ref}}-
+                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}${{ inputs.module_version }}-refs/heads/main-
+                ${{ inputs.os }}-${{ inputs.bazel_mode }}${{ inputs.compiler }}${{ inputs.llvm_version }}${{ inputs.gcc_version }}${{ inputs.bazel_config }}${{ inputs.module_version }}-
       - run: |
           declare -a BAZEL_INIT=()
           declare -a BAZEL_ARGS=()
@@ -89,5 +93,8 @@ jobs:
             BAZEL_ARGS+=("-c" "opt")
           else
             echo "ERROR: Matrix/Input var 'bazel_config' must be one of [asan, fastbuild, opt]."
+          fi
+          if [ -n "${{ inputs.module_version }}" ]; then
+            cp "bazelmod/MODULE.${{ inputs.module_version }}.bazel" MODULE.bazel
           fi
           bazel "${BAZEL_INIT[@]}" test "${BAZEL_ARGS[@]}" //...
