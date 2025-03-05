@@ -62,12 +62,13 @@ template<typename Key, typename Mapped, typename Value, auto options, typename C
 requires(LimitedOrderedValid<Key, Mapped, Value>)
 class [[nodiscard]] LimitedOrdered {
  protected:
+  using RawValue = std::remove_const_t<Value>;
   static constexpr bool kKeyOnly = std::same_as<Key, Value>;  // true = set, false = map (of pairs).
 
   // Size and Options management.
   static_assert(IsLimitedOptionsOrSize<decltype(options)>);
   using Options = decltype(MakeLimitedOptions<options>());
-  static_assert(std::is_trivially_destructible_v<Value> || !Options::Has(LimitedOptionsFlag::kEmptyDestructor));
+  static_assert(std::is_trivially_destructible_v<RawValue> || !Options::Has(LimitedOptionsFlag::kEmptyDestructor));
   static constexpr std::size_t Capacity = Options::kCapacity;
 
   static constexpr bool kOptimizeIndexOf = !Options::Has(LimitedOptionsFlag::kNoOptimizeIndexOf);
@@ -97,14 +98,14 @@ class [[nodiscard]] LimitedOrdered {
     constexpr Data& operator=(Data&&) noexcept = default;
 
     constexpr ~Data() noexcept
-    requires(std::is_trivially_destructible_v<Value>)
+    requires(std::is_trivially_destructible_v<RawValue>)
     = default;
 
     ~Data() noexcept
-    requires(!std::is_trivially_destructible_v<Value>)
+    requires(!std::is_trivially_destructible_v<RawValue>)
     {}
 
-    Value data;
+    RawValue data;
     None none;
   };
 
@@ -152,11 +153,11 @@ class [[nodiscard]] LimitedOrdered {
     template<typename L, typename R>
     requires(  // clang-format off
       (std::same_as<std::remove_cvref_t<L>, std::remove_cvref_t<Key>> ||
-       std::same_as<std::remove_cvref_t<L>, Value> ||
+       std::same_as<std::remove_cvref_t<L>, RawValue> ||
        std::same_as<std::remove_cvref_t<L>, Data>
       ) &&
       (std::same_as<std::remove_cvref_t<R>, std::remove_cvref_t<Key>> ||
-       std::same_as<std::remove_cvref_t<R>, Value> ||
+       std::same_as<std::remove_cvref_t<R>, RawValue> ||
        std::same_as<std::remove_cvref_t<R>, Data>)
     )  // clang-format on
     MBO_FORCE_INLINE constexpr bool operator()(const L& lhs, const R& rhs) const noexcept {
@@ -367,13 +368,13 @@ class [[nodiscard]] LimitedOrdered {
   = default;
 
   constexpr ~LimitedOrdered() noexcept
-  requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && std::is_trivially_destructible_v<Value>)
+  requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && std::is_trivially_destructible_v<RawValue>)
   {
     clear();
   }
 
   ~LimitedOrdered() noexcept
-  requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && !std::is_trivially_destructible_v<Value>)
+  requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) && !std::is_trivially_destructible_v<RawValue>)
   {
     clear();
   }
@@ -384,7 +385,7 @@ class [[nodiscard]] LimitedOrdered {
 
   constexpr LimitedOrdered(const LimitedOrdered& other) noexcept {
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(const_cast<Value*>(&values_[size_].data), other.values_[size_].data);
+      std::construct_at(const_cast<RawValue*>(&values_[size_].data), other.values_[size_].data);
     }
   }
 
@@ -399,7 +400,7 @@ class [[nodiscard]] LimitedOrdered {
 
   constexpr LimitedOrdered(LimitedOrdered&& other) noexcept {
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(const_cast<Value*>(&values_[size_].data), std::move(other.values_[size_].data));
+      std::construct_at(const_cast<RawValue*>(&values_[size_].data), std::move(other.values_[size_].data));
     }
     other.size_ = 0;
   }
@@ -407,7 +408,7 @@ class [[nodiscard]] LimitedOrdered {
   constexpr LimitedOrdered& operator=(LimitedOrdered&& other) noexcept {
     clear();
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(const_cast<Value*>(&values_[size_].data), std::move(other.values_[size_].data));
+      std::construct_at(const_cast<RawValue*>(&values_[size_].data), std::move(other.values_[size_].data));
     }
     other.size_ = 0;
     return *this;
@@ -416,7 +417,7 @@ class [[nodiscard]] LimitedOrdered {
   // Constructors and assignment from other LimitVector/value types.
 
   template<std::forward_iterator It>
-  requires std::constructible_from<Value, mbo::types::ForwardIteratorValueType<It>>
+  requires std::constructible_from<RawValue, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedOrdered(It first, It last, const Compare& key_comp = Compare()) noexcept(!kRequireThrows)
       : key_comp_(key_comp) {
     if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
@@ -424,7 +425,7 @@ class [[nodiscard]] LimitedOrdered {
     }
     while (first < last) {
       if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
-        std::construct_at(const_cast<Value*>(&values_[size_++].data), *first);
+        std::construct_at(const_cast<RawValue*>(&values_[size_++].data), *first);
       } else {
         emplace(*first);
       }
@@ -766,16 +767,16 @@ class [[nodiscard]] LimitedOrdered {
 
   template<typename... Args>
   constexpr std::pair<iterator, bool> emplace(Args&&... args) noexcept(!kRequireThrows) {
-    Value new_val(std::forward<Args>(args)...);
+    RawValue new_val(std::forward<Args>(args)...);
     const iterator dst = lower_bound(GetKey(new_val));
     if (dst != end() && !key_comp_(GetKey(*dst), GetKey(new_val)) && !key_comp_(GetKey(new_val), GetKey(*dst))) {
       return std::make_pair(dst, false);
     }
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
-      std::construct_at(const_cast<Value*>(&*next), std::move(*std::prev(next)));
+      std::construct_at(const_cast<RawValue*>(&*next), std::move(*std::prev(next)));
     }
-    std::construct_at(const_cast<Value*>(&*dst), std::move(new_val));
+    std::construct_at(const_cast<RawValue*>(&*dst), std::move(new_val));
     ++size_;
     return std::make_pair(dst, true);
   }
@@ -788,7 +789,7 @@ class [[nodiscard]] LimitedOrdered {
     --size_;
     std::destroy_at(&*dst);
     for (; dst < end(); ++dst) {
-      std::construct_at(const_cast<Value*>(&*dst), std::move(*std::next(dst)));
+      std::construct_at(const_cast<RawValue*>(&*dst), std::move(*std::next(dst)));
     }
     return pos > end() ? end() : to_iterator(pos);
   }
@@ -861,10 +862,10 @@ class [[nodiscard]] LimitedOrdered {
     }
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `try_emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
-      std::construct_at(const_cast<Value*>(&*next), std::move(*std::prev(next)));
+      std::construct_at(const_cast<RawValue*>(&*next), std::move(*std::prev(next)));
     }
     std::construct_at(
-        const_cast<Value*>(&*dst), std::piecewise_construct, std::forward_as_tuple(key),
+        const_cast<RawValue*>(&*dst), std::piecewise_construct, std::forward_as_tuple(key),
         std::forward_as_tuple(std::forward<Args>(args)...));
     ++size_;
     return std::make_pair(dst, true);
@@ -880,11 +881,11 @@ class [[nodiscard]] LimitedOrdered {
     }
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `try_emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
-      std::construct_at(const_cast<Value*>(&*next), std::move(*std::prev(next)));
+      std::construct_at(const_cast<RawValue*>(&*next), std::move(*std::prev(next)));
     }
     // Should possibly use: std::piecewise_construct, std::move(key), std::forward_as_tuple(std::forward<Args>(args)...)
     // But that creates issues with conversion. However, we know the two types, so we do not need piecewise.
-    std::construct_at(const_cast<Value*>(&*dst), std::move(key), Mapped(std::forward<Args>(args)...));
+    std::construct_at(const_cast<RawValue*>(&*dst), std::move(key), Mapped(std::forward<Args>(args)...));
     ++size_;
     return std::make_pair(dst, true);
   }
@@ -899,9 +900,9 @@ class [[nodiscard]] LimitedOrdered {
     }
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `insert_or_assign` at capacity.");
     for (iterator next = end(); next > dst; --next) {
-      std::construct_at(const_cast<Value*>(&*next), std::move(*std::prev(next)));
+      std::construct_at(const_cast<RawValue*>(&*next), std::move(*std::prev(next)));
     }
-    std::construct_at(const_cast<Value*>(&*dst), key, std::forward<V>(value));
+    std::construct_at(const_cast<RawValue*>(&*dst), key, std::forward<V>(value));
     ++size_;
     return std::make_pair(dst, true);
   }
@@ -916,9 +917,9 @@ class [[nodiscard]] LimitedOrdered {
     }
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
-      std::construct_at(const_cast<Value*>(&*next), std::move(*std::prev(next)));
+      std::construct_at(const_cast<RawValue*>(&*next), std::move(*std::prev(next)));
     }
-    std::construct_at(const_cast<Value*>(&*dst), std::move(key), std::forward<V>(value));
+    std::construct_at(const_cast<RawValue*>(&*dst), std::move(key), std::forward<V>(value));
     ++size_;
     return std::make_pair(dst, true);
   }

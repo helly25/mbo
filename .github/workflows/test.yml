@@ -99,4 +99,6 @@ jobs:
           if [ -n "${{ inputs.module_version }}" ]; then
             cp "bazelmod/MODULE.${{ inputs.module_version }}.bazel" MODULE.bazel
           fi
+          echo "BAZEL_INIT: ${BAZEL_INIT[@]}"
+          echo "BAZEL_ARGS: ${BAZEL_ARGS[@]}"
           bazel "${BAZEL_INIT[@]}" test "${BAZEL_ARGS[@]}" //...
