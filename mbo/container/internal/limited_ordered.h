@@ -384,7 +384,7 @@ class [[nodiscard]] LimitedOrdered {
 
   constexpr LimitedOrdered(const LimitedOrdered& other) noexcept {
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(&values_[size_].data, other.values_[size_].data);
+      std::construct_at(const_cast<Value*>(&values_[size_].data), other.values_[size_].data);
     }
   }
 
@@ -399,7 +399,7 @@ class [[nodiscard]] LimitedOrdered {
 
   constexpr LimitedOrdered(LimitedOrdered&& other) noexcept {
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(&values_[size_].data, std::move(other.values_[size_].data));
+      std::construct_at(const_cast<Value*>(&values_[size_].data), std::move(other.values_[size_].data));
     }
     other.size_ = 0;
   }
@@ -407,7 +407,7 @@ class [[nodiscard]] LimitedOrdered {
   constexpr LimitedOrdered& operator=(LimitedOrdered&& other) noexcept {
     clear();
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(&values_[size_].data, std::move(other.values_[size_].data));
+      std::construct_at(const_cast<Value*>(&values_[size_].data), std::move(other.values_[size_].data));
     }
     other.size_ = 0;
     return *this;
@@ -424,7 +424,7 @@ class [[nodiscard]] LimitedOrdered {
     }
     while (first < last) {
       if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
-        std::construct_at(&values_[size_++].data, *first);
+        std::construct_at(const_cast<Value*>(&values_[size_++].data), *first);
       } else {
         emplace(*first);
       }
@@ -773,9 +773,9 @@ class [[nodiscard]] LimitedOrdered {
     }
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
-      std::construct_at(&*next, std::move(*std::prev(next)));
+      std::construct_at(const_cast<Value*>(&*next), std::move(*std::prev(next)));
     }
-    std::construct_at(&*dst, std::move(new_val));
+    std::construct_at(const_cast<Value*>(&*dst), std::move(new_val));
     ++size_;
     return std::make_pair(dst, true);
   }
@@ -788,7 +788,7 @@ class [[nodiscard]] LimitedOrdered {
     --size_;
     std::destroy_at(&*dst);
     for (; dst < end(); ++dst) {
-      std::construct_at(&*dst, std::move(*std::next(dst)));
+      std::construct_at(const_cast<Value*>(&*dst), std::move(*std::next(dst)));
     }
     return pos > end() ? end() : to_iterator(pos);
   }
@@ -861,10 +861,10 @@ class [[nodiscard]] LimitedOrdered {
     }
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `try_emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
-      std::construct_at(&*next, std::move(*std::prev(next)));
+      std::construct_at(const_cast<Value*>(&*next), std::move(*std::prev(next)));
     }
     std::construct_at(
-        &*dst, std::piecewise_construct, std::forward_as_tuple(key),
+        const_cast<Value*>(&*dst), std::piecewise_construct, std::forward_as_tuple(key),
         std::forward_as_tuple(std::forward<Args>(args)...));
     ++size_;
     return std::make_pair(dst, true);
@@ -880,11 +880,11 @@ class [[nodiscard]] LimitedOrdered {
     }
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `try_emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
-      std::construct_at(&*next, std::move(*std::prev(next)));
+      std::construct_at(const_cast<Value*>(&*next), std::move(*std::prev(next)));
     }
     // Should possibly use: std::piecewise_construct, std::move(key), std::forward_as_tuple(std::forward<Args>(args)...)
     // But that creates issues with conversion. However, we know the two types, so we do not need piecewise.
-    std::construct_at(&*dst, std::move(key), Mapped(std::forward<Args>(args)...));
+    std::construct_at(const_cast<Value*>(&*dst), std::move(key), Mapped(std::forward<Args>(args)...));
     ++size_;
     return std::make_pair(dst, true);
   }
@@ -899,9 +899,9 @@ class [[nodiscard]] LimitedOrdered {
     }
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `insert_or_assign` at capacity.");
     for (iterator next = end(); next > dst; --next) {
-      std::construct_at(&*next, std::move(*std::prev(next)));
+      std::construct_at(const_cast<Value*>(&*next), std::move(*std::prev(next)));
     }
-    std::construct_at(&*dst, key, std::forward<V>(value));
+    std::construct_at(const_cast<Value*>(&*dst), key, std::forward<V>(value));
     ++size_;
     return std::make_pair(dst, true);
   }
@@ -916,9 +916,9 @@ class [[nodiscard]] LimitedOrdered {
     }
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `emplace` at capacity.");
     for (iterator next = end(); next > dst; --next) {
-      std::construct_at(&*next, std::move(*std::prev(next)));
+      std::construct_at(const_cast<Value*>(&*next), std::move(*std::prev(next)));
     }
-    std::construct_at(&*dst, std::move(key), std::forward<V>(value));
+    std::construct_at(const_cast<Value*>(&*dst), std::move(key), std::forward<V>(value));
     ++size_;
     return std::make_pair(dst, true);
   }

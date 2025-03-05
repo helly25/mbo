@@ -500,7 +500,7 @@ struct MakeTstringLiteralHelper {
 // [-Wgnu-string-literal-operator-template]
 template<typename T, T... chars>
 requires std::is_same_v<T, char>
-constexpr tstring<chars...> operator"" _ts() {
+constexpr tstring<chars...> operator""_ts() {
   return {};
 }
 #else

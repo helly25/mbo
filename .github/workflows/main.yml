@@ -38,16 +38,22 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         bazel_mode: [bzlmod]
         compiler: [clang]
-        llvm_version: [19.1.6, 17.0.4]
+        llvm_version: [20.1.0, 19.1.6, 17.0.4]
         bazel_config: [asan, opt, fastbuild]
         exclude:
           - os: macos-latest
             bazel_config: asan
           - os: macos-latest
             bazel_config: fastbuild
+          - os: macos-latest
+            llvm_version: 20.1.0
           - llvm_version: 17.0.4
             bazel_config: asan
           - llvm_version: 17.0.4
+            bazel_config: fastbuild
+          - llvm_version: 20.1.0
+            bazel_config: asan
+          - llvm_version: 20.1.0
             bazel_config: fastbuild
 
     uses: ./.github/workflows/test.yml

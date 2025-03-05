@@ -58,18 +58,20 @@ class NoDestruct final {
   };
 
  public:
-  constexpr NoDestruct() noexcept : data_(buf_) { std::construct_at(&data_.value); }
+  constexpr NoDestruct() noexcept : data_(buf_) { std::construct_at(const_cast<T*>(&data_.value)); }
 
-  constexpr explicit NoDestruct(T arg) noexcept : data_(buf_) { std::construct_at(&data_.value, std::move(arg)); }
+  constexpr explicit NoDestruct(T arg) noexcept : data_(buf_) {
+    std::construct_at(const_cast<T*>(&data_.value), std::move(arg));
+  }
 
   template<typename... Args>
   constexpr explicit NoDestruct(Args&&... args) noexcept : data_(buf_) {
-    std::construct_at(&data_.value, std::forward<Args>(args)...);
+    std::construct_at(const_cast<T*>(&data_.value), std::forward<Args>(args)...);
   }
 
   template<typename U>
   constexpr NoDestruct(const std::initializer_list<U>& args) noexcept : data_(buf_) {
-    std::construct_at(&data_.value, args);
+    std::construct_at(const_cast<T*>(&data_.value), args);
   }
 
   constexpr ~NoDestruct() noexcept = default;

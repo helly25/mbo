@@ -74,7 +74,9 @@ jobs:
           fi
           if [ "${{ inputs.compiler }}" == "clang" ]; then
             BAZEL_ARGS+=("--config=clang")
-            if [ "${{ inputs.llvm_version }}" != "19.1.6" ]; then
+            if [ -r "bazelmod/llvm.${{ inputs.llvm_version }}.MODULE.bazel" ]; then
+              cp "bazelmod/llvm.${{ inputs.llvm_version }}.MODULE.bazel" bazelmod/llvm.MODULE.bazel
+            elif [ "${{ inputs.llvm_version }}" != "19.1.6" ]; then
               CONTROL_FILE=bazelmod/llvm.MODULE.bazel
               sed -e 's,llvm_version = ".*",llvm_version = "${{ inputs.llvm_version }}",g' "${CONTROL_FILE}" > "${CONTROL_FILE}.new"
               mv "${CONTROL_FILE}.new" "${CONTROL_FILE}"
