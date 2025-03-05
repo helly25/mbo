@@ -1,3 +1,8 @@
+# 0.4.3
+
+* Address const-ness issues in constexpr functions found by Clang 20.1.0.
+* Drop space in front of string-literal notation found by Clang 20.1.0.
+
 # 0.4.2
 
 * Tweaked automated release tooling.

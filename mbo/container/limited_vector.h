@@ -130,7 +130,7 @@ class LimitedVector final {
 
   constexpr LimitedVector(const LimitedVector& other) noexcept {
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(&values_[size_].data, other.values_[size_].data);
+      std::construct_at(const_cast<T*>(&values_[size_].data), other.values_[size_].data);
     }
   }
 
@@ -145,7 +145,7 @@ class LimitedVector final {
 
   constexpr LimitedVector(LimitedVector&& other) noexcept {
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(&values_[size_].data, std::move(other.values_[size_].data));
+      std::construct_at(const_cast<T*>(&values_[size_].data), std::move(other.values_[size_].data));
     }
     other.size_ = 0;
   }
@@ -153,7 +153,7 @@ class LimitedVector final {
   constexpr LimitedVector& operator=(LimitedVector&& other) noexcept {
     clear();
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(&values_[size_].data, std::move(other.values_[size_].data));
+      std::construct_at(const_cast<T*>(&values_[size_].data), std::move(other.values_[size_].data));
     }
     other.size_ = 0;
     return *this;
@@ -195,7 +195,7 @@ class LimitedVector final {
   requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedVector(const LimitedVector<U, OtherN>& other) noexcept {
     for (; size_ < other.size(); ++size_) {
-      std::construct_at(&values_[size_].data, other.at(size_));
+      std::construct_at(const_cast<T*>(&values_[size_].data), other.at(size_));
     }
   }
 
@@ -204,7 +204,7 @@ class LimitedVector final {
   constexpr LimitedVector& operator=(const LimitedVector<U, OtherN>& other) noexcept {
     clear();
     for (; size_ < other.size(); ++size_) {
-      std::construct_at(&values_[size_].data, other.at(size_));
+      std::construct_at(const_cast<T*>(&values_[size_].data), other.at(size_));
     }
     return *this;
   }
@@ -213,7 +213,7 @@ class LimitedVector final {
   requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedVector(LimitedVector<U, OtherN>&& other) noexcept {
     for (; size_ < other.size(); ++size_) {
-      std::construct_at(&values_[size_].data, std::move(other.at(size_)));
+      std::construct_at(const_cast<T*>(&values_[size_].data), std::move(other.at(size_)));
     }
     other.size_ = 0;
   }
@@ -223,7 +223,7 @@ class LimitedVector final {
   constexpr LimitedVector& operator=(LimitedVector<U, OtherN>&& other) noexcept {
     clear();
     for (; size_ < other.size(); ++size_) {
-      std::construct_at(&values_[size_].data, std::move(other.at(size_)));
+      std::construct_at(const_cast<T*>(&values_[size_].data), std::move(other.at(size_)));
     }
     other.size_ = 0;
     return *this;
@@ -281,7 +281,7 @@ class LimitedVector final {
     for (; dst > pos; --dst) {
       *dst = std::move(*std::prev(dst));
     }
-    std::construct_at(dst, std::forward<Args>(args)...);
+    std::construct_at(const_cast<T*>(dst), std::forward<Args>(args)...);
     ++size_;
     return dst;
   }
@@ -322,21 +322,21 @@ class LimitedVector final {
   constexpr reference emplace_back(Args&&... args) noexcept(!kRequireThrows) {
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `emplace_back` at capacity.");
     auto& data_ref{values_[size_++]};
-    std::construct_at(&data_ref.data, std::forward<Args>(args)...);
+    std::construct_at(const_cast<std::remove_const_t<T>*>(&data_ref.data), std::forward<Args>(args)...);
     return data_ref.data;
   }
 
   constexpr reference push_back(T&& val) noexcept(!kRequireThrows) {
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `push_back` at capacity.");
     auto& data_ref{values_[size_++]};
-    std::construct_at(&data_ref.data, std::move(val));
+    std::construct_at(const_cast<T*>(&data_ref.data), std::move(val));
     return data_ref.data;
   }
 
   constexpr reference push_back(const T& val) noexcept(!kRequireThrows) {
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `push_back` at capacity.");
     auto& data_ref{values_[size_++]};
-    std::construct_at(&data_ref.data, val);
+    std::construct_at(const_cast<T*>(&data_ref.data), val);
     return data_ref.data;
   }
 
@@ -377,7 +377,7 @@ class LimitedVector final {
     // That makes them technically not point into an array AND that is indeed not allowed by C++.
     const auto dst = const_cast<iterator>(pos);  // NOLINT(cppcoreguidelines-pro-type-const-cast)
     move_backward(dst, 1);
-    std::construct_at(&*dst, std::forward<U>(value));
+    std::construct_at(const_cast<T*>(&*dst), std::forward<U>(value));
     return dst;
   }
 
@@ -390,7 +390,7 @@ class LimitedVector final {
     }
     std::size_t index = move_backward(dst, count);
     while (count > 0) {
-      std::construct_at(&values_[index].data, value);
+      std::construct_at(const_cast<T*>(&values_[index].data), value);
       ++index;
       --count;
     }
@@ -412,7 +412,7 @@ class LimitedVector final {
     }
     std::size_t index = move_backward(dst, count);
     while (count) {
-      std::construct_at(&values_[index].data, *first);
+      std::construct_at(const_cast<T*>(&values_[index].data), *first);
       ++index;
       --count;
       ++first;
@@ -494,7 +494,7 @@ class LimitedVector final {
     std::size_t pos = size_;
     while (dst < &values_[pos].data) {
       --pos;
-      std::construct_at(&values_[pos + count].data, std::move(values_[pos].data));
+      std::construct_at(const_cast<T*>(&values_[pos + count].data), std::move(values_[pos].data));
     }
     size_ += count;
     return pos;

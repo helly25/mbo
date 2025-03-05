@@ -51,6 +51,7 @@ class StructMeta;
 template<typename T>
 class StructMetaBase {
  private:
+  using RawT = std::remove_const_t<T>;
   template<typename U, bool, bool>
   friend class StructMeta;
 
@@ -67,13 +68,13 @@ class StructMetaBase {
       Uninitialized& operator=(Uninitialized&&) = delete;
 
       char temp[sizeof(T)] = {0};  // NOLINT(*-avoid-c-arrays)
-      T value;
+      RawT value;
     };
 
    public:
     constexpr Storage() noexcept {
-      if constexpr (std::is_default_constructible_v<T>) {
-        std::construct_at(&storage_.value);
+      if constexpr (std::is_default_constructible_v<RawT>) {
+        std::construct_at(const_cast<RawT*>(&storage_.value));
       } else {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         memset(const_cast<char*>(&storage_.temp[0]), 0, sizeof(T));
