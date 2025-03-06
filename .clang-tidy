@@ -14,6 +14,7 @@ Checks: >
   -cppcoreguidelines-avoid-const-or-ref-data-members,
   -fuchsia*,
   google-*,
+  -google-build-using-namespace,
   -hicpp-no-assembler,
   -llvm-else-after-return,
   llvm-header-guard,
@@ -22,6 +23,7 @@ Checks: >
   misc-*,
   modernize-*,
   -modernize-use-nodiscard,
+  -modernize-use-std-format,
   -modernize-use-trailing-return-type,
   performance-*,
   portability-*,
@@ -30,7 +32,6 @@ Checks: >
 
 WarningsAsErrors: true
 #HeaderFilterRegex: 'mbo/.*'
-AnalyzeTemporaryDtors: false
 FormatStyle:       '.clang-format'
 CheckOptions:
   - key:             bugprone-signed-char-misuse.CharTypdefsToIgnore
@@ -40,7 +41,7 @@ CheckOptions:
   - key:             google-readability-function-size.StatementThreshold
     value:           '800'
   - key:             google-readability-namespace-comments.ShortNamespaceLines
-    value:           '15'
+    value:           '25'
   - key:             google-readability-namespace-comments.SpacesBeforeComments
     value:           '2'
   - key:             misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic

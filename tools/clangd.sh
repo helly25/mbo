@@ -20,61 +20,58 @@ set -euo pipefail
 # The script is meant to be a VSCode wrapper to automatically find the provided
 # clangd. There is a one-time setup: `tools/clangd.sh --setup`.
 
-function die() {
-  echo "ERROR: ${@}"
-  exit 1
-}
+function die() { echo "ERROR: ${*}" 1>&2 ; exit 1; }
 
 if [ ${#} -ge 1 ] && [ "${1}" == "--setup" ]; then
-  if [ "$(realpath "${0}")" != "$(realpath "tools/clangd.sh")" ]; then
-    die "Script must be executed from project base directory."
-  fi
-  if [ -r ".vscode/settings.json" ]; then
-    if [ -z "$(which jq)" ]; then
-      die "The setup requires 'jq'."
+    if [ "$(realpath "${0}")" != "$(realpath "tools/clangd.sh")" ]; then
+        die "Script must be executed from project base directory."
     fi
-    cp .vscode/settings.json .vscode/settings.json.bak
-    if jq -r '."clangd.path" |= "tools/clangd.sh"' .vscode/settings.json.bak > .vscode/settings.json; then
-      rm .vscode/settings.json.bak
-      exit 0
+    if [ -r ".vscode/settings.json" ]; then
+        if [ -z "$(which jq)" ]; then
+            die "The setup requires 'jq'."
+        fi
+        cp .vscode/settings.json .vscode/settings.json.bak
+        if jq -r '."clangd.path" |= "tools/clangd.sh"' .vscode/settings.json.bak > .vscode/settings.json; then
+            rm .vscode/settings.json.bak
+            exit 0
+        else
+            mv .vscode/settings.json.bak .vscode/settings.json
+            die "Script setup failed."
+        fi
     else
-      mv .vscode/settings.json.bak .vscode/settings.json
-      die "Script setup failed."
+        cat < <(printf '{\n  "clangd.path": "tools/clangd.sh"\n}') > .vscode/settings.json
     fi
-  else
-    cat < <(echo '{\n  "clangd.path": "tools/clangd.sh"\n}') > .vscode/settings.json
-  fi
-  exit 0
+    exit 0
 fi
 
 declare -a CLANGD_LOCATIONS=(
-  # Bazelmod 8+
-  "bazel-bin/external/toolchains_llvm++llvm+llvm_toolchain_llvm_llvm/bin/clangd"
-  "external/toolchains_llvm++llvm+llvm_toolchain_llvm_llvm/bin/clangd"
-  # Bazelmod 7+
-  "bazel-bin/external/toolchains_llvm~~llvm~llvm_toolchain_llvm_llvm/bin/clangd"
-  "external/toolchains_llvm~~llvm~llvm_toolchain_llvm_llvm/bin/clangd"
-  # Workspace
-  "bazel-bin/external/llvm_toolchain_llvm/bin/clangd"
-  "external/llvm_toolchain_llvm/bin/clangd"
-  # System
-  "$(which clangd-23)"
-  "$(which clangd-22)"
-  "$(which clangd-21)"
-  "$(which clangd-20)"
-  "$(which clangd-19)"
-  "$(which clangd-18)"
-  "$(which clangd-17)"
-  "$(which clangd-16)"
-  "$(which clangd-15)"
-  "$(which clangd)"
+    # Bazelmod 8+
+    "bazel-bin/external/toolchains_llvm++llvm+llvm_toolchain_llvm_llvm/bin/clangd"
+    "external/toolchains_llvm++llvm+llvm_toolchain_llvm_llvm/bin/clangd"
+    # Bazelmod 7+
+    "bazel-bin/external/toolchains_llvm~~llvm~llvm_toolchain_llvm_llvm/bin/clangd"
+    "external/toolchains_llvm~~llvm~llvm_toolchain_llvm_llvm/bin/clangd"
+    # Workspace
+    "bazel-bin/external/llvm_toolchain_llvm/bin/clangd"
+    "external/llvm_toolchain_llvm/bin/clangd"
+    # System
+    "$(which clangd-23)"
+    "$(which clangd-22)"
+    "$(which clangd-21)"
+    "$(which clangd-20)"
+    "$(which clangd-19)"
+    "$(which clangd-18)"
+    "$(which clangd-17)"
+    "$(which clangd-16)"
+    "$(which clangd-15)"
+    "$(which clangd)"
 )
 
 for CLANGD in "${CLANGD_LOCATIONS[@]}"; do
-  if [ -n "${CLANGD}" ] && [ -x "${CLANGD}" ]; then
-    "${CLANGD}" "${@}"
-    exit 0
-  fi
+    if [ -n "${CLANGD}" ] && [ -x "${CLANGD}" ]; then
+        "${CLANGD}" "${@}"
+        exit 0
+    fi
 done
 
 die "No clangd was found!"

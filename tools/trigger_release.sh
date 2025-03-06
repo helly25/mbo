@@ -17,24 +17,21 @@
 
 set -euo pipefail
 
-function die() {
-  echo "ERROR: ${@}"
-  exit 1
-}
+function die() { echo "ERROR: ${*}" 1>&2 ; exit 1; }
 
 [ ${#} == 1 ] || die "Must provide a version argument."
 
 VERSION="${1}"
 
-BAZELMOD_VERSION="$(cat MODULE.bazel | sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p'|head -n1)"
-CHANGELOG_VERSION="$(cat CHANGELOG.md | sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p'|head -n1)"
+BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' < MODULE.bazel|head -n1)"
+CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' < CHANGELOG.md|head -n1)"
 
 if [ "${BAZELMOD_VERSION}" != "${CHANGELOG_VERSION}" ]; then
-  die "MODULE.bazel (${BAZELMOD_VERSION}) != CHANGELOG.md (${CHANGELOG_VERSION})."
+    die "MODULE.bazel (${BAZELMOD_VERSION}) != CHANGELOG.md (${CHANGELOG_VERSION})."
 fi
 
 if [ "${VERSION}" != "${BAZELMOD_VERSION}" ]; then
-  die "Provided version argument (${VERSION}) different from merged version (${BAZELMOD_VERSION})."
+    die "Provided version argument (${VERSION}) different from merged version (${BAZELMOD_VERSION})."
 fi
 
 grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."

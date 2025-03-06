@@ -2,6 +2,7 @@ repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v5.0.0
   hooks:
+  - id: check-added-large-files
   - id: check-merge-conflict
   - id: check-yaml
   - id: end-of-file-fixer
@@ -20,7 +21,7 @@ repos:
           )
 
 - repo: https://github.com/rhysd/actionlint
-  rev: v1.7.4
+  rev: v1.7.7
   hooks:
   - id: actionlint
     name: Lint GitHub Actions workflow files
@@ -85,6 +86,16 @@ repos:
       args: ["--warnings=all"]
 
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v19.1.6
+  rev: v19.1.7
   hooks:
   - id: clang-format
+
+- repo: https://github.com/lovesegfault/beautysh
+  rev: v6.2.1
+  hooks:
+    - id: beautysh
+
+- repo: https://github.com/koalaman/shellcheck-precommit
+  rev: v0.10.0
+  hooks:
+  -   id: shellcheck

@@ -25,25 +25,25 @@ PACKAGE_NAME="mbo"
 BAZELMOD_NAME="helly25_mbo"
 WORKSPACE_NAME="com_helly25_mbo"
 PATCHES=(
-  ".github/workflows/bazelmod.patch"
+    ".github/workflows/bazelmod.patch"
 )
 
 # Automatic vars from workflow integration.
 TAG="${GITHUB_REF_NAME}"
 
+function die() { echo "ERROR: ${*}" 1>&2 ; exit 1; }
+
 # Computed vars.
 PREFIX="${PACKAGE_NAME}-${TAG}"
 ARCHIVE="${PACKAGE_NAME}-${TAG}.tar.gz"
-BAZELMOD_VERSION="$(cat MODULE.bazel | sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p'|head -n1)"
-CHANGELOG_VERSION="$(cat CHANGELOG.md | sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p'|head -n1)"
+BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' < MODULE.bazel|head -n1)"
+CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' < CHANGELOG.md|head -n1)"
 
 if [ "${BAZELMOD_VERSION}" != "${TAG}" ]; then
-  echo "ERROR: Tag = '${TAG}' does not match version = '${BAZELMOD_VERSION}' in MODULE.bazel."
-  exit 1
+    die "Tag = '${TAG}' does not match version = '${BAZELMOD_VERSION}' in MODULE.bazel."
 fi
 if [ "${CHANGELOG_VERSION}" != "${TAG}" ]; then
-  echo "ERROR: Tag = '${TAG}' does not match version = '${CHANGELOG_VERSION}' in CHANGELOG.md."
-  exit 1
+    die "Tag = '${TAG}' does not match version = '${CHANGELOG_VERSION}' in CHANGELOG.md."
 fi
 
 # Instead of embed the version in MODULE.bazel, we expect it to be correct already.
@@ -51,7 +51,7 @@ fi
 
 # Apply patches
 for patch in "${PATCHES[@]}"; do
-  patch -s -p 1 <"${patch}"
+    patch -s -p 1 <"${patch}"
 done
 
 # Build the archive
@@ -64,7 +64,7 @@ echo "# Version ${TAG}"
 echo "## [Changelog](https://github.com/helly25/${PACKAGE_NAME}/blob/${TAG}/CHANGELOG.md)"
 
 # Print Changelog
-cat CHANGELOG.md | awk '/^#/{f+=1;if(f>1)exit} !/^#/{print}'
+awk '/^#/{f+=1;if(f>1)exit} !/^#/{print}' < CHANGELOG.md
 
 cat << EOF
 ## For Bazel WORKSPACE
