@@ -18,11 +18,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        bazel_mode: [bzlmod]
+        bazel_mode: [bzlmod, workspace]
         compiler: [gcc]
         gcc_version: [11, 12, 13]
         bazel_config: [cpp23, opt]
         exclude:
+          - bazel_mode: workspace
+            gcc_version: 11
+          - bazel_mode: workspace
+            gcc_version: 13
           - gcc_version: 11
             bazel_config: cpp23
           - gcc_version: 12
