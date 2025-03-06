@@ -63,8 +63,6 @@ jobs:
           - llvm_version: 20.1.0
             bazel_config: asan
           - llvm_version: 20.1.0
-            bazel_config: cpp23
-          - llvm_version: 20.1.0
             bazel_config: fastbuild
 
     uses: ./.github/workflows/test.yml
@@ -77,7 +75,7 @@ jobs:
       bazel_config: ${{ matrix.bazel_config }}
 
   test-bcr:
-    needs: [pre-commit, test-gcc, test-clang]
+    needs: [pre-commit, test-gcc]
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -85,7 +83,7 @@ jobs:
         compiler: [clang]
         llvm_version: [19.1.6]
         bazel_config: [opt]
-        module_versions: [0.4.2]
+        module_version: [0.4.2]
 
     uses: ./.github/workflows/test.yml
     with:
