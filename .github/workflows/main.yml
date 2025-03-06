@@ -18,10 +18,19 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        bazel_mode: [bzlmod]
+        bazel_mode: [bzlmod, workspace]
         compiler: [gcc]
         gcc_version: [11, 12, 13]
-        bazel_config: [opt]
+        bazel_config: [cpp23, opt]
+        exclude:
+          - bazel_mode: workspace
+            gcc_version: 11
+          - bazel_mode: workspace
+            gcc_version: 13
+          - gcc_version: 11
+            bazel_config: cpp23
+          - gcc_version: 12
+            bazel_config: cpp23
 
     uses: ./.github/workflows/test.yml
     with:
@@ -39,16 +48,20 @@ jobs:
         bazel_mode: [bzlmod]
         compiler: [clang]
         llvm_version: [20.1.0, 19.1.6, 17.0.4]
-        bazel_config: [asan, opt, fastbuild]
+        bazel_config: [asan, cpp23, fastbuild, opt]
         exclude:
           - os: macos-latest
             bazel_config: asan
+          - os: macos-latest
+            bazel_config: cpp23
           - os: macos-latest
             bazel_config: fastbuild
           - os: macos-latest
             llvm_version: 20.1.0
           - llvm_version: 17.0.4
             bazel_config: asan
+          - llvm_version: 17.0.4
+            bazel_config: cpp23
           - llvm_version: 17.0.4
             bazel_config: fastbuild
           - llvm_version: 20.1.0
@@ -66,7 +79,7 @@ jobs:
       bazel_config: ${{ matrix.bazel_config }}
 
   test-bcr:
-    needs: [pre-commit, test-gcc, test-clang]
+    needs: [pre-commit, test-gcc]
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -74,7 +87,7 @@ jobs:
         compiler: [clang]
         llvm_version: [19.1.6]
         bazel_config: [opt]
-        module_versions: [0.4.2]
+        module_version: [0.4.2]
 
     uses: ./.github/workflows/test.yml
     with:
