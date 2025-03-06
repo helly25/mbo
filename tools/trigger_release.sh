@@ -17,15 +17,25 @@
 
 set -euo pipefail
 
+function die() {
+  echo "ERROR: ${@}"
+  exit 1
+}
+
+[ ${#} == 1 ] || die "Must provide a version argument."
+
+VERSION="${1}"
+
 BAZELMOD_VERSION="$(cat MODULE.bazel | sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p'|head -n1)"
 CHANGELOG_VERSION="$(cat CHANGELOG.md | sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p'|head -n1)"
 
 if [ "${BAZELMOD_VERSION}" != "${CHANGELOG_VERSION}" ]; then
-  echo "ERROR: MODULE.bazel (${BAZELMOD_VERSION}) != CHANGELOG.md (${CHANGELOG_VERSION})."
-  exit 1
+  die "MODULE.bazel (${BAZELMOD_VERSION}) != CHANGELOG.md (${CHANGELOG_VERSION})."
 fi
 
-VERSION="${BAZELMOD_VERSION}"
+if [ "${VERSION}" != "${BAZELMOD_VERSION}" ]; then
+  die "Provided version argument (${VERSION}) different from merged version (${BAZELMOD_VERSION})."
+fi
 
 grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
 

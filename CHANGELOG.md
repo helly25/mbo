@@ -1,12 +1,16 @@
+# 0.4.4
+
+* Added `--config=cpp23` for `-std=c++23` to bazelrc and CI testing.
+
 # 0.4.3
 
 * Address const-ness issues in constexpr functions found by Clang 20.1.0.
-* Drop space in front of string-literal notation found by Clang 20.1.0.
+* Dropped space in front of string-literal notation found by Clang 20.1.0.
 
 # 0.4.2
 
 * Tweaked automated release tooling.
-* Use matrix for merge testing that verifies various GCC and Clang setups.
+* Switched to matrix for merge testing that verifies various GCC and Clang setups.
 * Fixed `mbo::types::ContainerProxy` for GCC opt builds (issue with aliasing interpretation).
 * Added `mbo::strings::StripPrefix` and `mbo::strings::StripSuffix` for temp `std::string&&`.
 

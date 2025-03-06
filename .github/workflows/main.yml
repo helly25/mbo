@@ -21,7 +21,12 @@ jobs:
         bazel_mode: [bzlmod]
         compiler: [gcc]
         gcc_version: [11, 12, 13]
-        bazel_config: [opt]
+        bazel_config: [cpp23, opt]
+        exclude:
+          - gcc_version: 11
+            bazel_config: cpp23
+          - gcc_version: 12
+            bazel_config: cpp23
 
     uses: ./.github/workflows/test.yml
     with:
@@ -39,10 +44,12 @@ jobs:
         bazel_mode: [bzlmod]
         compiler: [clang]
         llvm_version: [20.1.0, 19.1.6, 17.0.4]
-        bazel_config: [asan, opt, fastbuild]
+        bazel_config: [asan, cpp23, fastbuild, opt]
         exclude:
           - os: macos-latest
             bazel_config: asan
+          - os: macos-latest
+            bazel_config: cpp23
           - os: macos-latest
             bazel_config: fastbuild
           - os: macos-latest
@@ -50,9 +57,13 @@ jobs:
           - llvm_version: 17.0.4
             bazel_config: asan
           - llvm_version: 17.0.4
+            bazel_config: cpp23
+          - llvm_version: 17.0.4
             bazel_config: fastbuild
           - llvm_version: 20.1.0
             bazel_config: asan
+          - llvm_version: 20.1.0
+            bazel_config: cpp23
           - llvm_version: 20.1.0
             bazel_config: fastbuild
 

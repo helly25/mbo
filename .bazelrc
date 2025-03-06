@@ -39,3 +39,5 @@ common:clang --cxxopt=-gmlt
 common:clang --host_cxxopt=-gmlt
 common:clang --linkopt=-fuse-ld=lld
 common:clang --host_linkopt=-fuse-ld=lld
+
+common:cpp23 --cxxopt=-std=c++23 --host_cxxopt=-std=c++23
