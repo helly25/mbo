@@ -15,11 +15,16 @@
 
 #include "mbo/types/tstring.h"
 
+#include <cstddef>
+#include <functional>
+#include <iterator>
 #include <ranges>
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <variant>
 
+#include "absl/hash/hash.h"
 #include "absl/hash/hash_testing.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -97,7 +102,7 @@ TEST_F(TStringTest, Test) {
   EXPECT_THAT(("12"_ts).size(), 2);
   using MyTstring = tstring<'m', 'y', 'm', 'y'>;
   EXPECT_THAT(MyTstring::size(), 4);
-  MyTstring mymy;
+  const MyTstring mymy;
   EXPECT_THAT(decltype(mymy)::size(), 4);
 }
 
@@ -604,14 +609,14 @@ TEST_F(TStringTest, Contains) {
 TEST_F(TStringTest, BeginEnd) {
   {
     std::string str;
-    for (char chr : kTestA1) {
+    for (const char chr : kTestA1) {
       str += chr;
     }
     EXPECT_THAT(str, kTestA1.str());
   }
   {
     std::string rev;
-    for (char it : std::ranges::reverse_view(kTestA1)) {
+    for (const char it : std::ranges::reverse_view(kTestA1)) {
       rev += it;
     }
     EXPECT_THAT(rev, "tset_1");
@@ -667,7 +672,7 @@ TEST_F(TStringTest, StdHash) {
   constexpr auto kBarDirectHashTs = GetHash("bar");
   EXPECT_THAT(kBarDirectHashTs, Ne(k_bar_hash_ts));
   EXPECT_THAT(kBarDirectHashTs, decltype(kTsBar)::StringHash());
-  std::string_view vs_bar{"bar"};
+  const std::string_view vs_bar{"bar"};
   const auto k_bar_volatile_hash_ts = GetHash(vs_bar);
   EXPECT_THAT(k_bar_volatile_hash_ts, kBarDirectHashTs);
   // "foo"_ts
@@ -678,7 +683,7 @@ TEST_F(TStringTest, StdHash) {
   constexpr auto kFooDirectHashTs = GetHash("foo");
   EXPECT_THAT(kFooDirectHashTs, Ne(k_foo_hash_ts));
   EXPECT_THAT(kFooDirectHashTs, decltype(kTsFoo)::StringHash());
-  std::string_view vs_foo{"foo"};
+  const std::string_view vs_foo{"foo"};
   const auto k_foo_volatile_hash_ts = GetHash(vs_foo);
   EXPECT_THAT(k_foo_volatile_hash_ts, kFooDirectHashTs);
   // hash("bar"_ts) != hash("foo"_ts)

@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -129,7 +130,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
     return 1;
   }
   const std::string strip_comments = absl::GetFlag(FLAGS_strip_comments);
-  mbo::diff::UnifiedDiff::Options diff_options{
+  const mbo::diff::UnifiedDiff::Options diff_options{
       .context_size = absl::GetFlag(FLAGS_unified),
       .file_header_use = GetFileHeaderUse(),
       .ignore_blank_lines = absl::GetFlag(FLAGS_ignore_blank_lines),

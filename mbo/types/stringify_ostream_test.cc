@@ -15,8 +15,12 @@
 
 #include "mbo/types/stringify_ostream.h"
 
+#include <ostream>
+#include <sstream>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/types/extender.h"
 
 namespace mbo_other {  // Not using namespace mbo::types
 

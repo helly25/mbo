@@ -15,14 +15,21 @@
 
 #include "mbo/container/limited_map.h"
 
-#include <ranges>  // IWYU pragma: keep
+#include <array>
+#include <cstdint>
+#include <functional>
+#include <iterator>
+#include <ranges>
+#include <stdexcept>
 #include <string>
 #include <string_view>
-#include <type_traits>  // IWYU pragma: keep
+#include <utility>
+#include <vector>
 
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/config/config.h"
 #include "mbo/testing/matchers.h"
 
 // Clang has issues with exception tracing in ASAN, so corresponding tests must
@@ -284,7 +291,7 @@ TEST_F(LimitedMapTest, AtIndexNonExistingThrows) {
 TEST_F(LimitedMapTest, ConstructAssignFromSmaller) {
   {
     constexpr LimitedMap<uint32_t, uint32_t, 3> kSource({{0U, 0U}, {1U, 1U}, {2U, 2U}});
-    LimitedMap<int64_t, int64_t, 5> target(kSource);
+    const LimitedMap<int64_t, int64_t, 5> target(kSource);
     EXPECT_THAT(target, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
     EXPECT_THAT(kSource, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
   }
@@ -298,7 +305,7 @@ TEST_F(LimitedMapTest, ConstructAssignFromSmaller) {
   }
   {
     LimitedMap<uint32_t, uint32_t, 3> source({{0U, 0U}, {1U, 1U}, {2U, 2U}});
-    LimitedMap<int64_t, int64_t, 5> target(std::move(source));
+    const LimitedMap<int64_t, int64_t, 5> target(std::move(source));
     EXPECT_THAT(target, ElementsAre(Pair(0, 0), Pair(1, 1), Pair(2, 2)));
     // EXPECT_THAT(source, IsEmpty());
   }

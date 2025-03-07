@@ -16,11 +16,17 @@
 #include "mbo/container/any_scan.h"
 
 #include <array>
+#include <cstddef>
+#include <functional>
 #include <initializer_list>
 #include <iterator>
 #include <list>
 #include <map>
+#include <memory>
 #include <set>
+#include <string>
+#include <string_view>
+#include <type_traits>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -35,7 +41,8 @@
 namespace std {
 
 template<>
-struct hash<std::pair<std::string, std::string>> {
+struct hash<std::pair<std::string, std::string>> {  // NOLINT(cert-dcl58-cpp)
+
   std::size_t operator()(const std::pair<std::string, std::string>& obj) const noexcept {
     return absl::HashOf(obj.first, obj.second);
   }

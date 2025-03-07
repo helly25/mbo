@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/types/extend.h"
+#include "mbo/types/extender.h"
 #include "mbo/types/traits.h"
 
 namespace mbo::types {

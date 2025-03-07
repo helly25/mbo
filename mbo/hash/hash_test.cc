@@ -17,7 +17,10 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <random>
+#include <set>
+#include <string>
 #include <string_view>
 
 #include "gmock/gmock.h"
@@ -30,7 +33,6 @@ namespace {
 
 using ::testing::Le;
 using ::testing::Ne;
-using ::testing::SizeIs;
 
 struct HashTest : ::testing::Test {};
 
@@ -39,8 +41,8 @@ TEST_F(HashTest, TestEmty) {
   constexpr std::size_t kHashNull = GetHash(std::string_view());
   EXPECT_THAT(kHashEmpty, kHashNull);
   // Force using non constexpr `GetHash` by providing a non const string_view variable.
-  std::string_view sv_empty{""};  // NOLINT(*-redundant-string-init)
-  std::string_view sv_null{};
+  const std::string_view sv_empty{""};  // NOLINT(*-redundant-string-init)
+  const std::string_view sv_null{};
   const std::size_t hash_empty = GetHash(sv_empty);
   const std::size_t hash_null = GetHash(sv_null);
   EXPECT_THAT(kHashEmpty, hash_empty);

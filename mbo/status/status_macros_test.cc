@@ -15,6 +15,7 @@
 
 #include "mbo/status/status_macros.h"
 
+#include <string_view>
 #include <utility>
 
 #include "absl/cleanup/cleanup.h"
@@ -37,7 +38,7 @@ struct StatusMacrosTest : ::testing::Test {
   template<typename T>
   static absl::Status TestReturnIfError(T&& v, bool expect_early_return) {
     bool early_return = true;
-    absl::Cleanup done = [&] { EXPECT_THAT(early_return, expect_early_return); };
+    const absl::Cleanup done = [&] { EXPECT_THAT(early_return, expect_early_return); };
     MBO_RETURN_IF_ERROR(std::forward<T>(v));
     early_return = false;
     return absl::OkStatus();
@@ -127,7 +128,7 @@ TEST_F(StatusMacrosTest, AssignOrReturn) {
 }
 
 TEST_F(StatusMacrosTest, MboReturnOrAssignTo) {
-  absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
+  const absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
   EXPECT_THAT(TestAssignOrReturn(status_or, std::make_pair(25, 17)), IsOk());
   const auto test = []<typename T>(absl::StatusOr<std::pair<T, T>> status_or, const std::pair<T, T>& expected) {
     MBO_MOVE_TO_OR_RETURN(status_or, auto [first, second]);

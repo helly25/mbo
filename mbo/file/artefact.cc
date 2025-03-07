@@ -15,9 +15,11 @@
 
 #include "mbo/file/artefact.h"
 
+#include <cstddef>
 #include <string>
 #include <string_view>
 
+#include "absl/status/statusor.h"
 #include "absl/time/time.h"
 #include "mbo/file/file.h"
 

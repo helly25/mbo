@@ -15,8 +15,13 @@
 
 #include "mbo/types/traits.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <string_view>
 #include <type_traits>
 
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/types/internal/test_types.h"
@@ -42,12 +47,12 @@ struct TraitsTest : ::testing::Test {
 
 template<IsSameAsAnyOfRaw<int, short> T>
 constexpr bool Tester() noexcept {
-  return 1;
+  return true;
 }
 
 template<NotSameAsAnyOfRaw<int, short> T>
 constexpr bool Tester() noexcept {
-  return 0;
+  return false;
 }
 
 TEST_F(TraitsTest, Concepts) {
@@ -132,7 +137,7 @@ struct MadMix {
   char c[5]{};  // NOLINT(*-magic-numbers,*-avoid-c-arrays)
 
   std::string Print() const {
-    std::string_view str(static_cast<const char*>(&c[0]), sizeof(c));
+    const std::string_view str(&c[0], sizeof(c));
     return absl::StrCat("{.a=", a, ", .b=\"", b, "\", .c={", str, "}}");
   }
 };

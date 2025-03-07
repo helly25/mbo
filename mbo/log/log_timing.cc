@@ -15,11 +15,15 @@
 
 #include "mbo/log/log_timing.h"
 
+#include <cstddef>
+#include <string>
 #include <string_view>
 
+#include "absl/base/log_severity.h"
 #include "absl/flags/flag.h"
 #include "absl/log/log.h"
 #include "absl/strings/str_replace.h"
+#include "absl/time/clock.h"
 #include "absl/time/time.h"
 
 // NOLINTBEGIN(*avoid-non-const-global-variables,*abseil-no-namespace)
@@ -39,6 +43,7 @@ ABSL_FLAG(
 // NOLINTEND(*avoid-non-const-global-variables,*abseil-no-namespace)
 
 namespace mbo::log::log_internal {
+namespace {
 
 std::string_view ReverseFindSpaceSkipPastMatchingBrackets(std::string_view str) {
   if (str.empty()) {
@@ -116,6 +121,8 @@ std::string ShortenLambdas(std::string_view function) {
                 });
   return result;
 }
+
+}  // namespace
 
 std::string LogTimingImpl::StripFunctionName(std::string_view function) {
   auto pos = function.rfind(')');

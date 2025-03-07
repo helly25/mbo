@@ -15,14 +15,21 @@
 
 #include "mbo/file/ini/ini_file.h"
 
+#include <cstddef>
 #include <filesystem>
+#include <map>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "absl/log/initialize.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/diff/unified_diff.h"
+#include "mbo/file/artefact.h"
 #include "mbo/file/file.h"
 #include "mbo/testing/runfiles_dir.h"
 #include "mbo/testing/status.h"
@@ -41,30 +48,39 @@ namespace fs = std::filesystem;
 struct IniFileTest : ::testing::Test {
   static void SetUpTestSuite() { absl::InitializeLog(); }
 
-  static std::string SrcDir(std::string_view src_rel) { return mbo::testing::RunfilesDirOrDie(src_rel); }
-
   static std::string TmpDir() { return ::testing::TempDir(); }
+
+  static absl::StatusOr<std::map<std::string, std::pair<std::string, std::string>>> GatherTests(
+      const fs::path& test_ini) {
+    std::map<std::string, std::pair<std::string, std::string>> tests;
+    for (const auto& entry : fs::directory_iterator{test_ini.parent_path()}) {
+      const std::string_view filename = entry.path().native();
+      if (entry.path().extension() == ".ini") {
+        tests[entry.path().stem().native()].first = filename;
+        continue;
+      } else if (entry.path().extension() == ".golden") {
+        tests[entry.path().stem().native()].second = filename;
+        continue;
+      }
+    }
+    for (const auto& [base, files] : tests) {
+      const auto& [ini_fn, exp_fn] = files;
+      SCOPED_TRACE(absl::StrCat("Test: ", base));
+      if (ini_fn.empty()) {
+        return absl::NotFoundError(absl::StrCat("Missing '.ini' file for: ", base));
+      }
+      if (exp_fn.empty()) {
+        return absl::NotFoundError(absl::StrCat("Missing '.golden' file for: ", base));
+      }
+    }
+    return tests;
+  }
 };
 
 TEST_F(IniFileTest, TestGolden) {
-  const fs::path test_ini = SrcDir("@com_helly25_mbo//mbo/file/ini:tests/test.ini");
-  std::map<std::string, std::pair<std::string, std::string>> tests;
-  for (const auto& entry : fs::directory_iterator{test_ini.parent_path()}) {
-    std::string_view filename = entry.path().native();
-    if (entry.path().extension() == ".ini") {
-      tests[entry.path().stem().native()].first = filename;
-      continue;
-    } else if (entry.path().extension() == ".golden") {
-      tests[entry.path().stem().native()].second = filename;
-      continue;
-    }
-  }
-  for (const auto& [base, files] : tests) {
-    const auto& [ini_fn, exp_fn] = files;
-    SCOPED_TRACE(absl::StrCat("Test: ", base));
-    ASSERT_FALSE(ini_fn.empty()) << "Missing '.ini' file for: " << base;
-    ASSERT_FALSE(exp_fn.empty()) << "Missing '.golden' file for: " << base;
-  }
+  MBO_ASSERT_OK_AND_MOVE_TO(
+      GatherTests(mbo::testing::RunfilesDirOrDie("@com_helly25_mbo//mbo/file/ini:tests/test.ini")),
+      const std::map<std::string, std::pair<std::string, std::string>> tests);
   std::size_t file_count = 0;
   for (const auto& [base, files] : tests) {
     const auto& [ini_fn, exp_fn] = files;

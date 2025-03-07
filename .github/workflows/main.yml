@@ -97,3 +97,4 @@ jobs:
       compiler: ${{ matrix.compiler }}
       llvm_version: ${{ matrix.llvm_version }}
       bazel_config: ${{ matrix.bazel_config }}
+      module_version: ${{ matrix.module_version }}

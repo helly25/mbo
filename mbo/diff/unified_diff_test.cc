@@ -15,13 +15,16 @@
 
 #include "mbo/diff/unified_diff.h"
 
+#include <cstddef>
 #include <string>
 #include <string_view>
 #include <vector>
 
+#include "absl/status/statusor.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/container/convert_container.h"
+#include "mbo/file/artefact.h"
 #include "mbo/strings/indent.h"
 #include "mbo/testing/status.h"
 

@@ -17,17 +17,22 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 #include "absl/algorithm/container.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "mbo/status/status_macros.h"
 #include "mbo/types/extend.h"
+#include "re2/re2.h"
 
 #ifdef MBO_ALWAYS_INLINE
 # undef MBO_ALWAYS_INLINE
@@ -95,7 +100,7 @@ MBO_ALWAYS_INLINE absl::Status GlobFindRange(std::string_view& pattern, std::str
     if (pattern.empty()) {
       return absl::InvalidArgumentError("Unterminated range expression.");
     }
-    char chr = pattern.front();
+    const char chr = pattern.front();
     switch (chr) {
       default:
         re2_pattern += chr;
@@ -205,7 +210,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<std::string> GlobNormalizeStr(
 MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
     std::string_view glob_pattern,
     const Glob2Re2Options& options) {
-  MBO_MOVE_TO_OR_RETURN(GlobNormalizeStr(glob_pattern, options), std::string pattern);
+  MBO_MOVE_TO_OR_RETURN(GlobNormalizeStr(glob_pattern, options), const std::string pattern);
   char chr = '\0';
   std::size_t slash_0 = std::string_view::npos;
   std::size_t slash_1 = std::string_view::npos;
@@ -252,7 +257,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
   if (slash_1 == std::string_view::npos) {
     return result;
   }
-  bool star_star = result.pattern.find("**", slash_1) != std::string::npos;
+  const bool star_star = result.pattern.find("**", slash_1) != std::string::npos;
   if (star_star) {
     result.path_len = result.pattern.size();
   } else {
@@ -295,7 +300,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<std::string> Glob2Re2ExpressionImpl(
   std::string re2_pattern;
   re2_pattern.reserve(pattern.size() * 2);
   while (!pattern.empty()) {
-    char chr = pattern.front();
+    const char chr = pattern.front();
     switch (chr) {
       default:
         re2_pattern += chr;
@@ -378,9 +383,13 @@ absl::StatusOr<std::string> Glob2Re2Expression(std::string_view pattern, const G
 absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(
     std::string_view pattern,
     const Glob2Re2Options& re2_convert_options) {
-  MBO_MOVE_TO_OR_RETURN(Glob2Re2Expression(pattern, re2_convert_options), std::string re2_pattern);
+  MBO_MOVE_TO_OR_RETURN(Glob2Re2Expression(pattern, re2_convert_options), const std::string re2_pattern);
   return std::make_unique<RE2>(re2_pattern, re2_convert_options.re2_options);
 }
+
+}  // namespace file_internal
+
+namespace {
 
 absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const GlobEntryFunc& func) {
   const fs::path normalized_root = (root.empty() || root == ".") ? fs::current_path() : root.lexically_normal();
@@ -413,9 +422,7 @@ absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const Gl
   return absl::OkStatus();
 }
 
-}  // namespace file_internal
-
-using namespace mbo::file::file_internal;
+}  // namespace
 
 absl::Status GlobRe2(const fs::path& root, const RE2& regex, const GlobOptions& options, const GlobEntryFunc& func) {
   const auto wrap_func = [&](const GlobEntry& entry) -> absl::StatusOr<GlobEntryAction> {
@@ -433,7 +440,7 @@ absl::Status Glob(
     const Glob2Re2Options& re2_convert_options,
     const GlobOptions& options,
     const GlobEntryFunc& func) {
-  MBO_MOVE_TO_OR_RETURN(Glob2Re2(pattern, re2_convert_options), const std::unique_ptr<const RE2> regex);
+  MBO_MOVE_TO_OR_RETURN(file_internal::Glob2Re2(pattern, re2_convert_options), const std::unique_ptr<const RE2> regex);
   return GlobRe2(root, *regex, options, func);
 }
 

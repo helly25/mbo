@@ -15,16 +15,23 @@
 
 #include "mbo/mope/mope.h"
 
+#include <cstddef>
+#include <optional>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
+#include <vector>
 
 #include "absl/cleanup/cleanup.h"
 #include "absl/log/absl_check.h"
-#include "absl/log/absl_log.h"  // IWYU pragma: keep
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/numbers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "mbo/container/any_scan.h"
 #include "mbo/status/status_macros.h"
 #include "mbo/strings/parse.h"
 #include "re2/re2.h"
@@ -73,7 +80,7 @@ std::ostream& operator<<(std::ostream& os, Template::TagType value) {
 }
 
 bool Template::IsValidName(std::string_view name) {
-  static constexpr LazyRE2 kValid = {"[_a-zA-Z]\\w*"};
+  static constexpr LazyRE2 kValid = {.pattern_ = "[_a-zA-Z]\\w*"};
   return RE2::FullMatch(name, *kValid);
 }
 
@@ -275,7 +282,7 @@ absl::Status Template::ExpandConfiguredSection(
   if (Exists(name, ctx)) {
     return absl::InvalidArgumentError(absl::StrCat("Cannot override existing section tag '", name, "'."));
   }
-  absl::Cleanup cleanup = [&] { ctx.data.erase(name); };
+  const absl::Cleanup cleanup = [&] { ctx.data.erase(name); };
   for (auto& str : str_list) {
     MBO_RETURN_IF_ERROR(SetValueInternal(name, std::move(str), true, ctx.data));
     std::string result(original);
@@ -352,12 +359,13 @@ absl::Status Template::ExpandSectionTag(const TagInfo& tag, Context& ctx, std::s
     return ExpandSection(*section, ctx, output);
   }
   static constexpr LazyRE2 kReFor = {
-      R"(\s*(-?\d+|[_a-zA-Z]\w*)\s*;\s*(-?\d+|[_a-zA-Z]\w*)\s*(?:;\s*(|-?\d+|[_a-zA-Z]\w*)\s*(?:;([^;]*))?)?)"};
+      .pattern_ =
+          R"(\s*(-?\d+|[_a-zA-Z]\w*)\s*;\s*(-?\d+|[_a-zA-Z]\w*)\s*(?:;\s*(|-?\d+|[_a-zA-Z]\w*)\s*(?:;([^;]*))?)?)"};
   RangeData range;
   if (RE2::FullMatch(*tag.config, *kReFor, &range.start, &range.end, &range.step, &range.join)) {
     return ExpandRangeData(tag, range, ctx, output);
   }
-  if (*tag.config == "") {
+  if (tag.config->empty()) {
     output = "";
     return absl::OkStatus();
   }
@@ -402,7 +410,7 @@ absl::StatusOr<bool> Template::ExpandValueTag(const TagInfo& tag, Context& ctx, 
 std::optional<const Template::TagInfo> Template::FindAndConsumeTag(std::string_view& pos) {
   // Grab parts as string_view. Done in a separate block so these cannot escape.
   // They will be invalid upon the first change of `output`.
-  static constexpr LazyRE2 kTagRegex = {"({{(#?)([_a-zA-Z]\\w*)(?:([=:])((?:[^}]|[}][^}])*))?}})"};
+  static constexpr LazyRE2 kTagRegex = {.pattern_ = "({{(#?)([_a-zA-Z]\\w*)(?:([=:])((?:[^}]|[}][^}])*))?}})"};
   std::string_view start;
   std::string_view type;
   std::string_view name;
@@ -486,7 +494,7 @@ absl::Status Template::Expand(std::string& output) const {
 
 absl::Status Template::Expand(
     std::string& output,
-    mbo::container::ConvertingScan<std::pair<std::string_view, std::string_view>> context_data) const {
+    const mbo::container::ConvertingScan<std::pair<std::string_view, std::string_view>>& context_data) const {
   Context ctx;
   for (auto [name, value] : context_data) {
     MBO_RETURN_IF_ERROR(SetValueInternal(name, value, false, ctx.data));

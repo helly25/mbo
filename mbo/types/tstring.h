@@ -29,13 +29,13 @@ namespace mbo::types {
 
 // NOLINTBEGIN(readability-identifier-naming,readability-avoid-unconditional-preprocessor-if)
 
-#ifdef __clang__
+#if defined(__clang__)
 # pragma clang diagnostic push
 # pragma clang diagnostic ignored "-Wgnu-string-literal-operator-template"
 #elif defined(__GNUC__)
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wpedantic"
-#endif
+#endif  // defined(__clang__)
 
 // Implements type `tstring` a compile time string-literal type.
 //
@@ -395,8 +395,8 @@ struct tstring final {
   }
 
   template<typename H>
-  friend H AbslHashValue(H hash, const tstring& t_str) {
-    return H::combine(std::move(hash), t_str.Hash());
+  friend H AbslHashValue(H hash, const tstring& /*t_str*/) {
+    return H::combine(std::move(hash), Hash());
   }
 
  private:
@@ -597,11 +597,11 @@ constexpr auto make_ts(const char(&str)[N]) noexcept {
     return {};                                                                                    \
   }(std::make_index_sequence<types_internal::tstring_input_len(str)>{})
 
-#ifdef __clang__
+#if defined(__clang__)
 # pragma clang diagnostic pop
 #elif defined(__GNUC__)
 # pragma GCC diagnostic pop
-#endif
+#endif  // defined(__clang__)
 
 // NOLINTEND(readability-identifier-naming,readability-avoid-unconditional-preprocessor-if)
 

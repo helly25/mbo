@@ -15,6 +15,11 @@
 
 #include "mbo/status/status_builder.h"
 
+#include <string_view>
+#include <utility>
+
+#include "absl/status/status.h"
+#include "absl/strings/cord.h"
 #include "absl/strings/str_cat.h"
 
 namespace mbo::status {
@@ -51,7 +56,7 @@ StatusBuilder::operator absl::Status() const & {
       data_->status.code(),
       data_->appended ? data_->stream.str() : absl::StrCat(data_->status.message(), data_->stream.str()));
   data_->status.ForEachPayload(
-      [&result](absl::string_view url, const absl::Cord& payload) { result.SetPayload(url, payload); });
+      [&result](std::string_view url, const absl::Cord& payload) { result.SetPayload(url, payload); });
   return result;
 }
 

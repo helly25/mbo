@@ -98,7 +98,7 @@ TEST_F(RefWrapTest, Compare) {
   EXPECT_THAT(ref, Ge(25));
   EXPECT_THAT(ref, Not(Ge(33)));
   int val = 25;
-  RefWrap<int> cmp(val);
+  const RefWrap<int> cmp(val);
   EXPECT_THAT(ref == val, true);
   EXPECT_THAT(ref != val, false);
   EXPECT_THAT(ref <= val, true);

@@ -15,10 +15,14 @@
 
 #include "mbo/testing/matchers.h"
 
+#include <cstddef>
 #include <map>
+#include <memory>
 #include <set>
+#include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "absl/strings/numbers.h"
@@ -117,17 +121,17 @@ TEST_F(MatcherTest, WhenTransformedBySameType) {
 TEST_F(MatcherTest, WhenTransformedByConversion) {
   {
     // std::vector: int -> std::string
-    std::vector<int> set{1, 2};
+    const std::vector<int> set{1, 2};
     EXPECT_THAT(set, WhenTransformedBy([](int v) { return absl::StrCat(v + 2); }, ElementsAre("3", "4")));
   }
   {
     // std::set: int -> std::string
-    std::set<int> set{1, 2};
+    const std::set<int> set{1, 2};
     EXPECT_THAT(set, WhenTransformedBy([](int v) { return absl::StrCat(v + 2); }, ElementsAre("3", "4")));
   }
   {
     // std::vector: int -> (int, int)
-    std::vector<int> set{1, 2};
+    const std::vector<int> set{1, 2};
     EXPECT_THAT(
         set, WhenTransformedBy([](int v) { return std::make_pair(v, v + 2); }, ElementsAre(Pair(1, 3), Pair(2, 4))));
   }

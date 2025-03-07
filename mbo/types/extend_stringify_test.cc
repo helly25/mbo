@@ -13,12 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <array>
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
+#include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "absl/log/absl_check.h"  // IWYU pragma: keep
@@ -30,7 +34,7 @@
 #include "mbo/types/extender.h"
 #include "mbo/types/stringify.h"
 
-#ifdef __clang__
+#if defined(__clang__)
 # pragma clang diagnostic push
 # pragma clang diagnostic ignored "-Wunknown-pragmas"
 # pragma clang diagnostic ignored "-Wunused-local-typedef"
@@ -40,7 +44,7 @@
 #elif defined(__GNUC__)
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
+#endif  // defined(__clang__)
 
 // Not using namespace mbo::types {
 namespace {
@@ -58,10 +62,7 @@ using ::mbo::types::types_internal::kStructNameSupport;
 using ::mbo::types::types_internal::SupportsFieldNames;
 using ::mbo::types::types_internal::SupportsFieldNamesConstexpr;
 using ::testing::ElementsAre;
-using ::testing::FieldsAre;
 using ::testing::IsEmpty;
-using ::testing::Pointee;
-using ::testing::StrEq;
 
 // Matcher that checks the field name matches if field names are supported, or verifies that the
 // passed field_name is in fact empty.
@@ -79,7 +80,7 @@ struct ExtenderStringifyTest : ::testing::Test {
     MOCK_METHOD(StringifyOptions, FieldOptions, (std::size_t, std::string_view));
   };
 
-  ExtenderStringifyTest() { tester = new Tester(); }
+  ExtenderStringifyTest() { tester = new Tester(); }  // NOLINT(cppcoreguidelines-owning-memory)
 
   ExtenderStringifyTest(const ExtenderStringifyTest&) noexcept = delete;
   ExtenderStringifyTest& operator=(const ExtenderStringifyTest&) noexcept = delete;
@@ -87,7 +88,7 @@ struct ExtenderStringifyTest : ::testing::Test {
   ExtenderStringifyTest& operator=(ExtenderStringifyTest&&) noexcept = delete;
 
   ~ExtenderStringifyTest() override {
-    delete tester;
+    delete tester;  // NOLINT(cppcoreguidelines-owning-memory)
     tester = nullptr;
   }
 
@@ -410,7 +411,7 @@ TEST_F(ExtenderStringifyTest, ValueReplacement) {
 
 struct TestStructContainer : Extend<TestStructContainer> {
   std::vector<int> one = {1, 2, 3};
-  std::vector<int> two = {};
+  std::vector<int> two;
   std::vector<int> tre = {1, 2, 3};
 
   friend StringifyOptions MboTypesStringifyOptions(
@@ -680,10 +681,10 @@ struct TestExtApiCombo : mbo::types::Extend<TestExtApiCombo> {
   }
 
   friend const StringifyOptions& MboTypesStringifyOptions(
-      const TestExtApiCombo& v,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& defaults) {
+      const TestExtApiCombo&,
+      std::size_t,
+      std::string_view,
+      const StringifyOptions&) {
     return StringifyOptions::AsCpp();
   }
 };
@@ -707,7 +708,7 @@ struct TestSmartPtr : Extend<TestSmartPtr> {
 };
 
 TEST_F(ExtenderStringifyTest, TestSmartPtr) {
-  TestSmartPtr val{.ups = std::make_unique<std::string>("foo")};
+  const TestSmartPtr val{.ups = std::make_unique<std::string>("foo")};
 
   EXPECT_THAT(
       val.ToString(), R"({.ups: {"foo"}, .upn: <nullptr>, .psv: *{"global"}, .pn: <nullptr>, .npt: std::nullptr_t})");
@@ -716,9 +717,9 @@ TEST_F(ExtenderStringifyTest, TestSmartPtr) {
       R"({.ups = {"foo"}, .upn = nullptr, .psv = "global", .pn = nullptr, .npt = nullptr})");
   EXPECT_THAT(val.ToString(StringifyOptions::AsJson()), R"({"ups": "foo", "psv": "global"})");
 
-  TestSmartPtr val2{.ups = nullptr};
+  const TestSmartPtr val2{.ups = nullptr};
   EXPECT_THAT(val2.ToString(StringifyOptions::AsJson()), R"({"psv": "global"})");
-}
+}  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
 
 struct TestOptional : Extend<TestOptional> {
   friend auto MboTypesStringifyFieldNames(const T&) { return std::array<std::string_view, 2>{"opt", "none"}; }
@@ -728,7 +729,7 @@ struct TestOptional : Extend<TestOptional> {
 };
 
 TEST_F(ExtenderStringifyTest, TestOptional) {
-  TestOptional val{};
+  const TestOptional val{};
 
   EXPECT_THAT(val.ToString(), R"({.opt: {"foo"}, .none: std::nullopt})");
   EXPECT_THAT(val.ToString(StringifyOptions::AsCpp()), R"({.opt = {"foo"}, .none = std::nullopt})");
@@ -773,8 +774,8 @@ TEST_F(ExtenderStringifyTest, TestStringifyDisable) {
 
 // Not using namespace mbo::types
 
-#ifdef __clang__
+#if defined(__clang__)
 # pragma clang diagnostic pop
 #elif defined(__GNUC__)
 # pragma GCC diagnostic pop
-#endif
+#endif  // defined(__clang__)

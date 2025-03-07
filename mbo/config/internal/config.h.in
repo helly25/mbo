@@ -13,8 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_CONFIG_CONFIG_H_
-#define MBO_CONFIG_CONFIG_H_
+#ifndef MBO_CONFIG_CONFIG_GEN_H_
+#define MBO_CONFIG_CONFIG_GEN_H_
+
+// IWYU pragma: private, include "mbo/config/config.h"
+// IWYU pragma: friend "mbo/config/config.h"
 
 #include <cstddef>
 
@@ -45,4 +48,4 @@ static constexpr bool kRequireThrows = false;
 
 }  // namespace mbo::config
 
-#endif  // MBO_CONFIG_CONFIG_H_
+#endif  // MBO_CONFIG_CONFIG_GEN_H_

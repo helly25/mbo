@@ -16,7 +16,9 @@
 #include "mbo/types/template_search.h"
 
 #include <array>
+#include <cstddef>
 #include <limits>
+#include <type_traits>
 
 // NOLINTBEGIN(*-magic-numbers)
 

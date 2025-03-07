@@ -69,9 +69,9 @@ TEST_F(TupleTest, StructToTupleNoDerived) {
   EXPECT_THAT(kTest0, std::tuple());
   constexpr std::tuple<int> kTest1 = StructToTuple(Base1{1});
   EXPECT_THAT(kTest1, std::tuple(1));
-  constexpr std::tuple<int, int> kTest2 = StructToTuple(Base2{1, 2});
+  constexpr std::tuple<int, int> kTest2 = StructToTuple(Base2{.a = 1, .b = 2});
   EXPECT_THAT(kTest2, std::tuple(1, 2));
-  constexpr std::tuple<int, int, int> kTest3 = StructToTuple(Base3{1, 2, 3});
+  constexpr std::tuple<int, int, int> kTest3 = StructToTuple(Base3{.a = 1, .b = 2, .c = 3});
   EXPECT_THAT(kTest3, std::tuple(1, 2, 3));
 }
 
@@ -83,7 +83,8 @@ TEST_F(TupleTest, Mixed) {
     std::string_view d;
   };
 
-  const std::tuple<int, double, std::string, std::string_view> test0 = StructToTuple(Mixed{1, 2.2, "3", "4"});
+  const std::tuple<int, double, std::string, std::string_view> test0 =
+      StructToTuple(Mixed{.a = 1, .b = 2.2, .c = "3", .d = "4"});
   EXPECT_THAT(test0, std::tuple(1, 2.2, "3", "4"));
 }
 

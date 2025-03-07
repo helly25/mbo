@@ -15,16 +15,20 @@
 
 #include "mbo/diff/unified_diff.h"
 
+#include <cstddef>
 #include <list>
 #include <string>
 #include <string_view>
 #include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "absl/cleanup/cleanup.h"
 #include "absl/log/absl_log.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
@@ -33,6 +37,7 @@
 #include "mbo/file/artefact.h"
 #include "mbo/strings/strip.h"
 #include "mbo/types/no_destruct.h"
+#include "re2/re2.h"
 
 namespace mbo::diff {
 
@@ -319,7 +324,7 @@ class Chunk {
   }
 
   void OutputChunk() {
-    absl::Cleanup clear = [this] { Clear(); };
+    const absl::Cleanup clear = [this] { Clear(); };
     if (lhs_size_ == 0 && rhs_size_ == 0) {
       return;
     }
@@ -429,9 +434,9 @@ bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) co
     const auto strip = [](std::string_view input) {
       std::string out;
       out.reserve(input.length());
-      for (char c : input) {
-        if (!absl::ascii_isspace(c)) {
-          out.push_back(c);
+      for (const char chr : input) {
+        if (!absl::ascii_isspace(chr)) {
+          out.push_back(chr);
         }
       }
       return out;
