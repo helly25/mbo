@@ -15,6 +15,8 @@
 
 #include "mbo/status/status.h"
 
+#include <utility>
+
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "gmock/gmock.h"

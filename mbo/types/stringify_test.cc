@@ -33,7 +33,7 @@
 #include "mbo/types/traits.h"
 #include "mbo/types/tuple_extras.h"
 
-#ifdef __clang__
+#if defined(__clang__)
 # pragma clang diagnostic push
 # pragma clang diagnostic ignored "-Wunknown-pragmas"
 # pragma clang diagnostic ignored "-Wunused-local-typedef"
@@ -43,7 +43,7 @@
 #elif defined(__GNUC__)
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
+#endif  // defined(__clang__)
 
 namespace mbo_other {  // Not using namespace mbo::types
 
@@ -710,8 +710,8 @@ TEST_F(StringifyTest, NonLiteralFields) {
 }  // namespace
 }  // namespace mbo_other
 
-#ifdef __clang__
+#if defined(__clang__)
 # pragma clang diagnostic pop
 #elif defined(__GNUC__)
 # pragma GCC diagnostic pop
-#endif
+#endif  // defined(__clang__)

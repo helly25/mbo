@@ -246,7 +246,7 @@ class StatusHasPayload {
       return false;
     }
     PayloadInfo info;
-    actual_status.ForEachPayload([this, &info, listener](absl::string_view type_url, const absl::Cord& payload) {
+    actual_status.ForEachPayload([this, &info, listener](std::string_view type_url, const absl::Cord& payload) {
       ++info.count;
       if (info.messaged) {
         return;
@@ -317,7 +317,7 @@ class StatusPayloads {
   bool MatchAndExplain(const StatusType& actual, ::testing::MatchResultListener* listener) const {
     const absl::Status& actual_status = ::mbo::status::GetStatus(actual);
     std::map<std::string, std::string> payload_map;
-    actual_status.ForEachPayload([&payload_map](absl::string_view type_url, const absl::Cord& payload) {
+    actual_status.ForEachPayload([&payload_map](std::string_view type_url, const absl::Cord& payload) {
       payload_map.emplace(type_url, payload);
     });
     ::testing::StringMatchResultListener inner;
@@ -424,20 +424,20 @@ inline ::testing::PolymorphicMatcher<testing_internal::StatusPayloads> StatusPay
 #undef MBO_EXPECT_OK
 #define MBO_EXPECT_OK(expression) EXPECT_THAT(expression, ::mbo::testing::IsOk())
 
-#ifndef EXPECT_OK
+#if !defined(EXPECT_OK)
 # define EXPECT_OK(expr) MBO_EXPECT_OK(expr)
 #elif __cplusplus >= 202'302L
 # warning "EXPECT_OK already defined"
-#endif
+#endif  // !defined(EXPECT_OK)
 
 #undef MBO_ASSERT_OK
 #define MBO_ASSERT_OK(expression) ASSERT_THAT(expression, ::mbo::testing::IsOk())
 
-#ifndef ASSERT_OK
+#if !defined(ASSERT_OK)
 # define ASSERT_OK(expr) MBO_ASSERT_OK(expr)
 #elif __cplusplus >= 202'302L
 # warning "ASSERT_OK already defined"
-#endif
+#endif  // !defined(ASSERT_OK)
 
 #undef MBO_PRIVATE_TESTING_STATUS_ASSERT_OK_AND_ASSIGN_
 #undef MBO_ASSERT_OK_AND_ASSIGN
@@ -467,11 +467,11 @@ inline ::testing::PolymorphicMatcher<testing_internal::StatusPayloads> StatusPay
   MBO_PRIVATE_TESTING_STATUS_ASSERT_OK_AND_ASSIGN_( \
       MBO_PRIVATE_TESTING_STATUS_CONCAT_(_status_or_value, __LINE__), expression, __VA_ARGS__)
 
-#ifndef ASSERT_OK_AND_ASSIGN
+#if !defined(ASSERT_OK_AND_ASSIGN)
 # define ASSERT_OK_AND_ASSIGN(target, expression) MBO_ASSERT_OK_AND_ASSIGN(target, expression)
 #elif __cplusplus >= 202'302L
 # warning "ASSERT_OK_AND_ASSIGN already defined"
-#endif
+#endif  // !defined(ASSERT_OK_AND_ASSIGN)
 
 // NOLINTEND(bugprone-macro-parentheses)
 // NOLINTEND(cppcoreguidelines-macro-usage)

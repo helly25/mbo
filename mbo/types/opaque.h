@@ -69,7 +69,7 @@ OpaquePtr<T> MakeOpaquePtr(Args&&... args) {
 // NOTE: The macro defines the necessary ADL functions as inline functions.
 template<typename T>
 struct OpaqueValue {
-  using element_type = T;
+  using element_type = T;  // NOLINT(readability-identifier-naming)
 
   ~OpaqueValue() = default;
 
@@ -188,26 +188,25 @@ struct OpaqueContainer : ContainerProxy<OpaqueValue<Container>, Container> {};
 // Macro to define an ADL deletion hook for the specified type to be used with `OpaquePtr`.
 // NOLINTBEGIN(cppcoreguidelines-macro-usage,bugprone-macro-parentheses)
 #define MBO_TYPES_OPAQUE_HOOKS(T)                                                   \
-  /* NOLINTBEGIN(cert-dcl58-cpp,cppcoreguidelines-owning-memory) */                 \
-  inline void OpaquePtrDeleterHook(T* ptr) {                                        \
-    delete ptr;                                                                     \
-  }                                                                                 \
   template<typename... Args>                                                        \
   inline void OpaquePtrMakerHook(::mbo::types::OpaquePtr<T>& ptr, Args&&... args) { \
     ptr.reset(new T(std::forward<Args>(args)...));                                  \
+  }                                                                                 \
+  inline void OpaquePtrDeleterHook(T* ptr) {                                        \
+    delete ptr; /* NOLINT(cppcoreguidelines-owning-memory) */                       \
   }
-
-/* NOLINTEND(cert-dcl58-cpp,cppcoreguidelines-owning-memory) */
 
 // NOLINTEND(cppcoreguidelines-macro-usage,bugprone-macro-parentheses)
 
 namespace std {
-
+// NOLINTBEGIN(cert-dcl58-cpp)
 template<typename T>
 requires(requires(const T& val) { std::hash<T>{}; })
 struct hash<mbo::types::OpaqueValue<T>> {
   constexpr std::size_t operator()(const mbo::types::OpaqueValue<T>& ptr) const noexcept { return hash<T>{}(*ptr); }
 };
+
+// NOLINTEND(cert-dcl58-cpp)
 }  // namespace std
 
 #endif  // MBO_TYPES_OPAQUE_H_

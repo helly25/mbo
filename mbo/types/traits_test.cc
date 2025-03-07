@@ -17,7 +17,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <iterator>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -138,7 +137,7 @@ struct MadMix {
   char c[5]{};  // NOLINT(*-magic-numbers,*-avoid-c-arrays)
 
   std::string Print() const {
-    std::string_view str(&c[0], sizeof(c));
+    const std::string_view str(&c[0], sizeof(c));
     return absl::StrCat("{.a=", a, ", .b=\"", b, "\", .c={", str, "}}");
   }
 };

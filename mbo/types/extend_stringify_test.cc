@@ -34,7 +34,7 @@
 #include "mbo/types/extender.h"
 #include "mbo/types/stringify.h"
 
-#ifdef __clang__
+#if defined(__clang__)
 # pragma clang diagnostic push
 # pragma clang diagnostic ignored "-Wunknown-pragmas"
 # pragma clang diagnostic ignored "-Wunused-local-typedef"
@@ -44,7 +44,7 @@
 #elif defined(__GNUC__)
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
+#endif  // defined(__clang__)
 
 // Not using namespace mbo::types {
 namespace {
@@ -774,8 +774,8 @@ TEST_F(ExtenderStringifyTest, TestStringifyDisable) {
 
 // Not using namespace mbo::types
 
-#ifdef __clang__
+#if defined(__clang__)
 # pragma clang diagnostic pop
 #elif defined(__GNUC__)
 # pragma GCC diagnostic pop
-#endif
+#endif  // defined(__clang__)

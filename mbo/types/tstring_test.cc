@@ -22,6 +22,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <variant>
 
 #include "absl/hash/hash.h"
 #include "absl/hash/hash_testing.h"

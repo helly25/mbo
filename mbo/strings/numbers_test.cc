@@ -16,6 +16,7 @@
 #include "mbo/strings/numbers.h"
 
 #include <array>
+#include <cstdint>
 #include <limits>
 #include <string>
 #include <string_view>

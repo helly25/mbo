@@ -136,9 +136,9 @@ struct StringWrap : std::string {
 }  // namespace mbo::types
 
 namespace std {
-
+/* NOLINTBEGIN(cert-dcl58-cpp) */
 MBO_TYPES_OPAQUE_HOOKS(std::vector<std::string>);
 MBO_TYPES_OPAQUE_HOOKS(std::vector<mbo::types::StringWrap>);
 MBO_TYPES_OPAQUE_HOOKS(std::list<mbo::types::StringWrap>);
-
+/* NOLINTEND(cert-dcl58-cpp) */
 }  // namespace std

@@ -128,7 +128,7 @@ TEST_F(StatusMacrosTest, AssignOrReturn) {
 }
 
 TEST_F(StatusMacrosTest, MboReturnOrAssignTo) {
-  absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
+  const absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
   EXPECT_THAT(TestAssignOrReturn(status_or, std::make_pair(25, 17)), IsOk());
   const auto test = []<typename T>(absl::StatusOr<std::pair<T, T>> status_or, const std::pair<T, T>& expected) {
     MBO_MOVE_TO_OR_RETURN(status_or, auto [first, second]);
