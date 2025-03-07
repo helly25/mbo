@@ -13,7 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <functional>  // IWYU pragma: keep
+#ifndef MBO_CONTAINER_LIMITED_SET_BENCHMARK_H_
+#define MBO_CONTAINER_LIMITED_SET_BENCHMARK_H_
+
+#include <cstddef>
+#include <cstdint>
 #include <initializer_list>
 #include <limits>
 #include <random>
@@ -27,10 +31,8 @@
 #include "mbo/container/limited_options.h"
 #include "mbo/container/limited_set.h"
 #include "mbo/container/limited_vector.h"
-#include "mbo/types/compare.h"  // IWYU pragma: keep
 
 namespace mbo::container {
-namespace {
 
 class Random {
  public:
@@ -86,7 +88,7 @@ class Benchmarks {
     Random random;  // One per benchmark function instantiation means all functions use the same data.
 
     struct TestData {
-      TestData(Random& random) : data(GetData(random)), input(GetInput(random, data)) {}
+      explicit TestData(Random& random) : data(GetData(random)), input(GetInput(random, data)) {}
 
       const BenchmarkedContainer data;
       const std::vector<int> input;
@@ -162,85 +164,6 @@ std::string MakeName(std::string_view compare, std::string_view flags, std::stri
       ", ");
 }
 
-// NOLINTBEGIN(cppcoreguidelines-macro-usage)
-
-#define MBO_REGISTER_BENCHMARK(Size, Compare, Func, HaveOrMiss, Flags) \
-  BENCHMARK(Benchmarks<Size, HaveOrMiss, Compare, Flags>::Func)->Name(MakeName<HaveOrMiss>(#Compare, #Flags, #Func))
-
-#define MBO_REGISTER_BENCHMARKS_FLAGS(Size, Compare, Func, HaveOrMiss)                   \
-  MBO_REGISTER_BENCHMARK(Size, Compare, Func, HaveOrMiss, LimitedOptionsFlag::kDefault); \
-  MBO_REGISTER_BENCHMARK(Size, Compare, Func, HaveOrMiss, LimitedOptionsFlag::kNoOptimizeIndexOf)
-
-#define MBO_REGISTER_BENCHMARKS_COMPARE(Size, Func, HaveOrMiss)     \
-  MBO_REGISTER_BENCHMARKS_FLAGS(Size, std::less, Func, HaveOrMiss); \
-  MBO_REGISTER_BENCHMARKS_FLAGS(Size, mbo::types::CompareLess, Func, HaveOrMiss)
-
-#define MBO_REGISTER_BENCHMARKS_SIZE(Size)                  \
-  MBO_REGISTER_BENCHMARKS_COMPARE(Size, BmContains, true);  \
-  MBO_REGISTER_BENCHMARKS_COMPARE(Size, BmContains, false); \
-  MBO_REGISTER_BENCHMARKS_COMPARE(Size, BmFind, true);      \
-  MBO_REGISTER_BENCHMARKS_COMPARE(Size, BmFind, false);     \
-  MBO_REGISTER_BENCHMARKS_COMPARE(Size, BmIndexOf, true);   \
-  MBO_REGISTER_BENCHMARKS_COMPARE(Size, BmIndexOf, false)
-
-// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
-
-MBO_REGISTER_BENCHMARKS_SIZE(1);
-MBO_REGISTER_BENCHMARKS_SIZE(2);
-MBO_REGISTER_BENCHMARKS_SIZE(3);
-MBO_REGISTER_BENCHMARKS_SIZE(4);
-MBO_REGISTER_BENCHMARKS_SIZE(5);
-MBO_REGISTER_BENCHMARKS_SIZE(6);
-MBO_REGISTER_BENCHMARKS_SIZE(7);
-MBO_REGISTER_BENCHMARKS_SIZE(8);
-MBO_REGISTER_BENCHMARKS_SIZE(9);
-MBO_REGISTER_BENCHMARKS_SIZE(10);
-MBO_REGISTER_BENCHMARKS_SIZE(11);
-MBO_REGISTER_BENCHMARKS_SIZE(12);
-MBO_REGISTER_BENCHMARKS_SIZE(13);
-MBO_REGISTER_BENCHMARKS_SIZE(14);
-MBO_REGISTER_BENCHMARKS_SIZE(15);
-MBO_REGISTER_BENCHMARKS_SIZE(16);
-MBO_REGISTER_BENCHMARKS_SIZE(17);
-MBO_REGISTER_BENCHMARKS_SIZE(18);
-MBO_REGISTER_BENCHMARKS_SIZE(18);
-MBO_REGISTER_BENCHMARKS_SIZE(19);
-MBO_REGISTER_BENCHMARKS_SIZE(20);
-MBO_REGISTER_BENCHMARKS_SIZE(21);
-MBO_REGISTER_BENCHMARKS_SIZE(22);
-MBO_REGISTER_BENCHMARKS_SIZE(23);
-MBO_REGISTER_BENCHMARKS_SIZE(24);
-MBO_REGISTER_BENCHMARKS_SIZE(25);
-MBO_REGISTER_BENCHMARKS_SIZE(26);
-MBO_REGISTER_BENCHMARKS_SIZE(27);
-MBO_REGISTER_BENCHMARKS_SIZE(28);
-MBO_REGISTER_BENCHMARKS_SIZE(29);
-MBO_REGISTER_BENCHMARKS_SIZE(30);
-MBO_REGISTER_BENCHMARKS_SIZE(31);
-MBO_REGISTER_BENCHMARKS_SIZE(32);
-MBO_REGISTER_BENCHMARKS_SIZE(33);
-MBO_REGISTER_BENCHMARKS_SIZE(34);
-MBO_REGISTER_BENCHMARKS_SIZE(35);
-MBO_REGISTER_BENCHMARKS_SIZE(36);
-MBO_REGISTER_BENCHMARKS_SIZE(37);
-MBO_REGISTER_BENCHMARKS_SIZE(38);
-MBO_REGISTER_BENCHMARKS_SIZE(39);
-MBO_REGISTER_BENCHMARKS_SIZE(40);
-MBO_REGISTER_BENCHMARKS_SIZE(41);
-MBO_REGISTER_BENCHMARKS_SIZE(42);
-MBO_REGISTER_BENCHMARKS_SIZE(43);
-MBO_REGISTER_BENCHMARKS_SIZE(44);
-MBO_REGISTER_BENCHMARKS_SIZE(45);
-MBO_REGISTER_BENCHMARKS_SIZE(46);
-MBO_REGISTER_BENCHMARKS_SIZE(47);
-MBO_REGISTER_BENCHMARKS_SIZE(48);
-MBO_REGISTER_BENCHMARKS_SIZE(49);
-MBO_REGISTER_BENCHMARKS_SIZE(50);
-
-// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
-// NOLINTEND(cppcoreguidelines-macro-usage)
-
-}  // namespace
 }  // namespace mbo::container
 
-BENCHMARK_MAIN();  // NOLINT
+#endif  // MBO_CONTAINER_LIMITED_SET_BENCHMARK_H_

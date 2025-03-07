@@ -21,6 +21,7 @@
 #include <string>
 #include <string_view>
 
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "mbo/types/extend.h"
 #include "re2/re2.h"
@@ -44,7 +45,7 @@ struct Glob2Re2Options {
   bool allow_star_star : 1 = true;
   bool allow_ranges : 1 = true;
 
-  RE2::Options re2_options = {};
+  RE2::Options re2_options;
 };
 
 namespace file_internal {

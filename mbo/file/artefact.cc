@@ -15,6 +15,7 @@
 
 #include "mbo/file/artefact.h"
 
+#include <cstddef>
 #include <string>
 #include <string_view>
 

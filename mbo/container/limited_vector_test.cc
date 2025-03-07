@@ -15,10 +15,16 @@
 
 #include "mbo/container/limited_vector.h"
 
+#include <array>
+#include <cstdint>
+#include <initializer_list>
+#include <iterator>
 #include <ranges>  // IWYU pragma: keep
 #include <string>
 #include <string_view>
 #include <type_traits>  // IWYU pragma: keep
+#include <utility>
+#include <vector>
 
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
@@ -127,7 +133,7 @@ TEST_F(LimitedVectorTest, MakeWithStrings) {
 TEST_F(LimitedVectorTest, ConstructAssignFromSmaller) {
   {
     constexpr LimitedVector<unsigned, 3> kSource({0U, 1U, 2U});
-    LimitedVector<int, 5> target(kSource);
+    const LimitedVector<int, 5> target(kSource);
     EXPECT_THAT(target, ElementsAre(0, 1, 2));
   }
   {
@@ -139,7 +145,7 @@ TEST_F(LimitedVectorTest, ConstructAssignFromSmaller) {
   }
   {
     LimitedVector<unsigned, 4> source({0U, 1U, 2U});
-    LimitedVector<int, 5> target(std::move(source));
+    const LimitedVector<int, 5> target(std::move(source));
     EXPECT_THAT(target, ElementsAre(0, 1, 2));
   }
   {

@@ -16,23 +16,27 @@
 #include "mbo/log/log_timing.h"
 
 #include <source_location>
+#include <string>
+#include <string_view>
 
+#include "absl/base/log_severity.h"
 #include "absl/flags/declare.h"
 #include "absl/flags/flag.h"
 #include "absl/log/initialize.h"
 #include "absl/log/scoped_mock_log.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_replace.h"
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-ABSL_DECLARE_FLAG(  // NOLINT(abseil-no-namespace)
-    absl::Duration,
-    mbo_log_timing_min_duration);
+// NOLINTBEGIN(abseil-no-namespace,cppcoreguidelines-avoid-non-const-global-variables)
 
-ABSL_DECLARE_FLAG(  // NOLINT(abseil-no-namespace)
-    absl::LogSeverity,
-    mbo_log_timing_min_severity_always);
+ABSL_DECLARE_FLAG(absl::Duration, mbo_log_timing_min_duration);
+
+ABSL_DECLARE_FLAG(absl::LogSeverity, mbo_log_timing_min_severity_always);
+
+// NOLINTEND(abseil-no-namespace,cppcoreguidelines-avoid-non-const-global-variables)
 
 namespace mbo::log::log_internal {
 
@@ -130,7 +134,7 @@ TEST_F(LogTimingTest, LogFormat) {
           {"(", "\\("},
           {")", "\\)"},
       });
-  Sequence sequence;
+  const Sequence sequence;
   const std::string expected_log1 = absl::StrFormat(".*LogTiming\\(([0-9:.]+[mnu]s|0) @ (%s)*\\)$", function);
   const std::string expected_log2 = absl::StrFormat(".*LogTiming\\(([0-9:.]+[mnu]s|0) @ (%s)*\\): Foo$", function);
   ExpectLogConst(absl::LogSeverity::kInfo, ContainsRegex(expected_log1)).Times(1).InSequence(sequence);
@@ -142,7 +146,7 @@ TEST_F(LogTimingTest, LogFormat) {
 TEST_F(LogTimingTest, LogSequence) {
   absl::SetFlag(&FLAGS_mbo_log_timing_min_duration, absl::ZeroDuration());
   absl::SetFlag(&FLAGS_mbo_log_timing_min_severity_always, absl::LogSeverity::kError);
-  Sequence sequence;
+  const Sequence sequence;
   // Logging occurs in reverse order driven by the reverse order un-scoping.
   ExpectLog(absl::LogSeverity::kInfo, HasSubstr("Bar")).Times(1).InSequence(sequence);
   ExpectLog(absl::LogSeverity::kInfo, HasSubstr("Foo")).Times(1).InSequence(sequence);

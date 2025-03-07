@@ -15,15 +15,23 @@
 
 #include "mbo/container/limited_set.h"
 
+#include <array>
+#include <cstddef>
+#include <functional>
+#include <iterator>
 #include <ranges>  // IWYU pragma: keep
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>  // IWYU pragma: keep
 #include <utility>
+#include <vector>
 
 #include "absl/log/initialize.h"
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/config/config.h"
 #include "mbo/container/limited_options.h"
 #include "mbo/testing/matchers.h"
 
@@ -223,7 +231,7 @@ TEST_F(LimitedSetTest, MakeWithStrings) {
 TEST_F(LimitedSetTest, ConstructAssignFromSmaller) {
   {
     constexpr LimitedSet<unsigned, 3> kSource({0U, 1U, 2U});
-    LimitedSet<int, 5> target(kSource);
+    const LimitedSet<int, 5> target(kSource);
     EXPECT_THAT(target, ElementsAre(0, 1, 2));
   }
   {
@@ -235,11 +243,11 @@ TEST_F(LimitedSetTest, ConstructAssignFromSmaller) {
   }
   {
     LimitedSet<unsigned, 4> source({0U, 1U, 2U});
-    LimitedSet<int, 5> target(std::move(source));
+    const LimitedSet<int, 5> target(std::move(source));
     EXPECT_THAT(target, ElementsAre(0, 1, 2));
   }
   {
-    LimitedSet<unsigned, 3> source({0U, 1U, 2U});
+    const LimitedSet<unsigned, 3> source({0U, 1U, 2U});
     LimitedSet<int, 5> target;
     ASSERT_THAT(target, IsEmpty());
     target = source;
@@ -451,7 +459,7 @@ TEST_F(LimitedSetTest, CompareDifferentType) {
 
 template<std::size_t Size, template<typename> typename Compare, LimitedOptionsFlag... Flags>
 void CompareAllTheSizesFor() {  // NOLINT(readability-function-cognitive-complexity)
-  LimitedSet<int, LimitedOptions<Size, Flags...>{}, Compare<int>> data;
+  LimitedSet<int, LimitedOptions<Size, Flags...>{}, Compare<int>> data;  // NOLINT(modernize-use-transparent-functors)
   for (std::size_t len = 0; len < Size; ++len) {
     data.emplace(len * 100);
   }
@@ -460,7 +468,7 @@ void CompareAllTheSizesFor() {  // NOLINT(readability-function-cognitive-complex
     SCOPED_TRACE(absl::StrCat("Size: ", data.size()));
     for (std::size_t pos = 0; pos < Size + 1; ++pos) {
       const int v = static_cast<int>(100 * pos);
-      const std::size_t expected_pos = [&data, &v] {
+      const std::size_t expected_pos = [&data, &v] {  // NOLINT(modernize-use-transparent-functors)
         for (std::size_t pos = 0; pos < data.size(); ++pos) {
           if (data.at_index(pos) == v) {
             return pos;

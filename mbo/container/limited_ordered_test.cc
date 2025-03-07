@@ -15,15 +15,15 @@
 
 #include "mbo/container/internal/limited_ordered.h"
 
-#include <ranges>       // IWYU pragma: keep
-#include <string>       // IWYU pragma: keep
-#include <string_view>  // IWYU pragma: keep
-#include <type_traits>  // IWYU pragma: keep
+#include <iterator>
+#include <ranges>
+#include <stdexcept>
+#include <vector>
 
 #include "absl/log/initialize.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "mbo/config/require.h"  // IWYU pragma: keep
+#include "mbo/config/config.h"
 #include "mbo/testing/matchers.h"
 
 namespace mbo::container {

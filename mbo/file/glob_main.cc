@@ -13,12 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <functional>
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "absl//container/btree_map.h"
 #include "absl//container/btree_set.h"
@@ -26,6 +28,7 @@
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "mbo/file/glob.h"
 #include "mbo/strings/numbers.h"
@@ -56,6 +59,8 @@ using mbo::strings::BigNumberLen;
 
 class Entries {
  public:
+  ~Entries() = default;
+
   Entries()
       : dotdir_(absl::GetFlag(FLAGS_dotdir)),
         dotfile_(absl::GetFlag(FLAGS_dotfile)),
@@ -240,7 +245,8 @@ int main(int argc, char** argv) {
     absl::SetFlag(&FLAGS_sum, true);
   }
   const fs::path root = fs::path(args.size() >= 2 ? args[1] : ".").lexically_normal();
-  const std::string pattern{args.size() == 3 ? args[2] : (absl::GetFlag(FLAGS_re2) ? ".*" : "**")};
+  const std::string_view default_pattern = absl::GetFlag(FLAGS_re2) ? ".*" : "**";
+  const std::string pattern{args.size() == 3 ? args[2] : default_pattern};
   Entries entries;
   const auto collect = std::bind_front(&Entries::Add, &entries);
   const auto result = absl::GetFlag(FLAGS_re2) ? mbo::file::GlobRe2(root, pattern, {}, collect)

@@ -20,6 +20,7 @@
 #include <string>       // IWYU pragma: keep
 #include <string_view>  // IWYU pragma: keep
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "absl/strings/str_cat.h"
@@ -126,7 +127,7 @@ class MoveOnly final {
 
 TEST_F(ConversionTest, InitializerListMoveOnlyConversion) {
   // This works because we never move the `MoveOnly`
-  std::initializer_list<MoveOnly> values{MoveOnly(1), MoveOnly(2), MoveOnly(3)};
+  const std::initializer_list<MoveOnly> values{MoveOnly(1), MoveOnly(2), MoveOnly(3)};
   auto conv = [](const MoveOnly& v) -> std::string { return absl::StrCat(v.Value()); };
   EXPECT_THAT(std::set<std::string>(ConvertContainer(values, conv)), ElementsAre("1", "2", "3"));
 }
@@ -134,7 +135,7 @@ TEST_F(ConversionTest, InitializerListMoveOnlyConversion) {
 TEST_F(ConversionTest, MoveOnly) {
   auto values = MakeLimitedVector(MoveOnly(1), MoveOnly(2), MoveOnly(3));
   EXPECT_THAT(std::set<MoveOnly>(ConvertContainer(std::move(values))), ElementsAre(1, 2, 3));
-  EXPECT_THAT(values, IsEmpty());
+  EXPECT_THAT(values, IsEmpty());  // NOLINT(bugprone-use-after-move,hicpp-invalid-access-moved)
 }
 
 TEST_F(ConversionTest, MoveOnlyConvert) {
@@ -143,7 +144,7 @@ TEST_F(ConversionTest, MoveOnlyConvert) {
   auto values = MakeLimitedVector(MoveOnly(1), MoveOnly(2), MoveOnly(3));
   auto conv = [](MoveOnly&& v) -> std::string { return absl::StrCat(std::move(v).MovedValue()); };
   EXPECT_THAT(std::set<std::string>(ConvertContainer(std::move(values), conv)), ElementsAre("1", "2", "3"));
-  EXPECT_THAT(values, IsEmpty());
+  EXPECT_THAT(values, IsEmpty());  // NOLINT(bugprone-use-after-move,hicpp-invalid-access-moved)
 }
 
 }  // namespace

@@ -77,25 +77,24 @@ repos:
     pass_filenames: False
     types: [text]
 
-
 - repo: https://github.com/keith/pre-commit-buildifier
   rev: 8.0.1
   hooks:
-    - id: buildifier
-    - id: buildifier-lint
-      args: ["--warnings=all"]
+  - id: buildifier
+  - id: buildifier-lint
+    args: ["--warnings=all"]
 
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v19.1.7
+  rev: v19.1.6
   hooks:
   - id: clang-format
 
 - repo: https://github.com/lovesegfault/beautysh
   rev: v6.2.1
   hooks:
-    - id: beautysh
+  - id: beautysh
 
 - repo: https://github.com/koalaman/shellcheck-precommit
   rev: v0.10.0
   hooks:
-  -   id: shellcheck
+  - id: shellcheck

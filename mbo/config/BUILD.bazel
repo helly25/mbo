@@ -41,14 +41,17 @@ bzl_library(
 
 config_gen(
     name = "config_gen",
-    output = "config.h",
+    output = "config_gen.h",
     template = "internal/config.h.in",
     visibility = ["//visibility:private"],
 )
 
 cc_library(
     name = "config_cc",
-    hdrs = ["config.h"],
+    hdrs = [
+        "config.h",
+        "config_gen.h",
+    ],
     visibility = ["//mbo:__subpackages__"],
 )
 

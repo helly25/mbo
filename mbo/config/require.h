@@ -19,14 +19,7 @@
 #include <stdexcept>  // IWYU pragma: keep
 
 #include "absl/log/absl_log.h"  // IWYU pragma: keep
-
-// If `mbo/config/config.h` is available, then include that. In order to
-// make indexers work, we also include the generator "...in" as a fallback.
-#if __has_include("mbo/config/config.h")
-# include "mbo/config/config.h"  // IWYU pragma: keep
-#else
-# include "mbo/config/internal/config.h.in"  // IWYU pragma: keep
-#endif
+#include "mbo/config/config.h"  // IWYU pragma: keep
 
 // NOLINTBEGIN(cppcoreguidelines-macro-usage)
 

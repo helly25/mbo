@@ -19,16 +19,16 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/log_severity.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
-#include "absl/log/absl_log.h"
 #include "absl/log/globals.h"
 #include "absl/log/initialize.h"
 #include "absl/status/status.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
+#include "mbo/container/any_scan.h"
 #include "mbo/file/artefact.h"
 #include "mbo/file/file.h"
 #include "mbo/mope/ini.h"
@@ -60,6 +60,7 @@ struct Options {
   std::string generate_name;
 };
 
+namespace {
 absl::Status Process(const Options& opts) {
   auto input = mbo::file::Artefact::Read(opts.template_name);
   mbo::mope::Template mope_template;
@@ -76,8 +77,8 @@ absl::Status Process(const Options& opts) {
     if (section_names.size() == 1 && section_names[0].empty()) {
       context_data[key].assign(value);  // Global context_data
     } else {
-      auto section = &mope_template;
-      for (std::string_view section_name : section_names) {
+      auto* section = &mope_template;
+      for (const std::string_view section_name : section_names) {
         if (section_name.empty()) {
           return absl::InvalidArgumentError(
               "No part of the key in `--set=<key>=<value>` may be empty if split by ':'.");
@@ -101,6 +102,7 @@ absl::Status Process(const Options& opts) {
   return mbo::file::SetContents(opts.generate_name, input->data);
 }
 
+}  // namespace
 }  // namespace mbo
 
 static constexpr std::string_view kHelp = R"help(mope --template=<file.mope> [ --generate=<output> ] [ args ]

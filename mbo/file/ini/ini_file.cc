@@ -15,15 +15,17 @@
 
 #include "mbo/file/ini/ini_file.h"
 
+#include <cstddef>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
 #include "absl/log/absl_log.h"  // IWYU pragma: keep
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "mbo/file/file.h"
 #include "mbo/status/status_macros.h"
@@ -33,7 +35,7 @@ namespace mbo::file {
 absl::StatusOr<IniFile> IniFile::Read(std::string_view filename) {
   // TODO(helly25): Implement LineReader?
   MBO_ASSIGN_OR_RETURN(const std::string content, GetContents(filename));
-  std::vector<std::string_view> lines = absl::StrSplit(content, '\n', absl::SkipEmpty());
+  const std::vector<std::string_view> lines = absl::StrSplit(content, '\n', absl::SkipEmpty());
   IniFile ini;
   std::string_view group;
   for (auto line : lines) {
@@ -47,7 +49,7 @@ absl::StatusOr<IniFile> IniFile::Read(std::string_view filename) {
     if (line.starts_with(';') || line.starts_with('#')) {
       continue;
     }
-    std::pair<std::string_view, std::string_view> key_val = absl::StrSplit(line, absl::MaxSplits('=', 1));
+    const std::pair<std::string_view, std::string_view> key_val = absl::StrSplit(line, absl::MaxSplits('=', 1));
     auto [key, val] = key_val;
     key = absl::StripAsciiWhitespace(key);
     val = absl::StripAsciiWhitespace(val);

@@ -25,6 +25,7 @@ cc_library(
     hdrs = ["log_timing.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "@com_google_absl//absl/base:log_severity",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/strings",

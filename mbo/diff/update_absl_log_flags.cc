@@ -13,21 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
+#include "mbo/diff/update_absl_log_flags.h"
 
 #include "absl/flags/commandlineflag.h"
 #include "absl/flags/declare.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/reflection.h"
 
-// NOLINTBEGIN(abseil-no-namespace)
-// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
+// NOLINTBEGIN(abseil-no-namespace,cppcoreguidelines-avoid-non-const-global-variables)
 
 ABSL_DECLARE_FLAG(int, stderrthreshold);
 ABSL_DECLARE_FLAG(int, minloglevel);
 
-// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
-// NOLINTEND(abseil-no-namespace)
+// NOLINTEND(abseil-no-namespace,cppcoreguidelines-avoid-non-const-global-variables)
 
 namespace mbo {
 

@@ -27,7 +27,9 @@
 # include <fnmatch.h>
 #endif  // TEST_FNMATCH
 #include <array>
+#include <memory>
 #include <source_location>
+#include <string_view>
 
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -54,11 +56,11 @@ struct GlobTest : ::testing::Test {
       const std::source_location sloc = std::source_location::current()) {
     SCOPED_TRACE(absl::StrCat(
         "\n", sloc.file_name(), ":", sloc.line(), "\n  Pattern: '", glob_pattern, "'\n  Text: '", text, "'"));
-    MBO_ASSERT_OK_AND_MOVE_TO(Glob2Re2(glob_pattern), std::unique_ptr<const RE2> re2_pattern);
+    MBO_ASSERT_OK_AND_MOVE_TO(Glob2Re2(glob_pattern), const std::unique_ptr<const RE2> re2_pattern);
     ASSERT_THAT(re2_pattern, NotNull());
     EXPECT_THAT(re2::RE2::FullMatch(text, *re2_pattern), expected);
 #ifdef TEST_FNMATCH
-    EXPECT_THAT(fnmatch(glob_pattern.data(), text.data(), 0) == 0, expected);
+    EXPECT_THAT(fnmatch(std::string(glob_pattern).c_str(), std::string(text).c_str(), 0) == 0, expected);
 #endif  // TEST_FNMATCH
   }
 };
@@ -137,11 +139,11 @@ TEST_F(GlobTest, Glob2Re2PatternErrors) {
   EXPECT_THAT(Glob2Re2Expression("[[::]][[:alpha:]]"), empty_character_class);
   EXPECT_THAT(
       Glob2Re2Expression("[[:::]]"), StatusIs(absl::StatusCode::kInvalidArgument, "Invalid character-class name ':'."));
-  Glob2Re2Options disable_ranges{.allow_ranges = false};
+  const Glob2Re2Options disable_ranges{.allow_ranges = false};
   constexpr std::array<std::string_view, 6> kRangeIssues{
       "[]", "[!]", "[[:]", "[[:]]", "[[::]]", "[[::]][[:alpha:]]",
   };
-  for (std::string_view issue : kRangeIssues) {
+  for (const std::string_view issue : kRangeIssues) {
     EXPECT_THAT(Glob2Re2Expression(issue, disable_ranges), IsOk());
   }
 }

@@ -65,7 +65,7 @@ class Template {
   absl::Status Expand(std::string& output) const;
   absl::Status Expand(
       std::string& output,
-      mbo::container::ConvertingScan<std::pair<std::string_view, std::string_view>> context_data) const;
+      const mbo::container::ConvertingScan<std::pair<std::string_view, std::string_view>>& context_data) const;
 
  private:
   enum class TagType {

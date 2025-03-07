@@ -103,8 +103,8 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `DropIndent`: Converts a raw-string text block as if it had no indent.
         * function `DropIndentAndSplit`: Variant of `DropIndent` that returns the result as lines.
     * mbo/strings:numbers_cc, mbo/strings/numbers.h
-        * Added function `mbo::strings::BigNumber`: Convert integral number to string with thousands separator.
-        * Added function `mbo::strings::BigNumberLen`: Calculate required string length for `BigNumer`.
+        * function `mbo::strings::BigNumber`: Convert integral number to string with thousands separator.
+        * function `mbo::strings::BigNumberLen`: Calculate required string length for `BigNumer`.
     * mbo/strings:parse_cc, mbo/strings/parse.h
         * function `ParseString`: Parses strings respecting C++ and custom escapes as well as quotes (all configurable).
         * function `ParseStringList`: Parses and splits strings respecting C++ and custom escapes as well as quotes (all configurable).
@@ -114,8 +114,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `ConsumePrefix`: Removes a prefix from a `std::string` (like `absl::ConsumePrefix`).
         * function `ConsumeSuffix`: Removes a suffix from a `std::string` (like `absl::ConsumeSuffix`).
         * function `StripPrefix`: Removes a prefix from a `std::string&&` (like `absl::StripPrefix`).
-        * Function `StripSuffix`: Removes a suffix from a `std::string&&` (like `absl::StripSuffix`).
-
+        * function `StripSuffix`: Removes a suffix from a `std::string&&` (like `absl::StripSuffix`).
         * struct `StripCommentsArgs`: Arguments for `StripComments` and `StripLineComments`.
         * function `StripComments`: Strips comments from lines.
         * function `StripLineComments`: Strips comments from a single line.
@@ -255,6 +254,8 @@ Check [Releases](https://github.com/helly25/mbo/releases) for details. All that 
 ```
 bazel_dep(name = "helly25_mbo", version = "0.0.0")
 ```
+
+Unlike the `WORKSPACE` installation the `MODULES.bazel` installation from source checkout, the above [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler. This is due to a restriction in Bazel's ability to handle toolchains when Bazel uses MODULES (`--enable_bzlmod` as opposed to `--enable_workspace`). Nonetheless all versions, all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
 
 # Presentations
 

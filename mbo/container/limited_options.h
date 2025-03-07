@@ -16,7 +16,6 @@
 #ifndef MBO_CONTAINER_LIMITED_OPTIONS_H_
 #define MBO_CONTAINER_LIMITED_OPTIONS_H_
 
-#include <algorithm>
 #include <array>
 #include <concepts>  // IWYU pragma: keep
 #include <type_traits>

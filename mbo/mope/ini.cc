@@ -43,7 +43,7 @@ absl::Status ReadIniToTemlate(std::string_view ini_filename, Template& root_temp
     if (!levels.empty()) {
       SectionPath section_path;
       for (const auto& level : levels) {
-        std::pair<std::string_view, std::string_view> tail = absl::StrSplit(level, absl::MaxSplits(':', 1));
+        const std::pair<std::string_view, std::string_view> tail = absl::StrSplit(level, absl::MaxSplits(':', 1));
         section_path.emplace_back(tail.first, tail.second);
         auto [section, inserted] = sections.emplace(section_path, nullptr);
         if (inserted) {

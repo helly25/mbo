@@ -146,10 +146,10 @@ cc_test(
     ],
 )
 
-cc_binary(
-    name = "limited_set_benchmark",
-    srcs = ["limited_set_benchmark.cc"],
-    tags = ["manual"],
+cc_library(
+    name = "limited_set_benchmark_cc",
+    testonly = 1,
+    hdrs = ["limited_set_benchmark.h"],
     visibility = ["//visibility:private"],
     deps = [
         ":limited_set_cc",
@@ -158,6 +158,18 @@ cc_binary(
         "@com_github_google_benchmark//:benchmark",
         "@com_google_absl//absl/log:initialize",
         "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_binary(
+    name = "limited_set_benchmark",
+    testonly = 1,
+    srcs = ["limited_set_benchmark_main.cc"],
+    tags = ["manual"],
+    visibility = ["//visibility:private"],
+    deps = [
+        ":limited_set_benchmark_cc",
+        "@com_github_google_benchmark//:benchmark",
     ],
 )
 
