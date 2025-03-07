@@ -434,9 +434,9 @@ bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) co
     const auto strip = [](std::string_view input) {
       std::string out;
       out.reserve(input.length());
-      for (const char c : input) {
-        if (!absl::ascii_isspace(c)) {
-          out.push_back(c);
+      for (const char chr : input) {
+        if (!absl::ascii_isspace(chr)) {
+          out.push_back(chr);
         }
       }
       return out;

@@ -15,10 +15,14 @@
 
 #include "mbo/types/stringify.h"
 
+#include <array>
+#include <cstddef>
 #include <map>
 #include <set>
+#include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "absl/log/absl_check.h"  // IWYU pragma: keep
@@ -78,7 +82,7 @@ struct StringifyTest : ::testing::Test {
     MOCK_METHOD(StringifyOptions, FieldOptions, (std::size_t, std::string_view));
   };
 
-  StringifyTest() { tester = new Tester(); }
+  StringifyTest() { tester = new Tester(); }  // NOLINT(cppcoreguidelines-owning-memory)
 
   StringifyTest(const StringifyTest&) noexcept = delete;
   StringifyTest& operator=(const StringifyTest&) noexcept = delete;
@@ -86,7 +90,7 @@ struct StringifyTest : ::testing::Test {
   StringifyTest& operator=(StringifyTest&&) noexcept = delete;
 
   ~StringifyTest() override {
-    delete tester;
+    delete tester;  // NOLINT(cppcoreguidelines-owning-memory)
     tester = nullptr;
   }
 
@@ -434,7 +438,7 @@ TEST_F(StringifyTest, ValueReplacement) {
 
 struct TestStructContainer {
   std::vector<int> one = {1, 2, 3};
-  std::vector<int> two = {};
+  std::vector<int> two;
   std::vector<int> tre = {1, 2, 3};
 
   friend StringifyOptions MboTypesStringifyOptions(

@@ -15,25 +15,34 @@
 
 #include "mbo/types/extend.h"
 
-#include <concepts>  // IWYU pragma: keep
-#include <memory>    // IWYU pragma: keep
+#include <concepts>
+#include <cstddef>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
-#include <tuple>        // IWYU pragma: keep
-#include <type_traits>  // IWYU pragma: keep
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/hash/hash.h"
 #include "absl/hash/hash_testing.h"
-#include "absl/log/absl_log.h"  // IWYU pragma: keep
+#include "absl/log/absl_log.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/types/extender.h"
 #include "mbo/types/internal/decompose_count.h"
-#include "mbo/types/internal/extend.h"  // IWYU pragma: keep
-#include "mbo/types/traits.h"           // IWYU pragma: keep
-#include "mbo/types/tuple.h"            // IWYU pragma: keep
+#include "mbo/types/internal/extend.h"
+#include "mbo/types/traits.h"
+#include "mbo/types/tuple_extras.h"
 
 #ifdef __clang__
 # pragma clang diagnostic push
@@ -45,17 +54,18 @@
 #endif
 
 namespace std {
-
+// NOLINTBEGIN(misc-use-anonymous-namespace): These are ADL constructs and must be in the correct namespace.
 template<typename Sink>
-void AbslStringify(Sink& sink, const std::pair<const int, std::string>& val) {  // NOLINT(cert-dcl58-cpp)
+static void AbslStringify(Sink& sink, const std::pair<const int, std::string>& val) {  // NOLINT(cert-dcl58-cpp)
   absl::Format(&sink, R"({%d, "%s"})", val.first, val.second);
 }
 
 template<typename Sink, typename... Args>
-void AbslStringify(Sink& sink, const std::variant<Args...>& val) {  // NOLINT(cert-dcl58-cpp)
+static void AbslStringify(Sink& sink, const std::variant<Args...>& val) {  // NOLINT(cert-dcl58-cpp)
   std::visit([&sink](auto&& arg) { absl::Format(&sink, "%v", arg); }, val);
 }
 
+// NOLINTEND(misc-use-anonymous-namespace)
 }  // namespace std
 
 namespace mbo::types {
@@ -335,7 +345,7 @@ struct PersonData : Extend<PersonData> {
 
 TEST_F(ExtendTest, StreamableComplexFields) {
   const std::set<std::string> data{"foo", "bar"};
-  PersonData person{
+  const PersonData person{
       .index = 25,
       .person =
           {
@@ -427,7 +437,7 @@ TEST_F(ExtendTest, StreamableWithUnion) {
   EXPECT_THAT(kTest.ToString(), R"({25, 42, 99})");
 }
 
-TEST_F(ExtendTest, Comparable) {
+struct ComparableTest : ExtendTest {
   struct TestComparable : public ExtendNoDefault<TestComparable, Comparable> {
     int a = 0;
     int b = 0;
@@ -438,139 +448,161 @@ TEST_F(ExtendTest, Comparable) {
     int b = 0;
   };
 
-  constexpr TestComparable kTest1{.a = 25, .b = 42};
-  constexpr TestComparable kTest2{.a = 25, .b = 43};
-  constexpr TestComparable kTest3{.a = 26, .b = 42};
-  constexpr TestComparable kTest4{.a = 25, .b = 42};
+  static constexpr TestComparable kTest1{.a = 25, .b = 42};
+  static constexpr TestComparable kTest2{.a = 25, .b = 43};
+  static constexpr TestComparable kTest3{.a = 26, .b = 42};
+  static constexpr TestComparable kTest4{.a = 25, .b = 42};
 
-  constexpr Flat kFlat1{.a = 25, .b = 42};
-  constexpr Flat kFlat2{.a = 25, .b = 43};
-  constexpr Flat kFlat3{.a = 26, .b = 42};
-  constexpr Flat kFlat4{.a = 25, .b = 42};
+  static constexpr Flat kFlat1{.a = 25, .b = 42};
+  static constexpr Flat kFlat2{.a = 25, .b = 43};
+  static constexpr Flat kFlat3{.a = 26, .b = 42};
+  static constexpr Flat kFlat4{.a = 25, .b = 42};
+};
 
-  {
-    EXPECT_THAT(kTest1 == kTest1, true);
-    EXPECT_THAT(kTest1 != kTest1, false);
-    EXPECT_THAT(kTest1 < kTest1, false);
-    EXPECT_THAT(kTest1 <= kTest1, true);
-    EXPECT_THAT(kTest1 > kTest1, false);
-    EXPECT_THAT(kTest1 >= kTest1, true);
-    // Same kind of comparison, just with similar type.
-    EXPECT_THAT(kTest1 == kFlat1, true);
-    EXPECT_THAT(kTest1 != kFlat1, false);
-    EXPECT_THAT(kTest1 < kFlat1, false);
-    EXPECT_THAT(kTest1 <= kFlat1, true);
-    EXPECT_THAT(kTest1 > kFlat1, false);
-    EXPECT_THAT(kTest1 >= kFlat1, true);
-    // Same kind of comparison, just with similar type, otherway round.
-    EXPECT_THAT(kFlat1 == kTest1, true);
-    EXPECT_THAT(kFlat1 != kTest1, false);
-    EXPECT_THAT(kFlat1 < kTest1, false);
-    EXPECT_THAT(kFlat1 <= kTest1, true);
-    EXPECT_THAT(kFlat1 > kTest1, false);
-    EXPECT_THAT(kFlat1 >= kTest1, true);
-    // Gmock
-    EXPECT_THAT(kTest1, kTest1);  // shortcut for Eq, see below
-    EXPECT_THAT(kTest1, Eq(kTest1));
-    EXPECT_THAT(kTest1, Not(Lt(kTest1)));
-    EXPECT_THAT(kTest1, Le(kTest1));
-    EXPECT_THAT(kTest1, Not(Gt(kTest1)));
-    EXPECT_THAT(kTest1, Ge(kTest1));
-  }
-  {
-    EXPECT_THAT(kTest1 == kTest2, false);
-    EXPECT_THAT(kTest1 != kTest2, true);
-    EXPECT_THAT(kTest1 < kTest2, true);
-    EXPECT_THAT(kTest1 <= kTest2, true);
-    EXPECT_THAT(kTest1 > kTest2, false);
-    EXPECT_THAT(kTest1 >= kTest2, false);
-    // Same kind of comparison, just with similar type.
-    EXPECT_THAT(kTest1 == kFlat2, false);
-    EXPECT_THAT(kTest1 != kFlat2, true);
-    EXPECT_THAT(kTest1 < kFlat2, true);
-    EXPECT_THAT(kTest1 <= kFlat2, true);
-    EXPECT_THAT(kTest1 > kFlat2, false);
-    EXPECT_THAT(kTest1 >= kFlat2, false);
-    // GMock
-    EXPECT_THAT(kTest1, Not(kTest2));
-    EXPECT_THAT(kTest1, Not(Eq(kTest2)));
-    EXPECT_THAT(kTest1, Lt(kTest2));
-    EXPECT_THAT(kTest1, Le(kTest2));
-    EXPECT_THAT(kTest1, Not(Gt(kTest2)));
-    EXPECT_THAT(kTest1, Not(Ge(kTest2)));
-  }
-  {
-    EXPECT_THAT(kTest1 == kTest3, false);
-    EXPECT_THAT(kTest1 != kTest3, true);
-    EXPECT_THAT(kTest1 < kTest3, true);
-    EXPECT_THAT(kTest1 <= kTest3, true);
-    EXPECT_THAT(kTest1 > kTest3, false);
-    EXPECT_THAT(kTest1 >= kTest3, false);
-    // Same kind of comparison, just with similar type.
-    EXPECT_THAT(kTest1 == kFlat3, false);
-    EXPECT_THAT(kTest1 != kFlat3, true);
-    EXPECT_THAT(kTest1 < kFlat3, true);
-    EXPECT_THAT(kTest1 <= kFlat3, true);
-    EXPECT_THAT(kTest1 > kFlat3, false);
-    EXPECT_THAT(kTest1 >= kFlat3, false);
-    // GMock
-    EXPECT_THAT(kTest1, Not(kTest3));
-    EXPECT_THAT(kTest1, Not(Eq(kTest3)));
-    EXPECT_THAT(kTest1, Lt(kTest3));
-    EXPECT_THAT(kTest1, Le(kTest3));
-    EXPECT_THAT(kTest1, Not(Gt(kTest3)));
-    EXPECT_THAT(kTest1, Not(Ge(kTest3)));
-  }
-  {
-    EXPECT_THAT(kTest1 == kTest4, true);
-    EXPECT_THAT(kTest1 != kTest4, false);
-    EXPECT_THAT(kTest1 < kTest4, false);
-    EXPECT_THAT(kTest1 <= kTest4, true);
-    EXPECT_THAT(kTest1 > kTest4, false);
-    EXPECT_THAT(kTest1 >= kTest4, true);
-    // Same kind of comparison, just with similar type.
-    EXPECT_THAT(kTest1 == kFlat4, true);
-    EXPECT_THAT(kTest1 != kFlat4, false);
-    EXPECT_THAT(kTest1 < kFlat4, false);
-    EXPECT_THAT(kTest1 <= kFlat4, true);
-    EXPECT_THAT(kTest1 > kFlat4, false);
-    EXPECT_THAT(kTest1 >= kFlat4, true);
-    // GMock
-    EXPECT_THAT(kTest1, kTest4);  // shortcut for Eq, see below
-    EXPECT_THAT(kTest1, Eq(kTest4));
-    EXPECT_THAT(kTest1, Not(Lt(kTest4)));
-    EXPECT_THAT(kTest1, Le(kTest4));
-    EXPECT_THAT(kTest1, Not(Gt(kTest4)));
-    EXPECT_THAT(kTest1, Ge(kTest4));
-  }
-  {
-    EXPECT_THAT(kTest2 == kTest3, false);
-    EXPECT_THAT(kTest2 != kTest3, true);
-    EXPECT_THAT(kTest2 < kTest3, true);
-    EXPECT_THAT(kTest2 <= kTest3, true);
-    EXPECT_THAT(kTest2 > kTest3, false);
-    EXPECT_THAT(kTest2 >= kTest3, false);
-    EXPECT_THAT(kTest2, Not(kTest3));
-    EXPECT_THAT(kTest2, Not(Eq(kTest3)));
-    EXPECT_THAT(kTest2, Lt(kTest3));
-    EXPECT_THAT(kTest2, Le(kTest3));
-    EXPECT_THAT(kTest2, Not(Gt(kTest3)));
-    EXPECT_THAT(kTest2, Not(Ge(kTest3)));
-  }
-  {
-    EXPECT_THAT(kTest3 == kTest2, false);
-    EXPECT_THAT(kTest3 != kTest2, true);
-    EXPECT_THAT(kTest3 < kTest2, false);
-    EXPECT_THAT(kTest3 <= kTest2, false);
-    EXPECT_THAT(kTest3 > kTest2, true);
-    EXPECT_THAT(kTest3 >= kTest2, true);
-    EXPECT_THAT(kTest3, Not(kTest2));
-    EXPECT_THAT(kTest3, Not(Eq(kTest2)));
-    EXPECT_THAT(kTest3, Not(Lt(kTest2)));
-    EXPECT_THAT(kTest3, Not(Le(kTest2)));
-    EXPECT_THAT(kTest3, Gt(kTest2));
-    EXPECT_THAT(kTest3, Ge(kTest2));
-  }
+TEST_F(ComparableTest, SameType1vs1) {
+  EXPECT_THAT(kTest1 == kTest1, true);
+  EXPECT_THAT(kTest1 != kTest1, false);
+  EXPECT_THAT(kTest1 < kTest1, false);
+  EXPECT_THAT(kTest1 <= kTest1, true);
+  EXPECT_THAT(kTest1 > kTest1, false);
+  EXPECT_THAT(kTest1 >= kTest1, true);
+}
+
+TEST_F(ComparableTest, SameType1vs2) {
+  EXPECT_THAT(kTest1 == kTest2, false);
+  EXPECT_THAT(kTest1 != kTest2, true);
+  EXPECT_THAT(kTest1 < kTest2, true);
+  EXPECT_THAT(kTest1 <= kTest2, true);
+  EXPECT_THAT(kTest1 > kTest2, false);
+  EXPECT_THAT(kTest1 >= kTest2, false);
+}
+
+TEST_F(ComparableTest, SameType1vs3) {
+  EXPECT_THAT(kTest1 == kTest3, false);
+  EXPECT_THAT(kTest1 != kTest3, true);
+  EXPECT_THAT(kTest1 < kTest3, true);
+  EXPECT_THAT(kTest1 <= kTest3, true);
+  EXPECT_THAT(kTest1 > kTest3, false);
+  EXPECT_THAT(kTest1 >= kTest3, false);
+}
+
+TEST_F(ComparableTest, SameType1vs4) {
+  EXPECT_THAT(kTest1 == kTest4, true);
+  EXPECT_THAT(kTest1 != kTest4, false);
+  EXPECT_THAT(kTest1 < kTest4, false);
+  EXPECT_THAT(kTest1 <= kTest4, true);
+  EXPECT_THAT(kTest1 > kTest4, false);
+  EXPECT_THAT(kTest1 >= kTest4, true);
+}
+
+TEST_F(ComparableTest, SameType2vs3) {
+  EXPECT_THAT(kTest2 == kTest3, false);
+  EXPECT_THAT(kTest2 != kTest3, true);
+  EXPECT_THAT(kTest2 < kTest3, true);
+  EXPECT_THAT(kTest2 <= kTest3, true);
+  EXPECT_THAT(kTest2 > kTest3, false);
+  EXPECT_THAT(kTest2 >= kTest3, false);
+  EXPECT_THAT(kTest2, Not(kTest3));
+  EXPECT_THAT(kTest2, Not(Eq(kTest3)));
+  EXPECT_THAT(kTest2, Lt(kTest3));
+  EXPECT_THAT(kTest2, Le(kTest3));
+  EXPECT_THAT(kTest2, Not(Gt(kTest3)));
+  EXPECT_THAT(kTest2, Not(Ge(kTest3)));
+}
+
+TEST_F(ComparableTest, SameType3vs2) {
+  EXPECT_THAT(kTest3 == kTest2, false);
+  EXPECT_THAT(kTest3 != kTest2, true);
+  EXPECT_THAT(kTest3 < kTest2, false);
+  EXPECT_THAT(kTest3 <= kTest2, false);
+  EXPECT_THAT(kTest3 > kTest2, true);
+  EXPECT_THAT(kTest3 >= kTest2, true);
+  EXPECT_THAT(kTest3, Not(kTest2));
+  EXPECT_THAT(kTest3, Not(Eq(kTest2)));
+  EXPECT_THAT(kTest3, Not(Lt(kTest2)));
+  EXPECT_THAT(kTest3, Not(Le(kTest2)));
+  EXPECT_THAT(kTest3, Gt(kTest2));
+  EXPECT_THAT(kTest3, Ge(kTest2));
+}
+
+TEST_F(ComparableTest, SimilarTypeT1vsF1) {
+  // Same kind of comparison, just with similar type: T1 vs F1.
+  EXPECT_THAT(kTest1 == kFlat1, true);
+  EXPECT_THAT(kTest1 != kFlat1, false);
+  EXPECT_THAT(kTest1 < kFlat1, false);
+  EXPECT_THAT(kTest1 <= kFlat1, true);
+  EXPECT_THAT(kTest1 > kFlat1, false);
+  EXPECT_THAT(kTest1 >= kFlat1, true);
+}
+
+TEST_F(ComparableTest, SimilarTypeF1vsT1) {
+  // Same kind of comparison, just with similar type, otherway round: F1 vs T1.
+  EXPECT_THAT(kFlat1 == kTest1, true);
+  EXPECT_THAT(kFlat1 != kTest1, false);
+  EXPECT_THAT(kFlat1 < kTest1, false);
+  EXPECT_THAT(kFlat1 <= kTest1, true);
+  EXPECT_THAT(kFlat1 > kTest1, false);
+  EXPECT_THAT(kFlat1 >= kTest1, true);
+}
+
+TEST_F(ComparableTest, SimilarTypeT1vsFx) {
+  // Same kind of comparison, just with similar type: T1 vs F2.
+  EXPECT_THAT(kTest1 == kFlat2, false);
+  EXPECT_THAT(kTest1 != kFlat2, true);
+  EXPECT_THAT(kTest1 < kFlat2, true);
+  EXPECT_THAT(kTest1 <= kFlat2, true);
+  EXPECT_THAT(kTest1 > kFlat2, false);
+  EXPECT_THAT(kTest1 >= kFlat2, false);
+  // Same kind of comparison, just with similar type: T1 vs F3.
+  EXPECT_THAT(kTest1 == kFlat3, false);
+  EXPECT_THAT(kTest1 != kFlat3, true);
+  EXPECT_THAT(kTest1 < kFlat3, true);
+  EXPECT_THAT(kTest1 <= kFlat3, true);
+  EXPECT_THAT(kTest1 > kFlat3, false);
+  EXPECT_THAT(kTest1 >= kFlat3, false);
+  // Same kind of comparison, just with similar type: T1 vs F4.
+  EXPECT_THAT(kTest1 == kFlat4, true);
+  EXPECT_THAT(kTest1 != kFlat4, false);
+  EXPECT_THAT(kTest1 < kFlat4, false);
+  EXPECT_THAT(kTest1 <= kFlat4, true);
+  EXPECT_THAT(kTest1 > kFlat4, false);
+  EXPECT_THAT(kTest1 >= kFlat4, true);
+}
+
+TEST_F(ComparableTest, UsingGMock1vs1) {
+  EXPECT_THAT(kTest1, kTest1);  // shortcut for Eq, see below
+  EXPECT_THAT(kTest1, Eq(kTest1));
+  EXPECT_THAT(kTest1, Not(Lt(kTest1)));
+  EXPECT_THAT(kTest1, Le(kTest1));
+  EXPECT_THAT(kTest1, Not(Gt(kTest1)));
+  EXPECT_THAT(kTest1, Ge(kTest1));
+}
+
+TEST_F(ComparableTest, UsingGMock1vs2) {
+  EXPECT_THAT(kTest1, Not(kTest2));
+  EXPECT_THAT(kTest1, Not(Eq(kTest2)));
+  EXPECT_THAT(kTest1, Lt(kTest2));
+  EXPECT_THAT(kTest1, Le(kTest2));
+  EXPECT_THAT(kTest1, Not(Gt(kTest2)));
+  EXPECT_THAT(kTest1, Not(Ge(kTest2)));
+}
+
+TEST_F(ComparableTest, UsingGMock1vs3) {
+  EXPECT_THAT(kTest1, Not(kTest3));
+  EXPECT_THAT(kTest1, Not(Eq(kTest3)));
+  EXPECT_THAT(kTest1, Lt(kTest3));
+  EXPECT_THAT(kTest1, Le(kTest3));
+  EXPECT_THAT(kTest1, Not(Gt(kTest3)));
+  EXPECT_THAT(kTest1, Not(Ge(kTest3)));
+}
+
+TEST_F(ComparableTest, UsingGMock1vs4) {
+  EXPECT_THAT(kTest1, kTest4);  // shortcut for Eq, see below
+  EXPECT_THAT(kTest1, Eq(kTest4));
+  EXPECT_THAT(kTest1, Not(Lt(kTest4)));
+  EXPECT_THAT(kTest1, Le(kTest4));
+  EXPECT_THAT(kTest1, Not(Gt(kTest4)));
+  EXPECT_THAT(kTest1, Ge(kTest4));
 }
 
 struct PlainName {
@@ -692,7 +724,13 @@ TEST_F(ExtendTest, ExtenderNames) {
 }
 
 template<typename T>
-struct Crtp {};  // Technically `Crtp` is not needed for the test, but we want to ensure this works with CRTP types.
+struct Crtp {
+  // Technically `Crtp` is not needed for the test, but we want to ensure this works with CRTP types.
+
+ private:
+  Crtp() = default;
+  friend T;
+};
 
 struct Crtp1 : Crtp<Crtp1> {
   Crtp1() = delete;
@@ -867,7 +905,7 @@ TEST_F(ExtendTest, MoveOnlyTuple) {
   move1.value = kValue3;
   EXPECT_THAT(move1.value, kValue3);
   EXPECT_THAT(move2.value, kValue2);
-  EXPECT_THAT(data.one.value, Ne(kValue3))
+  EXPECT_THAT(data.one.value, Ne(kValue3))  // NOLINT(bugprone-use-after-move,hicpp-invalid-access-moved)
       << "It does not matter what the value is after the move, but it must not be `kValue3`.";
 }
 
@@ -936,13 +974,13 @@ TEST_F(ExtendTest, FromConversions) {
     std::string two;
   };
 
-  constexpr std::string_view sv1{"aa"};
-  constexpr std::string_view sv2{"bb"};
+  constexpr std::string_view kSv1{"aa"};
+  constexpr std::string_view kSv2{"bb"};
   {
-    const auto val2 = TestStruct::ConstructFromConversions(sv1, sv2);
+    const auto val2 = TestStruct::ConstructFromConversions(kSv1, kSv2);
     static_assert((std::same_as<std::remove_cvref_t<decltype(val2)>, TestStruct>));
-    EXPECT_THAT(val2.one, sv1);
-    EXPECT_THAT(val2.two, sv2);
+    EXPECT_THAT(val2.one, kSv1);
+    EXPECT_THAT(val2.two, kSv2);
   }
 }
 

@@ -21,7 +21,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "mbo/status/status_macros.h"
 #include "mbo/testing/status.h"
 
 namespace mbo::strings {
@@ -34,8 +33,8 @@ struct StripTest : public ::testing::Test {};
 
 TEST_F(StripTest, ConsumePrefix) {
   auto test_prefix = [](std::string text, std::string_view prefix) {
-    std::string stripped = StripPrefix(std::string{text}, prefix);
-    bool consumed = ConsumePrefix(text, prefix);
+    const std::string stripped = StripPrefix(std::string{text}, prefix);
+    const bool consumed = ConsumePrefix(text, prefix);
     EXPECT_THAT(stripped, text);
     return std::pair<bool, std::string>{consumed, text};
   };
@@ -50,8 +49,8 @@ TEST_F(StripTest, ConsumePrefix) {
 
 TEST_F(StripTest, ConsumeSuffix) {
   const auto test_suffix = [](std::string text, std::string_view suffix) {
-    std::string stripped = StripSuffix(std::string{text}, suffix);
-    bool consumed = ConsumeSuffix(text, suffix);
+    const std::string stripped = StripSuffix(std::string{text}, suffix);
+    const bool consumed = ConsumeSuffix(text, suffix);
     EXPECT_THAT(stripped, text);
     return std::pair<bool, std::string>{consumed, text};
   };

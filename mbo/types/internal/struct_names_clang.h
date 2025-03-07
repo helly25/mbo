@@ -18,6 +18,7 @@
 
 #if defined(__clang__) && __has_builtin(__builtin_dump_struct)
 
+# include <array>
 # include <atomic>  // IWYU pragma: keep
 # include <cstring>
 # include <string_view>

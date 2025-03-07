@@ -15,10 +15,13 @@
 
 #include "mbo/testing/status.h"
 
+#include <sstream>
 #include <string>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/cord.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -198,13 +201,13 @@ TEST_F(StatusMatcherTest, IsOkAndHolds) {
 }
 
 TEST_F(StatusMatcherTest, AssertOkAndAssign) {
-  absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
+  const absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
   MBO_ASSERT_OK_AND_ASSIGN(auto res, status_or);
   EXPECT_THAT(res, Pair(25, 17));
 }
 
 TEST_F(StatusMatcherTest, AssertOkAndAssignTo) {
-  absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
+  const absl::StatusOr<std::pair<int, int>> status_or(std::make_pair(25, 17));
   MBO_ASSERT_OK_AND_MOVE_TO(status_or, auto [first, second]);
   EXPECT_THAT(std::make_pair(first, second), Pair(25, 17));
 }

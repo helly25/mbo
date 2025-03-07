@@ -25,7 +25,6 @@ namespace mbo::status {
 namespace {
 
 using ::mbo::testing::IsOk;
-using ::mbo::testing::IsOkAndHolds;
 using ::mbo::testing::StatusHasPayload;
 using ::mbo::testing::StatusIs;
 
@@ -49,24 +48,24 @@ TEST_F(StatusBuilderTest, StatusOr) {
 }
 
 TEST_F(StatusBuilderTest, Message) {
-  auto error = StatusBuilder(absl::CancelledError("<Error>")) << "<Message>";
+  const auto error = StatusBuilder(absl::CancelledError("<Error>")) << "<Message>";
   EXPECT_THAT(error, StatusIs(absl::StatusCode::kCancelled, "<Error><Message>"));
 }
 
 TEST_F(StatusBuilderTest, SetAppend) {
-  auto error = StatusBuilder(absl::CancelledError("<Error>")).SetAppend() << "<Message>";
+  const auto error = StatusBuilder(absl::CancelledError("<Error>")).SetAppend() << "<Message>";
   EXPECT_THAT(error, StatusIs(absl::StatusCode::kCancelled, "<Error><Message>"));
 }
 
 TEST_F(StatusBuilderTest, SetPrepend) {
-  auto error = StatusBuilder(absl::CancelledError("<Error>")).SetPrepend()
-               << "<Prefix>" << StatusBuilder::Append << "<Suffix>";
+  const auto error = StatusBuilder(absl::CancelledError("<Error>")).SetPrepend()
+                     << "<Prefix>" << StatusBuilder::Append << "<Suffix>";
   EXPECT_THAT(error, StatusIs(absl::StatusCode::kCancelled, "<Prefix><Error><Suffix>"));
 }
 
 TEST_F(StatusBuilderTest, SetPayload) {
-  auto error = StatusBuilder(absl::CancelledError()).SetPayload("url", "content");
-  absl::Status status(error);
+  const auto error = StatusBuilder(absl::CancelledError()).SetPayload("url", "content");
+  const absl::Status status(error);
   EXPECT_THAT(status, StatusHasPayload("url", "content"));
 }
 

@@ -15,6 +15,11 @@
 
 #include "mbo/status/status_builder.h"
 
+#include <string_view>
+#include <utility>
+
+#include "absl/status/status.h"
+#include "absl/strings/cord.h"
 #include "absl/strings/str_cat.h"
 
 namespace mbo::status {

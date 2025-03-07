@@ -15,7 +15,7 @@
 
 #include "mbo/types/cases.h"
 
-#include <string>
+#include <cstddef>
 #include <type_traits>
 
 #include "gmock/gmock.h"

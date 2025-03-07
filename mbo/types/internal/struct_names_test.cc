@@ -16,6 +16,7 @@
 #include "mbo/types/internal/struct_names.h"
 
 #include <array>
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 
@@ -26,7 +27,7 @@
 namespace mbo::types::types_internal {
 namespace {
 
-using ::testing::ElementsAre;
+using ::testing::ElementsAre;  // NOLINT(misc-unused-using-decls)
 
 struct StructNamesTest : ::testing::Test {};
 

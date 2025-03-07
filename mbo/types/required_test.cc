@@ -63,7 +63,7 @@ TEST_F(RequiredTest, Compare) {
   EXPECT_THAT(req, Ge(25));
   EXPECT_THAT(req, Not(Ge(33)));
   int val = 25;
-  Required<int> cmp(val);
+  const Required<int> cmp(val);
   EXPECT_THAT(req == val, true);
   EXPECT_THAT(req != val, false);
   EXPECT_THAT(req <= val, true);

@@ -15,10 +15,10 @@
 
 #include "mbo/types/opaque.h"
 
-#include <concepts>  // IWYU pragma: keep
 #include <list>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -89,7 +89,7 @@ using MyTypes = ::testing::Types<
 class MyTypeNames {
  public:
   template<typename T>
-  static std::string GetName(int) {
+  static std::string GetName(int /*unused*/) {
     if constexpr (std::is_same<T, std::vector<std::string>>()) {
       return "VectorOfString";
     } else if constexpr (std::is_same<T, ProxyVectorString>()) {

@@ -227,6 +227,7 @@ cc_test(
     size = "small",
     srcs = ["stringify_ostream_test.cc"],
     deps = [
+        ":extender_cc",
         ":stringify_ostream_cc",
         "@com_google_googletest//:gtest_main",
     ],

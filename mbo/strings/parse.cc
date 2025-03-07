@@ -26,7 +26,7 @@
 #include "mbo/status/status_macros.h"
 
 namespace mbo::strings {
-
+namespace {
 absl::StatusOr<char> ParseOctal(char first_char, std::string_view& data) {
   const bool octal_23 = first_char == 'o';
   if (octal_23) {
@@ -125,7 +125,6 @@ void HandleQuotes(const ParseOptions& options, char chr, Quotes& quotes, std::st
   }
 }
 
-namespace {
 bool StopParsing(const ParseOptions& options, std::string_view data) {
   const char chr = data[0];
   return absl::StrContains(options.stop_at_any_of, chr)  //

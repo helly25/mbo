@@ -15,12 +15,14 @@
 
 #include "mbo/strings/split.h"
 
+#include <concepts>
 #include <list>
 #include <set>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "absl/strings/str_split.h"
 #include "gmock/gmock.h"
@@ -60,7 +62,7 @@ MATCHER(IsEmpty, "") {
 
 MATCHER_P(Elements, elements, "") {
   if constexpr (IsSet<std::remove_cvref_t<arg_type>>) {
-    std::set<std::string> expected_set{elements.begin(), elements.end()};
+    const std::set<std::string> expected_set{elements.begin(), elements.end()};
     return ::testing::ExplainMatchResult(::testing::UnorderedElementsAreArray(expected_set), arg, result_listener);
   } else if constexpr (mbo::types::IsPair<std::remove_cvref_t<arg_type>>) {
     if (elements.size() == 2) {

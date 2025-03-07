@@ -17,6 +17,7 @@
 
 #include <array>
 #include <limits>
+#include <type_traits>
 
 // NOLINTBEGIN(*-magic-numbers)
 

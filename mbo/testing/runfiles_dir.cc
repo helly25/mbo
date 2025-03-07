@@ -16,14 +16,17 @@
 #include "mbo/testing/runfiles_dir.h"
 
 #include <cstdlib>
+#include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "mbo/file/file.h"
 #include "mbo/status/status_macros.h"
@@ -32,8 +35,8 @@
 namespace mbo::testing {
 namespace {
 std::string SafeStr(const char* str, std::string_view default_str) {
-  if (str) {
-    return std::string(str);
+  if (str != nullptr) {
+    return {str};
   }
   return std::string(default_str);
 }
@@ -62,6 +65,7 @@ absl::StatusOr<std::string> RunfilesDir(std::string_view source) {
 }
 
 absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_view source_rel) {
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
   const std::string workspace_env = SafeStr(getenv("TEST_WORKSPACE"), workspace);
 
   std::string error;
@@ -71,17 +75,19 @@ absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_
   }
   if (!workspace.empty() && workspace != workspace_env) {
     // Must lookup the workspace and translate it.
+    // NOLINTNEXTLINE(concurrency-mt-unsafe)
     const std::string test_bin = SafeStr(getenv("TEST_SRCDIR"), workspace);
     if (test_bin.empty()) {
       return absl::NotFoundError("Environment variable `TEST_SRCDIR` not present.");
     }
     static constexpr std::string_view kRunfiles = ".runfiles";
     if (!test_bin.ends_with(kRunfiles)) {
-      return absl::NotFoundError("Environment variable `TEST_SRCDIR` does not end in '.runfiles'.");
+      return absl::NotFoundError(
+          absl::StrFormat("Environment variable `TEST_SRCDIR` does not end in '.runfiles', got '%s'.", test_bin));
     }
     const std::string mapping_file = absl::StrCat(test_bin, "/_repo_mapping");
     MBO_ASSIGN_OR_RETURN(const std::string mapping, mbo::file::GetContents(mapping_file));
-    for (std::string_view line : absl::StrSplit(mapping, '\n')) {
+    for (const std::string_view line : absl::StrSplit(mapping, '\n')) {
       const std::vector<std::string_view> parts = absl::StrSplit(line, ',', absl::AllowEmpty());
       if (parts.size() == 3 && parts[1] == workspace) {
         return runfiles->Rlocation(mbo::file::JoinPaths(parts[2], source_rel));

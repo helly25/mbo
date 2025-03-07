@@ -19,6 +19,7 @@
 #include <string>
 #include <string_view>
 
+#include "absl/status/statusor.h"
 #include "absl/time/time.h"
 #include "mbo/file/file.h"
 

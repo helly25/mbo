@@ -15,10 +15,14 @@
 
 #include "mbo/strings/parse.h"
 
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/status/status_macros.h"

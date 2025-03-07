@@ -15,6 +15,7 @@
 
 #include "mbo/strings/numbers.h"
 
+#include <array>
 #include <limits>
 #include <string>
 #include <string_view>
@@ -26,16 +27,14 @@
 namespace mbo::strings {
 namespace {
 
-using ::testing::Gt;
-using ::testing::Pair;
-using ::testing::StartsWith;
+// NOLINTBEGIN(*-magic-numbers,modernize-use-designated-initializers)
 
 struct NumbersTest : ::testing::Test {
   template<typename T>
   static void BigNumberTest(T v, unsigned expected_len, std::string_view expected_str) {
     SCOPED_TRACE(absl::StrFormat("Number: %d", v));
-    unsigned len = BigNumberLen(v);
-    std::string str = BigNumber(v);
+    const unsigned len = BigNumberLen(v);
+    const std::string str = BigNumber(v);
     EXPECT_THAT(str, expected_str);
     EXPECT_THAT(str.size(), len) << "  Number: '" << str << "'";
     EXPECT_THAT(len, expected_len) << "  Number: '" << str << "'";
@@ -45,7 +44,7 @@ struct NumbersTest : ::testing::Test {
 template<typename T>
 struct TestData {
   T value;
-  unsigned expected_len;
+  unsigned expected_len{0};
   std::string_view expected_str;
 };
 
@@ -65,7 +64,7 @@ TEST_F(NumbersTest, BigNumberMinMax) {
 }
 
 TEST_F(NumbersTest, BigNumberInt32) {
-  constexpr TestData<int32_t> kTests[] = {
+  constexpr std::array<TestData<int32_t>, 39> kTests{{
       {0, 1, "0"},
       {1, 1, "1"},
       {9, 1, "9"},
@@ -105,14 +104,14 @@ TEST_F(NumbersTest, BigNumberInt32) {
       {-100'000'000, 12, "-100'000'000"},
       {-999'999'999, 12, "-999'999'999"},
       {-1'000'000'000, 14, "-1'000'000'000"},
-  };
+  }};
   for (const auto& [value, expected_len, expected_str] : kTests) {
     BigNumberTest(value, expected_len, expected_str);
   }
 }
 
 TEST_F(NumbersTest, BigNumberInt64) {
-  constexpr TestData<int64_t> kTests[] = {
+  constexpr std::array<TestData<int64_t>, 38> kTests{{
       {0, 1, "0"},
       {1, 1, "1"},
       {9, 1, "9"},
@@ -133,29 +132,31 @@ TEST_F(NumbersTest, BigNumberInt64) {
       {100'000'000, 11, "100'000'000"},
       {999'999'999, 11, "999'999'999"},
       {1'000'000'000, 13, "1'000'000'000"},
-      {9'999'999'999ull, 13, "9'999'999'999"},
-      {10'000'000'000ull, 14, "10'000'000'000"},
-      {99'999'999'999ull, 14, "99'999'999'999"},
-      {100'000'000'000ull, 15, "100'000'000'000"},
-      {999'999'999'999ull, 15, "999'999'999'999"},
-      {1'000'000'000'000ull, 17, "1'000'000'000'000"},
-      {9'999'999'999'999ull, 17, "9'999'999'999'999"},
-      {10'000'000'000'000ull, 18, "10'000'000'000'000"},
-      {99'999'999'999'999ull, 18, "99'999'999'999'999"},
-      {100'000'000'000'000ull, 19, "100'000'000'000'000"},
-      {999'999'999'999'999ull, 19, "999'999'999'999'999"},
-      {1'000'000'000'000'000ull, 21, "1'000'000'000'000'000"},
-      {9'999'999'999'999'999ull, 21, "9'999'999'999'999'999"},
-      {10'000'000'000'000'000ull, 22, "10'000'000'000'000'000"},
-      {99'999'999'999'999'999ull, 22, "99'999'999'999'999'999"},
-      {100'000'000'000'000'000ull, 23, "100'000'000'000'000'000"},
-      {999'999'999'999'999'999ull, 23, "999'999'999'999'999'999"},
-      {1'000'000'000'000'000'000ull, 25, "1'000'000'000'000'000'000"},
-  };
+      {9'999'999'999ULL, 13, "9'999'999'999"},
+      {10'000'000'000ULL, 14, "10'000'000'000"},
+      {99'999'999'999ULL, 14, "99'999'999'999"},
+      {100'000'000'000ULL, 15, "100'000'000'000"},
+      {999'999'999'999ULL, 15, "999'999'999'999"},
+      {1'000'000'000'000ULL, 17, "1'000'000'000'000"},
+      {9'999'999'999'999ULL, 17, "9'999'999'999'999"},
+      {10'000'000'000'000ULL, 18, "10'000'000'000'000"},
+      {99'999'999'999'999ULL, 18, "99'999'999'999'999"},
+      {100'000'000'000'000ULL, 19, "100'000'000'000'000"},
+      {999'999'999'999'999ULL, 19, "999'999'999'999'999"},
+      {1'000'000'000'000'000ULL, 21, "1'000'000'000'000'000"},
+      {9'999'999'999'999'999ULL, 21, "9'999'999'999'999'999"},
+      {10'000'000'000'000'000ULL, 22, "10'000'000'000'000'000"},
+      {99'999'999'999'999'999ULL, 22, "99'999'999'999'999'999"},
+      {100'000'000'000'000'000ULL, 23, "100'000'000'000'000'000"},
+      {999'999'999'999'999'999ULL, 23, "999'999'999'999'999'999"},
+      {1'000'000'000'000'000'000ULL, 25, "1'000'000'000'000'000'000"},
+  }};
   for (const auto& [value, expected_len, expected_str] : kTests) {
     BigNumberTest(value, expected_len, expected_str);
   }
 }
+
+// NOLINTEND(*-magic-numbers,modernize-use-designated-initializers)
 
 }  // namespace
 }  // namespace mbo::strings
