@@ -17,7 +17,6 @@ Checks: >
   -google-build-using-namespace,
   -hicpp-no-assembler,
   -llvm-else-after-return,
-  llvm-header-guard,
   -llvm-include-order,
   -llvmlibc-*,
   misc-*,
@@ -26,12 +25,14 @@ Checks: >
   -modernize-use-std-format,
   -modernize-use-trailing-return-type,
   performance-*,
+  -performance-enum-size,
   portability-*,
   readability-*,
+  -readability-avoid-nested-conditional-operator,
   -readability-else-after-return,
+  -readability-redundant-inline-specifier,
 
 WarningsAsErrors: true
-#HeaderFilterRegex: 'mbo/.*'
 FormatStyle:       '.clang-format'
 CheckOptions:
   - key:             bugprone-signed-char-misuse.CharTypdefsToIgnore
