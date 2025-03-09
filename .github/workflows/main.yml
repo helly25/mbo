@@ -15,6 +15,7 @@ jobs:
 
   test-gcc:
     needs: pre-commit
+    secrets: inherit
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -42,6 +43,7 @@ jobs:
 
   test-clang:
     needs: [pre-commit, test-gcc]
+    secrets: inherit
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -98,3 +100,10 @@ jobs:
       llvm_version: ${{ matrix.llvm_version }}
       bazel_config: ${{ matrix.bazel_config }}
       module_version: ${{ matrix.module_version }}
+
+  done:
+    needs: [pre-commit, test-gcc, test-clang, test-bcr]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Done
+        run: echo "Done"

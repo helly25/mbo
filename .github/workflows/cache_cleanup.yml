@@ -1,0 +1,48 @@
+name: Cleanup caches by head/ref after merging.
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup caches from current PR
+        run: |
+          set -euo pipefail
+
+          # We could fetch the prefix list and per prefix keep one. But main cannot see the feature branch cahce :-(
+          echo "Fetching list of cache keys for head ref '${HEAD_REF}' on PR '${PULL_REQUEST}'."
+          cacheKeysForPR=$(gh cache list --ref "${HEAD_REF}" --limit 100 --json id --jq '.[].id')
+
+          echo "Deleting caches..."
+          for cacheKey in ${cacheKeysForPR}; do
+            echo "Deleting cache: ${cacheKey}"
+            gh cache delete "${cacheKey}" || echo "Error deleting: ${cacheKey}."
+          done
+          echo "Done"
+        env:
+          GH_TOKEN: ${{secrets.CACHE_ACCESS}}
+          GH_REPO: ${{github.repository}}
+          PULL_REQUEST: refs/pull/${{github.event.pull_request.number}}/merge
+          HEAD_REF: refs/heads/${{github.head_ref}}
+
+      - name: Cleanup caches from old PRs
+        run: |
+          set -euo pipefail
+
+          closedBeforeDate="$(date -Iminutes --date=-4hours)"
+          echo "Fetching list of branch names for PRs closed before: ${closedBeforeDate}."
+          closedPrList=$(gh pr list -s closed --json headRefName,closedAt --jq "map(select(.closedAt < \"${closedBeforeDate}\"))|.[].headRefName")
+          for closedPr in ${closedPrList}; do
+            echo "Deleting caches for '${closedPr}'..."
+            cacheKeyList=$(gh cache list --ref "refs/heads/${closedPr}" --limit 250 --json id --jq '.[].id')
+            for cacheKey in ${cacheKeyList}; do
+              echo "Deleting cache: '${cacheKey}'"
+              gh cache delete "${cacheKey}" || echo "Error deleting: '${cacheKey}'."
+            done
+          done
+        env:
+          GH_TOKEN: ${{secrets.CACHE_ACCESS}}
+          GH_REPO: ${{github.repository}}

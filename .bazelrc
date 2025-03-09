@@ -4,6 +4,9 @@
 common --consistent_labels
 common --enable_bzlmod
 common --noincompatible_enable_cc_toolchain_resolution
+common --incompatible_disallow_empty_glob
+common --nolegacy_external_runfiles
+common --features=layering_check
 
 # Define the Apple OS
 common --apple_platform_type=macos
