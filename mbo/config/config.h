@@ -20,7 +20,9 @@
 # include "mbo/config/config_gen.h"  // IWYU pragma: export
 #else
 # include "mbo/config/internal/config.h.in"  // IWYU pragma: export
-# error "BAD"
+# if !defined(IS_CLANGD)
+#  error "BAD"
+# endif  // !defined(IS_CLANGD)
 #endif
 
 #endif  // MBO_CONFIG_CONFIG_H_

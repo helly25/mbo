@@ -26,6 +26,7 @@ cc_library(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:cord",
     ],
 )
 
@@ -37,6 +38,7 @@ cc_test(
         "//mbo/testing:status_cc",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -59,6 +61,7 @@ cc_test(
         "//mbo/testing:status_cc",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -79,12 +82,14 @@ cc_test(
     name = "status_macros_test",
     srcs = ["status_macros_test.cc"],
     deps = [
+        ":status_builder_cc",
         ":status_cc",
         ":status_macros_cc",
         "//mbo/testing:status_cc",
         "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
