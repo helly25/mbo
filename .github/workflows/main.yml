@@ -82,6 +82,7 @@ jobs:
 
   test-bcr:
     needs: [pre-commit, test-gcc]
+    secrets: inherit
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
