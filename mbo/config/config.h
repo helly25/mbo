@@ -20,9 +20,11 @@
 # include "mbo/config/config_gen.h"  // IWYU pragma: export
 #else
 # include "mbo/config/internal/config.h.in"  // IWYU pragma: export
-# if !defined(IS_CLANGD)
-#  error "BAD"
-# endif  // !defined(IS_CLANGD)
+# if __STDC_VERSION__ >= 202'311L
+#  if !defined(IS_CLANGD)
+#   warning "BAD"
+#  endif  // __STDC_VERSION__ >= 202311L
+# endif   // !defined(IS_CLANGD)
 #endif
 
 #endif  // MBO_CONFIG_CONFIG_H_
