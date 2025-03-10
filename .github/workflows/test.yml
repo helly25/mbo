@@ -47,12 +47,16 @@ on:
         type: string
         default: opt
       module_version:
-        description: 'Version string for the MODULE.$ver.bazel to be copied from the bzlmod directory.'
+        description: 'Version string for the "MODULE.${module_version}.bazel" to be copied from the bzlmod directory.'
+        type: string
+        default: ''
+      module_default:
+        description: 'If the "module_version" has this value, then no "MODULE.${module_version}.bazel" will be copied.'
         type: string
         default: ''
 
 env:
-  CACHE_KEY_PREFIX: ${{inputs.os}}-${{inputs.bazel_mode}}_${{inputs.compiler}}_${{inputs.llvm_version}}_${{inputs.gcc_version}}_${{inputs.bazel_config}}_${{inputs.module_version}}
+  CACHE_KEY_PREFIX: ${{inputs.os}}-${{inputs.bazel_mode}}_${{inputs.compiler}}_${{inputs.compiler == 'clang' && inputs.llvm_version || ''}}_${{inputs.compiler == 'gcc' && inputs.gcc_version || ''}}_${{inputs.bazel_config}}_${{inputs.module_version}}
 
 jobs:
   test:
@@ -62,7 +66,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: bazelbuild/setup-bazelisk@v3
       - uses: egor-tensin/setup-gcc@v1
-        if: ${{inputs.compiler == 'gcc'}}
+        if: ${{inputs.compiler == 'gcc' && inputs.gcc_version != ''}}
         with:
           version: ${{inputs.gcc_version}}
           platform: ${{runner.arch}}
@@ -75,7 +79,12 @@ jobs:
               ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}
               ${{env.CACHE_KEY_PREFIX}}-refs/heads/main
               ${{env.CACHE_KEY_PREFIX}}
-      - run: |
+      - name: Build and Test
+        run: |
+          if [ "${{inputs.compiler}}:${{inputs.gcc_version}}" == "gcc:" ]; then
+            echo "ERROR: When compiler=='gcc', then a valid 'compiler_version' must be given."
+            exit 1
+          fi
           declare -a BAZEL_INIT=()
           declare -a BAZEL_ARGS=()
           CACHE_ROOT=~/.cache
@@ -103,8 +112,12 @@ jobs:
           elif [ "${{inputs.compiler}}" == "gcc" ]; then
             export CC=/usr/local/bin/gcc
             export CXX=/usr/local/bin/g++
+          elif [ "${{inputs.compiler}}" == "native" ]; then
+            # Use whatever is found!
+            [ -n "${CC}" ] && [ -x "${CC}" ] && echo "CC: $(${CC} --version)"
+            [ -n "${CXX}" ] && [ -x "${CXX}" ] && echo "CXX: $(${CXX} --version)"
           else
-            echo "ERROR: Matrix/Input var 'compiler' must be one of [clang, gcc]."
+            echo "ERROR: Matrix/Input var 'compiler' must be one of [clang, gcc, native]."
           fi
           if [ "${{inputs.bazel_config}}" == "asan" ]; then
             BAZEL_ARGS+=("-c" "dbg" "--config=asan")
@@ -118,7 +131,9 @@ jobs:
             echo "ERROR: Matrix/Input var 'bazel_config' must be one of [asan, cpp23, fastbuild, opt]."
           fi
           if [ -n "${{inputs.module_version}}" ]; then
-            cp "bazelmod/MODULE.${{inputs.module_version}}.bazel" MODULE.bazel
+            if [ "${{inputs.module_version}}" != "${{inputs.module_default}}" ]; then
+              cp "bazelmod/MODULE.${{inputs.module_version}}.bazel" MODULE.bazel
+            fi
           fi
           echo "BAZEL_INIT: ${BAZEL_INIT[@]}"
           echo "BAZEL_ARGS: ${BAZEL_ARGS[@]}"

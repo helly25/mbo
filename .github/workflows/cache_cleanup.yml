@@ -9,18 +9,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cleanup caches from current PR
+        # We could fetch the prefix list and per prefix keep only one.
+        # But for simplicity and safety we only work on the reported branch.
+        # On the main branch this `cache_cleanup` workflow may not delete the last version as that
+        # that would mean that the `test` workflow triggered for the same state will not find any
+        # caches. That is because the the `cache_cleanup` workflow is much faster and will most
+        # likely finish during the initial `pre-commit` job of the `test` workflow.
+        # Not that last version for the head ref means last cache version per cache key prefix.
         run: |
           set -euo pipefail
-
-          # We could fetch the prefix list and per prefix keep one. But main cannot see the feature branch cahce :-(
           echo "Fetching list of cache keys for head ref '${HEAD_REF}' on PR '${PULL_REQUEST}'."
-          cacheKeysForPR=$(gh cache list --ref "${HEAD_REF}" --limit 100 --json id --jq '.[].id')
-
-          echo "Deleting caches..."
-          for cacheKey in ${cacheKeysForPR}; do
-            echo "Deleting cache: ${cacheKey}"
-            gh cache delete "${cacheKey}" || echo "Error deleting: ${cacheKey}."
-          done
+          if [ "${HEAD_REF}" == "refs/heads/main" ]; then
+            cacheKeyPrefixList=$(gh cache list --ref refs/heads/main  --limit 250 --json id,key,ref,createdAt --jq "[map((.ref as \$ref|.key|split(\"-\")|index(\$ref) as \$idx|select(.|\$idx)|.[0:\$idx+1]|join(\"-\")) as \$prefix|.prefix=\$prefix)|.[]|.prefix]|sort|unique|.[]")
+            echo "Deleting all but last cache per key prefix for 'refs/heads/main'..."
+            for cacheKeyPrefix in ${cacheKeyPrefixList}; do
+              cacheKeyList=$(gh cache list --ref "${HEAD_REF}" --limit 250 --json id,key,createdAt --jq 'map(select(.key|startswith(\"${cacheKeyPrefix}\")))|sort_by(.createdAt)|.[:-1]|.[].id')
+              for cacheKey in ${cacheKeyList}; do
+                echo "Deleting cache: ${cacheKey}"
+                gh cache delete "${cacheKey}" || echo "Error deleting: ${cacheKey}."
+              done
+            done
+          else
+            cacheKeyList=$(gh cache list --ref "${HEAD_REF}" --limit 250 --json id --jq '.[].id')
+            echo "Deleting all caches for '${HEAD_REF}'..."
+            for cacheKey in ${cacheKeyList}; do
+              echo "Deleting cache: ${cacheKey}"
+              gh cache delete "${cacheKey}" || echo "Error deleting: ${cacheKey}."
+            done
+          fi
           echo "Done"
         env:
           GH_TOKEN: ${{secrets.CACHE_ACCESS}}
@@ -31,10 +47,10 @@ jobs:
       - name: Cleanup caches from old PRs
         run: |
           set -euo pipefail
-
           closedBeforeDate="$(date -Iminutes --date=-4hours)"
+          closedAfterDate="$(date -Iminutes --date=-14days)"
           echo "Fetching list of branch names for PRs closed before: ${closedBeforeDate}."
-          closedPrList=$(gh pr list -s closed --json headRefName,closedAt --jq "map(select(.closedAt < \"${closedBeforeDate}\"))|.[].headRefName")
+          closedPrList=$(gh pr list -s closed --json headRefName,closedAt --jq "map(select(.closedAt > \"${closedAfterDate}\" and .closedAt < \"${closedBeforeDate}\"))|.[].headRefName")
           for closedPr in ${closedPrList}; do
             echo "Deleting caches for '${closedPr}'..."
             cacheKeyList=$(gh cache list --ref "refs/heads/${closedPr}" --limit 250 --json id --jq '.[].id')

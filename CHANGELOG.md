@@ -2,6 +2,7 @@
 
 * Added `--config=cpp23` for `-std=c++23` to bazelrc and CI testing.
 * Updated code to comply with current clang-tidy warnings.
+* Enabled Bazel layering_check.
 
 # 0.4.3
 

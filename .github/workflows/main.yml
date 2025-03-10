@@ -28,10 +28,10 @@ jobs:
             gcc_version: 11
           - bazel_mode: workspace
             gcc_version: 13
-          - gcc_version: 11
-            bazel_config: cpp23
-          - gcc_version: 12
-            bazel_config: cpp23
+          - bazel_config: cpp23
+            gcc_version: 11
+          - bazel_config: cpp23
+            gcc_version: 12
 
     uses: ./.github/workflows/test.yml
     with:
@@ -87,10 +87,16 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         bazel_mode: [bzlmod]
-        compiler: [clang]
+        compiler: [gcc, native]
+        gcc_version: [11]
         llvm_version: [19.1.6]
         bazel_config: [opt]
         module_version: [0.4.2]
+        exclude:
+          - os: ubuntu-latest
+            compiler: native
+          - os: macos-latest
+            compiler: gcc
 
     uses: ./.github/workflows/test.yml
     with:
@@ -98,6 +104,7 @@ jobs:
       os: ${{ matrix.os }}
       bazel_mode: ${{ matrix.bazel_mode }}
       compiler: ${{ matrix.compiler }}
+      gcc_version: ${{ matrix.gcc_version }}
       llvm_version: ${{ matrix.llvm_version }}
       bazel_config: ${{ matrix.bazel_config }}
       module_version: ${{ matrix.module_version }}
