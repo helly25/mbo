@@ -59,6 +59,7 @@ cc_test(
     deps = [
         ":struct_names_cc",
         "//mbo/types:tstring_cc",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )

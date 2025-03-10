@@ -24,8 +24,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
+#include "absl/log/absl_log.h"
 #include "absl/log/initialize.h"
-#include "absl/log/log.h"
 #include "absl/status/statusor.h"
 #include "mbo/diff/unified_diff.h"
 #include "mbo/diff/update_absl_log_flags.h"
@@ -104,7 +104,7 @@ absl::StatusOr<Artefact> Read(std::string_view file_name) {
   auto result =
       max_lines > 0 ? Artefact::ReadMaxLines(file_name, max_lines, options) : Artefact::Read(file_name, options);
   if (!result.ok()) {
-    LOG(ERROR) << "ERROR: " << result.status();
+    ABSL_LOG(ERROR) << "ERROR: " << result.status();
   }
   return result;
 }
@@ -165,7 +165,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
   };
   const auto result = mbo::diff::UnifiedDiff::Diff(*lhs, *rhs, diff_options);
   if (!result.ok()) {
-    LOG(ERROR) << "ERROR: " << result.status();
+    ABSL_LOG(ERROR) << "ERROR: " << result.status();
     return 1;
   }
   if (!result->empty()) {

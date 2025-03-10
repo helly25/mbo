@@ -30,6 +30,7 @@ cc_test(
     srcs = ["cases_test.cc"],
     deps = [
         ":cases_cc",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -79,10 +80,18 @@ cc_test(
     srcs = ["extend_test.cc"],
     deps = [
         ":extend_cc",
+        ":extender_cc",
+        ":traits_cc",
+        ":tuple_extras_cc",
+        "//mbo/types/internal:extend_cc",
+        "//mbo/types/internal:traits_cc",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/hash",
         "@com_google_absl//absl/hash:hash_testing",
         "@com_google_absl//absl/log:absl_log",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -96,6 +105,8 @@ cc_test(
     ],
     deps = [
         ":extend_cc",
+        ":extender_cc",
+        ":stringify_cc",
         "//mbo/container:limited_vector_cc",
         "//mbo/types/internal:struct_names_cc",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -103,6 +114,7 @@ cc_test(
         "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/log:absl_log",
         "@com_google_absl//absl/strings:str_format",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -118,8 +130,11 @@ cc_test(
     srcs = ["no_destruct_test.cc"],
     deps = [
         ":extend_cc",
+        ":extender_cc",
         ":no_destruct_cc",
+        ":traits_cc",
         "@com_google_absl//absl/log:absl_check",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -144,6 +159,7 @@ cc_test(
     srcs = ["opaque_test.cc"],
     deps = [
         ":opaque_cc",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -159,6 +175,7 @@ cc_test(
     srcs = ["ref_wrap_test.cc"],
     deps = [
         ":ref_wrap_cc",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -174,6 +191,7 @@ cc_test(
     srcs = ["required_test.cc"],
     deps = [
         ":required_cc",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -202,6 +220,7 @@ cc_test(
     ],
     deps = [
         ":stringify_cc",
+        ":traits_cc",
         ":tuple_extras_cc",
         "//mbo/container:limited_vector_cc",
         "//mbo/types/internal:struct_names_cc",
@@ -210,6 +229,7 @@ cc_test(
         "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/log:absl_log",
         "@com_google_absl//absl/strings:str_format",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -229,6 +249,7 @@ cc_test(
     deps = [
         ":extender_cc",
         ":stringify_ostream_cc",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -245,6 +266,7 @@ cc_test(
     deps = [
         ":template_search_cc",
         ":traits_cc",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -266,6 +288,8 @@ cc_test(
     deps = [
         ":traits_cc",
         "//mbo/types/internal:test_types_cc",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -285,7 +309,9 @@ cc_test(
     deps = [
         ":tstring_cc",
         "//mbo/hash:hash_cc",
+        "@com_google_absl//absl/hash",
         "@com_google_absl//absl/hash:hash_testing",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -314,6 +340,8 @@ cc_test(
         ":tuple_cc",
         ":tuple_extras_cc",
         "//mbo/types/internal:test_types_cc",
+        "//mbo/types/internal:traits_cc",
+        "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],
 )
