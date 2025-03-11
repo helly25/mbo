@@ -1,3 +1,7 @@
+# 0.4.5
+
+* Added LLVM-20.1.0 config for Linux-Arm64 and MacOs-Arm64 platforms.
+
 # 0.4.4
 
 * Added `--config=cpp23` for `-std=c++23` to bazelrc and CI testing.

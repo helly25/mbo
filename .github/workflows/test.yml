@@ -71,7 +71,8 @@ jobs:
           version: ${{inputs.gcc_version}}
           platform: ${{runner.arch}}
 
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
+        id: cache_restore
         with:
             path: "~/.cache/bazel"
             key: ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}-${{github.sha}}
@@ -79,6 +80,7 @@ jobs:
               ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}
               ${{env.CACHE_KEY_PREFIX}}-refs/heads/main
               ${{env.CACHE_KEY_PREFIX}}
+
       - name: Build and Test
         run: |
           if [ "${{inputs.compiler}}:${{inputs.gcc_version}}" == "gcc:" ]; then
@@ -139,19 +141,20 @@ jobs:
           echo "BAZEL_ARGS: ${BAZEL_ARGS[@]}"
           bazel "${BAZEL_INIT[@]}" test "${BAZEL_ARGS[@]}" //...
 
-  cleanup:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    needs: test
-    steps:
+      - uses: actions/cache/save@v4
+        if: ${{!startsWith(github.ref, 'refs/tags/')}}
+        id: cache_save
+        with:
+            path: "~/.cache/bazel"
+            key: ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}-${{github.sha}}
+
       - name: Cleanup old caches
+        if: ${{!startsWith(github.ref, 'refs/tags/') && steps.cache_restore.outputs.cache-hit}}
         run: |
           set -euo pipefail
-
           PREFIX="${{env.CACHE_KEY_PREFIX}}-${{github.ref}}"
-          echo "Fetching list of old caches for key prefix '${PREFIX}''..."
+          echo "Fetching list of old caches for key prefix '${PREFIX}'..."
           cacheKeyList=$(gh cache list  --limit 250 --json id,key,ref,createdAt --jq "map(select(.key|startswith(\"${PREFIX}\")))|sort_by(.createdAt)|.[:-1]|.[].id")
-
           echo "Deleting caches..."
           for cacheKey in ${cacheKeyList}; do
             echo "Deleting cache: '${cacheKey}'"
