@@ -1,6 +1,8 @@
 # To debug bazel options, uncomment next line.
 # common --announce_rc
 
+try-import %workspace%/.bazelrc.user
+
 common --consistent_labels
 common --enable_bzlmod
 common --noincompatible_enable_cc_toolchain_resolution
