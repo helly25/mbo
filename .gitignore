@@ -10,4 +10,5 @@
 /.cache/
 /.vscode/
 
+/.bazelrc.user
 MODULE.bazel.lock
