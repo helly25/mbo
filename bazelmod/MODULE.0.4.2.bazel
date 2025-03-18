@@ -20,7 +20,7 @@ module(name = "helly25_mbo", version = "0.4.2", repo_name = "com_helly25_mbo")
 
 # For local development we include LLVM and Hedron-Compile-Commands.
 # For bazelmod usage these have to be provided by the main module - if necessary.
-include("//bazelmod:hedron.MODULE.bazel")
+include("//bazelmod:dev.MODULE.bazel")
 
 include("//bazelmod:llvm.MODULE.bazel")
 

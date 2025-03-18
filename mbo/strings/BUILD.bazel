@@ -21,10 +21,10 @@ cc_library(
     name = "indent_cc",
     srcs = ["indent.cc"],
     hdrs = ["indent.h"],
-    visibility = ["//visibility:public"],
-    deps = [
+    implementation_deps = [
         "@com_google_absl//absl/strings",
     ],
+    visibility = ["//visibility:public"],
 )
 
 cc_test(
