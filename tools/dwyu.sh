@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # SPDX-FileCopyrightText: Copyright (c) The helly25/mbo authors (helly25.com)
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -13,9 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-package(default_visibility = [])
+set -euo pipefail
 
-exports_files([
-    "dev.MODULE.bazel",
-    "llvm.MODULE.bazel",
-])
+function die() { echo "ERROR: ${*}" 1>&2 ; exit 1; }
+
+if [[ ! -r "MODULE.bazel" ]] || [[ "${0}" != "tools/dwyu.sh" ]]; then
+    die "Must be run from workspace directory."
+fi
+
+bazel build --aspects=//tools:dwyu.bzl%dwyu_aspect --output_groups=dwyu //...  || \
+    bazel run @depend_on_what_you_use//:apply_fixes -- --fix-all
+
+# -//mbo/strings:indent_cc
+# -//mbo/types/internal:struct_names_cc

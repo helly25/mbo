@@ -61,9 +61,25 @@ for patch in "${PATCHES[@]}"; do
     patch -s -p 1 <"${patch}"
 done
 
+# Exclude some dev stuff from the archive.
+EXCLUDES=(
+    ".bcr"
+    ".github"
+    ".pre-commit"
+    ".pre-commit-config.yaml"
+    "tools"
+)
+{
+    for exclude in "${EXCLUDES[@]}"; do
+        echo "${exclude} export-ignore"
+        if [[ -d "${exclude}" ]]; then
+            echo "${exclude}/** export-ignore"
+        fi
+    done
+} >> .gitattributes
 
 # Build the archive
-git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}"
+git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${TAG}" --worktree-attributes
 
 SHA256="$(shasum -a 256 "${ARCHIVE}" | awk '{print $1}')"
 
@@ -75,18 +91,6 @@ echo "## [Changelog](https://github.com/helly25/${PACKAGE_NAME}/blob/${TAG}/CHAN
 awk '/^#/{f+=1;if(f>1)exit} !/^#/{print}' < CHANGELOG.md
 
 cat << EOF
-## For Bazel WORKSPACE
-
-\`\`\`
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-http_archive(
-  name = "${WORKSPACE_NAME}",
-  url = "https://github.com/helly25/${PACKAGE_NAME}/releases/download/${TAG}/${ARCHIVE}",
-  sha256 = "${SHA256}",
-)
-\`\`\`
-
 ## For Bazel MODULES.bazel
 
 \`\`\`
@@ -99,5 +103,17 @@ Copy [llvm.MODULE.bazel](https://github.com/helly25/${PACKAGE_NAME}/blob/main/ba
 
 \`\`\`
 include("//:llvm.MODULE.bazel")
+\`\`\`
+
+## For Bazel WORKSPACE
+
+\`\`\`
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+  name = "${WORKSPACE_NAME}",
+  url = "https://github.com/helly25/${PACKAGE_NAME}/releases/download/${TAG}/${ARCHIVE}",
+  sha256 = "${SHA256}",
+)
 \`\`\`
 EOF

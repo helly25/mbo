@@ -76,6 +76,44 @@ repos:
     entry: .pre-commit/check_version.sh
     pass_filenames: False
     types: [text]
+  - id: no-do-not-merge
+    name: No 'DO NOT MERGE'
+    description: |
+      * You can add 'DONOTMERGE', 'DONOTSUBMIT', 'DO NOT MERGE', 'DO NOT SUBMIT', 'DON'T MERGE',
+        'DON'T SUBMIT' or the same with underscores instead of spaces to prevent merging.
+      * To run `pre-commit` without this hook, run `SKIP="no-do-not-merge" pre-commit`.
+    language: pygrep
+    args: [-i]
+    entry: DO([ _]?NOT|N'T)[ _]?(SUBMIT|MERGE)
+    exclude: ^.pre-commit-config.yaml$
+    types: [text]
+  - id: no-todos-without-context
+    name: No TODOs without context
+    description: |
+      * Use descriptive, referenceable TODOs. Examples:
+        * `// TODO(nero.windstriker@helly25.com)`
+        * `# FIXME(https://github.com/helly25/bzl/issues/42)`
+      * From the google style guide:
+        Use FIXME/TODO comments for code that is temporary, a short-term solution.
+        FIXME/TODOs should include the string `FIXME` or `TODO` in all caps, followed by a person's
+        e-mail address, or url with the best context about the problem referenced by the FIXME/TODO.
+      * A bug or other URL reference is better than a person, as the person may become unavailable.
+      * If a developer is referenced then it does not need to be the one writing the FIXME/TODO.
+        * It is more important to note the most knowledgable person.
+        * If you add someone else, first clarify with them.
+      * Concretely, FIXMEs and TODOs without a context are rather pointless. That is, sooner or
+        later noone knows why they were introduced and they will simply get deleted.
+      * It is impossible to systematically find your own TODOs, someone else' or perform any other
+        kind of statictics on them. The issue is that the blame tool tracks the last change, so you
+        would need a tool that can follow the history to the actual introduction of the FIXME/TODOs.
+      * To run `pre-commit` without this hook, run `SKIP="no-todos-without-context" pre-commit`
+    language: pygrep
+    args: [-i]
+    exclude: ^[.]pre-commit-config.yaml$
+    entry: (#|//|/[*]).*(FIXME|TODO)[(](?!(((\w|\w[.-]\w)+@(\w|-)+([.](\w|-)+)*)|(https?://[^)]+))(,[^)]+)?)[)]
+    #      1         1  1          1   1  234           4  4    4 4   5    5 4 3 3              322      2 1
+    types: [text]
+
 
 - repo: https://github.com/keith/pre-commit-buildifier
   rev: 8.0.1

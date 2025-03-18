@@ -13,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
-git_override(
-    module_name = "hedron_compile_commands",
-    commit = "6dd21b47db481a70c61698742438230e2399b639",
-    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
-)
+"""DWYU support (https://github.com/martis42/depend_on_what_you_use)."""
+
+load("@depend_on_what_you_use//:defs.bzl", "dwyu_aspect_factory")
+
+dwyu_aspect = dwyu_aspect_factory(use_implementation_deps = True, recursive = False, skip_external_targets = True)

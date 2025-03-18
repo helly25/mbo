@@ -6,10 +6,10 @@ index c298a32..658794e 100644
  
  # For local development we include LLVM and Hedron-Compile-Commands.
  # For bazelmod usage these have to be provided by the main module - if necessary.
--include("//bazelmod:hedron.MODULE.bazel")
+-include("//bazelmod:dev.MODULE.bazel")
 -
 -include("//bazelmod:llvm.MODULE.bazel")
-+# include("//bazelmod:hedron.MODULE.bazel")
++# include("//bazelmod:dev.MODULE.bazel")
 +
 +# include("//bazelmod:llvm.MODULE.bazel")
  

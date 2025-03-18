@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-package(default_visibility = [])
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+git_override(
+    module_name = "hedron_compile_commands",
+    commit = "6dd21b47db481a70c61698742438230e2399b639",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+)
 
-exports_files([
-    "dev.MODULE.bazel",
-    "llvm.MODULE.bazel",
-])
+bazel_dep(name = "depend_on_what_you_use", version = "0.7.0", dev_dependency = True)
