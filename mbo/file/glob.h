@@ -37,6 +37,10 @@ struct GlobOptions {
   // the relative path as opposed to `entry.path`.
   bool use_rel_path : 1 = false;
 
+  // By default the globbing is done in recursive fashion. But that can be disabled in which case
+  // only the given root directory will be iteratoed.
+  bool recursive : 1 = true;
+
   // Options passed to the creation of the `std::filesystem::recursive_directory_iterator`.
   std::filesystem::directory_options dir_options = std::filesystem::directory_options::skip_permission_denied;
 };
@@ -95,7 +99,7 @@ struct GlobEntry : mbo::types::Extend<GlobEntry> {
   const std::filesystem::directory_entry entry;
   const int depth;
 
-  // Returns the path for the `entry` either as is or elative to `root` if that was requested using
+  // Returns the path for the `entry` either as is or relative to `root` if that was requested using
   // `GlobOptions.use_rel_path`.
   const std::filesystem::path& MaybeRelativePath() const noexcept {
     return rel_path.has_value() ? *rel_path : entry.path();

@@ -15,24 +15,31 @@
 
 // If the macro `TEST_FNMATCH` is defined, and the <fnmatch.h> include is available, then the test
 // for `Glob2Re2` verifies that its result matches that of `fnmatch`.
+#include <initializer_list>
+
+#include "mbo/status/status_macros.h"
 #define TEST_FNMATCH
 
 #if !__has_include(<fnmatch.h>)
 # undef TEST_FNMATCH
 #endif
 
-#include "mbo/file/glob.h"
+#include <array>
+#include <cstdlib>
+#include <filesystem>
 
+#include "mbo/file/glob.h"
 #ifdef TEST_FNMATCH
 # include <fnmatch.h>
 #endif  // TEST_FNMATCH
-#include <array>
+#include <fstream>
 #include <memory>
 #include <source_location>
 #include <string_view>
 
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/testing/status.h"
@@ -46,6 +53,7 @@ using namespace mbo::file::file_internal;
 using ::mbo::testing::IsOk;
 using ::mbo::testing::IsOkAndHolds;
 using ::mbo::testing::StatusIs;
+using ::testing::ElementsAreArray;
 using ::testing::NotNull;
 
 struct GlobTest : ::testing::Test {
@@ -62,6 +70,18 @@ struct GlobTest : ::testing::Test {
 #ifdef TEST_FNMATCH
     EXPECT_THAT(fnmatch(std::string(glob_pattern).c_str(), std::string(text).c_str(), 0) == 0, expected);
 #endif  // TEST_FNMATCH
+  }
+
+  static absl::StatusOr<std::filesystem::path> GetTempDir(std::string_view sub_dir) {
+    // NOLINTNEXTLINE(concurrency-mt-unsafe)
+    const auto* const root = std::getenv("TEST_TMPDIR");
+    if (root == nullptr) {
+      return absl::NotFoundError("Environment variable TEST_TMPDIR not found.");
+    }
+    if (root[0] == '\0') {  // NOLINT(*-pointer-arithmetic)
+      return absl::InvalidArgumentError("Environment variable TEST_TMPDIR is empty.");
+    }
+    return std::filesystem::path(root) / sub_dir;
   }
 };
 
@@ -215,6 +235,145 @@ TEST_F(GlobTest, GlobSplitWithRanges) {
   EXPECT_THAT(GlobSplit("a[/]/b[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplit("a[/]/b[-/]/c"), IsOkAndHolds(HasParts("a/b[-/]", "c", false)));
   EXPECT_THAT(GlobSplit("a[/]/b[!/]/c"), IsOkAndHolds(HasParts("a/b[!/]", "c", false)));
+}
+
+template<typename C = std::initializer_list<std::string_view>>
+requires(std::same_as<std::remove_cvref_t<typename std::remove_cvref_t<C>::value_type>, std::string_view>)
+absl::StatusOr<std::filesystem::path> CreateFileSystemEntries(
+    const absl::StatusOr<std::filesystem::path>& root,
+    const C& entries) {
+  namespace fs = std::filesystem;
+  MBO_RETURN_IF_ERROR(root);
+  if (!fs::create_directories(*root)) {
+    return absl::AbortedError(absl::StrCat("Cannot create test root dir: ", root->native()));
+  }
+  std::set<std::string> created;
+  for (const std::string_view& entry : entries) {
+    const auto [path, file] = [&]() {
+      std::vector<std::string> split = absl::StrSplit(entry, absl::MaxSplits(':', 2));
+      while (split.size() < 2) {
+        split.emplace_back("");
+      }
+      return std::make_pair(split[0], split[1]);
+    }();
+    if (!path.empty() && created.emplace(path).second && !fs::create_directories(*root / path)) {
+      return absl::AbortedError(absl::StrCat("Cannot create dir: ", path));
+    }
+    if (!file.empty()) {
+      std::ofstream output(*root / path / file, std::ios::binary);
+    }
+  }
+  return *root;
+}
+
+struct GlobFileTest : GlobTest {
+  static void SetUpTestSuite() {
+    MBO_ASSERT_OK_AND_ASSIGN(
+        root_glob_test, CreateFileSystemEntries(
+                            GetTempDir("glob_test"), {
+                                                         ":top",
+                                                         "dir",
+                                                         "sub/dir:file1",
+                                                         "sub/dir:file2",
+                                                         "sub/two/dir:file1",
+                                                         "sub/two/dir:file2",
+                                                         "sub/two/dir:file3",
+                                                     }));
+  }
+
+  static std::filesystem::path root_glob_test;
+};
+
+std::filesystem::path GlobFileTest::root_glob_test;
+
+TEST_F(GlobFileTest, GlobStopImmediately) {
+  std::vector<std::string> found;
+  ASSERT_OK(Glob(root_glob_test, "*", {}, {}, [&](const GlobEntry& entry) -> GlobEntryAction {
+    found.push_back(entry.entry.path().lexically_relative(root_glob_test));
+    return GlobEntryAction::kStop;
+  }));
+  EXPECT_THAT(
+      found, ElementsAreArray({
+                 "top",
+             }));
+}
+
+TEST_F(GlobFileTest, GlobStar) {
+  std::vector<std::string> found;
+  ASSERT_OK(Glob(root_glob_test, "*", {}, {}, [&](const GlobEntry& entry) -> GlobEntryAction {
+    found.push_back(entry.entry.path().lexically_relative(root_glob_test));
+    return GlobEntryAction::kContinue;
+  }));
+  EXPECT_THAT(
+      found, ElementsAreArray({
+                 "top",
+                 "dir",
+                 "sub",
+             }));
+}
+
+TEST_F(GlobFileTest, GlobStarStar) {
+  std::vector<std::string> found;
+  ASSERT_OK(Glob(root_glob_test, "**", {}, {}, [&](const GlobEntry& entry) -> GlobEntryAction {
+    found.push_back(entry.entry.path().lexically_relative(root_glob_test));
+    return GlobEntryAction::kContinue;
+  }));
+  EXPECT_THAT(
+      found, ElementsAreArray({
+                 "top",
+                 "dir",
+                 "sub",
+                 "sub/dir",
+                 "sub/dir/file1",
+                 "sub/dir/file2",
+                 "sub/two",
+                 "sub/two/dir",
+                 "sub/two/dir/file1",
+                 "sub/two/dir/file2",
+                 "sub/two/dir/file3",
+             }));
+}
+
+TEST_F(GlobFileTest, GlobStarStarNonRecursive) {
+  std::vector<std::string> found;
+  ASSERT_OK(Glob(root_glob_test, "**/???", {}, {.recursive = false}, [&](const GlobEntry& entry) -> GlobEntryAction {
+    found.push_back(entry.entry.path().lexically_relative(root_glob_test));
+    return GlobEntryAction::kContinue;
+  }));
+  EXPECT_THAT(
+      found, ElementsAreArray({
+                 "top",
+                 "dir",
+                 "sub",
+             }));
+}
+
+TEST_F(GlobFileTest, GlobStarStarMatch) {
+  std::vector<std::string> found;
+  ASSERT_OK(Glob(root_glob_test, "**/dir", {}, {}, [&](const GlobEntry& entry) -> GlobEntryAction {
+    found.push_back(entry.entry.path().lexically_relative(root_glob_test));
+    return GlobEntryAction::kContinue;
+  }));
+  EXPECT_THAT(
+      found, ElementsAreArray({
+                 "dir",
+                 "sub/dir",
+                 "sub/two/dir",
+             }));
+}
+
+TEST_F(GlobFileTest, GlobStarStarMatchSquareBrackets) {
+  std::vector<std::string> found;
+  ASSERT_OK(Glob(root_glob_test, "**/file[23]", {}, {}, [&](const GlobEntry& entry) -> GlobEntryAction {
+    found.push_back(entry.entry.path().lexically_relative(root_glob_test));
+    return GlobEntryAction::kContinue;
+  }));
+  EXPECT_THAT(
+      found, ElementsAreArray({
+                 "sub/dir/file2",
+                 "sub/two/dir/file2",
+                 "sub/two/dir/file3",
+             }));
 }
 
 }  // namespace

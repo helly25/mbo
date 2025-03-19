@@ -391,14 +391,31 @@ absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(
 
 namespace {
 
-absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const GlobEntryFunc& func) {
+template<typename FileIterator>
+int FileIteratorDepth(const FileIterator& it) {
+  if constexpr (std::same_as<FileIterator, std::filesystem::recursive_directory_iterator>) {
+    return it.depth();
+  } else {
+    return 0;
+  }
+}
+
+template<typename FileIterator>
+void FileIteratorDisableRecursionPending(FileIterator& it) {
+  if constexpr (std::same_as<FileIterator, std::filesystem::recursive_directory_iterator>) {
+    it.disable_recursion_pending();
+  }
+}
+
+template<typename FileIterator>
+absl::Status GlobLoopImpl(const fs::path& root, const GlobOptions& options, const GlobEntryFunc& func) {
   const fs::path normalized_root = (root.empty() || root == ".") ? fs::current_path() : root.lexically_normal();
   std::error_code error_code;
   if (!fs::exists(normalized_root, error_code)) {
     return absl::NotFoundError(
         error_code ? error_code.message() : absl::StrFormat("Path does not exist: '%s'.", normalized_root));
   }
-  auto it = fs::recursive_directory_iterator(normalized_root, options.dir_options, error_code);
+  auto it = FileIterator(normalized_root, options.dir_options, error_code);
   if (error_code) {
     return absl::CancelledError(error_code.message());
   }
@@ -407,14 +424,14 @@ absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const Gl
         .rel_path =
             options.use_rel_path ? std::optional<fs::path>{entry.path().lexically_relative(root)} : std::nullopt,
         .entry = entry,
-        .depth = it.depth(),
+        .depth = FileIteratorDepth(it),
     };
     MBO_ASSIGN_OR_RETURN(const GlobEntryAction action, func(glob_entry));
     switch (action) {
       case GlobEntryAction::kContinue: continue;
-      case GlobEntryAction::kStop: break;
+      case GlobEntryAction::kStop: return absl::OkStatus();
       case GlobEntryAction::kDoNotRecurse: {
-        it.disable_recursion_pending();
+        FileIteratorDisableRecursionPending(it);
         continue;
       }
     }
@@ -422,12 +439,28 @@ absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const Gl
   return absl::OkStatus();
 }
 
+absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const GlobEntryFunc& func) {
+  if (options.recursive) {
+    return GlobLoopImpl<fs::recursive_directory_iterator>(root, options, func);
+  } else {
+    return GlobLoopImpl<fs::directory_iterator>(root, options, func);
+  }
+}
+
 }  // namespace
 
 absl::Status GlobRe2(const fs::path& root, const RE2& regex, const GlobOptions& options, const GlobEntryFunc& func) {
   const auto wrap_func = [&](const GlobEntry& entry) -> absl::StatusOr<GlobEntryAction> {
-    if (!RE2::FullMatch(entry.MaybeRelativePath().native(), regex)) {
-      return GlobEntryAction::kContinue;  // Path/Filename rejected.
+    if (options.use_rel_path) {
+      if (!RE2::FullMatch(entry.MaybeRelativePath().native(), regex)) {
+        return GlobEntryAction::kContinue;  // Path/Filename rejected.
+      }
+    } else {
+      // The only difference is that we are not actually saving the `rel_path` anywhere.
+      const fs::path rel_path = entry.entry.path().lexically_relative(root);
+      if (!RE2::FullMatch(rel_path.native(), regex)) {
+        return GlobEntryAction::kContinue;  // Path/Filename rejected.
+      }
     }
     return func(entry);
   };

@@ -1,7 +1,8 @@
-# 0.4.5
+# 0.5.0
 
-* Added LLVM-20.1.0 config for Linux-Arm64 and MacOs-Arm64 platforms.
+* Added CI config LLVM-20.1.0 for Linux-Arm64 and MacOs-Arm64 platforms.
 * Applied DWYU cleanup.
+* Added field `GlobOptions::recursive` to select between recursive and flat globbing.
 
 # 0.4.4
 
