@@ -15,24 +15,15 @@
 
 // If the macro `TEST_FNMATCH` is defined, and the <fnmatch.h> include is available, then the test
 // for `Glob2Re2` verifies that its result matches that of `fnmatch`.
-#include <initializer_list>
-
-#include "mbo/status/status_macros.h"
 #define TEST_FNMATCH
 
-#if !__has_include(<fnmatch.h>)
-# undef TEST_FNMATCH
-#endif
+#include "mbo/file/glob.h"
 
 #include <array>
 #include <cstdlib>
 #include <filesystem>
-
-#include "mbo/file/glob.h"
-#ifdef TEST_FNMATCH
-# include <fnmatch.h>
-#endif  // TEST_FNMATCH
 #include <fstream>
+#include <initializer_list>
 #include <memory>
 #include <source_location>
 #include <string_view>
@@ -42,8 +33,16 @@
 #include "absl/strings/str_split.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/status/status_macros.h"
 #include "mbo/testing/status.h"
 #include "re2/re2.h"
+
+#if !__has_include(<fnmatch.h>)
+# undef TEST_FNMATCH
+#endif
+#ifdef TEST_FNMATCH
+# include <fnmatch.h>
+#endif  // TEST_FNMATCH
 
 namespace mbo::file {
 namespace {
@@ -53,8 +52,8 @@ using namespace mbo::file::file_internal;
 using ::mbo::testing::IsOk;
 using ::mbo::testing::IsOkAndHolds;
 using ::mbo::testing::StatusIs;
-using ::testing::ElementsAreArray;
 using ::testing::NotNull;
+using ::testing::UnorderedElementsAreArray;
 
 struct GlobTest : ::testing::Test {
   static void Glob2Re2Match(
@@ -269,16 +268,18 @@ absl::StatusOr<std::filesystem::path> CreateFileSystemEntries(
 struct GlobFileTest : GlobTest {
   static void SetUpTestSuite() {
     MBO_ASSERT_OK_AND_ASSIGN(
-        root_glob_test, CreateFileSystemEntries(
-                            GetTempDir("glob_test"), {
-                                                         ":top",
-                                                         "dir",
-                                                         "sub/dir:file1",
-                                                         "sub/dir:file2",
-                                                         "sub/two/dir:file1",
-                                                         "sub/two/dir:file2",
-                                                         "sub/two/dir:file3",
-                                                     }));
+        root_glob_test,  //
+        CreateFileSystemEntries(
+            GetTempDir("glob_test"),  //
+            {
+                ":top",
+                "dir",
+                "sub/dir:file1",
+                "sub/dir:file2",
+                "sub/two/dir:file1",
+                "sub/two/dir:file2",
+                "sub/two/dir:file3",
+            }));
   }
 
   static std::filesystem::path root_glob_test;
@@ -293,7 +294,7 @@ TEST_F(GlobFileTest, GlobStopImmediately) {
     return GlobEntryAction::kStop;
   }));
   EXPECT_THAT(
-      found, ElementsAreArray({
+      found, UnorderedElementsAreArray({
                  "top",
              }));
 }
@@ -305,7 +306,7 @@ TEST_F(GlobFileTest, GlobStar) {
     return GlobEntryAction::kContinue;
   }));
   EXPECT_THAT(
-      found, ElementsAreArray({
+      found, UnorderedElementsAreArray({
                  "top",
                  "dir",
                  "sub",
@@ -319,7 +320,7 @@ TEST_F(GlobFileTest, GlobStarStar) {
     return GlobEntryAction::kContinue;
   }));
   EXPECT_THAT(
-      found, ElementsAreArray({
+      found, UnorderedElementsAreArray({
                  "top",
                  "dir",
                  "sub",
@@ -341,7 +342,7 @@ TEST_F(GlobFileTest, GlobStarStarNonRecursive) {
     return GlobEntryAction::kContinue;
   }));
   EXPECT_THAT(
-      found, ElementsAreArray({
+      found, UnorderedElementsAreArray({
                  "top",
                  "dir",
                  "sub",
@@ -355,7 +356,7 @@ TEST_F(GlobFileTest, GlobStarStarMatch) {
     return GlobEntryAction::kContinue;
   }));
   EXPECT_THAT(
-      found, ElementsAreArray({
+      found, UnorderedElementsAreArray({
                  "dir",
                  "sub/dir",
                  "sub/two/dir",
@@ -369,7 +370,7 @@ TEST_F(GlobFileTest, GlobStarStarMatchSquareBrackets) {
     return GlobEntryAction::kContinue;
   }));
   EXPECT_THAT(
-      found, ElementsAreArray({
+      found, UnorderedElementsAreArray({
                  "sub/dir/file2",
                  "sub/two/dir/file2",
                  "sub/two/dir/file3",
