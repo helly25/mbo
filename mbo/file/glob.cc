@@ -488,6 +488,15 @@ absl::Status Glob(
   return GlobRe2(root, *regex, options, func);
 }
 
+absl::Status Glob(
+    const absl::StatusOr<RootAndPattern>& pattern,
+    const Glob2Re2Options& re2_convert_options,
+    const GlobOptions& options,
+    const GlobEntryFunc& func) {
+  MBO_RETURN_IF_ERROR(pattern);
+  return Glob(pattern->root, pattern->pattern, re2_convert_options, options, func);
+}
+
 absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options) {
   MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), GlobData data);
   std::string_view root(data.pattern);

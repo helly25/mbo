@@ -153,6 +153,23 @@ absl::Status Glob(
     const GlobOptions& options,
     const GlobEntryFunc& func);
 
+// Recursive glob to be called with `GlobSplit` as pattern argument.
+//
+// Example:
+// ```
+// std::vector<std::string> found;
+// const auto result = mbo::file::Glob(
+//     mbo::file::GlobSplit("/home/you/*", {}, {}, [&](const GlobEntry& e) {
+//       found.push_back(e.entry.path().native());
+//       return mbo::file::GlobEntryAction::kContinue;
+//     }));
+// ```
+absl::Status Glob(
+    const absl::StatusOr<RootAndPattern>& pattern,
+    const Glob2Re2Options& re2_convert_options,
+    const GlobOptions& options,
+    const GlobEntryFunc& func);
+
 }  // namespace mbo::file
 
 #endif  // MBO_FILE_GLOB_H_
