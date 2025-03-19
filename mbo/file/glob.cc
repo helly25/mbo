@@ -269,11 +269,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
     return result;
   }
   const bool star_star = result.pattern.find("**", slash_1) != std::string::npos;
-  if (star_star) {
-    result.path_len = result.pattern.size();
-  } else {
-    result.path_len = slash_1;
-  }
+  result.path_len = star_star ? result.pattern.size() : slash_1;
   return result;
 }
 
@@ -421,18 +417,18 @@ absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re
 namespace {
 
 template<typename FileIterator>
-int FileIteratorDepth(const FileIterator& it) {
+int FileIteratorDepth(const FileIterator& file_iterator) {
   if constexpr (std::same_as<FileIterator, std::filesystem::recursive_directory_iterator>) {
-    return it.depth();
+    return file_iterator.depth();
   } else {
     return 0;
   }
 }
 
 template<typename FileIterator>
-void FileIteratorDisableRecursionPending(FileIterator& it) {
+void FileIteratorDisableRecursionPending(FileIterator& file_iterator) {
   if constexpr (std::same_as<FileIterator, std::filesystem::recursive_directory_iterator>) {
-    it.disable_recursion_pending();
+    file_iterator.disable_recursion_pending();
   }
 }
 
