@@ -2,7 +2,8 @@
 
 * Added CI config LLVM-20.1.0 for Linux-Arm64 and MacOs-Arm64 platforms.
 * Applied DWYU cleanup.
-* Added field `GlobOptions::recursive` to select between recursive and flat globbing.
+* Added field `mbo::file::GlobOptions::recursive` to select between recursive and flat globbing.
+* Added function `mbo::file::GlobSplit` that splits a pattern into root and pattern.
 
 # 0.4.4
 

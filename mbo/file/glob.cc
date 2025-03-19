@@ -132,6 +132,7 @@ MBO_ALWAYS_INLINE absl::Status GlobFindRange(std::string_view& pattern, std::str
 struct GlobData : mbo::types::Extend<GlobData> {
   std::string pattern;
   std::optional<std::size_t> path_len;
+  std::size_t root_len = 0;
   bool mixed = false;
 };
 
@@ -214,6 +215,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
   char chr = '\0';
   std::size_t slash_0 = std::string_view::npos;
   std::size_t slash_1 = std::string_view::npos;
+  bool found_pattern = false;
   bool range_with_slash = false;
   glob_pattern = pattern;  // Operate on the normalized pattern
   GlobData result;
@@ -225,7 +227,13 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
         glob_pattern.remove_prefix(2);
         continue;
       }
+      case '*':
+      case '?':
+        glob_pattern.remove_prefix(1);
+        found_pattern = true;
+        continue;
       case '[': {
+        found_pattern = true;
         if (!options.allow_ranges) {
           glob_pattern.remove_prefix(1);
           continue;
@@ -240,6 +248,9 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
         range_with_slash = false;
         slash_0 = slash_1;
         slash_1 = result.pattern.size() - glob_pattern.size();
+        if (!found_pattern) {
+          result.root_len = result.pattern.size() - glob_pattern.size();
+        }
         glob_pattern.remove_prefix(1);
         continue;
       default: glob_pattern.remove_prefix(1); continue;
@@ -348,7 +359,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<std::string> Glob2Re2ExpressionImpl(
 
 namespace file_internal {
 
-absl::StatusOr<GlobParts> GlobSplit(std::string_view pattern, const Glob2Re2Options& options) {
+absl::StatusOr<GlobParts> GlobSplitParts(std::string_view pattern, const Glob2Re2Options& options) {
   MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), GlobData data);
   if (data.mixed) {
     return GlobParts{
@@ -475,6 +486,24 @@ absl::Status Glob(
     const GlobEntryFunc& func) {
   MBO_MOVE_TO_OR_RETURN(file_internal::Glob2Re2(pattern, re2_convert_options), const std::unique_ptr<const RE2> regex);
   return GlobRe2(root, *regex, options, func);
+}
+
+absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options) {
+  MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), GlobData data);
+  std::string_view root(data.pattern);
+  root.remove_suffix(root.size() - data.root_len);
+  std::string_view patt(data.pattern);
+  patt.remove_prefix(data.root_len);
+  if (patt.starts_with('/')) {
+    patt.remove_prefix(1);
+    if (root.empty()) {
+      root = "/";
+    }
+  }
+  return RootAndPattern{
+      .root = std::string{root},
+      .pattern = std::string{patt},
+  };
 }
 
 }  // namespace mbo::file

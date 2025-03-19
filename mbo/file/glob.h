@@ -66,7 +66,7 @@ struct GlobParts : mbo::types::Extend<GlobParts> {
 // - while a range `[/]` is normalized to a single `/` and handled as such,
 // - any other range that can accept a slash can either be a path or file name component. Those cases will
 //   be reported as just a path component with the `mixed = true`.
-absl::StatusOr<GlobParts> GlobSplit(std::string_view pattern, const Glob2Re2Options& options = {});
+absl::StatusOr<GlobParts> GlobSplitParts(std::string_view pattern, const Glob2Re2Options& options = {});
 
 // Convert `pattern` into a RE2 expression.
 // Supported syntax:
@@ -93,6 +93,13 @@ absl::StatusOr<std::string> Glob2Re2Expression(std::string_view pattern, const G
 absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(std::string_view pattern, const Glob2Re2Options& options = {});
 
 }  // namespace file_internal
+
+struct RootAndPattern : mbo::types::Extend<RootAndPattern> {
+  std::string root;
+  std::string pattern;
+};
+
+absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options = {});
 
 struct GlobEntry : mbo::types::Extend<GlobEntry> {
   const std::optional<const std::filesystem::path> rel_path;  // Must be first

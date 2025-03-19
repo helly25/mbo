@@ -63,6 +63,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * type `mbo::file::GlobEntryFunc`: Callback for acceptable glob entries.
         * function `mbo::file::GlobRe2`: Performs recursive glob functionality using a RE2 pattern.
         * function `mbo::file::Glob`: Performs recursive glob functionality using a `fnmatch` style pattern.
+        * function `mbo::file::GlobSplit`: Splits a pattern into root and pattern parts.
         * program `glob`: A recursive glob, see `glob --help`.
     * mbo/file/ini:ini_file_cc, mbo/file/ini/ini_file.h
         * class `IniFile`: A simple INI file reader.

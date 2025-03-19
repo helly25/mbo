@@ -195,45 +195,80 @@ MATCHER_P3(HasParts, path_matcher, file_matcher, is_mixed, "") {
       arg, result_listener);
 }
 
-TEST_F(GlobTest, GlobSplit) {
+TEST_F(GlobTest, GlobSplitParts) {
   EXPECT_THAT(
-      GlobSplit("\\"), StatusIs(absl::StatusCode::kInvalidArgument, "No character left to escape at end of pattern."));
-  EXPECT_THAT(GlobSplit(""), IsOkAndHolds(HasParts("", "", false)));
-  EXPECT_THAT(GlobSplit("/"), IsOkAndHolds(HasParts("/", "", false)));
-  EXPECT_THAT(GlobSplit("//"), IsOkAndHolds(HasParts("/", "", false)));
-  EXPECT_THAT(GlobSplit("a/b"), IsOkAndHolds(HasParts("a", "b", false)));
-  EXPECT_THAT(GlobSplit("a//b"), IsOkAndHolds(HasParts("a", "b", false)));
-  EXPECT_THAT(GlobSplit("a/b/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplit("a/**/c"), IsOkAndHolds(HasParts("a/**", "c", false)));
-  EXPECT_THAT(GlobSplit("a/b/**"), IsOkAndHolds(HasParts("a/b/**", "", false)));
+      GlobSplitParts("\\"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "No character left to escape at end of pattern."));
+  EXPECT_THAT(GlobSplitParts(""), IsOkAndHolds(HasParts("", "", false)));
+  EXPECT_THAT(GlobSplitParts("/"), IsOkAndHolds(HasParts("/", "", false)));
+  EXPECT_THAT(GlobSplitParts("//"), IsOkAndHolds(HasParts("/", "", false)));
+  EXPECT_THAT(GlobSplitParts("a/b"), IsOkAndHolds(HasParts("a", "b", false)));
+  EXPECT_THAT(GlobSplitParts("a//b"), IsOkAndHolds(HasParts("a", "b", false)));
+  EXPECT_THAT(GlobSplitParts("a/b/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a/**/c"), IsOkAndHolds(HasParts("a/**", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a/b/**"), IsOkAndHolds(HasParts("a/b/**", "", false)));
 }
 
-TEST_F(GlobTest, GlobSplitWithRanges) {
-  EXPECT_THAT(GlobSplit("a[/]b/[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]b/[-/]c"), IsOkAndHolds(HasParts("a/b/[-/]c", "", true)));
-  EXPECT_THAT(GlobSplit("a[/]b/[!/]c"), IsOkAndHolds(HasParts("a/b", "[!/]c", false)));
-  EXPECT_THAT(GlobSplit("a[/]b/[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]b/[-/]/c"), IsOkAndHolds(HasParts("a/b/[-/]", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]b/[!/]/c"), IsOkAndHolds(HasParts("a/b/[!/]", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]/b/[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]/b/[-/]c"), IsOkAndHolds(HasParts("a/b/[-/]c", "", true)));
-  EXPECT_THAT(GlobSplit("a[/]/b/[!/]c"), IsOkAndHolds(HasParts("a/b", "[!/]c", false)));
-  EXPECT_THAT(GlobSplit("a[/]/b/[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]/b/[-/]/c"), IsOkAndHolds(HasParts("a/b/[-/]", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]/b/[!/]/c"), IsOkAndHolds(HasParts("a/b/[!/]", "c", false)));
+TEST_F(GlobTest, GlobSplitPartsWithRanges) {
+  EXPECT_THAT(GlobSplitParts("a[/]b/[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]b/[-/]c"), IsOkAndHolds(HasParts("a/b/[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]b/[!/]c"), IsOkAndHolds(HasParts("a/b", "[!/]c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]b/[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]b/[-/]/c"), IsOkAndHolds(HasParts("a/b/[-/]", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]b/[!/]/c"), IsOkAndHolds(HasParts("a/b/[!/]", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b/[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b/[-/]c"), IsOkAndHolds(HasParts("a/b/[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b/[!/]c"), IsOkAndHolds(HasParts("a/b", "[!/]c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b/[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b/[-/]/c"), IsOkAndHolds(HasParts("a/b/[-/]", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b/[!/]/c"), IsOkAndHolds(HasParts("a/b/[!/]", "c", false)));
 
-  EXPECT_THAT(GlobSplit("a[/]b[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]b[-/]c"), IsOkAndHolds(HasParts("a/b[-/]c", "", true)));
-  EXPECT_THAT(GlobSplit("a[/]b[!/]c"), IsOkAndHolds(HasParts("a", "b[!/]c", false)));
-  EXPECT_THAT(GlobSplit("a[/]b[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]b[-/]/c"), IsOkAndHolds(HasParts("a/b[-/]", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]b[!/]/c"), IsOkAndHolds(HasParts("a/b[!/]", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]/b[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]/b[-/]c"), IsOkAndHolds(HasParts("a/b[-/]c", "", true)));
-  EXPECT_THAT(GlobSplit("a[/]/b[!/]c"), IsOkAndHolds(HasParts("a", "b[!/]c", false)));
-  EXPECT_THAT(GlobSplit("a[/]/b[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]/b[-/]/c"), IsOkAndHolds(HasParts("a/b[-/]", "c", false)));
-  EXPECT_THAT(GlobSplit("a[/]/b[!/]/c"), IsOkAndHolds(HasParts("a/b[!/]", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]b[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]b[-/]c"), IsOkAndHolds(HasParts("a/b[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]b[!/]c"), IsOkAndHolds(HasParts("a", "b[!/]c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]b[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]b[-/]/c"), IsOkAndHolds(HasParts("a/b[-/]", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]b[!/]/c"), IsOkAndHolds(HasParts("a/b[!/]", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b[-/]c"), IsOkAndHolds(HasParts("a/b[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b[!/]c"), IsOkAndHolds(HasParts("a", "b[!/]c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b[-/]/c"), IsOkAndHolds(HasParts("a/b[-/]", "c", false)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b[!/]/c"), IsOkAndHolds(HasParts("a/b[!/]", "c", false)));
+}
+
+MATCHER_P2(HasSplit, root_matcher, pattern_matcher, "") {
+  using ::testing::AllOf;
+  using ::testing::Field;
+  return ::testing::ExplainMatchResult(
+      AllOf(
+          Field("root", &RootAndPattern::root, root_matcher),
+          Field("pattern", &RootAndPattern::pattern, pattern_matcher)),
+      arg, result_listener);
+}
+
+TEST_F(GlobTest, GlobSplit) {
+  EXPECT_THAT(GlobSplit(""), IsOkAndHolds(HasSplit("", "")));
+  EXPECT_THAT(GlobSplit("a/?/c"), IsOkAndHolds(HasSplit("a", "?/c")));
+  EXPECT_THAT(GlobSplit("a/b/?/c"), IsOkAndHolds(HasSplit("a/b", "?/c")));
+  EXPECT_THAT(GlobSplit("a/*/c"), IsOkAndHolds(HasSplit("a", "*/c")));
+  EXPECT_THAT(GlobSplit("a/b/*/c"), IsOkAndHolds(HasSplit("a/b", "*/c")));
+  EXPECT_THAT(GlobSplit("a/**/c"), IsOkAndHolds(HasSplit("a", "**/c")));
+  EXPECT_THAT(GlobSplit("a/b/**/c"), IsOkAndHolds(HasSplit("a/b", "**/c")));
+  EXPECT_THAT(GlobSplit("/"), IsOkAndHolds(HasSplit("/", "")));
+  EXPECT_THAT(GlobSplit("/a/**/c"), IsOkAndHolds(HasSplit("/a", "**/c")));
+  EXPECT_THAT(GlobSplit("/a/b/**/c"), IsOkAndHolds(HasSplit("/a/b", "**/c")));
+  EXPECT_THAT(GlobSplit("//"), IsOkAndHolds(HasSplit("/", "")));
+  EXPECT_THAT(GlobSplit("//a//**//c"), IsOkAndHolds(HasSplit("/a", "**/c")));
+  EXPECT_THAT(GlobSplit("//a//b/**//c"), IsOkAndHolds(HasSplit("/a/b", "**/c")));
+  EXPECT_THAT(GlobSplit("a/[/]/c"), IsOkAndHolds(HasSplit("a", "c")));
+  EXPECT_THAT(GlobSplit("a/b/[/]/c"), IsOkAndHolds(HasSplit("a/b", "c")));
+  EXPECT_THAT(GlobSplit("a/[xy]/c"), IsOkAndHolds(HasSplit("a", "[xy]/c")));
+  EXPECT_THAT(GlobSplit("a/b/[xy]/c"), IsOkAndHolds(HasSplit("a/b", "[xy]/c")));
+  EXPECT_THAT(GlobSplit("a/x?y/c"), IsOkAndHolds(HasSplit("a", "x?y/c")));
+  EXPECT_THAT(GlobSplit("a/b/x?y/c"), IsOkAndHolds(HasSplit("a/b", "x?y/c")));
+  EXPECT_THAT(GlobSplit("a/x*y/c"), IsOkAndHolds(HasSplit("a", "x*y/c")));
+  EXPECT_THAT(GlobSplit("a/b/x*y/c"), IsOkAndHolds(HasSplit("a/b", "x*y/c")));
 }
 
 template<typename C = std::initializer_list<std::string_view>>
@@ -268,9 +303,9 @@ absl::StatusOr<std::filesystem::path> CreateFileSystemEntries(
 struct GlobFileTest : GlobTest {
   static void SetUpTestSuite() {
     MBO_ASSERT_OK_AND_ASSIGN(
-        root_glob_test,  //
+        root_glob_test,  // NL
         CreateFileSystemEntries(
-            GetTempDir("glob_test"),  //
+            GetTempDir("glob_test"),  // NL
             {
                 ":top",
                 "dir",
