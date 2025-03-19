@@ -398,6 +398,24 @@ absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(
   return std::make_unique<RE2>(re2_pattern, re2_convert_options.re2_options);
 }
 
+absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options) {
+  MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), GlobData data);
+  std::string_view root(data.pattern);
+  root.remove_suffix(root.size() - data.root_len);
+  std::string_view patt(data.pattern);
+  patt.remove_prefix(data.root_len);
+  if (patt.starts_with('/')) {
+    patt.remove_prefix(1);
+    if (root.empty()) {
+      root = "/";
+    }
+  }
+  return RootAndPattern{
+      .root = std::string{root},
+      .pattern = std::string{patt},
+  };
+}
+
 }  // namespace file_internal
 
 namespace {
@@ -495,24 +513,6 @@ absl::Status Glob(
     const GlobEntryFunc& func) {
   MBO_RETURN_IF_ERROR(pattern);
   return Glob(pattern->root, pattern->pattern, re2_convert_options, options, func);
-}
-
-absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options) {
-  MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), GlobData data);
-  std::string_view root(data.pattern);
-  root.remove_suffix(root.size() - data.root_len);
-  std::string_view patt(data.pattern);
-  patt.remove_prefix(data.root_len);
-  if (patt.starts_with('/')) {
-    patt.remove_prefix(1);
-    if (root.empty()) {
-      root = "/";
-    }
-  }
-  return RootAndPattern{
-      .root = std::string{root},
-      .pattern = std::string{patt},
-  };
 }
 
 }  // namespace mbo::file

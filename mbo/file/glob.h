@@ -16,6 +16,7 @@
 #ifndef MBO_FILE_GLOB_H_
 #define MBO_FILE_GLOB_H_
 
+#include <concepts>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -50,6 +51,11 @@ struct Glob2Re2Options {
   bool allow_ranges : 1 = true;
 
   RE2::Options re2_options;
+};
+
+struct RootAndPattern : mbo::types::Extend<RootAndPattern> {
+  std::string root;
+  std::string pattern;
 };
 
 namespace file_internal {
@@ -92,14 +98,20 @@ absl::StatusOr<std::string> Glob2Re2Expression(std::string_view pattern, const G
 // See `Glob2Re2Expression` for supported syntax.
 absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(std::string_view pattern, const Glob2Re2Options& options = {});
 
+absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options = {});
+
 }  // namespace file_internal
 
-struct RootAndPattern : mbo::types::Extend<RootAndPattern> {
-  std::string root;
-  std::string pattern;
-};
-
-absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options = {});
+// Splits a pattern into the root part and the actual pattern for use with `Glob`.
+template<typename T>
+requires(std::same_as<T, std::filesystem::path> || std::convertible_to<T, std::string_view>)
+inline absl::StatusOr<RootAndPattern> GlobSplit(const T& pattern, const Glob2Re2Options& options = {}) {
+  if constexpr (std::same_as<T, std::filesystem::path>) {
+    return file_internal::GlobSplit(pattern.native(), options);
+  } else {
+    return file_internal::GlobSplit(pattern, options);
+  }
+}
 
 struct GlobEntry : mbo::types::Extend<GlobEntry> {
   const std::optional<const std::filesystem::path> rel_path;  // Must be first

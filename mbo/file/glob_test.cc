@@ -400,7 +400,7 @@ TEST_F(GlobFileTest, GlobStarStarMatch) {
 
 TEST_F(GlobFileTest, GlobStarStarMatchSquareBrackets) {
   std::vector<std::string> found;
-  ASSERT_OK(Glob(root_glob_test, "**/file[23]", {}, {}, [&](const GlobEntry& entry) -> GlobEntryAction {
+  ASSERT_OK(Glob(GlobSplit(root_glob_test / "**/file[23]"), {}, {}, [&](const GlobEntry& entry) -> GlobEntryAction {
     found.push_back(entry.entry.path().lexically_relative(root_glob_test));
     return GlobEntryAction::kContinue;
   }));
