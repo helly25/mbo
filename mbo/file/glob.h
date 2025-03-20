@@ -16,6 +16,7 @@
 #ifndef MBO_FILE_GLOB_H_
 #define MBO_FILE_GLOB_H_
 
+#include <concepts>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -37,6 +38,10 @@ struct GlobOptions {
   // the relative path as opposed to `entry.path`.
   bool use_rel_path : 1 = false;
 
+  // By default the globbing is done in recursive fashion. But that can be disabled in which case
+  // only the given root directory will be iteratoed.
+  bool recursive : 1 = true;
+
   // Options passed to the creation of the `std::filesystem::recursive_directory_iterator`.
   std::filesystem::directory_options dir_options = std::filesystem::directory_options::skip_permission_denied;
 };
@@ -46,6 +51,11 @@ struct Glob2Re2Options {
   bool allow_ranges : 1 = true;
 
   RE2::Options re2_options;
+};
+
+struct RootAndPattern : mbo::types::Extend<RootAndPattern> {
+  std::string root;
+  std::string pattern;
 };
 
 namespace file_internal {
@@ -62,7 +72,7 @@ struct GlobParts : mbo::types::Extend<GlobParts> {
 // - while a range `[/]` is normalized to a single `/` and handled as such,
 // - any other range that can accept a slash can either be a path or file name component. Those cases will
 //   be reported as just a path component with the `mixed = true`.
-absl::StatusOr<GlobParts> GlobSplit(std::string_view pattern, const Glob2Re2Options& options = {});
+absl::StatusOr<GlobParts> GlobSplitParts(std::string_view pattern, const Glob2Re2Options& options = {});
 
 // Convert `pattern` into a RE2 expression.
 // Supported syntax:
@@ -88,14 +98,27 @@ absl::StatusOr<std::string> Glob2Re2Expression(std::string_view pattern, const G
 // See `Glob2Re2Expression` for supported syntax.
 absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(std::string_view pattern, const Glob2Re2Options& options = {});
 
+absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options = {});
+
 }  // namespace file_internal
+
+// Splits a pattern into the root part and the actual pattern for use with `Glob`.
+template<typename T>
+requires(std::same_as<T, std::filesystem::path> || std::convertible_to<T, std::string_view>)
+inline absl::StatusOr<RootAndPattern> GlobSplit(const T& pattern, const Glob2Re2Options& options = {}) {
+  if constexpr (std::same_as<T, std::filesystem::path>) {
+    return file_internal::GlobSplit(pattern.native(), options);
+  } else {
+    return file_internal::GlobSplit(pattern, options);
+  }
+}
 
 struct GlobEntry : mbo::types::Extend<GlobEntry> {
   const std::optional<const std::filesystem::path> rel_path;  // Must be first
   const std::filesystem::directory_entry entry;
   const int depth;
 
-  // Returns the path for the `entry` either as is or elative to `root` if that was requested using
+  // Returns the path for the `entry` either as is or relative to `root` if that was requested using
   // `GlobOptions.use_rel_path`.
   const std::filesystem::path& MaybeRelativePath() const noexcept {
     return rel_path.has_value() ? *rel_path : entry.path();
@@ -138,6 +161,23 @@ absl::Status GlobRe2(
 absl::Status Glob(
     const std::filesystem::path& root,
     std::string_view pattern,
+    const Glob2Re2Options& re2_convert_options,
+    const GlobOptions& options,
+    const GlobEntryFunc& func);
+
+// Recursive glob to be called with `GlobSplit` as pattern argument.
+//
+// Example:
+// ```
+// std::vector<std::string> found;
+// const auto result = mbo::file::Glob(
+//     mbo::file::GlobSplit("/home/you/*", {}, {}, [&](const GlobEntry& e) {
+//       found.push_back(e.entry.path().native());
+//       return mbo::file::GlobEntryAction::kContinue;
+//     }));
+// ```
+absl::Status Glob(
+    const absl::StatusOr<RootAndPattern>& pattern,
     const Glob2Re2Options& re2_convert_options,
     const GlobOptions& options,
     const GlobEntryFunc& func);

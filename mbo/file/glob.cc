@@ -132,6 +132,7 @@ MBO_ALWAYS_INLINE absl::Status GlobFindRange(std::string_view& pattern, std::str
 struct GlobData : mbo::types::Extend<GlobData> {
   std::string pattern;
   std::optional<std::size_t> path_len;
+  std::size_t root_len = 0;
   bool mixed = false;
 };
 
@@ -214,6 +215,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
   char chr = '\0';
   std::size_t slash_0 = std::string_view::npos;
   std::size_t slash_1 = std::string_view::npos;
+  bool found_pattern = false;
   bool range_with_slash = false;
   glob_pattern = pattern;  // Operate on the normalized pattern
   GlobData result;
@@ -225,7 +227,13 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
         glob_pattern.remove_prefix(2);
         continue;
       }
+      case '*':
+      case '?':
+        glob_pattern.remove_prefix(1);
+        found_pattern = true;
+        continue;
       case '[': {
+        found_pattern = true;
         if (!options.allow_ranges) {
           glob_pattern.remove_prefix(1);
           continue;
@@ -240,6 +248,9 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
         range_with_slash = false;
         slash_0 = slash_1;
         slash_1 = result.pattern.size() - glob_pattern.size();
+        if (!found_pattern) {
+          result.root_len = result.pattern.size() - glob_pattern.size();
+        }
         glob_pattern.remove_prefix(1);
         continue;
       default: glob_pattern.remove_prefix(1); continue;
@@ -258,11 +269,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
     return result;
   }
   const bool star_star = result.pattern.find("**", slash_1) != std::string::npos;
-  if (star_star) {
-    result.path_len = result.pattern.size();
-  } else {
-    result.path_len = slash_1;
-  }
+  result.path_len = star_star ? result.pattern.size() : slash_1;
   return result;
 }
 
@@ -348,7 +355,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<std::string> Glob2Re2ExpressionImpl(
 
 namespace file_internal {
 
-absl::StatusOr<GlobParts> GlobSplit(std::string_view pattern, const Glob2Re2Options& options) {
+absl::StatusOr<GlobParts> GlobSplitParts(std::string_view pattern, const Glob2Re2Options& options) {
   MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), GlobData data);
   if (data.mixed) {
     return GlobParts{
@@ -387,18 +394,53 @@ absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(
   return std::make_unique<RE2>(re2_pattern, re2_convert_options.re2_options);
 }
 
+absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options) {
+  MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), GlobData data);
+  std::string_view root(data.pattern);
+  root.remove_suffix(root.size() - data.root_len);
+  std::string_view patt(data.pattern);
+  patt.remove_prefix(data.root_len);
+  if (patt.starts_with('/')) {
+    patt.remove_prefix(1);
+    if (root.empty()) {
+      root = "/";
+    }
+  }
+  return RootAndPattern{
+      .root = std::string{root},
+      .pattern = std::string{patt},
+  };
+}
+
 }  // namespace file_internal
 
 namespace {
 
-absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const GlobEntryFunc& func) {
+template<typename FileIterator>
+int FileIteratorDepth(const FileIterator& file_iterator) {
+  if constexpr (std::same_as<FileIterator, std::filesystem::recursive_directory_iterator>) {
+    return file_iterator.depth();
+  } else {
+    return 0;
+  }
+}
+
+template<typename FileIterator>
+void FileIteratorDisableRecursionPending(FileIterator& file_iterator) {
+  if constexpr (std::same_as<FileIterator, std::filesystem::recursive_directory_iterator>) {
+    file_iterator.disable_recursion_pending();
+  }
+}
+
+template<typename FileIterator>
+absl::Status GlobLoopImpl(const fs::path& root, const GlobOptions& options, const GlobEntryFunc& func) {
   const fs::path normalized_root = (root.empty() || root == ".") ? fs::current_path() : root.lexically_normal();
   std::error_code error_code;
   if (!fs::exists(normalized_root, error_code)) {
     return absl::NotFoundError(
         error_code ? error_code.message() : absl::StrFormat("Path does not exist: '%s'.", normalized_root));
   }
-  auto it = fs::recursive_directory_iterator(normalized_root, options.dir_options, error_code);
+  auto it = FileIterator(normalized_root, options.dir_options, error_code);
   if (error_code) {
     return absl::CancelledError(error_code.message());
   }
@@ -407,14 +449,14 @@ absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const Gl
         .rel_path =
             options.use_rel_path ? std::optional<fs::path>{entry.path().lexically_relative(root)} : std::nullopt,
         .entry = entry,
-        .depth = it.depth(),
+        .depth = FileIteratorDepth(it),
     };
     MBO_ASSIGN_OR_RETURN(const GlobEntryAction action, func(glob_entry));
     switch (action) {
       case GlobEntryAction::kContinue: continue;
-      case GlobEntryAction::kStop: break;
+      case GlobEntryAction::kStop: return absl::OkStatus();
       case GlobEntryAction::kDoNotRecurse: {
-        it.disable_recursion_pending();
+        FileIteratorDisableRecursionPending(it);
         continue;
       }
     }
@@ -422,12 +464,28 @@ absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const Gl
   return absl::OkStatus();
 }
 
+absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const GlobEntryFunc& func) {
+  if (options.recursive) {
+    return GlobLoopImpl<fs::recursive_directory_iterator>(root, options, func);
+  } else {
+    return GlobLoopImpl<fs::directory_iterator>(root, options, func);
+  }
+}
+
 }  // namespace
 
 absl::Status GlobRe2(const fs::path& root, const RE2& regex, const GlobOptions& options, const GlobEntryFunc& func) {
   const auto wrap_func = [&](const GlobEntry& entry) -> absl::StatusOr<GlobEntryAction> {
-    if (!RE2::FullMatch(entry.MaybeRelativePath().native(), regex)) {
-      return GlobEntryAction::kContinue;  // Path/Filename rejected.
+    if (options.use_rel_path) {
+      if (!RE2::FullMatch(entry.MaybeRelativePath().native(), regex)) {
+        return GlobEntryAction::kContinue;  // Path/Filename rejected.
+      }
+    } else {
+      // The only difference is that we are not actually saving the `rel_path` anywhere.
+      const fs::path rel_path = entry.entry.path().lexically_relative(root);
+      if (!RE2::FullMatch(rel_path.native(), regex)) {
+        return GlobEntryAction::kContinue;  // Path/Filename rejected.
+      }
     }
     return func(entry);
   };
@@ -442,6 +500,15 @@ absl::Status Glob(
     const GlobEntryFunc& func) {
   MBO_MOVE_TO_OR_RETURN(file_internal::Glob2Re2(pattern, re2_convert_options), const std::unique_ptr<const RE2> regex);
   return GlobRe2(root, *regex, options, func);
+}
+
+absl::Status Glob(
+    const absl::StatusOr<RootAndPattern>& pattern,
+    const Glob2Re2Options& re2_convert_options,
+    const GlobOptions& options,
+    const GlobEntryFunc& func) {
+  MBO_RETURN_IF_ERROR(pattern);
+  return Glob(pattern->root, pattern->pattern, re2_convert_options, options, func);
 }
 
 }  // namespace mbo::file

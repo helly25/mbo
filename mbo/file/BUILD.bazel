@@ -84,6 +84,7 @@ cc_test(
     srcs = ["glob_test.cc"],
     deps = [
         ":glob_cc",
+        "//mbo/status:status_macros_cc",
         "//mbo/testing:status_cc",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
