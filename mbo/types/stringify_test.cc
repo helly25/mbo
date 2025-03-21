@@ -27,6 +27,8 @@
 
 #include "absl/log/absl_check.h"  // IWYU pragma: keep
 #include "absl/log/absl_log.h"    // IWYU pragma: keep
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/container/limited_vector.h"
@@ -703,6 +705,39 @@ TEST_F(StringifyTest, NonLiteralFields) {
   EXPECT_THAT(
       Stringify::AsCpp().ToString(TestStructNonLiteralFields{}),
       R"({.one = {{.first = 1, .second = 2}, {.first = 2, .second = 3}}, .two = {{.first = 3, .second = 4}}, .three = "three"})");
+}
+
+struct TestMboTypesStringifyConvert {
+  using MboTypesStringifyDoNotPrintFieldNames = void;
+
+  int value = 25;
+  int other = 42;
+
+  bool complex = false;
+
+  static std::string MboTypesStringifyConvert(std::size_t idx, const TestMboTypesStringifyConvert&, const int& value) {
+    return absl::StrFormat("value@%d:%d", idx, value);
+  }
+
+  static std::pair<std::string, std::string> MboTypesStringifyConvert(
+      std::size_t field_index,
+      const TestMboTypesStringifyConvert&,
+      const bool& value) {
+    if (value) {
+      return {"two", absl::StrCat(field_index)};
+    } else {
+      return {"one", absl::StrCat(field_index)};
+    }
+  }
+};
+
+TEST_F(StringifyTest, MboTypesStringifyConvert) {
+  TestMboTypesStringifyConvert data;
+  EXPECT_THAT(Stringify::AsCpp().ToString(data), R"({"value@0:25", "value@1:42", {"one", "2"}})");
+  data.value += 17;
+  data.other -= 9;
+  data.complex = !data.complex;
+  EXPECT_THAT(Stringify::AsCpp().ToString(data), R"({"value@0:42", "value@1:33", {"two", "2"}})");
 }
 
 // NOLINTEND(*-magic-numbers,*-named-parameter)

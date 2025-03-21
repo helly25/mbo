@@ -4,6 +4,8 @@
 * Applied DWYU cleanup.
 * Added field `mbo::file::GlobOptions::recursive` to select between recursive and flat globbing.
 * Added function `mbo::file::GlobSplit` that splits a pattern into root and pattern.
+* Improved program `//mbo/file:glob` to automatically split a single arg pattern.
+* Added API extension point function `MboTypesStringifyConvert(I, T, V)` which allows to control conversion based on field types via a static call to the owning type, receiving the field index, the object and the field value.
 
 # 0.4.4
 

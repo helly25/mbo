@@ -182,6 +182,7 @@ The C++ library is organized in functional groups each residing in their own dir
         * API extension point type `MboTypesStringifyDoNotPrintFieldNames` which if present disables field names in `Stringify`.
         * API extension point function `MboTypesStringifyFieldNames` which adds field names to `Stringify`.
         * API extension point function `MboTypesStringifyOptions` which adds full format control to `Stringify`.
+        * API extension point function `MboTypesStringifyConvert(I, T, V)` allows to control conversion based on field types via a static call to the owning type, receiving the field index, the object and the field value.
     * mbo/types:stringify_ostream_cc, mbo/types/stringify_ostream.h
         * operator `std::ostream& operator<<(std::ostream&, const MboTypesStringifySupport auto& v)` - conditioanl automatic ostream support for structs using `Stringify`.
     * mbo/types:traits_cc, mbo/types/traits.h

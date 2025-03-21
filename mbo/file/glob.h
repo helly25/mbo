@@ -25,6 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "mbo/types/extend.h"
+#include "mbo/types/stringify.h"
 #include "re2/re2.h"
 
 namespace mbo::file {
@@ -40,7 +41,11 @@ struct GlobOptions {
 
   // By default the globbing is done in recursive fashion. But that can be disabled in which case
   // only the given root directory will be iteratoed.
+  // This is only useful if '**' is not meant to actually be recursive and thus allows fast testing.
   bool recursive : 1 = true;
+
+  // By default we use the current directory if the root directory is otherwise empty or relative.
+  bool use_current_dir : 1 = true;
 
   // Options passed to the creation of the `std::filesystem::recursive_directory_iterator`.
   std::filesystem::directory_options dir_options = std::filesystem::directory_options::skip_permission_denied;
@@ -118,6 +123,12 @@ struct GlobEntry : mbo::types::Extend<GlobEntry> {
   const std::filesystem::directory_entry entry;
   const int depth;
 
+  static std::string MboTypesStringifyConvert(
+      const GlobEntry& entry,
+      const std::filesystem::directory_entry& /*value*/) {
+    return entry.MaybeRelativePath().native();
+  }
+
   // Returns the path for the `entry` either as is or relative to `root` if that was requested using
   // `GlobOptions.use_rel_path`.
   const std::filesystem::path& MaybeRelativePath() const noexcept {
@@ -151,13 +162,21 @@ enum class GlobEntryAction {
 using GlobEntryFunc = std::function<absl::StatusOr<GlobEntryAction>(const GlobEntry&)>;
 
 // Recursive glob function that uses `RE2` regular expressions for path/filename matching.
+//
+// Note: If `regex` is empty, then no filtering occurs.
 absl::Status GlobRe2(
-    const std::filesystem::path& root,
+    std::filesystem::path root,
     const RE2& regex,
+    const GlobOptions& options,
+    const GlobEntryFunc& func);
+absl::Status GlobRe2(
+    const absl::StatusOr<RootAndPattern>& pattern,
     const GlobOptions& options,
     const GlobEntryFunc& func);
 
 // Recursive glob function that uses `glob` expressions for path/filename matching.
+//
+// Note: If `pattern` is empty, then no filtering occurs.
 absl::Status Glob(
     const std::filesystem::path& root,
     std::string_view pattern,
@@ -171,10 +190,10 @@ absl::Status Glob(
 // ```
 // std::vector<std::string> found;
 // const auto result = mbo::file::Glob(
-//     mbo::file::GlobSplit("/home/you/*", {}, {}, [&](const GlobEntry& e) {
+//     mbo::file::GlobSplit("/home/you/*"), {}, {}, [&](const GlobEntry& e) {
 //       found.push_back(e.entry.path().native());
 //       return mbo::file::GlobEntryAction::kContinue;
-//     }));
+//     });
 // ```
 absl::Status Glob(
     const absl::StatusOr<RootAndPattern>& pattern,
