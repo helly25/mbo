@@ -35,7 +35,7 @@ unsigned BigNumberLen(T v) {
   //   len = 1 + static_cast<unsigned>(std::log10(std::abs(v)));
   //   return (v < 0 ? 1 : 0) + len + std::floor((len - 1) / 3);
   // But:
-  //   a) The input would need to be converted to `long double` and evne then can only handle up to
+  //   a) The input would need to be converted to `long double` and even then can only handle up to
   //      17 digits, but int64_t needs 19.
   //   b) That computation is slow.
   //   c) Binary searching in a limit/length map is much faster.
