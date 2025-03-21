@@ -102,6 +102,7 @@ cc_binary(
         ":glob_cc",
         "//mbo/status:status_cc",
         "//mbo/strings:numbers_cc",
+        "//mbo/types:extend_cc",
         "@com_google_absl//absl/container:btree",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
