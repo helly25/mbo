@@ -235,6 +235,11 @@ TEST_F(GlobTest, GlobSplitPartsWithRanges) {
   EXPECT_THAT(GlobSplitParts("a[/]/b[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b[-/]/c"), IsOkAndHolds(HasParts("a/b[-/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b[!/]/c"), IsOkAndHolds(HasParts("a/b[!/]", "c", false)));
+
+  EXPECT_THAT(GlobSplitParts("a/b[-1]c"), IsOkAndHolds(HasParts("a", "b[-1]c", false)));
+  EXPECT_THAT(GlobSplitParts("a/b[.-]c"), IsOkAndHolds(HasParts("a", "b[.-]c", false)));
+  EXPECT_THAT(GlobSplitParts("a/b[.-1]c"), IsOkAndHolds(HasParts("a/b[.-1]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a/b[0-1]c"), IsOkAndHolds(HasParts("a", "b[0-1]c", false)));
 }
 
 MATCHER_P2(HasSplit, root_matcher, pattern_matcher, "") {
@@ -261,8 +266,8 @@ TEST_F(GlobTest, GlobSplit) {
   EXPECT_THAT(GlobSplit("//"), IsOkAndHolds(HasSplit("/", "")));
   EXPECT_THAT(GlobSplit("//a//**//c"), IsOkAndHolds(HasSplit("/a", "**/c")));
   EXPECT_THAT(GlobSplit("//a//b/**//c"), IsOkAndHolds(HasSplit("/a/b", "**/c")));
-  EXPECT_THAT(GlobSplit("a/[/]/c"), IsOkAndHolds(HasSplit("a", "c")));
-  EXPECT_THAT(GlobSplit("a/b/[/]/c"), IsOkAndHolds(HasSplit("a/b", "c")));
+  EXPECT_THAT(GlobSplit("a/[/]/c"), IsOkAndHolds(HasSplit("a/c", "")));
+  EXPECT_THAT(GlobSplit("a/b/[/]/c"), IsOkAndHolds(HasSplit("a/b/c", "")));
   EXPECT_THAT(GlobSplit("a/[xy]/c"), IsOkAndHolds(HasSplit("a", "[xy]/c")));
   EXPECT_THAT(GlobSplit("a/b/[xy]/c"), IsOkAndHolds(HasSplit("a/b", "[xy]/c")));
   EXPECT_THAT(GlobSplit("a/x?y/c"), IsOkAndHolds(HasSplit("a", "x?y/c")));

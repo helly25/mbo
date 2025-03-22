@@ -27,7 +27,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
-#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "mbo/status/status_macros.h"
@@ -75,13 +74,17 @@ MBO_ALWAYS_INLINE absl::Status MaybeCharacterClass(std::string_view& glob_patter
   return absl::OkStatus();
 }
 
-MBO_ALWAYS_INLINE void GlobFindRangePrefix(std::string_view& pattern, std::string& re2_pattern) {
+// Find the initial part of the range and return whether the reange is negative.
+// Handles special case characters at the beginning.
+MBO_ALWAYS_INLINE bool GlobFindRangePrefix(std::string_view& pattern, std::string& re2_pattern) {
   if (pattern.starts_with("[!]")) {
     absl::StrAppend(&re2_pattern, "[^\\]");
     pattern.remove_prefix(3);
+    return true;
   } else if (pattern.starts_with("[!")) {
     absl::StrAppend(&re2_pattern, "[^");
     pattern.remove_prefix(2);
+    return true;
   } else if (pattern.starts_with("[]")) {
     absl::StrAppend(&re2_pattern, "[\\]");
     pattern.remove_prefix(2);
@@ -92,41 +95,91 @@ MBO_ALWAYS_INLINE void GlobFindRangePrefix(std::string_view& pattern, std::strin
     absl::StrAppend(&re2_pattern, "[");
     pattern.remove_prefix(1);
   }
+  return false;
 }
 
-MBO_ALWAYS_INLINE absl::Status GlobFindRange(std::string_view& pattern, std::string& re2_pattern) {
-  GlobFindRangePrefix(pattern, re2_pattern);
-  while (true) {
-    if (pattern.empty()) {
-      return absl::InvalidArgumentError("Unterminated range expression.");
-    }
+bool CopytNextChar(std::string_view& pattern, std::string& re2_pattern) {
+  if (pattern.empty()) {
+    return false;
+  }
+  if (pattern[0] != '\\') {
+    re2_pattern += pattern[0];
+    pattern.remove_prefix(1);
+    return true;
+  }
+  if (pattern.size() < 2) {
+    return false;
+  }
+  re2_pattern.append(pattern.substr(0, 2));
+  pattern.remove_prefix(2);
+  return true;
+}
+
+bool RangeRangeContainsSlash(char last, char next) {
+  return last < next && last <= '/' && '/' <= next;
+}
+
+struct GlobRangeInfo {
+  bool negative = false;
+  bool has_slash = false;
+};
+
+// Find the range pattern end (including ']') and remove it from pattern.
+// Convert it into a RE2 pattern and append that to `re2_pattern`.
+// On success return whether the pattern is a negative pattern.
+MBO_ALWAYS_INLINE absl::StatusOr<GlobRangeInfo> GlobFindRange(std::string_view& pattern, std::string& re2_pattern) {
+  GlobRangeInfo result{
+      .negative = GlobFindRangePrefix(pattern, re2_pattern),
+      .has_slash = false,
+  };
+  std::size_t pos = 0;
+  while (!pattern.empty()) {
+    ++pos;
     const char chr = pattern.front();
     switch (chr) {
-      default:
+      default: {
+        if (!CopytNextChar(pattern, re2_pattern)) {
+          return absl::InvalidArgumentError("Unterminated range expression ending in back-slash.");
+        }
+        continue;
+      }
+      case '/':
         re2_pattern += chr;
         pattern.remove_prefix(1);
+        result.has_slash = true;
         continue;
+      case '-': {
+        char last = re2_pattern.back();
+        re2_pattern += chr;
+        pattern.remove_prefix(1);
+        if (pattern.front() == ']') {
+          re2_pattern += ']';
+          pattern.remove_prefix(1);
+          return result;
+        }
+        if (!CopytNextChar(pattern, re2_pattern)) {
+          return absl::InvalidArgumentError("Unterminated range expression ending in back-slash.");
+        }
+        if (pos > 1) {
+          result.has_slash |= RangeRangeContainsSlash(last, re2_pattern.back());
+        } else {
+          // Case [-X].
+          result.has_slash |= re2_pattern.back() == '/';
+        }
+        continue;
+      }
       case '[': {
         MBO_RETURN_IF_ERROR(MaybeCharacterClass(pattern, re2_pattern));
+        // TODO(helly25): Does it contain a '/'?
         continue;
       }
       case ']':
         re2_pattern += chr;
         pattern.remove_prefix(1);
-        break;
-      case '\\':
-        if (pattern.size() < 2) {
-          return absl::InvalidArgumentError("Unterminated range expression ending in back-slash.");
-        }
-        absl::StrAppend(&re2_pattern, pattern.substr(0, 2));
-        continue;
+        return result;
     }
-    break;
   }
-  if (!re2_pattern.ends_with(']')) {
-    return absl::InvalidArgumentError("Unterminated range expression.");
-  }
-  return absl::OkStatus();
+  return absl::InvalidArgumentError("Unterminated range expression.");
 }
 
 struct GlobData : mbo::types::Extend<GlobData> {
@@ -218,8 +271,9 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
   bool found_pattern = false;
   bool range_with_slash = false;
   glob_pattern = pattern;  // Operate on the normalized pattern
-  GlobData result;
-  result.pattern = pattern;
+  GlobData result{
+      .pattern = pattern,
+  };
   while (!glob_pattern.empty()) {
     chr = glob_pattern.front();
     switch (chr) {
@@ -238,10 +292,9 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
           glob_pattern.remove_prefix(1);
           continue;
         }
-        std::string tmp_re2;  //  We do not care about the translated pattern here.
-        const bool negative = glob_pattern.size() > 1 && glob_pattern[1] == '!';
-        MBO_RETURN_IF_ERROR(GlobFindRange(glob_pattern, tmp_re2));
-        range_with_slash |= !negative && absl::StrContains(tmp_re2, '/');
+        std::string tmp_re2;  //  Here we only care whether a slash is allowed.
+        MBO_ASSIGN_OR_RETURN(const GlobRangeInfo info, GlobFindRange(glob_pattern, tmp_re2));
+        range_with_slash |= !info.negative && info.has_slash;
         continue;
       }
       case '/':
@@ -255,6 +308,9 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
         continue;
       default: glob_pattern.remove_prefix(1); continue;
     }
+  }
+  if (!found_pattern) {
+    result.root_len = result.pattern.size();
   }
   if (range_with_slash) {
     result.path_len = result.pattern.size();
@@ -391,7 +447,11 @@ absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(
     std::string_view pattern,
     const Glob2Re2Options& re2_convert_options) {
   MBO_MOVE_TO_OR_RETURN(Glob2Re2Expression(pattern, re2_convert_options), const std::string re2_pattern);
-  return std::make_unique<RE2>(re2_pattern, re2_convert_options.re2_options);
+  auto re2 = std::make_unique<RE2>(re2_pattern, re2_convert_options.re2_options);
+  if (re2->error_code() != RE2::NoError) {
+    return absl::InvalidArgumentError(absl::StrFormat("Could not compile re2: '%s': %s.", pattern, re2->error()));
+  }
+  return re2;
 }
 
 absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options) {
@@ -474,22 +534,44 @@ absl::Status GlobLoop(const fs::path& root, const GlobOptions& options, const Gl
 
 }  // namespace
 
-absl::Status GlobRe2(const fs::path& root, const RE2& regex, const GlobOptions& options, const GlobEntryFunc& func) {
+absl::Status GlobRe2(fs::path root, const RE2& regex, const GlobOptions& options, const GlobEntryFunc& func) {
+  if (options.use_current_dir) {
+    if (root.empty() || root == ".") {
+      root = std::filesystem::current_path();
+    } else if (root.is_relative()) {
+      root = std::filesystem::current_path() / root;
+    }
+  }
   const auto wrap_func = [&](const GlobEntry& entry) -> absl::StatusOr<GlobEntryAction> {
-    if (options.use_rel_path) {
-      if (!RE2::FullMatch(entry.MaybeRelativePath().native(), regex)) {
-        return GlobEntryAction::kContinue;  // Path/Filename rejected.
-      }
-    } else {
-      // The only difference is that we are not actually saving the `rel_path` anywhere.
-      const fs::path rel_path = entry.entry.path().lexically_relative(root);
-      if (!RE2::FullMatch(rel_path.native(), regex)) {
-        return GlobEntryAction::kContinue;  // Path/Filename rejected.
+    if (!regex.pattern().empty()) {
+      if (options.use_rel_path) {
+        if (!RE2::FullMatch(entry.MaybeRelativePath().native(), regex)) {
+          return GlobEntryAction::kContinue;  // Path/Filename rejected.
+        }
+      } else {
+        // The only difference is that we are not actually saving the `rel_path` anywhere.
+        const fs::path rel_path = entry.entry.path().lexically_relative(root);
+        if (!RE2::FullMatch(rel_path.native(), regex)) {
+          return GlobEntryAction::kContinue;  // Path/Filename rejected.
+        }
       }
     }
     return func(entry);
   };
   return GlobLoop(root, options, wrap_func);
+}
+
+absl::Status GlobRe2(
+    const absl::StatusOr<RootAndPattern>& pattern,
+    const GlobOptions& options,
+    const GlobEntryFunc& func) {
+  MBO_RETURN_IF_ERROR(pattern);
+  const RE2 re2(pattern->pattern);
+  if (re2.error_code() != RE2::NoError) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Could not compile re2: '%s': %s.", pattern->pattern, re2.error()));
+  }
+  return GlobRe2(pattern->root, re2, options, func);
 }
 
 absl::Status Glob(

@@ -84,7 +84,7 @@ struct StringifyOptions {
   std::string_view key_prefix = ".";            // Prefix to key names.
   std::string_view key_suffix;                  // Suffix to key names.
   std::string_view key_value_separator = ": ";  // Seperator between key and value.
-  std::string_view key_use_name{};              // Force name for the key.
+  std::string_view key_use_name;                // Force name for the key.
 
   // Value options:
 
@@ -288,6 +288,16 @@ template<typename T, typename ObjectType = mbo::types::types_internal::AnyType>
 concept IsOrCanProduceStringifyOptions =
     std::is_convertible_v<T, StringifyOptions> || CanProduceStringifyOptions<T, ObjectType>;
 
+// Concept that verifies whether `T` has a static `MboTypesStringifyConvert`
+// member function callable as:
+//     `MboTypesStringifyConvert(const T& obj, std::size_t idx, const V& val)`
+// Where `obj` is the owning object, `idx` is the field index and `val` is the
+// actual field value.
+template<typename T, typename V>
+concept HasMboTypesStringifyConvert = requires {
+  { T::MboTypesStringifyConvert(std::size_t{}, std::declval<const T&>(), std::declval<const V&>()) };
+};
+
 // Class `Stringify` implements the conversion of any aggregate into a string.
 class Stringify {
  public:
@@ -332,6 +342,18 @@ class Stringify {
     // is inline with what field streaming does.
   }
 
+  template<typename T, typename V>
+  requires(HasMboTypesStringifyConvert<T, V>)
+  static constexpr auto TsValue(std::size_t field_index, const T& object, const V& value) {
+    return T::MboTypesStringifyConvert(field_index, object, value);
+  }
+
+  template<typename T, typename V>
+  requires(!HasMboTypesStringifyConvert<T, V>)
+  static constexpr const V& TsValue(std::size_t /*field_index*/, const T& /*object*/, const V& value) {
+    return value;  // NOLINT(bugprone-return-const-ref-from-parameter)
+  }
+
   template<typename T>
   requires(!HasMboTypesStringifyDisable<T>)
   void StreamFieldsImpl(
@@ -345,7 +367,9 @@ class Stringify {
         [&](const auto&... fields) {
           os << '{';
           std::size_t idx{0};
-          (StreamField(os, use_seperator, value, fields, idx++, field_names, allow_field_names), ...);
+          ((StreamField(os, use_seperator, value, TsValue<T>(idx, value, fields), idx, field_names, allow_field_names),
+            ++idx),
+           ...);
           os << '}';
         },
         [&value]() {
@@ -525,40 +549,22 @@ class Stringify {
   static constexpr bool kUseStringify = types_internal::IsExtended<T> || HasMboTypesStringifySupport<T>
                                         || (std::is_aggregate_v<T> && !absl::HasAbslStringify<T>::value);
 
-  template<typename V>
+  template<typename V>  // xxxOLINTNEXTLINE(readability-function-cognitive-complexity)
   void StreamValue(std::ostream& os, const V& v, const StringifyOptions& field_options, bool allow_field_names) const {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (HasMboTypesStringifyDisable<RawV>) {
-      os << "{/*MboTypesStringifyDisable*/}";
+      os << "{/*MboTypesStringifyDisable*/}";  // TODO(helly25@github): Verify this always works.
     } else if constexpr (kUseStringify<RawV>) {
       Stream(os, v);
     } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
       os << field_options.value_nullptr_t;
     } else if constexpr (IsSmartPtr<RawV>) {
-      if (v) {
-        os << field_options.value_smart_ptr_prefix;
-        StreamValue(os, *v, field_options, allow_field_names);
-        os << field_options.value_smart_ptr_suffix;
-      } else {
-        os << field_options.value_nullptr;
-      }
+      StreamValueSmartPtr(os, v, field_options, allow_field_names);
     } else if constexpr (std::is_pointer_v<RawV>) {
-      if (v) {
-        os << field_options.value_pointer_prefix;
-        StreamValue(os, *v, field_options, allow_field_names);
-        os << field_options.value_pointer_suffix;
-      } else {
-        os << field_options.value_nullptr;
-      }
+      StreamValuePointer(os, v, field_options, allow_field_names);
     } else if constexpr (mbo::types::IsOptional<RawV>) {
-      if (v.has_value()) {
-        os << field_options.value_optional_prefix;
-        StreamValue(os, *v, field_options, allow_field_names);
-        os << field_options.value_optional_suffix;
-      } else {
-        os << field_options.value_nullopt;
-      }
+      StreamValueOptional(os, v, field_options, allow_field_names);
     } else if constexpr (mbo::types::IsPair<RawV>) {
       if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyOptions<RawV>) {
         if (!field_options.special_pair_first.empty() || !field_options.special_pair_second.empty()) {
@@ -596,6 +602,42 @@ class Stringify {
       os << '"';
     } else {  // NOTE WHEN EXTENDING: Must always use `else if constexpr`
       StreamValueFallback(os, v, field_options);
+    }
+  }
+
+  template<typename V>
+  void StreamValueSmartPtr(std::ostream& os, const V& v, const StringifyOptions& field_options, bool allow_field_names)
+      const {
+    if (v) {
+      os << field_options.value_smart_ptr_prefix;
+      StreamValue(os, *v, field_options, allow_field_names);
+      os << field_options.value_smart_ptr_suffix;
+    } else {
+      os << field_options.value_nullptr;
+    }
+  }
+
+  template<typename V>
+  void StreamValuePointer(std::ostream& os, const V& v, const StringifyOptions& field_options, bool allow_field_names)
+      const {
+    if (v) {
+      os << field_options.value_pointer_prefix;
+      StreamValue(os, *v, field_options, allow_field_names);
+      os << field_options.value_pointer_suffix;
+    } else {
+      os << field_options.value_nullptr;
+    }
+  }
+
+  template<typename V>
+  void StreamValueOptional(std::ostream& os, const V& v, const StringifyOptions& field_options, bool allow_field_names)
+      const {
+    if (v.has_value()) {
+      os << field_options.value_optional_prefix;
+      StreamValue(os, *v, field_options, allow_field_names);
+      os << field_options.value_optional_suffix;
+    } else {
+      os << field_options.value_nullopt;
     }
   }
 

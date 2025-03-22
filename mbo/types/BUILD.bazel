@@ -203,6 +203,7 @@ cc_library(
     name = "stringify_cc",
     srcs = ["stringify.cc"],
     hdrs = ["stringify.h"],
+    visibility = ["//visibility:public"],
     deps = [
         ":traits_cc",
         ":tuple_extras_cc",
@@ -231,6 +232,7 @@ cc_test(
         "@com_google_absl//absl/hash:hash_testing",
         "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/log:absl_log",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",

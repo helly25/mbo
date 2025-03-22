@@ -1,0 +1,10 @@
+d dir
+d sub
+d sub/dir
+f sub/dir/file1
+f sub/dir/file2
+d sub/two
+d sub/two/dir
+f sub/two/dir/file1
+f sub/two/dir/file2
+f sub/two/dir/file3

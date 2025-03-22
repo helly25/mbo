@@ -84,3 +84,9 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+sh_library(
+    name = "bashtest",
+    srcs = ["bashtest.sh"],
+    visibility = ["//mbo:__subpackages__"],
+)
