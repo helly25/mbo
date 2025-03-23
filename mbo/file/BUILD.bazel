@@ -117,5 +117,5 @@ sh_test(
     name = "glob_sh_test",
     srcs = ["glob_sh_test.sh"],
     data = [":glob"] + glob(["testdata/glob_sh_test/**"]),
-    deps = ["//mbo/testing:bashtest"],
+    deps = ["//mbo/testing:bashtest_sh"],
 )

@@ -124,6 +124,8 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `StripLineParsedComments`: Strips comments from a single parsed line.
 * Testing
     * `namespace mbo::testing`
+    * mbo/testing:bashtest_sh, mbo/testing/bashtest.sh
+        * (experimental) sh_library `bashtest.sh` which provides a test runner for complex shell tests involving golden files that provides built-in golden update functionality (see `(. mbo/testing/bashtest.sh --help)`).
     * mbo/testing:matchers_cc, mbo/testing/matchers.h
         * gMock-Matcher `CapacityIs` which checks the capacity of a container.
         * gmock-matcher `WhenTransformedBy` which allows to compare containers after transforming them. This sometimes allows for much more concise comparisons where a golden expectation is already available that only differs in a simple transformation.
