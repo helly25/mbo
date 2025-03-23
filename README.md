@@ -129,13 +129,12 @@ The C++ library is organized in functional groups each residing in their own dir
           * status helper `test_has_erro`: Returns whether a test function has had an error.
           * status helper `test_has_failed_tests`: Returns whether a test program had previous failing test functions.
           * expectation `expect_eq` "\${LHS}" "\${RHS}": Asserts that two strings are the same.
-          * expectation`expect_ne` "\${LHS}" "\${RHS}": Asserts that two strings are different.
-          * expectation`expect_files_eq` "\${LHS}" "\${RHS}": Asserts that two file are the same (supports golden updates).
-          * expectation`expect_contains` "\${EXPECTED}" "\${ARRAY[@]}": Assert that one string is present in an array.
+          * expectation `expect_ne` "\${LHS}" "\${RHS}": Asserts that two strings are different.
+          * expectation `expect_files_eq` "\${LHS}" "\${RHS}": Asserts that two file are the same (supports golden updates).
+          * expectation `expect_contains` "\${EXPECTED}" "\${ARRAY[@]}": Assert that one string is present in an array.
+          * expectation `expect_not_contains` "\${EXPECTED}" "\${ARRAY[@]}": Assert that one string is not present in an array.
           * special test function `test::test_init`: If present, then this function runs first! Tests will only be executed if it succeeds.
           * special test function `test::test_done`: If present, then this function runs last!
-
-
     * mbo/testing:matchers_cc, mbo/testing/matchers.h
         * gMock-Matcher `CapacityIs` which checks the capacity of a container.
         * gmock-matcher `WhenTransformedBy` which allows to compare containers after transforming them. This sometimes allows for much more concise comparisons where a golden expectation is already available that only differs in a simple transformation.
