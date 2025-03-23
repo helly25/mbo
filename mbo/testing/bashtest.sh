@@ -16,7 +16,6 @@
 # limitations under the License.
 
 # BashTest:  EXPERIMENTAL - see `bashtest.sh -h`
-#
 
 set -euo pipefail
 
@@ -30,7 +29,7 @@ bashtest.sh - A Bazel shell test runner.
 - Call `test_runner` at the end of the test program.
 - Provides '${BASHTEST_TMPDIR}' which is a test scratch directory.
 - Tests can be filtered (skipping non matching) using flag '--test_filter <pattern>'.
-- Tests that use diff functionality 'expect_file_eq' can use '-u="${PWD}"' to
+- Tests that use diff functionality 'expect_files_eq' can use '-u="${PWD}"' to
   update their golden files.
 
 Usage:
@@ -43,14 +42,38 @@ Usage:
 -v --verbose                Show additional output while tests succeed or fail.
                             Prints all test calls and file diffs.
 
+Assertions:
+  expect_eq "${LHS}" "${RHS}"
+                            Asserts that two strings are the same.
+
+  expect_ne "${LHS}" "${RHS}"
+                            Asserts that two strings are different.
+
+  expect_files_eq "${LHS}" "${RHS}"
+                            Asserts that two file are the same (supports golden
+                            updates).
+
+  expect_contains "${EXPECTED}" "${ARRAY[@]}"
+                            Assert that one string is present in an array.
+
+
+Status:
+  test_has_error            Returns whether a test function has had an error.
+  test_has_failed_tests     Returns whether a test program had previous
+                            failing test functions.
+
+Setup/Shutdown:
+  test::test_init           If present, then this function runs first!
+                            Test will only be executed if it succeeds.
+  test::test_done           If present, then this function runs last!
+
 Example:
 
 ```sh
 source mbo/testing/bashtest.sh
 
 function test::hello() {
-    echo "Hello"
-    return 0
+    expect_ne "Hello" "World"
 }
 
 test_runner
@@ -110,6 +133,8 @@ _BASHTEST_NUM_SKIP=0
 
 _BASHTEST_HAS_ERROR=0
 _BASHTEST_SUGGEST_UPDATE=0
+_BASHTEST_INIT_FAILED=0
+_BASHTEST_DONE_FAILED=0
 
 function _bashtest_cleanup () {
     # Bazel sandboxing will delete anyway unless `--sandbox_debug` is used.
@@ -143,6 +168,23 @@ function _bashtest_handler() {
     fi
 }
 
+# Returns whether a test function has had an error.
+test_has_error() {
+    [[ "${_BASHTEST_HAS_ERROR}" != "0" ]]
+}
+
+# Returns whether a test program had previous failing test functions.
+test_has_failed_tests() {
+    [[ "${_BASHTEST_NUM_FAIL}" != "0" ]]
+}
+
+_bashtest_contains_element () {
+    local expected="$1"
+    shift
+    for element; do [[ "${element}" == "${expected}" ]] && return 0; done
+    return 1
+}
+
 ################################################################################
 # The test's main function that finds and runs all tests.
 
@@ -153,15 +195,35 @@ function test_runner() {
     echo "----------"
     TEST_FUNCS=()
     while IFS='' read -r line; do TEST_FUNCS+=("${line}"); done < <(declare -f|sed -rne 's,^test::([^ ]*).*$,\1,p')
-    for TEST in "${TEST_FUNCS[@]}"; do
-        _bashtest_handler "test::${TEST}" "${TEST}"
+    if _bashtest_contains_element "test_init" "${TEST_FUNCS[@]}"; then
+        if ! "test::test_init"; then
+            _BASHTEST_INIT_FAILED=1
+            _BASHTEST_FILTER=("${TEST_FUNCS[*]}")
+            echo "Test init (test::test_init) failed! Skipping all tests."
+        fi
         echo "----------"
+    fi
+    for TEST in "${TEST_FUNCS[@]}"; do
+        if [[ "${TEST}" != "test_init" ]] && [[ "${TEST}" != "test_done" ]]; then
+            _bashtest_handler "test::${TEST}" "${TEST}"
+            echo "----------"
+        fi
     done
+    if _bashtest_contains_element "test_done" "${TEST_FUNCS[@]}"; then
+        if ! "test::test_done"; then
+            _BASHTEST_DONE_FAILED=1
+        fi
+        echo "----------"
+    fi
     echo "PASS: ${_BASHTEST_NUM_PASS}"
     echo "SKIP: ${_BASHTEST_NUM_SKIP}"
     echo >&2 "FAIL: ${_BASHTEST_NUM_FAIL}"
     echo "----------"
-    if [[ "${_BASHTEST_NUM_FAIL}" -gt 0 ]]; then
+    if [[ "${_BASHTEST_INIT_FAILED}" -ne "0" ]]; then
+        echo >&2 "ERROR: Test initialization failed."
+        return 1
+    fi
+    if [[ "${_BASHTEST_NUM_FAIL}" != "0" ]]; then
         echo >&2 "ERROR: Some tests failed."
         if [[ "${_BASHTEST_SUGGEST_UPDATE}" -gt 0 ]]; then
             echo ""
@@ -169,16 +231,21 @@ function test_runner() {
             echo "  > bazel test --spawn_strategy=local --test_arg=-u=\"\${PWD}\" ${TEST_TARGET:-<test_target>}"
             echo "  > bazel run ${TEST_TARGET:-<test_target>} -- -u=\"\${PWD}\""
         fi
-        exit 1
+        return 1
     elif [[ "${_BASHTEST_NUM_PASS}" == 0 ]]; then
         echo >&2 "ERROR: No tests were run."
-        exit 2
-    elif [[ "${_BASHTEST_NUM_SKIP}" -gt 0 ]]; then
+        return 2
+    fi
+    if [[ "${_BASHTEST_DONE_FAILED}" != "0" ]]; then
+        echo >&2 "ERROR: Test shutdown failed."
+        return 1
+    fi
+    if [[ "${_BASHTEST_NUM_SKIP}" -gt 0 ]]; then
         echo "All selected tests passed but some tests were skipped."
-        exit 0
+        return 0
     else
         echo "All tests passed."
-        exit 0
+        return 0
     fi
 }
 
@@ -186,12 +253,12 @@ function test_runner() {
 # Assert that two files are the same.
 #
 # ```sh
-# expect_file_eq <golden_file> <result_file>
+# expect_files_eq <golden_file> <result_file>
 # ```
 #
 # If the test fails it will explain how to update the golden file.
 
-expect_file_eq() {
+expect_files_eq() {
     FILE_GOLDEN="${1}"
     FILE_RESULT="${2}"
     shift
@@ -287,8 +354,113 @@ expect_file_eq() {
     fi
     if [[ -n "${_BASHTEST_VERBOSE}" ]]; then
         echo ""
-        echo "Test: success:"
+        echo "Test success:"
         echo "  Result equals golden: '${FILE_REL_GOLDEN}'."
     fi
     return 0
+}
+
+################################################################################
+# Assert that two string values are the same.
+#
+# ```sh
+# expect_eq <golden_text> <result_text>
+# ```
+
+expect_eq() {
+    TEXT_GOLDEN="${1}"
+    TEXT_RESULT="${2}"
+    shift
+    shift
+    TEXT_GOLDEN_OUT="${TEXT_GOLDEN}"
+    TEXT_RESULT_OUT="${TEXT_RESULT}"
+    if [[ "${#TEXT_GOLDEN_OUT}" -ge 50 ]]; then
+        TEXT_GOLDEN_OUT="${TEXT_GOLDEN_OUT:0:47}..."
+    fi
+    if [[ "${#TEXT_RESULT_OUT}" -ge 50 ]]; then
+        TEXT_RESULT_OUT="${TEXT_RESULT_OUT:0:47}..."
+    fi
+    if [[ "${TEXT_GOLDEN}" != "${TEXT_RESULT}" ]]; then
+        _BASHTEST_HAS_ERROR=1
+        echo >&2 ""
+        echo >&2 "Test failure:"
+        echo >&2 "  Expected: strings are equal:"
+        echo >&2 "  Golden:  '${TEXT_GOLDEN_OUT}'"
+        echo >&2 "  Result:  '${TEXT_RESULT_OUT}'"
+        return 1
+    else
+        if [[ -n "${_BASHTEST_VERBOSE}" ]]; then
+            echo ""
+            echo "Test success:"
+            echo "  Result equals golden: '${TEXT_GOLDEN_OUT}'."
+        fi
+        return 0
+    fi
+}
+
+################################################################################
+# Assert that two string values are different.
+#
+# ```sh
+# expect_ne <golden_text> <result_text>
+# ```
+
+expect_ne() {
+    TEXT_GOLDEN="${1}"
+    TEXT_RESULT="${2}"
+    shift
+    shift
+    TEXT_GOLDEN_OUT="${TEXT_GOLDEN}"
+    TEXT_RESULT_OUT="${TEXT_RESULT}"
+    if [[ "${#TEXT_GOLDEN_OUT}" -ge 50 ]]; then
+        TEXT_GOLDEN_OUT="${TEXT_GOLDEN_OUT:0:47}..."
+    fi
+    if [[ "${#TEXT_RESULT_OUT}" -ge 50 ]]; then
+        TEXT_RESULT_OUT="${TEXT_RESULT_OUT:0:47}..."
+    fi
+    if [[ "${TEXT_GOLDEN}" == "${TEXT_RESULT}" ]]; then
+        _BASHTEST_HAS_ERROR=1
+        echo >&2 ""
+        echo >&2 "Test failure:"
+        echo >&2 "  Expected: strings are different:"
+        echo >&2 "  Golden:  '${TEXT_GOLDEN_OUT}'"
+        echo >&2 "  Result:  '${TEXT_RESULT_OUT}'"
+        return 1
+    else
+        if [[ -n "${_BASHTEST_VERBOSE}" ]]; then
+            echo ""
+            echo "Test success:"
+            echo "  Golden: '${TEXT_GOLDEN_OUT}'."
+            echo "  Result: '${TEXT_RESULT_OUT}'."
+        fi
+        return 0
+    fi
+}
+
+################################################################################
+# Assert that one string is present in an array.
+#
+# ```sh
+# expect_contains ${ELEMENT}" "${ARRAY[@]}"
+# ```
+
+expect_contains() {
+    ELEMENT="${1}"
+    shift
+    if _bashtest_contains_element "${ELEMENT}" "${@}"; then
+        if [[ -n "${_BASHTEST_VERBOSE}" ]]; then
+            echo ""
+            echo "Test success:"
+            echo "  Expected: element is present: '${ELEMENT}'."
+        fi
+        return 0
+    else
+        _BASHTEST_HAS_ERROR=1
+        echo >&2 ""
+        echo >&2 "Test failure:"
+        echo >&2 "  Expected: element contained in array:"
+        echo >&2 "  Element:  '${ELEMENT}'"
+        echo >&2 "  Array:    '${*}'"
+        return 1
+    fi
 }
