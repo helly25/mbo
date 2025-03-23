@@ -63,9 +63,7 @@ function _test_glob_and_diff() {
     NAME="${1}"
     shift
     "${GLOB}" "${@}" > "${TEST_TMPDIR}/${NAME}.out" 2>&1
-    if ! diff -u "${TESTDATA}/${NAME}.txt" "${TEST_TMPDIR}/${NAME}.out"; then
-        return 1
-    fi
+    expect_file_eq "${TESTDATA}/${NAME}.txt" "${TEST_TMPDIR}/${NAME}.out"
 }
 
 function test::default() {

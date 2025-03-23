@@ -86,7 +86,7 @@ cc_test(
 )
 
 sh_library(
-    name = "bashtest",
+    name = "bashtest_sh",
     srcs = ["bashtest.sh"],
-    visibility = ["//mbo:__subpackages__"],
+    visibility = ["//visibility:public"],
 )
