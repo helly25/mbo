@@ -102,7 +102,7 @@ test::expect_ne() {
     _BASHTEST_NUM_SKIP="${NUM_SKIP}"
 }
 
-test::expect_ne() {
+test::expect_contains() {
     [[ "${_BASHTEST_HAS_ERROR}" == "0" ]] || bad_bashtest "Test starts with _BASHTEST_HAS_ERROR != 0, got '${_BASHTEST_HAS_ERROR}'."
 
     NUM_PASS="${_BASHTEST_NUM_PASS}"
@@ -132,6 +132,46 @@ test::expect_ne() {
     FOO_BAR+=("")
 
     expect_contains "" "${FOO_BAR[@]}" || bad_bashtest "Element is present, yet test failed."
+    _BASHTEST_HAS_ERROR=0
+
+    [[ "${_BASHTEST_NUM_PASS}" == "${NUM_PASS}" ]] || bad_bashtest "Test modified _BASHTEST_NUM_PASS."
+    [[ "${_BASHTEST_NUM_FAIL}" == "${NUM_FAIL}" ]] || bad_bashtest "Test modified _BASHTEST_NUM_FAIL."
+    [[ "${_BASHTEST_NUM_SKIP}" == "${NUM_SKIP}" ]] || bad_bashtest "Test modified _BASHTEST_NUM_SKIP."
+    _BASHTEST_NUM_PASS="${NUM_PASS}"
+    _BASHTEST_NUM_FAIL="${NUM_FAIL}"
+    _BASHTEST_NUM_SKIP="${NUM_SKIP}"
+}
+
+test::expect_not_contains() {
+    [[ "${_BASHTEST_HAS_ERROR}" == "0" ]] || bad_bashtest "Test starts with _BASHTEST_HAS_ERROR != 0, got '${_BASHTEST_HAS_ERROR}'."
+
+    NUM_PASS="${_BASHTEST_NUM_PASS}"
+    NUM_FAIL="${_BASHTEST_NUM_FAIL}"
+    NUM_SKIP="${_BASHTEST_NUM_SKIP}"
+
+    EMPTY=()
+    expect_not_contains "foo" "${EMPTY[@]}" || bad_bashtest "Element is not present, yet test failed."
+    _BASHTEST_HAS_ERROR=0
+
+    expect_not_contains "" "${EMPTY[@]}" || bad_bashtest "Element is not present, yet test failed."
+    _BASHTEST_HAS_ERROR=0
+
+    FOO_BAR=("foo" "bar")
+    expect_not_contains "foo" "${FOO_BAR[@]}" && bad_bashtest "Element is present, yet test passed."
+    _BASHTEST_HAS_ERROR=0
+
+    expect_not_contains "bar" "${FOO_BAR[@]}" && bad_bashtest "Element is present, yet test passed."
+    _BASHTEST_HAS_ERROR=0
+
+    expect_not_contains "baz" "${FOO_BAR[@]}" || bad_bashtest "Element is not present, yet test failed."
+    _BASHTEST_HAS_ERROR=0
+
+    expect_not_contains "" "${FOO_BAR[@]}" || bad_bashtest "Element is not present, yet test failed."
+    _BASHTEST_HAS_ERROR=0
+
+    FOO_BAR+=("")
+
+    expect_not_contains "" "${FOO_BAR[@]}" && bad_bashtest "Element is present, yet test passed."
     _BASHTEST_HAS_ERROR=0
 
     [[ "${_BASHTEST_NUM_PASS}" == "${NUM_PASS}" ]] || bad_bashtest "Test modified _BASHTEST_NUM_PASS."

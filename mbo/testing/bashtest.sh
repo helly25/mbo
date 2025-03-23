@@ -56,6 +56,9 @@ Assertions:
   expect_contains "${EXPECTED}" "${ARRAY[@]}"
                             Assert that one string is present in an array.
 
+  expect_not_contains "${EXPECTED}" "${ARRAY[@]}"
+                            Assert that one string is NOT present in an array.
+
 
 Status:
   test_has_error            Returns whether a test function has had an error.
@@ -451,14 +454,42 @@ expect_contains() {
         if [[ -n "${_BASHTEST_VERBOSE}" ]]; then
             echo ""
             echo "Test success:"
-            echo "  Expected: element is present: '${ELEMENT}'."
+            echo "  Expected: element is present in array: '${ELEMENT}'."
         fi
         return 0
     else
         _BASHTEST_HAS_ERROR=1
         echo >&2 ""
         echo >&2 "Test failure:"
-        echo >&2 "  Expected: element contained in array:"
+        echo >&2 "  Expected: element is present in array:"
+        echo >&2 "  Element:  '${ELEMENT}'"
+        echo >&2 "  Array:    '${*}'"
+        return 1
+    fi
+}
+
+################################################################################
+# Assert that one string is NOT present in an array.
+#
+# ```sh
+# expect_not_contains ${ELEMENT}" "${ARRAY[@]}"
+# ```
+
+expect_not_contains() {
+    ELEMENT="${1}"
+    shift
+    if ! _bashtest_contains_element "${ELEMENT}" "${@}"; then
+        if [[ -n "${_BASHTEST_VERBOSE}" ]]; then
+            echo ""
+            echo "Test success:"
+            echo "  Expected: element is NOT present in array: '${ELEMENT}'."
+        fi
+        return 0
+    else
+        _BASHTEST_HAS_ERROR=1
+        echo >&2 ""
+        echo >&2 "Test failure:"
+        echo >&2 "  Expected: element is NOT present in array:"
         echo >&2 "  Element:  '${ELEMENT}'"
         echo >&2 "  Array:    '${*}'"
         return 1
