@@ -25,11 +25,14 @@ function die() { echo >&2 "ERROR: ${*}"; exit 1; }
 _BASHTEST_USAGE=$(cat <<'EOF'
 bashtest.sh - A Bazel shell test runner.
 
+Usage:
+  bazel test <test_target> [ --test_arg=-f=<pattern> ]
+
 - All declared functions that start with "test::" are considered as tests.
 - Each test should `return 0` to indicate success or `return 1` for failure.
 - Call `test_runner` at the end of the test program.
 - Provides '${BASHTEST_TMPDIR}' which is a test scratch directory.
-- Tests can be filtered (skipping non matching) using flag '--filter <pattern>'.
+- Tests can be filtered (skipping non matching) using flag '--test_filter <pattern>'.
 
 Example:
 
@@ -46,16 +49,27 @@ test_runner
 EOF
 )
 
+_BASHTEST_NUM_PASS=0
+_BASHTEST_NUM_FAIL=0
+_BASHTEST_NUM_SKIP=0
+_BASHTEST_FILTER=""
+
 while getopts -- '-:f:h' OPTION; do
-    OPTERR="-${OPTION}"
     if [ "${OPTION}" = "-" ]; then
         OPTION="${OPTARG%%[= ]*}"
         OPTARG="${OPTARG#"${OPTION}"}"
-        OPTARG="${OPTARG#=}"
+        OPTARG="${OPTARG#[= ]}"
         OPTERR="--${OPTION}"
+        if [[ "${#OPTION}" -le 1 ]]; then
+            die "Long options have at least two characters. Did you mean '-${OPTION}'?"
+        fi
+    else
+        OPTARG="${OPTARG:-}"
+        OPTARG="${OPTARG//[= ]}"
+        OPTERR="-${OPTION}"
     fi
     case "${OPTION}" in
-        f|filter) _BASHTEST_FILTER="${OPTARG//[= ]}" ;;
+        f|test[-_]filter) _BASHTEST_FILTER="${OPTARG}" ;;
         h|help) echo "${_BASHTEST_USAGE}"; exit 2 ;;
         *) die "Unknown flag '${OPTERR}'." ;;
     esac
@@ -64,11 +78,6 @@ done
 ################################################################################
 # Beyond this point we must be sourced!
 [[ -z "$(caller 0)" ]] && die "The ${0} script must be sourced."
-
-_BASHTEST_NUM_PASS=0
-_BASHTEST_NUM_FAIL=0
-_BASHTEST_NUM_SKIP=0
-_BASHTEST_FILTER=""
 
 function _bashtest_cleanup () {
     # Bazel sandboxing will delete anyway unless `--sandbox_debug` is used.
