@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@com_helly25_bashtest//bashtest:bashtest.bzl", "bashtest")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 package(default_visibility = ["//visibility:private"])
@@ -113,9 +114,8 @@ cc_binary(
     ],
 )
 
-sh_test(
+bashtest(
     name = "glob_sh_test",
     srcs = ["glob_sh_test.sh"],
     data = [":glob"] + glob(["testdata/glob_sh_test/**"]),
-    deps = ["//mbo/testing:bashtest_sh"],
 )

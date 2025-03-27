@@ -91,7 +91,7 @@ jobs:
         gcc_version: [11]
         llvm_version: [19.1.6]
         bazel_config: [opt]
-        module_version: [0.4.2]
+        module_version: [0.6.0]
         exclude:
           - os: ubuntu-latest
             compiler: native

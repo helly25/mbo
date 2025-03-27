@@ -19,8 +19,8 @@
 
 set -euo pipefail
 
-# shellcheck disable=SC1091
-source "mbo/testing/bashtest.sh"
+# shellcheck disable=SC1090,SC1091,SC2154
+source "${helly25_bashtest}"
 
 declare -a EXPECTED=(
     "dir"

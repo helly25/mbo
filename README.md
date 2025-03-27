@@ -5,7 +5,7 @@ with [Google's Abseil library](https://abseil.io/).
 
 The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml).
 
-The C++ library is organized in functional groups each residing in their own directory.
+## The C++ library is organized in functional groups each residing in their own directory.
 
 * Config
     * `namespace mbo::config`
@@ -123,18 +123,6 @@ The C++ library is organized in functional groups each residing in their own dir
         * function `StripParsedComments`: Strips comments from parsed lines.
         * function `StripLineParsedComments`: Strips comments from a single parsed line.
 * Testing
-    * `namespace mbo::testing`
-    * mbo/testing:bashtest_sh, mbo/testing/bashtest.sh
-        * (experimental) sh_library `bashtest.sh` which provides a test runner for complex shell tests involving golden files that provides built-in golden update functionality (see `(. mbo/testing/bashtest.sh --help)`).
-          * status helper `test_has_erro`: Returns whether a test function has had an error.
-          * status helper `test_has_failed_tests`: Returns whether a test program had previous failing test functions.
-          * expectation `expect_eq` "\${LHS}" "\${RHS}": Asserts that two strings are the same.
-          * expectation `expect_ne` "\${LHS}" "\${RHS}": Asserts that two strings are different.
-          * expectation `expect_files_eq` "\${LHS}" "\${RHS}": Asserts that two file are the same (supports golden updates).
-          * expectation `expect_contains` "\${EXPECTED}" "\${ARRAY[@]}": Assert that one string is present in an array.
-          * expectation `expect_not_contains` "\${EXPECTED}" "\${ARRAY[@]}": Assert that one string is not present in an array.
-          * special test function `test::test_init`: If present, then this function runs first! Tests will only be executed if it succeeds.
-          * special test function `test::test_done`: If present, then this function runs last!
     * mbo/testing:matchers_cc, mbo/testing/matchers.h
         * gMock-Matcher `CapacityIs` which checks the capacity of a container.
         * gmock-matcher `WhenTransformedBy` which allows to compare containers after transforming them. This sometimes allows for much more concise comparisons where a golden expectation is already available that only differs in a simple transformation.
@@ -232,13 +220,13 @@ The C++ library is organized in functional groups each residing in their own dir
     * mbo/types:tuple_cc, mbo/types/tuple.h
         * template struct `mbo::types::TupleCat` which concatenates tuple types.
 
-In addition some Bazel macros are implemented that are not direct part of the library:
+## In addition some Bazel macros are implemented that are not direct part of the library:
 
 * bzl:archive.bzl
     * `http_archive`: Simple wrapper that tests whether the archive was already loaded.
     * `github_archive`: Specialized archive wrapper that supports github that supports `tagged` releases or commits.
 
-# Installation and requirements
+## Installation and requirements
 
 This repository requires a C++20 compiler (in case of MacOS XCode 15 is needed). This is done so that newer features like `std::source_location` can be used.
 
@@ -246,7 +234,7 @@ The project only comes with a Bazel BUILD.bazel file and can be added to other B
 
 The project is formatted with specific clang-format settings which require clang 16+ (in case of MacOs LLVM 16+ can be installed using brew). For simplicity in dev mode the project pulls the appropriate clang tools and can be compiled with those tools using `bazel [build|test] --config=clang ...`.
 
-## WORKSPACE
+### WORKSPACE
 
 Checkout [Releases](https://github.com/helly25/mbo/releases) or use head ref as follows:
 
@@ -260,7 +248,7 @@ http_archive(
 )
 ```
 
-## MODULES.bazel
+### MODULES.bazel
 
 Check [Releases](https://github.com/helly25/mbo/releases) for details. All that is needed is a `bazel_dep` instruction with the correct version.
 
@@ -270,9 +258,9 @@ bazel_dep(name = "helly25_mbo", version = "0.0.0")
 
 Unlike the `WORKSPACE` installation the `MODULES.bazel` installation from source checkout, the above [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler. This is due to a restriction in Bazel's ability to handle toolchains when Bazel uses MODULES (`--enable_bzlmod` as opposed to `--enable_workspace`). Nonetheless all versions, all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
 
-# Presentations
+## Presentations
 
-## Practical Production-proven Constexpr API Elements
+### Practical Production-proven Constexpr API Elements
 
 Presented at [C++ On Sea 2024](https://cpponsea.uk/2024/session/practical-production-proven-constexpr-api-elements), this presentation covers the theory behind:
 * `mbo::hash::simple::GetHash`,

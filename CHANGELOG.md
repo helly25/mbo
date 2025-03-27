@@ -1,4 +1,8 @@
-# 0.5.1
+# 0.6.0
+
+* Moved bashtest out into `@com_helly25_bashtest` and used it from there.
+* Added dependency on `@com_helly25_bashtest`.
+* Dropped all remaining bashtest component.
 
 # 0.5.0
 

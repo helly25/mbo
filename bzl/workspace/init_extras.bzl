@@ -13,22 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-package(default_visibility = ["//visibility:private"])
+"""Initializes extra modules required by the workspace, requies helly25_mbo_init_extras_llvm."""
 
-sh_test(
-    name = "bashtest_test",
-    srcs = ["bashtest_test.sh"],
-    deps = ["//mbo/testing:bashtest_sh"],
-)
+load("@hedron_compile_commands//:workspace_setup.bzl", "hedron_compile_commands_setup")
+load("@toolchains_llvm//toolchain:deps.bzl", "bazel_toolchain_dependencies")
+load("@toolchains_llvm//toolchain:rules.bzl", "llvm_toolchain")
 
-sh_test(
-    name = "bashtest_init_test",
-    srcs = ["bashtest_init_test.sh"],
-    deps = ["//mbo/testing:bashtest_sh"],
-)
+def helly25_mbo_init_extras():
+    """Initializes all standard modules required by the workspace."""
 
-sh_test(
-    name = "bashtest_done_test",
-    srcs = ["bashtest_done_test.sh"],
-    deps = ["//mbo/testing:bashtest_sh"],
-)
+    hedron_compile_commands_setup()
+
+    bazel_toolchain_dependencies()
+
+    llvm_toolchain(
+        name = "llvm_toolchain",
+        llvm_version = "19.1.6",
+    )
