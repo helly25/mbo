@@ -15,59 +15,24 @@
 
 workspace(name = "com_helly25_mbo")
 
-load(":workspace.bzl", "workspace_load_modules")
+load("//bzl/workspace:load_modules.bzl", "helly25_mbo_load_modules")
 
-#load("@bazel_features//:deps.bzl", "bazel_features_deps")
-#bazel_features_deps()
+helly25_mbo_load_modules()
 
-workspace_load_modules()
+load("//bzl/workspace:init_modules.bzl", "helly25_mbo_init_modules")
 
-###########################################################################
+helly25_mbo_init_modules()
 
-load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+################################################################################
 
-bazel_skylib_workspace()
+load("//bzl/workspace:load_extras.bzl", "helly25_mbo_load_extras")
 
-###########################################################################
+helly25_mbo_load_extras()  # Adds Hedron + LLVM
 
-load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
+load("//bzl/workspace:init_extras.bzl", "helly25_mbo_init_extras")
 
-rules_foreign_cc_dependencies()
+helly25_mbo_init_extras()  # Init Hedron + LLVM
 
-###########################################################################
+load("//bzl/workspace:init_extras_llvm.bzl", "helly25_mbo_init_extras_llvm")
 
-load("@rules_python//python:repositories.bzl", "py_repositories")
-
-py_repositories()
-
-###########################################################################
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
-
-###########################################################################
-
-load("@toolchains_llvm//toolchain:deps.bzl", "bazel_toolchain_dependencies")
-
-bazel_toolchain_dependencies()
-
-load("@toolchains_llvm//toolchain:rules.bzl", "llvm_toolchain")
-
-llvm_toolchain(
-    name = "llvm_toolchain",
-    llvm_version = "19.1.6",
-)
-
-load("@llvm_toolchain//:toolchains.bzl", "llvm_register_toolchains")
-
-llvm_register_toolchains()
-
-###########################################################################
-
-# Run: ./compile_commands-update.sh
-load("@hedron_compile_commands//:workspace_setup.bzl", "hedron_compile_commands_setup")
-
-hedron_compile_commands_setup()
-
-###########################################################################
+helly25_mbo_init_extras_llvm()  # Init LLVM/Part 2

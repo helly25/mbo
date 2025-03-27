@@ -84,9 +84,3 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
-
-sh_library(
-    name = "bashtest_sh",
-    srcs = ["bashtest.sh"],
-    visibility = ["//visibility:public"],
-)
