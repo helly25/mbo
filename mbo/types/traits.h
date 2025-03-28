@@ -397,8 +397,9 @@ concept IsOptional = requires {
 
 // Verify whether `From` can used used to construct a `Into`.
 // That allows the concept to be used for in-place/auto template parameters.
+// See Compiler Explorer debug: https://godbolt.org/z/5vMEeGMMP
 //
-// Motivating example (https://godbolt.org/z/zhzcqqnWv):
+// Motivating example:
 //
 // A function that is meant to handle any string-like type (std::string/_view,
 // char*, ...). That still supports perfect forwarding (or move). In order to
