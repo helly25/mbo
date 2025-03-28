@@ -185,6 +185,7 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
     * mbo/types:stringify_ostream_cc, mbo/types/stringify_ostream.h
         * operator `std::ostream& operator<<(std::ostream&, const MboTypesStringifySupport auto& v)` - conditioanl automatic ostream support for structs using `Stringify`.
     * mbo/types:traits_cc, mbo/types/traits.h
+        * concept `ConstructibleInto` determined whether one type can be constructed from another. Similar to `std::convertible_to` but with the argument order of `std::constructible_from`.
         * type alias `ContainerConstIteratorValueType` returned the value-type of the const_iterator of a container.
         * concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.
         * concept `ContainerHasEmplace` determines whether a container has `emplace`.

@@ -265,6 +265,17 @@ TYPED_TEST(GenTraitsTest, IsBracesContructibleGenerateDerived) {
   EXPECT_THAT((IsBracesConstructibleV<Type, AnyBaseType<Type>, AnyType, AnyType, AnyType>), kDerived >= 3);
 }
 
+TEST_F(TraitsTest, ConstructInto) {
+  EXPECT_TRUE((ConstructibleInto<std::string, std::string>));
+  EXPECT_TRUE((ConstructibleInto<std::string, std::string_view>));
+  EXPECT_TRUE((ConstructibleInto<std::string_view, std::string>));
+  EXPECT_TRUE((ConstructibleInto<std::string_view, std::string_view>));
+  EXPECT_FALSE((ConstructibleInto<std::string, int>));
+  EXPECT_FALSE((ConstructibleInto<std::string_view, int>));
+  EXPECT_FALSE((ConstructibleInto<int, std::string>));
+  EXPECT_FALSE((ConstructibleInto<int, std::string_view>));
+}
+
 // NOLINTEND(*-runtime-int)
 
 }  // namespace

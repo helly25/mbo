@@ -2,7 +2,8 @@
 
 * Moved bashtest out into `@com_helly25_bashtest` and used it from there.
 * Added dependency on `@com_helly25_bashtest`.
-* Dropped all remaining bashtest component.
+* Dropped all remaining bashtest components.
+* Added concept `ConstructibleInto` determined whether one type can be constructed from another. Similar to `std::convertible_to` but with the argument order of `std::constructible_from`.
 
 # 0.5.0
 
