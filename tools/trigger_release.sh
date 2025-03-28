@@ -54,7 +54,9 @@ fi
 
 grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
 
-git tag -s -a "${VERSION}"
+git tag -s -a "${VERSION}" \
+    -m "New release tag version: '${VERSION}'." \
+    -m "$(awk '/^#/{if(NR>1)exit}/^[^#]/{print}' <CHANGELOG.md)"
 git push origin --tags
 
 echo "Next version: ${NEXT_VERSION}"
@@ -73,5 +75,32 @@ git commit -m "Bump version to ${NEXT_VERSION}"
 git push -u origin "${NEXT_BRANCH}"
 git push
 if which gh; then
-    gh pr create --title "Bump version to ${NEXT_VERSION}" -b "Created by ${0}."
+    PRNUM=""
+    PRURL=""
+    BUMP_TEXT="Bump version from ${VERSION} to ${NEXT_VERSION}"
+    MERGE_TITLE="${BUMP_TEXT}"
+    MERGE_SUBJECT="${BUMP_TEXT}"
+    MERGE_BODY="Auto approved version bump from ${VERSION} to ${NEXT_VERSION} by trigger script."
+    if gh pr create --title "${MERGE_TITLE}" -b "Created by ${0}." 2>&1 | tee pr_create_output.txt; then
+        PRNUM="$(sed -rne 's,https?://github.com/[^/]+/[^/]+/pull/([0-9]+)$,\1,p' < pr_create_output.txt)"
+        PRURL="$(sed -rne 's,https?://github.com/[^/]+/[^/]+/pull/([0-9]+)$,\0,p' < pr_create_output.txt)"
+    else
+        echo "ERROR: Cannot create PR:"
+        cat pr_create_output.txt
+    fi
+    if [[ "${PRNUM}" -gt 1 ]]; then
+        gh pr ready "${NEXT_BRANCH}"
+        gh pr review "${NEXT_BRANCH}" -a -b "${MERGE_BODY}" || true
+        if gh pr merge "${NEXT_BRANCH}" --admin -d -s -b "${MERGE_BODY}" -t "${MERGE_SUBJECT}"; then
+            git checkout main
+            git branch -d "${NEXT_BRANCH}"
+            echo "PR ${PRNUM} was merged via admin override. See: ${PRURL}."
+        else
+            gh pr merge "${NEXT_BRANCH}" --auto -d -s -b "${MERGE_BODY}" -t "${MERGE_SUBJECT}"
+            git checkout main
+            git branch -d "${NEXT_BRANCH}" || true
+            echo "PR ${PRNUM} cannot be merged via admin override."
+            echo "Please approve it at ${PRURL}."
+        fi
+    fi
 fi

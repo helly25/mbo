@@ -88,7 +88,7 @@ echo "# Version ${TAG}"
 echo "## [Changelog](https://github.com/helly25/${PACKAGE_NAME}/blob/${TAG}/CHANGELOG.md)"
 
 # Print Changelog
-awk '/^#/{f+=1;if(f>1)exit} !/^#/{print}' < CHANGELOG.md
+awk '/^#/{if(NR>1)exit}/^[^#]/{print}' <CHANGELOG.md
 
 cat << EOF
 ## For Bazel MODULES.bazel
