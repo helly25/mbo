@@ -11,4 +11,5 @@
 /.vscode/
 
 /.bazelrc.user
-MODULE.bazel.lock
+/MODULE.bazel.lock
+/pr_create_output.txt
