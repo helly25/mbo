@@ -16,8 +16,8 @@
 #ifndef MBO_TYPES_TRAITS_H_
 #define MBO_TYPES_TRAITS_H_
 
-#include <concepts>  // IWYU pragma: keep
-#include <cstddef>   // IWYU pragma: keep
+#include <concepts>
+#include <cstddef>  // IWYU pragma: keep
 #include <initializer_list>
 #include <iterator>
 #include <memory>
@@ -394,6 +394,37 @@ concept IsOptional = requires {
   typename T::value_type;
   requires std::same_as<std::optional<typename T::value_type>, T>;
 };
+
+// Verify whether `From` can used used to construct a `Into`.
+// That allows the concept to be used for in-place/auto template parameters.
+//
+// Motivating example (https://godbolt.org/z/zhzcqqnWv):
+//
+// A function that is meant to handle any string-like type (std::string/_view,
+// char*, ...). That still supports perfect forwarding (or move). In order to
+// have a short notation we need the `std::constructible_from` parameter order
+// switched. That is what this concept does.
+//
+// ```
+// struct Type {
+//   Type(ConstructibleInto<std::string> auto&& v) : name_(std::forward<decltype(v)>(v)) {}
+//
+//   const std::string name;
+// };
+// ```
+//
+// Second variant, doing the same:
+//
+// ```
+// struct Type {
+//   template<ConstructibleInto<std::string> Str>
+//   Type(Str&& v) : name_(int, std::forward<decltype(v)>(v)) {}
+//
+//   const std::string name;
+// };
+// ```
+template<typename From, typename Into>
+concept ConstructibleInto = std::constructible_from<Into, From>;
 
 }  // namespace mbo::types
 
