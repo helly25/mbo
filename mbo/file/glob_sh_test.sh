@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# shellcheck disable=SC2317 # Functions are called bashtest
+# shellcheck disable=SC2317 # Functions are called by bashtest
 
 set -euo pipefail
 
