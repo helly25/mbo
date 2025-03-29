@@ -114,6 +114,7 @@ http_archive(
   name = "${WORKSPACE_NAME}",
   url = "https://github.com/helly25/${PACKAGE_NAME}/releases/download/${TAG}/${ARCHIVE}",
   sha256 = "${SHA256}",
+  strip_prefix = "${PREFIX}",
 )
 \`\`\`
 
