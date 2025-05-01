@@ -15,7 +15,7 @@
 * Added function `mbo::file::GlobSplit` that splits a pattern into root and pattern.
 * Improved program `//mbo/file:glob` to automatically split a single arg pattern.
 * Added API extension point function `MboTypesStringifyConvert(I, T, V)` which allows to control conversion based on field types via a static call to the owning type, receiving the field index, the object and the field value.
-* Added (experimental) sh_library bashtest which provides a test runner for complex shell tests involving golden files that provides built-in golden update functionality (see `(. mbo/testing/bashtest.sh --help)`).
+* Added (experimental, removed in 0.6.0, moved to @helly25/bashtest) sh_library bashtest which provides a test runner for complex shell tests involving golden files that provides built-in golden update functionality (see `(. mbo/testing/bashtest.sh --help)`).
 
 # 0.4.4
 
