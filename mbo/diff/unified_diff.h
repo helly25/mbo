@@ -17,8 +17,10 @@
 #define MBO_DIFF_UNIFIED_DIFF_H_
 
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 
 #include "absl/status/statusor.h"
 #include "mbo/file/artefact.h"
@@ -55,6 +57,13 @@ class UnifiedDiff final {
   using StripCommentOptions =
       std::variant<NoCommentStripping, mbo::strings::StripCommentArgs, mbo::strings::StripParsedCommentArgs>;
 
+  struct RegexReplace {
+    std::unique_ptr<RE2> regex;
+    std::string replace;
+  };
+
+  static std::optional<RegexReplace> ParseRegexReplaceFlag(std::string_view flag);
+
   struct Options final {
     enum class FileHeaderUse {
       kBoth = 0,   // In header both file names are used (left uses left file name and right uses right file name).
@@ -76,6 +85,8 @@ class UnifiedDiff final {
     bool ignore_space_change = false;
     bool skip_left_deletions = false;
     StripCommentOptions strip_comments = NoCommentStripping{};
+    std::optional<RegexReplace> lhs_regex_replace;
+    std::optional<RegexReplace> rhs_regex_replace;
     std::string strip_file_header_prefix;
 
     std::size_t max_diff_chunk_length = 1'337'000;  // NOLINT(*-magic-numbers)
