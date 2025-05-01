@@ -16,7 +16,6 @@
 #include <cstddef>
 #include <filesystem>
 #include <iostream>
-#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -25,11 +24,9 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/log/initialize.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_split.h"
 #include "mbo/diff/unified_diff.h"
 #include "mbo/diff/update_absl_log_flags.h"
 #include "mbo/file/artefact.h"

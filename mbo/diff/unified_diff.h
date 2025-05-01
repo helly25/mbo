@@ -17,6 +17,7 @@
 #define MBO_DIFF_UNIFIED_DIFF_H_
 
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <string>
 #include <variant>
