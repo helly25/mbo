@@ -96,6 +96,8 @@ class Data final {
 
   size_t Idx() const { return idx_; }
 
+  size_t Idx(size_t ofs) const { return idx_ + ofs; }
+
   size_t Size() const { return text_.size(); }
 
   bool Done() const { return idx_ >= Size(); }
@@ -428,8 +430,8 @@ class UnifiedDiff::Impl {
   };
 
   bool CompareEqImpl(std::string_view lhs, std::string_view rhs) const;
-  const LineCache& CompareCache(LorR which, std::string_view line) const;
-  bool CompareEq(std::string_view lhs, std::string_view rhs) const;
+  const LineCache& CompareCache(LorR which, const diff_internal::Data& data, std::size_t ofs) const;
+  bool CompareEq(std::size_t lhs, std::size_t rhs) const;
   void Loop();
   void LoopBoth();
   bool FindNext();
@@ -442,8 +444,9 @@ class UnifiedDiff::Impl {
   diff_internal::Data lhs_data_;
   diff_internal::Data rhs_data_;
   diff_internal::Chunk chunk_;
-  mutable absl::flat_hash_map<std::string, LineCache> lhs_line_cache_map_;
-  mutable absl::flat_hash_map<std::string, LineCache> rhs_line_cache_map_;
+  // The line caches should probably uses C++26's `std::hive`.
+  mutable absl::flat_hash_map<std::size_t, LineCache> lhs_line_cache_map_;
+  mutable absl::flat_hash_map<std::size_t, LineCache> rhs_line_cache_map_;
 };
 
 template<class... Args>
@@ -461,11 +464,15 @@ bool UnifiedDiff::Impl::CompareEqImpl(std::string_view lhs, std::string_view rhs
   }
 }
 
-const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(LorR which, std::string_view line) const {
+const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(
+    LorR which,
+    const diff_internal::Data& data,
+    std::size_t ofs) const {
   auto& line_cache_map = which == LorR::kLHS ? lhs_line_cache_map_ : rhs_line_cache_map_;
-  auto [line_cache_it, inserted] = line_cache_map.emplace(line, LineCache{});
+  auto [line_cache_it, inserted] = line_cache_map.emplace(data.Idx(ofs), LineCache{});
   LineCache& line_cache = line_cache_it->second;
   if (inserted) {
+    std::string_view line = data.Line(ofs);
     if (options_.ignore_all_space) {
       line_cache.line.reserve(line.length());
       for (const char chr : line) {
@@ -508,10 +515,9 @@ const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(LorR which, 
   return line_cache;
 }
 
-bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) const {
-  const LineCache& lhs_cache = CompareCache(LorR::kLHS, lhs);
-  const LineCache& rhs_cache = CompareCache(LorR::kRHS, rhs);
-
+bool UnifiedDiff::Impl::CompareEq(std::size_t lhs, std::size_t rhs) const {
+  const LineCache& lhs_cache = CompareCache(LorR::kLHS, lhs_data_, lhs);
+  const LineCache& rhs_cache = CompareCache(LorR::kRHS, rhs_data_, rhs);
   if (lhs_cache.matches_ignore && rhs_cache.matches_ignore) {
     return true;
   }
@@ -519,7 +525,7 @@ bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) co
 }
 
 void UnifiedDiff::Impl::LoopBoth() {
-  while (!lhs_data_.Done() && !rhs_data_.Done() && CompareEq(lhs_data_.Line(), rhs_data_.Line())) {
+  while (!lhs_data_.Done() && !rhs_data_.Done() && CompareEq(0, 0)) {
     chunk_.PushBoth(lhs_data_.Idx(), rhs_data_.Idx(), lhs_data_.Line());
     lhs_data_.Next();
     rhs_data_.Next();
@@ -532,7 +538,7 @@ std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextRight() {
   bool equal = false;
   while (!rhs_data_.Done(rhs)) {
     while (!lhs_data_.Done(lhs)) {
-      if (CompareEq(lhs_data_.Line(lhs), rhs_data_.Line(rhs))) {
+      if (CompareEq(lhs, rhs)) {
         equal = true;
         break;
       }
@@ -553,7 +559,7 @@ std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
   bool equal = false;
   while (!lhs_data_.Done(lhs)) {
     while (!rhs_data_.Done(rhs)) {
-      if (CompareEq(lhs_data_.Line(lhs), rhs_data_.Line(rhs))) {
+      if (CompareEq(lhs, rhs)) {
         equal = true;
         break;
       }
