@@ -50,6 +50,7 @@ namespace {
 // NOLINTBEGIN(*-magic-numbers)
 
 using ::mbo::testing::CapacityIs;
+using ::testing::Contains;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::Ge;
@@ -526,6 +527,17 @@ TEST_F(LimitedMapTest, CompareDifferentType) {
 
   EXPECT_THAT(k42v65 >= k42, true);
   EXPECT_THAT(k42v65, Ge(k42));
+}
+
+TEST_F(LimitedMapTest, StringToString) {
+  constexpr auto kData = ToLimitedMap<std::string_view, std::string_view>({
+      {"something_longer_that_7", "something_longer_that_7!"},
+      {"something_else_long", "something_else_long!"},
+  });
+
+  EXPECT_THAT(kData, SizeIs(2));
+  EXPECT_THAT(kData, Contains(Pair("something_longer_that_7", "something_longer_that_7!")));
+  EXPECT_THAT(kData, Contains(Pair("something_else_long", "something_else_long!")));
 }
 
 // NOLINTEND(*-magic-numbers)
