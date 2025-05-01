@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "absl/cleanup/cleanup.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_log.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
@@ -42,6 +43,19 @@
 namespace mbo::diff {
 
 using std::size_t;
+
+std::optional<UnifiedDiff::RegexReplace> UnifiedDiff::ParseRegexReplaceFlag(std::string_view flag) {
+  if (flag.empty()) {
+    return std::nullopt;
+  }
+  const char separator = flag[0];
+  std::vector<std::string> parts = absl::StrSplit(flag, separator);
+  ABSL_CHECK_EQ(parts.size(), 4U);
+  return UnifiedDiff::RegexReplace{
+      .regex = std::make_unique<RE2>(parts[1]),
+      .replace{parts[2]},
+  };
+}
 
 namespace {
 size_t AbsDiff(size_t lhs, size_t rhs) {
@@ -405,6 +419,15 @@ class UnifiedDiff::Impl {
   }
 
  private:
+  enum LorR { kLHS, kRHS };
+
+  struct LineCache {
+    std::string line;
+    bool matches_ignore = false;
+  };
+
+  bool CompareEqImpl(std::string_view lhs, std::string_view rhs) const;
+  const LineCache& CompareCache(LorR which, std::string_view line) const;
   bool CompareEq(std::string_view lhs, std::string_view rhs) const;
   void Loop();
   void LoopBoth();
@@ -418,6 +441,8 @@ class UnifiedDiff::Impl {
   diff_internal::Data lhs_data_;
   diff_internal::Data rhs_data_;
   diff_internal::Chunk chunk_;
+  mutable absl::flat_hash_map<std::string, LineCache> lhs_line_cache_map_;
+  mutable absl::flat_hash_map<std::string, LineCache> rhs_line_cache_map_;
 };
 
 template<class... Args>
@@ -427,60 +452,69 @@ struct Select : Args... {
   using Args::operator()...;
 };
 
-bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) const {
-  std::string tmp_lhs;
-  std::string tmp_rhs;
-  if (options_.ignore_all_space) {
-    const auto strip = [](std::string_view input) {
-      std::string out;
-      out.reserve(input.length());
-      for (const char chr : input) {
+bool UnifiedDiff::Impl::CompareEqImpl(std::string_view lhs, std::string_view rhs) const {
+  if (options_.ignore_case) {
+    return absl::EqualsIgnoreCase(lhs, rhs);
+  } else {
+    return lhs == rhs;
+  }
+}
+
+const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(LorR which, std::string_view line) const {
+  auto& line_cache_map = which == LorR::kLHS ? lhs_line_cache_map_ : rhs_line_cache_map_;
+  auto [line_cache_it, inserted] = line_cache_map.emplace(line, LineCache{});
+  LineCache& line_cache = line_cache_it->second;
+  if (inserted) {
+    if (options_.ignore_all_space) {
+      line_cache.line.reserve(line.length());
+      for (const char chr : line) {
         if (!absl::ascii_isspace(chr)) {
-          out.push_back(chr);
+          line_cache.line.push_back(chr);
         }
       }
-      return out;
-    };
-    tmp_lhs = strip(lhs);
-    tmp_rhs = strip(rhs);
-    lhs = tmp_lhs;
-    rhs = tmp_rhs;
-  } else if (options_.ignore_consecutive_space) {
-    tmp_lhs = lhs;
-    tmp_rhs = rhs;
-    absl::RemoveExtraAsciiWhitespace(&tmp_lhs);
-    absl::RemoveExtraAsciiWhitespace(&tmp_rhs);
-    lhs = tmp_lhs;
-    rhs = tmp_rhs;
-  }
-  if (options_.ignore_space_change) {
-    lhs = absl::StripTrailingAsciiWhitespace(lhs);
-    rhs = absl::StripTrailingAsciiWhitespace(rhs);
-  }
-  const auto str_comp =
-      options_.ignore_case ? [](std::string_view lhs, std::string_view rhs) { return absl::EqualsIgnoreCase(lhs, rhs); }
-                           : [](std::string_view lhs, std::string_view rhs) { return lhs == rhs; };
-  const auto comp = [&](std::string_view lhs, std::string_view rhs) {
-    if (options_.ignore_matching_chunks && options_.ignore_matching_lines.has_value()) {
-      if (RE2::PartialMatch(lhs, *options_.ignore_matching_lines)
-          && RE2::PartialMatch(rhs, *options_.ignore_matching_lines)) {
-        return true;
-      }
+    } else if (options_.ignore_consecutive_space) {
+      line_cache.line = line;
+      absl::RemoveExtraAsciiWhitespace(&line_cache.line);
+    } else if (options_.ignore_space_change) {
+      // TODO(helly25): Should be `StripAsciiWhitespace`.
+      line_cache.line = absl::StripTrailingAsciiWhitespace(line);
+    } else {
+      line_cache.line = line;
     }
-    return str_comp(lhs, rhs);
-  };
-  return std::visit(
-      Select{
-          [&](UnifiedDiff::NoCommentStripping) -> bool { return comp(lhs, rhs); },
-          [&](const mbo::strings::StripCommentArgs& args) -> bool {
-            return comp(mbo::strings::StripLineComments(lhs, args), mbo::strings::StripLineComments(rhs, args));
-          },
-          [&](const mbo::strings::StripParsedCommentArgs& args) -> bool {
-            const auto lhs_or = mbo::strings::StripParsedLineComments(lhs, args);
-            const auto rhs_or = mbo::strings::StripParsedLineComments(rhs, args);
-            return lhs_or.ok() && rhs_or.ok() ? comp(*lhs_or, *rhs_or) : comp(lhs, rhs);
-          }},
-      options_.strip_comments);
+    std::visit(
+        Select{
+            [&](UnifiedDiff::NoCommentStripping) {},
+            [&](const mbo::strings::StripCommentArgs& args) {
+              std::string stripped{mbo::strings::StripLineComments(line_cache.line, args)};
+              line_cache.line = stripped;
+            },
+            [&](const mbo::strings::StripParsedCommentArgs& args) {
+              const auto line_or = mbo::strings::StripParsedLineComments(line_cache.line, args);
+              if (line_or.ok()) {
+                line_cache.line = *line_or;
+              }
+            }},
+        options_.strip_comments);
+    const std::optional<RegexReplace>& regex_replace =
+        which == LorR::kLHS ? options_.lhs_regex_replace : options_.rhs_regex_replace;
+    if (regex_replace.has_value()) {
+      RE2::Replace(&line_cache.line, *regex_replace->regex, regex_replace->replace);
+    }
+    if (options_.ignore_matching_chunks && options_.ignore_matching_lines.has_value()) {
+      line_cache.matches_ignore = RE2::PartialMatch(line_cache.line, *options_.ignore_matching_lines);
+    }
+  }
+  return line_cache;
+}
+
+bool UnifiedDiff::Impl::CompareEq(std::string_view lhs, std::string_view rhs) const {
+  const LineCache& lhs_cache = CompareCache(LorR::kLHS, lhs);
+  const LineCache& rhs_cache = CompareCache(LorR::kRHS, rhs);
+
+  if (lhs_cache.matches_ignore && rhs_cache.matches_ignore) {
+    return true;
+  }
+  return CompareEqImpl(lhs_cache.line, rhs_cache.line);
 }
 
 void UnifiedDiff::Impl::LoopBoth() {

@@ -48,7 +48,7 @@ def diff_test(
         ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
         ignore_blank_lines:       Ignore chunks which include only blank lines.
         ignore_case:              Whether to ignore letter case.
-        ignore_matching_chunks:   Whether `ignore_matching_lines` applies to chanks or single lines.
+        ignore_matching_chunks:   Whether `ignore_matching_lines` applies to chunks or single lines.
         ignore_matching_lines:    Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
         ignore_space_change:      Ignore traling whitespace changes.
         strip_comments:           Strip out anything starting from `strip_comments`.

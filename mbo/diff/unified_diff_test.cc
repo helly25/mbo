@@ -471,5 +471,102 @@ TEST_F(UnifiedDiffTest, Multi3) {
   )txt"))));
 }
 
+TEST_F(UnifiedDiffTest, RegexReplace) {
+  const file::Artefact lhs{
+      .data = R"txt(
+    foo
+    bar ERROR 1
+    baz
+    )txt",
+      .name = "lhs",
+  };
+  const file::Artefact rhs{
+      .data = R"txt(
+    foo
+    bar ERROR 2
+    baz
+    )txt",
+      .name = "rhs",
+  };
+  const file::Artefact oth{
+      .data = R"txt(
+    foo
+    oth ERROR 3
+    baz
+    )txt",
+      .name = "rhs",
+  };
+  EXPECT_THAT(UnifiedDiff(lhs, rhs, {}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+    --- lhs 1970-01-01 00:00:00.000 +0000
+    +++ rhs 1970-01-01 00:00:00.000 +0000
+    @@ -1,3 +1,3 @@
+     foo
+    -bar ERROR 1
+    +bar ERROR 2
+     baz
+  )txt"))));
+  EXPECT_THAT(
+      UnifiedDiff(
+          lhs, rhs,
+          {
+              .lhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/SAME/"),
+              .rhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,SAME,"),
+          }),
+      IsOkAndHolds(IsEmpty()))
+      << "The replacement made LHS and RHS the same, so there should be no difference.";
+  EXPECT_THAT(
+      UnifiedDiff(
+          lhs, rhs,
+          {
+              .lhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 SAME/"),
+              .rhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 SAME,"),
+          }),
+      IsOkAndHolds(IsEmpty()))
+      << "The replacement made LHS and RHS the same, so there should be no differences.";
+  EXPECT_THAT(
+      UnifiedDiff(
+          lhs, rhs,
+          {
+              .lhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 LHS/"),
+              .rhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 RHS,"),
+          }),
+      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+    --- lhs 1970-01-01 00:00:00.000 +0000
+    +++ rhs 1970-01-01 00:00:00.000 +0000
+    @@ -1,3 +1,3 @@
+     foo
+    -bar ERROR 1
+    +bar ERROR 2
+     baz
+  )txt"))))
+      << "The replacement changes the difference, still different though.";
+  EXPECT_THAT(
+      UnifiedDiff(
+          lhs, oth,
+          {
+              .lhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag("/ERROR.*//"),
+              .rhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag(",ERROR.*,,"),
+          }),
+      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+    --- lhs 1970-01-01 00:00:00.000 +0000
+    +++ rhs 1970-01-01 00:00:00.000 +0000
+    @@ -1,3 +1,3 @@
+     foo
+    -bar ERROR 1
+    +oth ERROR 3
+     baz
+  )txt"))))
+      << "The replacement equalizes the errors, still different though.";
+  EXPECT_THAT(
+      UnifiedDiff(
+          lhs, oth,
+          {
+              .lhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag("/bar/oth/"),
+              .rhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag(",ERROR 3,ERROR 1,"),
+          }),
+      IsOkAndHolds(IsEmpty()))
+      << "Different replacements that producr the same results lead to same zero differences.";
+}
+
 }  // namespace
 }  // namespace mbo::diff

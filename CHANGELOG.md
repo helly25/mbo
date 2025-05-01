@@ -1,5 +1,8 @@
 # 0.6.1
 
+* Added caching for unified `mbo::diff::UnifiedDiff` algorithm.
+* Added `--lhs_regex_replace` and `--rhs_regex_replace` flags to `//mbo/diff:unified_diff`.
+
 # 0.6.0
 
 * Moved bashtest out into `@com_helly25_bashtest` and used it from there.
