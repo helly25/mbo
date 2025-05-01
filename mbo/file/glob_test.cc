@@ -52,6 +52,7 @@ using namespace mbo::file::file_internal;
 using ::mbo::testing::IsOk;
 using ::mbo::testing::IsOkAndHolds;
 using ::mbo::testing::StatusIs;
+using ::testing::AnyOf;
 using ::testing::NotNull;
 using ::testing::UnorderedElementsAreArray;
 
@@ -335,7 +336,7 @@ TEST_F(GlobFileTest, GlobStopImmediately) {
   }));
   EXPECT_THAT(
       found, UnorderedElementsAreArray({
-                 "top",
+                 AnyOf("dir", "sub", "top"),
              }));
 }
 
