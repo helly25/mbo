@@ -48,11 +48,8 @@ namespace mbo::diff {
 // the algorithm is closer to O(max(L,R)) for small differences. In detail the
 // algorithm has a complexity of O(max(L,R)+dL*R+L*dR).
 class UnifiedDiff final {
- private:
-  struct NoCommentStripping {};
-
  public:
-  UnifiedDiff() = delete;
+  struct NoCommentStripping final {};
 
   using StripCommentOptions =
       std::variant<NoCommentStripping, mbo::strings::StripCommentArgs, mbo::strings::StripParsedCommentArgs>;
@@ -99,8 +96,7 @@ class UnifiedDiff final {
       const file::Artefact& rhs,
       const Options& options = Options::Default());
 
- private:
-  class Impl;
+  UnifiedDiff() = delete;
 };
 
 }  // namespace mbo::diff

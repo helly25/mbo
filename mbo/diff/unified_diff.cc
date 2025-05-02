@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <list>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -26,7 +27,6 @@
 #include <vector>
 
 #include "absl/cleanup/cleanup.h"
-#include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_log.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
@@ -70,11 +70,48 @@ namespace diff_internal {
 
 class Data {
  public:
+  class LineCache final {
+   public:
+    LineCache() = delete;
+
+    explicit LineCache(std::string_view line) : line_(line) {}
+
+    LineCache(const LineCache&) = delete;
+    LineCache& operator=(const LineCache&) = delete;
+    LineCache(LineCache&&) noexcept = default;
+    LineCache& operator=(LineCache&& oth) noexcept = default;
+    ~LineCache() noexcept = default;
+
+    std::string_view GetLine() const noexcept { return line_; }
+
+    const std::string& GetProcessed() const noexcept {
+      ABSL_DCHECK(is_processed_);
+      return processed_;
+    }
+
+    const LineCache& GetOrUpdate(
+        const UnifiedDiff::Options& options,
+        const std::optional<UnifiedDiff::RegexReplace>& regex_replace) const;
+
+    bool GetMatchesIgnore() const noexcept { return matches_ignore_; }
+
+   private:
+    std::string_view line_;
+    mutable std::string processed_;
+    mutable bool matches_ignore_ : 1 = false;
+    mutable bool is_processed_ : 1 = false;
+  };
+
   Data() = delete;
   ~Data() = default;
 
-  explicit Data(std::string_view text)
-      : got_nl_(absl::ConsumeSuffix(&text, "\n")),
+  Data(
+      const UnifiedDiff::Options& options,
+      const std::optional<UnifiedDiff::RegexReplace>& regex_replace,
+      std::string_view text)
+      : options_(options),
+        regex_replace_(regex_replace),
+        got_nl_(absl::ConsumeSuffix(&text, "\n")),
         last_line_no_nl_(LastLineIfNoNewLine(text, got_nl_)),
         text_(SplitAndAdaptLastLine(text, got_nl_, last_line_no_nl_)) {}
 
@@ -83,13 +120,19 @@ class Data {
   Data(Data&&) = delete;
   Data& operator=(Data&&) = delete;
 
-  std::string_view Next() noexcept { return Done() ? "" : text_[idx_++]; }
+  std::string_view Next() noexcept { return Done() ? "" : text_[idx_++].GetLine(); }
 
-  std::string_view Line() const noexcept { return Done() ? "" : text_[idx_]; }
+  std::string_view Line() const noexcept { return Done() ? "" : text_[idx_].GetLine(); }
 
   std::string_view Line(std::size_t ofs) const noexcept {
     ofs += idx_;
-    return ofs >= Size() ? "" : text_[ofs];
+    return ofs >= Size() ? "" : text_[ofs].GetLine();
+  }
+
+  const LineCache& GetCache(std::size_t ofs) const noexcept {
+    ofs += idx_;
+    ABSL_CHECK_LT(ofs, Size());
+    return text_.at(ofs).GetOrUpdate(options_, regex_replace_);
   }
 
   std::size_t Idx() const noexcept { return idx_; }
@@ -103,6 +146,8 @@ class Data {
   bool Done(std::size_t ofs) const noexcept { return idx_ + ofs >= Size(); }
 
   bool GotNl() const noexcept { return got_nl_; }
+
+  const std::optional<UnifiedDiff::RegexReplace>& GetRegexReplace() const noexcept { return regex_replace_; }
 
  private:
   static std::string LastLineIfNoNewLine(std::string_view text, bool got_nl) {
@@ -118,22 +163,18 @@ class Data {
     return absl::StrCat(text.substr(pos), "\n\\ No newline at end of file");
   }
 
-  static std::vector<std::string_view> SplitAndAdaptLastLine(
-      std::string_view text,
-      bool got_nl,
-      std::string_view last_line) {
+  static std::vector<LineCache> SplitAndAdaptLastLine(std::string_view text, bool got_nl, std::string_view last_line) {
     if (!got_nl && text.empty()) {
       // This means a zero-length input (not just a single new-line).
       // For that case `diff -du` does not show 'No newline at end of file'.
       return {};
     }
-    std::vector<std::string_view> result = absl::StrSplit(text, '\n');
+    std::vector<LineCache> result = absl::StrSplit(text, '\n');
     if (!got_nl) {
-      if (result.empty()) {
-        result.push_back(last_line);
-      } else {
-        result.back() = last_line;
+      if (!result.empty()) {
+        result.pop_back();
       }
+      result.emplace_back(last_line);
     }
     return result;
   }
@@ -156,11 +197,67 @@ class Data {
     return lines;
   }
 
+  const UnifiedDiff::Options& options_;
+  const std::optional<UnifiedDiff::RegexReplace>& regex_replace_;
   const bool got_nl_;
   const std::string last_line_no_nl_;
-  const std::vector<std::string_view> text_;
+  const std::vector<LineCache> text_;
   std::size_t idx_ = 0;
 };
+
+template<class... Args>
+struct Select : Args... {
+  explicit Select(Args... args) : Args(args)... {}
+
+  using Args::operator()...;
+};
+
+const Data::LineCache& Data::LineCache::GetOrUpdate(
+    const UnifiedDiff::Options& options,
+    const std::optional<UnifiedDiff::RegexReplace>& regex_replace) const {
+  if (is_processed_) {
+    return *this;
+  }
+  if (options.ignore_all_space) {
+    std::string stripped;
+    stripped.reserve(line_.length());
+    for (const char chr : line_) {
+      if (!absl::ascii_isspace(chr)) {
+        stripped.push_back(chr);
+      }
+    }
+    processed_ = stripped;
+  } else if (options.ignore_consecutive_space) {
+    processed_ = line_;
+    absl::RemoveExtraAsciiWhitespace(&processed_);
+  } else if (options.ignore_space_change) {
+    // TODO(helly25): Should be `StripAsciiWhitespace`.
+    processed_ = absl::StripTrailingAsciiWhitespace(line_);
+  } else {
+    processed_ = line_;
+  }
+  std::visit(
+      Select{
+          [&](UnifiedDiff::NoCommentStripping) {},
+          [&](const mbo::strings::StripCommentArgs& args) {
+            processed_ = mbo::strings::StripLineComments(processed_, args);
+          },
+          [&](const mbo::strings::StripParsedCommentArgs& args) {
+            const auto line_or = mbo::strings::StripParsedLineComments(processed_, args);
+            if (line_or.ok()) {
+              processed_ = *std::move(line_or);
+            }
+          }},
+      options.strip_comments);
+  if (regex_replace.has_value()) {
+    RE2::Replace(&processed_, *regex_replace->regex, regex_replace->replace);
+  }
+  if (options.ignore_matching_chunks && options.ignore_matching_lines.has_value()) {
+    matches_ignore_ = RE2::PartialMatch(processed_, *options.ignore_matching_lines);
+  }
+  is_processed_ = true;
+  return *this;
+}
 
 class Context final {
  public:
@@ -401,21 +498,21 @@ class Chunk {
 
 }  // namespace diff_internal
 
-class UnifiedDiff::Impl {
+class UnifiedDiffImpl {
  public:
-  Impl() = delete;
+  UnifiedDiffImpl() = delete;
 
-  Impl(const file::Artefact& lhs, const file::Artefact& rhs, const Options& options)
+  UnifiedDiffImpl(const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options)
       : options_(options),
-        lhs_data_(lhs.data, options_.lhs_regex_replace),
-        rhs_data_(rhs.data, options_.rhs_regex_replace),
+        lhs_data_(options_, options_.lhs_regex_replace, lhs.data),
+        rhs_data_(options_, options_.rhs_regex_replace, rhs.data),
         chunk_(lhs, rhs, options_) {}
 
-  ~Impl() = default;
-  Impl(const Impl&) = delete;
-  Impl& operator=(const Impl&) = delete;
-  Impl(Impl&&) = delete;
-  Impl& operator=(Impl&&) = delete;
+  ~UnifiedDiffImpl() = default;
+  UnifiedDiffImpl(const UnifiedDiffImpl&) = delete;
+  UnifiedDiffImpl& operator=(const UnifiedDiffImpl&) = delete;
+  UnifiedDiffImpl(UnifiedDiffImpl&&) = delete;
+  UnifiedDiffImpl& operator=(UnifiedDiffImpl&&) = delete;
 
   absl::StatusOr<std::string> Compute() {
     Loop();
@@ -423,22 +520,6 @@ class UnifiedDiff::Impl {
   }
 
  private:
-  struct LineCache {
-    std::string line;
-    bool matches_ignore = false;
-  };
-
-  struct LeftAndRight final : diff_internal::Data {
-    LeftAndRight(std::string_view text, const std::optional<RegexReplace>& regex_replace)
-        : Data(text), regex_replace(regex_replace) {}
-
-    const std::optional<RegexReplace>& regex_replace;
-    // The line caches should probably uses C++26's `std::hive`.
-    mutable absl::flat_hash_map<std::size_t, LineCache> line_cache_map;
-  };
-
-  bool CompareEqImpl(std::string_view lhs, std::string_view rhs) const noexcept;
-  const LineCache& CompareCache(const LeftAndRight& data, std::size_t ofs) const;
   bool CompareEq(std::size_t lhs, std::size_t rhs) const;
   void Loop();
   void LoopBoth();
@@ -449,82 +530,25 @@ class UnifiedDiff::Impl {
   absl::StatusOr<std::string> Finalize();
 
   const UnifiedDiff::Options& options_;
-  LeftAndRight lhs_data_;
-  LeftAndRight rhs_data_;
+  diff_internal::Data lhs_data_;
+  diff_internal::Data rhs_data_;
   diff_internal::Chunk chunk_;
 };
 
-template<class... Args>
-struct Select : Args... {
-  explicit Select(Args... args) : Args(args)... {}
-
-  using Args::operator()...;
-};
-
-bool UnifiedDiff::Impl::CompareEqImpl(std::string_view lhs, std::string_view rhs) const noexcept {
-  if (options_.ignore_case) {
-    return absl::EqualsIgnoreCase(lhs, rhs);
-  } else {
-    return lhs == rhs;
-  }
-}
-
-const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(const LeftAndRight& data, std::size_t ofs) const {
-  auto& line_cache_map = data.line_cache_map;
-  auto [line_cache_it, inserted] = line_cache_map.emplace(data.Idx(ofs), LineCache{});
-  LineCache& line_cache = line_cache_it->second;
-  if (inserted) {
-    std::string_view line = data.Line(ofs);
-    if (options_.ignore_all_space) {
-      line_cache.line.reserve(line.length());
-      for (const char chr : line) {
-        if (!absl::ascii_isspace(chr)) {
-          line_cache.line.push_back(chr);
-        }
-      }
-    } else if (options_.ignore_consecutive_space) {
-      line_cache.line = line;
-      absl::RemoveExtraAsciiWhitespace(&line_cache.line);
-    } else if (options_.ignore_space_change) {
-      // TODO(helly25): Should be `StripAsciiWhitespace`.
-      line_cache.line = absl::StripTrailingAsciiWhitespace(line);
-    } else {
-      line_cache.line = line;
-    }
-    std::visit(
-        Select{
-            [&](UnifiedDiff::NoCommentStripping) {},
-            [&](const mbo::strings::StripCommentArgs& args) {
-              std::string stripped{mbo::strings::StripLineComments(line_cache.line, args)};
-              line_cache.line = stripped;
-            },
-            [&](const mbo::strings::StripParsedCommentArgs& args) {
-              const auto line_or = mbo::strings::StripParsedLineComments(line_cache.line, args);
-              if (line_or.ok()) {
-                line_cache.line = *line_or;
-              }
-            }},
-        options_.strip_comments);
-    if (data.regex_replace.has_value()) {
-      RE2::Replace(&line_cache.line, *data.regex_replace->regex, data.regex_replace->replace);
-    }
-    if (options_.ignore_matching_chunks && options_.ignore_matching_lines.has_value()) {
-      line_cache.matches_ignore = RE2::PartialMatch(line_cache.line, *options_.ignore_matching_lines);
-    }
-  }
-  return line_cache;
-}
-
-bool UnifiedDiff::Impl::CompareEq(std::size_t lhs, std::size_t rhs) const {
-  const LineCache& lhs_cache = CompareCache(lhs_data_, lhs);
-  const LineCache& rhs_cache = CompareCache(rhs_data_, rhs);
-  if (lhs_cache.matches_ignore && rhs_cache.matches_ignore) {
+bool UnifiedDiffImpl::CompareEq(std::size_t lhs, std::size_t rhs) const {
+  const auto& lhs_cache = lhs_data_.GetCache(lhs);
+  const auto& rhs_cache = rhs_data_.GetCache(rhs);
+  if (lhs_cache.GetMatchesIgnore() && rhs_cache.GetMatchesIgnore()) {
     return true;
   }
-  return CompareEqImpl(lhs_cache.line, rhs_cache.line);
+  if (options_.ignore_case) {
+    return absl::EqualsIgnoreCase(lhs_cache.GetProcessed(), rhs_cache.GetProcessed());
+  } else {
+    return lhs_cache.GetProcessed() == rhs_cache.GetProcessed();
+  }
 }
 
-void UnifiedDiff::Impl::LoopBoth() {
+void UnifiedDiffImpl::LoopBoth() {
   while (!lhs_data_.Done() && !rhs_data_.Done() && CompareEq(0, 0)) {
     chunk_.PushBoth(lhs_data_.Idx(), rhs_data_.Idx(), lhs_data_.Line());
     lhs_data_.Next();
@@ -532,7 +556,7 @@ void UnifiedDiff::Impl::LoopBoth() {
   }
 }
 
-std::tuple<std::size_t, std::size_t, bool> UnifiedDiff::Impl::FindNextRight() {
+std::tuple<std::size_t, std::size_t, bool> UnifiedDiffImpl::FindNextRight() {
   std::size_t lhs = 1;  // L+0 != R+0 -> start at lhs = 1, R1 = 0
   std::size_t rhs = 0;
   bool equal = false;
@@ -553,7 +577,7 @@ std::tuple<std::size_t, std::size_t, bool> UnifiedDiff::Impl::FindNextRight() {
   return {lhs, rhs, equal};
 }
 
-std::tuple<std::size_t, std::size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
+std::tuple<std::size_t, std::size_t, bool> UnifiedDiffImpl::FindNextLeft() {
   std::size_t lhs = 0;
   std::size_t rhs = 1;  // L+0 != R+0 -> start at L2 = 0, rhs = 1
   bool equal = false;
@@ -574,7 +598,7 @@ std::tuple<std::size_t, std::size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
   return {lhs, rhs, equal};
 }
 
-bool UnifiedDiff::Impl::PastMaxDiffChunkLength(std::size_t& loop) {
+bool UnifiedDiffImpl::PastMaxDiffChunkLength(std::size_t& loop) {
   if (++loop > options_.max_diff_chunk_length) {
     static constexpr std::string_view kMsg = "Maximum loop count reached";
     ABSL_LOG(ERROR) << kMsg;
@@ -584,7 +608,7 @@ bool UnifiedDiff::Impl::PastMaxDiffChunkLength(std::size_t& loop) {
   return false;
 }
 
-bool UnifiedDiff::Impl::FindNext() {
+bool UnifiedDiffImpl::FindNext() {
   auto [lhs1, rhs1, eq1] = FindNextRight();
   auto [lhs2, rhs2, eq2] = FindNextLeft();
   if (eq1 && (!eq2 || AbsDiff(lhs1, rhs1) < AbsDiff(lhs2, rhs2))) {
@@ -620,7 +644,7 @@ bool UnifiedDiff::Impl::FindNext() {
   return false;
 }
 
-void UnifiedDiff::Impl::Loop() {
+void UnifiedDiffImpl::Loop() {
   while (!lhs_data_.Done() && !rhs_data_.Done()) {
     LoopBoth();
     std::size_t loop = 0;
@@ -628,7 +652,7 @@ void UnifiedDiff::Impl::Loop() {
   }
 }
 
-absl::StatusOr<std::string> UnifiedDiff::Impl::Finalize() {
+absl::StatusOr<std::string> UnifiedDiffImpl::Finalize() {
   while (!lhs_data_.Done()) {
     const std::size_t l_idx = lhs_data_.Idx();
     chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
@@ -647,7 +671,7 @@ absl::StatusOr<std::string> UnifiedDiff::Diff(
   if (lhs.data == rhs.data) {
     return std::string();
   }
-  Impl diff(lhs, rhs, options);
+  UnifiedDiffImpl diff(lhs, rhs, options);
   return diff.Compute();
 }
 
