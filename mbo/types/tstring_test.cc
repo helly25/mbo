@@ -40,7 +40,6 @@ namespace {
 // NOLINTBEGIN(readability-static-accessed-through-instance)
 // NOLINTBEGIN(readability-static-definition-in-anonymous-namespace)
 
-using std::size_t;
 using ::testing::Conditional;
 using ::testing::IsEmpty;
 using ::testing::Ne;
@@ -81,10 +80,10 @@ struct TStringTest : ::testing::Test {
 const std::string TStringTest::kTestC1{"1_test"};
 const std::string TStringTest::kTestC2{"2_test"};
 
-template<tstring TString, size_t Length>
+template<tstring TString, std::size_t Length>
 struct TestInfo {
   static constexpr tstring kStr = TString;
-  static constexpr size_t kLength = Length;
+  static constexpr std::size_t kLength = Length;
 };
 
 template<typename T>
@@ -625,15 +624,15 @@ TEST_F(TStringTest, BeginEnd) {
 
 TEST_F(TStringTest, FindFirstLast) {
   {
-    static constexpr size_t kPosF = kTestA1.find_first_of('e');  // Verify `constexpr`
+    static constexpr std::size_t kPosF = kTestA1.find_first_of('e');  // Verify `constexpr`
     EXPECT_THAT(kPosF, 3);
   }
   {
-    static constexpr size_t kPos = kTestA1.find_first_of("asx");  // Verify `constexpr`
+    static constexpr std::size_t kPos = kTestA1.find_first_of("asx");  // Verify `constexpr`
     EXPECT_THAT(kPos, 4);
-    static constexpr size_t kPos2 = kTestA1.find_first_of("astx");  // Verify `constexpr`
+    static constexpr std::size_t kPos2 = kTestA1.find_first_of("astx");  // Verify `constexpr`
     EXPECT_THAT(kPos2, 2);
-    static constexpr size_t kPos3 = kTestA1.find_first_of("astx", 3);  // Verify `constexpr`
+    static constexpr std::size_t kPos3 = kTestA1.find_first_of("astx", 3);  // Verify `constexpr`
     EXPECT_THAT(kPos3, 4);
   }
   EXPECT_THAT(kTestA1.find_first_of('e', 3), 3);
@@ -643,17 +642,17 @@ TEST_F(TStringTest, FindFirstLast) {
   EXPECT_THAT(kTestA1.find_first_of('t', 3), 5);
   EXPECT_THAT(kTestA1.find_first_of('x'), tstring<>::npos);
   {
-    static constexpr size_t kPos = kTestA1.find_last_of('e');  // Verify `constexpr`
+    static constexpr std::size_t kPos = kTestA1.find_last_of('e');  // Verify `constexpr`
     EXPECT_THAT(kPos, 3);
-    static constexpr size_t kPos2 = kTestA1.find_last_of('t');  // Verify `constexpr`
+    static constexpr std::size_t kPos2 = kTestA1.find_last_of('t');  // Verify `constexpr`
     EXPECT_THAT(kPos2, 5);
   }
   {
-    static constexpr size_t kPos = kTestA1.find_last_of("asx");  // Verify `constexpr`
+    static constexpr std::size_t kPos = kTestA1.find_last_of("asx");  // Verify `constexpr`
     EXPECT_THAT(kPos, 4);
-    static constexpr size_t kPos2 = kTestA1.find_last_of("astx");  // Verify `constexpr`
+    static constexpr std::size_t kPos2 = kTestA1.find_last_of("astx");  // Verify `constexpr`
     EXPECT_THAT(kPos2, 5);
-    static constexpr size_t kPos3 = kTestA1.find_last_of("atx", 4);  // Verify `constexpr`
+    static constexpr std::size_t kPos3 = kTestA1.find_last_of("atx", 4);  // Verify `constexpr`
     EXPECT_THAT(kPos3, 2);
   }
   EXPECT_THAT(kTestA1.find_last_of('t'), 5);  // not 3 which would be first

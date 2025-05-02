@@ -510,7 +510,7 @@ class LimitedVector final {
 template<typename... T>
 LimitedVector(T&&... v) -> LimitedVector<std::common_type_t<T...>, sizeof...(T)>;
 
-template<size_t LN, size_t RN, typename LHS, typename RHS>
+template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
   std::size_t minsize = std::min(LN, RN);
@@ -523,7 +523,7 @@ constexpr inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const Limit
   return lhs.size() <=> rhs.size();
 }
 
-template<size_t LN, size_t RN, typename LHS, typename RHS>
+template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
   if (lhs.size() != rhs.size()) {
@@ -539,7 +539,7 @@ constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const Limite
   return true;
 }
 
-template<size_t LN, size_t RN, typename LHS, typename RHS>
+template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline bool operator<(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
   std::size_t minsize = std::min(LN, RN);

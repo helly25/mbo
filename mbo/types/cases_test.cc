@@ -22,9 +22,6 @@
 #include "gtest/gtest.h"
 
 namespace mbo::types {
-
-using std::size_t;
-
 namespace {
 
 class CasesTest : public ::testing::Test {};
@@ -60,9 +57,9 @@ TEST_F(CasesTest, CasesIndex) {
 }
 
 TEST_F(CasesTest, Else) {
-  using Case0 = std::integral_constant<size_t, 0>;
-  using Case1 = std::integral_constant<size_t, 1>;
-  using Case2 = std::integral_constant<size_t, 2>;
+  using Case0 = std::integral_constant<std::size_t, 0>;
+  using Case1 = std::integral_constant<std::size_t, 1>;
+  using Case2 = std::integral_constant<std::size_t, 2>;
   EXPECT_THAT((Cases<IfThen<false, Case0>, IfThen<false, Case1>, IfElse<Case2>>::value), 2);
   EXPECT_THAT((Cases<IfThen<false, Case0>, IfThen<true, Case1>, IfElse<Case2>>::value), 1);
   EXPECT_THAT((Cases<IfThen<true, Case0>, IfThen<false, Case1>, IfElse<Case2>>::value), 0);

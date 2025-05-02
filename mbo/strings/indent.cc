@@ -26,18 +26,16 @@
 
 namespace mbo::strings {
 
-using std::size_t;
-
 std::vector<std::string_view> DropIndentAndSplit(std::string_view text) {
   // If the first line is empty, simply remove it and the new first line will
   // determine the indent to remove. Otherwise the first line will be left alone
   // and the second line will determine the indent to remove.
   // On the last line we remove any indent unconditionally.
-  const size_t start = absl::ConsumePrefix(&text, "\n") ? 0 : 1;
+  const std::size_t start = absl::ConsumePrefix(&text, "\n") ? 0 : 1;
 
   std::vector<std::string_view> lines = absl::StrSplit(text, '\n');
   if (lines.size() > start) {
-    size_t pos = lines[start].find_first_not_of(" \t");
+    std::size_t pos = lines[start].find_first_not_of(" \t");
     if (pos == std::string_view::npos) {
       pos = lines[start].size();
     }
@@ -48,7 +46,7 @@ std::vector<std::string_view> DropIndentAndSplit(std::string_view text) {
     if (lines.back().find_first_not_of(" \t") == std::string::npos) {
       lines.back() = "";
     }
-    for (size_t i = start; i < lines.size(); ++i) {
+    for (std::size_t i = start; i < lines.size(); ++i) {
       absl::ConsumePrefix(&lines[i], prefix);
     }
   }
