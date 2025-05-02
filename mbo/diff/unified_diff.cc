@@ -43,8 +43,6 @@
 
 namespace mbo::diff {
 
-using std::size_t;
-
 std::optional<UnifiedDiff::RegexReplace> UnifiedDiff::ParseRegexReplaceFlag(std::string_view flag) {
   if (flag.empty()) {
     return std::nullopt;
@@ -59,7 +57,7 @@ std::optional<UnifiedDiff::RegexReplace> UnifiedDiff::ParseRegexReplaceFlag(std:
 }
 
 namespace {
-size_t AbsDiff(size_t lhs, size_t rhs) {
+std::size_t AbsDiff(std::size_t lhs, std::size_t rhs) {
   if (lhs > rhs) {
     return lhs - rhs;
   } else {
@@ -89,20 +87,20 @@ class Data final {
 
   std::string_view Line() const { return Done() ? "" : text_[idx_]; }
 
-  std::string_view Line(size_t ofs) const {
+  std::string_view Line(std::size_t ofs) const {
     ofs += idx_;
     return ofs >= Size() ? "" : text_[ofs];
   }
 
-  size_t Idx() const { return idx_; }
+  std::size_t Idx() const { return idx_; }
 
-  size_t Idx(size_t ofs) const { return idx_ + ofs; }
+  std::size_t Idx(std::size_t ofs) const { return idx_ + ofs; }
 
-  size_t Size() const { return text_.size(); }
+  std::size_t Size() const { return text_.size(); }
 
   bool Done() const { return idx_ >= Size(); }
 
-  bool Done(size_t ofs) const { return idx_ + ofs >= Size(); }
+  bool Done(std::size_t ofs) const { return idx_ + ofs >= Size(); }
 
   bool GotNl() const { return got_nl_; }
 
@@ -161,7 +159,7 @@ class Data final {
   const bool got_nl_;
   const std::string last_line_no_nl_;
   const std::vector<std::string_view> text_;
-  size_t idx_ = 0;
+  std::size_t idx_ = 0;
 };
 
 class Context final {
@@ -199,11 +197,11 @@ class Context final {
     return result;
   }
 
-  size_t Max() const { return options_.context_size; }
+  std::size_t Max() const { return options_.context_size; }
 
-  size_t Size() const { return data_.size(); }
+  std::size_t Size() const { return data_.size(); }
 
-  size_t HalfSsize() const { return HalfFull() ? Max() : data_.size(); }
+  std::size_t HalfSsize() const { return HalfFull() ? Max() : data_.size(); }
 
   void Clear() { data_.clear(); }
 
@@ -228,7 +226,7 @@ class Chunk {
   Chunk(Chunk&&) = delete;
   Chunk& operator=(Chunk&&) = delete;
 
-  void PushBoth(size_t lhs_idx, size_t rhs_idx, std::string_view ctx) {
+  void PushBoth(std::size_t lhs_idx, std::size_t rhs_idx, std::string_view ctx) {
     MoveDiffs();
     if (!data_.empty() && context_.Full()) {
       // We have a finished chunk_.
@@ -248,7 +246,7 @@ class Chunk {
     context_.Push(ctx, lhs_size_ == 0 && rhs_size_ == 0);
   }
 
-  void PushLhs(size_t lhs_idx, size_t rhs_idx, std::string_view lhs) {
+  void PushLhs(std::size_t lhs_idx, std::size_t rhs_idx, std::string_view lhs) {
     if (options_.skip_left_deletions) {
       return;
     }
@@ -259,7 +257,7 @@ class Chunk {
     ++lhs_size_;
   }
 
-  void PushRhs(size_t lhs_idx, size_t rhs_idx, std::string_view rhs) {
+  void PushRhs(std::size_t lhs_idx, std::size_t rhs_idx, std::string_view rhs) {
     only_blank_lines_ &= rhs.empty();
     only_matching_lines_ &= options_.ignore_matching_lines && RE2::PartialMatch(rhs, *options_.ignore_matching_lines);
     CheckContext(lhs_idx, rhs_idx);
@@ -302,7 +300,7 @@ class Chunk {
     return FileHeader(either, options);
   }
 
-  void CheckContext(size_t lhs_idx, size_t rhs_idx) {
+  void CheckContext(std::size_t lhs_idx, std::size_t rhs_idx) {
     if (context_.Empty() && lhs_size_ == 0 && rhs_size_ == 0) {
       lhs_idx_ = lhs_idx;
       rhs_idx_ = rhs_idx;
@@ -322,7 +320,7 @@ class Chunk {
   }
 
   void MoveContext(bool last) {
-    size_t ctx = last ? context_.HalfSsize() : context_.Size();
+    std::size_t ctx = last ? context_.HalfSsize() : context_.Size();
     while (ctx-- > 0) {
       data_.emplace_back(' ', context_.PopFront());
       ++lhs_size_;
@@ -330,7 +328,7 @@ class Chunk {
     }
   }
 
-  static std::string ChunkPos(bool empty, size_t idx, size_t size) {
+  static std::string ChunkPos(bool empty, std::size_t idx, std::size_t size) {
     if (empty) {
       return "0,0";
     } else if (size == 1) {
@@ -392,10 +390,10 @@ class Chunk {
   std::list<std::pair<char, std::string_view>> data_;
   std::list<std::string_view> lhs_;
   std::list<std::string_view> rhs_;
-  size_t lhs_idx_ = 0;
-  size_t rhs_idx_ = 0;
-  size_t lhs_size_ = 0;
-  size_t rhs_size_ = 0;
+  std::size_t lhs_idx_ = 0;
+  std::size_t rhs_idx_ = 0;
+  std::size_t lhs_size_ = 0;
+  std::size_t rhs_size_ = 0;
   bool diff_found_ = false;
   bool only_blank_lines_ = true;
   bool only_matching_lines_ = true;
@@ -435,9 +433,9 @@ class UnifiedDiff::Impl {
   void Loop();
   void LoopBoth();
   bool FindNext();
-  std::tuple<size_t, size_t, bool> FindNextRight();
-  std::tuple<size_t, size_t, bool> FindNextLeft();
-  bool PastMaxDiffChunkLength(size_t& loop);
+  std::tuple<std::size_t, std::size_t, bool> FindNextRight();
+  std::tuple<std::size_t, std::size_t, bool> FindNextLeft();
+  bool PastMaxDiffChunkLength(std::size_t& loop);
   absl::StatusOr<std::string> Finalize();
 
   const UnifiedDiff::Options& options_;
@@ -532,9 +530,9 @@ void UnifiedDiff::Impl::LoopBoth() {
   }
 }
 
-std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextRight() {
-  size_t lhs = 1;  // L+0 != R+0 -> start at lhs = 1, R1 = 0
-  size_t rhs = 0;
+std::tuple<std::size_t, std::size_t, bool> UnifiedDiff::Impl::FindNextRight() {
+  std::size_t lhs = 1;  // L+0 != R+0 -> start at lhs = 1, R1 = 0
+  std::size_t rhs = 0;
   bool equal = false;
   while (!rhs_data_.Done(rhs)) {
     while (!lhs_data_.Done(lhs)) {
@@ -553,9 +551,9 @@ std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextRight() {
   return {lhs, rhs, equal};
 }
 
-std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
-  size_t lhs = 0;
-  size_t rhs = 1;  // L+0 != R+0 -> start at L2 = 0, rhs = 1
+std::tuple<std::size_t, std::size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
+  std::size_t lhs = 0;
+  std::size_t rhs = 1;  // L+0 != R+0 -> start at L2 = 0, rhs = 1
   bool equal = false;
   while (!lhs_data_.Done(lhs)) {
     while (!rhs_data_.Done(rhs)) {
@@ -574,7 +572,7 @@ std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
   return {lhs, rhs, equal};
 }
 
-bool UnifiedDiff::Impl::PastMaxDiffChunkLength(size_t& loop) {
+bool UnifiedDiff::Impl::PastMaxDiffChunkLength(std::size_t& loop) {
   if (++loop > options_.max_diff_chunk_length) {
     static constexpr std::string_view kMsg = "Maximum loop count reached";
     ABSL_LOG(ERROR) << kMsg;
@@ -588,32 +586,32 @@ bool UnifiedDiff::Impl::FindNext() {
   auto [lhs1, rhs1, eq1] = FindNextRight();
   auto [lhs2, rhs2, eq2] = FindNextLeft();
   if (eq1 && (!eq2 || AbsDiff(lhs1, rhs1) < AbsDiff(lhs2, rhs2))) {
-    for (size_t i = 0; i < lhs1; ++i) {
-      const size_t l_idx = lhs_data_.Idx();  // Compiler might execute `Next` first.
+    for (std::size_t i = 0; i < lhs1; ++i) {
+      const std::size_t l_idx = lhs_data_.Idx();  // Compiler might execute `Next` first.
       chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
     }
-    for (size_t i = 0; i < rhs1; ++i) {
-      const size_t r_idx = rhs_data_.Idx();
+    for (std::size_t i = 0; i < rhs1; ++i) {
+      const std::size_t r_idx = rhs_data_.Idx();
       chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
     }
     return true;
   } else if (eq2) {
-    for (size_t i = 0; i < lhs2; ++i) {
-      const size_t l_idx = lhs_data_.Idx();
+    for (std::size_t i = 0; i < lhs2; ++i) {
+      const std::size_t l_idx = lhs_data_.Idx();
       chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
     }
-    for (size_t i = 0; i < rhs2; ++i) {
-      const size_t r_idx = rhs_data_.Idx();
+    for (std::size_t i = 0; i < rhs2; ++i) {
+      const std::size_t r_idx = rhs_data_.Idx();
       chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
     }
     return true;
   } else {
     if (!lhs_data_.Done()) {
-      const size_t l_idx = lhs_data_.Idx();
+      const std::size_t l_idx = lhs_data_.Idx();
       chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
     }
     if (!rhs_data_.Done()) {
-      const size_t r_idx = rhs_data_.Idx();
+      const std::size_t r_idx = rhs_data_.Idx();
       chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
     }
   }
@@ -623,18 +621,18 @@ bool UnifiedDiff::Impl::FindNext() {
 void UnifiedDiff::Impl::Loop() {
   while (!lhs_data_.Done() && !rhs_data_.Done()) {
     LoopBoth();
-    size_t loop = 0;
+    std::size_t loop = 0;
     while (!lhs_data_.Done() && !rhs_data_.Done() && !PastMaxDiffChunkLength(loop) && !FindNext()) {}
   }
 }
 
 absl::StatusOr<std::string> UnifiedDiff::Impl::Finalize() {
   while (!lhs_data_.Done()) {
-    const size_t l_idx = lhs_data_.Idx();
+    const std::size_t l_idx = lhs_data_.Idx();
     chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
   }
   while (!rhs_data_.Done()) {
-    const size_t r_idx = rhs_data_.Idx();
+    const std::size_t r_idx = rhs_data_.Idx();
     chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
   }
   return chunk_.MoveOutput();
