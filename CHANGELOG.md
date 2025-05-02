@@ -1,7 +1,8 @@
-# 0.6.1
+# 0.7.0
 
 * Added caching for unified `mbo::diff::UnifiedDiff` algorithm.
 * Added `--lhs_regex_replace` and `--rhs_regex_replace` flags to `//mbo/diff:unified_diff`.
+* Dropped all `using std::size_t` declarations.
 
 # 0.6.0
 

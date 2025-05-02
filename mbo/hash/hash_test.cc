@@ -79,11 +79,11 @@ class RandomStringGenerator {
   std::string GetRandomString(std::size_t max_len = kDefaultMaxLen) const {
     std::uniform_int_distribution<> str_len_dist(0, static_cast<int>(max_len));
 
-    size_t length{0};
+    std::size_t length{0};
     while ((length = str_len_dist(mt_)) > max_len) {};
     std::string str;
     str.resize(length);
-    for (size_t n = 0; n < length; ++n) {
+    for (std::size_t n = 0; n < length; ++n) {
       str[n] = static_cast<char>(char_dist_(mt_));
     }
     return str;

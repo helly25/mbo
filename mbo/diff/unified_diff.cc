@@ -43,8 +43,6 @@
 
 namespace mbo::diff {
 
-using std::size_t;
-
 std::optional<UnifiedDiff::RegexReplace> UnifiedDiff::ParseRegexReplaceFlag(std::string_view flag) {
   if (flag.empty()) {
     return std::nullopt;
@@ -59,7 +57,7 @@ std::optional<UnifiedDiff::RegexReplace> UnifiedDiff::ParseRegexReplaceFlag(std:
 }
 
 namespace {
-size_t AbsDiff(size_t lhs, size_t rhs) {
+std::size_t AbsDiff(std::size_t lhs, std::size_t rhs) {
   if (lhs > rhs) {
     return lhs - rhs;
   } else {
@@ -70,7 +68,7 @@ size_t AbsDiff(size_t lhs, size_t rhs) {
 
 namespace diff_internal {
 
-class Data final {
+class Data {
  public:
   Data() = delete;
   ~Data() = default;
@@ -85,26 +83,26 @@ class Data final {
   Data(Data&&) = delete;
   Data& operator=(Data&&) = delete;
 
-  std::string_view Next() { return Done() ? "" : text_[idx_++]; }
+  std::string_view Next() noexcept { return Done() ? "" : text_[idx_++]; }
 
-  std::string_view Line() const { return Done() ? "" : text_[idx_]; }
+  std::string_view Line() const noexcept { return Done() ? "" : text_[idx_]; }
 
-  std::string_view Line(size_t ofs) const {
+  std::string_view Line(std::size_t ofs) const noexcept {
     ofs += idx_;
     return ofs >= Size() ? "" : text_[ofs];
   }
 
-  size_t Idx() const { return idx_; }
+  std::size_t Idx() const noexcept { return idx_; }
 
-  size_t Idx(size_t ofs) const { return idx_ + ofs; }
+  std::size_t Idx(std::size_t ofs) const noexcept { return idx_ + ofs; }
 
-  size_t Size() const { return text_.size(); }
+  std::size_t Size() const noexcept { return text_.size(); }
 
-  bool Done() const { return idx_ >= Size(); }
+  bool Done() const noexcept { return idx_ >= Size(); }
 
-  bool Done(size_t ofs) const { return idx_ + ofs >= Size(); }
+  bool Done(std::size_t ofs) const noexcept { return idx_ + ofs >= Size(); }
 
-  bool GotNl() const { return got_nl_; }
+  bool GotNl() const noexcept { return got_nl_; }
 
  private:
   static std::string LastLineIfNoNewLine(std::string_view text, bool got_nl) {
@@ -161,7 +159,7 @@ class Data final {
   const bool got_nl_;
   const std::string last_line_no_nl_;
   const std::vector<std::string_view> text_;
-  size_t idx_ = 0;
+  std::size_t idx_ = 0;
 };
 
 class Context final {
@@ -176,11 +174,11 @@ class Context final {
   Context(Context&&) = delete;
   Context& operator=(Context&&) = delete;
 
-  bool Empty() const { return data_.empty(); }
+  bool Empty() const noexcept { return data_.empty(); }
 
-  bool HalfFull() const { return Full(true); }
+  bool HalfFull() const noexcept { return Full(true); }
 
-  bool Full(bool half = false) const { return data_.size() >= (half ? Max() : 2 * Max()); }
+  bool Full(bool half = false) const noexcept { return data_.size() >= (half ? Max() : 2 * Max()); }
 
   bool Push(std::string_view line, bool half = false) {
     if (Max() == 0) {
@@ -193,19 +191,19 @@ class Context final {
     return Full(half);
   }
 
-  std::string_view PopFront() {
+  std::string_view PopFront() noexcept {
     const std::string_view result = data_.front();
     data_.pop_front();
     return result;
   }
 
-  size_t Max() const { return options_.context_size; }
+  std::size_t Max() const noexcept { return options_.context_size; }
 
-  size_t Size() const { return data_.size(); }
+  std::size_t Size() const noexcept { return data_.size(); }
 
-  size_t HalfSsize() const { return HalfFull() ? Max() : data_.size(); }
+  std::size_t HalfSsize() const noexcept { return HalfFull() ? Max() : data_.size(); }
 
-  void Clear() { data_.clear(); }
+  void Clear() noexcept { data_.clear(); }
 
  private:
   const UnifiedDiff::Options& options_;
@@ -228,7 +226,7 @@ class Chunk {
   Chunk(Chunk&&) = delete;
   Chunk& operator=(Chunk&&) = delete;
 
-  void PushBoth(size_t lhs_idx, size_t rhs_idx, std::string_view ctx) {
+  void PushBoth(std::size_t lhs_idx, std::size_t rhs_idx, std::string_view ctx) {
     MoveDiffs();
     if (!data_.empty() && context_.Full()) {
       // We have a finished chunk_.
@@ -248,7 +246,7 @@ class Chunk {
     context_.Push(ctx, lhs_size_ == 0 && rhs_size_ == 0);
   }
 
-  void PushLhs(size_t lhs_idx, size_t rhs_idx, std::string_view lhs) {
+  void PushLhs(std::size_t lhs_idx, std::size_t rhs_idx, std::string_view lhs) {
     if (options_.skip_left_deletions) {
       return;
     }
@@ -259,7 +257,7 @@ class Chunk {
     ++lhs_size_;
   }
 
-  void PushRhs(size_t lhs_idx, size_t rhs_idx, std::string_view rhs) {
+  void PushRhs(std::size_t lhs_idx, std::size_t rhs_idx, std::string_view rhs) {
     only_blank_lines_ &= rhs.empty();
     only_matching_lines_ &= options_.ignore_matching_lines && RE2::PartialMatch(rhs, *options_.ignore_matching_lines);
     CheckContext(lhs_idx, rhs_idx);
@@ -302,7 +300,7 @@ class Chunk {
     return FileHeader(either, options);
   }
 
-  void CheckContext(size_t lhs_idx, size_t rhs_idx) {
+  void CheckContext(std::size_t lhs_idx, std::size_t rhs_idx) {
     if (context_.Empty() && lhs_size_ == 0 && rhs_size_ == 0) {
       lhs_idx_ = lhs_idx;
       rhs_idx_ = rhs_idx;
@@ -322,7 +320,7 @@ class Chunk {
   }
 
   void MoveContext(bool last) {
-    size_t ctx = last ? context_.HalfSsize() : context_.Size();
+    std::size_t ctx = last ? context_.HalfSsize() : context_.Size();
     while (ctx-- > 0) {
       data_.emplace_back(' ', context_.PopFront());
       ++lhs_size_;
@@ -330,7 +328,7 @@ class Chunk {
     }
   }
 
-  static std::string ChunkPos(bool empty, size_t idx, size_t size) {
+  static std::string ChunkPos(bool empty, std::size_t idx, std::size_t size) {
     if (empty) {
       return "0,0";
     } else if (size == 1) {
@@ -392,10 +390,10 @@ class Chunk {
   std::list<std::pair<char, std::string_view>> data_;
   std::list<std::string_view> lhs_;
   std::list<std::string_view> rhs_;
-  size_t lhs_idx_ = 0;
-  size_t rhs_idx_ = 0;
-  size_t lhs_size_ = 0;
-  size_t rhs_size_ = 0;
+  std::size_t lhs_idx_ = 0;
+  std::size_t rhs_idx_ = 0;
+  std::size_t lhs_size_ = 0;
+  std::size_t rhs_size_ = 0;
   bool diff_found_ = false;
   bool only_blank_lines_ = true;
   bool only_matching_lines_ = true;
@@ -408,7 +406,10 @@ class UnifiedDiff::Impl {
   Impl() = delete;
 
   Impl(const file::Artefact& lhs, const file::Artefact& rhs, const Options& options)
-      : options_(options), lhs_data_(lhs.data), rhs_data_(rhs.data), chunk_(lhs, rhs, options_) {}
+      : options_(options),
+        lhs_data_(lhs.data, options_.lhs_regex_replace),
+        rhs_data_(rhs.data, options_.rhs_regex_replace),
+        chunk_(lhs, rhs, options_) {}
 
   ~Impl() = default;
   Impl(const Impl&) = delete;
@@ -422,31 +423,35 @@ class UnifiedDiff::Impl {
   }
 
  private:
-  enum LorR { kLHS, kRHS };
-
   struct LineCache {
     std::string line;
     bool matches_ignore = false;
   };
 
-  bool CompareEqImpl(std::string_view lhs, std::string_view rhs) const;
-  const LineCache& CompareCache(LorR which, const diff_internal::Data& data, std::size_t ofs) const;
+  struct LeftAndRight final : diff_internal::Data {
+    LeftAndRight(std::string_view text, const std::optional<RegexReplace>& regex_replace)
+        : Data(text), regex_replace(regex_replace) {}
+
+    const std::optional<RegexReplace>& regex_replace;
+    // The line caches should probably uses C++26's `std::hive`.
+    mutable absl::flat_hash_map<std::size_t, LineCache> line_cache_map;
+  };
+
+  bool CompareEqImpl(std::string_view lhs, std::string_view rhs) const noexcept;
+  const LineCache& CompareCache(const LeftAndRight& data, std::size_t ofs) const;
   bool CompareEq(std::size_t lhs, std::size_t rhs) const;
   void Loop();
   void LoopBoth();
   bool FindNext();
-  std::tuple<size_t, size_t, bool> FindNextRight();
-  std::tuple<size_t, size_t, bool> FindNextLeft();
-  bool PastMaxDiffChunkLength(size_t& loop);
+  std::tuple<std::size_t, std::size_t, bool> FindNextRight();
+  std::tuple<std::size_t, std::size_t, bool> FindNextLeft();
+  bool PastMaxDiffChunkLength(std::size_t& loop);
   absl::StatusOr<std::string> Finalize();
 
   const UnifiedDiff::Options& options_;
-  diff_internal::Data lhs_data_;
-  diff_internal::Data rhs_data_;
+  LeftAndRight lhs_data_;
+  LeftAndRight rhs_data_;
   diff_internal::Chunk chunk_;
-  // The line caches should probably uses C++26's `std::hive`.
-  mutable absl::flat_hash_map<std::size_t, LineCache> lhs_line_cache_map_;
-  mutable absl::flat_hash_map<std::size_t, LineCache> rhs_line_cache_map_;
 };
 
 template<class... Args>
@@ -456,7 +461,7 @@ struct Select : Args... {
   using Args::operator()...;
 };
 
-bool UnifiedDiff::Impl::CompareEqImpl(std::string_view lhs, std::string_view rhs) const {
+bool UnifiedDiff::Impl::CompareEqImpl(std::string_view lhs, std::string_view rhs) const noexcept {
   if (options_.ignore_case) {
     return absl::EqualsIgnoreCase(lhs, rhs);
   } else {
@@ -464,11 +469,8 @@ bool UnifiedDiff::Impl::CompareEqImpl(std::string_view lhs, std::string_view rhs
   }
 }
 
-const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(
-    LorR which,
-    const diff_internal::Data& data,
-    std::size_t ofs) const {
-  auto& line_cache_map = which == LorR::kLHS ? lhs_line_cache_map_ : rhs_line_cache_map_;
+const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(const LeftAndRight& data, std::size_t ofs) const {
+  auto& line_cache_map = data.line_cache_map;
   auto [line_cache_it, inserted] = line_cache_map.emplace(data.Idx(ofs), LineCache{});
   LineCache& line_cache = line_cache_it->second;
   if (inserted) {
@@ -503,10 +505,8 @@ const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(
               }
             }},
         options_.strip_comments);
-    const std::optional<RegexReplace>& regex_replace =
-        which == LorR::kLHS ? options_.lhs_regex_replace : options_.rhs_regex_replace;
-    if (regex_replace.has_value()) {
-      RE2::Replace(&line_cache.line, *regex_replace->regex, regex_replace->replace);
+    if (data.regex_replace.has_value()) {
+      RE2::Replace(&line_cache.line, *data.regex_replace->regex, data.regex_replace->replace);
     }
     if (options_.ignore_matching_chunks && options_.ignore_matching_lines.has_value()) {
       line_cache.matches_ignore = RE2::PartialMatch(line_cache.line, *options_.ignore_matching_lines);
@@ -516,8 +516,8 @@ const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(
 }
 
 bool UnifiedDiff::Impl::CompareEq(std::size_t lhs, std::size_t rhs) const {
-  const LineCache& lhs_cache = CompareCache(LorR::kLHS, lhs_data_, lhs);
-  const LineCache& rhs_cache = CompareCache(LorR::kRHS, rhs_data_, rhs);
+  const LineCache& lhs_cache = CompareCache(lhs_data_, lhs);
+  const LineCache& rhs_cache = CompareCache(rhs_data_, rhs);
   if (lhs_cache.matches_ignore && rhs_cache.matches_ignore) {
     return true;
   }
@@ -532,9 +532,9 @@ void UnifiedDiff::Impl::LoopBoth() {
   }
 }
 
-std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextRight() {
-  size_t lhs = 1;  // L+0 != R+0 -> start at lhs = 1, R1 = 0
-  size_t rhs = 0;
+std::tuple<std::size_t, std::size_t, bool> UnifiedDiff::Impl::FindNextRight() {
+  std::size_t lhs = 1;  // L+0 != R+0 -> start at lhs = 1, R1 = 0
+  std::size_t rhs = 0;
   bool equal = false;
   while (!rhs_data_.Done(rhs)) {
     while (!lhs_data_.Done(lhs)) {
@@ -553,9 +553,9 @@ std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextRight() {
   return {lhs, rhs, equal};
 }
 
-std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
-  size_t lhs = 0;
-  size_t rhs = 1;  // L+0 != R+0 -> start at L2 = 0, rhs = 1
+std::tuple<std::size_t, std::size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
+  std::size_t lhs = 0;
+  std::size_t rhs = 1;  // L+0 != R+0 -> start at L2 = 0, rhs = 1
   bool equal = false;
   while (!lhs_data_.Done(lhs)) {
     while (!rhs_data_.Done(rhs)) {
@@ -574,7 +574,7 @@ std::tuple<size_t, size_t, bool> UnifiedDiff::Impl::FindNextLeft() {
   return {lhs, rhs, equal};
 }
 
-bool UnifiedDiff::Impl::PastMaxDiffChunkLength(size_t& loop) {
+bool UnifiedDiff::Impl::PastMaxDiffChunkLength(std::size_t& loop) {
   if (++loop > options_.max_diff_chunk_length) {
     static constexpr std::string_view kMsg = "Maximum loop count reached";
     ABSL_LOG(ERROR) << kMsg;
@@ -588,32 +588,32 @@ bool UnifiedDiff::Impl::FindNext() {
   auto [lhs1, rhs1, eq1] = FindNextRight();
   auto [lhs2, rhs2, eq2] = FindNextLeft();
   if (eq1 && (!eq2 || AbsDiff(lhs1, rhs1) < AbsDiff(lhs2, rhs2))) {
-    for (size_t i = 0; i < lhs1; ++i) {
-      const size_t l_idx = lhs_data_.Idx();  // Compiler might execute `Next` first.
+    for (std::size_t i = 0; i < lhs1; ++i) {
+      const std::size_t l_idx = lhs_data_.Idx();  // Compiler might execute `Next` first.
       chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
     }
-    for (size_t i = 0; i < rhs1; ++i) {
-      const size_t r_idx = rhs_data_.Idx();
+    for (std::size_t i = 0; i < rhs1; ++i) {
+      const std::size_t r_idx = rhs_data_.Idx();
       chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
     }
     return true;
   } else if (eq2) {
-    for (size_t i = 0; i < lhs2; ++i) {
-      const size_t l_idx = lhs_data_.Idx();
+    for (std::size_t i = 0; i < lhs2; ++i) {
+      const std::size_t l_idx = lhs_data_.Idx();
       chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
     }
-    for (size_t i = 0; i < rhs2; ++i) {
-      const size_t r_idx = rhs_data_.Idx();
+    for (std::size_t i = 0; i < rhs2; ++i) {
+      const std::size_t r_idx = rhs_data_.Idx();
       chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
     }
     return true;
   } else {
     if (!lhs_data_.Done()) {
-      const size_t l_idx = lhs_data_.Idx();
+      const std::size_t l_idx = lhs_data_.Idx();
       chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
     }
     if (!rhs_data_.Done()) {
-      const size_t r_idx = rhs_data_.Idx();
+      const std::size_t r_idx = rhs_data_.Idx();
       chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
     }
   }
@@ -623,18 +623,18 @@ bool UnifiedDiff::Impl::FindNext() {
 void UnifiedDiff::Impl::Loop() {
   while (!lhs_data_.Done() && !rhs_data_.Done()) {
     LoopBoth();
-    size_t loop = 0;
+    std::size_t loop = 0;
     while (!lhs_data_.Done() && !rhs_data_.Done() && !PastMaxDiffChunkLength(loop) && !FindNext()) {}
   }
 }
 
 absl::StatusOr<std::string> UnifiedDiff::Impl::Finalize() {
   while (!lhs_data_.Done()) {
-    const size_t l_idx = lhs_data_.Idx();
+    const std::size_t l_idx = lhs_data_.Idx();
     chunk_.PushLhs(l_idx, rhs_data_.Idx(), lhs_data_.Next());
   }
   while (!rhs_data_.Done()) {
-    const size_t r_idx = rhs_data_.Idx();
+    const std::size_t r_idx = rhs_data_.Idx();
     chunk_.PushRhs(lhs_data_.Idx(), r_idx, rhs_data_.Next());
   }
   return chunk_.MoveOutput();
