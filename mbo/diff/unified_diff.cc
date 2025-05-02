@@ -68,7 +68,7 @@ std::size_t AbsDiff(std::size_t lhs, std::size_t rhs) {
 
 namespace diff_internal {
 
-class Data final {
+class Data {
  public:
   Data() = delete;
   ~Data() = default;
@@ -83,26 +83,26 @@ class Data final {
   Data(Data&&) = delete;
   Data& operator=(Data&&) = delete;
 
-  std::string_view Next() { return Done() ? "" : text_[idx_++]; }
+  std::string_view Next() noexcept { return Done() ? "" : text_[idx_++]; }
 
-  std::string_view Line() const { return Done() ? "" : text_[idx_]; }
+  std::string_view Line() const noexcept { return Done() ? "" : text_[idx_]; }
 
-  std::string_view Line(std::size_t ofs) const {
+  std::string_view Line(std::size_t ofs) const noexcept {
     ofs += idx_;
     return ofs >= Size() ? "" : text_[ofs];
   }
 
-  std::size_t Idx() const { return idx_; }
+  std::size_t Idx() const noexcept { return idx_; }
 
-  std::size_t Idx(std::size_t ofs) const { return idx_ + ofs; }
+  std::size_t Idx(std::size_t ofs) const noexcept { return idx_ + ofs; }
 
-  std::size_t Size() const { return text_.size(); }
+  std::size_t Size() const noexcept { return text_.size(); }
 
-  bool Done() const { return idx_ >= Size(); }
+  bool Done() const noexcept { return idx_ >= Size(); }
 
-  bool Done(std::size_t ofs) const { return idx_ + ofs >= Size(); }
+  bool Done(std::size_t ofs) const noexcept { return idx_ + ofs >= Size(); }
 
-  bool GotNl() const { return got_nl_; }
+  bool GotNl() const noexcept { return got_nl_; }
 
  private:
   static std::string LastLineIfNoNewLine(std::string_view text, bool got_nl) {
@@ -174,11 +174,11 @@ class Context final {
   Context(Context&&) = delete;
   Context& operator=(Context&&) = delete;
 
-  bool Empty() const { return data_.empty(); }
+  bool Empty() const noexcept { return data_.empty(); }
 
-  bool HalfFull() const { return Full(true); }
+  bool HalfFull() const noexcept { return Full(true); }
 
-  bool Full(bool half = false) const { return data_.size() >= (half ? Max() : 2 * Max()); }
+  bool Full(bool half = false) const noexcept { return data_.size() >= (half ? Max() : 2 * Max()); }
 
   bool Push(std::string_view line, bool half = false) {
     if (Max() == 0) {
@@ -191,19 +191,19 @@ class Context final {
     return Full(half);
   }
 
-  std::string_view PopFront() {
+  std::string_view PopFront() noexcept {
     const std::string_view result = data_.front();
     data_.pop_front();
     return result;
   }
 
-  std::size_t Max() const { return options_.context_size; }
+  std::size_t Max() const noexcept { return options_.context_size; }
 
-  std::size_t Size() const { return data_.size(); }
+  std::size_t Size() const noexcept { return data_.size(); }
 
-  std::size_t HalfSsize() const { return HalfFull() ? Max() : data_.size(); }
+  std::size_t HalfSsize() const noexcept { return HalfFull() ? Max() : data_.size(); }
 
-  void Clear() { data_.clear(); }
+  void Clear() noexcept { data_.clear(); }
 
  private:
   const UnifiedDiff::Options& options_;
@@ -406,7 +406,10 @@ class UnifiedDiff::Impl {
   Impl() = delete;
 
   Impl(const file::Artefact& lhs, const file::Artefact& rhs, const Options& options)
-      : options_(options), lhs_data_(lhs.data), rhs_data_(rhs.data), chunk_(lhs, rhs, options_) {}
+      : options_(options),
+        lhs_data_(lhs.data, options_.lhs_regex_replace),
+        rhs_data_(rhs.data, options_.rhs_regex_replace),
+        chunk_(lhs, rhs, options_) {}
 
   ~Impl() = default;
   Impl(const Impl&) = delete;
@@ -420,15 +423,22 @@ class UnifiedDiff::Impl {
   }
 
  private:
-  enum LorR { kLHS, kRHS };
-
   struct LineCache {
     std::string line;
     bool matches_ignore = false;
   };
 
-  bool CompareEqImpl(std::string_view lhs, std::string_view rhs) const;
-  const LineCache& CompareCache(LorR which, const diff_internal::Data& data, std::size_t ofs) const;
+  struct LeftAndRight final : diff_internal::Data {
+    LeftAndRight(std::string_view text, const std::optional<RegexReplace>& regex_replace)
+        : Data(text), regex_replace(regex_replace) {}
+
+    const std::optional<RegexReplace>& regex_replace;
+    // The line caches should probably uses C++26's `std::hive`.
+    mutable absl::flat_hash_map<std::size_t, LineCache> line_cache_map;
+  };
+
+  bool CompareEqImpl(std::string_view lhs, std::string_view rhs) const noexcept;
+  const LineCache& CompareCache(const LeftAndRight& data, std::size_t ofs) const;
   bool CompareEq(std::size_t lhs, std::size_t rhs) const;
   void Loop();
   void LoopBoth();
@@ -439,12 +449,9 @@ class UnifiedDiff::Impl {
   absl::StatusOr<std::string> Finalize();
 
   const UnifiedDiff::Options& options_;
-  diff_internal::Data lhs_data_;
-  diff_internal::Data rhs_data_;
+  LeftAndRight lhs_data_;
+  LeftAndRight rhs_data_;
   diff_internal::Chunk chunk_;
-  // The line caches should probably uses C++26's `std::hive`.
-  mutable absl::flat_hash_map<std::size_t, LineCache> lhs_line_cache_map_;
-  mutable absl::flat_hash_map<std::size_t, LineCache> rhs_line_cache_map_;
 };
 
 template<class... Args>
@@ -454,7 +461,7 @@ struct Select : Args... {
   using Args::operator()...;
 };
 
-bool UnifiedDiff::Impl::CompareEqImpl(std::string_view lhs, std::string_view rhs) const {
+bool UnifiedDiff::Impl::CompareEqImpl(std::string_view lhs, std::string_view rhs) const noexcept {
   if (options_.ignore_case) {
     return absl::EqualsIgnoreCase(lhs, rhs);
   } else {
@@ -462,11 +469,8 @@ bool UnifiedDiff::Impl::CompareEqImpl(std::string_view lhs, std::string_view rhs
   }
 }
 
-const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(
-    LorR which,
-    const diff_internal::Data& data,
-    std::size_t ofs) const {
-  auto& line_cache_map = which == LorR::kLHS ? lhs_line_cache_map_ : rhs_line_cache_map_;
+const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(const LeftAndRight& data, std::size_t ofs) const {
+  auto& line_cache_map = data.line_cache_map;
   auto [line_cache_it, inserted] = line_cache_map.emplace(data.Idx(ofs), LineCache{});
   LineCache& line_cache = line_cache_it->second;
   if (inserted) {
@@ -501,10 +505,8 @@ const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(
               }
             }},
         options_.strip_comments);
-    const std::optional<RegexReplace>& regex_replace =
-        which == LorR::kLHS ? options_.lhs_regex_replace : options_.rhs_regex_replace;
-    if (regex_replace.has_value()) {
-      RE2::Replace(&line_cache.line, *regex_replace->regex, regex_replace->replace);
+    if (data.regex_replace.has_value()) {
+      RE2::Replace(&line_cache.line, *data.regex_replace->regex, data.regex_replace->replace);
     }
     if (options_.ignore_matching_chunks && options_.ignore_matching_lines.has_value()) {
       line_cache.matches_ignore = RE2::PartialMatch(line_cache.line, *options_.ignore_matching_lines);
@@ -514,8 +516,8 @@ const UnifiedDiff::Impl::LineCache& UnifiedDiff::Impl::CompareCache(
 }
 
 bool UnifiedDiff::Impl::CompareEq(std::size_t lhs, std::size_t rhs) const {
-  const LineCache& lhs_cache = CompareCache(LorR::kLHS, lhs_data_, lhs);
-  const LineCache& rhs_cache = CompareCache(LorR::kRHS, rhs_data_, rhs);
+  const LineCache& lhs_cache = CompareCache(lhs_data_, lhs);
+  const LineCache& rhs_cache = CompareCache(rhs_data_, rhs);
   if (lhs_cache.matches_ignore && rhs_cache.matches_ignore) {
     return true;
   }
