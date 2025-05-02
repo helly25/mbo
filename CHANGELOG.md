@@ -1,3 +1,5 @@
+# 0.7.1
+
 # 0.7.0
 
 * Added caching for unified `mbo::diff::UnifiedDiff` algorithm.
