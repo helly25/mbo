@@ -20,6 +20,10 @@ load("@bazel_skylib//lib:shell.bzl", "shell")
 def _bool_arg(arg):
     return "1" if arg else "0"
 
+def _escape(arg):
+    # TODO(helly25): Implement
+    return arg
+
 def diff_test(
         name,
         file_old,
@@ -31,7 +35,9 @@ def diff_test(
         ignore_case = False,
         ignore_matching_chunks = True,
         ignore_matching_lines = "",
-        ignore_space_change = False,
+        ignore_trailing_space = False,
+        regex_replace_lhs = "",
+        regex_replace_rhs = "",
         strip_comments = "",
         strip_parsed_comments = True,
         **kwargs):
@@ -50,7 +56,9 @@ def diff_test(
         ignore_case:              Whether to ignore letter case.
         ignore_matching_chunks:   Whether `ignore_matching_lines` applies to chunks or single lines.
         ignore_matching_lines:    Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
-        ignore_space_change:      Ignore traling whitespace changes.
+        ignore_trailing_space:    Ignore traling whitespace changes.
+        regex_replace_lhs:        Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.
+        regex_replace_rhs:        Regular expression and replacement for right side: <sep><regex><sep><replace><sep>.
         strip_comments:           Strip out anything starting from `strip_comments`.
         strip_parsed_comments:    Whether to parse lines when stripping comments.
         **kwargs:                 Keyword args to pass down to native rules.
@@ -70,7 +78,9 @@ def diff_test(
         ignore_case = ignore_case,
         ignore_matching_lines = ignore_matching_lines,
         ignore_matching_chunks = ignore_matching_chunks,
-        ignore_space_change = ignore_space_change,
+        ignore_trailing_space = ignore_trailing_space,
+        regex_replace_lhs = _escape(regex_replace_lhs),
+        regex_replace_rhs = _escape(regex_replace_rhs),
         strip_comments = strip_comments,
         strip_parsed_comments = strip_parsed_comments,
         **kwargs
@@ -117,7 +127,9 @@ if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
     --ignore_case={ignore_case} \
     --ignore_matching_chunks={ignore_matching_chunks} \
     --ignore_matching_lines={ignore_matching_lines} \
-    --ignore_space_change={ignore_space_change} \
+    --ignore_trailing_space={ignore_trailing_space} \
+    --regex_replace_lhs={regex_replace_lhs} \\
+    --regex_replace_rhs={regex_replace_rhs} \\
     --strip_comments={strip_comments} \
     --strip_file_header_prefix="external/com_helly25_mbo/" \
     --strip_parsed_comments={strip_parsed_comments} \
@@ -136,7 +148,9 @@ fi
                 ignore_case = _bool_arg(ctx.attr.ignore_case),
                 ignore_matching_chunks = _bool_arg(ctx.attr.ignore_matching_chunks),
                 ignore_matching_lines = shell.quote(ctx.attr.ignore_matching_lines),
-                ignore_space_change = _bool_arg(ctx.attr.ignore_space_change),
+                ignore_trailing_space = _bool_arg(ctx.attr.ignore_trailing_space),
+                regex_replace_lhs = _escape(ctx.attr.regex_replace_lhs),
+                regex_replace_rhs = _escape(ctx.attr.regex_replace_rhs),
                 strip_comments = shell.quote(ctx.attr.strip_comments),
                 strip_parsed_comments = _bool_arg(ctx.attr.strip_parsed_comments),
             ),
@@ -189,12 +203,20 @@ _diff_test = rule(
         "ignore_matching_lines": attr.string(
             doc = "Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).",
         ),
-        "ignore_space_change": attr.bool(
+        "ignore_trailing_space": attr.bool(
             doc = "Ignore traling whitespace changes.",
             default = False,
         ),
         "is_windows": attr.bool(
             mandatory = True,
+        ),
+        "regex_replace_lhs": attr.string(
+            doc = "Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.",
+            default = "",
+        ),
+        "regex_replace_rhs": attr.string(
+            doc = "Regular expression and replacement for right side:  <sep><regex><sep><replace><sep>.",
+            default = "",
         ),
         "strip_comments": attr.string(
             doc = "Strip out any thing starting from `strip_comments`.",

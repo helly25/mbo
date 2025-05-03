@@ -21,6 +21,10 @@ load("//mbo/diff:diff.bzl", "diff_test")
 def _bool_arg(arg):
     return "1" if arg else "0"
 
+def _escape(arg):
+    # TODO(helly25): Implement
+    return arg
+
 def diff_test_test(
         name,
         file_old,
@@ -32,7 +36,9 @@ def diff_test_test(
         ignore_case = False,
         ignore_matching_chunks = True,
         ignore_matching_lines = "",
-        ignore_space_change = False,
+        ignore_trailing_space = False,
+        regex_replace_lhs = "",
+        regex_replace_rhs = "",
         strip_comments = "",
         strip_parsed_comments = True,
         **kwargs):
@@ -51,7 +57,9 @@ def diff_test_test(
         ignore_case:              Whether to ignore letter case.
         ignore_matching_chunks:   Whether `ignore_matching_lines` applies to chanks or single lines.
         ignore_matching_lines:    Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
-        ignore_space_change:      Ignore leading and traling whitespace changes.
+        ignore_trailing_space:    Ignore traling whitespace changes.
+        regex_replace_lhs:        Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.
+        regex_replace_rhs:        Regular expression and replacement for right side: <sep><regex><sep><replace><sep>.
         strip_comments:           Strip out anything starting from `strip_comments`.
         strip_parsed_comments:    Whether to parse lines when stripping comments.
         **kwargs:                 Keyword args to pass down to native rules.
@@ -73,7 +81,9 @@ def diff_test_test(
                 --ignore_case={ignore_case} \\
                 --ignore_matching_chunks={ignore_matching_chunks} \\
                 --ignore_matching_lines={ignore_matching_lines} \\
-                --ignore_space_change={ignore_space_change} \\
+                --ignore_trailing_space={ignore_trailing_space} \\
+                --regex_replace_lhs={regex_replace_lhs} \\
+                --regex_replace_rhs={regex_replace_rhs} \\
                 --strip_comments={strip_comments} \\
                 --strip_file_header_prefix="external/(com_)?helly25_mbo[^/]*/" \\
                 --strip_parsed_comments={strip_parsed_comments} \\
@@ -87,7 +97,9 @@ def diff_test_test(
             ignore_case = _bool_arg(ignore_case),
             ignore_matching_chunks = _bool_arg(ignore_matching_chunks),
             ignore_matching_lines = shell.quote(ignore_matching_lines),
-            ignore_space_change = _bool_arg(ignore_space_change),
+            ignore_trailing_space = _bool_arg(ignore_trailing_space),
+            regex_replace_lhs = _escape(regex_replace_lhs),
+            regex_replace_rhs = _escape(regex_replace_rhs),
             strip_comments = shell.quote(strip_comments),
             strip_parsed_comments = _bool_arg(strip_parsed_comments),
         ),
