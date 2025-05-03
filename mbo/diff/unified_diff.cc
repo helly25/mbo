@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "absl/cleanup/cleanup.h"
+#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
@@ -50,6 +51,8 @@ std::optional<UnifiedDiff::RegexReplace> UnifiedDiff::ParseRegexReplaceFlag(std:
   const char separator = flag[0];
   std::vector<std::string> parts = absl::StrSplit(flag, separator);
   ABSL_CHECK_EQ(parts.size(), 4U);
+  ABSL_CHECK(parts[0].empty());
+  ABSL_CHECK(parts[3].empty());
   return UnifiedDiff::RegexReplace{
       .regex = std::make_unique<RE2>(parts[1]),
       .replace{parts[2]},
@@ -70,36 +73,10 @@ namespace diff_internal {
 
 class Data {
  public:
-  class LineCache final {
-   public:
-    LineCache() = delete;
-
-    explicit LineCache(std::string_view line) : line_(line) {}
-
-    LineCache(const LineCache&) = delete;
-    LineCache& operator=(const LineCache&) = delete;
-    LineCache(LineCache&&) noexcept = default;
-    LineCache& operator=(LineCache&& oth) noexcept = default;
-    ~LineCache() noexcept = default;
-
-    std::string_view GetLine() const noexcept { return line_; }
-
-    const std::string& GetProcessed() const noexcept {
-      ABSL_DCHECK(is_processed_);
-      return processed_;
-    }
-
-    const LineCache& GetOrUpdate(
-        const UnifiedDiff::Options& options,
-        const std::optional<UnifiedDiff::RegexReplace>& regex_replace) const;
-
-    bool GetMatchesIgnore() const noexcept { return matches_ignore_; }
-
-   private:
-    std::string_view line_;
-    mutable std::string processed_;
-    mutable bool matches_ignore_ : 1 = false;
-    mutable bool is_processed_ : 1 = false;
+  struct LineCache final {
+    std::string_view line;
+    std::string processed;
+    bool matches_ignore = false;
   };
 
   Data() = delete;
@@ -113,26 +90,26 @@ class Data {
         regex_replace_(regex_replace),
         got_nl_(absl::ConsumeSuffix(&text, "\n")),
         last_line_no_nl_(LastLineIfNoNewLine(text, got_nl_)),
-        text_(SplitAndAdaptLastLine(text, got_nl_, last_line_no_nl_)) {}
+        text_(SplitAndAdaptLastLine(options_, regex_replace_, text, got_nl_, last_line_no_nl_)) {}
 
   Data(const Data&) = delete;
   Data& operator=(const Data&) = delete;
   Data(Data&&) = delete;
   Data& operator=(Data&&) = delete;
 
-  std::string_view Next() noexcept { return Done() ? "" : text_[idx_++].GetLine(); }
+  std::string_view Next() noexcept { return Done() ? "" : text_[idx_++].line; }
 
-  std::string_view Line() const noexcept { return Done() ? "" : text_[idx_].GetLine(); }
+  std::string_view Line() const noexcept { return Done() ? "" : text_[idx_].line; }
 
   std::string_view Line(std::size_t ofs) const noexcept {
     ofs += idx_;
-    return ofs >= Size() ? "" : text_[ofs].GetLine();
+    return ofs >= Size() ? "" : text_[ofs].line;
   }
 
   const LineCache& GetCache(std::size_t ofs) const noexcept {
     ofs += idx_;
     ABSL_CHECK_LT(ofs, Size());
-    return text_.at(ofs).GetOrUpdate(options_, regex_replace_);
+    return text_.at(ofs);
   }
 
   std::size_t Idx() const noexcept { return idx_; }
@@ -163,38 +140,39 @@ class Data {
     return absl::StrCat(text.substr(pos), "\n\\ No newline at end of file");
   }
 
-  static std::vector<LineCache> SplitAndAdaptLastLine(std::string_view text, bool got_nl, std::string_view last_line) {
+  static LineCache Process(
+      const UnifiedDiff::Options& options,
+      const std::optional<UnifiedDiff::RegexReplace>& regex_replace,
+      std::string_view line);
+
+  static std::vector<LineCache> SplitAndAdaptLastLine(
+      const UnifiedDiff::Options& options,
+      const std::optional<UnifiedDiff::RegexReplace>& regex_replace,
+      std::string_view text,
+      bool got_nl,
+      std::string_view last_line) {
     if (!got_nl && text.empty()) {
       // This means a zero-length input (not just a single new-line).
       // For that case `diff -du` does not show 'No newline at end of file'.
       return {};
     }
-    std::vector<LineCache> result = absl::StrSplit(text, '\n');
+    const std::size_t count = std::count_if(text.begin(), text.end(), [](char chr) { return chr == '\n'; });
+    std::vector<LineCache> result;
+    result.reserve(count > 0 ? count : 1);
+    for (std::string_view line : absl::StrSplit(text, '\n')) {
+      result.push_back(Process(options, regex_replace, line));
+    }
     if (!got_nl) {
       if (!result.empty()) {
         result.pop_back();
       }
-      result.emplace_back(last_line);
+      result.push_back({
+          .line = last_line,
+          .processed = std::string{last_line},
+          .matches_ignore = false,
+      });
     }
     return result;
-  }
-
-  static std::string_view LastLine(std::string_view text) {
-    auto pos = text.rfind('\n');
-    if (pos == std::string_view::npos) {
-      return text;
-    }
-    return text.substr(pos);
-  }
-
-  static std::vector<std::string_view> UpdateLast(
-      std::vector<std::string_view> lines,
-      bool got_nl,
-      std::string_view last_line) {
-    if (!got_nl) {
-      lines.back() = last_line;
-    }
-    return lines;
   }
 
   const UnifiedDiff::Options& options_;
@@ -212,51 +190,51 @@ struct Select : Args... {
   using Args::operator()...;
 };
 
-const Data::LineCache& Data::LineCache::GetOrUpdate(
+Data::LineCache Data::Process(
     const UnifiedDiff::Options& options,
-    const std::optional<UnifiedDiff::RegexReplace>& regex_replace) const {
-  if (is_processed_) {
-    return *this;
-  }
+    const std::optional<UnifiedDiff::RegexReplace>& regex_replace,
+    std::string_view line) {
+  std::string processed;
   if (options.ignore_all_space) {
     std::string stripped;
-    stripped.reserve(line_.length());
-    for (const char chr : line_) {
+    stripped.reserve(line.length());
+    for (const char chr : line) {
       if (!absl::ascii_isspace(chr)) {
         stripped.push_back(chr);
       }
     }
-    processed_ = stripped;
+    processed = stripped;
   } else if (options.ignore_consecutive_space) {
-    processed_ = line_;
-    absl::RemoveExtraAsciiWhitespace(&processed_);
+    processed = line;
+    absl::RemoveExtraAsciiWhitespace(&processed);
   } else if (options.ignore_space_change) {
     // TODO(helly25): Should be `StripAsciiWhitespace`.
-    processed_ = absl::StripTrailingAsciiWhitespace(line_);
+    processed = absl::StripTrailingAsciiWhitespace(line);
   } else {
-    processed_ = line_;
+    processed = line;
   }
   std::visit(
       Select{
           [&](UnifiedDiff::NoCommentStripping) {},
           [&](const mbo::strings::StripCommentArgs& args) {
-            processed_ = mbo::strings::StripLineComments(processed_, args);
+            processed = mbo::strings::StripLineComments(processed, args);
           },
           [&](const mbo::strings::StripParsedCommentArgs& args) {
-            const auto line_or = mbo::strings::StripParsedLineComments(processed_, args);
+            const auto line_or = mbo::strings::StripParsedLineComments(processed, args);
             if (line_or.ok()) {
-              processed_ = *std::move(line_or);
+              processed = *std::move(line_or);
             }
           }},
       options.strip_comments);
   if (regex_replace.has_value()) {
-    RE2::Replace(&processed_, *regex_replace->regex, regex_replace->replace);
+    RE2::Replace(&processed, *regex_replace->regex, regex_replace->replace);
   }
-  if (options.ignore_matching_chunks && options.ignore_matching_lines.has_value()) {
-    matches_ignore_ = RE2::PartialMatch(processed_, *options.ignore_matching_lines);
-  }
-  is_processed_ = true;
-  return *this;
+  return {
+      .line = line,
+      .processed = processed,
+      .matches_ignore = options.ignore_matching_chunks && options.ignore_matching_lines.has_value()
+                        && RE2::PartialMatch(processed, *options.ignore_matching_lines),
+  };
 }
 
 class Context final {
@@ -538,13 +516,13 @@ class UnifiedDiffImpl {
 bool UnifiedDiffImpl::CompareEq(std::size_t lhs, std::size_t rhs) const {
   const auto& lhs_cache = lhs_data_.GetCache(lhs);
   const auto& rhs_cache = rhs_data_.GetCache(rhs);
-  if (lhs_cache.GetMatchesIgnore() && rhs_cache.GetMatchesIgnore()) {
+  if (lhs_cache.matches_ignore && rhs_cache.matches_ignore) {
     return true;
   }
   if (options_.ignore_case) {
-    return absl::EqualsIgnoreCase(lhs_cache.GetProcessed(), rhs_cache.GetProcessed());
+    return absl::EqualsIgnoreCase(lhs_cache.processed, rhs_cache.processed);
   } else {
-    return lhs_cache.GetProcessed() == rhs_cache.GetProcessed();
+    return lhs_cache.processed == rhs_cache.processed;
   }
 }
 
