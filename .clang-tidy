@@ -3,6 +3,7 @@ Checks: >
   *,
   abseil-*,
   -altera-*,
+  -boost-*,
   bugprone-*,
   -bugprone-exception-escape,
   -cert-err58-cpp,
