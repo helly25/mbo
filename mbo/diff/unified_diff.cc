@@ -168,7 +168,7 @@ class Data {
       }
       result.push_back({
           .line = last_line,
-          .processed{last_line},
+          .processed = std::string{last_line},
           .matches_ignore = false,
       });
     }
