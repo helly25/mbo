@@ -119,11 +119,11 @@ diff_test_test(
 )
 
 diff_test_test(
-    name = "abc_ignore_space_change_diff_test",
-    expected_diff = "abc_ignore_space_change.diff.txt",
+    name = "abc_ignore_trailing_space_diff_test",
+    expected_diff = "abc_ignore_trailing_space.diff.txt",
     file_new = "abc_whitespace.txt",
     file_old = "abc.txt",
-    ignore_space_change = True,
+    ignore_trailing_space = True,
 )
 
 diff_test(

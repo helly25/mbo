@@ -79,11 +79,11 @@ class UnifiedDiff final {
     std::optional<RE2> ignore_matching_lines;
     bool ignore_all_space = false;
     bool ignore_consecutive_space = false;
-    bool ignore_space_change = false;
+    bool ignore_trailing_space = false;
     bool skip_left_deletions = false;
     StripCommentOptions strip_comments = NoCommentStripping{};
-    std::optional<RegexReplace> lhs_regex_replace;
-    std::optional<RegexReplace> rhs_regex_replace;
+    std::optional<RegexReplace> regex_replace_lhs;
+    std::optional<RegexReplace> regex_replace_rhs;
     std::string strip_file_header_prefix;
 
     std::size_t max_diff_chunk_length = 1'337'000;  // NOLINT(*-magic-numbers)

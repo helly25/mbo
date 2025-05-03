@@ -509,8 +509,8 @@ TEST_F(UnifiedDiffTest, RegexReplace) {
       UnifiedDiff(
           lhs, rhs,
           {
-              .lhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/SAME/"),
-              .rhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,SAME,"),
+              .regex_replace_lhs = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/SAME/"),
+              .regex_replace_rhs = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,SAME,"),
           }),
       IsOkAndHolds(IsEmpty()))
       << "The replacement made LHS and RHS the same, so there should be no difference.";
@@ -518,8 +518,8 @@ TEST_F(UnifiedDiffTest, RegexReplace) {
       UnifiedDiff(
           lhs, rhs,
           {
-              .lhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 SAME/"),
-              .rhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 SAME,"),
+              .regex_replace_lhs = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 SAME/"),
+              .regex_replace_rhs = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 SAME,"),
           }),
       IsOkAndHolds(IsEmpty()))
       << "The replacement made LHS and RHS the same, so there should be no differences.";
@@ -527,8 +527,8 @@ TEST_F(UnifiedDiffTest, RegexReplace) {
       UnifiedDiff(
           lhs, rhs,
           {
-              .lhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 LHS/"),
-              .rhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 RHS,"),
+              .regex_replace_lhs = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 LHS/"),
+              .regex_replace_rhs = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 RHS,"),
           }),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
@@ -544,8 +544,8 @@ TEST_F(UnifiedDiffTest, RegexReplace) {
       UnifiedDiff(
           lhs, oth,
           {
-              .lhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag("/ERROR.*//"),
-              .rhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag(",ERROR.*,,"),
+              .regex_replace_lhs = UnifiedDiff::ParseRegexReplaceFlag("/ERROR.*//"),
+              .regex_replace_rhs = UnifiedDiff::ParseRegexReplaceFlag(",ERROR.*,,"),
           }),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
@@ -561,8 +561,8 @@ TEST_F(UnifiedDiffTest, RegexReplace) {
       UnifiedDiff(
           lhs, oth,
           {
-              .lhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag("/bar/oth/"),
-              .rhs_regex_replace = UnifiedDiff::ParseRegexReplaceFlag(",ERROR 3,ERROR 1,"),
+              .regex_replace_lhs = UnifiedDiff::ParseRegexReplaceFlag("/bar/oth/"),
+              .regex_replace_rhs = UnifiedDiff::ParseRegexReplaceFlag(",ERROR 3,ERROR 1,"),
           }),
       IsOkAndHolds(IsEmpty()))
       << "Different replacements that producr the same results lead to same zero differences.";

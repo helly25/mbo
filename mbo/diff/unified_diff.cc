@@ -101,11 +101,6 @@ class Data {
 
   std::string_view Line() const noexcept { return Done() ? "" : text_[idx_].line; }
 
-  std::string_view Line(std::size_t ofs) const noexcept {
-    ofs += idx_;
-    return ofs >= Size() ? "" : text_[ofs].line;
-  }
-
   const LineCache& GetCache(std::size_t ofs) const noexcept {
     ofs += idx_;
     ABSL_CHECK_LT(ofs, Size());
@@ -114,17 +109,11 @@ class Data {
 
   std::size_t Idx() const noexcept { return idx_; }
 
-  std::size_t Idx(std::size_t ofs) const noexcept { return idx_ + ofs; }
-
   std::size_t Size() const noexcept { return text_.size(); }
 
   bool Done() const noexcept { return idx_ >= Size(); }
 
   bool Done(std::size_t ofs) const noexcept { return idx_ + ofs >= Size(); }
-
-  bool GotNl() const noexcept { return got_nl_; }
-
-  const std::optional<UnifiedDiff::RegexReplace>& GetRegexReplace() const noexcept { return regex_replace_; }
 
  private:
   static std::string LastLineIfNoNewLine(std::string_view text, bool got_nl) {
@@ -207,8 +196,7 @@ Data::LineCache Data::Process(
   } else if (options.ignore_consecutive_space) {
     processed = line;
     absl::RemoveExtraAsciiWhitespace(&processed);
-  } else if (options.ignore_space_change) {
-    // TODO(helly25): Should be `StripAsciiWhitespace`.
+  } else if (options.ignore_trailing_space) {
     processed = absl::StripTrailingAsciiWhitespace(line);
   } else {
     processed = line;
@@ -482,8 +470,8 @@ class UnifiedDiffImpl {
 
   UnifiedDiffImpl(const file::Artefact& lhs, const file::Artefact& rhs, const UnifiedDiff::Options& options)
       : options_(options),
-        lhs_data_(options_, options_.lhs_regex_replace, lhs.data),
-        rhs_data_(options_, options_.rhs_regex_replace, rhs.data),
+        lhs_data_(options_, options_.regex_replace_lhs, lhs.data),
+        rhs_data_(options_, options_.regex_replace_rhs, rhs.data),
         chunk_(lhs, rhs, options_) {}
 
   ~UnifiedDiffImpl() = default;

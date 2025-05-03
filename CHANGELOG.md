@@ -1,4 +1,8 @@
-# 0.7.1
+# 0.8.0
+
+* Renamed diff tooling options `ignore_space_change` to `ignore_trailing_space.
+* Renamed `lhs_regex_replace` and `rhs_regex_replace` to `regex_replace_lhs` and `regex_replace_rhs` respectively.
+* Added `regex_replace_lhs` and `regex_replace_rhs` to bzl rules `//mbo/diff:diff_test` and `//mbo/diff/tests:diff_test_test`.
 
 # 0.7.0
 
