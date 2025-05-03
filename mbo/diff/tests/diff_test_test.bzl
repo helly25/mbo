@@ -16,14 +16,7 @@
 """Macro `diff_test` allows to compare two files."""
 
 load("@bazel_skylib//lib:shell.bzl", "shell")
-load("//mbo/diff:diff.bzl", "diff_test")
-
-def _bool_arg(arg):
-    return "1" if arg else "0"
-
-def _escape(arg):
-    # TODO(helly25): Implement
-    return arg
+load("//mbo/diff:diff.bzl", "bool_arg", "diff_test")
 
 def diff_test_test(
         name,
@@ -91,17 +84,17 @@ def diff_test_test(
         """.format(
             file_old = file_old,
             file_new = file_new,
-            ignore_all_space = _bool_arg(ignore_all_space),
-            ignore_consecutive_space = _bool_arg(ignore_consecutive_space),
-            ignore_blank_lines = _bool_arg(ignore_blank_lines),
-            ignore_case = _bool_arg(ignore_case),
-            ignore_matching_chunks = _bool_arg(ignore_matching_chunks),
+            ignore_all_space = bool_arg(ignore_all_space),
+            ignore_consecutive_space = bool_arg(ignore_consecutive_space),
+            ignore_blank_lines = bool_arg(ignore_blank_lines),
+            ignore_case = bool_arg(ignore_case),
+            ignore_matching_chunks = bool_arg(ignore_matching_chunks),
             ignore_matching_lines = shell.quote(ignore_matching_lines),
-            ignore_trailing_space = _bool_arg(ignore_trailing_space),
-            regex_replace_lhs = _escape(regex_replace_lhs),
-            regex_replace_rhs = _escape(regex_replace_rhs),
+            ignore_trailing_space = bool_arg(ignore_trailing_space),
+            regex_replace_lhs = shell.quote(regex_replace_lhs),
+            regex_replace_rhs = shell.quote(regex_replace_rhs),
             strip_comments = shell.quote(strip_comments),
-            strip_parsed_comments = _bool_arg(strip_parsed_comments),
+            strip_parsed_comments = bool_arg(strip_parsed_comments),
         ),
         tags = kwargs.get("tags, None"),
         testonly = True,

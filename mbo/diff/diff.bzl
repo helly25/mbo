@@ -17,12 +17,8 @@
 
 load("@bazel_skylib//lib:shell.bzl", "shell")
 
-def _bool_arg(arg):
+def bool_arg(arg):
     return "1" if arg else "0"
-
-def _escape(arg):
-    # TODO(helly25): Implement
-    return arg
 
 def diff_test(
         name,
@@ -79,8 +75,8 @@ def diff_test(
         ignore_matching_lines = ignore_matching_lines,
         ignore_matching_chunks = ignore_matching_chunks,
         ignore_trailing_space = ignore_trailing_space,
-        regex_replace_lhs = _escape(regex_replace_lhs),
-        regex_replace_rhs = _escape(regex_replace_rhs),
+        regex_replace_lhs = shell.quote(regex_replace_lhs),
+        regex_replace_rhs = shell.quote(regex_replace_rhs),
         strip_comments = strip_comments,
         strip_parsed_comments = strip_parsed_comments,
         **kwargs
@@ -142,17 +138,17 @@ fi
                 failure_message = shell.quote(ctx.attr.failure_message),
                 file_old = _runfiles_path(ctx.file.file_old),
                 file_new = _runfiles_path(ctx.file.file_new),
-                ignore_all_space = _bool_arg(ctx.attr.ignore_all_space),
-                ignore_consecutive_space = _bool_arg(ctx.attr.ignore_consecutive_space),
-                ignore_blank_lines = _bool_arg(ctx.attr.ignore_blank_lines),
-                ignore_case = _bool_arg(ctx.attr.ignore_case),
-                ignore_matching_chunks = _bool_arg(ctx.attr.ignore_matching_chunks),
+                ignore_all_space = bool_arg(ctx.attr.ignore_all_space),
+                ignore_consecutive_space = bool_arg(ctx.attr.ignore_consecutive_space),
+                ignore_blank_lines = bool_arg(ctx.attr.ignore_blank_lines),
+                ignore_case = bool_arg(ctx.attr.ignore_case),
+                ignore_matching_chunks = bool_arg(ctx.attr.ignore_matching_chunks),
                 ignore_matching_lines = shell.quote(ctx.attr.ignore_matching_lines),
-                ignore_trailing_space = _bool_arg(ctx.attr.ignore_trailing_space),
-                regex_replace_lhs = _escape(ctx.attr.regex_replace_lhs),
-                regex_replace_rhs = _escape(ctx.attr.regex_replace_rhs),
+                ignore_trailing_space = bool_arg(ctx.attr.ignore_trailing_space),
+                regex_replace_lhs = shell.quote(ctx.attr.regex_replace_lhs),
+                regex_replace_rhs = shell.quote(ctx.attr.regex_replace_rhs),
                 strip_comments = shell.quote(ctx.attr.strip_comments),
-                strip_parsed_comments = _bool_arg(ctx.attr.strip_parsed_comments),
+                strip_parsed_comments = bool_arg(ctx.attr.strip_parsed_comments),
             ),
             is_executable = True,
         )
