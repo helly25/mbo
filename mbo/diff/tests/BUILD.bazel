@@ -51,11 +51,27 @@ diff_test_test(
 )
 
 diff_test_test(
+    name = "same_unified_diff_test",
+    algorithm = "unified",
+    expected_diff = "same_unified.diff.txt",
+    file_new = "abc.txt",
+    file_old = "abc_same.txt",
+)
+
+diff_test_test(
     name = "abc_axc_direct_diff_test",
     algorithm = "direct",
     expected_diff = "abc_axc_direct.diff.txt",
     file_new = "axc.txt",
     file_old = "abc.txt",
+)
+
+diff_test_test(
+    name = "same_direct_diff_test",
+    algorithm = "direct",
+    expected_diff = "same_direct.diff.txt",
+    file_new = "abc.txt",
+    file_old = "abc_same.txt",
 )
 
 diff_test(
