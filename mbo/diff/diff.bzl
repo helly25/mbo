@@ -134,7 +134,7 @@ if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
     --strip_file_header_prefix="external/com_helly25_mbo/" \
     --strip_parsed_comments={strip_parsed_comments} \
 ; then
-  echo >&2 "FAIL: files \"{file_old}\" and \"{file_new}\" differ. "{failure_message}
+  echo >&2 "FAIL: files \"{file_old}\" and \"{file_new}\" differ. " {failure_message}
   exit 1
 fi
 """.format(
@@ -175,7 +175,9 @@ _diff_test = rule(
             doc = "The diff algorithm to use.",
             values = ["", "direct", "unified"],
         ),
-        "failure_message": attr.string(),
+        "failure_message": attr.string(
+            doc = "An extra failure message to append to diff failure lines.",
+        ),
         "file_new": attr.label(
             allow_single_file = True,
             doc = "The new (right) file of the comparison.",
