@@ -27,7 +27,7 @@
 #include "absl/log/absl_log.h"
 #include "absl/log/initialize.h"
 #include "absl/status/statusor.h"
-#include "mbo/diff/unified_diff.h"
+#include "mbo/diff/diff.h"
 #include "mbo/diff/update_absl_log_flags.h"
 #include "mbo/file/artefact.h"
 #include "mbo/strings/indent.h"
@@ -112,12 +112,20 @@ ABSL_FLAG(
 Regular expression and replace value. The format consisted of a separator character (e.g. '/') \
 followed by the regular expression, followed by the separator, followed by the replacement string, \
 followed by the separator. Example: /foo/bar/.");
+ABSL_FLAG(
+    std::string,
+    algorithm,
+    "unified",
+    R"(Diff algorigth:
+- unified: Like diff -u or git diff.
+- direct:  Direct side-by-side comparison.
+)");
 
 // NOLINTEND(*avoid-non-const-global-variables,*abseil-no-namespace)
 
 namespace {
 
-using mbo::diff::UnifiedDiff;
+using mbo::diff::Diff;
 using mbo::file::Artefact;
 
 absl::StatusOr<Artefact> Read(std::string_view file_name) {
@@ -131,15 +139,15 @@ absl::StatusOr<Artefact> Read(std::string_view file_name) {
   return result;
 }
 
-UnifiedDiff::Options::FileHeaderUse GetFileHeaderUse() {
+Diff::Options::FileHeaderUse GetFileHeaderUse() {
   const std::string mode = absl::GetFlag(FLAGS_file_header_use);
   if (mode == "left") {
-    return UnifiedDiff::Options::FileHeaderUse::kLeft;
+    return Diff::Options::FileHeaderUse::kLeft;
   }
   if (mode == "right") {
-    return UnifiedDiff::Options::FileHeaderUse::kRight;
+    return Diff::Options::FileHeaderUse::kRight;
   }
-  return UnifiedDiff::Options::FileHeaderUse::kBoth;
+  return Diff::Options::FileHeaderUse::kBoth;
 }
 
 int Diff(std::string_view lhs_name, std::string_view rhs_name) {
@@ -152,7 +160,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
     return 1;
   }
   const std::string strip_comments = absl::GetFlag(FLAGS_strip_comments);
-  const UnifiedDiff::Options diff_options{
+  const Diff::Options diff_options{
       .context_size = absl::GetFlag(FLAGS_unified),
       .file_header_use = GetFileHeaderUse(),
       .ignore_blank_lines = absl::GetFlag(FLAGS_ignore_blank_lines),
@@ -168,7 +176,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
       .ignore_consecutive_space = absl::GetFlag(FLAGS_ignore_consecutive_space),
       .ignore_trailing_space = absl::GetFlag(FLAGS_ignore_trailing_space),
       .skip_left_deletions = absl::GetFlag(FLAGS_skip_left_deletions),
-      .strip_comments = [&]() -> UnifiedDiff::StripCommentOptions {
+      .strip_comments = [&]() -> Diff::StripCommentOptions {
         if (strip_comments.empty()) {
           return {};
         } else if (absl::GetFlag(FLAGS_strip_parsed_comments)) {
@@ -183,11 +191,17 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
           };
         }
       }(),
-      .regex_replace_lhs{UnifiedDiff::ParseRegexReplaceFlag(absl::GetFlag(FLAGS_regex_replace_lhs))},
-      .regex_replace_rhs{UnifiedDiff::ParseRegexReplaceFlag(absl::GetFlag(FLAGS_regex_replace_rhs))},
+      .regex_replace_lhs{Diff::ParseRegexReplaceFlag(absl::GetFlag(FLAGS_regex_replace_lhs))},
+      .regex_replace_rhs{Diff::ParseRegexReplaceFlag(absl::GetFlag(FLAGS_regex_replace_rhs))},
       .strip_file_header_prefix = absl::GetFlag(FLAGS_strip_file_header_prefix),
   };
-  const auto result = UnifiedDiff::Diff(*lhs, *rhs, diff_options);
+  const auto result = [&] {
+    if (absl::GetFlag(FLAGS_algorithm) == "direct") {
+      return Diff::DiffDirect(*lhs, *rhs, diff_options);
+    } else {
+      return Diff::DiffUnified(*lhs, *rhs, diff_options);
+    }
+  }();
   if (!result.ok()) {
     ABSL_LOG(ERROR) << "ERROR: " << result.status();
     return 1;

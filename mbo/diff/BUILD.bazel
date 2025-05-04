@@ -33,9 +33,9 @@ cc_library(
 )
 
 cc_library(
-    name = "unified_diff_cc",
-    srcs = ["unified_diff.cc"],
-    hdrs = ["unified_diff.h"],
+    name = "diff_cc",
+    srcs = ["diff.cc"],
+    hdrs = ["diff.h"],
     visibility = ["//visibility:public"],
     deps = [
         "//mbo/file:artefact_cc",
@@ -57,7 +57,7 @@ cc_binary(
     srcs = ["unified_diff_main.cc"],
     visibility = ["//visibility:public"],
     deps = [
-        ":unified_diff_cc",
+        ":diff_cc",
         ":update_absl_log_flags_cc",
         "//mbo/file:artefact_cc",
         "//mbo/strings:indent_cc",
@@ -74,11 +74,11 @@ cc_binary(
 )
 
 cc_test(
-    name = "unified_diff_test",
+    name = "diff_test",
     size = "small",
-    srcs = ["unified_diff_test.cc"],
+    srcs = ["diff_test.cc"],
     deps = [
-        ":unified_diff_cc",
+        ":diff_cc",
         "//mbo/container:convert_container_cc",
         "//mbo/file:artefact_cc",
         "//mbo/strings:indent_cc",

@@ -3,6 +3,9 @@
 * Renamed diff tooling options `ignore_space_change` to `ignore_trailing_space.
 * Renamed `lhs_regex_replace` and `rhs_regex_replace` to `regex_replace_lhs` and `regex_replace_rhs` respectively.
 * Added `regex_replace_lhs` and `regex_replace_rhs` to bzl rules `//mbo/diff:diff_test` and `//mbo/diff/tests:diff_test_test`.
+* Renamed `mbo::diff::UnifiedDiff` to `mbo::diff::Diff`.
+* Implemented diff algorithm `kDirect` which performs a direct side by side comparison.
+* Renamed //mbo/diff/unified_diff.cc/h to diff.cc/h.
 
 # 0.7.0
 

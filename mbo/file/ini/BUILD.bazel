@@ -42,7 +42,7 @@ cc_test(
     ]),
     deps = [
         "ini_file_cc",
-        "//mbo/diff:unified_diff_cc",
+        "//mbo/diff:diff_cc",
         "//mbo/file:artefact_cc",
         "//mbo/file:file_cc",
         "//mbo/testing:runfiles_dir_cc",

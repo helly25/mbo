@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_DIFF_UNIFIED_DIFF_H_
-#define MBO_DIFF_UNIFIED_DIFF_H_
+#ifndef MBO_DIFF_DIFF_H_
+#define MBO_DIFF_DIFF_H_
 
 #include <cstddef>
 #include <memory>
@@ -47,7 +47,7 @@ namespace mbo::diff {
 // The complexity of the algorithm used is O(L*R) in the worst case. In practise
 // the algorithm is closer to O(max(L,R)) for small differences. In detail the
 // algorithm has a complexity of O(max(L,R)+dL*R+L*dR).
-class UnifiedDiff final {
+class Diff final {
  public:
   struct NoCommentStripping final {};
 
@@ -66,6 +66,18 @@ class UnifiedDiff final {
       kBoth = 0,   // In header both file names are used (left uses left file name and right uses right file name).
       kLeft = 1,   // In header left and right file both use left file name.
       kRight = 2,  // In header left and right file both use right file name.
+    };
+
+    enum class Algorithm {
+      // Unified diff like `diff -u` or `git diff`.
+      kUnified = 0,
+
+      // Compare two inputs and output in direct side by side format.
+      // That is similar to unified format, but it is assumed that the left and
+      // right content are meant to line up with only changed lines and no added
+      // or removed lines. The changes are then presented next to each other.
+      // This mode does not allow for context.
+      kDirect = 1,
     };
 
     static const Options& Default() noexcept;
@@ -89,16 +101,32 @@ class UnifiedDiff final {
     std::size_t max_diff_chunk_length = 1'337'000;  // NOLINT(*-magic-numbers)
 
     std::string time_format = "%F %H:%M:%E3S %z";
+
+    Algorithm algorithm = Algorithm::kUnified;
   };
 
-  static absl::StatusOr<std::string> Diff(
+  // Compare two inputs and output differences in unified format.
+  static absl::StatusOr<std::string> DiffUnified(
       const file::Artefact& lhs,
       const file::Artefact& rhs,
       const Options& options = Options::Default());
 
-  UnifiedDiff() = delete;
+  // Compare two inputs and output in direct side by side format.
+  // See `Algorithm::kDirect`.
+  static absl::StatusOr<std::string> DiffDirect(
+      const file::Artefact& lhs,
+      const file::Artefact& rhs,
+      const Options& options = Options::Default());
+
+  // Algorithm selected by `options.algorithm`.
+  static absl::StatusOr<std::string> DiffSelect(
+      const file::Artefact& lhs,
+      const file::Artefact& rhs,
+      const Options& options = Options::Default());
+
+  Diff() = delete;
 };
 
 }  // namespace mbo::diff
 
-#endif  // MBO_DIFF_UNIFIED_DIFF_H_
+#endif  // MBO_DIFF_DIFF_H_

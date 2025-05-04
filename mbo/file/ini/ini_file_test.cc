@@ -28,7 +28,7 @@
 #include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "mbo/diff/unified_diff.h"
+#include "mbo/diff/diff.h"
 #include "mbo/file/artefact.h"
 #include "mbo/file/file.h"
 #include "mbo/testing/runfiles_dir.h"
@@ -91,7 +91,7 @@ TEST_F(IniFileTest, TestGolden) {
     ++file_count;
     MBO_ASSERT_OK_AND_ASSIGN(const auto dst_artefact, Artefact::Read(dst_fn));
     MBO_ASSERT_OK_AND_ASSIGN(const auto exp_artefact, Artefact::Read(exp_fn));
-    MBO_ASSERT_OK_AND_ASSIGN(const std::string diff, mbo::diff::UnifiedDiff::Diff(exp_artefact, dst_artefact));
+    MBO_ASSERT_OK_AND_ASSIGN(const std::string diff, mbo::diff::Diff::DiffSelect(exp_artefact, dst_artefact));
     if (base == "empty") {
       EXPECT_THAT(ini, IsEmpty());
       EXPECT_THAT(ini, SizeIs(Eq(0)));
