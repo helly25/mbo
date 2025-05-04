@@ -42,6 +42,22 @@ diff_test_test(
     file_old = "abc.txt",
 )
 
+diff_test_test(
+    name = "abc_axc_unified_diff_test",
+    algorithm = "unified",
+    expected_diff = "abc_axc.diff.txt",
+    file_new = "axc.txt",
+    file_old = "abc.txt",
+)
+
+diff_test_test(
+    name = "abc_axc_direct_diff_test",
+    algorithm = "direct",
+    expected_diff = "abc_axc_direct.diff.txt",
+    file_new = "axc.txt",
+    file_old = "abc.txt",
+)
+
 diff_test(
     name = "diff_ignore_matching_lines_test",
     file_new = "axc.txt",
@@ -141,7 +157,7 @@ diff_test_test(
 )
 
 diff_test_test(
-    name = "numbers_blnanks_plus_diff_test",
+    name = "numbers_blanks_plus_diff_test",
     expected_diff = "numbers_blanks_plus.diff.txt",
     file_new = "numbers_blanks_plus.txt",
     file_old = "numbers.txt",

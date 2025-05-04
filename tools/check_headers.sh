@@ -17,9 +17,9 @@
 
 set -euxo pipefail
 
-bazel build -c opt //mbo/diff:unified_diff
+bazel build -c opt //mbo/diff
 
-UNIFIED_DIFF="bazel-bin/mbo/diff/unified_diff"
+UNIFIED_DIFF="bazel-bin/mbo/diff/diff"
 
 if find -P -E . >/dev/null 2>&1; then
     FLAGS=("-P" "-E")

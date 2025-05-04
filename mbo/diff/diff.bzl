@@ -24,7 +24,7 @@ def diff_test(
         name,
         file_old,
         file_new,
-        algorithm = "",
+        algorithm = "unified",
         failure_message = "",
         ignore_all_space = False,
         ignore_consecutive_space = False,
@@ -96,6 +96,7 @@ def _diff_test_impl(ctx):
         fail("Windows not yet supported")
     else:
         test_bin = ctx.actions.declare_file(ctx.label.name + "-test.sh")
+        strip_file_header_prefix = "external/(com_)?helly25_mbo[^/]*/"
         ctx.actions.write(
             output = test_bin,
             content = r"""#!/usr/bin/env bash
@@ -128,10 +129,10 @@ if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
     --ignore_matching_chunks={ignore_matching_chunks} \
     --ignore_matching_lines={ignore_matching_lines} \
     --ignore_trailing_space={ignore_trailing_space} \
-    --regex_replace_lhs={regex_replace_lhs} \\
-    --regex_replace_rhs={regex_replace_rhs} \\
+    --regex_replace_lhs={regex_replace_lhs} \
+    --regex_replace_rhs={regex_replace_rhs} \
     --strip_comments={strip_comments} \
-    --strip_file_header_prefix="external/com_helly25_mbo/" \
+    --strip_file_header_prefix={strip_file_header_prefix} \
     --strip_parsed_comments={strip_parsed_comments} \
 ; then
   echo >&2 "FAIL: files \"{file_old}\" and \"{file_new}\" differ. " {failure_message}
@@ -153,6 +154,7 @@ fi
                 regex_replace_lhs = shell.quote(ctx.attr.regex_replace_lhs),
                 regex_replace_rhs = shell.quote(ctx.attr.regex_replace_rhs),
                 strip_comments = shell.quote(ctx.attr.strip_comments),
+                strip_file_header_prefix = shell.quote(strip_file_header_prefix),
                 strip_parsed_comments = bool_arg(ctx.attr.strip_parsed_comments),
             ),
             is_executable = True,
@@ -173,7 +175,7 @@ _diff_test = rule(
         "algorithm": attr.string(
             default = "",
             doc = "The diff algorithm to use.",
-            values = ["", "direct", "unified"],
+            values = ["direct", "unified"],
         ),
         "failure_message": attr.string(
             doc = "An extra failure message to append to diff failure lines.",
@@ -235,7 +237,7 @@ _diff_test = rule(
         ),
         "_diff_tool": attr.label(
             doc = "The diff tool executable.",
-            default = Label("//mbo/diff:unified_diff"),
+            default = Label("//mbo/diff"),
             allow_single_file = True,
             executable = True,
             cfg = "exec",

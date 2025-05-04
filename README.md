@@ -37,7 +37,7 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
     * `namespace mbo::diff`
     * mbo/diff:dff_cc, mbo/diff/diff.h
         * class `Diff`: A class that implements unified-diffing.
-    * mbo/diff:diff
+    * mbo/diff
         * binary `unfied_diff`: A binary that performs a unified-diff on two files.
     * mbo/diff:diff_bzl, mbo/diff/diff.bzl
         * bzl-macro `difftest`: A test rule that compares an output versus a golden file.

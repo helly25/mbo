@@ -59,6 +59,7 @@ def diff_test_test(
         strip_parsed_comments:    Whether to parse lines when stripping comments.
         **kwargs:                 Keyword args to pass down to native rules.
     """
+    strip_file_header_prefix = "external/(com_)?helly25_mbo[^/]*/"
     native.genrule(
         name = name + "_diff",
         srcs = [
@@ -66,9 +67,9 @@ def diff_test_test(
             file_new,
         ],
         outs = [name + ".diff"],
-        tools = ["//mbo/diff:unified_diff"],
-        cmd = """
-            $(location //mbo/diff:unified_diff) --skip_time \\
+        tools = ["//mbo/diff"],
+        cmd = """set euxo pipefail
+            $(location //mbo/diff) --skip_time \\
                 $(location {file_old}) $(location {file_new}) > $@ \\
                 --algorithm={algorithm} \\
                 --ignore_all_space={ignore_all_space} \\
@@ -81,7 +82,7 @@ def diff_test_test(
                 --regex_replace_lhs={regex_replace_lhs} \\
                 --regex_replace_rhs={regex_replace_rhs} \\
                 --strip_comments={strip_comments} \\
-                --strip_file_header_prefix="external/(com_)?helly25_mbo[^/]*/" \\
+                --strip_file_header_prefix={strip_file_header_prefix} \\
                 --strip_parsed_comments={strip_parsed_comments} \\
                 || true
         """.format(
@@ -98,6 +99,7 @@ def diff_test_test(
             regex_replace_lhs = shell.quote(regex_replace_lhs),
             regex_replace_rhs = shell.quote(regex_replace_rhs),
             strip_comments = shell.quote(strip_comments),
+            strip_file_header_prefix = shell.quote(strip_file_header_prefix),
             strip_parsed_comments = bool_arg(strip_parsed_comments),
         ),
         tags = kwargs.get("tags, None"),
