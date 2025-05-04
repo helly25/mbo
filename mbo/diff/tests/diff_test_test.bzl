@@ -66,9 +66,9 @@ def diff_test_test(
             file_new,
         ],
         outs = [name + ".diff"],
-        tools = ["//mbo/diff:unified_diff"],
+        tools = ["//mbo/diff"],
         cmd = """
-            $(location //mbo/diff:unified_diff) --skip_time \\
+            $(location //mbo/diff) --skip_time \\
                 $(location {file_old}) $(location {file_new}) > $@ \\
                 --algorithm={algorithm} \\
                 --ignore_all_space={ignore_all_space} \\

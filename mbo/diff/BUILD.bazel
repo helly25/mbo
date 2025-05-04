@@ -53,8 +53,8 @@ cc_library(
 )
 
 cc_binary(
-    name = "unified_diff",
-    srcs = ["unified_diff_main.cc"],
+    name = "diff",
+    srcs = ["diff_main.cc"],
     visibility = ["//visibility:public"],
     deps = [
         ":diff_cc",

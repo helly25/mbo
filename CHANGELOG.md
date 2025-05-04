@@ -5,7 +5,8 @@
 * Added `regex_replace_lhs` and `regex_replace_rhs` to bzl rules `//mbo/diff:diff_test` and `//mbo/diff/tests:diff_test_test`.
 * Renamed `mbo::diff::UnifiedDiff` to `mbo::diff::Diff`.
 * Implemented diff algorithm `kDirect` which performs a direct side by side comparison.
-* Renamed //mbo/diff/unified_diff.cc/h to diff.cc/h.
+* Renamed `//mbo/diff/unified_diff(_main).cc/h` to `//mbo/diff/diff(_main).cc/h`.
+* Renamed `//mbo/diff:unified_diff` to `//mbo/diff`.
 
 # 0.7.0
 

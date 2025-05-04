@@ -24,7 +24,7 @@ def diff_test(
         name,
         file_old,
         file_new,
-        algorithm = "",
+        algorithm = "unified",
         failure_message = "",
         ignore_all_space = False,
         ignore_consecutive_space = False,
@@ -173,7 +173,7 @@ _diff_test = rule(
         "algorithm": attr.string(
             default = "",
             doc = "The diff algorithm to use.",
-            values = ["", "direct", "unified"],
+            values = ["direct", "unified"],
         ),
         "failure_message": attr.string(
             doc = "An extra failure message to append to diff failure lines.",
@@ -235,7 +235,7 @@ _diff_test = rule(
         ),
         "_diff_tool": attr.label(
             doc = "The diff tool executable.",
-            default = Label("//mbo/diff:unified_diff"),
+            default = Label("//mbo/diff"),
             allow_single_file = True,
             executable = True,
             cfg = "exec",
