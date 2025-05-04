@@ -24,6 +24,7 @@ def diff_test(
         name,
         file_old,
         file_new,
+        algorithm = "",
         failure_message = "",
         ignore_all_space = False,
         ignore_consecutive_space = False,
@@ -45,6 +46,7 @@ def diff_test(
         name:                     Name of the test
         file_old:                 The old file.
         file_new:                 The new file.
+        algorithm:                Algorithm to use ('unified', 'direct', etc).
         failure_message:          Additional message to log if the files don't match.
         ignore_all_space:         Ignore all leading, trailing, and consecutive internal whitespace changes.
         ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
@@ -63,6 +65,7 @@ def diff_test(
         name = name,
         file_old = file_old,
         file_new = file_new,
+        algorithm = algorithm,
         failure_message = failure_message,
         is_windows = select({
             "@bazel_tools//src/conditions:host_windows": True,
@@ -75,8 +78,8 @@ def diff_test(
         ignore_matching_lines = ignore_matching_lines,
         ignore_matching_chunks = ignore_matching_chunks,
         ignore_trailing_space = ignore_trailing_space,
-        regex_replace_lhs = shell.quote(regex_replace_lhs),
-        regex_replace_rhs = shell.quote(regex_replace_rhs),
+        regex_replace_lhs = regex_replace_lhs,
+        regex_replace_rhs = regex_replace_rhs,
         strip_comments = strip_comments,
         strip_parsed_comments = strip_parsed_comments,
         **kwargs
@@ -117,6 +120,7 @@ else
   exit 1
 fi
 if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
+    --algorithm={algorithm} \
     --ignore_all_space={ignore_all_space} \
     --ignore_consecutive_space={ignore_consecutive_space} \
     --ignore_blank_lines={ignore_blank_lines} \
@@ -138,6 +142,7 @@ fi
                 failure_message = shell.quote(ctx.attr.failure_message),
                 file_old = _runfiles_path(ctx.file.file_old),
                 file_new = _runfiles_path(ctx.file.file_new),
+                algorithm = shell.quote(ctx.attr.algorithm),
                 ignore_all_space = bool_arg(ctx.attr.ignore_all_space),
                 ignore_consecutive_space = bool_arg(ctx.attr.ignore_consecutive_space),
                 ignore_blank_lines = bool_arg(ctx.attr.ignore_blank_lines),
@@ -165,6 +170,11 @@ fi
 
 _diff_test = rule(
     attrs = {
+        "algorithm": attr.string(
+            default = "",
+            doc = "The diff algorithm to use.",
+            values = ["", "direct", "unified"],
+        ),
         "failure_message": attr.string(),
         "file_new": attr.label(
             allow_single_file = True,
