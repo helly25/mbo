@@ -23,6 +23,7 @@ def diff_test_test(
         file_old,
         file_new,
         expected_diff,
+        algorithm = "",
         ignore_all_space = False,
         ignore_consecutive_space = False,
         ignore_blank_lines = False,
@@ -44,6 +45,7 @@ def diff_test_test(
         file_old:                 The old file.
         file_new:                 The new file.
         expected_diff:            The expected diff result.
+        algorithm:                Algorithm to use ('unified', 'direct', etc).
         ignore_all_space:         Ignore all leading, trailing, and consecutive internal whitespace changes.
         ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
         ignore_blank_lines:       Ignore chunks which include only blank lines.
@@ -68,6 +70,7 @@ def diff_test_test(
         cmd = """
             $(location //mbo/diff:unified_diff) --skip_time \\
                 $(location {file_old}) $(location {file_new}) > $@ \\
+                --algorithm={algorithm} \\
                 --ignore_all_space={ignore_all_space} \\
                 --ignore_consecutive_space={ignore_consecutive_space} \\
                 --ignore_blank_lines={ignore_blank_lines} \\
@@ -84,6 +87,7 @@ def diff_test_test(
         """.format(
             file_old = file_old,
             file_new = file_new,
+            algorithm = shell.quote(algorithm),
             ignore_all_space = bool_arg(ignore_all_space),
             ignore_consecutive_space = bool_arg(ignore_consecutive_space),
             ignore_blank_lines = bool_arg(ignore_blank_lines),

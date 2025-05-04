@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mbo/diff/unified_diff.h"
+#include "mbo/diff/diff.h"
 
 #include <cstddef>
 #include <string>
@@ -37,16 +37,16 @@ using ::mbo::testing::IsOkAndHolds;
 using ::testing::ElementsAreArray;
 using ::testing::IsEmpty;
 
-class UnifiedDiffTest : public ::testing::Test {
+class DiffTest : public ::testing::Test {
  public:
   // IMPORTANT: Uses a global cache, so cannot be used simultaneously.
-  static absl::StatusOr<std::vector<std::string>> UnifiedDiff(
+  static absl::StatusOr<std::vector<std::string>> Diff(
       file::Artefact lhs,
       file::Artefact rhs,
-      const UnifiedDiff::Options& options = UnifiedDiff::Options::Default()) {
+      const Diff::Options& options = Diff::Options::Default()) {
     lhs.data = DropIndent(lhs.data);
     rhs.data = DropIndent(rhs.data);
-    absl::StatusOr<std::string> result = mbo::diff::UnifiedDiff::Diff(lhs, rhs, options);
+    absl::StatusOr<std::string> result = mbo::diff::Diff::DiffUnified(lhs, rhs, options);
     if (!result.ok()) {
       return result.status();
     }
@@ -66,37 +66,36 @@ class UnifiedDiffTest : public ::testing::Test {
   }
 };
 
-TEST_F(UnifiedDiffTest, Empty) {
-  EXPECT_THAT(UnifiedDiff({}, {}), IsOkAndHolds(IsEmpty()));
-  EXPECT_THAT(UnifiedDiff({"\n", "lhs"}, {"\n", "rhs"}), IsOkAndHolds(IsEmpty()));
+TEST_F(DiffTest, Empty) {
+  EXPECT_THAT(Diff({}, {}), IsOkAndHolds(IsEmpty()));
+  EXPECT_THAT(Diff({"\n", "lhs"}, {"\n", "rhs"}), IsOkAndHolds(IsEmpty()));
 }
 
-TEST_F(UnifiedDiffTest, Equal) {
+TEST_F(DiffTest, Equal) {
   for (const std::string txt : {"a", "a\nb", "a\nb\n"}) {
-    EXPECT_THAT(UnifiedDiff({txt, "lhs"}, {txt, "rhs"}), IsOkAndHolds(IsEmpty()));
+    EXPECT_THAT(Diff({txt, "lhs"}, {txt, "rhs"}), IsOkAndHolds(IsEmpty()));
   }
 }
 
-TEST_F(UnifiedDiffTest, OnlyLhs) {
+TEST_F(DiffTest, OnlyLhs) {
   const std::string txt = R"txt(
     l
   )txt";
-  EXPECT_THAT(UnifiedDiff({txt, "lhs"}, {"\n", "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+  EXPECT_THAT(Diff({txt, "lhs"}, {"\n", "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1 +1 @@
     -l
     +
   )txt"))));
-  EXPECT_THAT(UnifiedDiff({txt, "lhs"}, {"", "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+  EXPECT_THAT(Diff({txt, "lhs"}, {"", "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1 +0,0 @@
     -l
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("alb"), "lhs"}, {ToLines("ab"), "rhs"}),
-      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+      Diff({ToLines("alb"), "lhs"}, {ToLines("ab"), "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1,3 +1,2 @@
@@ -105,7 +104,7 @@ TEST_F(UnifiedDiffTest, OnlyLhs) {
      b
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("1234_L_5678"), "lhs"}, {ToLines("12345678"), "rhs"}),
+      Diff({ToLines("1234_L_5678"), "lhs"}, {ToLines("12345678"), "rhs"}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -122,26 +121,25 @@ TEST_F(UnifiedDiffTest, OnlyLhs) {
   )txt"))));
 }
 
-TEST_F(UnifiedDiffTest, OnlyRhs) {
+TEST_F(DiffTest, OnlyRhs) {
   const std::string txt = R"txt(
     r
   )txt";
-  EXPECT_THAT(UnifiedDiff({"\n", "lhs"}, {txt, "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+  EXPECT_THAT(Diff({"\n", "lhs"}, {txt, "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1 +1 @@
     -
     +r
   )txt"))));
-  EXPECT_THAT(UnifiedDiff({"", "lhs"}, {txt, "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+  EXPECT_THAT(Diff({"", "lhs"}, {txt, "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -0,0 +1 @@
     +r
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("ab"), "lhs"}, {ToLines("arb"), "rhs"}),
-      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+      Diff({ToLines("ab"), "lhs"}, {ToLines("arb"), "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1,2 +1,3 @@
@@ -150,7 +148,7 @@ TEST_F(UnifiedDiffTest, OnlyRhs) {
      b
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("12345678"), "lhs"}, {ToLines("1234_R_5678"), "rhs"}),
+      Diff({ToLines("12345678"), "lhs"}, {ToLines("1234_R_5678"), "rhs"}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -167,8 +165,8 @@ TEST_F(UnifiedDiffTest, OnlyRhs) {
   )txt"))));
 }
 
-TEST_F(UnifiedDiffTest, NoNewLine) {
-  EXPECT_THAT(UnifiedDiff({ToLines("l"), "lhs"}, {"r", "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+TEST_F(DiffTest, NoNewLine) {
+  EXPECT_THAT(Diff({ToLines("l"), "lhs"}, {"r", "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1 +1 @@
@@ -176,7 +174,7 @@ TEST_F(UnifiedDiffTest, NoNewLine) {
     +r
     \ No newline at end of file
   )txt"))));
-  EXPECT_THAT(UnifiedDiff({"l", "lhs"}, {ToLines("r"), "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+  EXPECT_THAT(Diff({"l", "lhs"}, {ToLines("r"), "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1 +1 @@
@@ -184,7 +182,7 @@ TEST_F(UnifiedDiffTest, NoNewLine) {
     \ No newline at end of file
     +r
   )txt"))));
-  EXPECT_THAT(UnifiedDiff({"l", "lhs"}, {"r", "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+  EXPECT_THAT(Diff({"l", "lhs"}, {"r", "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1 +1 @@
@@ -195,9 +193,9 @@ TEST_F(UnifiedDiffTest, NoNewLine) {
   )txt"))));
 }
 
-TEST_F(UnifiedDiffTest, CompletelyDifferent) {
+TEST_F(DiffTest, CompletelyDifferent) {
   EXPECT_THAT(
-      UnifiedDiff({ToLines("l"), "lhs"}, {ToLines("r"), "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+      Diff({ToLines("l"), "lhs"}, {ToLines("r"), "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1 +1 @@
@@ -205,8 +203,7 @@ TEST_F(UnifiedDiffTest, CompletelyDifferent) {
     +r
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("l1"), "lhs"}, {ToLines("r2"), "rhs"}),
-      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+      Diff({ToLines("l1"), "lhs"}, {ToLines("r2"), "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1,2 +1,2 @@
@@ -217,10 +214,9 @@ TEST_F(UnifiedDiffTest, CompletelyDifferent) {
   )txt"))));
 }
 
-TEST_F(UnifiedDiffTest, Diff) {
+TEST_F(DiffTest, Diff) {
   EXPECT_THAT(
-      UnifiedDiff({ToLines("a1b"), "lhs"}, {ToLines("a2b"), "rhs"}),
-      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+      Diff({ToLines("a1b"), "lhs"}, {ToLines("a2b"), "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1,3 +1,3 @@
@@ -230,8 +226,7 @@ TEST_F(UnifiedDiffTest, Diff) {
      b
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("a12b"), "lhs"}, {ToLines("a3b"), "rhs"}),
-      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+      Diff({ToLines("a12b"), "lhs"}, {ToLines("a3b"), "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1,4 +1,3 @@
@@ -242,8 +237,7 @@ TEST_F(UnifiedDiffTest, Diff) {
      b
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("a1b"), "lhs"}, {ToLines("a23b"), "rhs"}),
-      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+      Diff({ToLines("a1b"), "lhs"}, {ToLines("a23b"), "rhs"}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1,3 +1,4 @@
@@ -255,9 +249,9 @@ TEST_F(UnifiedDiffTest, Diff) {
   )txt"))));
 }
 
-TEST_F(UnifiedDiffTest, Multi1) {
+TEST_F(DiffTest, Multi1) {
   EXPECT_THAT(
-      UnifiedDiff({ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"}, {.context_size = 0}),
+      Diff({ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"}, {.context_size = 0}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -275,7 +269,7 @@ TEST_F(UnifiedDiffTest, Multi1) {
   // Context_size = 1 is the mosty the same as context_size = 2:
   // Skip the first/last line, rest of the diff is the same.
   EXPECT_THAT(
-      UnifiedDiff({ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"}, {.context_size = 1}),
+      Diff({ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"}, {.context_size = 1}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -313,18 +307,18 @@ TEST_F(UnifiedDiffTest, Multi1) {
      d
   )txt";
   EXPECT_THAT(
-      UnifiedDiff({ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"}),
+      Diff({ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(kOneChunk))));
   for (const std::size_t context_size : {2, 3, 5, 50}) {
     EXPECT_THAT(
-        UnifiedDiff({ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"}, {.context_size = context_size}),
+        Diff({ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"}, {.context_size = context_size}),
         IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(kOneChunk))));
   }
 }
 
-TEST_F(UnifiedDiffTest, Multi2) {
+TEST_F(DiffTest, Multi2) {
   EXPECT_THAT(
-      UnifiedDiff({ToLines("123456789ac0"), "lhs"}, {ToLines("1234ab7890"), "rhs"}),
+      Diff({ToLines("123456789ac0"), "lhs"}, {ToLines("1234ab7890"), "rhs"}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -344,7 +338,7 @@ TEST_F(UnifiedDiffTest, Multi2) {
      0
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("123456789ac0"), "lhs"}, {ToLines("1234ab7890"), "rhs"}, {.context_size = 2}),
+      Diff({ToLines("123456789ac0"), "lhs"}, {ToLines("1234ab7890"), "rhs"}, {.context_size = 2}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -363,7 +357,7 @@ TEST_F(UnifiedDiffTest, Multi2) {
      0
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("123456789ac0"), "lhs"}, {ToLines("1234ab7890"), "rhs"}, {.context_size = 1}),
+      Diff({ToLines("123456789ac0"), "lhs"}, {ToLines("1234ab7890"), "rhs"}, {.context_size = 1}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -381,7 +375,7 @@ TEST_F(UnifiedDiffTest, Multi2) {
      0
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("123456789ac0"), "lhs"}, {ToLines("1234ab7890"), "rhs"}, {.context_size = 0}),
+      Diff({ToLines("123456789ac0"), "lhs"}, {ToLines("1234ab7890"), "rhs"}, {.context_size = 0}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -396,9 +390,9 @@ TEST_F(UnifiedDiffTest, Multi2) {
   )txt"))));
 }
 
-TEST_F(UnifiedDiffTest, Multi3) {
+TEST_F(DiffTest, Multi3) {
   EXPECT_THAT(
-      UnifiedDiff({ToLines("123456789XYZac0"), "lhs"}, {ToLines("1234ab789XYZ0"), "rhs"}),
+      Diff({ToLines("123456789XYZac0"), "lhs"}, {ToLines("1234ab789XYZ0"), "rhs"}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -421,7 +415,7 @@ TEST_F(UnifiedDiffTest, Multi3) {
      0
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("123456789_XYZac0"), "lhs"}, {ToLines("1234ab789_XYZ0"), "rhs"}),
+      Diff({ToLines("123456789_XYZac0"), "lhs"}, {ToLines("1234ab789_XYZ0"), "rhs"}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -445,7 +439,7 @@ TEST_F(UnifiedDiffTest, Multi3) {
      0
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff({ToLines("123456789_XYZac0"), "lhs"}, {ToLines("1234ab789_XYZ0"), "rhs"}, {.context_size = 4}),
+      Diff({ToLines("123456789_XYZac0"), "lhs"}, {ToLines("1234ab789_XYZ0"), "rhs"}, {.context_size = 4}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
@@ -471,7 +465,7 @@ TEST_F(UnifiedDiffTest, Multi3) {
   )txt"))));
 }
 
-TEST_F(UnifiedDiffTest, RegexReplace) {
+TEST_F(DiffTest, RegexReplace) {
   const file::Artefact lhs{
       .data = R"txt(
     foo
@@ -496,7 +490,7 @@ TEST_F(UnifiedDiffTest, RegexReplace) {
     )txt",
       .name = "rhs",
   };
-  EXPECT_THAT(UnifiedDiff(lhs, rhs, {}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+  EXPECT_THAT(Diff(lhs, rhs, {}), IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
     +++ rhs 1970-01-01 00:00:00.000 +0000
     @@ -1,3 +1,3 @@
@@ -506,29 +500,29 @@ TEST_F(UnifiedDiffTest, RegexReplace) {
      baz
   )txt"))));
   EXPECT_THAT(
-      UnifiedDiff(
+      Diff(
           lhs, rhs,
           {
-              .regex_replace_lhs = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/SAME/"),
-              .regex_replace_rhs = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,SAME,"),
+              .regex_replace_lhs = Diff::ParseRegexReplaceFlag("/(.*)ERROR.*/SAME/"),
+              .regex_replace_rhs = Diff::ParseRegexReplaceFlag(",(.*)ERROR.*,SAME,"),
           }),
       IsOkAndHolds(IsEmpty()))
       << "The replacement made LHS and RHS the same, so there should be no difference.";
   EXPECT_THAT(
-      UnifiedDiff(
+      Diff(
           lhs, rhs,
           {
-              .regex_replace_lhs = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 SAME/"),
-              .regex_replace_rhs = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 SAME,"),
+              .regex_replace_lhs = Diff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 SAME/"),
+              .regex_replace_rhs = Diff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 SAME,"),
           }),
       IsOkAndHolds(IsEmpty()))
       << "The replacement made LHS and RHS the same, so there should be no differences.";
   EXPECT_THAT(
-      UnifiedDiff(
+      Diff(
           lhs, rhs,
           {
-              .regex_replace_lhs = UnifiedDiff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 LHS/"),
-              .regex_replace_rhs = UnifiedDiff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 RHS,"),
+              .regex_replace_lhs = Diff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 LHS/"),
+              .regex_replace_rhs = Diff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 RHS,"),
           }),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
@@ -541,11 +535,11 @@ TEST_F(UnifiedDiffTest, RegexReplace) {
   )txt"))))
       << "The replacement changes the difference, still different though.";
   EXPECT_THAT(
-      UnifiedDiff(
+      Diff(
           lhs, oth,
           {
-              .regex_replace_lhs = UnifiedDiff::ParseRegexReplaceFlag("/ERROR.*//"),
-              .regex_replace_rhs = UnifiedDiff::ParseRegexReplaceFlag(",ERROR.*,,"),
+              .regex_replace_lhs = Diff::ParseRegexReplaceFlag("/ERROR.*//"),
+              .regex_replace_rhs = Diff::ParseRegexReplaceFlag(",ERROR.*,,"),
           }),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
@@ -558,11 +552,11 @@ TEST_F(UnifiedDiffTest, RegexReplace) {
   )txt"))))
       << "The replacement equalizes the errors, still different though.";
   EXPECT_THAT(
-      UnifiedDiff(
+      Diff(
           lhs, oth,
           {
-              .regex_replace_lhs = UnifiedDiff::ParseRegexReplaceFlag("/bar/oth/"),
-              .regex_replace_rhs = UnifiedDiff::ParseRegexReplaceFlag(",ERROR 3,ERROR 1,"),
+              .regex_replace_lhs = Diff::ParseRegexReplaceFlag("/bar/oth/"),
+              .regex_replace_rhs = Diff::ParseRegexReplaceFlag(",ERROR 3,ERROR 1,"),
           }),
       IsOkAndHolds(IsEmpty()))
       << "Different replacements that producr the same results lead to same zero differences.";
