@@ -275,11 +275,12 @@ class Chunk {
   Chunk() = delete;
   ~Chunk() = default;
 
-  Chunk(const file::Artefact& lhs, const file::Artefact& rhs, const Diff::Options& options)
-      : options_(options), lhs_empty_(lhs.data.empty()), rhs_empty_(rhs.data.empty()), context_(options) {
-    absl::StrAppend(&output_, "--- ", SelectFileHeader(lhs, lhs, rhs, options), "\n");
-    absl::StrAppend(&output_, "+++ ", SelectFileHeader(rhs, lhs, rhs, options), "\n");
-  }
+  Chunk(const file::Artefact& lhs, const file::Artefact& rhs, std::string header, const Diff::Options& options)
+      : options_(options),
+        lhs_empty_(lhs.data.empty()),
+        rhs_empty_(rhs.data.empty()),
+        output_(std::move(header)),
+        context_(options) {}
 
   Chunk(const Chunk&) = delete;
   Chunk& operator=(const Chunk&) = delete;
@@ -335,31 +336,6 @@ class Chunk {
   }
 
  private:
-  static std::string FileHeader(const file::Artefact& info, const Diff::Options& options) {
-    std::string_view name;
-    if (options.strip_file_header_prefix.find_first_of(".*?()[]|") == std::string::npos) {
-      name = absl::StripPrefix(info.name, options.strip_file_header_prefix);
-    } else {
-      name = info.name;
-      RE2::Consume(&name, options.strip_file_header_prefix);
-    }
-    return absl::StrCat(info.name.empty() ? "-" : name, " ", absl::FormatTime(options.time_format, info.time, info.tz));
-  }
-
-  static std::string SelectFileHeader(
-      const file::Artefact& either,
-      const file::Artefact& lhs,
-      const file::Artefact& rhs,
-      const Diff::Options& options) {
-    switch (options.file_header_use) {
-      case Diff::Options::FileHeaderUse::kBoth:
-        break;  // Do not use default, but break for this case, so it becomes the function return.
-      case Diff::Options::FileHeaderUse::kLeft: return FileHeader(lhs, options);
-      case Diff::Options::FileHeaderUse::kRight: return FileHeader(rhs, options);
-    }
-    return FileHeader(either, options);
-  }
-
   void CheckContext(std::size_t lhs_idx, std::size_t rhs_idx) {
     if (context_.Empty() && lhs_size_ == 0 && rhs_size_ == 0) {
       lhs_idx_ = lhs_idx;
@@ -463,10 +439,43 @@ class Chunk {
 
 struct DiffBase {
  public:
+  static std::string FileHeaders(const file::Artefact& lhs, const file::Artefact& rhs, const Diff::Options& options) {
+    std::string output;
+    absl::StrAppend(&output, "--- ", SelectFileHeader(lhs, lhs, rhs, options), "\n");
+    absl::StrAppend(&output, "+++ ", SelectFileHeader(rhs, lhs, rhs, options), "\n");
+    return output;
+  }
+
+  static std::string FileHeader(const file::Artefact& info, const Diff::Options& options) {
+    std::string_view name;
+    if (options.strip_file_header_prefix.find_first_of(".*?()[]|") == std::string::npos) {
+      name = absl::StripPrefix(info.name, options.strip_file_header_prefix);
+    } else {
+      name = info.name;
+      RE2::Consume(&name, options.strip_file_header_prefix);
+    }
+    return absl::StrCat(info.name.empty() ? "-" : name, " ", absl::FormatTime(options.time_format, info.time, info.tz));
+  }
+
+  static std::string SelectFileHeader(
+      const file::Artefact& either,
+      const file::Artefact& lhs,
+      const file::Artefact& rhs,
+      const Diff::Options& options) {
+    switch (options.file_header_use) {
+      case Diff::Options::FileHeaderUse::kBoth:
+        break;  // Do not use default, but break for this case, so it becomes the function return.
+      case Diff::Options::FileHeaderUse::kLeft: return FileHeader(lhs, options);
+      case Diff::Options::FileHeaderUse::kRight: return FileHeader(rhs, options);
+    }
+    return FileHeader(either, options);
+  }
+
   DiffBase() = delete;
 
   DiffBase(const file::Artefact& lhs, const file::Artefact& rhs, const Diff::Options& opts)
       : options(opts),
+        header(FileHeaders(lhs, rhs, options)),
         lhs_data(opts, opts.regex_replace_lhs, lhs.data),
         rhs_data(opts, opts.regex_replace_rhs, rhs.data) {}
 
@@ -490,6 +499,7 @@ struct DiffBase {
   }
 
   const Diff::Options& options;
+  const std::string header;
   diff_internal::Data lhs_data;
   diff_internal::Data rhs_data;
 };
@@ -499,7 +509,7 @@ class DiffUnifiedImpl final : private DiffBase {
   DiffUnifiedImpl() = delete;
 
   DiffUnifiedImpl(const file::Artefact& lhs, const file::Artefact& rhs, const Diff::Options& options)
-      : DiffBase(lhs, rhs, options), chunk_(lhs, rhs, options) {}
+      : DiffBase(lhs, rhs, options), chunk_(lhs, rhs, header, options) {}
 
   absl::StatusOr<std::string> Compute() {
     Loop();
@@ -654,8 +664,12 @@ class DiffDirectImpl final : private DiffBase {
   std::vector<std::pair<std::string, std::string>> Compute();
 
   std::string ComputeAsString() {
-    std::string result;
-    for (auto& [lhs, rhs] : Compute()) {
+    auto diff = Compute();
+    if (diff.empty()) {
+      return "";
+    }
+    std::string result = header;
+    for (auto& [lhs, rhs] : diff) {
       absl::StrAppend(&result, "-", lhs, "\n");
       absl::StrAppend(&result, "+", rhs, "\n");
       lhs.clear();
