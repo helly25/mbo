@@ -1,0 +1,82 @@
+# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(
+    default_visibility = ["//mbo/diff:__subpackages__"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
+
+cc_library(
+    name = "update_absl_log_flags_cc",
+    srcs = ["update_absl_log_flags.cc"],
+    hdrs = ["update_absl_log_flags.h"],
+    visibility = ["//mbo/diff:__pkg__"],
+    deps = [
+        "@com_google_absl//absl/flags:commandlineflag",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_absl//absl/flags:reflection",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:flags",
+    ],
+)
+
+cc_library(
+    name = "chunk_cc",
+    srcs = ["chunk.cc"],
+    hdrs = ["chunk.h"],
+    deps = [
+        ":context_cc",
+        "//mbo/diff:diff_options_cc",
+        "//mbo/file:artefact_cc",
+        "//mbo/strings:strip_cc",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_googlesource_code_re2//:re2",
+    ],
+)
+
+cc_library(
+    name = "context_cc",
+    hdrs = ["context.h"],
+    deps = [
+        "//mbo/diff:diff_options_cc",
+        "//mbo/file:artefact_cc",
+        "//mbo/strings:strip_cc",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "data_cc",
+    srcs = ["data.cc"],
+    hdrs = ["data.h"],
+    deps = [
+        "//mbo/diff:diff_options_cc",
+        "//mbo/file:artefact_cc",
+        "//mbo/strings:strip_cc",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_googlesource_code_re2//:re2",
+    ],
+)

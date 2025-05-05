@@ -7,6 +7,8 @@
 * Implemented diff algorithm `kDirect` which performs a direct side by side comparison.
 * Renamed `//mbo/diff/unified_diff(_main).cc/h` to `//mbo/diff/diff(_main).cc/h`.
 * Renamed `//mbo/diff:unified_diff` to `//mbo/diff`.
+* Renamed `unified` to `context` for flags and attributes.
+* Reorganized files and rules in directory `mbo/diff`.
 
 # 0.7.0
 

@@ -13,35 +13,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_DIFF_DIFF_H_
-#define MBO_DIFF_DIFF_H_
+#ifndef MBO_DIFF_IMPL_DIFF_DIRECT_H_
+#define MBO_DIFF_IMPL_DIFF_DIRECT_H_
 
 #include <string>
 
 #include "absl/status/statusor.h"
+#include "mbo/diff/chunked_diff.h"
 #include "mbo/diff/diff_options.h"
 #include "mbo/file/artefact.h"
 
 namespace mbo::diff {
 
-// Creates the unified line-by-line diff between `lhs_text` and `rhs_text`.
+// Forward side by side diff.
 //
-// `lhs_name` and `rhs_name` are used as the file names in the diff headers.
-//
-// If left and right are identical, returns an empty string.
-class Diff final {
+// Compare two inputs and output in direct side by side format.
+// That is similar to unified format, but it is assumed that the left and
+// right content are meant to line up with only changed lines and no added
+// or removed lines. The changes are then presented next to each other.
+class DiffDirect final : private ChunkedDiff {
  public:
-  using Options = DiffOptions;
-
-  // Algorithm selected by `options.algorithm`.
   static absl::StatusOr<std::string> FileDiff(
       const file::Artefact& lhs,
       const file::Artefact& rhs,
-      const Options& options = Options::Default());
+      const DiffOptions& options);
 
-  Diff() = delete;
+  DiffDirect() = delete;
+
+ protected:
+  DiffDirect(const file::Artefact& lhs, const file::Artefact& rhs, const DiffOptions& options)
+      : ChunkedDiff(lhs, rhs, options) {}
+
+  absl::StatusOr<std::string> Compute();
 };
 
 }  // namespace mbo::diff
 
-#endif  // MBO_DIFF_DIFF_H_
+#endif  // MBO_DIFF_IMPL_DIFF_DIRECT_H_

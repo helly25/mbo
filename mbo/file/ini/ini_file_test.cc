@@ -91,7 +91,7 @@ TEST_F(IniFileTest, TestGolden) {
     ++file_count;
     MBO_ASSERT_OK_AND_ASSIGN(const auto dst_artefact, Artefact::Read(dst_fn));
     MBO_ASSERT_OK_AND_ASSIGN(const auto exp_artefact, Artefact::Read(exp_fn));
-    MBO_ASSERT_OK_AND_ASSIGN(const std::string diff, mbo::diff::Diff::DiffSelect(exp_artefact, dst_artefact));
+    MBO_ASSERT_OK_AND_ASSIGN(const std::string diff, mbo::diff::Diff::FileDiff(exp_artefact, dst_artefact));
     if (base == "empty") {
       EXPECT_THAT(ini, IsEmpty());
       EXPECT_THAT(ini, SizeIs(Eq(0)));

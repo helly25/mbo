@@ -24,7 +24,10 @@ def diff_test(
         name,
         file_old,
         file_new,
+        *,
+        file_header_use = "both",
         algorithm = "unified",
+        context = -1,
         failure_message = "",
         ignore_all_space = False,
         ignore_consecutive_space = False,
@@ -35,6 +38,7 @@ def diff_test(
         ignore_trailing_space = False,
         regex_replace_lhs = "",
         regex_replace_rhs = "",
+        show_chunk_headers = True,
         strip_comments = "",
         strip_parsed_comments = True,
         **kwargs):
@@ -46,7 +50,9 @@ def diff_test(
         name:                     Name of the test
         file_old:                 The old file.
         file_new:                 The new file.
+        file_header_use:          Select which file header to use.
         algorithm:                Algorithm to use ('unified', 'direct', etc).
+        context:                  Produces a diff with number of context lines (defaults to 0 for direct diff, 3 otherwise).
         failure_message:          Additional message to log if the files don't match.
         ignore_all_space:         Ignore all leading, trailing, and consecutive internal whitespace changes.
         ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
@@ -57,6 +63,7 @@ def diff_test(
         ignore_trailing_space:    Ignore traling whitespace changes.
         regex_replace_lhs:        Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.
         regex_replace_rhs:        Regular expression and replacement for right side: <sep><regex><sep><replace><sep>.
+        show_chunk_headers:       Whether to show the chunk headers.
         strip_comments:           Strip out anything starting from `strip_comments`.
         strip_parsed_comments:    Whether to parse lines when stripping comments.
         **kwargs:                 Keyword args to pass down to native rules.
@@ -66,6 +73,8 @@ def diff_test(
         file_old = file_old,
         file_new = file_new,
         algorithm = algorithm,
+        context = context,
+        file_header_use = file_header_use,
         failure_message = failure_message,
         is_windows = select({
             "@bazel_tools//src/conditions:host_windows": True,
@@ -80,6 +89,7 @@ def diff_test(
         ignore_trailing_space = ignore_trailing_space,
         regex_replace_lhs = regex_replace_lhs,
         regex_replace_rhs = regex_replace_rhs,
+        show_chunk_headers = show_chunk_headers,
         strip_comments = strip_comments,
         strip_parsed_comments = strip_parsed_comments,
         **kwargs
@@ -122,6 +132,8 @@ else
 fi
 if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
     --algorithm={algorithm} \
+    {context} \
+    --file_header_use={file_header_use} \
     --ignore_all_space={ignore_all_space} \
     --ignore_consecutive_space={ignore_consecutive_space} \
     --ignore_blank_lines={ignore_blank_lines} \
@@ -131,11 +143,13 @@ if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
     --ignore_trailing_space={ignore_trailing_space} \
     --regex_replace_lhs={regex_replace_lhs} \
     --regex_replace_rhs={regex_replace_rhs} \
+    --show_chunk_headers={show_chunk_headers} \
     --strip_comments={strip_comments} \
     --strip_file_header_prefix={strip_file_header_prefix} \
     --strip_parsed_comments={strip_parsed_comments} \
 ; then
-  echo >&2 "FAIL: files \"{file_old}\" and \"{file_new}\" differ. " {failure_message}
+  EXTRA_FAILURE_MESSAGE={failure_message}
+  echo >&2 "FAIL: files \"{file_old}\" and \"{file_new}\" differ.${{EXTRA_FAILURE_MESSAGE:+ }}${{EXTRA_FAILURE_MESSAGE}}"
   exit 1
 fi
 """.format(
@@ -144,6 +158,8 @@ fi
                 file_old = _runfiles_path(ctx.file.file_old),
                 file_new = _runfiles_path(ctx.file.file_new),
                 algorithm = shell.quote(ctx.attr.algorithm),
+                context = "" if ctx.attr.context == -1 else "--context=%d" % ctx.attr.context,
+                file_header_use = shell.quote(ctx.attr.file_header_use),
                 ignore_all_space = bool_arg(ctx.attr.ignore_all_space),
                 ignore_consecutive_space = bool_arg(ctx.attr.ignore_consecutive_space),
                 ignore_blank_lines = bool_arg(ctx.attr.ignore_blank_lines),
@@ -153,6 +169,7 @@ fi
                 ignore_trailing_space = bool_arg(ctx.attr.ignore_trailing_space),
                 regex_replace_lhs = shell.quote(ctx.attr.regex_replace_lhs),
                 regex_replace_rhs = shell.quote(ctx.attr.regex_replace_rhs),
+                show_chunk_headers = bool_arg(ctx.attr.show_chunk_headers),
                 strip_comments = shell.quote(ctx.attr.strip_comments),
                 strip_file_header_prefix = shell.quote(strip_file_header_prefix),
                 strip_parsed_comments = bool_arg(ctx.attr.strip_parsed_comments),
@@ -173,12 +190,21 @@ fi
 _diff_test = rule(
     attrs = {
         "algorithm": attr.string(
-            default = "",
+            default = "unified",
             doc = "The diff algorithm to use.",
             values = ["direct", "unified"],
         ),
+        "context": attr.int(
+            default = -1,
+            doc = "Produces a diff with number of context lines.",
+        ),
         "failure_message": attr.string(
             doc = "An extra failure message to append to diff failure lines.",
+        ),
+        "file_header_use": attr.string(
+            default = "both",
+            doc = "Select which file header to use",
+            values = ["both", "left", "none", "right"],
         ),
         "file_new": attr.label(
             allow_single_file = True,
@@ -227,6 +253,10 @@ _diff_test = rule(
         "regex_replace_rhs": attr.string(
             doc = "Regular expression and replacement for right side:  <sep><regex><sep><replace><sep>.",
             default = "",
+        ),
+        "show_chunk_headers": attr.bool(
+            doc = "Whether to show the chunk headers.",
+            default = True,
         ),
         "strip_comments": attr.string(
             doc = "Strip out any thing starting from `strip_comments`.",
