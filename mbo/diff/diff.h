@@ -29,19 +29,6 @@ namespace mbo::diff {
 // `lhs_name` and `rhs_name` are used as the file names in the diff headers.
 //
 // If left and right are identical, returns an empty string.
-//
-// The implementation is in no way meant to be optimized. It rather aims at
-// matching `diff -du` output API as close as possible. Documentation used:
-// https://en.wikipedia.org/wiki/Diff#Unified_format
-// https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html
-//
-// Most implementations follow LCS (longest common subsequence) approach. Here
-// we implement shortest diff approach, both of which work well with the `patch`
-// tool.
-//
-// The complexity of the algorithm used is O(L*R) in the worst case. In practise
-// the algorithm is closer to O(max(L,R)) for small differences. In detail the
-// algorithm has a complexity of O(max(L,R)+dL*R+L*dR).
 class Diff final {
  public:
   using Options = DiffOptions;

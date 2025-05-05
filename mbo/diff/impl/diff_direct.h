@@ -25,6 +25,12 @@
 
 namespace mbo::diff {
 
+// Forward side by side diff.
+//
+// Compare two inputs and output in direct side by side format.
+// That is similar to unified format, but it is assumed that the left and
+// right content are meant to line up with only changed lines and no added
+// or removed lines. The changes are then presented next to each other.
 class DiffDirect final : private ChunkedDiff {
  public:
   static absl::StatusOr<std::string> FileDiff(

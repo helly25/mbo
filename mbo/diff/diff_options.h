@@ -30,13 +30,11 @@ namespace mbo::diff {
 struct DiffOptions final {
   enum class Algorithm {
     // Unified diff like `diff -u` or `git diff`.
+    // See implementation in `mbo::diff::DiffUnified`.
     kUnified = 0,
 
     // Compare two inputs and output in direct side by side format.
-    // That is similar to unified format, but it is assumed that the left and
-    // right content are meant to line up with only changed lines and no added
-    // or removed lines. The changes are then presented next to each other.
-    // This mode does not allow for context.
+    // See implementation in `mbo::diff::DiffDirect`.
     kDirect = 1,
   };
 
