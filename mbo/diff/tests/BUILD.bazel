@@ -179,3 +179,33 @@ diff_test_test(
     file_old = "numbers.txt",
     ignore_blank_lines = True,
 )
+
+diff_test_test(
+    name = "direct_diff_test",
+    algorithm = "direct",
+    expected_diff = "direct.diff.txt",
+    file_new = "direct.rhs.txt",
+    file_old = "direct.lhs.txt",
+    show_chunk_headers = False,
+)
+
+diff_test_test(
+    name = "direct_no_header_diff_test",
+    algorithm = "direct",
+    expected_diff = "direct.no_header_diff_test.txt",
+    file_header_use = "none",
+    file_new = "direct.rhs.txt",
+    file_old = "direct.lhs.txt",
+    show_chunk_headers = False,
+)
+
+diff_test_test(
+    name = "direct_context_diff_test",
+    algorithm = "direct",
+    context = 2,
+    expected_diff = "direct.context_diff_test.txt",
+    file_header_use = "both",
+    file_new = "direct.rhs.txt",
+    file_old = "direct.lhs.txt",
+    show_chunk_headers = True,
+)

@@ -13,13 +13,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_DIFF_UPDATE_ABSL_LOG_FLAGS_H_
-#define MBO_DIFF_UPDATE_ABSL_LOG_FLAGS_H_
+#ifndef MBO_DIFF_CHUNKED_DIFF_H_
+#define MBO_DIFF_CHUNKED_DIFF_H_
 
-namespace mbo {
+#include <string>
 
-void UpdateAbslLogFlags();
+#include "absl/status/statusor.h"
+#include "mbo/diff/base_diff.h"
+#include "mbo/diff/diff_options.h"
+#include "mbo/diff/internal/chunk.h"
+#include "mbo/file/artefact.h"
 
-}  // namespace mbo
+namespace mbo::diff {
 
-#endif  // MBO_DIFF_UPDATE_ABSL_LOG_FLAGS_H_
+class ChunkedDiff : public BaseDiff {
+ public:
+  ChunkedDiff() = delete;
+
+  ChunkedDiff(const file::Artefact& lhs, const file::Artefact& rhs, const DiffOptions& options);
+
+  absl::StatusOr<std::string> Finalize();
+
+ protected:
+  diff_internal::Chunk& Chunk() noexcept { return chunk_; }
+
+ private:
+  diff_internal::Chunk chunk_;
+};
+
+}  // namespace mbo::diff
+
+#endif  // MBO_DIFF_DIFF_H_

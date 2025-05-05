@@ -13,26 +13,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mbo/diff/diff.h"
+#include "mbo/diff/impl/diff_direct.h"
 
 #include <string>
 
 #include "absl/status/statusor.h"
-#include "mbo/diff/impl/diff_direct.h"
-#include "mbo/diff/impl/diff_unified.h"
-#include "mbo/file/artefact.h"
+#include "mbo/diff/diff_options.h"
 
 namespace mbo::diff {
 
-absl::StatusOr<std::string> Diff::DiffSelect(
+absl::StatusOr<std::string> DiffDirect::Diff(
     const file::Artefact& lhs,
     const file::Artefact& rhs,
-    const Options& options) {
-  switch (options.algorithm) {
-    case Diff::Options::Algorithm::kUnified: return DiffUnified::Diff(lhs, rhs, options);
-    case Diff::Options::Algorithm::kDirect: return DiffDirect::Diff(lhs, rhs, options);
+    const DiffOptions& options) {
+  if (lhs.data == rhs.data) {
+    return std::string();
   }
-  return absl::InvalidArgumentError("Unknown algorithm selected.");
+  DiffDirect diff(lhs, rhs, options);
+  return diff.Compute();
+}
+
+absl::StatusOr<std::string> DiffDirect::Compute() {
+  while (!LhsData().Done() && !RhsData().Done()) {
+    if (CompareEq(0, 0)) {
+      Chunk().PushBoth(LhsData().Idx(), RhsData().Idx(), LhsData().Line());
+      LhsData().Next();
+      RhsData().Next();
+    } else {
+      Chunk().PushLhs(LhsData().Idx(), RhsData().Idx(), LhsData().Next());
+      Chunk().PushRhs(LhsData().Idx(), RhsData().Idx(), RhsData().Next());
+      Chunk().MoveDiffs();
+    }
+  }
+  return Finalize();
 }
 
 }  // namespace mbo::diff

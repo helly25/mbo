@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "mbo/container/convert_container.h"
 #include "mbo/file/artefact.h"
+#include "mbo/status/status_macros.h"
 #include "mbo/strings/indent.h"
 #include "mbo/testing/status.h"
 
@@ -46,14 +47,11 @@ class DiffTest : public ::testing::Test {
       const Diff::Options& options = Diff::Options::Default()) {
     lhs.data = DropIndent(lhs.data);
     rhs.data = DropIndent(rhs.data);
-    absl::StatusOr<std::string> result = mbo::diff::Diff::DiffUnified(lhs, rhs, options);
-    if (!result.ok()) {
-      return result.status();
-    }
-    if (result->empty()) {
+    MBO_ASSIGN_OR_RETURN(std::string result, mbo::diff::Diff::DiffSelect(lhs, rhs, options));
+    if (result.empty()) {
       return std::vector<std::string>{};
     }
-    return std::vector<std::string>(mbo::container::ConvertContainer(DropIndentAndSplit(*result)));
+    return std::vector<std::string>(mbo::container::ConvertContainer(DropIndentAndSplit(result)));
   }
 
   static std::string ToLines(std::string_view input) {
@@ -503,8 +501,8 @@ TEST_F(DiffTest, RegexReplace) {
       Diff(
           lhs, rhs,
           {
-              .regex_replace_lhs = Diff::ParseRegexReplaceFlag("/(.*)ERROR.*/SAME/"),
-              .regex_replace_rhs = Diff::ParseRegexReplaceFlag(",(.*)ERROR.*,SAME,"),
+              .regex_replace_lhs = Diff::Options::ParseRegexReplaceFlag("/(.*)ERROR.*/SAME/"),
+              .regex_replace_rhs = Diff::Options::ParseRegexReplaceFlag(",(.*)ERROR.*,SAME,"),
           }),
       IsOkAndHolds(IsEmpty()))
       << "The replacement made LHS and RHS the same, so there should be no difference.";
@@ -512,8 +510,8 @@ TEST_F(DiffTest, RegexReplace) {
       Diff(
           lhs, rhs,
           {
-              .regex_replace_lhs = Diff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 SAME/"),
-              .regex_replace_rhs = Diff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 SAME,"),
+              .regex_replace_lhs = Diff::Options::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 SAME/"),
+              .regex_replace_rhs = Diff::Options::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 SAME,"),
           }),
       IsOkAndHolds(IsEmpty()))
       << "The replacement made LHS and RHS the same, so there should be no differences.";
@@ -521,8 +519,8 @@ TEST_F(DiffTest, RegexReplace) {
       Diff(
           lhs, rhs,
           {
-              .regex_replace_lhs = Diff::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 LHS/"),
-              .regex_replace_rhs = Diff::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 RHS,"),
+              .regex_replace_lhs = Diff::Options::ParseRegexReplaceFlag("/(.*)ERROR.*/\\1 LHS/"),
+              .regex_replace_rhs = Diff::Options::ParseRegexReplaceFlag(",(.*)ERROR.*,\\1 RHS,"),
           }),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
@@ -538,8 +536,8 @@ TEST_F(DiffTest, RegexReplace) {
       Diff(
           lhs, oth,
           {
-              .regex_replace_lhs = Diff::ParseRegexReplaceFlag("/ERROR.*//"),
-              .regex_replace_rhs = Diff::ParseRegexReplaceFlag(",ERROR.*,,"),
+              .regex_replace_lhs = Diff::Options::ParseRegexReplaceFlag("/ERROR.*//"),
+              .regex_replace_rhs = Diff::Options::ParseRegexReplaceFlag(",ERROR.*,,"),
           }),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
     --- lhs 1970-01-01 00:00:00.000 +0000
@@ -555,8 +553,8 @@ TEST_F(DiffTest, RegexReplace) {
       Diff(
           lhs, oth,
           {
-              .regex_replace_lhs = Diff::ParseRegexReplaceFlag("/bar/oth/"),
-              .regex_replace_rhs = Diff::ParseRegexReplaceFlag(",ERROR 3,ERROR 1,"),
+              .regex_replace_lhs = Diff::Options::ParseRegexReplaceFlag("/bar/oth/"),
+              .regex_replace_rhs = Diff::Options::ParseRegexReplaceFlag(",ERROR 3,ERROR 1,"),
           }),
       IsOkAndHolds(IsEmpty()))
       << "Different replacements that producr the same results lead to same zero differences.";

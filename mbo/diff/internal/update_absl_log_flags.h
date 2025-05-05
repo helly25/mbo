@@ -13,26 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mbo/diff/diff.h"
+#ifndef MBO_DIFF_INTERNAL_UPDATE_ABSL_LOG_FLAGS_H_
+#define MBO_DIFF_INTERNAL_UPDATE_ABSL_LOG_FLAGS_H_
 
-#include <string>
+namespace mbo::diff::diff_internal {
 
-#include "absl/status/statusor.h"
-#include "mbo/diff/impl/diff_direct.h"
-#include "mbo/diff/impl/diff_unified.h"
-#include "mbo/file/artefact.h"
+void UpdateAbslLogFlags();
 
-namespace mbo::diff {
+}  // namespace mbo::diff::diff_internal
 
-absl::StatusOr<std::string> Diff::DiffSelect(
-    const file::Artefact& lhs,
-    const file::Artefact& rhs,
-    const Options& options) {
-  switch (options.algorithm) {
-    case Diff::Options::Algorithm::kUnified: return DiffUnified::Diff(lhs, rhs, options);
-    case Diff::Options::Algorithm::kDirect: return DiffDirect::Diff(lhs, rhs, options);
-  }
-  return absl::InvalidArgumentError("Unknown algorithm selected.");
-}
-
-}  // namespace mbo::diff
+#endif  // MBO_DIFF_INTERNAL_UPDATE_ABSL_LOG_FLAGS_H_

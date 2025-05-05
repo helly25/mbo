@@ -22,8 +22,11 @@ def diff_test_test(
         name,
         file_old,
         file_new,
+        *,
         expected_diff,
-        algorithm = "",
+        algorithm = "unified",
+        context = -1,
+        file_header_use = "both",
         ignore_all_space = False,
         ignore_consecutive_space = False,
         ignore_blank_lines = False,
@@ -33,6 +36,7 @@ def diff_test_test(
         ignore_trailing_space = False,
         regex_replace_lhs = "",
         regex_replace_rhs = "",
+        show_chunk_headers = True,
         strip_comments = "",
         strip_parsed_comments = True,
         **kwargs):
@@ -46,6 +50,8 @@ def diff_test_test(
         file_new:                 The new file.
         expected_diff:            The expected diff result.
         algorithm:                Algorithm to use ('unified', 'direct', etc).
+        context:                  Produces a diff with number of context lines (defaults to 0 for direct diff, 3 otherwise).
+        file_header_use:          Select which file header to use.
         ignore_all_space:         Ignore all leading, trailing, and consecutive internal whitespace changes.
         ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
         ignore_blank_lines:       Ignore chunks which include only blank lines.
@@ -55,6 +61,7 @@ def diff_test_test(
         ignore_trailing_space:    Ignore traling whitespace changes.
         regex_replace_lhs:        Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.
         regex_replace_rhs:        Regular expression and replacement for right side: <sep><regex><sep><replace><sep>.
+        show_chunk_headers:       Whether to show the chunk headers.
         strip_comments:           Strip out anything starting from `strip_comments`.
         strip_parsed_comments:    Whether to parse lines when stripping comments.
         **kwargs:                 Keyword args to pass down to native rules.
@@ -68,10 +75,12 @@ def diff_test_test(
         ],
         outs = [name + ".diff"],
         tools = ["//mbo/diff"],
-        cmd = """set euxo pipefail
+        cmd = """set -euo pipefail
             $(location //mbo/diff) --skip_time \\
                 $(location {file_old}) $(location {file_new}) > $@ \\
                 --algorithm={algorithm} \\
+                {context} \\
+                --file_header_use={file_header_use} \\
                 --ignore_all_space={ignore_all_space} \\
                 --ignore_consecutive_space={ignore_consecutive_space} \\
                 --ignore_blank_lines={ignore_blank_lines} \\
@@ -81,6 +90,7 @@ def diff_test_test(
                 --ignore_trailing_space={ignore_trailing_space} \\
                 --regex_replace_lhs={regex_replace_lhs} \\
                 --regex_replace_rhs={regex_replace_rhs} \\
+                --show_chunk_headers={show_chunk_headers} \\
                 --strip_comments={strip_comments} \\
                 --strip_file_header_prefix={strip_file_header_prefix} \\
                 --strip_parsed_comments={strip_parsed_comments} \\
@@ -89,6 +99,8 @@ def diff_test_test(
             file_old = file_old,
             file_new = file_new,
             algorithm = shell.quote(algorithm),
+            context = "" if context == -1 else "--context=%d" % context,
+            file_header_use = shell.quote(file_header_use),
             ignore_all_space = bool_arg(ignore_all_space),
             ignore_consecutive_space = bool_arg(ignore_consecutive_space),
             ignore_blank_lines = bool_arg(ignore_blank_lines),
@@ -98,6 +110,7 @@ def diff_test_test(
             ignore_trailing_space = bool_arg(ignore_trailing_space),
             regex_replace_lhs = shell.quote(regex_replace_lhs),
             regex_replace_rhs = shell.quote(regex_replace_rhs),
+            show_chunk_headers = bool_arg(show_chunk_headers),
             strip_comments = shell.quote(strip_comments),
             strip_file_header_prefix = shell.quote(strip_file_header_prefix),
             strip_parsed_comments = bool_arg(strip_parsed_comments),

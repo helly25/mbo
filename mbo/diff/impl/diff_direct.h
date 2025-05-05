@@ -13,26 +13,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mbo/diff/diff.h"
+#ifndef MBO_DIFF_IMPL_DIFF_DIRECT_H_
+#define MBO_DIFF_IMPL_DIFF_DIRECT_H_
 
 #include <string>
 
 #include "absl/status/statusor.h"
-#include "mbo/diff/impl/diff_direct.h"
-#include "mbo/diff/impl/diff_unified.h"
+#include "mbo/diff/chunked_diff.h"
+#include "mbo/diff/diff_options.h"
 #include "mbo/file/artefact.h"
 
 namespace mbo::diff {
 
-absl::StatusOr<std::string> Diff::DiffSelect(
-    const file::Artefact& lhs,
-    const file::Artefact& rhs,
-    const Options& options) {
-  switch (options.algorithm) {
-    case Diff::Options::Algorithm::kUnified: return DiffUnified::Diff(lhs, rhs, options);
-    case Diff::Options::Algorithm::kDirect: return DiffDirect::Diff(lhs, rhs, options);
-  }
-  return absl::InvalidArgumentError("Unknown algorithm selected.");
-}
+class DiffDirect final : private ChunkedDiff {
+ public:
+  static absl::StatusOr<std::string> Diff(
+      const file::Artefact& lhs,
+      const file::Artefact& rhs,
+      const DiffOptions& options);
+
+  DiffDirect() = delete;
+
+ protected:
+  DiffDirect(const file::Artefact& lhs, const file::Artefact& rhs, const DiffOptions& options)
+      : ChunkedDiff(lhs, rhs, options) {}
+
+  absl::StatusOr<std::string> Compute();
+};
 
 }  // namespace mbo::diff
+
+#endif  // MBO_DIFF_IMPL_DIFF_DIRECT_H_

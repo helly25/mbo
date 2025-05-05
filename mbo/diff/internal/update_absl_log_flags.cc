@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mbo/diff/update_absl_log_flags.h"
+#include "mbo/diff/internal/update_absl_log_flags.h"
 
 #include "absl/flags/commandlineflag.h"
 #include "absl/flags/declare.h"
@@ -27,7 +27,7 @@ ABSL_DECLARE_FLAG(int, minloglevel);
 
 // NOLINTEND(abseil-no-namespace,cppcoreguidelines-avoid-non-const-global-variables)
 
-namespace mbo {
+namespace mbo::diff::diff_internal {
 
 void UpdateAbslLogFlags() {
   // Unfortunately we cannot call `absl::InitializeLog()` as `IsIntialized()`
@@ -47,4 +47,4 @@ void UpdateAbslLogFlags() {
   }
 }
 
-}  // namespace mbo
+}  // namespace mbo::diff::diff_internal
