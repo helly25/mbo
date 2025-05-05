@@ -237,7 +237,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
       .regex_replace_rhs{Diff::Options::ParseRegexReplaceFlag(absl::GetFlag(FLAGS_regex_replace_rhs))},
       .strip_file_header_prefix = absl::GetFlag(FLAGS_strip_file_header_prefix),
   };
-  const auto result = Diff::DiffSelect(*lhs, *rhs, diff_options);
+  const auto result = Diff::FileDiff(*lhs, *rhs, diff_options);
   if (!result.ok()) {
     ABSL_LOG(ERROR) << "ERROR: " << result.status();
     return 1;

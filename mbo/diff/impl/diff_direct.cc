@@ -22,7 +22,7 @@
 
 namespace mbo::diff {
 
-absl::StatusOr<std::string> DiffDirect::Diff(
+absl::StatusOr<std::string> DiffDirect::FileDiff(
     const file::Artefact& lhs,
     const file::Artefact& rhs,
     const DiffOptions& options) {
@@ -34,7 +34,7 @@ absl::StatusOr<std::string> DiffDirect::Diff(
 }
 
 absl::StatusOr<std::string> DiffDirect::Compute() {
-  while (!LhsData().Done() && !RhsData().Done()) {
+  while (More()) {
     if (CompareEq(0, 0)) {
       PushEqual();
     } else {

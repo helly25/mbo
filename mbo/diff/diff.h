@@ -47,7 +47,7 @@ class Diff final {
   using Options = DiffOptions;
 
   // Algorithm selected by `options.algorithm`.
-  static absl::StatusOr<std::string> DiffSelect(
+  static absl::StatusOr<std::string> FileDiff(
       const file::Artefact& lhs,
       const file::Artefact& rhs,
       const Options& options = Options::Default());

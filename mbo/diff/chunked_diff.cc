@@ -38,18 +38,4 @@ absl::StatusOr<std::string> ChunkedDiff::Finalize() {
   return Chunk().MoveOutput();
 }
 
-void ChunkedDiff::PushEqual() {
-  Chunk().PushBoth(LhsData().Idx(), RhsData().Idx(), LhsData().Line());
-  LhsData().Next();
-  RhsData().Next();
-}
-
-void ChunkedDiff::PushDiff() {
-  Chunk().PushLhs(LhsData().Idx(), RhsData().Idx(), LhsData().Line());
-  Chunk().PushRhs(LhsData().Idx(), RhsData().Idx(), RhsData().Line());
-  Chunk().MoveDiffs();
-  LhsData().Next();
-  RhsData().Next();
-}
-
 }  // namespace mbo::diff

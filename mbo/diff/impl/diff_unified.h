@@ -28,7 +28,7 @@ namespace mbo::diff {
 
 class DiffUnified final : private ChunkedDiff {
  public:
-  static absl::StatusOr<std::string> Diff(
+  static absl::StatusOr<std::string> FileDiff(
       const file::Artefact& lhs,
       const file::Artefact& rhs,
       const DiffOptions& options);

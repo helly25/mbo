@@ -32,8 +32,31 @@ class ChunkedDiff : public BaseDiff {
 
   ChunkedDiff(const file::Artefact& lhs, const file::Artefact& rhs, const DiffOptions& options);
 
-  void PushEqual();
-  void PushDiff();
+  bool More() const { return !LhsData().Done() && !RhsData().Done(); }
+
+  void PushLhs() {
+    Chunk().PushLhs(LhsData().Idx(), RhsData().Idx(), LhsData().Line());
+    LhsData().Next();
+  }
+
+  void PushRhs() {
+    Chunk().PushRhs(LhsData().Idx(), RhsData().Idx(), RhsData().Line());
+    RhsData().Next();
+  }
+
+  void PushEqual() {
+    Chunk().PushBoth(LhsData().Idx(), RhsData().Idx(), LhsData().Line());
+    LhsData().Next();
+    RhsData().Next();
+  }
+
+  void PushDiff() {
+    Chunk().PushLhs(LhsData().Idx(), RhsData().Idx(), LhsData().Line());
+    Chunk().PushRhs(LhsData().Idx(), RhsData().Idx(), RhsData().Line());
+    Chunk().MoveDiffs();
+    LhsData().Next();
+    RhsData().Next();
+  }
 
   absl::StatusOr<std::string> Finalize();
 

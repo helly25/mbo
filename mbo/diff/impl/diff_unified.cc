@@ -33,7 +33,7 @@ std::size_t AbsDiff(std::size_t lhs, std::size_t rhs) {
 }
 }  // namespace
 
-absl::StatusOr<std::string> DiffUnified::Diff(
+absl::StatusOr<std::string> DiffUnified::FileDiff(
     const file::Artefact& lhs,
     const file::Artefact& rhs,
     const DiffOptions& options) {
@@ -44,7 +44,7 @@ absl::StatusOr<std::string> DiffUnified::Diff(
 }
 
 void DiffUnified::LoopBoth() {
-  while (!LhsData().Done() && !RhsData().Done() && CompareEq(0, 0)) {
+  while (More() && CompareEq(0, 0)) {
     PushEqual();
   }
 }
@@ -106,42 +106,36 @@ bool DiffUnified::FindNext() {
   auto [lhs2, rhs2, eq2] = FindNextLeft();
   if (eq1 && (!eq2 || AbsDiff(lhs1, rhs1) < AbsDiff(lhs2, rhs2))) {
     for (std::size_t i = 0; i < lhs1; ++i) {
-      const std::size_t l_idx = LhsData().Idx();  // Compiler might execute `Next` first.
-      Chunk().PushLhs(l_idx, RhsData().Idx(), LhsData().Next());
+      PushLhs();
     }
     for (std::size_t i = 0; i < rhs1; ++i) {
-      const std::size_t r_idx = RhsData().Idx();
-      Chunk().PushRhs(LhsData().Idx(), r_idx, RhsData().Next());
+      PushRhs();
     }
     return true;
   } else if (eq2) {
     for (std::size_t i = 0; i < lhs2; ++i) {
-      const std::size_t l_idx = LhsData().Idx();
-      Chunk().PushLhs(l_idx, RhsData().Idx(), LhsData().Next());
+      PushLhs();
     }
     for (std::size_t i = 0; i < rhs2; ++i) {
-      const std::size_t r_idx = RhsData().Idx();
-      Chunk().PushRhs(LhsData().Idx(), r_idx, RhsData().Next());
+      PushRhs();
     }
     return true;
   } else {
     if (!LhsData().Done()) {
-      const std::size_t l_idx = LhsData().Idx();
-      Chunk().PushLhs(l_idx, RhsData().Idx(), LhsData().Next());
+      PushLhs();
     }
     if (!RhsData().Done()) {
-      const std::size_t r_idx = RhsData().Idx();
-      Chunk().PushRhs(LhsData().Idx(), r_idx, RhsData().Next());
+      PushRhs();
     }
   }
   return false;
 }
 
 void DiffUnified::Loop() {
-  while (!LhsData().Done() && !RhsData().Done()) {
+  while (More()) {
     LoopBoth();
     std::size_t loop = 0;
-    while (!LhsData().Done() && !RhsData().Done() && !PastMaxDiffChunkLength(loop) && !FindNext()) {}
+    while (More() && !PastMaxDiffChunkLength(loop) && !FindNext()) {}
   }
 }
 
