@@ -36,13 +36,9 @@ absl::StatusOr<std::string> DiffDirect::Diff(
 absl::StatusOr<std::string> DiffDirect::Compute() {
   while (!LhsData().Done() && !RhsData().Done()) {
     if (CompareEq(0, 0)) {
-      Chunk().PushBoth(LhsData().Idx(), RhsData().Idx(), LhsData().Line());
-      LhsData().Next();
-      RhsData().Next();
+      PushEqual();
     } else {
-      Chunk().PushLhs(LhsData().Idx(), RhsData().Idx(), LhsData().Next());
-      Chunk().PushRhs(LhsData().Idx(), RhsData().Idx(), RhsData().Next());
-      Chunk().MoveDiffs();
+      PushDiff();
     }
   }
   return Finalize();

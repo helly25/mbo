@@ -45,9 +45,7 @@ absl::StatusOr<std::string> DiffUnified::Diff(
 
 void DiffUnified::LoopBoth() {
   while (!LhsData().Done() && !RhsData().Done() && CompareEq(0, 0)) {
-    Chunk().PushBoth(LhsData().Idx(), RhsData().Idx(), LhsData().Line());
-    LhsData().Next();
-    RhsData().Next();
+    PushEqual();
   }
 }
 

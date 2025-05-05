@@ -24,7 +24,7 @@
 namespace mbo::diff {
 
 ChunkedDiff::ChunkedDiff(const file::Artefact& lhs, const file::Artefact& rhs, const DiffOptions& options)
-    : BaseDiff(lhs, rhs, options), chunk_(lhs, rhs, Header(), options) {}
+    : BaseDiff(lhs, rhs, options), chunk_(lhs, rhs, Header(), Options()) {}
 
 absl::StatusOr<std::string> ChunkedDiff::Finalize() {
   while (!LhsData().Done()) {
@@ -36,6 +36,20 @@ absl::StatusOr<std::string> ChunkedDiff::Finalize() {
     Chunk().PushRhs(LhsData().Idx(), r_idx, RhsData().Next());
   }
   return Chunk().MoveOutput();
+}
+
+void ChunkedDiff::PushEqual() {
+  Chunk().PushBoth(LhsData().Idx(), RhsData().Idx(), LhsData().Line());
+  LhsData().Next();
+  RhsData().Next();
+}
+
+void ChunkedDiff::PushDiff() {
+  Chunk().PushLhs(LhsData().Idx(), RhsData().Idx(), LhsData().Line());
+  Chunk().PushRhs(LhsData().Idx(), RhsData().Idx(), RhsData().Line());
+  Chunk().MoveDiffs();
+  LhsData().Next();
+  RhsData().Next();
 }
 
 }  // namespace mbo::diff

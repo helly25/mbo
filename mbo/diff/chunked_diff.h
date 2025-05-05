@@ -32,6 +32,9 @@ class ChunkedDiff : public BaseDiff {
 
   ChunkedDiff(const file::Artefact& lhs, const file::Artefact& rhs, const DiffOptions& options);
 
+  void PushEqual();
+  void PushDiff();
+
   absl::StatusOr<std::string> Finalize();
 
  protected:

@@ -32,7 +32,9 @@ cc_library(
     deps = [
         "//mbo/file:artefact_cc",
         "//mbo/strings:strip_cc",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
         "@com_googlesource_code_re2//:re2",
         "@com_helly25_mbo//mbo/container:limited_map_cc",
         "@com_helly25_mbo//mbo/types:no_destruct_cc",
@@ -50,6 +52,7 @@ cc_library(
         "//mbo/file:artefact_cc",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/time",
+        "@com_googlesource_code_re2//:re2",
     ],
 )
 
@@ -69,42 +72,14 @@ cc_library(
 )
 
 cc_library(
-    name = "diff_direct_cc",
-    srcs = ["impl/diff_direct.cc"],
-    hdrs = ["impl/diff_direct.h"],
-    deps = [
-        ":chunked_diff_cc",
-        ":diff_options_cc",
-        "//mbo/file:artefact_cc",
-        "@com_google_absl//absl/status:statusor",
-    ],
-)
-
-cc_library(
-    name = "diff_unified_cc",
-    srcs = ["impl/diff_unified.cc"],
-    hdrs = ["impl/diff_unified.h"],
-    deps = [
-        ":chunked_diff_cc",
-        ":diff_options_cc",
-        "//mbo/file:artefact_cc",
-        "//mbo/types:no_destruct_cc",
-        "@com_google_absl//absl/log:absl_log",
-        "@com_google_absl//absl/status:statusor",
-    ],
-)
-
-cc_library(
     name = "diff_cc",
     srcs = ["diff.cc"],
     hdrs = ["diff.h"],
     visibility = ["//visibility:public"],
     deps = [
-        ":base_diff_cc",
-        ":chunked_diff_cc",
-        ":diff_direct_cc",
         ":diff_options_cc",
-        ":diff_unified_cc",
+        "//mbo/diff/impl:diff_direct_cc",
+        "//mbo/diff/impl:diff_unified_cc",
         "//mbo/file:artefact_cc",
         "@com_google_absl//absl/status:statusor",
     ],
@@ -145,6 +120,7 @@ cc_test(
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
+        "@com_helly25_mbo//mbo/status:status_macros_cc",
     ],
 )
 
