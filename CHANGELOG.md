@@ -1,3 +1,5 @@
+# 0.8.1
+
 # 0.8.0
 
 * Renamed diff tooling options `ignore_space_change` to `ignore_trailing_space.
