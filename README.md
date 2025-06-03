@@ -56,14 +56,14 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
         * function `Readable`: Returns whether a file is readable or an absl::Status error.
         * function `SetContents`: Writes contents to a file.
     * mbo/file:glob_cc, mbo/file/glob.h
-        * struct `mbo::file::Glob2Re2Options`: Control conversion of a [glob pattern](https://man7.org/linux/man-pages/man7/glob.7.html) into a [RE2 pattern](https://github.com/google/re2/wiki/Syntax).
-        * struct `mbo::file::GlobEntry`: Stores data for a single globbed entry (file, dir, etc.).
-        * struct `mbo::file::GlobOptions`: Options for functions `Glob2Re2` and `Glob2Re2Expression`.
-        * enum `mbo::file::GlobEntryAction`: Allows GlobEntryFunc to control further glob progression.
-        * type `mbo::file::GlobEntryFunc`: Callback for acceptable glob entries.
-        * function `mbo::file::GlobRe2`: Performs recursive glob functionality using a RE2 pattern.
-        * function `mbo::file::Glob`: Performs recursive glob functionality using a `fnmatch` style pattern.
-        * function `mbo::file::GlobSplit`: Splits a pattern into root and pattern parts.
+        * struct `Glob2Re2Options`: Control conversion of a [glob pattern](https://man7.org/linux/man-pages/man7/glob.7.html) into a [RE2 pattern](https://github.com/google/re2/wiki/Syntax).
+        * struct `GlobEntry`: Stores data for a single globbed entry (file, dir, etc.).
+        * struct `GlobOptions`: Options for functions `Glob2Re2` and `Glob2Re2Expression`.
+        * enum `GlobEntryAction`: Allows GlobEntryFunc to control further glob progression.
+        * type `GlobEntryFunc`: Callback for acceptable glob entries.
+        * function `GlobRe2`: Performs recursive glob functionality using a RE2 pattern.
+        * function `Glob`: Performs recursive glob functionality using a `fnmatch` style pattern.
+        * function `GlobSplit`: Splits a pattern into root and pattern parts.
         * program `glob`: A recursive glob, see `glob --help`.
     * mbo/file/ini:ini_file_cc, mbo/file/ini/ini_file.h
         * class `IniFile`: A simple INI file reader.
@@ -74,7 +74,7 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
 * Log
     * `namespace mbo::log`
     * mbo/log:log_timing_cc, mbo/log/log_timing.h
-        * functoin `mbo::log::LogTiming([args])` a simple timing logger.
+        * functoin `LogTiming([args])` a simple timing logger.
 * Mope
     * `namespace mbo::mope`
     * The `MOPE` templating engine. Run `bazel run //mbo/mope -- --help` for detailed documentation.
@@ -104,13 +104,13 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
         * function `DropIndent`: Converts a raw-string text block as if it had no indent.
         * function `DropIndentAndSplit`: Variant of `DropIndent` that returns the result as lines.
     * mbo/strings:numbers_cc, mbo/strings/numbers.h
-        * function `mbo::strings::BigNumber`: Convert integral number to string with thousands separator.
-        * function `mbo::strings::BigNumberLen`: Calculate required string length for `BigNumer`.
+        * function `BigNumber`: Convert integral number to string with thousands separator.
+        * function `BigNumberLen`: Calculate required string length for `BigNumer`.
     * mbo/strings:parse_cc, mbo/strings/parse.h
         * function `ParseString`: Parses strings respecting C++ and custom escapes as well as quotes (all configurable).
         * function `ParseStringList`: Parses and splits strings respecting C++ and custom escapes as well as quotes (all configurable).
     * mbo/strings:split_cc, mbo/strings/split.h
-        * struct `mbo::strings::AtLast`: Allows `absl::StrSplit' to split on the last occurrence of a separator.
+        * struct `AtLast`: Allows `absl::StrSplit' to split on the last occurrence of a separator.
     * mbo/strings:strip_cc, mbo/strings/strip.h
         * function `ConsumePrefix`: Removes a prefix from a `std::string` (like `absl::ConsumePrefix`).
         * function `ConsumeSuffix`: Removes a suffix from a `std::string` (like `absl::ConsumeSuffix`).
@@ -124,8 +124,10 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
         * function `StripLineParsedComments`: Strips comments from a single parsed line.
 * Testing
     * mbo/testing:matchers_cc, mbo/testing/matchers.h
-        * gMock-Matcher `CapacityIs` which checks the capacity of a container.
+        * gmock-matcher `CapacityIs` which checks the capacity of a container.
+        * gMock-matcher `EqualsText` which compares text using line by line unified text diff.
         * gmock-matcher `WhenTransformedBy` which allows to compare containers after transforming them. This sometimes allows for much more concise comparisons where a golden expectation is already available that only differs in a simple transformation.
+        * gmock-matcher-modifier `WithDropIndent` which modifies `EqualsText` so that `DropIndent` will be applied to the expected text.
     * mbo/testing:status_cc, mbo/testing/status.h
         * gMock-matcher `IsOk`: Tests whether an `absl::Status` or `absl::StatusOr` is `absl::OkStatus`.
         * gMock-matcher `IsOkAndHolds`: Tests an `absl::StatusOr` for `absl::OkStatus` and contents.
@@ -144,9 +146,9 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
         * meta-type `IfFalseThenVoid`: Helper type that can be used to skip a case.
         * meta-type `IfTrueThenVoid`: Helper type to inject default cases and to ensure the required type expansion is always possible.
     * mbo/types:compare_cc, mbo/types/compare.h
-        * comparator `mbo::types::CompareLess` which is compatible to std::Less but allows container optimizations.
+        * comparator `CompareLess` which is compatible to std::Less but allows container optimizations.
     * mbo/types:container_proxy_cc, mbo/types/container_proxy.h
-        * struct `mbo::types::ContainerProxy` which allows to add container access to other types including smart pointers of containers.
+        * struct `ContainerProxy` which allows to add container access to other types including smart pointers of containers.
     * mbo/types:extend_cc, mbo/types/extend.h
         * crtp-struct `Extend`: Enables extending of struct/class types with basic functionality.
         * crtp-struct `ExtendNoDefault` Like `Extend` but without default extender functionality.
@@ -164,9 +166,9 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
         * struct `NoDestruct<T>`: Implements a type that allows to use any type as a static constant.
         * Mainly, this prevents calling the destructor and thus prevents termination issues (initialization order fiasco).
     * mbo/types:opaque_cc, mbo/types/opaque.h
-        * struct `mbo::types::OpaquePtr` an opaque alternative to `std::unique_ptr` which works with forward declared types.
-        * struct `mbo::types::OpaqueValue` an `OpaquePtr` with direct access, comparison and hashing which will not allow a nullptr.
-        * struct `mbo::types::OpaqueContainer` an `OpaqueValue` with direct container access.
+        * struct `OpaquePtr` an opaque alternative to `std::unique_ptr` which works with forward declared types.
+        * struct `OpaqueValue` an `OpaquePtr` with direct access, comparison and hashing which will not allow a nullptr.
+        * struct `OpaqueContainer` an `OpaqueValue` with direct container access.
     * mbo/types:ref_wrap_cc, mbo/types/ref_wrap.h
         * template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.
     * mbo/types:required_cc, mbo/types/required.h
@@ -219,7 +221,7 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
         * struct `tstring`: Implements type `tstring` a compile time string-literal type.
         * operator `operator"" _ts`: String literal support for Clang, GCC and derived compilers.
     * mbo/types:tuple_cc, mbo/types/tuple.h
-        * template struct `mbo::types::TupleCat` which concatenates tuple types.
+        * template struct `TupleCat` which concatenates tuple types.
 
 ## In addition some Bazel macros are implemented that are not direct part of the library:
 
