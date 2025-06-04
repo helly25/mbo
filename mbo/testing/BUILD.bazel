@@ -22,7 +22,9 @@ cc_library(
     hdrs = ["matchers.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "//mbo/strings:indent_cc",
         "//mbo/types:traits_cc",
+        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest",
     ],
 )

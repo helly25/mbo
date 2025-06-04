@@ -64,7 +64,7 @@ class MatcherTest : public ::testing::Test {
   template<typename Matcher, typename V>
   static std::pair<bool, std::string> MatchAndExplain(const Matcher& matcher, const V& value) {
     ::testing::StringMatchResultListener os;
-    const bool result = matcher.MatchAndExplain(value, &os);
+    const bool result = ::testing::Matcher<V>(matcher).MatchAndExplain(value, &os);
     return {result, os.str()};
   }
 };
@@ -233,6 +233,29 @@ TEST_F(MatcherTest, WhenTransformedByDescriptions) {
         MatchAndExplain(matcher, std::vector<int>{0, 1, 2, 3, 4}),
         Pair(false, "which (when transformed) doesn't match, which has 5 elements"));
   }
+}
+
+TEST_F(MatcherTest, EqualsText) {
+  EXPECT_THAT("", EqualsText(""));
+  EXPECT_THAT("", Not(EqualsText("abc")));
+  EXPECT_THAT("abc", Not(EqualsText("")));
+  EXPECT_THAT("abc", EqualsText("abc"));
+  EXPECT_THAT(MatchAndExplain(EqualsText("a\nb\nc"), "a\nb\nc"), Pair(true, ""));
+  EXPECT_THAT(MatchAndExplain(EqualsText("a\nb\nc"), "a\nX\nc"), Pair(false, R"(Text differene:
+@@ -1,3 +1,3 @@
+ a
+-b
++X
+ c
+)"));
+  EXPECT_THAT(MatchAndExplain(EqualsText("a\nb\nc"), "a\nX\nc"), Pair(false, WithDropIndent(EqualsText(R"(
+    Text differene:
+    @@ -1,3 +1,3 @@
+     a
+    -b
+    +X
+     c
+    )"))));
 }
 
 // NOLINTEND(*-magic-numbers)

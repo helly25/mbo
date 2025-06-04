@@ -1,4 +1,7 @@
-# 0.8.1
+# 0.9.0
+
+* Added gmomck-matcher `mbo::testing::EqualsText` which compares text using line by line unified text diff.
+* Added gmock-matcher-modifier `mbo::testing::WithDropIndent` which modifies `EqualsText` so that `mbo::strings::DropIndent` will be applied to the expected text.
 
 # 0.8.0
 

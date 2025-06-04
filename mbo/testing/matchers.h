@@ -19,8 +19,11 @@
 #include <concepts>  // IWYU pragma: keep
 #include <type_traits>
 
+#include "absl/strings/str_split.h"
 #include "gmock/gmock-matchers.h"
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/strings/indent.h"
 #include "mbo/types/traits.h"  // IWYU pragma: keep
 
 namespace mbo::testing {
@@ -187,7 +190,7 @@ class WhenTransformedByMatcher {
 //  const std::map<int, int> map{{1, 2}, {3, 4}};
 //  EXPECT_THAT(
 //      map,
-//      WhenTransformedBy([](const std::pair<int, int>& v) { return v.first; }), ElementsAre(1, 2));
+//      WhenTransformedBy([](const std::pair<int, int>& v) { return v.first; }), ElementsAre(1, 3));
 // ```
 //
 // The internal comparison will always be performed on a `std::vector` whose elements are the result
@@ -197,6 +200,73 @@ class WhenTransformedByMatcher {
 template<typename Transformer, typename ContainerMatcher>
 inline auto WhenTransformedBy(const Transformer& transformer, const ContainerMatcher& container_matcher) {
   return testing_internal::WhenTransformedByMatcher(transformer, container_matcher);
+}
+
+namespace testing_internal {
+
+class EqualsTextMatcher : public ::testing::MatcherInterface<std::string_view> {
+ public:
+  explicit EqualsTextMatcher(std::string_view text) : text_(text) {}
+
+  void DescribeTo(::std::ostream* os) const override { *os << "matches text"; }
+
+  void DescribeNegationTo(::std::ostream* os) const override { *os << "does not match text"; }
+
+  bool MatchAndExplain(std::string_view other, ::testing::MatchResultListener* listener) const override {
+    if (!options_.drop_indent && text_ == other) {
+      return true;
+    }
+    const auto wants_lines = [&]() -> std::vector<std::string> {
+      if (options_.drop_indent) {
+        *listener << "[" << mbo::strings::DropIndent(text_) << "]\n";
+        return absl::StrSplit(mbo::strings::DropIndent(text_), '\n');
+      }
+      return absl::StrSplit(text_, '\n');
+    }();
+    const std::vector<std::string> other_lines = absl::StrSplit(other, '\n');
+    if (options_.drop_indent && wants_lines == other_lines) {
+      return true;
+    }
+    *listener << "Text differene:\n" << ::testing::internal::edit_distance::CreateUnifiedDiff(wants_lines, other_lines);
+    return false;
+  }
+
+  void SetDropIndent(bool drop_indent = true) { options_.drop_indent = drop_indent; }
+
+ private:
+  struct Options {
+    bool drop_indent = false;
+  };
+
+  const std::string text_;
+  Options options_;
+};
+
+}  // namespace testing_internal
+
+using PolymorphicEqualsTextMatcher = ::testing::PolymorphicMatcher<testing_internal::EqualsTextMatcher>;
+
+// Matcher that compares text line by line using unified diff.
+// Can be wrapped with `WithDropIndent`.
+inline PolymorphicEqualsTextMatcher EqualsText(std::string_view text) {
+  return ::testing::MakePolymorphicMatcher(testing_internal::EqualsTextMatcher(text));
+}
+
+// Matcher that compares text line by line using unified diff.
+// Can be wrapped with `WithDropIndent`.
+template<std::size_t N>
+inline PolymorphicEqualsTextMatcher EqualsText(const char text[N]) {  // NOLINT(*-avoid-c-arrays)
+  return ::testing::MakePolymorphicMatcher(testing_internal::EqualsTextMatcher(text));
+}
+
+// Modifies `EqualsText` so that the provided `text` has its indents stripped, see `mbo::strings::DropIndent`.
+// The value argument is kepts as is. If its indent should be dropped than that must be done manually, e.g.:
+// ```c++
+// EXPECT_THAT(DropIndent(text), WithDropIndent(EqualsText(golden)));
+// ```
+inline PolymorphicEqualsTextMatcher WithDropIndent(PolymorphicEqualsTextMatcher&& matcher) {
+  matcher.mutable_impl().SetDropIndent();
+  return std::move(matcher);
 }
 
 }  // namespace mbo::testing
