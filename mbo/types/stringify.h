@@ -118,6 +118,8 @@ struct StringifyOptions {
   std::string_view value_optional_prefix = "{";         // Prefix for optional types.
   std::string_view value_optional_suffix = "}";         // Suffix for optional types.
   std::string_view value_nullopt = "std::nullopt";      // Value for `nullopt` values.
+  std::string_view value_structure_prefix = "{";        // Prefix for object (struct/class) values.
+  std::string_view value_structure_suffix = "}";        // Suffix for object (struct/class) values.
   std::string_view value_container_prefix = "{";        // Prefix for container values.
   std::string_view value_container_suffix = "}";        // Suffix for container values.
 
@@ -365,12 +367,12 @@ class Stringify {
     const auto& field_names = GetFieldNames(value);
     std::apply(
         [&](const auto&... fields) {
-          os << '{';
+          os << default_options_.value_structure_prefix;
           std::size_t idx{0};
           ((StreamField(os, use_seperator, value, TsValue<T>(idx, value, fields), idx, field_names, allow_field_names),
             ++idx),
            ...);
-          os << '}';
+          os << default_options_.value_structure_suffix;
         },
         [&value]() {
           if constexpr (types_internal::IsExtended<T>) {
@@ -512,7 +514,7 @@ class Stringify {
       if (field_options.special_pair_first_is_name) {
         // Each pair element of the container `vs` is an element whose key is the `first` member and
         // whose value is the `second` member.
-        os << "{";
+        os << field_options.value_structure_prefix;
         std::string_view sep;
         std::size_t index = 0;
         for (const auto& v : vs) {
@@ -527,7 +529,7 @@ class Stringify {
           StreamValue(os, v.second, field_options, allow_field_names);
           ++index;
         }
-        os << "}";
+        os << field_options.value_structure_suffix;
         return;
       }
     }
@@ -573,10 +575,10 @@ class Stringify {
               field_options.special_pair_second,
           };
           bool use_seperator = false;
-          os << "{";
+          os << field_options.value_structure_prefix;
           StreamField(os, use_seperator, v, v.first, 0, field_names, allow_field_names);
           StreamField(os, use_seperator, v, v.second, 1, field_names, allow_field_names);
-          os << "}";
+          os << field_options.value_structure_suffix;
           return;
         }
       }
