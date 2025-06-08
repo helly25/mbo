@@ -132,6 +132,8 @@ struct StringifyOptions {
   // Maximum length of value (prior to escaping).
   std::string_view::size_type value_max_length{std::string_view::npos};
   std::string_view value_cutoff_suffix = "...";  // Suffix if value gets shortened.
+  std::string_view value_char_delim = "'";
+  std::string_view value_string_delim = "\"";
 
   // Special types:
 
@@ -584,10 +586,14 @@ class Stringify {
       }
       StreamFieldsImpl(os, v, allow_field_names);
     } else if constexpr (std::is_same_v<RawV, char> || std::is_same_v<RawV, unsigned char>) {
-      os << "'";
-      std::string_view vv{reinterpret_cast<const char*>(&v), 1};  // NOLINT(*-type-reinterpret-cast)
-      StreamValueStr(os, vv, field_options);
-      os << "'";
+      os << field_options.value_char_delim;
+      if (v == '\'') {
+        StreamValueStr(os, "\\'", field_options);
+      } else {
+        std::string_view vv{reinterpret_cast<const char*>(&v), 1};  // NOLINT(*-type-reinterpret-cast)
+        StreamValueStr(os, vv, field_options);
+      }
+      os << field_options.value_char_delim;
     } else if constexpr (std::is_arithmetic_v<RawV>) {
       if (field_options.value_replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
@@ -599,9 +605,9 @@ class Stringify {
         || (std::is_convertible_v<V, std::string_view> && !absl::HasAbslStringify<V>::value)) {
       // Do not attempt to invoke string conversion for AbslStringify supported types as that breaks
       // this very implementation.
-      os << '"';
+      os << field_options.value_string_delim;
       StreamValueStr(os, v, field_options);
-      os << '"';
+      os << field_options.value_string_delim;
     } else {  // NOTE WHEN EXTENDING: Must always use `else if constexpr`
       StreamValueFallback(os, v, field_options);
     }
