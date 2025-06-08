@@ -1,4 +1,6 @@
-# 0.9.1
+# 0.10.0
+
+* Improved control for `Stringify` with Json output.
 
 # 0.9.0
 

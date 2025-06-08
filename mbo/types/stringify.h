@@ -118,6 +118,8 @@ struct StringifyOptions {
   std::string_view value_optional_prefix = "{";         // Prefix for optional types.
   std::string_view value_optional_suffix = "}";         // Suffix for optional types.
   std::string_view value_nullopt = "std::nullopt";      // Value for `nullopt` values.
+  std::string_view value_structure_prefix = "{";        // Prefix for object (struct/class) values.
+  std::string_view value_structure_suffix = "}";        // Suffix for object (struct/class) values.
   std::string_view value_container_prefix = "{";        // Prefix for container values.
   std::string_view value_container_suffix = "}";        // Suffix for container values.
 
@@ -130,6 +132,8 @@ struct StringifyOptions {
   // Maximum length of value (prior to escaping).
   std::string_view::size_type value_max_length{std::string_view::npos};
   std::string_view value_cutoff_suffix = "...";  // Suffix if value gets shortened.
+  std::string_view value_char_delim = "'";
+  std::string_view value_string_delim = "\"";
 
   // Special types:
 
@@ -365,12 +369,12 @@ class Stringify {
     const auto& field_names = GetFieldNames(value);
     std::apply(
         [&](const auto&... fields) {
-          os << '{';
+          os << default_options_.value_structure_prefix;
           std::size_t idx{0};
           ((StreamField(os, use_seperator, value, TsValue<T>(idx, value, fields), idx, field_names, allow_field_names),
             ++idx),
            ...);
-          os << '}';
+          os << default_options_.value_structure_suffix;
         },
         [&value]() {
           if constexpr (types_internal::IsExtended<T>) {
@@ -512,7 +516,7 @@ class Stringify {
       if (field_options.special_pair_first_is_name) {
         // Each pair element of the container `vs` is an element whose key is the `first` member and
         // whose value is the `second` member.
-        os << "{";
+        os << field_options.value_structure_prefix;
         std::string_view sep;
         std::size_t index = 0;
         for (const auto& v : vs) {
@@ -527,7 +531,7 @@ class Stringify {
           StreamValue(os, v.second, field_options, allow_field_names);
           ++index;
         }
-        os << "}";
+        os << field_options.value_structure_suffix;
         return;
       }
     }
@@ -573,19 +577,23 @@ class Stringify {
               field_options.special_pair_second,
           };
           bool use_seperator = false;
-          os << "{";
+          os << field_options.value_structure_prefix;
           StreamField(os, use_seperator, v, v.first, 0, field_names, allow_field_names);
           StreamField(os, use_seperator, v, v.second, 1, field_names, allow_field_names);
-          os << "}";
+          os << field_options.value_structure_suffix;
           return;
         }
       }
       StreamFieldsImpl(os, v, allow_field_names);
     } else if constexpr (std::is_same_v<RawV, char> || std::is_same_v<RawV, unsigned char>) {
-      os << "'";
-      std::string_view vv{reinterpret_cast<const char*>(&v), 1};  // NOLINT(*-type-reinterpret-cast)
-      StreamValueStr(os, vv, field_options);
-      os << "'";
+      os << field_options.value_char_delim;
+      if (v == '\'') {
+        StreamValueStr(os, "\\'", field_options);
+      } else {
+        std::string_view vv{reinterpret_cast<const char*>(&v), 1};  // NOLINT(*-type-reinterpret-cast)
+        StreamValueStr(os, vv, field_options);
+      }
+      os << field_options.value_char_delim;
     } else if constexpr (std::is_arithmetic_v<RawV>) {
       if (field_options.value_replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
@@ -597,9 +605,9 @@ class Stringify {
         || (std::is_convertible_v<V, std::string_view> && !absl::HasAbslStringify<V>::value)) {
       // Do not attempt to invoke string conversion for AbslStringify supported types as that breaks
       // this very implementation.
-      os << '"';
+      os << field_options.value_string_delim;
       StreamValueStr(os, v, field_options);
-      os << '"';
+      os << field_options.value_string_delim;
     } else {  // NOTE WHEN EXTENDING: Must always use `else if constexpr`
       StreamValueFallback(os, v, field_options);
     }
