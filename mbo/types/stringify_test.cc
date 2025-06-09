@@ -670,7 +670,6 @@ TEST_F(StringifyTest, NestedJsonNumericFallback) {
   EXPECT_THAT(Stringify::AsJson().ToString(v), kExpectedJson);
 }
 
-#if !defined(__clang__)  // TODO(helly25): Clang takes aim at this.
 struct TestStructCustomNestedJsonNested {
   int first = 0;
   std::string second = "nested";
@@ -717,7 +716,7 @@ TEST_F(StringifyTest, CustomNestedJson) {
       Stringify::AsJson().ToString(TestStructCustomNestedJson{}),
       R"({"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"}, {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {"first": 25, "second": 42}})");
 }
-#endif
+
 struct TestStructNonLiteralFields {
   std::map<int, int> one = {{1, 2}, {2, 3}};
   std::unordered_map<int, int> two = {{3, 4}};
