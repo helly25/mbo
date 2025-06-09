@@ -1,6 +1,7 @@
 # 0.10.0
 
 * Improved control for `Stringify` with Json output.
+* Added `Stringify::AsJsonPretty()` and `StringifyOptions::AsJsonPretty()`.
 
 # 0.9.0
 

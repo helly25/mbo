@@ -32,6 +32,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/container/limited_vector.h"
+#include "mbo/testing/matchers.h"
 #include "mbo/types/traits.h"
 #include "mbo/types/tuple_extras.h"
 
@@ -53,6 +54,7 @@ namespace {
 
 // NOLINTBEGIN(*-magic-numbers,*-named-parameter)
 
+using ::mbo::testing::EqualsText;
 using ::mbo::types::HasMboTypesStringifyDoNotPrintFieldNames;
 using ::mbo::types::HasMboTypesStringifyFieldNames;
 using ::mbo::types::HasMboTypesStringifyOptions;
@@ -148,6 +150,11 @@ TEST_F(StringifyTest, AddFieldNames) {
   EXPECT_TRUE(HasMboTypesStringifySupport<AddFieldNames>);
   EXPECT_THAT(Stringify().ToString(AddFieldNames{}), R"({.1: 25, .2: "42"})")
       << "  NOTE: Here we inject the field names and override any possibly compiler provided names.";
+  EXPECT_THAT(Stringify::AsJsonPretty().ToString(AddFieldNames{}), EqualsText(R"({
+  "1": 25,
+  "2": "42"
+}
+)"));
 }
 
 struct AddFieldVectorOfString {
@@ -512,8 +519,14 @@ TEST_F(StringifyTest, MoreContainers) {
       << "  NOTE: Here we are not providing the defualt Json options down do the pairs. However, in `three` we have "
          "the provided key/value names.";
   EXPECT_THAT(
-      Stringify(StringifyOptions::AsJson()).ToString(TestStructMoreContainers{}),
+      Stringify::AsJson().ToString(TestStructMoreContainers{}),
       R"({"one": [1, 2], "two": [{"first": 1, "second": 2}, {"first": 3, "second": 4}], "three": [{"Key": 5, "Val": 6}]})");
+  EXPECT_THAT(
+      Stringify::AsJsonPretty().ToString(TestStructMoreContainers{}),
+      EqualsText(
+          R"({"one": [1, 2], "two": [{"first": 1,"second": 2}, {"first": 3,"second": 4}], "three": [{"Key": 5,"Val": 6}]
+}
+)")) << "The new line comes from the outer default options.";
 }
 
 struct TestStructMoreContainersWithDirectFieldNames {
@@ -578,9 +591,17 @@ TEST_F(StringifyTest, PrintWithControl) {
   if constexpr (kStructNameSupport) {
     EXPECT_THAT(Stringify(StringifyOptions::AsCpp()).ToString(v), R"({.one = 25})");
     EXPECT_THAT(Stringify(StringifyOptions::AsJson()).ToString(v), R"({"one": 25})");
+    EXPECT_THAT(Stringify::AsJsonPretty().ToString(v), EqualsText(R"({
+  "one": 25
+}
+)"));
   } else {
     EXPECT_THAT(Stringify(StringifyOptions::AsCpp()).ToString(v), R"({25})");
     EXPECT_THAT(Stringify(StringifyOptions::AsJson()).ToString(v), R"({"0": 25})");
+    EXPECT_THAT(Stringify::AsJsonPretty().ToString(v), EqualsText(R"({
+  "0": 25
+}
+)"));
   }
 }
 
@@ -605,6 +626,23 @@ TEST_F(StringifyTest, NestedDefaults) {
     EXPECT_THAT(Stringify(StringifyOptions::AsCpp()).ToString(v), kExpectedCpp);
     EXPECT_THAT(Stringify(StringifyOptions::AsJson()).ToString(v), kExpectedJson);
     EXPECT_THAT(Stringify::AsJson().ToString(v), kExpectedJson);
+    EXPECT_THAT(Stringify::AsJsonPretty().ToString(v), EqualsText(R"({
+  "one": 11,
+  "two": 25,
+  "three": {
+    "four": 42
+  }
+}
+)"));
+  } else {
+    EXPECT_THAT(Stringify::AsJsonPretty().ToString(v), EqualsText(R"({
+  "0": 11,
+  "1": 25,
+  "2": {
+    "0": 42
+  }
+}
+)"));
   }
 }
 
@@ -705,6 +743,26 @@ TEST_F(StringifyTest, NonLiteralFields) {
   EXPECT_THAT(
       Stringify::AsCpp().ToString(TestStructNonLiteralFields{}),
       R"({.one = {{.first = 1, .second = 2}, {.first = 2, .second = 3}}, .two = {{.first = 3, .second = 4}}, .three = "three"})");
+  EXPECT_THAT(Stringify::AsJsonPretty().ToString(TestStructNonLiteralFields{}), EqualsText(R"({
+  "one": [
+    {
+      "first": 1,
+      "second": 2
+    },
+    {
+      "first": 2,
+      "second": 3
+    }
+  ],
+  "two": [
+    {
+      "first": 3,
+      "second": 4
+    }
+  ],
+  "three": "three"
+}
+)"));
 }
 
 struct TestMboTypesStringifyConvert {

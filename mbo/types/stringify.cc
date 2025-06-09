@@ -24,7 +24,6 @@ const StringifyOptions& StringifyOptions::AsDefault() noexcept {
 
 const StringifyOptions& StringifyOptions::AsCpp() noexcept {
   static constexpr StringifyOptions kCpp{
-      .output_mode = OutputMode::kCpp,
       .key_prefix = ".",
       .key_value_separator = " = ",
       .value_pointer_prefix = "",
@@ -37,7 +36,6 @@ const StringifyOptions& StringifyOptions::AsCpp() noexcept {
 
 const StringifyOptions& StringifyOptions::AsJson() noexcept {
   static constexpr StringifyOptions kJson{
-      .output_mode = OutputMode::kJson,
       .field_suppress_nullptr = true,
       .field_suppress_nullopt = true,
       .field_suppress_disabled = true,
@@ -59,6 +57,17 @@ const StringifyOptions& StringifyOptions::AsJson() noexcept {
       .value_char_delim = "\"",
       .special_pair_first_is_name = true,
   };
+  return kJson;
+}
+
+const StringifyOptions& StringifyOptions::AsJsonPretty() noexcept {
+  static const StringifyOptions kJson = [] {
+    StringifyOptions json = AsJson();
+    json.message_end = "\n";
+    json.field_indent = "  ";
+    json.field_separator = ",";
+    return json;
+  }();
   return kJson;
 }
 

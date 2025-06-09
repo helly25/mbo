@@ -29,6 +29,7 @@
 #include <tuple>
 #include <type_traits>
 
+#include "absl/cleanup/cleanup.h"
 #include "absl/log/absl_check.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
@@ -44,6 +45,7 @@ struct StringifyOptions {
     kDefault,
     kCpp,
     kJson,
+    kJsonPretty,
   };
 
   friend std::ostream& operator<<(std::ostream& os, const OutputMode& value) {
@@ -51,17 +53,21 @@ struct StringifyOptions {
       case OutputMode::kDefault: break;
       case OutputMode::kCpp: return os << "OutpuMode::kCpp";
       case OutputMode::kJson: return os << "OutpuMode::kJson";
+      case OutputMode::kJsonPretty: return os << "OutpuMode::kJsonPretty";
     }
     return os << "OutpuMode::kDefault";
   }
 
-  OutputMode output_mode = OutputMode::kDefault;
+  // Message options:
+  std::string_view message_begin;
+  std::string_view message_end;
 
   // Field options:
   bool field_suppress = false;              // Allows complete suppression of the field.
   bool field_suppress_nullptr = false;      // Allows complete suppression of nullptr field values.
   bool field_suppress_nullopt = false;      // Allows complete suppression of nullopt field values.
   bool field_suppress_disabled = false;     // Allows complete suppression of disabled fields.
+  std::string_view field_indent;            // Indent (multiplied by level) in front of fields.
   std::string_view field_separator = ", ";  // Separator between two field (in front of field).
 
   // Key options:
@@ -160,12 +166,14 @@ struct StringifyOptions {
   // latter possibly with the `StringifyWithFieldNames` adapter. Alternatively,
   // numeric field names will be generated as a last resort.
   static const StringifyOptions& AsJson() noexcept;
+  static const StringifyOptions& AsJsonPretty() noexcept;
 
   static const StringifyOptions& As(OutputMode mode) noexcept {
     switch (mode) {
       case OutputMode::kDefault: break;
       case OutputMode::kCpp: return AsCpp();
       case OutputMode::kJson: return AsJson();
+      case OutputMode::kJsonPretty: return AsJsonPretty();
     }
     return AsDefault();
   }
@@ -309,17 +317,20 @@ class Stringify {
 
   static Stringify AsJson() noexcept { return Stringify(StringifyOptions::AsJson()); }
 
-  explicit Stringify(const StringifyOptions& default_options = StringifyOptions::AsDefault())
-      : default_options_(default_options) {}
+  static Stringify AsJsonPretty() noexcept { return Stringify(StringifyOptions::AsJsonPretty()); }
 
-  explicit Stringify(const StringifyOptions::OutputMode output_mode)
-      : default_options_(StringifyOptions::As(output_mode)) {}
+  explicit Stringify(const StringifyOptions& default_options = StringifyOptions::AsDefault())
+      : default_options_(default_options), indent_(*this) {}
+
+  explicit Stringify(const StringifyOptions::OutputMode output_mode) : Stringify(StringifyOptions::As(output_mode)) {}
 
   template<typename T>
   requires(std::is_aggregate_v<T>)
   std::string ToString(const T& value) const {
     std::ostringstream os;
+    os << default_options_.message_begin;
     Stream<T>(os, value);
+    os << default_options_.message_end;
     return os.str();
   }
 
@@ -333,6 +344,46 @@ class Stringify {
   }
 
  private:
+  class Indent {
+   public:
+    Indent() = delete;
+
+    explicit Indent(const Stringify& stringify)
+        : stringify_(stringify), enable_(!stringify_.default_options_.field_indent.empty()) {}
+
+    Indent& operator++() {
+      level_.push_back(stringify_.default_options_.field_indent);
+      return *this;
+    }
+
+    Indent& operator--() {
+      level_.pop_back();
+      return *this;
+    }
+
+    bool IsEnabled() const { return enable_; }
+
+    void SetEnable(const StringifyOptions& options) { enable_ = !options.field_indent.empty(); }
+
+    void SetEnable(bool enable) { enable_ = enable; }
+
+    friend std::ostream& operator<<(std::ostream& os, const Indent& indent) {
+      if (!indent.enable_) {
+        return os;
+      }
+      os << "\n";
+      for (std::string_view level : indent.level_) {
+        os << level;
+      }
+      return os;
+    }
+
+   private:
+    const Stringify& stringify_;
+    bool enable_ = true;
+    std::vector<std::string_view> level_;
+  };
+
   template<typename T>
   requires(HasMboTypesStringifyDisable<T>)
   void StreamFieldsImpl(
@@ -370,11 +421,13 @@ class Stringify {
     std::apply(
         [&](const auto&... fields) {
           os << default_options_.value_structure_prefix;
+          ++indent_;
           std::size_t idx{0};
           ((StreamField(os, use_seperator, value, TsValue<T>(idx, value, fields), idx, field_names, allow_field_names),
             ++idx),
            ...);
-          os << default_options_.value_structure_suffix;
+          --indent_;
+          os << indent_ << default_options_.value_structure_suffix;
         },
         [&value]() {
           if constexpr (types_internal::IsExtended<T>) {
@@ -420,11 +473,19 @@ class Stringify {
     if (allow_field_names && idx < std::size(field_names)) {
       field_name = std::data(field_names)[idx];
     }
-    const auto& field_options = [&]() {
+    const absl::Cleanup cleanup = [&, enable = indent_.IsEnabled()] {
       if constexpr (HasMboTypesStringifyOptions<T>) {
-        return MboTypesStringifyOptions(value, idx, field_name, default_options_);
+        indent_.SetEnable(enable);
+      }
+    };
+    std::optional<const StringifyOptions> copied_field_options;
+    const StringifyOptions& field_options = [&] {
+      if constexpr (HasMboTypesStringifyOptions<T>) {
+        copied_field_options.emplace(MboTypesStringifyOptions(value, idx, field_name, default_options_));
+        indent_.SetEnable(*copied_field_options);
+        return *copied_field_options;
       } else {
-        return StringifyOptions::As(default_options_.output_mode);
+        return default_options_;
       }
     }();
     using RawField = std::remove_cvref_t<Field>;
@@ -446,14 +507,14 @@ class Stringify {
     }
   }
 
-  static bool StreamFieldKey(
+  bool StreamFieldKey(
       std::ostream& os,
       bool& use_seperator,
       std::size_t idx,
       std::string_view field_name,
       const StringifyOptions& field_options,
       bool allow_field_names,
-      SpecialFieldValue is_special) {
+      SpecialFieldValue is_special) const {
     switch (is_special) {
       case SpecialFieldValue::kNoSuppress: break;
       case SpecialFieldValue::kNormal:
@@ -480,6 +541,7 @@ class Stringify {
     if (use_seperator) {
       os << field_options.field_separator;
     }
+    os << indent_;
     use_seperator = true;
     if (allow_field_names) {
       StreamFieldName(os, idx, field_name, field_options);
@@ -517,13 +579,14 @@ class Stringify {
         // Each pair element of the container `vs` is an element whose key is the `first` member and
         // whose value is the `second` member.
         os << field_options.value_structure_prefix;
+        ++indent_;
         std::string_view sep;
         std::size_t index = 0;
         for (const auto& v : vs) {
           if (index >= field_options.value_container_max_len) {
             break;
           }
-          os << sep;
+          os << sep << indent_;
           sep = field_options.field_separator;
           if (allow_field_names) {
             StreamFieldName(os, index, v.first, field_options, /*allow_key_override=*/false);
@@ -531,22 +594,25 @@ class Stringify {
           StreamValue(os, v.second, field_options, allow_field_names);
           ++index;
         }
-        os << field_options.value_structure_suffix;
+        --indent_;
+        os << indent_ << field_options.value_structure_suffix;
         return;
       }
     }
     os << field_options.value_container_prefix;
+    ++indent_;
     std::string_view sep;
     std::size_t index = 0;
     for (const auto& v : vs) {
       if (++index > field_options.value_container_max_len) {
         break;
       }
-      os << sep;
+      os << sep << indent_;
       sep = field_options.field_separator;
       StreamValue(os, v, field_options, allow_field_names);
     }
-    os << field_options.value_container_suffix;
+    --indent_;
+    os << indent_ << field_options.value_container_suffix;
   }
 
   template<typename T>
@@ -578,9 +644,11 @@ class Stringify {
           };
           bool use_seperator = false;
           os << field_options.value_structure_prefix;
+          ++indent_;
           StreamField(os, use_seperator, v, v.first, 0, field_names, allow_field_names);
           StreamField(os, use_seperator, v, v.second, 1, field_names, allow_field_names);
-          os << field_options.value_structure_suffix;
+          --indent_;
+          os << indent_ << field_options.value_structure_suffix;
           return;
         }
       }
@@ -683,6 +751,7 @@ class Stringify {
   }
 
   const StringifyOptions& default_options_;
+  mutable Indent indent_;
 };
 
 // Adapter (not Extender) that injects field names into field control.
