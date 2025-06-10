@@ -299,10 +299,8 @@ namespace extender {
 //   }
 //
 //   friend mbo::types::StringifyOptions MboTypesStringifyOptions(
-//       const TestType& /* unused */,
-//       std::size_t field_index,
-//       std::string_view field_name,
-//       const StringifyOptions& default_options) {
+//       const TestType& /* unused object */,
+//       const StringifyFieldInfo& /* unused field */) {
 //     return {
 //       .value_max_length = 42,
 //     };

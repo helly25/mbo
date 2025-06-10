@@ -18,6 +18,7 @@
 
 // IWYU pragma: private, include "mbo/types/traits.h"
 
+#include <concepts>  // IWYU pragma: keep
 #include <type_traits>
 
 namespace mbo::types::types_internal {
@@ -29,7 +30,14 @@ namespace mbo::types::types_internal {
 
 struct AnyType {
   template<typename T>
-  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
+};
+
+template<typename T>
+struct AnyOtherType {
+  template<typename U>
+  requires(!std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<U>>)
+  constexpr operator U() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<std::size_t kIndex>
@@ -39,14 +47,14 @@ template<typename D>
 struct AnyBaseType {
   using RawD = std::remove_cvref_t<D>;
   template<typename T, typename = std::enable_if_t<std::is_base_of_v<std::remove_cvref_t<T>, RawD>>>
-  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<typename D>
 struct AnyNonBaseType {
   using RawD = std::remove_cvref_t<D>;
   template<typename T, typename = std::enable_if_t<!std::is_base_of_v<std::remove_cvref_t<T>, RawD>>>
-  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<std::size_t kIndex, typename D>
@@ -60,7 +68,7 @@ struct AnyTypeIf {
       typename = std::enable_if_t<                                         //
           (kBaseOrNot == std::is_base_of_v<std::remove_cvref_t<T>, RawD>)  //
           &&(!kBaseOrNot || !kRequireNonEmpty || (!std::is_empty_v<std::remove_cvref_t<T>> && kAllowNonEmpty))>>
-  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<std::size_t kIndex, typename D, bool kBaseOrNot, bool kRequireNonEmpty, bool kAllowNonEmpty = kRequireNonEmpty>
@@ -73,7 +81,7 @@ struct AnyEmptyBase {
       typename T,
       typename =
           std::enable_if_t<std::is_base_of_v<std::remove_cvref_t<T>, RawD> && std::is_empty_v<std::remove_cvref_t<T>>>>
-  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<std::size_t kIndex, typename D>
@@ -86,7 +94,7 @@ struct AnyEmptyBaseOrNonBase {
       typename T,
       typename =
           std::enable_if_t<!std::is_base_of_v<std::remove_cvref_t<T>, RawD> || std::is_empty_v<std::remove_cvref_t<T>>>>
-  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<std::size_t kIndex, typename D>
@@ -101,7 +109,7 @@ struct AnyBaseMaybeEmpty {
           std::is_base_of_v<std::remove_cvref_t<T>, RawD>
           && (kIsEmpty == std::is_empty_v<std::remove_cvref_t<T>>
               || (kAllowNonEmpty && !std::is_empty_v<std::remove_cvref_t<T>>))>>
-  constexpr operator T() const noexcept;  // NOLINT(*-explicit-constructor, *-explicit-conversions)
+  constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<std::size_t kIndex, typename D, bool kIsEmpty, bool kAllowNonEmpty = false>
