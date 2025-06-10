@@ -24,6 +24,7 @@ const StringifyOptions& StringifyOptions::AsDefault() noexcept {
 
 const StringifyOptions& StringifyOptions::AsCpp() noexcept {
   static constexpr StringifyOptions kCpp{
+      .field_disabled = "{/*MboTypesStringifyDisable*/}",
       .key_prefix = ".",
       .key_value_separator = " = ",
       .value_pointer_prefix = "",
@@ -63,7 +64,7 @@ const StringifyOptions& StringifyOptions::AsJson() noexcept {
 const StringifyOptions& StringifyOptions::AsJsonPretty() noexcept {
   static const StringifyOptions kJson = [] {
     StringifyOptions json = AsJson();
-    json.message_end = "\n";
+    json.message_suffix = "\n";
     json.field_indent = "  ";
     json.field_separator = ",";
     return json;

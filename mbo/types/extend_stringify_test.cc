@@ -55,6 +55,7 @@ using ::mbo::types::Extend;
 using ::mbo::types::HasMboTypesStringifyDoNotPrintFieldNames;
 using ::mbo::types::HasMboTypesStringifyFieldNames;
 using ::mbo::types::HasMboTypesStringifyOptions;
+using ::mbo::types::StringifyFieldInfo;
 using ::mbo::types::StringifyNameHandling;
 using ::mbo::types::StringifyOptions;
 using ::mbo::types::StringifyWithFieldNames;
@@ -174,15 +175,11 @@ TEST_F(ExtenderStringifyTest, AddFieldNamesLimitedVector) {
 
 struct TestStructFieldOptions : Extend<TestStructFieldOptions> {
   int one = 11;
-  int two = 25;
+  std::pair<int, int> two = {25, 27};
   int tre = 33;
 
-  friend StringifyOptions MboTypesStringifyOptions(
-      const TestStructFieldOptions&,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& /*defaults*/) {
-    return ExtenderStringifyTest::tester->FieldOptions(idx, name);
+  friend StringifyOptions MboTypesStringifyOptions(const TestStructFieldOptions&, const StringifyFieldInfo& field) {
+    return ExtenderStringifyTest::tester->FieldOptions(field.idx, field.name);
   }
 };
 
@@ -219,24 +216,20 @@ TEST_F(ExtenderStringifyTest, FieldOptions) {
           .field_suppress = true,
       }));
 
-  EXPECT_THAT(TestStructFieldOptions{}.ToString(), "{_1_first.1.=1=11+2+_2_second.2.=2=25}");
+  EXPECT_THAT(TestStructFieldOptions{}.ToString(), "{_1_first.1.=1=11, _2_second.2.=2={.first: 25+2+.second: 27}}");
 }
 
 struct TestStructFieldNames : Extend<TestStructFieldNames> {
   int one = 11;
-  int two = 25;
+  std::pair<int, int> two = {25, 27};
   int tre = 33;
 
   friend std::vector<std::string> MboTypesStringifyFieldNames(const TestStructFieldNames&) {
     return ExtenderStringifyTest::tester->FieldNames();
   }
 
-  friend StringifyOptions MboTypesStringifyOptions(
-      const TestStructFieldNames&,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& /*defaults*/) {
-    return ExtenderStringifyTest::tester->FieldOptions(idx, name);
+  friend StringifyOptions MboTypesStringifyOptions(const TestStructFieldNames&, const StringifyFieldInfo& field) {
+    return ExtenderStringifyTest::tester->FieldOptions(field.idx, field.name);
   }
 };
 
@@ -272,7 +265,7 @@ TEST_F(ExtenderStringifyTest, FieldNames) {
           .key_value_separator = "=3=",
       }));
 
-  EXPECT_THAT(TestStructFieldNames{}.ToString(), "{_1_First.1.=1=11+3+_3_Third.3.=3=33}");
+  EXPECT_THAT(TestStructFieldNames{}.ToString(), "{_1_First.1.=1=11, _3_Third.3.=3=33}");
 
   // 2nd ToString call.
   EXPECT_CALL(*tester, FieldNames()).WillOnce(::testing::Return(std::vector<std::string>{"Fourth"}));
@@ -300,12 +293,12 @@ TEST_F(ExtenderStringifyTest, FieldNames) {
           .key_value_separator = "=6=",
           .key_use_name = "Sixth",
       }));
-  EXPECT_THAT(TestStructFieldNames{}.ToString(), "{_4_Fourth.4.=4=11+5+25+6+_6_Sixth.6.=6=33}");
+  EXPECT_THAT(TestStructFieldNames{}.ToString(), "{_4_Fourth.4.=4=11, {.first: 25+5+.second: 27}, _6_Sixth.6.=6=33}");
 }
 
 struct TestStructDoNotPrintFieldNames : Extend<TestStructDoNotPrintFieldNames> {
   int one = 11;
-  int two = 25;
+  std::pair<int, int> two = {25, 27};
   int tre = 33;
 
   using MboTypesStringifyDoNotPrintFieldNames = void;
@@ -314,10 +307,8 @@ struct TestStructDoNotPrintFieldNames : Extend<TestStructDoNotPrintFieldNames> {
 
   friend StringifyOptions MboTypesStringifyOptions(
       const TestStructDoNotPrintFieldNames&,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& /*defaults*/) {
-    return ExtenderStringifyTest::tester->FieldOptions(idx, name);
+      const StringifyFieldInfo& field) {
+    return ExtenderStringifyTest::tester->FieldOptions(field.idx, field.name);
   }
 };
 
@@ -349,7 +340,7 @@ TEST_F(ExtenderStringifyTest, DoNotPrintFieldNames) {
           .field_suppress = true,
       }));
 
-  EXPECT_THAT(TestStructDoNotPrintFieldNames{}.ToString(), "{11++25}");
+  EXPECT_THAT(TestStructDoNotPrintFieldNames{}.ToString(), "{11, {25++27}}");
 }
 
 struct TestStructShorten : Extend<TestStructShorten> {
@@ -359,19 +350,13 @@ struct TestStructShorten : Extend<TestStructShorten> {
   std::string_view four = "4444";
   std::string_view five;
 
-  friend StringifyOptions MboTypesStringifyOptions(
-      const TestStructShorten& v,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& defaults) {
-    return StringifyWithFieldNames(
-        StringifyOptions{
-            .key_prefix = "",
-            .key_value_separator = " = ",
-            .value_max_length = idx >= 3 && idx <= 4 ? 0U : 1U,
-            .value_cutoff_suffix = idx < 2 ? StringifyOptions::AsDefault().value_cutoff_suffix : "**",
-        },
-        {"one", "two", "three", "four", "five"})(v, idx, name, defaults);
+  friend StringifyOptions MboTypesStringifyOptions(const TestStructShorten& v, const StringifyFieldInfo& field) {
+    StringifyOptions opts = StringifyWithFieldNames({"one", "two", "three", "four", "five"})(v, field);
+    opts.key_prefix = "";
+    opts.key_value_separator = " = ";
+    opts.value_max_length = field.idx >= 3 && field.idx <= 4 ? 0U : 1U;
+    opts.value_cutoff_suffix = field.idx < 2 ? StringifyOptions::AsDefault().value_cutoff_suffix : "**";
+    return opts;
   }
 };
 
@@ -386,19 +371,13 @@ struct TestStructValueReplacement : Extend<TestStructValueReplacement> {
   std::vector<int> three = {331, 332, 333};
   std::vector<std::string_view> four{"41", "42", "43"};
 
-  friend StringifyOptions MboTypesStringifyOptions(
-      const TestStructValueReplacement& v,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& defaults) {
-    return StringifyWithFieldNames(
-        StringifyOptions{
-            .key_prefix = "",
-            .key_value_separator = " = ",
-            .value_replacement_str = "<XX>",
-            .value_replacement_other = "<YY>",
-        },
-        {"one", "two", "three", "four"})(v, idx, name, defaults);
+  friend auto MboTypesStringifyOptions(const TestStructValueReplacement& v, const StringifyFieldInfo& field) {
+    StringifyOptions ret = StringifyWithFieldNames({"one", "two", "three", "four"})(v, field);
+    ret.key_prefix = "";
+    ret.key_value_separator = " = ";
+    ret.value_replacement_str = "<XX>";
+    ret.value_replacement_other = "<YY>";
+    return ret;
   }
 };
 
@@ -414,20 +393,15 @@ struct TestStructContainer : Extend<TestStructContainer> {
   std::vector<int> two;
   std::vector<int> tre = {1, 2, 3};
 
-  friend StringifyOptions MboTypesStringifyOptions(
-      const TestStructContainer& v,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& defaults) {
-    return StringifyWithFieldNames(
-        StringifyOptions{
-            .key_prefix = "",
-            .key_value_separator = " = ",
-            .value_container_prefix = "[",
-            .value_container_suffix = "]",
-            .value_container_max_len = idx == 1 ? 0U : 2U,
-        },
-        {"one", "two", "three"}, StringifyNameHandling::kOverwrite)(v, idx, name, defaults);
+  friend StringifyOptions MboTypesStringifyOptions(const TestStructContainer& v, const StringifyFieldInfo& field) {
+    StringifyOptions ret =
+        StringifyWithFieldNames({"one", "two", "three"}, StringifyNameHandling::kOverwrite)(v, field);
+    ret.key_prefix = "";
+    ret.key_value_separator = " = ";
+    ret.value_container_prefix = "[";
+    ret.value_container_suffix = "]";
+    ret.value_container_max_len = field.idx == 1 ? 0U : 2U;
+    return ret;
   }
 };
 
@@ -459,14 +433,10 @@ struct TestStructMoreContainers : Extend<TestStructMoreContainers> {
   std::map<int, int> two = {{1, 2}, {3, 4}};
   std::vector<std::pair<int, int>> three = {{5, 6}};
 
-  friend StringifyOptions MboTypesStringifyOptions(
-      const TestStructMoreContainers& v,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& defaults) {
-    auto ret =
-        StringifyWithFieldNames(StringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name, defaults);
-    if (idx == 2) {
+  friend StringifyOptions MboTypesStringifyOptions(const TestStructMoreContainers& v, const StringifyFieldInfo& field) {
+    StringifyOptions ret = StringifyWithFieldNames({"one", "two", "three", "four"})(
+        v, StringifyFieldInfo{.options{StringifyOptions::AsJson()}, .idx = field.idx, .name = field.name});
+    if (field.idx == 2) {
       ret.special_pair_first = "Key";
       ret.special_pair_second = "Val";
     }
@@ -497,11 +467,9 @@ struct TestStructMoreContainersWithDirectFieldNames : Extend<TestStructMoreConta
 
   friend StringifyOptions MboTypesStringifyOptions(
       const TestStructMoreContainersWithDirectFieldNames&,
-      std::size_t idx,
-      std::string_view,
-      const StringifyOptions& defaults) {
-    StringifyOptions ret = defaults;
-    if (idx == 2) {
+      const StringifyFieldInfo& field) {
+    StringifyOptions ret = field.options.inner;
+    if (field.idx == 2) {
       ret.special_pair_first = "Key";
       ret.special_pair_second = "Val";
     }
@@ -526,10 +494,9 @@ struct TestStructContainersOfPairs : Extend<TestStructContainersOfPairs> {
 
   friend StringifyOptions MboTypesStringifyOptions(
       const TestStructContainersOfPairs& v,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& defaults) {
-    return StringifyWithFieldNames(StringifyOptions::AsJson(), {"one", "two", "three", "four"})(v, idx, name, defaults);
+      const StringifyFieldInfo& field) {
+    return StringifyWithFieldNames({"one", "two", "three", "four"})(
+        v, StringifyFieldInfo{.options{StringifyOptions::AsJson()}, .idx = field.idx, .name = field.name});
   }
 };
 
@@ -605,12 +572,9 @@ struct TestStructCustomNestedJsonNested : Extend<TestStructCustomNestedJsonNeste
 
   friend StringifyOptions MboTypesStringifyOptions(
       const TestStructCustomNestedJsonNested& v,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& defaults) {
-    return StringifyWithFieldNames(
-        StringifyOptions::AsJson(), {"NESTED_1", "NESTED_2"}, StringifyNameHandling::kOverwrite)(
-        v, idx, name, defaults);
+      const StringifyFieldInfo& field) {
+    return StringifyWithFieldNames({"NESTED_1", "NESTED_2"}, StringifyNameHandling::kOverwrite)(
+        v, StringifyFieldInfo{.options{StringifyOptions::AsJson()}, .idx = field.idx, .name = field.name});
   }
 };
 
@@ -623,11 +587,9 @@ struct TestStructCustomNestedJson : Extend<TestStructCustomNestedJson> {
 
   friend StringifyOptions MboTypesStringifyOptions(
       const TestStructCustomNestedJson& v,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& defaults) {
-    return StringifyWithFieldNames(StringifyOptions::AsJson(), {"one", "two", "three", "four", "five"})(
-        v, idx, name, defaults);
+      const StringifyFieldInfo& field) {
+    return StringifyWithFieldNames({"one", "two", "three", "four", "five"})(
+        v, StringifyFieldInfo{.options{StringifyOptions::AsJson()}, .idx = field.idx, .name = field.name});
   }
 };
 
@@ -651,13 +613,8 @@ struct TestStructNonLiteralFields : mbo::types::Extend<TestStructNonLiteralField
   std::unordered_map<int, int> two = {{3, 4}};
   std::string three = "three";
 
-  friend StringifyOptions MboTypesStringifyOptions(
-      const TestStructNonLiteralFields& v,
-      std::size_t idx,
-      std::string_view name,
-      const StringifyOptions& defaults) {
-    return StringifyWithFieldNames(defaults, {"one", "two", "three"}, StringifyNameHandling::kVerify)(
-        v, idx, name, defaults);
+  friend auto MboTypesStringifyOptions(const TestStructNonLiteralFields& v, const StringifyFieldInfo& field) {
+    return StringifyWithFieldNames({"one", "two", "three"}, StringifyNameHandling::kVerify)(v, field);
   }
 };
 
@@ -680,11 +637,7 @@ struct TestExtApiCombo : mbo::types::Extend<TestExtApiCombo> {
     return std::array<std::string_view, 1>{"one"};
   }
 
-  friend const StringifyOptions& MboTypesStringifyOptions(
-      const TestExtApiCombo&,
-      std::size_t,
-      std::string_view,
-      const StringifyOptions&) {
+  friend const StringifyOptions& MboTypesStringifyOptions(const TestExtApiCombo&, const StringifyFieldInfo&) {
     return StringifyOptions::AsCpp();
   }
 };

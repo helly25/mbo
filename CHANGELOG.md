@@ -1,6 +1,11 @@
 # 0.10.0
 
 * Improved control for `Stringify` with Json output.
+* Updated `StringifyOptions` (breaking change, but no field renames).
+* Updated `StringifyWithFieldNames` (breaking change).
+* Modified `MboTypesStringifyOptions` (breaking change) to be more flexible - but users must deal with the change.
+* Added ability to detect bad `MboTypesStringifyOptions` signatures.
+* Added `StringifyFieldOptions` which holds outer and inner `StringifyOptions`.
 * Added `Stringify::AsJsonPretty()` and `StringifyOptions::AsJsonPretty()`.
 
 # 0.9.0
