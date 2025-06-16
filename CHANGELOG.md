@@ -1,5 +1,11 @@
 # 0.10.0
 
+* Added direct support for `-fno-exceptions` irrespective of config setting.
+* Added support for ASAN symbolizer with `--config=clang`.
+* Added AbslStringify and hash support to `NoDestruct`, `RefWrap`, `Required`.
+* Added struct `OptionalDataOrRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a reference `T&`/`const T&`.
+* Added struct `OptionalDataOrConstRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a const reference `const T&`.
+* Added struct `OptionalRef` similar to `std::optional` but can hold `std::nullopt` or a reference `T&`/`const T&`.
 * Improved control for `Stringify` with Json output.
 * Updated `StringifyOptions` (breaking change, but no field renames).
 * Updated `StringifyWithFieldNames` (breaking change).

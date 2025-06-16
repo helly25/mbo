@@ -20,6 +20,9 @@
 #include <memory>  // IWYU pragma: keep
 #include <utility>
 
+#include "absl/hash/hash.h"
+#include "absl/strings/str_format.h"
+
 namespace mbo::types {
 
 // NOLINTBEGIN(*-pro-type-member-init)
@@ -92,6 +95,16 @@ class NoDestruct final {
   constexpr T& operator*() noexcept { return Get(); }
 
   constexpr T* operator->() noexcept { return &Get(); }
+
+  template<typename H>
+  friend H AbslHashValue(H hash, const NoDestruct<T>& v) {
+    return H::combine(std::move(hash), absl::HashOf<>(*v.data_));
+  }
+
+  template<typename Sink>
+  friend void AbslStringify(Sink& sink, const NoDestruct<T>& v) {
+    absl::Format(&sink, "%v", v.data_);
+  }
 
  private:
   Data buf_ = {};  // NOLINT(*-avoid-c-arrays)

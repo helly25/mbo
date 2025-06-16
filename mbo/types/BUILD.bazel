@@ -168,6 +168,48 @@ cc_test(
 )
 
 cc_library(
+    name = "optional_data_or_ref_cc",
+    hdrs = ["optional_data_or_ref.h"],
+    deps = [
+        ":optional_ref_cc",
+        "@com_google_absl//absl/hash",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "optional_data_or_ref_test",
+    srcs = ["optional_data_or_ref_test.cc"],
+    deps = [
+        ":optional_data_or_ref_cc",
+        "//mbo/testing:matchers_cc",
+        "@com_google_googletest//:gtest",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "optional_ref_cc",
+    hdrs = ["optional_ref.h"],
+    deps = [
+        "//mbo/config:require_cc",
+        "@com_google_absl//absl/hash",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "optional_ref_test",
+    srcs = ["optional_ref_test.cc"],
+    deps = [
+        ":optional_ref_cc",
+        "//mbo/testing:matchers_cc",
+        "@com_google_googletest//:gtest",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "ref_wrap_cc",
     hdrs = ["ref_wrap.h"],
     visibility = ["//visibility:public"],

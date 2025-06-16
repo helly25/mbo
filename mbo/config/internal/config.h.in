@@ -44,7 +44,12 @@ static constexpr std::size_t kUnrollMaxCapacityDefault = 16;
 // This is controlled by custom Bazel `--//mbo/config:require_throws`.
 // When the library is built as a dependency (e.g. as `com_helly25_mbo`), then the flag becomes
 // `--@com_helly25_mbo//mbo/config:require_throws` (defaults to `False` / `0`).
+#if __cpp_exceptions
 static constexpr bool kRequireThrows = false;
+#else
+// This value won't be replaced.
+static constexpr bool kRequireThrows{false};
+#endif
 
 }  // namespace mbo::config
 

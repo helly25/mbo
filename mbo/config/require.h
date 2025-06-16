@@ -30,14 +30,24 @@
 # undef MBO_CONFIG_REQUIRE
 #endif
 
-#define MBO_CONFIG_REQUIRE(condition, message)                                                             \
-  if constexpr (!::mbo::config::kRequireThrows) {                                                          \
-    /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */                                             \
-    ABSL_LOG_IF(FATAL, !(condition)) << message;                                                           \
-  } else if ((condition)) { /* GOOD */                                                                     \
-  } else                                                                                                   \
-    throw std::runtime_error(__FILE__ ":" MBO_PRIVATE_CONFIG_NUM2STR_(__LINE__) " : Required (" #condition \
-                                                                                ") : " message)
+#if __cpp_exceptions
+# define MBO_CONFIG_REQUIRE(condition, message)                                                               \
+   if constexpr (::mbo::config::kRequireThrows) {                                                             \
+     if (!(condition))                                                                                        \
+       throw std::runtime_error(__FILE__ ":" MBO_PRIVATE_CONFIG_NUM2STR_(__LINE__) " : Required (" #condition \
+                                                                                   ") "                       \
+                                                                                   ": " message);             \
+   } else                                                                                                     \
+     /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */                                               \
+     ABSL_LOG_IF(FATAL, !(condition)) << message
+
+#else  // __cpp_exceptions
+
+# define MBO_CONFIG_REQUIRE(condition, message)               \
+   /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */ \
+   ABSL_LOG_IF(FATAL, !(condition)) << message
+
+#endif  // __cpp_exceptions
 
 // NOLINTEND(cppcoreguidelines-macro-usage)
 

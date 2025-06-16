@@ -20,3 +20,8 @@ filegroup(
     srcs = [".clang-format"],
     visibility = ["//visibility:public"],
 )
+
+config_setting(
+    name = "is_clang",
+    define_values = {"is_clang": "true"},
+)

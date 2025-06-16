@@ -20,6 +20,9 @@
 #include <concepts>  // IWYU pragma: keep
 #include <cstddef>
 
+#include "absl/hash/hash.h"
+#include "absl/strings/str_format.h"
+
 namespace mbo::types {
 
 // Template class `RefWrap<T>` is a reference wrapper for a type `T`. It has
@@ -93,6 +96,16 @@ class RefWrap final {
       return decltype(*ptr_ <=> other)::equivalent;
     }
     return *ptr_ <=> other;
+  }
+
+  template<typename H>
+  friend H AbslHashValue(H hash, const RefWrap<T>& v) {
+    return H::combine(std::move(hash), absl::HashOf<>(*v.ptr_));
+  }
+
+  template<typename Sink>
+  friend void AbslStringify(Sink& sink, const RefWrap<T>& v) {
+    absl::Format(&sink, "%v", *v.ptr_);
   }
 
  private:

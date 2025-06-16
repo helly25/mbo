@@ -27,6 +27,11 @@
 #include "mbo/types/traits.h"  // IWYU pragma: keep
 
 namespace mbo::testing {
+
+inline auto IsNullopt() {
+  return ::testing::Eq(std::nullopt);
+}
+
 namespace testing_internal {
 
 // Implements the polymorphic `CapacityIs` matcher, which

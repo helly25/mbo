@@ -20,6 +20,9 @@
 #include <concepts>  // IWYU pragma: keep
 #include <utility>
 
+#include "absl/hash/hash.h"
+#include "absl/strings/str_format.h"
+
 namespace mbo::types {
 
 // Template class `Required<T>` is a wrapper around a type `T`. The value can be
@@ -27,8 +30,8 @@ namespace mbo::types {
 // will call the destructor and then in-place construct the wrapped value using
 // the type's move constructor.
 //
-// In other words the reson for this type is the rare case where a variable of a
-// type `T` needs to be assigned (say for a test) while the type follows the
+// In other words the reason for this type is the rare case where a variable of
+// a type `T` needs to be assigned (say for a test) while the type follows the
 // rule of 0/3/5 but only allows move-construction.
 //
 // The type is similar to `RefWrap` and `std::optional` (only it cannot be
@@ -126,6 +129,16 @@ class Required {
       return decltype(value_ <=> other)::equivalent;
     }
     return value_ <=> other;
+  }
+
+  template<typename H>
+  friend H AbslHashValue(H hash, const Required<T>& v) {
+    return H::combine(std::move(hash), absl::HashOf<>(*v.value_));
+  }
+
+  template<typename Sink>
+  friend void AbslStringify(Sink& sink, const Required<T>& v) {
+    absl::Format(&sink, "%v", v.value_);
   }
 
  private:
