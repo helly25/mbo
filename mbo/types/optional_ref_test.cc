@@ -28,7 +28,6 @@ using ::mbo::testing::IsNullopt;
 using ::testing::Contains;
 using ::testing::ElementsAre;
 using ::testing::Not;
-using ::testing::Optional;
 
 struct OptionalRefTest : ::testing::Test {};
 

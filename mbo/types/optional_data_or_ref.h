@@ -23,7 +23,6 @@
 #include <variant>
 
 #include "absl/hash/hash.h"
-#include "absl/log/absl_check.h"
 #include "absl/strings/str_format.h"
 #include "mbo/types/optional_ref.h"
 
