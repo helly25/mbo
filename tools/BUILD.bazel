@@ -25,11 +25,12 @@ genrule(
     outs = ["run_under_symbolizer.sh"],
     cmd = """
       LLVM_SYMBOLIZER_PATH="$$(readlink -f $${{PWD}}/$(location {SYMBOLIZER}))"
-      sed "s,%%LLVM_SYMBOLIZER_PATH%%,$${{LLVM_SYMBOLIZER_PATH}}," $(location run_under_symbolizer.sh.in) > $@
+      sed "s,%%LLVM_SYMBOLIZER_PATH%%,$${{LLVM_SYMBOLIZER_PATH}}," $< > $@
     """.format(
         SYMBOLIZER = _SYMBOLIZER,
     ),
     executable = True,
+    tags = ["manual"],
     tools = [_SYMBOLIZER],
 )
 
@@ -37,4 +38,5 @@ sh_binary(
     name = "run_under_symbolizer",
     srcs = ["run_under_symbolizer.sh"],
     data = [_SYMBOLIZER],
+    tags = ["manual"],
 )
