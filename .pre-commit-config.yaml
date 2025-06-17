@@ -127,10 +127,11 @@ repos:
   hooks:
   - id: clang-format
 
-#- repo: https://github.com/lovesegfault/beautysh
-#  rev: v6.2.1
-#  hooks:
-#  - id: beautysh
+- repo: https://github.com/scop/pre-commit-shfmt
+  rev: v3.11.0-1
+  hooks:
+    - id: shfmt
+      args: ["-bn", "-ci", "-i=2", "-w"]
 
 - repo: https://github.com/koalaman/shellcheck-precommit
   rev: v0.10.0

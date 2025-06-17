@@ -17,44 +17,47 @@
 
 set -euo pipefail
 
-function die() { echo "ERROR: ${*}" 1>&2 ; exit 1; }
+function die() {
+  echo "ERROR: ${*}" 1>&2
+  exit 1
+}
 
 # 1) Assume we have the `external` convenience link.
 BAZEL_OUTPUT="bazel-$(basename "${PWD}")"
 [ -d "${BAZEL_OUTPUT}" ] || BAZEL_OUTPUT="."
 
 declare -a CLANG_FORMAT_LOCS=(
-    # 1) Find it via the `bazel-<repo>` link structure.
-    # 1.1) Bazel workspaces
-    "${BAZEL_OUTPUT}/external/llvm_toolchain_llvm/bin/clang-format"
-    "${BAZEL_OUTPUT}/external/llvm_toolchain/bin/clang-format"
-    # 1.2) Bazel modules < 8
-    "${BAZEL_OUTPUT}/external/toolchains_llvm~~llvm~llvm_toolchain_llvm/bin/clang-format"
-    "${BAZEL_OUTPUT}/external/toolchains_llvm~~llvm~llvm_toolchain_llvm_llvm/bin/clang-format"
-    # 1.3) Bazel modules >= 8
-    "${BAZEL_OUTPUT}/external/toolchains_llvm++llvm+llvm_toolchain_llvm/bin/clang-format"
-    "${BAZEL_OUTPUT}/external/toolchains_llvm++llvm+llvm_toolchain_llvm_llvm/bin/clang-format"
+  # 1) Find it via the `bazel-<repo>` link structure.
+  # 1.1) Bazel workspaces
+  "${BAZEL_OUTPUT}/external/llvm_toolchain_llvm/bin/clang-format"
+  "${BAZEL_OUTPUT}/external/llvm_toolchain/bin/clang-format"
+  # 1.2) Bazel modules < 8
+  "${BAZEL_OUTPUT}/external/toolchains_llvm~~llvm~llvm_toolchain_llvm/bin/clang-format"
+  "${BAZEL_OUTPUT}/external/toolchains_llvm~~llvm~llvm_toolchain_llvm_llvm/bin/clang-format"
+  # 1.3) Bazel modules >= 8
+  "${BAZEL_OUTPUT}/external/toolchains_llvm++llvm+llvm_toolchain_llvm/bin/clang-format"
+  "${BAZEL_OUTPUT}/external/toolchains_llvm++llvm+llvm_toolchain_llvm_llvm/bin/clang-format"
 
-    # 2) Try to find clang-format directly or by its name plus version suffix as is common.
-    "$(which "clang-format-23")"
-    "$(which "clang-format-22")"
-    "$(which "clang-format-21")"
-    "$(which "clang-format-20")"
-    "$(which "clang-format-19")"
-    "$(which "clang-format-18")"
-    "$(which "clang-format-17")"
-    "$(which "clang-format-16")"
-    "$(which "clang-format-15")"
+  # 2) Try to find clang-format directly or by its name plus version suffix as is common.
+  "$(which "clang-format-23")"
+  "$(which "clang-format-22")"
+  "$(which "clang-format-21")"
+  "$(which "clang-format-20")"
+  "$(which "clang-format-19")"
+  "$(which "clang-format-18")"
+  "$(which "clang-format-17")"
+  "$(which "clang-format-16")"
+  "$(which "clang-format-15")"
 
-    # 3) Prefer clang-format from LLVM_PATH or PATH environment variables if any.
-    "${LLVM_PATH:-/usr}/bin/clang-format"
-    "$(which clang-format)"
+  # 3) Prefer clang-format from LLVM_PATH or PATH environment variables if any.
+  "${LLVM_PATH:-/usr}/bin/clang-format"
+  "$(which clang-format)"
 )
 
 for CLANG_FORMAT in "${CLANG_FORMAT_LOCS[@]}"; do
-    [ -x "${CLANG_FORMAT}" ] && break
+  [ -x "${CLANG_FORMAT}" ] && break
 done
 
-[[ -x "${CLANG_FORMAT}" ]] || die "Cannot find clang-format"
+[[ -x ${CLANG_FORMAT} ]] || die "Cannot find clang-format"
 
 "${CLANG_FORMAT}" "${@}"

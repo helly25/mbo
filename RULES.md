@@ -4,9 +4,11 @@ Some rules for the code layout and its development.
 * All sources must be unix-text files: https://en.wikipedia.org/wiki/Text_file
   * Lines end in {LF}.
   * The files are either empty or end in {LF}.
+* API changes that are not backwards compatible should not occur in minor version changes.
+* Undocumented and private/internal APIs may be changed in any way at any time.
 * This library uses C++20 and is intended to be compiled with `clang`.
   * Reasonable effort is performed to ensure compilation with GCC is functional.
-* All code must be formatted using `clang-format` with '.clang-format'.
+* All (C++) code must be formatted using `clang-format` with '.clang-format'.
   * This provides consistent formatting.
   * The choices are meant to enable fast structural reading by humans.
   * It cares less about writing because there is auto formatting and code is
@@ -54,5 +56,5 @@ Some rules for the code layout and its development.
 * Flags in libraries should be prefixed with their path/namespace. E.g. the flag
   `--mbo_log_timing_min_duration` has the prefix `mbo_log` as it is defined in
   `mbo/log/log_timing.cc` (path `mbo/log`) and uses namespace `mbo::log`.
-* API changes that are not backwards compatible should not occur in minor version changes.
-* Undocumented and private/internal APIs may be changed in any way at any time.
+* All shell files follow https://google.github.io/styleguide/shellguide.html but use shfmt which diverges slightly.
+  * The common shebang line is `#!/usr/bin/env bash` followed by the license.

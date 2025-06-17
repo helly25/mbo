@@ -22,14 +22,14 @@ bazel build -c opt //mbo/diff
 UNIFIED_DIFF="bazel-bin/mbo/diff/diff"
 
 if find -P -E . >/dev/null 2>&1; then
-    FLAGS=("-P" "-E")
-    EXTRA=()
+  FLAGS=("-P" "-E")
+  EXTRA=()
 elif find -P . -regextype posix-extended >/dev/null 2>&1; then
-    FLAGS=("-P")
-    EXTRA=("-regextype" "posix-extended")
+  FLAGS=("-P")
+  EXTRA=("-regextype" "posix-extended")
 else
-    FLAGS=("-P")
-    EXTRA=()
+  FLAGS=("-P")
+  EXTRA=()
 fi
 
 rm -f /tmp/header-diffs.txt
@@ -37,35 +37,35 @@ touch /tmp/header-diffs.txt
 
 MAX_LINES=$(wc -l tools/header_cpp.txt | sed -e 's,^ *,,g' | cut -d ' ' -f 1)
 find "${FLAGS[@]}" . "${EXTRA[@]+"${EXTRA[@]}"}" -regex '.*[.](c|cc|cpp|h|hh|hpp)([.]mope)?$' \
-    -exec "${UNIFIED_DIFF}" \
-    --file_header_use left \
-    --ignore_matching_lines='^($|([^/]($|[^/])))' \
-    --max_lines "${MAX_LINES}" \
-    {} \
-    tools/header_cpp.txt \
-    \; \
-    >> /tmp/header-diffs.txt
+  -exec "${UNIFIED_DIFF}" \
+  --file_header_use left \
+  --ignore_matching_lines='^($|([^/]($|[^/])))' \
+  --max_lines "${MAX_LINES}" \
+  {} \
+  tools/header_cpp.txt \
+  \; \
+  >>/tmp/header-diffs.txt
 
 MAX_LINES=$(wc -l tools/header.txt | sed -e 's,^  *,,g' | cut -d ' ' -f 1)
 find "${FLAGS[@]}" . "${EXTRA[@]+"${EXTRA[@]}"}" -regex '.*/(.*[.](bzl|bazel)|BAZEL|WORKSPACE)$' \
-    -exec "${UNIFIED_DIFF}" \
-    --file_header_use left \
-    --ignore_matching_lines='^($|[^#])' \
-    --max_lines "${MAX_LINES}" \
-    {} \
-    tools/header.txt \
-    \; \
-    >> /tmp/header-diffs.txt
+  -exec "${UNIFIED_DIFF}" \
+  --file_header_use left \
+  --ignore_matching_lines='^($|[^#])' \
+  --max_lines "${MAX_LINES}" \
+  {} \
+  tools/header.txt \
+  \; \
+  >>/tmp/header-diffs.txt
 
 MAX_LINES=$(wc -l tools/header_sh.txt | sed -e 's,^  *,,g' | cut -d ' ' -f 1)
 find "${FLAGS[@]}" . "${EXTRA[@]+"${EXTRA[@]}"}" -regex '.*[.](sh)$' \
-    -exec "${UNIFIED_DIFF}" \
-    --file_header_use left \
-    --ignore_matching_lines='^($|[^#]|(#!/bin/bash$))' \
-    --max_lines "${MAX_LINES}" \
-    {} \
-    tools/header_sh.txt \
-    \; \
-    >> /tmp/header-diffs.txt
+  -exec "${UNIFIED_DIFF}" \
+  --file_header_use left \
+  --ignore_matching_lines='^($|[^#]|(#!/bin/bash$))' \
+  --max_lines "${MAX_LINES}" \
+  {} \
+  tools/header_sh.txt \
+  \; \
+  >>/tmp/header-diffs.txt
 
-patch -p 1 < /tmp/header-diffs.txt
+patch -p 1 </tmp/header-diffs.txt
