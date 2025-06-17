@@ -54,6 +54,10 @@ common:clang --incompatible_enable_cc_toolchain_resolution
 common:clang --//mbo/mope:clang_format=
 common:clang --cxxopt=-gmlt
 common:clang --host_cxxopt=-gmlt
+common:clang --linkopt=-fuse-ld=lld
+common:clang --host_linkopt=-fuse-ld=lld
 common:clang --define is_clang=true
 
 common:cpp23 --cxxopt=-std=c++23 --host_cxxopt=-std=c++23
+
+try-import %workspace%/.bazelrc.user.end

@@ -23,7 +23,7 @@ git_override(
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 llvm.toolchain(
     name = "llvm_toolchain_llvm",
-    llvm_version = "19.1.6",
+    llvm_version = "17.0.4",
 )
 use_repo(llvm, "llvm_toolchain_llvm")
 

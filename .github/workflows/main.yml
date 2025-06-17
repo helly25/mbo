@@ -21,15 +21,11 @@ jobs:
         os: [ubuntu-latest]
         bazel_mode: [bzlmod, workspace]
         compiler: [gcc]
-        gcc_version: [11, 12, 13]
+        gcc_version: [12, 13]
         bazel_config: [cpp23, opt]
         exclude:
           - bazel_mode: workspace
-            gcc_version: 11
-          - bazel_mode: workspace
             gcc_version: 13
-          - bazel_config: cpp23
-            gcc_version: 11
           - bazel_config: cpp23
             gcc_version: 12
 
@@ -88,7 +84,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         bazel_mode: [bzlmod]
         compiler: [gcc, native]
-        gcc_version: [11]
+        gcc_version: [12]
         llvm_version: [19.1.6]
         bazel_config: [opt]
         module_version: [0.6.0]

@@ -62,6 +62,7 @@ using ::mbo::types::HasMboTypesStringifyOptions;
 using ::mbo::types::HasMboTypesStringifySupport;
 using ::mbo::types::Stringify;
 using ::mbo::types::StringifyFieldInfo;
+using ::mbo::types::StringifyFieldInfoString;
 using ::mbo::types::StringifyFieldOptions;
 using ::mbo::types::StringifyNameHandling;
 using ::mbo::types::StringifyOptions;
@@ -324,6 +325,46 @@ TEST_F(StringifyTest, FieldNames) {
       "{_4_Fourth.4.=4=11, {.first: 25+5+.second: 27}, _6_Sixth.6.=6=33}");
 }
 
+#ifdef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
+struct TestStructKeyUseName {
+  int one = 11;
+  int two = 25;
+  int tre = 33;
+
+  friend StringifyOptions MboTypesStringifyOptions(const TestStructKeyUseName&, const StringifyFieldInfo& field) {
+    StringifyOptions options = field.options.outer;
+    options.key_use_name.emplace<const StringifyFieldInfoString>(
+        [](const StringifyFieldInfo& info) { return info.idx == 0 ? "First" : "Other"; });
+    return options;
+  }
+};
+
+TEST_F(StringifyTest, KeyNameFunction) {
+  EXPECT_THAT(Stringify().ToString(TestStructKeyUseName{}), "{.First: 11, .Other: 25, .Other: 33}");
+}
+#endif  // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
+
+struct TestStructStaticKeyUseName {
+  int one = 11;
+  int two = 25;
+
+  friend const StringifyOptions& MboTypesStringifyOptions(
+      const TestStructStaticKeyUseName&,
+      const StringifyFieldInfo&) {
+    static const StringifyFieldInfoString kKeyFunc = [](const StringifyFieldInfo& info) {
+      return info.idx == 0 ? "One" : "Two";
+    };
+    static const StringifyOptions kOptions{
+        .key_use_name = &kKeyFunc,
+    };
+    return kOptions;
+  }
+};
+
+TEST_F(StringifyTest, StaticKeyNameFunction) {
+  EXPECT_THAT(Stringify().ToString(TestStructStaticKeyUseName{}), "{.One: 11, .Two: 25}");
+}
+
 struct TestStructDoNotPrintFieldNames {
   int one = 11;
   std::pair<int, int> two = {25, 27};
@@ -501,8 +542,7 @@ struct TestStructMoreContainers {
                .name = field.name,
            });
     if (field.idx == 2) {
-      ret.special_pair_first = "Key";
-      ret.special_pair_second = "Val";
+      ret.value_pair_keys = {{"Key", "Val"}};
     }
     return ret;
   }
@@ -542,8 +582,7 @@ struct TestStructMoreContainersWithDirectFieldNames {
       const StringifyFieldInfo& field) {
     StringifyOptions ret = field.options.inner;
     if (field.idx == 2) {
-      ret.special_pair_first = "Key";
-      ret.special_pair_second = "Val";
+      ret.value_pair_keys = {{"Key", "Val"}};
     }
     return ret;
   }
