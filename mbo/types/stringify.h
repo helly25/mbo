@@ -47,6 +47,17 @@ struct StringifyFieldInfo;
 
 using StringifyFieldInfoString = std::function<std::string_view(const StringifyFieldInfo)>;
 
+#undef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
+#if !defined(__clang__) || (__clang_major__ >= 19)
+# define MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
+constexpr bool kLiteralOptionalfunction = true;
+#else   // !defined(__clang__) || (__clang_major__ >= 19)
+constexpr bool kLiteralOptionalfunction = false;
+#endif  // !defined(__clang__) || (__clang_major__ >= 19)
+#ifdef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
+static_assert(std::optional<std::variant<int, const StringifyFieldInfoString>>);
+#endif  // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
+
 struct StringifyOptions {
   enum class OutputMode {
     kDefault,
@@ -104,7 +115,11 @@ struct StringifyOptions {
   // * A (literal/constexpr compatible) `const StringifyFieldInfoString*`.
   // * A (non literal) `std::optional<const StringifyFieldInfoString>`. This is wrapped in a `std::optional` because
   //   otherwise the whole struct cannot be a literal/constexpr.
+#ifdef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
   std::optional<std::variant<std::string_view, const StringifyFieldInfoString*, const StringifyFieldInfoString>>
+#else   // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
+  std::optional<std::variant<std::string_view, const StringifyFieldInfoString*>>
+#endif  // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
       key_use_name;
 
   // Value options:
@@ -193,6 +208,10 @@ struct StringifyOptions {
     return AsDefault();
   }
 };
+
+#if defined(__clang__) || defined(__GNUC__)
+static_assert(__is_literal_type(StringifyOptions));
+#endif  // defined(__clang__) || defined(__GNUC__)
 
 struct StringifyFieldOptions {
   static constexpr const StringifyOptions& GetOuter(
@@ -694,11 +713,13 @@ class Stringify {
         if (func != nullptr && *func) {
           field_name = (*func)(field);
         }
+#ifdef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
       } else if (std::holds_alternative<const StringifyFieldInfoString>(*options.key_use_name)) {
         const auto& func = std::get<const StringifyFieldInfoString>(*options.key_use_name);
         if (func) {
           field_name = func(field);
         }
+#endif  // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
       } else {
         ABSL_LOG(FATAL) << "Bad field name override: variant type not handled.";
       }

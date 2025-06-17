@@ -325,6 +325,7 @@ TEST_F(StringifyTest, FieldNames) {
       "{_4_Fourth.4.=4=11, {.first: 25+5+.second: 27}, _6_Sixth.6.=6=33}");
 }
 
+#ifdef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
 struct TestStructKeyUseName {
   int one = 11;
   int two = 25;
@@ -341,6 +342,7 @@ struct TestStructKeyUseName {
 TEST_F(StringifyTest, KeyNameFunction) {
   EXPECT_THAT(Stringify().ToString(TestStructKeyUseName{}), "{.First: 11, .Other: 25, .Other: 33}");
 }
+#endif  // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
 
 struct TestStructStaticKeyUseName {
   int one = 11;
