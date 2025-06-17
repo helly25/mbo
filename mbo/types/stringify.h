@@ -21,6 +21,7 @@
 // IWYU pragma private, include "mbo/types/extend.h"
 
 #include <concepts>  // IWYU pragma: keep
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -32,6 +33,7 @@
 #include <variant>
 
 #include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
 #include "mbo/types/internal/extender.h"      // IWYU pragma: keep
@@ -40,6 +42,10 @@
 #include "mbo/types/tuple_extras.h"
 
 namespace mbo::types {
+
+struct StringifyFieldInfo;
+
+using StringifyFieldInfoString = std::function<std::string_view(const StringifyFieldInfo)>;
 
 struct StringifyOptions {
   enum class OutputMode {
@@ -93,12 +99,14 @@ struct StringifyOptions {
   std::string_view key_prefix = ".";            // Prefix to key names.
   std::string_view key_suffix;                  // Suffix to key names.
   std::string_view key_value_separator = ": ";  // Seperator between key and value.
-  std::string_view key_use_name;                // Force name for the key.
+  // Force name for the key.
+  std::variant<std::string_view, const StringifyFieldInfoString> key_use_name = "";
 
   // Value options:
 
-  // If `true` (the default), then the value is printed as is.
-  // Otherwise (`false`) all value format control is applied.
+  // If no suitable printing found then this option is controls the behavior:
+  // - If `true` (the default), then the value is printed as is.
+  // - Otherwise (`false`) all value format control is applied.
   bool value_other_types_direct = true;
 
   enum class EscapeMode {
@@ -149,11 +157,10 @@ struct StringifyOptions {
   // Containers with Pairs whose `first` type is a string-like automatically
   // create objects where the keys are the field names. This is useful for JSON.
   // The types are checked with `IsPairFirstStr`.
-  bool special_pair_first_is_name = false;
+  bool value_pair_first_is_name = false;
 
   // For all other cases of pairs, their names can be overwritten.
-  std::string_view special_pair_first = "first";
-  std::string_view special_pair_second = "second";
+  std::optional<std::pair<std::string_view, std::string_view>> value_pair_keys{{"first", "second"}};
 
   // Arbirary default value.
   static const StringifyOptions& AsDefault() noexcept;
@@ -633,7 +640,7 @@ class Stringify {
       use_seperator = true;
       indent_.StreamIndent(os);
       if (allow_field_names) {
-        StreamFieldName(os, idx, field_name, inner_options.outer);
+        StreamFieldName(os, StringifyFieldInfo{.options = inner_options, .idx = idx, .name = field_name});
       }
       StreamValue(os, inner_options, field, allow_field_names);
     }
@@ -666,25 +673,33 @@ class Stringify {
     return true;
   }
 
-  static void StreamFieldName(
-      std::ostream& os,
-      std::size_t idx,
-      std::string_view field_name,
-      const StringifyOptions& options,
-      bool allow_key_override = true) {
+  static void StreamFieldName(std::ostream& os, const StringifyFieldInfo& field, bool allow_key_override = true) {
+    const StringifyOptions& options = field.options.outer;
     switch (options.key_mode) {
       case StringifyOptions::KeyMode::kNone: return;
       case StringifyOptions::KeyMode::kNormal:
-      case StringifyOptions::KeyMode::kNumericFallback: {
-        if (allow_key_override && !options.key_use_name.empty()) {
-          field_name = options.key_use_name;
+      case StringifyOptions::KeyMode::kNumericFallback: break;
+    }
+    std::string_view field_name;
+    if (allow_key_override) {
+      if (std::holds_alternative<std::string_view>(options.key_use_name)) {
+        field_name = std::get<std::string_view>(options.key_use_name);
+      } else if (std::holds_alternative<const StringifyFieldInfoString>(options.key_use_name)) {
+        const auto& func = std::get<const StringifyFieldInfoString>(options.key_use_name);
+        if (func) {
+          field_name = func(field);
         }
-        if (!field_name.empty()) {
-          os << options.key_prefix << field_name << options.key_suffix << options.key_value_separator;
-        } else if (options.key_mode == StringifyOptions::KeyMode::kNumericFallback) {
-          os << options.key_prefix << idx << options.key_suffix << options.key_value_separator;
-        }
+      } else {
+        ABSL_LOG(FATAL) << "Bad field name override: variant type not handled.";
       }
+    }
+    if (field_name.empty()) {
+      field_name = field.name;
+    }
+    if (!field_name.empty()) {
+      os << options.key_prefix << field_name << options.key_suffix << options.key_value_separator;
+    } else if (options.key_mode == StringifyOptions::KeyMode::kNumericFallback) {
+      os << options.key_prefix << field.idx << options.key_suffix << options.key_value_separator;
     }
   }
 
@@ -692,7 +707,7 @@ class Stringify {
   requires(::mbo::types::ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
   void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
     if constexpr (mbo::types::IsPairFirstStr<std::remove_cvref_t<typename C::value_type>>) {
-      if (options.outer.special_pair_first_is_name) {
+      if (options.outer.value_pair_first_is_name) {
         // Each pair element of the container `vs` is an element whose key is the `first` member and
         // whose value is the `second` member.
         indent_.IncStruct(os, options.outer);
@@ -706,7 +721,9 @@ class Stringify {
           indent_.StreamIndent(os);
           sep = options.outer.field_separator;
           if (allow_field_names) {
-            StreamFieldName(os, index, v.first, options.outer, /*allow_key_override=*/false);
+            StreamFieldName(
+                os, StringifyFieldInfo{.options = options, .idx = index, .name = v.first},
+                /*allow_key_override=*/false);
           }
           StreamValue(os, options.ToInner(), v.second, allow_field_names);
           ++index;
@@ -789,10 +806,10 @@ class Stringify {
       const {
     using RawV = std::remove_cvref_t<V>;
     if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyOptions<RawV>) {
-      if (!options.outer.special_pair_first.empty() || !options.outer.special_pair_second.empty()) {
+      if (options.outer.value_pair_keys.has_value()) {
         const std::array<std::string_view, 2> field_names{
-            options.outer.special_pair_first,
-            options.outer.special_pair_second,
+            options.outer.value_pair_keys->first,
+            options.outer.value_pair_keys->second,
         };
         bool use_seperator = false;
         indent_.IncStruct(os, options.outer);
@@ -914,12 +931,13 @@ inline constexpr auto StringifyWithFieldNames(
   // Once those are available, the overrides can be applied.
   return [&field_names, name_handling]<typename T>(const T&, const StringifyFieldInfo& field) -> StringifyOptions {
     if (field.idx >= std::size(field_names)) {
-      return field.options.inner;
+      return field.options.outer;
     }
-    StringifyOptions options = field.options.inner;
-    options.key_use_name = std::data(field_names)[field.idx];  // NOLINT(*-pointer-arithmetic)
+    StringifyOptions options = field.options.outer;
+    std::string_view field_name = std::data(field_names)[field.idx];  // NOLINT(*-pointer-arithmetic)
+    options.key_use_name = field_name;
     if (types_internal::SupportsFieldNames<T> && name_handling == StringifyNameHandling::kVerify) {
-      ABSL_CHECK_EQ(field.name, options.key_use_name) << "Bad field_name injection for field #" << field.idx;
+      ABSL_CHECK_EQ(field.name, field_name) << "Bad field_name injection for field #" << field.idx;
     }
     return options;
   };

@@ -437,8 +437,7 @@ struct TestStructMoreContainers : Extend<TestStructMoreContainers> {
     StringifyOptions ret = StringifyWithFieldNames({"one", "two", "three", "four"})(
         v, StringifyFieldInfo{.options{StringifyOptions::AsJson()}, .idx = field.idx, .name = field.name});
     if (field.idx == 2) {
-      ret.special_pair_first = "Key";
-      ret.special_pair_second = "Val";
+      ret.value_pair_keys = {{"Key", "Val"}};
     }
     return ret;
   }
@@ -470,8 +469,7 @@ struct TestStructMoreContainersWithDirectFieldNames : Extend<TestStructMoreConta
       const StringifyFieldInfo& field) {
     StringifyOptions ret = field.options.inner;
     if (field.idx == 2) {
-      ret.special_pair_first = "Key";
-      ret.special_pair_second = "Val";
+      ret.value_pair_keys = {{"Key", "Val"}};
     }
     return ret;
   }

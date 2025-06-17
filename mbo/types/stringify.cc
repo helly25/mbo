@@ -56,7 +56,7 @@ const StringifyOptions& StringifyOptions::AsJson() noexcept {
       .value_container_prefix = "[",
       .value_container_suffix = "]",
       .value_char_delim = "\"",
-      .special_pair_first_is_name = true,
+      .value_pair_first_is_name = true,
   };
   return kJson;
 }
