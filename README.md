@@ -125,13 +125,14 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
 * Testing
     * mbo/testing:matchers_cc, mbo/testing/matchers.h
         * gmock-matcher `CapacityIs` which checks the capacity of a container.
-        * gMock-matcher `EqualsText` which compares text using line by line unified text diff.
+        * gmock-matcher `EqualsText` which compares text using line by line unified text diff.
+        * gmock-matcher `IsNullopt` which compares its argument agains `std::nullopt`.
         * gmock-matcher `WhenTransformedBy` which allows to compare containers after transforming them. This sometimes allows for much more concise comparisons where a golden expectation is already available that only differs in a simple transformation.
         * gmock-matcher-modifier `WithDropIndent` which modifies `EqualsText` so that `DropIndent` will be applied to the expected text.
     * mbo/testing:status_cc, mbo/testing/status.h
-        * gMock-matcher `IsOk`: Tests whether an `absl::Status` or `absl::StatusOr` is `absl::OkStatus`.
-        * gMock-matcher `IsOkAndHolds`: Tests an `absl::StatusOr` for `absl::OkStatus` and contents.
-        * gMock-matcher `StatusIs`: Tests an `absl::Status` or `absl::StatusOr` against a specific status code and message.
+        * gmock-matcher `IsOk`: Tests whether an `absl::Status` or `absl::StatusOr` is `absl::OkStatus`.
+        * gmock-matcher `IsOkAndHolds`: Tests an `absl::StatusOr` for `absl::OkStatus` and contents.
+        * gmock-matcher `StatusIs`: Tests an `absl::Status` or `absl::StatusOr` against a specific status code and message.
         * gmock-matcher `StatusHasPayload`: Tests whether an `absl::Status` or `absl::StatusOr` payload map has any payload, a specific payload url, or a payload url with specific content.
         * gmock-matcher `StatusPayloads` Tests whether an `absl::Status` or `absl::StatusOr` payload map matches.
         * macro `MBO_ASSERT_OK_AND_ASSIGN`: Simplifies testing with functions that return `absl::StatusOr<T>`.
@@ -169,6 +170,11 @@ The library is tested with Clang and GCC on Ubuntu and MacOS (arm) using continu
         * struct `OpaquePtr` an opaque alternative to `std::unique_ptr` which works with forward declared types.
         * struct `OpaqueValue` an `OpaquePtr` with direct access, comparison and hashing which will not allow a nullptr.
         * struct `OpaqueContainer` an `OpaqueValue` with direct container access.
+    * mbo/types:optional_ref_cc, mbo/types/optional_data_or_ref.h
+        * struct `OptionalDataOrRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a reference `T&`/`const T&`.
+        * struct `OptionalDataOrConstRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a const reference `const T&`.
+    * mbo/types:optional_ref_cc, mbo/types/optional_ref.h
+        * struct `OptionalRef` similar to `std::optional` but can hold `std::nullopt` or a reference `T&`/`const T&`.
     * mbo/types:ref_wrap_cc, mbo/types/ref_wrap.h
         * template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.
     * mbo/types:required_cc, mbo/types/required.h

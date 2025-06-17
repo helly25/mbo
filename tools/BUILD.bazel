@@ -14,3 +14,37 @@
 # limitations under the License.
 
 """helly25_mbo/tools"""
+
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+
+_SYMBOLIZER = "@llvm_toolchain_llvm//:llvm-symbolizer"
+
+genrule(
+    name = "generate_run_under_script",
+    srcs = [":run_under_symbolizer.sh.in"],
+    outs = ["run_under_symbolizer.sh"],
+    cmd = select({
+        "//:is_clang": """
+            LLVM_SYMBOLIZER_PATH="$$(readlink -f $${{PWD}}/$(location {SYMBOLIZER}))"
+            sed "s,%%LLVM_SYMBOLIZER_PATH%%,$${{LLVM_SYMBOLIZER_PATH}}," $< > $@
+        """.format(
+            SYMBOLIZER = _SYMBOLIZER,
+        ),
+        "//conditions:default": """
+            LLVM_SYMBOLIZER_PATH="$$(readlink -f $${{PWD}}/$(location {SYMBOLIZER}))"
+            sed "s,%%LLVM_SYMBOLIZER_PATH%%,$${{LLVM_SYMBOLIZER_PATH}}," $< > $@
+        """.format(
+            SYMBOLIZER = "/usr/local/llvm/bin/llvm-symbolizer",
+        ),
+    }),
+    executable = True,
+    tags = ["manual"],
+    tools = [_SYMBOLIZER],
+)
+
+sh_binary(
+    name = "run_under_symbolizer",
+    srcs = ["run_under_symbolizer.sh"],
+    data = [_SYMBOLIZER],
+    tags = ["manual"],
+)

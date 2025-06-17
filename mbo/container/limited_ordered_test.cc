@@ -104,7 +104,7 @@ void DoTestConstexprRequireSortedInputThrows() {
 
 TEST_F(LimitedOrderedTest, ConstexprRequireSortedInputThrows) {
   if constexpr (kRequireThrows) {
-    bool caught = false;
+#if __cpp_exceptions
     try {
       // Passing the value list direvtly into the constructor of `LimitedOrdered` results in a compile time exception.
       // That exception cannot be tested here, so the values are being passed at run-time using a vector. That allows
@@ -117,6 +117,9 @@ TEST_F(LimitedOrderedTest, ConstexprRequireSortedInputThrows) {
       ADD_FAILURE() << "Wrong exception type.";
     }
     ASSERT_TRUE(caught);
+#else   // __cpp_exceptions
+    ASSERT_TRUE(false) << "Exceptions not supported";
+#endif  // __cpp_exceptions
   } else {
     ASSERT_DEATH(DoTestConstexprRequireSortedInputThrows(), "Flag `kRequireSortedInput` violated.");
   }

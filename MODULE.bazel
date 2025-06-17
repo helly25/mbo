@@ -25,11 +25,11 @@ module(
 # For local development we include LLVM and Hedron-Compile-Commands.
 # For bazelmod usage these have to be provided by the main module - if necessary.
 include("//bazelmod:dev.MODULE.bazel")
-
 include("//bazelmod:llvm.MODULE.bazel")
 
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "rules_shell", version = "0.5.0")
 bazel_dep(name = "platforms", version = "0.0.11")
 bazel_dep(name = "abseil-cpp", version = "20250127.0", repo_name = "com_google_absl")
 bazel_dep(name = "re2", version = "2024-07-02.bcr.1", repo_name = "com_googlesource_code_re2")

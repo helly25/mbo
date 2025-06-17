@@ -541,7 +541,8 @@ TEST_F(LimitedSetTest, AtIndexNonExistingThrows) {
   if constexpr (!::mbo::config::kRequireThrows) {
     ASSERT_DEATH(kTest.at_index(3), "Out of range");
   } else {
-#if !HAS_ADDRESS_SANITIZER
+#if __cpp_exceptions
+# if !HAS_ADDRESS_SANITIZER
     // Disabled due to https://github.com/google/sanitizers/issues/749
     const bool caught = [&]() {
       try {
@@ -554,7 +555,8 @@ TEST_F(LimitedSetTest, AtIndexNonExistingThrows) {
       return false;
     }();
     ASSERT_TRUE(caught);
-#endif
+# endif  // !HAS_ADDRESS_SANITIZER
+#endif   // __cpp_exceptions
   }
 }
 
