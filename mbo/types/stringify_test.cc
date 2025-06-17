@@ -328,17 +328,20 @@ TEST_F(StringifyTest, FieldNames) {
 struct TestStructKeyUseName {
   int one = 11;
   int two = 25;
+  int tre = 33;
 
   friend StringifyOptions MboTypesStringifyOptions(const TestStructKeyUseName&, const StringifyFieldInfo& field) {
+    static const StringifyFieldInfoString kKeyFunc = [](const StringifyFieldInfo& info) {
+      return info.idx == 0 ? "First" : "Other";
+    };
     StringifyOptions options = field.options.outer;
-    options.key_use_name.template emplace<const StringifyFieldInfoString>(
-        [](const StringifyFieldInfo& info) { return info.idx == 0 ? "First" : "Other"; });
+    options.key_use_name.template emplace<const StringifyFieldInfoString*>(&kKeyFunc);
     return options;
   }
 };
 
 TEST_F(StringifyTest, KeyNameFunction) {
-  EXPECT_THAT(Stringify().ToString(TestStructKeyUseName{}), "{.First: 11, .Other: 25}");
+  EXPECT_THAT(Stringify().ToString(TestStructKeyUseName{}), "{.First: 11, .Other: 25, .Other: 33}");
 }
 
 struct TestStructStaticKeyUseName {
@@ -348,8 +351,11 @@ struct TestStructStaticKeyUseName {
   friend const StringifyOptions& MboTypesStringifyOptions(
       const TestStructStaticKeyUseName&,
       const StringifyFieldInfo&) {
+    static const StringifyFieldInfoString kKeyFunc = [](const StringifyFieldInfo& info) {
+      return info.idx == 0 ? "One" : "Two";
+    };
     static const StringifyOptions kOptions{
-        .key_use_name = [](const StringifyFieldInfo& info) { return info.idx == 0 ? "One" : "Two"; },
+        .key_use_name = &kKeyFunc,
     };
     return kOptions;
   }

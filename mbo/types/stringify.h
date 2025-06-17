@@ -100,7 +100,7 @@ struct StringifyOptions {
   std::string_view key_suffix;                  // Suffix to key names.
   std::string_view key_value_separator = ": ";  // Seperator between key and value.
   // Force name for the key.
-  std::variant<std::string_view, const StringifyFieldInfoString> key_use_name = "";
+  std::variant<std::string_view, const StringifyFieldInfoString*> key_use_name = "";
 
   // Value options:
 
@@ -684,10 +684,10 @@ class Stringify {
     if (allow_key_override) {
       if (std::holds_alternative<std::string_view>(options.key_use_name)) {
         field_name = std::get<std::string_view>(options.key_use_name);
-      } else if (std::holds_alternative<const StringifyFieldInfoString>(options.key_use_name)) {
-        const auto& func = std::get<const StringifyFieldInfoString>(options.key_use_name);
-        if (func) {
-          field_name = func(field);
+      } else if (std::holds_alternative<const StringifyFieldInfoString*>(options.key_use_name)) {
+        const auto* func = std::get<const StringifyFieldInfoString*>(options.key_use_name);
+        if (func != nullptr && *func) {
+          field_name = (*func)(field);
         }
       } else {
         ABSL_LOG(FATAL) << "Bad field name override: variant type not handled.";
