@@ -55,7 +55,7 @@ constexpr bool kLiteralOptionalfunction = true;
 constexpr bool kLiteralOptionalfunction = false;
 #endif  // !defined(__clang__) || (__clang_major__ >= 19)
 #ifdef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
-static_assert(std::optional<std::variant<int, const StringifyFieldInfoString>>);
+static_assert(__is_literal_type(std::optional<std::variant<int, const StringifyFieldInfoString>>));
 #endif  // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
 
 struct StringifyOptions {
