@@ -99,8 +99,13 @@ struct StringifyOptions {
   std::string_view key_prefix = ".";            // Prefix to key names.
   std::string_view key_suffix;                  // Suffix to key names.
   std::string_view key_value_separator = ": ";  // Seperator between key and value.
-  // Force name for the key.
-  std::variant<std::string_view, const StringifyFieldInfoString*> key_use_name = "";
+  // Force name for the key. This can be one of:
+  // * A (literal/constexpr compatible) `std::string_view` which will be used as-is.
+  // * A (literal/constexpr compatible) `const StringifyFieldInfoString*`.
+  // * A (non literal) `std::optional<const StringifyFieldInfoString>`. This is wrapped in a `std::optional` because
+  //   otherwise the whole struct cannot be a literal/constexpr.
+  std::variant<std::string_view, const StringifyFieldInfoString*, std::optional<const StringifyFieldInfoString>>
+      key_use_name = "";
 
   // Value options:
 
@@ -687,6 +692,11 @@ class Stringify {
       } else if (std::holds_alternative<const StringifyFieldInfoString*>(options.key_use_name)) {
         const auto* func = std::get<const StringifyFieldInfoString*>(options.key_use_name);
         if (func != nullptr && *func) {
+          field_name = (*func)(field);
+        }
+      } else if (std::holds_alternative<std::optional<const StringifyFieldInfoString>>(options.key_use_name)) {
+        const auto& func = std::get<std::optional<const StringifyFieldInfoString>>(options.key_use_name);
+        if (func.has_value() && *func) {
           field_name = (*func)(field);
         }
       } else {
