@@ -332,7 +332,7 @@ struct TestStructKeyUseName {
 
   friend StringifyOptions MboTypesStringifyOptions(const TestStructKeyUseName&, const StringifyFieldInfo& field) {
     StringifyOptions options = field.options.outer;
-    options.key_use_name.template emplace<std::optional<const StringifyFieldInfoString>>(
+    options.key_use_name.emplace<const StringifyFieldInfoString>(
         [](const StringifyFieldInfo& info) { return info.idx == 0 ? "First" : "Other"; });
     return options;
   }

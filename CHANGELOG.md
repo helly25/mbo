@@ -13,6 +13,7 @@
 * Added ability to detect bad `MboTypesStringifyOptions` signatures.
 * Added `StringifyFieldOptions` which holds outer and inner `StringifyOptions`.
 * Added `Stringify::AsJsonPretty()` and `StringifyOptions::AsJsonPretty()`.
+* Bumped minimum GCC to 12 and minimum Clang to 19 due to issues with literal type restrictions.
 
 # 0.9.0
 

@@ -104,8 +104,8 @@ struct StringifyOptions {
   // * A (literal/constexpr compatible) `const StringifyFieldInfoString*`.
   // * A (non literal) `std::optional<const StringifyFieldInfoString>`. This is wrapped in a `std::optional` because
   //   otherwise the whole struct cannot be a literal/constexpr.
-  std::variant<std::string_view, const StringifyFieldInfoString*, std::optional<const StringifyFieldInfoString>>
-      key_use_name = "";
+  std::optional<std::variant<std::string_view, const StringifyFieldInfoString*, const StringifyFieldInfoString>>
+      key_use_name;
 
   // Value options:
 
@@ -686,18 +686,18 @@ class Stringify {
       case StringifyOptions::KeyMode::kNumericFallback: break;
     }
     std::string_view field_name;
-    if (allow_key_override) {
-      if (std::holds_alternative<std::string_view>(options.key_use_name)) {
-        field_name = std::get<std::string_view>(options.key_use_name);
-      } else if (std::holds_alternative<const StringifyFieldInfoString*>(options.key_use_name)) {
-        const auto* func = std::get<const StringifyFieldInfoString*>(options.key_use_name);
+    if (allow_key_override && options.key_use_name.has_value()) {
+      if (std::holds_alternative<std::string_view>(*options.key_use_name)) {
+        field_name = std::get<std::string_view>(*options.key_use_name);
+      } else if (std::holds_alternative<const StringifyFieldInfoString*>(*options.key_use_name)) {
+        const auto* func = std::get<const StringifyFieldInfoString*>(*options.key_use_name);
         if (func != nullptr && *func) {
           field_name = (*func)(field);
         }
-      } else if (std::holds_alternative<std::optional<const StringifyFieldInfoString>>(options.key_use_name)) {
-        const auto& func = std::get<std::optional<const StringifyFieldInfoString>>(options.key_use_name);
-        if (func.has_value() && *func) {
-          field_name = (*func)(field);
+      } else if (std::holds_alternative<const StringifyFieldInfoString>(*options.key_use_name)) {
+        const auto& func = std::get<const StringifyFieldInfoString>(*options.key_use_name);
+        if (func) {
+          field_name = func(field);
         }
       } else {
         ABSL_LOG(FATAL) << "Bad field name override: variant type not handled.";
