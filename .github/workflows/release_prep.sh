@@ -25,25 +25,28 @@ PACKAGE_NAME="mbo"
 BAZELMOD_NAME="helly25_mbo"
 WORKSPACE_NAME="com_helly25_mbo"
 PATCHES=(
-    ".github/workflows/bazelmod.patch"
+  ".github/workflows/bazelmod.patch"
 )
 
 # Automatic vars from workflow integration.
 TAG="${GITHUB_REF_NAME}"
 
-function die() { echo "ERROR: ${*}" 1>&2 ; exit 1; }
+function die() {
+  echo "ERROR: ${*}" 1>&2
+  exit 1
+}
 
 # Computed vars.
 PREFIX="${PACKAGE_NAME}-${TAG}"
 ARCHIVE="${PACKAGE_NAME}-${TAG}.tar.gz"
-BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' < MODULE.bazel|head -n1)"
-CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' < CHANGELOG.md|head -n1)"
+BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' <MODULE.bazel | head -n1)"
+CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' <CHANGELOG.md | head -n1)"
 
 if [ "${BAZELMOD_VERSION}" != "${TAG}" ]; then
-    die "Tag = '${TAG}' does not match version = '${BAZELMOD_VERSION}' in MODULE.bazel."
+  die "Tag = '${TAG}' does not match version = '${BAZELMOD_VERSION}' in MODULE.bazel."
 fi
 if [ "${CHANGELOG_VERSION}" != "${TAG}" ]; then
-    die "Tag = '${TAG}' does not match version = '${CHANGELOG_VERSION}' in CHANGELOG.md."
+  die "Tag = '${TAG}' does not match version = '${CHANGELOG_VERSION}' in CHANGELOG.md."
 fi
 
 # Instead of embed the version in MODULE.bazel, we expect it to be correct already.
@@ -51,32 +54,32 @@ fi
 
 # Empty `BUILD.bazel`
 {
-    cat tools/header.txt
-    echo ""
-    echo "\"\"\"Empty root BUILD for @${BAZELMOD_NAME}.\"\"\""
-} > BUILD.bazel
+  cat tools/header.txt
+  echo ""
+  echo "\"\"\"Empty root BUILD for @${BAZELMOD_NAME}.\"\"\""
+} >BUILD.bazel
 
 # Apply patches
 for patch in "${PATCHES[@]}"; do
-    patch -s -p 1 <"${patch}"
+  patch -s -p 1 <"${patch}"
 done
 
 # Exclude some dev stuff from the archive.
 EXCLUDES=(
-    ".bcr"
-    ".github"
-    ".pre-commit"
-    ".pre-commit-config.yaml"
-    "tools"
+  ".bcr"
+  ".github"
+  ".pre-commit"
+  ".pre-commit-config.yaml"
+  "tools"
 )
 {
-    for exclude in "${EXCLUDES[@]}"; do
-        echo "${exclude} export-ignore"
-        if [[ -d "${exclude}" ]]; then
-            echo "${exclude}/** export-ignore"
-        fi
-    done
-} >> .gitattributes
+  for exclude in "${EXCLUDES[@]}"; do
+    echo "${exclude} export-ignore"
+    if [[ -d ${exclude} ]]; then
+      echo "${exclude}/** export-ignore"
+    fi
+  done
+} >>.gitattributes
 
 # Build the archive
 git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${TAG}" --worktree-attributes
@@ -90,7 +93,7 @@ echo "## [Changelog](https://github.com/helly25/${PACKAGE_NAME}/blob/${TAG}/CHAN
 # Print Changelog
 awk '/^#/{if(NR>1)exit}/^[^#]/{print}' <CHANGELOG.md
 
-cat << EOF
+cat <<EOF
 ## For Bazel MODULES.bazel
 
 \`\`\`bzl

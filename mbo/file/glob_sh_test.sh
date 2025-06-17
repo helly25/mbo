@@ -23,31 +23,31 @@ set -euo pipefail
 source "${helly25_bashtest}"
 
 declare -a EXPECTED=(
-    "dir"
-    "sub"
-    "sub/dir"
-    "sub/dir:file1"
-    "sub/dir:file2"
-    "sub/two"
-    "sub/two/dir"
-    "sub/two/dir:file1"
-    "sub/two/dir:file2"
-    "sub/two/dir:file3"
+  "dir"
+  "sub"
+  "sub/dir"
+  "sub/dir:file1"
+  "sub/dir:file2"
+  "sub/two"
+  "sub/two/dir"
+  "sub/two/dir:file1"
+  "sub/two/dir:file2"
+  "sub/two/dir:file3"
 )
 
 function setup() {
-    for entry in "${EXPECTED[@]}"; do
-        IFS=":" read -r -a dir_file <<< "${entry}"
-        if [[ "${#dir_file[@]}" -ge 1 ]]; then
-            mkdir -p "${BASHTEST_TMPDIR}/${dir_file[0]}"
-        fi
-        if [[ "${#dir_file[@]}" -ge 2 ]]; then
-            touch "${BASHTEST_TMPDIR}/${dir_file[0]}/${dir_file[1]}"
-        fi
-        if [[ "${#dir_file[@]}" = 1 ]] && [[ "${#dir_file[@]}" = 2 ]]; then
-            die "Bad expected entry."
-        fi
-    done
+  for entry in "${EXPECTED[@]}"; do
+    IFS=":" read -r -a dir_file <<<"${entry}"
+    if [[ ${#dir_file[@]} -ge 1 ]]; then
+      mkdir -p "${BASHTEST_TMPDIR}/${dir_file[0]}"
+    fi
+    if [[ ${#dir_file[@]} -ge 2 ]]; then
+      touch "${BASHTEST_TMPDIR}/${dir_file[0]}/${dir_file[1]}"
+    fi
+    if [[ ${#dir_file[@]} == 1 ]] && [[ ${#dir_file[@]} == 2 ]]; then
+      die "Bad expected entry."
+    fi
+  done
 }
 
 setup
@@ -57,29 +57,29 @@ declare -r GLOB
 TESTDATA="${TEST_SRCDIR}/${TEST_WORKSPACE}/mbo/file/testdata/glob_sh_test"
 declare -r TESTDATA
 
-[[ -x "${GLOB}" ]] || die "Program glob not found."
+[[ -x ${GLOB} ]] || die "Program glob not found."
 
 function _test_glob_and_diff() {
-    NAME="${1}"
-    shift
-    "${GLOB}" "${@}" > "${TEST_TMPDIR}/${NAME}.out" 2>&1
-    expect_files_eq "${TESTDATA}/${NAME}.txt" "${TEST_TMPDIR}/${NAME}.out"
+  NAME="${1}"
+  shift
+  "${GLOB}" "${@}" >"${TEST_TMPDIR}/${NAME}.out" 2>&1
+  expect_files_eq "${TESTDATA}/${NAME}.txt" "${TEST_TMPDIR}/${NAME}.out"
 }
 
 function test::default() {
-    _test_glob_and_diff default "${BASHTEST_TMPDIR}"
+  _test_glob_and_diff default "${BASHTEST_TMPDIR}"
 }
 
 function test::flag_type() {
-    _test_glob_and_diff flag_type "${BASHTEST_TMPDIR}" -type
+  _test_glob_and_diff flag_type "${BASHTEST_TMPDIR}" -type
 }
 
 function test::simple() {
-    _test_glob_and_diff simple "${BASHTEST_TMPDIR}/*"
+  _test_glob_and_diff simple "${BASHTEST_TMPDIR}/*"
 }
 
 function test::select() {
-    _test_glob_and_diff select "${BASHTEST_TMPDIR}/**/file[23]"
+  _test_glob_and_diff select "${BASHTEST_TMPDIR}/**/file[23]"
 }
 
 test_runner
