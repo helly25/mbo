@@ -843,23 +843,24 @@ class Stringify {
     };
     static_assert(!BadMboTypesStringifyOptions<T>, "Provided `BadMboTypesStringifyOptions` has a bad signature.");
     if constexpr (HasMboTypesStringifyOptions<T>) {
-      auto&& custom = MboTypesStringifyOptions(value, {.options = outer_options, .idx = idx, .name = field_name});
-      using CustomT = decltype(custom);
-      if constexpr (std::same_as<std::remove_cvref_t<CustomT>, StringifyFieldOptions>) {
-        MBO_CONFIG_REQUIRE(custom.AllDataSet(), "Not all data is set: ") << custom.DebugStr();
-        do_stream(custom);
-        return;
-      } else {
-        if constexpr (std::is_reference_v<CustomT>) {
-          if (custom.AllDataSet()) {
-            do_stream({custom});
-            return;
+      [&]<typename CustomT>(CustomT&& custom) {
+        if constexpr (std::same_as<std::remove_cvref_t<CustomT>, StringifyFieldOptions>) {
+          MBO_CONFIG_REQUIRE(custom.AllDataSet(), "Not all data is set: ") << custom.DebugStr();
+          do_stream(custom);
+          return;
+        } else {
+          if constexpr (std::is_reference_v<CustomT>) {
+            if (custom.AllDataSet()) {
+              do_stream({custom});
+              return;
+            }
           }
+          std::optional<const StringifyOptions> copied_options;
+          do_stream(SFO{copied_options.emplace(SO::WithAllRefs(std::forward<CustomT>(custom), outer_options.outer))});
+          return;
         }
-        std::optional<const StringifyOptions> copied_options;
-        do_stream(SFO{copied_options.emplace(SO::WithAllRefs(std::forward<CustomT>(custom), outer_options.outer))});
-        return;
-      }
+      }(MboTypesStringifyOptions(value, {.options = outer_options, .idx = idx, .name = field_name}));
+      return;
     }
     do_stream({root_options_});  // No customization
   }

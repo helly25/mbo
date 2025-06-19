@@ -15,6 +15,8 @@
 
 #include "mbo/log/demangle.h"
 
+#include <cstdlib>
+
 #ifdef MBO_LOG_HAS_CXA_DEMANGLE
 # error MBO_LOG_HAS_CXA_DEMANGLE cannot be set directly
 #elif defined(OS_ANDROID) && (defined(__i386__) || defined(__x86_64__))
