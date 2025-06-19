@@ -3,7 +3,7 @@
 This C++20 library provides some general useful building blocks and integrates
 with [Google's Abseil library](https://abseil.io/).
 
-The library is tested with Clang (19+) and GCC (12+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml).
+The library is tested with Clang (19+) and GCC (13+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml).
 
 ## The C++ library is organized in functional groups each residing in their own directory.
 
