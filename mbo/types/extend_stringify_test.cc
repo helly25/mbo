@@ -98,6 +98,18 @@ struct ExtenderStringifyTest : ::testing::Test {
 
 ExtenderStringifyTest::Tester* ExtenderStringifyTest::tester = nullptr;
 
+TEST_F(ExtenderStringifyTest, AllDataSet) {
+  const StringifyOptions& opts = StringifyOptions::AsDefault();
+  EXPECT_TRUE(opts.format.has_value());
+  EXPECT_TRUE(opts.field_control.has_value());
+  EXPECT_TRUE(opts.key_control.has_value());
+  EXPECT_TRUE(opts.key_overrides.has_value());
+  EXPECT_TRUE(opts.value_control.has_value());
+  EXPECT_TRUE(opts.value_overrides.has_value());
+  EXPECT_TRUE(opts.special.has_value());
+  EXPECT_TRUE(StringifyOptions::AsDefault().AllDataSet());
+}
+
 TEST_F(ExtenderStringifyTest, AllExtensionApiPointsAbsent) {
   struct TestStruct : Extend<TestStruct> {
     int one = 11;
@@ -195,25 +207,43 @@ TEST_F(ExtenderStringifyTest, FieldOptions) {
 
   EXPECT_CALL(*tester, FieldOptions(0, HasFieldName("one")))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_suppress = false,
-          .field_separator = "+1+",
-          .key_prefix = "_1_",
-          .key_suffix = ".1.",
-          .key_value_separator = "=1=",
-          .key_use_name = "first",
+          .format{StringifyOptions::Format{
+              .key_value_separator = "=1=",
+              .field_separator = "+1+",
+          }},
+          .field_control{StringifyOptions::FieldControl{
+              .suppress = false,
+          }},
+          .key_control{StringifyOptions::KeyControl{
+              .key_prefix = "_1_",
+              .key_suffix = ".1.",
+          }},
+          .key_overrides{StringifyOptions::KeyOverrides{
+              .key_use_name = "first",
+          }},
       }));
   EXPECT_CALL(*tester, FieldOptions(1, HasFieldName("two")))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_suppress = false,
-          .field_separator = "+2+",
-          .key_prefix = "_2_",
-          .key_suffix = ".2.",
-          .key_value_separator = "=2=",
-          .key_use_name = "second",
+          .format{StringifyOptions::Format{
+              .key_value_separator = "=2=",
+              .field_separator = "+2+",
+          }},
+          .field_control{StringifyOptions::FieldControl{
+              .suppress = false,
+          }},
+          .key_control{StringifyOptions::KeyControl{
+              .key_prefix = "_2_",
+              .key_suffix = ".2.",
+          }},
+          .key_overrides{StringifyOptions::KeyOverrides{
+              .key_use_name = "second",
+          }},
       }));
   EXPECT_CALL(*tester, FieldOptions(2, HasFieldName("tre")))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_suppress = true,
+          .field_control{StringifyOptions::FieldControl{
+              .suppress = true,
+          }},
       }));
 
   EXPECT_THAT(TestStructFieldOptions{}.ToString(), "{_1_first.1.=1=11, _2_second.2.=2={.first: 25+2+.second: 27}}");
@@ -244,25 +274,39 @@ TEST_F(ExtenderStringifyTest, FieldNames) {
   EXPECT_CALL(*tester, FieldNames()).WillOnce(::testing::Return(std::vector<std::string>{"First", "Second", "Third"}));
   EXPECT_CALL(*tester, FieldOptions(0, "First"))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_separator = "+1+",
-          .key_prefix = "_1_",
-          .key_suffix = ".1.",
-          .key_value_separator = "=1=",
+          .format{StringifyOptions::Format{
+              .key_value_separator = "=1=",
+              .field_separator = "+1+",
+          }},
+          .key_control{StringifyOptions::KeyControl{
+              .key_prefix = "_1_",
+              .key_suffix = ".1.",
+          }},
       }));
   EXPECT_CALL(*tester, FieldOptions(1, "Second"))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_suppress = true,
-          .field_separator = "+2+",
-          .key_prefix = "_2_",
-          .key_suffix = ".2.",
-          .key_value_separator = "=2=",
+          .format{StringifyOptions::Format{
+              .key_value_separator = "=2=",
+              .field_separator = "+2+",
+          }},
+          .field_control{StringifyOptions::FieldControl{
+              .suppress = true,
+          }},
+          .key_control{StringifyOptions::KeyControl{
+              .key_prefix = "_2_",
+              .key_suffix = ".2.",
+          }},
       }));
   EXPECT_CALL(*tester, FieldOptions(2, "Third"))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_separator = "+3+",
-          .key_prefix = "_3_",
-          .key_suffix = ".3.",
-          .key_value_separator = "=3=",
+          .format{StringifyOptions::Format{
+              .key_value_separator = "=3=",
+              .field_separator = "+3+",
+          }},
+          .key_control{StringifyOptions::KeyControl{
+              .key_prefix = "_3_",
+              .key_suffix = ".3.",
+          }},
       }));
 
   EXPECT_THAT(TestStructFieldNames{}.ToString(), "{_1_First.1.=1=11, _3_Third.3.=3=33}");
@@ -271,27 +315,41 @@ TEST_F(ExtenderStringifyTest, FieldNames) {
   EXPECT_CALL(*tester, FieldNames()).WillOnce(::testing::Return(std::vector<std::string>{"Fourth"}));
   EXPECT_CALL(*tester, FieldOptions(0, "Fourth"))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_separator = "+4+",
-          .key_prefix = "_4_",
-          .key_suffix = ".4.",
-          .key_value_separator = "=4=",
+          .format{StringifyOptions::Format{
+              .key_value_separator = "=4=",
+              .field_separator = "+4+",
+          }},
+          .key_control{StringifyOptions::KeyControl{
+              .key_prefix = "_4_",
+              .key_suffix = ".4.",
+          }},
       }));
   // 2nd and 3rd field get printed. But 2nd has no key name, so related options get ignored.
   EXPECT_CALL(*tester, FieldOptions(1, IsEmpty()))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_separator = "+5+",
-          .key_prefix = "_5_",
-          .key_suffix = ".5.",
-          .key_value_separator = "=5=",
+          .format{StringifyOptions::Format{
+              .key_value_separator = "=5=",
+              .field_separator = "+5+",
+          }},
+          .key_control{StringifyOptions::KeyControl{
+              .key_prefix = "_5_",
+              .key_suffix = ".5.",
+          }},
       }));
   // For the 3rd field, the options provide the field name through `key_use_name`.
   EXPECT_CALL(*tester, FieldOptions(2, IsEmpty()))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_separator = "+6+",
-          .key_prefix = "_6_",
-          .key_suffix = ".6.",
-          .key_value_separator = "=6=",
-          .key_use_name = "Sixth",
+          .format{StringifyOptions::Format{
+              .key_value_separator = "=6=",
+              .field_separator = "+6+",
+          }},
+          .key_control{StringifyOptions::KeyControl{
+              .key_prefix = "_6_",
+              .key_suffix = ".6.",
+          }},
+          .key_overrides{StringifyOptions::KeyOverrides{
+              .key_use_name = "Sixth",
+          }},
       }));
   EXPECT_THAT(TestStructFieldNames{}.ToString(), "{_4_Fourth.4.=4=11, {.first: 25+5+.second: 27}, _6_Sixth.6.=6=33}");
 }
@@ -321,25 +379,38 @@ TEST_F(ExtenderStringifyTest, DoNotPrintFieldNames) {
 
   EXPECT_CALL(*tester, FieldOptions(0, IsEmpty()))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_suppress = false,
-          .field_separator = "++",
-          .key_prefix = "__",
-          .key_suffix = "..",
-          .key_value_separator = "==",
+          .format{StringifyOptions::Format{
+              .key_value_separator = "==",
+              .field_separator = "++",
+          }},
+          .field_control{StringifyOptions::FieldControl{
+              .suppress = false,
+          }},
+          .key_control{StringifyOptions::KeyControl{
+              .key_prefix = "__",
+              .key_suffix = "..",
+          }},
       }));
   EXPECT_CALL(*tester, FieldOptions(1, IsEmpty()))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_suppress = false,
-          .field_separator = "++",
-          .key_prefix = "__",
-          .key_suffix = "..",
-          .key_value_separator = "==",
+          .format{StringifyOptions::Format{
+              .key_value_separator = "==",
+              .field_separator = "++",
+          }},
+          .field_control{StringifyOptions::FieldControl{
+              .suppress = false,
+          }},
+          .key_control{StringifyOptions::KeyControl{
+              .key_prefix = "__",
+              .key_suffix = "..",
+          }},
       }));
   EXPECT_CALL(*tester, FieldOptions(2, IsEmpty()))
       .WillOnce(::testing::Return(StringifyOptions{
-          .field_suppress = true,
+          .field_control{StringifyOptions::FieldControl{
+              .suppress = true,
+          }},
       }));
-
   EXPECT_THAT(TestStructDoNotPrintFieldNames{}.ToString(), "{11, {25++27}}");
 }
 
@@ -352,10 +423,13 @@ struct TestStructShorten : Extend<TestStructShorten> {
 
   friend StringifyOptions MboTypesStringifyOptions(const TestStructShorten& v, const StringifyFieldInfo& field) {
     StringifyOptions opts = StringifyWithFieldNames({"one", "two", "three", "four", "five"})(v, field);
-    opts.key_prefix = "";
-    opts.key_value_separator = " = ";
-    opts.value_max_length = field.idx >= 3 && field.idx <= 4 ? 0U : 1U;
-    opts.value_cutoff_suffix = field.idx < 2 ? StringifyOptions::AsDefault().value_cutoff_suffix : "**";
+    StringifyOptions::Format& format = opts.format.as_data();
+    format.key_value_separator = " = ";
+    StringifyOptions::KeyControl& keys = opts.key_control.as_data();
+    keys.key_prefix = "";
+    StringifyOptions::ValueControl& vals = opts.value_control.as_data();
+    vals.str_max_length = field.idx >= 3 && field.idx <= 4 ? 0U : 1U;
+    vals.str_cutoff_suffix = field.idx < 2 ? StringifyOptions::AsDefault().value_control->str_cutoff_suffix : "**";
     return opts;
   }
 };
@@ -372,12 +446,15 @@ struct TestStructValueReplacement : Extend<TestStructValueReplacement> {
   std::vector<std::string_view> four{"41", "42", "43"};
 
   friend auto MboTypesStringifyOptions(const TestStructValueReplacement& v, const StringifyFieldInfo& field) {
-    StringifyOptions ret = StringifyWithFieldNames({"one", "two", "three", "four"})(v, field);
-    ret.key_prefix = "";
-    ret.key_value_separator = " = ";
-    ret.value_replacement_str = "<XX>";
-    ret.value_replacement_other = "<YY>";
-    return ret;
+    StringifyOptions opts = StringifyWithFieldNames({"one", "two", "three", "four"})(v, field);
+    StringifyOptions::Format& format = opts.format.as_data();
+    format.key_value_separator = " = ";
+    StringifyOptions::KeyControl& keys = opts.key_control.as_data();
+    keys.key_prefix = "";
+    StringifyOptions::ValueOverrides& vals = opts.value_overrides.as_data();
+    vals.replacement_str = "<XX>";
+    vals.replacement_other = "<YY>";
+    return opts;
   }
 };
 
@@ -394,14 +471,17 @@ struct TestStructContainer : Extend<TestStructContainer> {
   std::vector<int> tre = {1, 2, 3};
 
   friend StringifyOptions MboTypesStringifyOptions(const TestStructContainer& v, const StringifyFieldInfo& field) {
-    StringifyOptions ret =
+    StringifyOptions opts =
         StringifyWithFieldNames({"one", "two", "three"}, StringifyNameHandling::kOverwrite)(v, field);
-    ret.key_prefix = "";
-    ret.key_value_separator = " = ";
-    ret.value_container_prefix = "[";
-    ret.value_container_suffix = "]";
-    ret.value_container_max_len = field.idx == 1 ? 0U : 2U;
-    return ret;
+    StringifyOptions::Format& format = opts.format.as_data();
+    format.key_value_separator = " = ";
+    format.container_prefix = "[";
+    format.container_suffix = "]";
+    StringifyOptions::KeyControl& keys = opts.key_control.as_data();
+    keys.key_prefix = "";
+    StringifyOptions::ValueControl& vals = opts.value_control.as_data();
+    vals.container_max_len = field.idx == 1 ? 0U : 2U;
+    return opts;
   }
 };
 
@@ -437,7 +517,7 @@ struct TestStructMoreContainers : Extend<TestStructMoreContainers> {
     StringifyOptions ret = StringifyWithFieldNames({"one", "two", "three", "four"})(
         v, StringifyFieldInfo{.options{StringifyOptions::AsJson()}, .idx = field.idx, .name = field.name});
     if (field.idx == 2) {
-      ret.value_pair_keys = {{"Key", "Val"}};
+      ret.special.as_data().pair_keys = {{"Key", "Val"}};
     }
     return ret;
   }
@@ -448,7 +528,8 @@ TEST_F(ExtenderStringifyTest, MoreContainers) {
   EXPECT_THAT(
       TestStructMoreContainers{}.ToString(),
       R"({"one": [1, 2], "two": [{.first: 1, .second: 2}, {.first: 3, .second: 4}], "three": [{.Key: 5, .Val: 6}]})")
-      << "  NOTE: Here we are not providing the defualt Json options down do the pairs. However, in `three` we have "
+      << "  NOTE: Here we are not providing the defualt Json options down do the pairs. "
+         "However, in `three` we have "
          "the provided key/value names.";
   EXPECT_THAT(
       TestStructMoreContainers{}.ToString(StringifyOptions::AsJson()),
@@ -469,7 +550,7 @@ struct TestStructMoreContainersWithDirectFieldNames : Extend<TestStructMoreConta
       const StringifyFieldInfo& field) {
     StringifyOptions ret = field.options.inner;
     if (field.idx == 2) {
-      ret.value_pair_keys = {{"Key", "Val"}};
+      ret.special.as_data().pair_keys = {{"Key", "Val"}};
     }
     return ret;
   }
@@ -594,9 +675,9 @@ struct TestStructCustomNestedJson : Extend<TestStructCustomNestedJson> {
 TEST_F(ExtenderStringifyTest, CustomNestedJson) {
   ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructCustomNestedJson>);
 
-  // Keys for nested "four" should get their key names as "first" and "second" since they are not provided.
-  // No handover of concrete values to defaults should occur.
-  // BUT: Five uses non JSON mode as we fallback to the default options which were not set.
+  // Keys for nested "four" should get their key names as "first" and "second" since they are
+  // not provided. No handover of concrete values to defaults should occur. BUT: Five uses non
+  // JSON mode as we fallback to the default options which were not set.
   EXPECT_THAT(
       TestStructCustomNestedJson{}.ToString(),
       R"({"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"}, {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {.first: 25, .second: 42}})");

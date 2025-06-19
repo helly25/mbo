@@ -4,4 +4,10 @@ export LLVM_SYMBOLIZER_PATH="%%LLVM_SYMBOLIZER_PATH%%"
 export ASAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
 export TSAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
 
+BIN="$(realpath "${PWD}/${1}")"
+
+if [[ -x "$(which dsymutil)" ]]; then
+  dsymutil "${BIN}"
+fi
+
 exec "$@"

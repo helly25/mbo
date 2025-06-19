@@ -1,7 +1,9 @@
 # 0.10.0
 
+* Bumped minimum GCC to 12 and Clang to 19.1.0 (specifically) for constexpr use in std::optional and std::variant.
 * Added direct support for `-fno-exceptions` irrespective of config setting.
 * Added support for ASAN symbolizer with `--config=clang`.
+* Added concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
 * Added AbslStringify and hash support to `NoDestruct`, `RefWrap`, `Required`.
 * Added struct `OptionalDataOrRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a reference `T&`/`const T&`.
 * Added struct `OptionalDataOrConstRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a const reference `const T&`.
@@ -13,7 +15,6 @@
 * Added ability to detect bad `MboTypesStringifyOptions` signatures.
 * Added `StringifyFieldOptions` which holds outer and inner `StringifyOptions`.
 * Added `Stringify::AsJsonPretty()` and `StringifyOptions::AsJsonPretty()`.
-* Bumped minimum GCC to 12.
 
 # 0.9.0
 

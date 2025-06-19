@@ -247,6 +247,8 @@ cc_library(
     hdrs = ["stringify.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":optional_data_or_ref_cc",
+        ":optional_ref_cc",
         ":traits_cc",
         ":tuple_extras_cc",
         "//mbo/types/internal:extender_cc",

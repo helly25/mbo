@@ -212,7 +212,8 @@ The library is tested with Clang (19+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * concept `IsOptional` determines whether a type is a `std::optional` type.
         * concept `IsPair` determines whether a type is a `std::pair` type.
         * concept `IsSet` determines whether a type is a `std::set` type.
-        * concept `IsSameAsAnyOfRaw` / `NotSameAsAnyOfRaw` which determine whether type is one of a list of types.
+        * concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
+        * concept `IsSameAsAnyOfRaw` / `NotSameAsAnyOfRaw` which determines whether a type is one of a list of types. Similar to `IsSameAsAnyOf` but applies `std::remove_cvref_t` on all types.
         * concept `IsSmartPtr` determines whether a type is a `std::shared_ptr`, `std::unique_ptr` or `std::weak_ptr`.
           * Can be extended with other smart pointers through `IsSmartPtrImpl`.
         * concept `IsTuple` determines whether a type is a `std::tuple` type.

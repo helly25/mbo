@@ -67,29 +67,33 @@ class OptionalRef {
 
   constexpr explicit operator bool() const noexcept { return has_value(); }
 
-  constexpr reference value() noexcept { return *v_; }  // NOLINT(*-identifier-naming)
+  constexpr reference value() noexcept {  // NOLINT(*-identifier-naming)
+    MBO_CONFIG_REQUIRE(has_value(), "Value is not set.");
+    return *v_;
+  }
 
-  constexpr const_reference value() const noexcept { return *v_; }  // NOLINT(*-identifier-naming)
+  constexpr const_reference value() const noexcept {  // NOLINT(*-identifier-naming)
+    MBO_CONFIG_REQUIRE(has_value(), "Value is not set.");
+    return *v_;
+  }
 
-  constexpr reference operator*() noexcept { return *v_; }
+  constexpr reference operator*() noexcept { return value(); }
 
-  constexpr const_reference operator*() const noexcept { return *v_; }
+  constexpr const_reference operator*() const noexcept { return value(); }
 
-  constexpr pointer operator->() noexcept { return v_; }
+  constexpr pointer operator->() noexcept { return &value(); }
 
-  constexpr const_pointer operator->() const noexcept { return v_; }
+  constexpr const_pointer operator->() const noexcept { return &value(); }
 
   template<AssignableTo<T&> U = T>
   constexpr OptionalRef& operator=(U&& v) noexcept {
-    MBO_CONFIG_REQUIRE(has_value(), "Value is not set.");
-    *v_ = std::forward<U>(v);
+    value() = std::forward<U>(v);
     return *this;
   }
 
   template<AssignableTo<T&> U = T>
   constexpr OptionalRef& operator=(const U& v) noexcept {
-    MBO_CONFIG_REQUIRE(has_value(), "Value is not set.");
-    *v_ = v;
+    value() = v;
     return *this;
   }
 

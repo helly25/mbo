@@ -36,9 +36,11 @@
 #include "absl/log/absl_log.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
+#include "mbo/config/require.h"
 #include "mbo/types/internal/extender.h"      // IWYU pragma: keep
 #include "mbo/types/internal/struct_names.h"  // IWYU pragma: keep
-#include "mbo/types/traits.h"                 // IWYU pragma: keep
+#include "mbo/types/optional_data_or_ref.h"
+#include "mbo/types/traits.h"  // IWYU pragma: keep
 #include "mbo/types/tuple_extras.h"
 
 namespace mbo::types {
@@ -58,6 +60,48 @@ constexpr bool kLiteralOptionalfunction = false;
 static_assert(__is_literal_type(std::optional<std::variant<int, const StringifyFieldInfoString>>));
 #endif  // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
 
+// Options that control all Stringify behavior.
+//
+// The objects are very large due to the very detailed ability to control behavior and override
+// actual values.
+//
+// However, the objects support sparness, that is the data is grouped into severl aspects that can
+// each be unset (nullopt), a const reference or actual materialized data. That enables fast
+// creation and opying beyond the size. Nontheless, the data is large and will impact caches. So
+// creating the options upfront and not specializing structs as much as neccessary is best.
+//
+// Construction example 1: Fully unset, which results in all defaults. Here we copy the whole object
+// pretty much byte by byte.
+//
+// ```c++
+// StringifyOptions opts;
+// ```
+//
+// Construction example 2: Sparse with only ValueOverrides based on the default ValueOverrides by
+// only initializing specific fields. We also leave all other groups unset so they refer to either
+// core defaults or context dependent defaults.
+//
+// ```c++
+// StringifyOptions opts{
+//   .format{StringifyOptions::Format{
+//     .message_prefix = "<",
+//     .message_suffix = ">",
+//   }},
+// };
+// ```
+//
+// Construction example 3: Sparse with only format overrides. Unlike before we first copy the format
+// group's defaults from `AsJson()` then override specifics.
+//
+// ```c++
+// StringifyOptions opts{[]() {
+//   StringifyOptions opts = StringifyOptions::AsJson();
+//   Format& format = opts.format.as_data();
+//   format.message_prefix = "<",
+//   format.message_suffix = ">\n";
+//   return opts;
+// }()};
+// ```
 struct StringifyOptions {
   enum class OutputMode {
     kDefault,
@@ -76,19 +120,39 @@ struct StringifyOptions {
     return os << "OutpuMode::kDefault";
   }
 
-  // Message options:
-  std::string_view message_prefix;
-  std::string_view message_suffix;
+  struct Format {
+    // Message options:
+    std::string_view message_prefix;
+    std::string_view message_suffix;
 
-  // Field options:
-  bool field_suppress = false;              // Allows complete suppression of the field.
-  bool field_suppress_nullptr = false;      // Allows complete suppression of nullptr field values.
-  bool field_suppress_nullopt = false;      // Allows complete suppression of nullopt field values.
-  bool field_suppress_disabled = false;     // Allows complete suppression of disabled fields.
-  std::string_view field_indent;            // Indent for fields.
-  std::string_view field_separator = ", ";  // Separator between two field (in front of field).
-  std::string_view field_disabled = "{/*MboTypesStringifyDisable*/}";  // Replacement for disabled complex field.
-  const StringifyOptions* inner_field_options = nullptr;
+    std::string_view field_indent;                // Indent for fields.
+    std::string_view key_value_separator = ": ";  // Seperator between key and value.
+    std::string_view field_separator = ", ";      // Separator between two field (in front of field).
+
+    std::string_view pointer_prefix = "*{";   // Prefix for pointer types.
+    std::string_view pointer_suffix = "}";    // Suffix for pointer types.
+    std::string_view smart_ptr_prefix = "{";  // Prefix for smart pointer types.
+    std::string_view smart_ptr_suffix = "}";  // Suffix for smart pointer types.
+    std::string_view optional_prefix = "{";   // Prefix for optional types.
+    std::string_view optional_suffix = "}";   // Suffix for optional types.
+
+    std::string_view structure_prefix = "{";  // Prefix for object (struct/class) values.
+    std::string_view structure_suffix = "}";  // Suffix for object (struct/class) values.
+    std::string_view container_prefix = "{";  // Prefix for container values.
+    std::string_view container_suffix = "}";  // Suffix for container values.
+
+    std::string_view char_delim = "'";  // If empty, then use numeric value.
+    std::string_view string_delim = "\"";
+  };
+
+  struct FieldControl {
+    // Field options:
+    bool suppress = false;           // Allows complete suppression of the field.
+    bool suppress_nullptr = false;   // Allows complete suppression of nullptr field values.
+    bool suppress_nullopt = false;   // Allows complete suppression of nullopt field values.
+    bool suppress_disabled = false;  // Allows complete suppression of disabled fields.
+    std::string_view field_disabled = "{/*MboTypesStringifyDisable*/}";  // Replacement for disabled complex field.
+  };
 
   // Key options:
   enum class KeyMode {
@@ -106,28 +170,27 @@ struct StringifyOptions {
     return os << "KeyMode::kNone";
   }
 
-  KeyMode key_mode{KeyMode::kNormal};
-  std::string_view key_prefix = ".";            // Prefix to key names.
-  std::string_view key_suffix;                  // Suffix to key names.
-  std::string_view key_value_separator = ": ";  // Seperator between key and value.
-  // Force name for the key. This can be one of:
-  // * A (literal/constexpr compatible) `std::string_view` which will be used as-is.
-  // * A (literal/constexpr compatible) `const StringifyFieldInfoString*`.
-  // * A (non literal) `std::optional<const StringifyFieldInfoString>`. This is wrapped in a `std::optional` because
-  //   otherwise the whole struct cannot be a literal/constexpr.
+  struct KeyControl {
+    KeyMode key_mode{KeyMode::kNormal};
+    std::string_view key_prefix = ".";  // Prefix to key names.
+    std::string_view key_suffix;        // Suffix to key names.
+  };
+
+  struct KeyOverrides {
+    // Force name for the key. This can be one of:
+    // * A (literal/constexpr compatible) `std::string_view` which will be used as-is.
+    // * A (literal/constexpr compatible) `const StringifyFieldInfoString*`.
+    // * A (non literal) `std::optional<const StringifyFieldInfoString>`. This is wrapped in a `std::optional` because
+    //   otherwise the whole struct cannot be a literal/constexpr.
 #ifdef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
-  std::optional<std::variant<std::string_view, const StringifyFieldInfoString*, const StringifyFieldInfoString>>
+    std::optional<std::variant<std::string_view, const StringifyFieldInfoString*, const StringifyFieldInfoString>>
 #else   // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
-  std::optional<std::variant<std::string_view, const StringifyFieldInfoString*>>
+    std::optional<std::variant<std::string_view, const StringifyFieldInfoString*>>
 #endif  // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
-      key_use_name;
+        key_use_name;
+  };
 
   // Value options:
-
-  // If no suitable printing found then this option is controls the behavior:
-  // - If `true` (the default), then the value is printed as is.
-  // - Otherwise (`false`) all value format control is applied.
-  bool value_other_types_direct = true;
 
   enum class EscapeMode {
     kNone,        // Values are printed as is.
@@ -144,46 +207,98 @@ struct StringifyOptions {
     return os << "EscapeMode::kNone";
   }
 
-  EscapeMode value_escape_mode{EscapeMode::kCEscape};
+  struct ValueControl {
+    // If no suitable printing found then this option is controls the behavior:
+    // - If `true` (the default), then the value is printed as is.
+    // - Otherwise (`false`) all value format control is applied.
+    bool other_types_direct = true;
 
-  std::string_view value_pointer_prefix = "*{";         // Prefix for pointer types.
-  std::string_view value_pointer_suffix = "}";          // Suffix for pointer types.
-  std::string_view value_smart_ptr_prefix = "{";        // Prefix for smart pointer types.
-  std::string_view value_smart_ptr_suffix = "}";        // Suffix for smart pointer types.
-  std::string_view value_nullptr_t = "std::nullptr_t";  // Value for `nullptr_t` types.
-  std::string_view value_nullptr = "<nullptr>";         // Value for `nullptr` values.
-  std::string_view value_optional_prefix = "{";         // Prefix for optional types.
-  std::string_view value_optional_suffix = "}";         // Suffix for optional types.
-  std::string_view value_nullopt = "std::nullopt";      // Value for `nullopt` values.
-  std::string_view value_structure_prefix = "{";        // Prefix for object (struct/class) values.
-  std::string_view value_structure_suffix = "}";        // Suffix for object (struct/class) values.
-  std::string_view value_container_prefix = "{";        // Prefix for container values.
-  std::string_view value_container_suffix = "}";        // Suffix for container values.
+    EscapeMode escape_mode{EscapeMode::kCEscape};
 
-  // Max num elements to show.
-  std::size_t value_container_max_len = std::numeric_limits<std::size_t>::max();
+    std::string_view nullptr_t_str = "std::nullptr_t";  // Value for `nullptr_t` types.
+    std::string_view nullptr_v_str = "<nullptr>";       // Value for `nullptr` values.
+    std::string_view nullopt_str = "std::nullopt";      // Value for `nullopt` values.
 
-  std::string_view value_replacement_str;    // Allows "redacted" for string values
-  std::string_view value_replacement_other;  // Allows "redacted" for non string values
+    // Max num elements to show.
+    std::size_t container_max_len = std::numeric_limits<std::size_t>::max();
 
-  // Maximum length of value (prior to escaping).
-  std::string_view::size_type value_max_length{std::string_view::npos};
-  std::string_view value_cutoff_suffix = "...";  // Suffix if value gets shortened.
-  std::string_view value_char_delim = "'";       // If empty, then use numeric value.
-  std::string_view value_string_delim = "\"";
+    // Maximum length of value (prior to escaping).
+    std::string_view::size_type str_max_length{std::string_view::npos};
+    std::string_view str_cutoff_suffix = "...";  // Suffix if value gets shortened.
+  };
+
+  struct ValueOverrides {
+    std::string_view replacement_str;    // Allows "redacted" for string values
+    std::string_view replacement_other;  // Allows "redacted" for non string values
+  };
 
   // Special types:
 
-  // Containers with Pairs whose `first` type is a string-like automatically
-  // create objects where the keys are the field names. This is useful for JSON.
-  // The types are checked with `IsPairFirstStr`.
-  bool value_pair_first_is_name = false;
+  struct Special {
+    // Containers with Pairs whose `first` type is a string-like automatically
+    // create objects where the keys are the field names. This is useful for JSON.
+    // The types are checked with `IsPairFirstStr`.
+    bool pair_first_is_name = false;
 
-  // For all other cases of pairs, their names can be overwritten.
-  std::optional<std::pair<std::string_view, std::string_view>> value_pair_keys{{"first", "second"}};
+    // For all other cases of pairs, their names can be overwritten.
+    std::optional<std::pair<std::string_view, std::string_view>> pair_keys{{"first", "second"}};
+  };
+
+  OptionalDataOrConstRef<Format> format;
+  OptionalDataOrConstRef<FieldControl> field_control;
+  OptionalDataOrConstRef<KeyControl> key_control;
+  OptionalDataOrConstRef<KeyOverrides> key_overrides;
+  OptionalDataOrConstRef<ValueControl> value_control;
+  OptionalDataOrConstRef<ValueOverrides> value_overrides;
+  OptionalDataOrConstRef<Special> special;
+
+  template<IsSameAsAnyOf<Format, FieldControl, KeyControl, KeyOverrides, ValueControl, ValueOverrides, Special> T>
+  constexpr const auto& Access() const {
+    if constexpr (std::same_as<T, Format>) {
+      return format;
+    } else if constexpr (std::same_as<T, FieldControl>) {
+      return field_control;
+    } else if constexpr (std::same_as<T, KeyControl>) {
+      return key_control;
+    } else if constexpr (std::same_as<T, KeyOverrides>) {
+      return key_overrides;
+    } else if constexpr (std::same_as<T, ValueControl>) {
+      return value_control;
+    } else if constexpr (std::same_as<T, ValueOverrides>) {
+      return value_overrides;
+    } else if constexpr (std::same_as<T, Special>) {
+      return special;
+    }
+  }
+
+  constexpr bool AllDataSet() const noexcept {
+    return format && field_control && key_control && key_overrides && value_control && value_overrides && special;
+  }
+
+  constexpr explicit operator bool() const noexcept { return AllDataSet(); }
+
+  template<typename Opts, typename Func, typename... Args>
+  requires(std::same_as<std::remove_const_t<Opts>, StringifyOptions>)
+  static constexpr bool ApplyAll(Opts& opts, const Func& func, const Args&... args) {
+    return func(opts.format, args...) && func(opts.field_control, args...) && func(opts.key_control, args...)
+           && func(opts.key_overrides, args...) && func(opts.value_control, args...)
+           && func(opts.value_overrides, args...) && func(opts.special, args...);
+  }
+
+  static constexpr StringifyOptions WithAllData(StringifyOptions&& options, const StringifyOptions& defaults = {}) {
+    ApplyAll(options, [&defaults]<typename T>(T& v) constexpr {
+      v.as_data(defaults.Access<typename T::value_type>().get());
+      return true;
+    });
+    return std::move(options);
+  }
 
   // Arbirary default value.
-  static const StringifyOptions& AsDefault() noexcept;
+  static constexpr const StringifyOptions& AsDefault() noexcept {
+    static constexpr StringifyOptions kDefaults = WithAllData({});
+    MBO_CONFIG_REQUIRE(kDefaults.AllDataSet(), "Not all data set.");
+    return kDefaults;
+  }
 
   // Formatting control that mostly produces C++ code.
   static const StringifyOptions& AsCpp() noexcept;
@@ -207,9 +322,18 @@ struct StringifyOptions {
     }
     return AsDefault();
   }
+
+  static_assert(__is_literal_type(Format));
+  static_assert(__is_literal_type(FieldControl));
+  static_assert(__is_literal_type(KeyControl));
+  static_assert(__is_literal_type(KeyOverrides));
+  static_assert(__is_literal_type(ValueControl));
+  static_assert(__is_literal_type(ValueOverrides));
+  static_assert(__is_literal_type(Special));
 };
 
 #if defined(__clang__) || defined(__GNUC__)
+static_assert(sizeof(StringifyOptions) <= 700);  // NOLINT(*-magic-numbers)
 static_assert(__is_literal_type(StringifyOptions));
 #endif  // defined(__clang__) || defined(__GNUC__)
 
@@ -226,7 +350,7 @@ struct StringifyFieldOptions {
                                                                   : std::get<const StringifyOptions>(v);
   }
 
-  ~StringifyFieldOptions() noexcept = default;
+  constexpr ~StringifyFieldOptions() noexcept = default;
 
   // NOLINTNEXTLINE(*-explicit-*): Implicit conversion in this direction is pretty intended.
   constexpr StringifyFieldOptions(const StringifyOptions& both) : outer(both), inner(both) {}
@@ -243,6 +367,10 @@ struct StringifyFieldOptions {
   constexpr StringifyFieldOptions& operator=(const StringifyFieldOptions& other) = delete;
   constexpr StringifyFieldOptions(StringifyFieldOptions&& other) noexcept = default;
   constexpr StringifyFieldOptions& operator=(StringifyFieldOptions&& other) = delete;
+
+  constexpr bool AllDataSet() const noexcept { return outer.AllDataSet() && inner.AllDataSet(); }
+
+  constexpr explicit operator bool() const noexcept { return AllDataSet(); }
 
   constexpr StringifyFieldOptions ToInner() const noexcept { return StringifyFieldOptions{inner, inner}; }
 
@@ -460,7 +588,9 @@ class Stringify {
   static Stringify AsJsonPretty() noexcept { return Stringify(StringifyOptions::AsJsonPretty()); }
 
   explicit Stringify(const StringifyOptions& root_options = StringifyOptions::AsDefault())
-      : root_options_(root_options), indent_(*this) {}
+      : root_options_(root_options), indent_(*this) {
+    // We could check whether all data is set. But ... it works via get() and referencing defaults just fine.
+  }
 
   explicit Stringify(const StringifyOptions::OutputMode output_mode) : Stringify(StringifyOptions::As(output_mode)) {}
 
@@ -475,9 +605,9 @@ class Stringify {
   template<typename T>
   requires(std::is_aggregate_v<T>)
   void Stream(std::ostream& os, const T& value) const {
-    os << root_options_.message_prefix;
+    os << root_options_.format.get().message_prefix;
     StreamImpl(os, {root_options_, root_options_}, value);
-    os << root_options_.message_suffix;
+    os << root_options_.format.get().message_suffix;
   }
 
  private:
@@ -485,31 +615,31 @@ class Stringify {
    public:
     Indent() = delete;
 
-    explicit Indent(const Stringify& stringify) : enable_(!stringify.root_options_.field_indent.empty()) {}
+    explicit Indent(const Stringify& stringify) : enable_(!stringify.root_options_.format.get().field_indent.empty()) {}
 
     void IncContainer(std::ostream& os, const StringifyOptions& options) {
-      os << options.value_container_prefix;
-      level_.push_back(options.field_indent);
-      enable_ = !options.field_indent.empty();
+      os << options.format.get().container_prefix;
+      level_.push_back(options.format.get().field_indent);
+      enable_ = !options.format.get().field_indent.empty();
     }
 
     void DecContainer(std::ostream& os, const StringifyOptions& options) {
       level_.pop_back();
       StreamIndent(os);
-      os << options.value_container_suffix;
+      os << options.format.get().container_suffix;
       enable_ = level_.empty() || !level_.back().empty();
     }
 
     void IncStruct(std::ostream& os, const StringifyOptions& options) {
-      os << options.value_structure_prefix;
-      level_.push_back(options.field_indent);
-      enable_ = !options.field_indent.empty();
+      os << options.format.get().structure_prefix;
+      level_.push_back(options.format.get().field_indent);
+      enable_ = !options.format.get().field_indent.empty();
     }
 
     void DecStruct(std::ostream& os, const StringifyOptions& options) {
       level_.pop_back();
       StreamIndent(os);
-      os << options.value_structure_suffix;
+      os << options.format.get().structure_suffix;
       enable_ = level_.empty() || !level_.back().empty();
     }
 
@@ -543,8 +673,8 @@ class Stringify {
       const StringifyFieldOptions& options,
       const T& /*value*/,
       bool /*allow_field_names*/ = !HasMboTypesStringifyDoNotPrintFieldNames<T>) const {
-    if (!options.outer.field_suppress_disabled) {
-      os << options.outer.field_disabled;
+    if (!options.outer.field_control.get().suppress_disabled) {
+      os << options.outer.field_control.get().field_disabled;
     }
     // Otherwise no output! Streaming `"{}"` would also be possible, but not streaming anything is
     // is inline with what field streaming does.
@@ -569,7 +699,7 @@ class Stringify {
       const StringifyFieldOptions& options,
       const T& value,
       bool use_field_names = !HasMboTypesStringifyDoNotPrintFieldNames<T>) const {
-    use_field_names |= options.outer.key_mode == StringifyOptions::KeyMode::kNumericFallback;
+    use_field_names |= options.outer.key_control.get().key_mode == StringifyOptions::KeyMode::kNumericFallback;
     bool use_sep = false;
     const auto& field_names = GetFieldNames(value);
     std::apply(
@@ -656,10 +786,11 @@ class Stringify {
         return StringifyFieldOptions{root_options_};
       }
     }();
+    // We could check whether all data is set. But ... it works via get() and referencing defaults just fine.
     const SpecialFieldValue is_special = IsSpecial(field);
     if (StreamFieldKeyEnabled(inner_options.outer, is_special)) {
       if (use_seperator) {
-        os << outer_options.outer.field_separator;
+        os << outer_options.outer.format.get().field_separator;
       }
       use_seperator = true;
       indent_.StreamIndent(os);
@@ -674,22 +805,22 @@ class Stringify {
     switch (is_special) {
       case SpecialFieldValue::kNoSuppress: break;
       case SpecialFieldValue::kNormal:
-        if (options.field_suppress) {
+        if (options.field_control.get().suppress) {
           return false;
         }
         break;
       case SpecialFieldValue::kIsNullptr:
-        if (options.field_suppress_nullptr) {
+        if (options.field_control.get().suppress_nullptr) {
           return false;
         }
         break;
       case SpecialFieldValue::kIsNullopt:
-        if (options.field_suppress_nullopt) {
+        if (options.field_control.get().suppress_nullopt) {
           return false;
         }
         break;
       case SpecialFieldValue::kStringifyDisabled:
-        if (options.field_suppress_disabled) {
+        if (options.field_control.get().suppress_disabled) {
           return false;
         }
         break;
@@ -699,23 +830,24 @@ class Stringify {
 
   static void StreamFieldName(std::ostream& os, const StringifyFieldInfo& field, bool allow_key_override = true) {
     const StringifyOptions& options = field.options.outer;
-    switch (options.key_mode) {
+    switch (options.key_control.get().key_mode) {
       case StringifyOptions::KeyMode::kNone: return;
       case StringifyOptions::KeyMode::kNormal:
       case StringifyOptions::KeyMode::kNumericFallback: break;
     }
     std::string_view field_name;
-    if (allow_key_override && options.key_use_name.has_value()) {
-      if (std::holds_alternative<std::string_view>(*options.key_use_name)) {
-        field_name = std::get<std::string_view>(*options.key_use_name);
-      } else if (std::holds_alternative<const StringifyFieldInfoString*>(*options.key_use_name)) {
-        const auto* func = std::get<const StringifyFieldInfoString*>(*options.key_use_name);
+    if (allow_key_override && options.key_overrides.get().key_use_name.has_value()) {
+      const auto& key_use_name = *options.key_overrides.get().key_use_name;
+      if (std::holds_alternative<std::string_view>(key_use_name)) {
+        field_name = std::get<std::string_view>(key_use_name);
+      } else if (std::holds_alternative<const StringifyFieldInfoString*>(key_use_name)) {
+        const auto* func = std::get<const StringifyFieldInfoString*>(key_use_name);
         if (func != nullptr && *func) {
           field_name = (*func)(field);
         }
 #ifdef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
-      } else if (std::holds_alternative<const StringifyFieldInfoString>(*options.key_use_name)) {
-        const auto& func = std::get<const StringifyFieldInfoString>(*options.key_use_name);
+      } else if (std::holds_alternative<const StringifyFieldInfoString>(key_use_name)) {
+        const auto& func = std::get<const StringifyFieldInfoString>(key_use_name);
         if (func) {
           field_name = func(field);
         }
@@ -728,9 +860,11 @@ class Stringify {
       field_name = field.name;
     }
     if (!field_name.empty()) {
-      os << options.key_prefix << field_name << options.key_suffix << options.key_value_separator;
-    } else if (options.key_mode == StringifyOptions::KeyMode::kNumericFallback) {
-      os << options.key_prefix << field.idx << options.key_suffix << options.key_value_separator;
+      os << options.key_control.get().key_prefix << field_name << options.key_control.get().key_suffix
+         << options.format.get().key_value_separator;
+    } else if (options.key_control.get().key_mode == StringifyOptions::KeyMode::kNumericFallback) {
+      os << options.key_control.get().key_prefix << field.idx << options.key_control.get().key_suffix
+         << options.format.get().key_value_separator;
     }
   }
 
@@ -738,19 +872,19 @@ class Stringify {
   requires(::mbo::types::ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
   void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
     if constexpr (mbo::types::IsPairFirstStr<std::remove_cvref_t<typename C::value_type>>) {
-      if (options.outer.value_pair_first_is_name) {
+      if (options.outer.special.get().pair_first_is_name) {
         // Each pair element of the container `vs` is an element whose key is the `first` member and
         // whose value is the `second` member.
         indent_.IncStruct(os, options.outer);
         std::string_view sep;
         std::size_t index = 0;
         for (const auto& v : vs) {
-          if (index >= options.outer.value_container_max_len) {
+          if (index >= options.outer.value_control.get().container_max_len) {
             break;
           }
           os << sep;
           indent_.StreamIndent(os);
-          sep = options.outer.field_separator;
+          sep = options.outer.format.get().field_separator;
           if (allow_field_names) {
             StreamFieldName(
                 os, StringifyFieldInfo{.options = options, .idx = index, .name = v.first},
@@ -767,12 +901,12 @@ class Stringify {
     std::string_view sep;
     std::size_t index = 0;
     for (const auto& v : vs) {
-      if (++index > options.outer.value_container_max_len) {
+      if (++index > options.outer.value_control.get().container_max_len) {
         break;
       }
       os << sep;
       indent_.StreamIndent(os);
-      sep = options.outer.field_separator;
+      sep = options.outer.format.get().field_separator;
       StreamValue(os, options.ToInner(), v, allow_field_names);
     }
     indent_.DecContainer(os, options.outer);
@@ -787,11 +921,11 @@ class Stringify {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (HasMboTypesStringifyDisable<RawV>) {
-      os << options.outer.field_disabled;
+      os << options.outer.field_control.get().field_disabled;
     } else if constexpr (kUseStringify<RawV>) {
       StreamImpl(os, options, v);
     } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
-      os << options.outer.value_nullptr_t;
+      os << options.outer.value_control.get().nullptr_t_str;
     } else if constexpr (IsSmartPtr<RawV>) {
       StreamValueSmartPtr(os, options, v, allow_field_names);
     } else if constexpr (std::is_pointer_v<RawV>) {
@@ -801,32 +935,32 @@ class Stringify {
     } else if constexpr (mbo::types::IsPair<RawV>) {
       StreamValuePair(os, options, v, allow_field_names);
     } else if constexpr (std::is_same_v<RawV, char> || std::is_same_v<RawV, unsigned char>) {
-      if (options.outer.value_char_delim.empty()) {
+      if (options.outer.format.get().char_delim.empty()) {
         os << absl::StreamFormat("%v", int(v));
       } else {
-        os << options.outer.value_char_delim;
+        os << options.outer.format.get().char_delim;
         if (v == '\'') {
           StreamValueStr(os, options.outer, "\\'");
         } else {
           std::string_view vv{reinterpret_cast<const char*>(&v), 1};  // NOLINT(*-type-reinterpret-cast)
           StreamValueStr(os, options.outer, vv);
         }
-        os << options.outer.value_char_delim;
+        os << options.outer.format.get().char_delim;
       }
     } else if constexpr (std::is_arithmetic_v<RawV>) {
-      if (options.outer.value_replacement_other.empty()) {
+      if (options.outer.value_overrides.get().replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
       } else {
-        os << options.outer.value_replacement_other;
+        os << options.outer.value_overrides.get().replacement_other;
       }
     } else if constexpr (
         std::same_as<RawV, std::string_view> || std::same_as<V, std::string>
         || (std::is_convertible_v<V, std::string_view> && !absl::HasAbslStringify<V>::value)) {
       // Do not attempt to invoke string conversion for AbslStringify supported types as that breaks
       // this very implementation.
-      os << options.outer.value_string_delim;
+      os << options.outer.format.get().string_delim;
       StreamValueStr(os, options.outer, v);
-      os << options.outer.value_string_delim;
+      os << options.outer.format.get().string_delim;
     } else {  // NOTE WHEN EXTENDING: Must always use `else if constexpr`
       StreamValueFallback(os, options.outer, v);
     }
@@ -837,10 +971,10 @@ class Stringify {
       const {
     using RawV = std::remove_cvref_t<V>;
     if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyOptions<RawV>) {
-      if (options.outer.value_pair_keys.has_value()) {
+      if (options.outer.special.get().pair_keys.has_value()) {
         const std::array<std::string_view, 2> field_names{
-            options.outer.value_pair_keys->first,
-            options.outer.value_pair_keys->second,
+            options.outer.special.get().pair_keys->first,
+            options.outer.special.get().pair_keys->second,
         };
         bool use_seperator = false;
         indent_.IncStruct(os, options.outer);
@@ -857,11 +991,11 @@ class Stringify {
   void StreamValueSmartPtr(std::ostream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names)
       const {
     if (v) {
-      os << options.outer.value_smart_ptr_prefix;
+      os << options.outer.format.get().smart_ptr_prefix;
       StreamValue(os, options.ToInner(), *v, allow_field_names);
-      os << options.outer.value_smart_ptr_suffix;
+      os << options.outer.format.get().smart_ptr_suffix;
     } else {
-      os << options.outer.value_nullptr;
+      os << options.outer.value_control.get().nullptr_v_str;
     }
   }
 
@@ -869,11 +1003,11 @@ class Stringify {
   void StreamValuePointer(std::ostream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names)
       const {
     if (v) {
-      os << options.outer.value_pointer_prefix;
+      os << options.outer.format.get().pointer_prefix;
       StreamValue(os, options.ToInner(), *v, allow_field_names);
-      os << options.outer.value_pointer_suffix;
+      os << options.outer.format.get().pointer_suffix;
     } else {
-      os << options.outer.value_nullptr;
+      os << options.outer.value_control.get().nullptr_v_str;
     }
   }
 
@@ -881,21 +1015,21 @@ class Stringify {
   void StreamValueOptional(std::ostream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names)
       const {
     if (v.has_value()) {
-      os << options.outer.value_optional_prefix;
+      os << options.outer.format.get().optional_prefix;
       StreamValue(os, options.ToInner(), *v, allow_field_names);
-      os << options.outer.value_optional_suffix;
+      os << options.outer.format.get().optional_suffix;
     } else {
-      os << options.outer.value_nullopt;
+      os << options.outer.value_control.get().nullopt_str;
     }
   }
 
   template<typename V>
   static void StreamValueFallback(std::ostream& os, const StringifyOptions& options, const V& v) {
-    if (options.value_other_types_direct) {
-      if (options.value_replacement_other.empty()) {
+    if (options.value_control.get().other_types_direct) {
+      if (options.value_overrides.get().replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
       } else {
-        os << options.value_replacement_other;
+        os << options.value_overrides.get().replacement_other;
       }
     } else {
       const std::string vv = absl::StrFormat("%v", v);
@@ -904,21 +1038,21 @@ class Stringify {
   }
 
   static void StreamValueStr(std::ostream& os, const StringifyOptions& options, std::string_view v) {
-    if (!options.value_replacement_str.empty()) {
-      os << options.value_replacement_str;
+    if (!options.value_overrides.get().replacement_str.empty()) {
+      os << options.value_overrides.get().replacement_str;
       return;
     }
     std::string_view vvv{v};
-    if (options.value_max_length != std::string_view::npos) {
-      vvv = vvv.substr(0, options.value_max_length);
+    if (options.value_control.get().str_max_length != std::string_view::npos) {
+      vvv = vvv.substr(0, options.value_control.get().str_max_length);
     }
-    switch (options.value_escape_mode) {
+    switch (options.value_control.get().escape_mode) {
       case StringifyOptions::EscapeMode::kNone: os << vvv; break;
       case StringifyOptions::EscapeMode::kCEscape: os << absl::CEscape(vvv); break;
       case StringifyOptions::EscapeMode::kCHexEscape: os << absl::CHexEscape(vvv); break;
     }
     if (vvv.length() < v.length()) {
-      os << options.value_cutoff_suffix;
+      os << options.value_control.get().str_cutoff_suffix;
     }
   }
 
@@ -966,7 +1100,7 @@ inline constexpr auto StringifyWithFieldNames(
     }
     StringifyOptions options = field.options.outer;
     std::string_view field_name = std::data(field_names)[field.idx];  // NOLINT(*-pointer-arithmetic)
-    options.key_use_name = field_name;
+    options.key_overrides.as_data().key_use_name = field_name;
     if (types_internal::SupportsFieldNames<T> && name_handling == StringifyNameHandling::kVerify) {
       ABSL_CHECK_EQ(field.name, field_name) << "Bad field_name injection for field #" << field.idx;
     }

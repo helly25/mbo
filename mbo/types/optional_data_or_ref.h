@@ -28,6 +28,8 @@
 
 namespace mbo::types {
 
+// NOLINTBEGIN(*-identifier-naming)
+
 template<typename T, typename RefT = T>
 requires(
     !std::is_reference_v<T> && !std::is_reference_v<RefT>
@@ -37,11 +39,11 @@ class OptionalDataOrRef {
   using OptionalRefT = OptionalRef<RefT>;
 
  public:
-  using value_type = T;                 // NOLINT(*-identifier-naming)
-  using pointer = T*;                   // NOLINT(*-identifier-naming)
-  using const_pointer = const T*;       // NOLINT(*-identifier-naming)
-  using reference = RefT&;              // NOLINT(*-identifier-naming)
-  using const_reference = const RefT&;  // NOLINT(*-identifier-naming)
+  using value_type = T;
+  using pointer = RefT*;
+  using const_pointer = const RefT*;
+  using reference = RefT&;
+  using const_reference = const RefT&;
 
   constexpr ~OptionalDataOrRef() noexcept = default;
 
@@ -49,16 +51,24 @@ class OptionalDataOrRef {
 
   constexpr OptionalDataOrRef(std::nullopt_t /* unused */) : v_(std::nullopt) {}  // NOLINT(*-explicit-*)
 
-  template<typename U = RefT>
-  requires(!std::is_rvalue_reference_v<U>)
-  constexpr OptionalDataOrRef(U& v) {  // NOLINT(*-explicit-*)
+  template<typename U = T>
+  requires(!std::same_as<U, OptionalDataOrRef>)
+  constexpr OptionalDataOrRef(T&& v) {  // NOLINT(*-explicit-*)
+    emplace(std::move(v));
+  }
+
+  constexpr OptionalDataOrRef(RefT& v)  // NOLINT(*-explicit-*)
+  requires(!std::same_as<T, RefT>)
+  {
     set_ref(v);
   }
 
-  template<typename U = T>
-  requires(std::is_rvalue_reference_v<U>)
-  constexpr OptionalDataOrRef(U&& v) {  // NOLINT(*-explicit-*)
-    emplace(std::forward<U>(v));
+  template<typename U = RefT>
+  requires(
+      !std::is_rvalue_reference_v<U> && !std::same_as<U, OptionalDataOrRef>
+      && (!std::is_const_v<U> || std::is_const_v<RefT>))
+  constexpr OptionalDataOrRef(U& v) {  // NOLINT(*-explicit-*)
+    set_ref(v);
   }
 
   constexpr OptionalDataOrRef(const OptionalDataOrRef&) noexcept = default;
@@ -74,71 +84,79 @@ class OptionalDataOrRef {
   }
 
   template<typename U>
-  requires(AssignableTo<U, T&> && std::constructible_from<T, U>)
+  requires(std::assignable_from<T&, U> && std::constructible_from<T, U> && !std::same_as<U, T>)
   constexpr OptionalDataOrRef& operator=(U&& v) noexcept {
     if constexpr (std::is_rvalue_reference_v<decltype(v)>) {
       emplace(std::forward<U>(v));
     } else if (has_value()) {
       value() = std::forward<U>(v);
     } else {
-      as_data() = std::forward<U>(v);
+      emplace(std::forward<U>(v));
     }
     return *this;
   }
 
-  constexpr OptionalDataOrRef& reset() noexcept {  // NOLINT(*-identifier-naming)
+  constexpr OptionalDataOrRef& reset() noexcept {
     v_.template emplace<OptionalRefT>().reset();
     return *this;
   }
 
-  constexpr OptionalDataOrRef& set_ref(reference v) noexcept {  // NOLINT(*-identifier-naming)
+  constexpr OptionalDataOrRef& set_ref(reference v) noexcept {
     v_.template emplace<OptionalRefT>().set_ref(v);
     return *this;
   }
 
   template<typename... Args>
-  constexpr OptionalDataOrRef& emplace(Args&&... args) noexcept {  // NOLINT(*-identifier-naming)
+  constexpr OptionalDataOrRef& emplace(Args&&... args) noexcept {
     v_.template emplace<T>(std::forward<Args>(args)...);
     return *this;
   }
 
   constexpr explicit operator bool() const noexcept { return has_value(); }
 
-  constexpr bool has_value() const noexcept {  // NOLINT(*-identifier-naming)
+  constexpr bool has_value() const noexcept {
     return std::holds_alternative<T>(v_) || std::get<OptionalRefT>(v_).has_value();
   }
 
-  constexpr bool HoldsData() const noexcept {  // NOLINT(*-identifier-naming)
-    return std::holds_alternative<T>(v_);
-  }
+  constexpr bool HoldsData() const noexcept { return std::holds_alternative<T>(v_); }
 
-  constexpr bool HoldsNullopt() const noexcept {  // NOLINT(*-identifier-naming)
+  constexpr bool HoldsNullopt() const noexcept {
     return std::holds_alternative<OptionalRefT>(v_) && !std::get<OptionalRefT>(v_).has_value();
   }
 
-  constexpr bool HoldsReference() const noexcept {  // NOLINT(*-identifier-naming)
+  constexpr bool HoldsReference() const noexcept {
     return std::holds_alternative<OptionalRefT>(v_) && std::get<OptionalRefT>(v_).has_value();
   }
 
-  constexpr reference value() noexcept {  // NOLINT(*-identifier-naming)
+  constexpr reference value() noexcept {
     return std::holds_alternative<T>(v_) ? std::get<T>(v_) : std::get<OptionalRefT>(v_).value();
   }
 
-  constexpr const_reference value() const noexcept {  // NOLINT(*-identifier-naming)
+  constexpr const_reference value() const noexcept {
     return std::holds_alternative<T>(v_) ? std::get<T>(v_) : std::get<OptionalRefT>(v_).value();
+  }
+
+  // Returns `value()` if `holds_value()` is true, a reference to static defaults otherwise.
+  constexpr const_reference get() const noexcept
+  requires std::is_default_constructible_v<T>
+  {
+    static constexpr T kDefaults{};
+    return has_value() ? value() : kDefaults;
   }
 
   // Returns a reference to existing data or created data. If the object:
   // * is `std::nullopt`, then a default value will be emplace and is reference returned.
   // * contains a value, then its reference will be returned.
   // * contains a reference, then that reference is emplace and then its reference returned.
-  constexpr value_type& as_data() noexcept {  // NOLINT(*-identifier-naming)
+  template<typename... Args>
+  requires(std::is_constructible_v<T, Args...>)
+  constexpr value_type& as_data(Args&&... args) noexcept {
     if (!std::holds_alternative<T>(v_)) {
       const OptionalRefT& ref = std::get<OptionalRefT>(v_);
       if (ref.has_value()) {
         emplace(ref.value());
       } else {
-        emplace();
+        emplace(std::forward<Args>(args)...);
       }
     }
     return std::get<T>(v_);
@@ -160,8 +178,8 @@ class OptionalDataOrRef {
     return std::holds_alternative<T>(v_) ? &std::get<T>(v_) : &std::get<OptionalRefT>(v_).value();
   }
 
-  template<std::equality_comparable_with<T> U = T>
-  constexpr bool operator==(const OptionalDataOrRef<U>& rhs) const noexcept {
+  template<std::equality_comparable_with<T> U = T, typename RefU = U>
+  constexpr bool operator==(const OptionalDataOrRef<U, RefU>& rhs) const noexcept {
     if (has_value() != rhs.has_value()) {
       return false;
     }
@@ -171,8 +189,8 @@ class OptionalDataOrRef {
     return value() == rhs.value();
   }
 
-  template<std::totally_ordered_with<T> U = T>
-  constexpr bool operator<(const OptionalDataOrRef<U>& rhs) const noexcept {
+  template<std::totally_ordered_with<T> U = T, typename RefU = U>
+  constexpr bool operator<(const OptionalDataOrRef<U, RefU>& rhs) const noexcept {
     if (has_value() != rhs.has_value()) {
       return !has_value();
     }
@@ -182,8 +200,8 @@ class OptionalDataOrRef {
     return value() < rhs.value();
   }
 
-  template<std::three_way_comparable_with<T> U = T>
-  constexpr auto operator<=>(const OptionalDataOrRef<U>& rhs) const {
+  template<std::three_way_comparable_with<T> U = T, typename RefU = U>
+  constexpr auto operator<=>(const OptionalDataOrRef<U, RefU>& rhs) const {
     using Result = decltype(std::declval<T>() <=> std::declval<T>());
     if (Result result = has_value() <=> rhs.has_value(); result != Result::equal) {
       return result;
@@ -234,7 +252,7 @@ class OptionalDataOrRef {
   }
 
   template<typename H>
-  friend constexpr H AbslHashValue(H hash, const OptionalDataOrRef<T>& v) {
+  friend constexpr H AbslHashValue(H hash, const OptionalDataOrRef<T, RefT>& v) {
     if (v.has_value()) {
       return H::combine(std::move(hash), absl::HashOf<>(v.value()));
     } else {
@@ -243,7 +261,7 @@ class OptionalDataOrRef {
   }
 
   template<typename Sink>
-  friend constexpr void AbslStringify(Sink& sink, const OptionalDataOrRef<T>& v) {
+  friend constexpr void AbslStringify(Sink& sink, const OptionalDataOrRef<T, RefT>& v) {
     if (v.has_value()) {
       absl::Format(&sink, "%v", v.value());
     } else {
@@ -257,6 +275,8 @@ class OptionalDataOrRef {
 
 template<typename T>
 using OptionalDataOrConstRef = OptionalDataOrRef<T, const T>;
+
+// NOLINTEND(*-identifier-naming)
 
 }  // namespace mbo::types
 
