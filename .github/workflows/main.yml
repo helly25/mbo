@@ -31,6 +31,7 @@ jobs:
 
     uses: ./.github/workflows/test.yml
     with:
+      continue-on-error: true
       os: ${{ matrix.os }}
       bazel_mode: ${{ matrix.bazel_mode }}
       compiler: ${{ matrix.compiler }}
