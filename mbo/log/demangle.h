@@ -13,24 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_CONFIG_CONFIG_H_
-#define MBO_CONFIG_CONFIG_H_
+#ifndef MBO_LOG_DEMANGLE_H_
+#define MBO_LOG_DEMANGLE_H_
 
-#if __has_include("mbo/config/config_gen.h")
-# include "mbo/config/config_gen.h"  // IWYU pragma: export
-#else
-# include "mbo/config/internal/config.h.in"  // IWYU pragma: export
-# if __STDC_VERSION__ >= 202'311L
-#  if !defined(IS_CLANGD)
-#   warning "The correctly generated header is not available. Falling back to template."
-#  endif  // __STDC_VERSION__ >= 202311L
-# endif   // !defined(IS_CLANGD)
-#endif
+#include <string>
+#include <typeinfo>
 
-#if __cplusplus >= 202'302L
-# define CONSTEXPR_23 constexpr
-#else  // __cplusplus >= 202302L
-# define CONSTEXPR_23
-#endif  // __cplusplus >= 202302L
+namespace mbo::log {
 
-#endif  // MBO_CONFIG_CONFIG_H_
+std::string Demangle(const char* mangled_name);
+
+template<typename T>
+std::string DemangleV(T&& v) {  // NOLINT(*-missing-std-forward)
+  return Demangle(typeid(v).name());
+}
+
+}  // namespace mbo::log
+
+#endif  // MBO_LOG_DEMANGLE_H_

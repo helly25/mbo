@@ -73,6 +73,8 @@ The library is tested with Clang (19+) and GCC (13+) on Ubuntu and MacOS (arm) u
         * function `simple::GetHash(std::string_view)`: A constexpr capable hash function.
 * Log
     * `namespace mbo::log`
+    * mbo/log:demangle_cc, mbo/log/demangle.h
+        * functions `Demangle` to log de-mangled typeid names.
     * mbo/log:log_timing_cc, mbo/log/log_timing.h
         * functoin `LogTiming([args])` a simple timing logger.
 * Mope

@@ -20,6 +20,13 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "demangle_cc",
+    srcs = ["demangle.cc"],
+    hdrs = ["demangle.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "log_timing_cc",
     srcs = ["log_timing.cc"],
     hdrs = ["log_timing.h"],

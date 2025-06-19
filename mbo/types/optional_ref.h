@@ -24,6 +24,7 @@
 #include "absl/hash/hash.h"
 #include "absl/strings/str_format.h"
 #include "mbo/config/require.h"
+#include "mbo/log/demangle.h"
 
 namespace mbo::types {
 
@@ -68,12 +69,12 @@ class OptionalRef {
   constexpr explicit operator bool() const noexcept { return has_value(); }
 
   constexpr reference value() noexcept {  // NOLINT(*-identifier-naming)
-    MBO_CONFIG_REQUIRE(has_value(), "Value is not set.");
+    MBO_CONFIG_REQUIRE(has_value(), "Value is not set for: ") << mbo::log::DemangleV(*this);
     return *v_;
   }
 
   constexpr const_reference value() const noexcept {  // NOLINT(*-identifier-naming)
-    MBO_CONFIG_REQUIRE(has_value(), "Value is not set.");
+    MBO_CONFIG_REQUIRE(has_value(), "Value is not set for: ") << mbo::log::DemangleV(*this);
     return *v_;
   }
 

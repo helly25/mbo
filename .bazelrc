@@ -20,7 +20,7 @@ common:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=
 # Define absl=1 to tell googletest to use absl for backtrace.
 common --define absl=1
 
-common --cxxopt=-std=c++23 --host_cxxopt=-std=c++23 --cxxopt=-Werror
+common --cxxopt=-std=c++20 --host_cxxopt=-std=c++20 --cxxopt=-Werror
 test --test_output=errors
 
 common --copt=-fdiagnostics-color=always

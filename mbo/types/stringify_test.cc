@@ -502,7 +502,7 @@ struct TestStructShorten {
     keys.key_prefix = "";
     StringifyOptions::ValueControl& vals = opts.value_control.as_data();
     vals.str_max_length = field.idx >= 3 && field.idx <= 4 ? 0U : 1U;
-    vals.str_cutoff_suffix = field.idx < 2 ? StringifyOptions::AsDefault().value_control.get().str_cutoff_suffix : "**";
+    vals.str_cutoff_suffix = field.idx < 2 ? StringifyOptions::AsDefault().value_control->str_cutoff_suffix : "**";
     return opts;
   }
 };

@@ -15,6 +15,9 @@
 
 #include "mbo/types/stringify.h"
 
+#include <ios>
+#include <sstream>
+
 #include "mbo/config/require.h"
 
 namespace mbo::types {
@@ -91,6 +94,21 @@ const StringifyOptions& StringifyOptions::AsJsonPretty() noexcept {
   }();
   MBO_CONFIG_REQUIRE(kOptions.AllDataSet(), "Not all data set.");
   return kOptions;
+}
+
+std::string StringifyOptions::DebugStr() const {
+  std::ostringstream out;
+  out << "{\n";
+  ApplyAll(*this, [&out]<typename T>(const T& v) {
+    out << "  " << TypeName<typename T::value_type>() << ": " << std::boolalpha << v.has_value() << "\n";
+    return true;
+  });
+  out << "}\n";
+  return out.str();
+}
+
+std::string StringifyFieldOptions::DebugStr() const {
+  return absl::StrCat("Outer: ", outer.DebugStr(), "Inner: ", inner.DebugStr());
 }
 
 }  // namespace mbo::types

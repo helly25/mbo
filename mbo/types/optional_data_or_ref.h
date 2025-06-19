@@ -86,7 +86,7 @@ class OptionalDataOrRef {
   template<typename U>
   requires(std::assignable_from<T&, U> && std::constructible_from<T, U> && !std::same_as<U, T>)
   constexpr OptionalDataOrRef& operator=(U&& v) noexcept {
-    if constexpr (std::is_rvalue_reference_v<decltype(v)>) {
+    if constexpr (std::is_rvalue_reference_v<decltype(v)>) {  // NOLINT(*-branch-clone)
       emplace(std::forward<U>(v));
     } else if (has_value()) {
       value() = std::forward<U>(v);
@@ -136,6 +136,7 @@ class OptionalDataOrRef {
     return std::holds_alternative<T>(v_) ? std::get<T>(v_) : std::get<OptionalRefT>(v_).value();
   }
 
+#if __cplusplus >= 202'302L
   // Returns `value()` if `holds_value()` is true, a reference to static defaults otherwise.
   constexpr const_reference get() const noexcept
   requires std::is_default_constructible_v<T>
@@ -143,6 +144,11 @@ class OptionalDataOrRef {
     static constexpr T kDefaults{};
     return has_value() ? value() : kDefaults;
   }
+#endif  // __cplusplus >= 202302L
+
+  // Returns `value()` if `holds_value()` is true, a reference `defaults`.
+  // BEWARE of dangling references.
+  constexpr const_reference get(const T& defaults) const noexcept { return has_value() ? value() : defaults; }
 
   // Returns a reference to existing data or created data. If the object:
   // * is `std::nullopt`, then a default value will be emplace and is reference returned.
