@@ -18,13 +18,14 @@
 
 #include <compare>
 #include <concepts>
+#include <memory>
 #include <optional>
 #include <type_traits>
-#include <variant>
 
 #include "absl/hash/hash.h"
 #include "absl/strings/str_format.h"
-#include "mbo/types/optional_ref.h"
+#include "mbo/config/require.h"
+#include "mbo/log/demangle.h"
 
 namespace mbo::types {
 
@@ -35,9 +36,6 @@ requires(
     !std::is_reference_v<T> && !std::is_reference_v<RefT>
     && std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<RefT>>)
 class OptionalDataOrRef {
- private:
-  using OptionalRefT = OptionalRef<RefT>;
-
  public:
   using value_type = T;
   using pointer = RefT*;
@@ -45,11 +43,11 @@ class OptionalDataOrRef {
   using reference = RefT&;
   using const_reference = const RefT&;
 
-  constexpr ~OptionalDataOrRef() noexcept = default;
+  constexpr ~OptionalDataOrRef() noexcept { Destruct(); }
 
-  constexpr OptionalDataOrRef() noexcept = default;
+  constexpr OptionalDataOrRef() noexcept {}  // NOLINT(hicpp-use-equals-default): Not the same
 
-  constexpr OptionalDataOrRef(std::nullopt_t /* unused */) : v_(std::nullopt) {}  // NOLINT(*-explicit-*)
+  constexpr OptionalDataOrRef(std::nullopt_t /* unused */) {}  // NOLINT(*-explicit-*)
 
   template<typename U = T>
   requires(!std::same_as<U, OptionalDataOrRef>)
@@ -71,10 +69,54 @@ class OptionalDataOrRef {
     set_ref(v);
   }
 
-  constexpr OptionalDataOrRef(const OptionalDataOrRef&) noexcept = default;
-  constexpr OptionalDataOrRef& operator=(const OptionalDataOrRef&) = delete;
-  constexpr OptionalDataOrRef(OptionalDataOrRef&&) noexcept = default;
-  constexpr OptionalDataOrRef& operator=(OptionalDataOrRef&&) = delete;
+  constexpr OptionalDataOrRef(const OptionalDataOrRef& other) noexcept
+  requires std::copy_constructible<T>
+  {
+    if (other.is_val_) {
+      emplace(other.union_.val);
+    } else {
+      Destruct(other.union_.ptr);
+    }
+  }
+
+  constexpr OptionalDataOrRef& operator=(const OptionalDataOrRef& other)
+  requires std::copy_constructible<T>
+  {
+    if (this == &other) {
+      return *this;
+    }
+    if (other.is_val_) {
+      emplace(other.union_.val);
+    } else {
+      Destruct(other.union_.ptr);
+    }
+    return *this;
+  }
+
+  constexpr OptionalDataOrRef(OptionalDataOrRef&& other) noexcept
+  requires std::move_constructible<T>
+  {
+    if (other.is_val_) {
+      emplace(std::move(other.union_.val));
+      other.is_val_ = false;
+      other.union_.ptr = nullptr;
+    } else {
+      Destruct(other.union_.ptr);
+    }
+  }
+
+  constexpr OptionalDataOrRef& operator=(OptionalDataOrRef&& other)
+  requires std::move_constructible<T>
+  {
+    if (other.is_val_) {
+      emplace(std::move(other.union_.val));
+      other.is_val_ = false;
+      other.union_.ptr = nullptr;
+    } else {
+      Destruct(other.union_.ptr);
+    }
+    return *this;
+  }
 
   constexpr OptionalDataOrRef& operator=(std::nullopt_t /* unused */) { reset(); }
 
@@ -97,43 +139,43 @@ class OptionalDataOrRef {
   }
 
   constexpr OptionalDataOrRef& reset() noexcept {
-    v_.template emplace<OptionalRefT>().reset();
+    Destruct();
     return *this;
   }
 
   constexpr OptionalDataOrRef& set_ref(reference v) noexcept {
-    v_.template emplace<OptionalRefT>().set_ref(v);
+    Destruct(&v);
     return *this;
   }
 
   template<typename... Args>
   constexpr OptionalDataOrRef& emplace(Args&&... args) noexcept {
-    v_.template emplace<T>(std::forward<Args>(args)...);
+    if (is_val_) {
+      std::destroy_at(&union_.val);
+    }
+    std::construct_at(&union_.val, std::forward<Args>(args)...);
+    is_val_ = true;
     return *this;
   }
 
   constexpr explicit operator bool() const noexcept { return has_value(); }
 
-  constexpr bool has_value() const noexcept {
-    return std::holds_alternative<T>(v_) || std::get<OptionalRefT>(v_).has_value();
-  }
+  constexpr bool has_value() const noexcept { return is_val_ || union_.ptr != nullptr; }
 
-  constexpr bool HoldsData() const noexcept { return std::holds_alternative<T>(v_); }
+  constexpr bool HoldsData() const noexcept { return is_val_; }
 
-  constexpr bool HoldsNullopt() const noexcept {
-    return std::holds_alternative<OptionalRefT>(v_) && !std::get<OptionalRefT>(v_).has_value();
-  }
+  constexpr bool HoldsNullopt() const noexcept { return !is_val_ && union_.ptr == nullptr; }
 
-  constexpr bool HoldsReference() const noexcept {
-    return std::holds_alternative<OptionalRefT>(v_) && std::get<OptionalRefT>(v_).has_value();
-  }
+  constexpr bool HoldsReference() const noexcept { return !is_val_ && union_.ptr != nullptr; }
 
   constexpr reference value() noexcept {
-    return std::holds_alternative<T>(v_) ? std::get<T>(v_) : std::get<OptionalRefT>(v_).value();
+    MBO_CONFIG_REQUIRE(has_value(), "No value set for: ") << mbo::log::DemangleV(*this);
+    return is_val_ ? union_.val : *union_.ptr;
   }
 
   constexpr const_reference value() const noexcept {
-    return std::holds_alternative<T>(v_) ? std::get<T>(v_) : std::get<OptionalRefT>(v_).value();
+    MBO_CONFIG_REQUIRE(has_value(), "No value set for: ") << mbo::log::DemangleV(*this);
+    return is_val_ ? union_.val : *union_.ptr;
   }
 
 #if __cplusplus >= 202'302L
@@ -157,32 +199,23 @@ class OptionalDataOrRef {
   template<typename... Args>
   requires(std::is_constructible_v<T, Args...>)
   constexpr value_type& as_data(Args&&... args) noexcept {
-    if (!std::holds_alternative<T>(v_)) {
-      const OptionalRefT& ref = std::get<OptionalRefT>(v_);
-      if (ref.has_value()) {
-        emplace(ref.value());
+    if (!is_val_) {
+      if (union_.ptr != nullptr) {
+        emplace(*union_.ptr);
       } else {
         emplace(std::forward<Args>(args)...);
       }
     }
-    return std::get<T>(v_);
+    return union_.val;
   }
 
-  constexpr reference operator*() noexcept {
-    return std::holds_alternative<T>(v_) ? std::get<T>(v_) : std::get<OptionalRefT>(v_).value();
-  }
+  constexpr reference operator*() noexcept { return value(); }
 
-  constexpr const_reference operator*() const noexcept {
-    return std::holds_alternative<T>(v_) ? std::get<T>(v_) : std::get<OptionalRefT>(v_).value();
-  }
+  constexpr const_reference operator*() const noexcept { return value(); }
 
-  constexpr pointer operator->() noexcept {
-    return std::holds_alternative<T>(v_) ? &std::get<T>(v_) : &std::get<OptionalRefT>(v_).value();
-  }
+  constexpr pointer operator->() noexcept { return &value(); }
 
-  constexpr const_pointer operator->() const noexcept {
-    return std::holds_alternative<T>(v_) ? &std::get<T>(v_) : &std::get<OptionalRefT>(v_).value();
-  }
+  constexpr const_pointer operator->() const noexcept { return &value(); }
 
   template<std::equality_comparable_with<T> U = T, typename RefU = U>
   constexpr bool operator==(const OptionalDataOrRef<U, RefU>& rhs) const noexcept {
@@ -250,7 +283,7 @@ class OptionalDataOrRef {
   template<typename U = T>
   requires(!std::same_as<U, OptionalDataOrRef<T, RefT>> && std::three_way_comparable_with<T, U>)
   constexpr auto operator<=>(const U& other) const noexcept {
-    using Result = decltype(*v_ <=> other);
+    using Result = decltype(union_.val <=> other);
     if (!has_value()) {
       return Result::less;
     }
@@ -276,7 +309,41 @@ class OptionalDataOrRef {
   }
 
  private:
-  std::variant<OptionalRefT, T> v_ = OptionalRefT(std::nullopt);
+  // In C++20 some implementtions of `variant` are not (fully) `constexpr` compliant.
+  // std::variant<OptionalRefT, T> v_ = OptionalRefT(std::nullopt);
+  // So instead we go with a manual implementation.
+
+  constexpr void DestructOnly() noexcept {
+    if (is_val_) {
+      std::destroy_at(&union_.val);
+    }
+  }
+
+  constexpr void Destruct(RefT* ptr = nullptr) noexcept {
+    DestructOnly();
+    union_.ptr = ptr;
+    is_val_ = false;
+  }
+
+  union Data {
+    constexpr ~Data() noexcept { /* Nothing to do: Owner deletes */ }
+
+    constexpr Data() noexcept : ptr(nullptr) {}
+
+    constexpr Data(const Data& /*unused*/) noexcept {}
+
+    constexpr Data& operator=(const Data& /*unused*/) noexcept { return *this; }  // NOLINT(cert-oop54-cpp,*unhandled*)
+
+    constexpr Data(Data&& /*unused*/) noexcept {}
+
+    constexpr Data& operator=(Data&& /*unused*/) noexcept { return *this; }
+
+    RefT* ptr;
+    T val;
+  };
+
+  Data union_;
+  bool is_val_ = false;
 };
 
 template<typename T>

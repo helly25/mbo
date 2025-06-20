@@ -56,7 +56,7 @@ TEST_F(OptionalRefTest, Value) {
   EXPECT_THAT(val, 42);
   ref.reset();
   EXPECT_THAT(ref, IsNullopt());
-  EXPECT_DEATH(ref = 99, "Value is not set");
+  EXPECT_DEATH(ref = 99, "No value set for:.*OptionalRef");
 }
 
 TEST_F(OptionalRefTest, Compare) {
