@@ -12,8 +12,8 @@ common:macos --host_linkopt=-Wl,-undefined,dynamic_lookup
 common:macos --platforms=@apple_support//platforms:darwin_arm64
 common:macos --features=-macos_default_link_flags
 
-#common:macos --config=apple-toolchain
-#common:apple-toolchain --apple_crosstool_top=@apple_support//:toolchain
+common:macos --config=apple-toolchain
+common:apple-toolchain --apple_crosstool_top=@apple_support//:toolchain
 
 try-import %workspace%/.bazelrc.user
 
