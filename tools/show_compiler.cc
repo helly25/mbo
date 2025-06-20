@@ -13,24 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_CONFIG_CONFIG_H_
-#define MBO_CONFIG_CONFIG_H_
+#include <iostream>
 
-#if __has_include("mbo/config/config_gen.h")
-# include "mbo/config/config_gen.h"  // IWYU pragma: export
-#else
-# include "mbo/config/internal/config.h.in"  // IWYU pragma: export
-# if __STDC_VERSION__ >= 202'311L
-#  if !defined(IS_CLANGD)
-#   warning "The correctly generated header is not available. Falling back to template."
-#  endif  // __STDC_VERSION__ >= 202311L
-# endif   // !defined(IS_CLANGD)
-#endif
-
-#if __cplusplus >= 202'302L
-# define CONSTEXPR_23 constexpr
-#else  // __cplusplus >= 202302L
-# define CONSTEXPR_23
-#endif  // __cplusplus >= 202302L
-
-#endif  // MBO_CONFIG_CONFIG_H_
+int main() {
+#if defined(__GNUC__) && !defined(__clang__)
+  std::cout << "GCC: " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << "\n";
+  return 0;
+#elif defined(__clang__) && defined(__clang_major__) && defined(__clang_minor__) && defined(__clang_patchlevel__)
+  std::cout << "Clang: " << __clang_major__ << "." << __clang_minor__ << "." << __clang_patchlevel__ << " ("
+            << __clang_version__ << ")\n";
+  return 0;
+#else   // __clang__ / __GNUC__
+  std::cerr << "Unknown compiler!";
+  return 1;
+#endif  // __clang__ / __GNUC__
+}

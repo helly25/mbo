@@ -1,6 +1,16 @@
 # To debug bazel options, uncomment next line.
 # common --announce_rc
 
+# Allow platform specific control and add the missing 'CoreFoundation' lib.
+common --enable_platform_specific_config
+
+# Define the Apple OS
+common --apple_platform_type=macos
+common:macos --features=-macos_default_link_flags
+common:macos --features=-supports_dynamic_linker
+common:macos --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
+common:macos --linkopt=-Wl,-undefined,dynamic_lookup --host_linkopt=-Wl,-undefined,dynamic_lookup
+
 try-import %workspace%/.bazelrc.user
 
 common --consistent_labels
@@ -9,13 +19,6 @@ common --noincompatible_enable_cc_toolchain_resolution
 common --incompatible_disallow_empty_glob
 common --nolegacy_external_runfiles
 common --features=layering_check,parse_headers
-
-# Define the Apple OS
-common --apple_platform_type=macos
-
-# Allow platform specific control and add the missing 'CoreFoundation' lib.
-common --enable_platform_specific_config
-common:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
 
 # Define absl=1 to tell googletest to use absl for backtrace.
 common --define absl=1
@@ -26,16 +29,25 @@ test --test_output=errors
 common --copt=-fdiagnostics-color=always
 common --copt=-fno-exceptions
 
+common:clang --incompatible_enable_cc_toolchain_resolution
+common:clang --//mbo/mope:clang_format=
+common:clang --cxxopt=-gmlt
+common:clang --host_cxxopt=-gmlt
+common:clang --linkopt=-fuse-ld=lld
+common:clang --host_linkopt=-fuse-ld=lld
+common:clang --define is_clang=true
+
 common:symbolizer --strip=never
 common:symbolizer --run_under=//tools:run_under_symbolizer
 
 # Custom --config=asan mode:
 common:asan --config=symbolizer
-common:asan --copt -fsanitize=address,undefined
+common:asan --copt -g
+common:asan --copt -fsanitize=address
 common:asan --copt -fno-sanitize=vptr
 common:asan --copt -fno-omit-frame-pointer
 common:asan --copt -DADDRESS_SANITIZER
-common:asan --linkopt -fsanitize=address,undefined
+common:asan --linkopt -fsanitize=address
 common:asan --linkopt -fno-sanitize=vptr
 #common:asan --linkopt -fsanitize-link-c++-runtime
 common:asan --linkopt -ldl
@@ -49,14 +61,6 @@ common:asan --action_env=ASAN_OPTIONS=halt_on_error=1:print_stacktrace=1:symboli
 common:asan --action_env=UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1:symbolize=1:strip_path_prefix=/proc/self/cwd/:color=always
 common:asan --test_env=ASAN_OPTIONS=halt_on_error=1:print_stacktrace=1:symbolize=1:strip_path_prefix=/proc/self/cwd/:color=always
 common:asan --test_env=UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1:symbolize=1:strip_path_prefix=/proc/self/cwd/:color=always
-
-common:clang --incompatible_enable_cc_toolchain_resolution
-common:clang --//mbo/mope:clang_format=
-common:clang --cxxopt=-gmlt
-common:clang --host_cxxopt=-gmlt
-common:clang --linkopt=-fuse-ld=lld
-common:clang --host_linkopt=-fuse-ld=lld
-common:clang --define is_clang=true
 
 common:cpp23 --cxxopt=-std=c++23 --host_cxxopt=-std=c++23
 

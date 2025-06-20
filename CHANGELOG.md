@@ -1,19 +1,21 @@
 # 0.10.0
 
+* Bumped minimum GCC to 13.
 * Added direct support for `-fno-exceptions` irrespective of config setting.
 * Added support for ASAN symbolizer with `--config=clang`.
+* Added concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
 * Added AbslStringify and hash support to `NoDestruct`, `RefWrap`, `Required`.
 * Added struct `OptionalDataOrRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a reference `T&`/`const T&`.
 * Added struct `OptionalDataOrConstRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a const reference `const T&`.
 * Added struct `OptionalRef` similar to `std::optional` but can hold `std::nullopt` or a reference `T&`/`const T&`.
 * Improved control for `Stringify` with Json output.
-* Updated `StringifyOptions` (breaking change, but no field renames).
-* Updated `StringifyWithFieldNames` (breaking change).
+  * Updated `StringifyOptions` (breaking change).
+  * Updated `StringifyWithFieldNames` (breaking change).
 * Modified `MboTypesStringifyOptions` (breaking change) to be more flexible - but users must deal with the change.
 * Added ability to detect bad `MboTypesStringifyOptions` signatures.
 * Added `StringifyFieldOptions` which holds outer and inner `StringifyOptions`.
 * Added `Stringify::AsJsonPretty()` and `StringifyOptions::AsJsonPretty()`.
-* Bumped minimum GCC to 12.
+* Added `Demangle` to log de-mangled typeid names.
 
 # 0.9.0
 

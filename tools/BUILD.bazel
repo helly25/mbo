@@ -15,7 +15,10 @@
 
 """helly25_mbo/tools"""
 
+load("@rules_cc//cc:defs.bzl", "cc_binary")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+
+package(default_visibility = ["//visibility:private"])
 
 _SYMBOLIZER = "@llvm_toolchain_llvm//:llvm-symbolizer"
 
@@ -46,5 +49,11 @@ sh_binary(
     name = "run_under_symbolizer",
     srcs = ["run_under_symbolizer.sh"],
     data = [_SYMBOLIZER],
+    tags = ["manual"],
+)
+
+cc_binary(
+    name = "show_compiler",
+    srcs = ["show_compiler.cc"],
     tags = ["manual"],
 )

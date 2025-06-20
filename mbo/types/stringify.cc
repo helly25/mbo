@@ -15,61 +15,100 @@
 
 #include "mbo/types/stringify.h"
 
+#include <ios>
+#include <sstream>
+
+#include "mbo/config/require.h"
+
 namespace mbo::types {
 
-const StringifyOptions& StringifyOptions::AsDefault() noexcept {
-  static constexpr StringifyOptions kDefault{};
-  return kDefault;
-}
+constexpr StringifyOptions kOptionsCpp = StringifyOptions::WithAllData({
+    .format{StringifyOptions::Format{
+        .key_value_separator = " = ",
+        .pointer_prefix = "",
+        .pointer_suffix = "",
+    }},
+    .field_control{StringifyOptions::FieldControl{
+        .field_disabled = "{/*MboTypesStringifyDisable*/}",
+    }},
+    .key_control{StringifyOptions::KeyControl{
+        .key_prefix = ".",
+    }},
+    .value_control{StringifyOptions::ValueControl{
+        .nullptr_t_str = "nullptr",
+        .nullptr_v_str = "nullptr",
+    }},
+});
 
 const StringifyOptions& StringifyOptions::AsCpp() noexcept {
-  static constexpr StringifyOptions kCpp{
-      .field_disabled = "{/*MboTypesStringifyDisable*/}",
-      .key_prefix = ".",
-      .key_value_separator = " = ",
-      .value_pointer_prefix = "",
-      .value_pointer_suffix = "",
-      .value_nullptr_t = "nullptr",
-      .value_nullptr = "nullptr",
-  };
-  return kCpp;
+  MBO_CONFIG_REQUIRE(kOptionsCpp.AllDataSet(), "Not all data set.");
+  return kOptionsCpp;
 }
 
+constexpr StringifyOptions kOptionsJson = StringifyOptions::WithAllData({
+    .format{StringifyOptions::Format{
+        .key_value_separator = ": ",
+        .pointer_prefix = "",
+        .pointer_suffix = "",
+        .smart_ptr_prefix = "",
+        .smart_ptr_suffix = "",
+        .optional_prefix = "",
+        .optional_suffix = "",
+        .container_prefix = "[",
+        .container_suffix = "]",
+        .char_delim = "\"",
+    }},
+    .field_control{StringifyOptions::FieldControl{
+        .suppress_nullptr = true,
+        .suppress_nullopt = true,
+        .suppress_disabled = true,
+    }},
+    .key_control{StringifyOptions::KeyControl{
+        .key_mode = StringifyOptions::KeyMode::kNumericFallback,
+        .key_prefix = "\"",
+        .key_suffix = "\"",
+    }},
+    .value_control{StringifyOptions::ValueControl{
+        .nullptr_t_str = "0",
+        .nullptr_v_str = "0",
+        .nullopt_str = "0",
+    }},
+    .special{StringifyOptions::Special{
+        .pair_first_is_name = true,
+    }},
+});
+
 const StringifyOptions& StringifyOptions::AsJson() noexcept {
-  static constexpr StringifyOptions kJson{
-      .field_suppress_nullptr = true,
-      .field_suppress_nullopt = true,
-      .field_suppress_disabled = true,
-      .key_mode = KeyMode::kNumericFallback,
-      .key_prefix = "\"",
-      .key_suffix = "\"",
-      .key_value_separator = ": ",
-      .value_pointer_prefix = "",
-      .value_pointer_suffix = "",
-      .value_smart_ptr_prefix = "",
-      .value_smart_ptr_suffix = "",
-      .value_nullptr_t = "0",
-      .value_nullptr = "0",
-      .value_optional_prefix = "",
-      .value_optional_suffix = "",
-      .value_nullopt = "0",
-      .value_container_prefix = "[",
-      .value_container_suffix = "]",
-      .value_char_delim = "\"",
-      .value_pair_first_is_name = true,
-  };
-  return kJson;
+  MBO_CONFIG_REQUIRE(kOptionsJson.AllDataSet(), "Not all data set.");
+  return kOptionsJson;
 }
 
 const StringifyOptions& StringifyOptions::AsJsonPretty() noexcept {
-  static const StringifyOptions kJson = [] {
-    StringifyOptions json = AsJson();
-    json.message_suffix = "\n";
-    json.field_indent = "  ";
-    json.field_separator = ",";
-    return json;
+  static constexpr StringifyOptions kOptions = []() constexpr {
+    StringifyOptions opts = kOptionsJson;
+    Format& format = opts.format.as_data();
+    format.message_suffix = "\n";
+    format.field_indent = "  ";
+    format.field_separator = ",";
+    return opts;
   }();
-  return kJson;
+  MBO_CONFIG_REQUIRE(kOptions.AllDataSet(), "Not all data set.");
+  return kOptions;
+}
+
+std::string StringifyOptions::DebugStr() const {
+  std::ostringstream out;
+  out << "{\n";
+  ApplyAll(*this, [&out]<typename T>(const T& v) {
+    out << "  " << TypeName<typename T::value_type>() << ": " << std::boolalpha << v.has_value() << "\n";
+    return true;
+  });
+  out << "}\n";
+  return out.str();
+}
+
+std::string StringifyFieldOptions::DebugStr() const {
+  return absl::StrCat("Outer: ", outer.DebugStr(), "Inner: ", inner.DebugStr());
 }
 
 }  // namespace mbo::types

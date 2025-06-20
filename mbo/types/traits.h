@@ -339,6 +339,9 @@ concept IsSameAsAnyOfRawImpl = (std::same_as<SameAs, std::remove_cvref_t<Ts>> ||
 template<typename SameAs, typename... Ts>
 concept IsSameAsAnyOfRaw = types_internal::IsSameAsAnyOfRawImpl<std::remove_cvref_t<SameAs>, Ts...>;
 
+template<typename SameAs, typename... Ts>
+concept IsSameAsAnyOf = (std::same_as<SameAs, Ts> || ...);
+
 // Inverse of the above. So this prevents specific types. This is necessary when building overload
 // alternatives.
 template<typename SameAs, typename... Ts>

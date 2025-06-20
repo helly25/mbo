@@ -116,8 +116,12 @@ jobs:
             export CXX=/usr/local/bin/g++
           elif [ "${{inputs.compiler}}" == "native" ]; then
             # Use whatever is found!
-            [ -n "${CC}" ] && [ -x "${CC}" ] && echo "CC: $(${CC} --version)"
-            [ -n "${CXX}" ] && [ -x "${CXX}" ] && echo "CXX: $(${CXX} --version)"
+            if [ -n "${CC}" ] && [ -x "${which gcc}" ]; then
+              export CC="${which gcc}"
+            fi
+            if [ -n "${CXX}" ] && [ -x "${which g++}" ]; then
+              export CC="${which g++}"
+            fi
           else
             echo "ERROR: Matrix/Input var 'compiler' must be one of [clang, gcc, native]."
           fi
@@ -137,8 +141,11 @@ jobs:
               cp "bazelmod/MODULE.${{inputs.module_version}}.bazel" MODULE.bazel
             fi
           fi
+          [ -n "${CC}" ] && [ -x "${CC}" ] && echo "CC: $(${CC} --version)"
+          [ -n "${CXX}" ] && [ -x "${CXX}" ] && echo "CXX: $(${CXX} --version)"
           echo "BAZEL_INIT: ${BAZEL_INIT[@]}"
           echo "BAZEL_ARGS: ${BAZEL_ARGS[@]}"
+          bazel "${BAZEL_INIT[@]}" run "${BAZEL_ARGS[@]}" //tools:show_compiler || echo "Cannot determine compiler version!"
           bazel "${BAZEL_INIT[@]}" test "${BAZEL_ARGS[@]}" //...
 
       - uses: actions/cache/save@v4
