@@ -1,6 +1,20 @@
 # To debug bazel options, uncomment next line.
 # common --announce_rc
 
+# Allow platform specific control and add the missing 'CoreFoundation' lib.
+common --enable_platform_specific_config
+
+# Define the Apple OS
+common --apple_platform_type=macos
+common:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
+common:macos --linkopt=-Wl,-undefined,dynamic_lookup
+common:macos --host_linkopt=-Wl,-undefined,dynamic_lookup
+common:macos --platforms=@apple_support//platforms:darwin_arm64
+common:macos --features=-macos_default_link_flags
+
+#common:macos --config=apple-toolchain
+#common:apple-toolchain --apple_crosstool_top=@apple_support//:toolchain
+
 try-import %workspace%/.bazelrc.user
 
 common --consistent_labels
@@ -9,13 +23,6 @@ common --noincompatible_enable_cc_toolchain_resolution
 common --incompatible_disallow_empty_glob
 common --nolegacy_external_runfiles
 common --features=layering_check,parse_headers
-
-# Define the Apple OS
-common --apple_platform_type=macos
-
-# Allow platform specific control and add the missing 'CoreFoundation' lib.
-common --enable_platform_specific_config
-common:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
 
 # Define absl=1 to tell googletest to use absl for backtrace.
 common --define absl=1
