@@ -46,6 +46,8 @@ jobs:
         os: [ubuntu-latest, macos-15]
         bazel_mode: [bzlmod]
         compiler: [clang]
+        # MacOS-15: Clang 16.0.0
+        # MacOS-25: Clang 17.0.0
         llvm_version: [17.0.4, 19.1.6, 20.1.0]
         bazel_config: [asan, cpp23, fastbuild, opt]
         exclude:
@@ -84,9 +86,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-15]
         bazel_mode: [bzlmod]
-        compiler: [gcc, native]
+        compiler: [gcc, native, clang]
         gcc_version: [13]
-        llvm_version: [17.0.4]
+        llvm_version: [16.0.4]
         bazel_config: [opt]
         module_version: [0.6.0]
         exclude:

@@ -9,11 +9,7 @@ common --apple_platform_type=macos
 common:macos --features=-supports_dynamic_linker --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
 common:macos --linkopt=-Wl,-undefined,dynamic_lookup
 common:macos --host_linkopt=-Wl,-undefined,dynamic_lookup
-common:macos --platforms=@apple_support//platforms:darwin_arm64
 common:macos --features=-macos_default_link_flags
-
-common:macos --config=apple-toolchain
-common:apple-toolchain --apple_crosstool_top=@apple_support//:toolchain
 
 try-import %workspace%/.bazelrc.user
 
