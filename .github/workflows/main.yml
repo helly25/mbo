@@ -38,8 +38,37 @@ jobs:
       gcc_version: ${{ matrix.gcc_version }}
       bazel_config: ${{ matrix.bazel_config }}
 
-  test-clang:
+  test-bcr:
     needs: [pre-commit, test-gcc]
+    secrets: inherit
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-15]
+        bazel_mode: [bzlmod]
+        compiler: [gcc, native, clang]
+        gcc_version: [13]
+        llvm_version: [16.0.4]
+        bazel_config: [opt]
+        module_version: [0.6.0]
+        exclude:
+          - os: ubuntu-latest
+            compiler: native
+          - os: macos-15
+            compiler: gcc
+
+    uses: ./.github/workflows/test.yml
+    with:
+      continue-on-error: true
+      os: ${{ matrix.os }}
+      bazel_mode: ${{ matrix.bazel_mode }}
+      compiler: ${{ matrix.compiler }}
+      gcc_version: ${{ matrix.gcc_version }}
+      llvm_version: ${{ matrix.llvm_version }}
+      bazel_config: ${{ matrix.bazel_config }}
+      module_version: ${{ matrix.module_version }}
+
+  test-clang:
+    needs: [pre-commit, test-gcc, test-bcr]
     secrets: inherit
     strategy:
       matrix:
@@ -78,35 +107,6 @@ jobs:
       compiler: ${{ matrix.compiler }}
       llvm_version: ${{ matrix.llvm_version }}
       bazel_config: ${{ matrix.bazel_config }}
-
-  test-bcr:
-    #needs: [pre-commit, test-gcc]
-    secrets: inherit
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-15]
-        bazel_mode: [bzlmod]
-        compiler: [gcc, native, clang]
-        gcc_version: [13]
-        llvm_version: [16.0.4]
-        bazel_config: [opt]
-        module_version: [0.6.0]
-        exclude:
-          - os: ubuntu-latest
-            compiler: native
-          - os: macos-15
-            compiler: gcc
-
-    uses: ./.github/workflows/test.yml
-    with:
-      continue-on-error: true
-      os: ${{ matrix.os }}
-      bazel_mode: ${{ matrix.bazel_mode }}
-      compiler: ${{ matrix.compiler }}
-      gcc_version: ${{ matrix.gcc_version }}
-      llvm_version: ${{ matrix.llvm_version }}
-      bazel_config: ${{ matrix.bazel_config }}
-      module_version: ${{ matrix.module_version }}
 
   done:
     needs: [pre-commit, test-gcc, test-clang, test-bcr]
