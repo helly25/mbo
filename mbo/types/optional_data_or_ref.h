@@ -197,7 +197,7 @@ class OptionalDataOrRef {
   // * contains a value, then its reference will be returned.
   // * contains a reference, then that reference is emplace and then its reference returned.
   template<typename... Args>
-  requires(std::constructible_from<T, Args...>)
+  // requires(std::constructible_from<T, Args...>) TODO(helly25): Does not work with some native MacOs configs?
   constexpr value_type& as_data(Args&&... args) noexcept {
     if (!is_val_) {
       if (union_.ptr != nullptr) {

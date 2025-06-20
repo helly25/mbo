@@ -115,7 +115,7 @@ jobs:
             export CC=/usr/local/bin/gcc
             export CXX=/usr/local/bin/g++
           elif [ "${{inputs.compiler}}" == "native" ]; then
-            # Use whatever is found! Not setting environment (done below). Here we only show.
+            # Use whatever is found!
             if [ -n "${CC}" ] && [ -x "${which gcc}" ]; then
               export CC="${which gcc}"
             fi
@@ -145,7 +145,7 @@ jobs:
           [ -n "${CXX}" ] && [ -x "${CXX}" ] && echo "CXX: $(${CXX} --version)"
           echo "BAZEL_INIT: ${BAZEL_INIT[@]}"
           echo "BAZEL_ARGS: ${BAZEL_ARGS[@]}"
-          bazel "${BAZEL_INIT[@]}" run //tools:show_compiler || echo "Cannot determine compiler version!"
+          bazel "${BAZEL_INIT[@]}" run "${BAZEL_ARGS[@]}" //tools:show_compiler || echo "Cannot determine compiler version!"
           bazel "${BAZEL_INIT[@]}" test "${BAZEL_ARGS[@]}" //... -k
 
       - uses: actions/cache/save@v4
