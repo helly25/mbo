@@ -78,7 +78,7 @@ jobs:
       bazel_config: ${{ matrix.bazel_config }}
 
   test-bcr:
-    needs: [pre-commit, test-gcc]
+    #needs: [pre-commit, test-gcc]
     secrets: inherit
     strategy:
       matrix:

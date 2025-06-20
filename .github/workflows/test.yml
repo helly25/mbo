@@ -139,7 +139,7 @@ jobs:
           fi
           echo "BAZEL_INIT: ${BAZEL_INIT[@]}"
           echo "BAZEL_ARGS: ${BAZEL_ARGS[@]}"
-          bazel "${BAZEL_INIT[@]}" test "${BAZEL_ARGS[@]}" //...
+          bazel "${BAZEL_INIT[@]}" test "${BAZEL_ARGS[@]}" //... -k
 
       - uses: actions/cache/save@v4
         if: ${{!startsWith(github.ref, 'refs/tags/')}}
