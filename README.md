@@ -3,7 +3,7 @@
 This C++20 library provides some general useful building blocks and integrates
 with [Google's Abseil library](https://abseil.io/).
 
-The library is tested with Clang (16+) and GCC (13+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml).
+The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml).
 
 ## The C++ library is organized in functional groups each residing in their own directory.
 
@@ -184,7 +184,9 @@ The library is tested with Clang (16+) and GCC (13+) on Ubuntu and MacOS (arm) u
     * mbo/types:stringify_cc, mbo/types/stringify.h
         * class `Stringify` a utility to convert structs into strings.
         * function `StringifyWithFieldNames` a format control adapter for `Stringify`.
+        * struct `StringifyFieldOptions` which controls outer and inner options (both a `const StringifyOptions&`).
         * struct `StringifyOptions` which can be used to control `Stringify` formatting.
+        * struct `StringifyRootOptions` which can be used to control outer/root options for streaming/printing structs.
         * API extension point type `MboTypesStringifySupport` which enables `Stringify` support even if not otherwise enabled (disables Abseil stringify support in `Stringify`).
         * API extension point type `MboTypesStringifyDisable` which disables `Stringify` support. This allows to prevent
         complex classes (and more importantly fields of complex types) from being printed/streamed using `Stringify`
