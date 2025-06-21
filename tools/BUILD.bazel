@@ -41,13 +41,19 @@ genrule(
     }),
     executable = True,
     tags = ["manual"],
-    tools = [_SYMBOLIZER],
+    tools = select({
+        "//:is_clang": [_SYMBOLIZER],
+        "//conditions:default": [],
+    }),
 )
 
 sh_binary(
     name = "run_under_symbolizer",
     srcs = ["run_under_symbolizer.sh"],
-    data = [_SYMBOLIZER],
+    data = select({
+        "//:is_clang": [_SYMBOLIZER],
+        "//conditions:default": [],
+    }),
     tags = ["manual"],
 )
 
