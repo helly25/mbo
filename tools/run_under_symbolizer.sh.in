@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
 
-export LLVM_SYMBOLIZER_PATH="%%LLVM_SYMBOLIZER_PATH%%"
+if [[ "%%LLVM_SYMBOLIZER_PATH%%" == "auto" ]] && [[ -z "${LLVM_SYMBOLIZER_PATH}" ]]; then
+  LOCATIONS=(
+    $(which llvm_symbolizer)
+    /usr/local/bin/llvm-symbolizer
+    /usr/bin/llvm-symbolizer
+    /opt/homebrew/opt/llvm/bin/llvm-symbolizer
+  )
+  for LOC in "${LOCATIONS[@]}"; do
+    if [[ -x "${LOC}" ]]; then
+      export LLVM_SYMBOLIZER_PATH="${LOC}"
+      break
+    fi
+  done
+else
+  export LLVM_SYMBOLIZER_PATH="%%LLVM_SYMBOLIZER_PATH%%"
+fi
+
+if [[ -z "${LLVM_SYMBOLIZER_PATH}" ]] || ! [[ -x "${LLVM_SYMBOLIZER_PATH}" ]]; then
+  echo "Cannot find llvm-symbolizer or configured symbolier not executable: '${LLVM_SYMBOLIZER_PATH}'." 1>&2
+  die 1
+fi
+
 export ASAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
 export TSAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
 

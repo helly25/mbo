@@ -34,8 +34,7 @@ genrule(
             SYMBOLIZER = _SYMBOLIZER,
         ),
         "//conditions:default": """
-            LLVM_SYMBOLIZER_PATH="$$(readlink -f $${{PWD}}/$(location {SYMBOLIZER}))"
-            sed "s,%%LLVM_SYMBOLIZER_PATH%%,$${{LLVM_SYMBOLIZER_PATH}}," $< > $@
+            sed "s,%%LLVM_SYMBOLIZER_PATH%%,auto," $< > $@
         """.format(
             SYMBOLIZER = "/usr/local/llvm/bin/llvm-symbolizer",
         ),

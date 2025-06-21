@@ -66,6 +66,7 @@ using ::mbo::types::StringifyFieldInfoString;
 using ::mbo::types::StringifyFieldOptions;
 using ::mbo::types::StringifyNameHandling;
 using ::mbo::types::StringifyOptions;
+using ::mbo::types::StringifyRootOptions;
 using ::mbo::types::StringifyWithFieldNames;
 using ::mbo::types::types_internal::GetFieldNames;
 using ::mbo::types::types_internal::kStructNameSupport;
@@ -909,21 +910,29 @@ struct TestSubStructDynamicIndent {
   std::map<int, int> one = {{1, 2}, {2, 3}};
   absl::btree_map<int, int> two = {{3, 4}, {5, 6}};
   std::string three = "three";
+  int four = 4;
+  int five = 5;
 
   friend constexpr auto MboTypesStringifyFieldNames(const TestSubStructDynamicIndent&) {
     return std::array<std::string_view, 5>{"one", "two", "three"};
   }
 
-  friend StringifyFieldOptions MboTypesStringifyOptions(
+  friend const StringifyFieldOptions& MboTypesStringifyOptions(
       const TestSubStructDynamicIndent& v,
       const StringifyFieldInfo& field) {
+    if (field.idx >= 3) {
+      static const StringifyFieldOptions kDisabled{StringifyOptions::AsDisabled(), StringifyOptions::AsDisabled()};
+      return kDisabled;
+    }
     if (field.idx != 1 && v.two.size() < 3) {
-      return field.options;  // NOLINT(bugprone-return-const-ref-from-parameter)
+      return field.options;
     }
     if (v.two.size() < 3) {
-      return StringifyFieldOptions{StringifyOptions::AsJson(), StringifyOptions::AsJson()};
+      static const StringifyFieldOptions kShort{StringifyOptions::AsJson(), StringifyOptions::AsJson()};
+      return kShort;
     } else {
-      return StringifyFieldOptions{StringifyOptions::AsJsonPretty(), StringifyOptions::AsJson()};
+      static const StringifyFieldOptions kPretty{StringifyOptions::AsJsonPretty(), StringifyOptions::AsJson()};
+      return kPretty;
     }
   }
 };
@@ -960,6 +969,50 @@ TEST_F(StringifyTest, SubStructDynamicIndent) {
   "three": "three"
 }
 )"));
+}
+
+TEST_F(StringifyTest, SubStructDynamicIndentAndRootIndent) {
+  TestSubStructDynamicIndent data{};
+  constexpr StringifyRootOptions kRootOptions1{
+      .root_indent = "  ",
+  };
+  const Stringify formatter_1 = Stringify::AsJsonPretty(kRootOptions1);
+  EXPECT_THAT(formatter_1.ToString(data), EqualsText(R"({
+    "one": [
+      {
+        "first": 1,
+        "second": 2
+      },
+      {
+        "first": 2,
+        "second": 3
+      }
+    ],
+    "two": [{"first": 3, "second": 4}, {"first": 5, "second": 6}],
+    "three": "three"
+  }
+)"));
+  data.two.emplace(7, 8);
+  constexpr StringifyRootOptions kRootOptions2{
+      .root_prefix = "<prefix>\n  ",
+      .root_suffix = "<suffix>",
+      .root_indent = "  ",
+  };
+  const Stringify formatter_2 = Stringify::AsJsonPretty(kRootOptions2);
+  EXPECT_THAT(formatter_2.ToString(data), EqualsText(R"(<prefix>
+  {
+    "one": [
+      {"first": 1, "second": 2},
+      {"first": 2, "second": 3}
+    ],
+    "two": [
+      {"first": 3, "second": 4},
+      {"first": 5, "second": 6},
+      {"first": 7, "second": 8}
+    ],
+    "three": "three"
+  }
+<suffix>)"));
 }
 
 struct TestMboTypesStringifyConvert {
