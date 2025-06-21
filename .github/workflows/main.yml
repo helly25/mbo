@@ -19,17 +19,17 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        bazel_mode: [bzlmod]
         compiler: [gcc]
         gcc_version: [12, 13, 14]
-        bazel_config: [opt]
         include:
+          - bazel_config: opt
           - bazel_config: asan
-            gcc_version: 12
-          - bazel_mode: workspace
             gcc_version: 12
           - bazel_config: cpp23
             gcc_version: 14
+          - bazel_mode: bzlmod
+          - bazel_mode: workspace
+            gcc_version: 12
 
     uses: ./.github/workflows/test.yml
     with:
