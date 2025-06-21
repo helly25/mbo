@@ -15,7 +15,7 @@
 
 #include "mbo/types/optional_data_or_ref.h"
 
-#include <concepts>
+#include <concepts>  // IWYU pragma: keep
 #include <optional>
 #include <set>
 #include <string>

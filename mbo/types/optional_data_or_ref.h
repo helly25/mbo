@@ -17,7 +17,7 @@
 #define MBO_TYPES_OPTIONAL_DATA_OR_REF_H_
 
 #include <compare>
-#include <concepts>
+#include <concepts>  // IWYU pragma: keep
 #include <memory>
 #include <optional>
 #include <type_traits>
