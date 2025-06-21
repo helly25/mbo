@@ -49,6 +49,14 @@
 
 #endif  // __cpp_exceptions
 
+#ifdef NDEBUG
+// Debug only requirement log.
+# define MBO_CONFIG_REQUIRE_DEBUG(condition, message) ABSL_DLOG(INFO)
+#else  // NDEBUG
+// Debug only requirement log.
+# define MBO_CONFIG_REQUIRE_DEBUG(condition, message) MBO_CONFIG_REQUIRE(condition, message)
+#endif  // NDEBUG
+
 // NOLINTEND(cppcoreguidelines-macro-usage)
 
 #endif  // MBO_CONFIG_REQUIRE_H_

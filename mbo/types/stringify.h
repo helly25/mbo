@@ -311,6 +311,7 @@ struct StringifyOptions {
       v.as_data(defaults.Access<typename T::value_type>().get({}));
       return true;
     });
+    MBO_CONFIG_REQUIRE_DEBUG(options, "Not all data set.");
     return std::move(options);
   }
 
@@ -321,6 +322,7 @@ struct StringifyOptions {
       }
       return true;
     });
+    MBO_CONFIG_REQUIRE_DEBUG(options, "Not all data set.");
     return std::move(options);
   }
 
@@ -331,14 +333,45 @@ struct StringifyOptions {
   }
 
   // Arbirary default value.
-  static CONSTEXPR_23 const StringifyOptions& AsDefault() noexcept {
-    static CONSTEXPR_23 const StringifyOptions kDefaults = WithAllData({});
+  static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsDefault() noexcept {
+    static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions kDefaults = WithAllData({});
     MBO_CONFIG_REQUIRE(kDefaults.AllDataSet(), "Not all data set.");
     return kDefaults;
   }
 
+  // Formatting control that disables a field.
+  static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsDisabled() noexcept {
+    static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions kOptionsDisabled = StringifyOptions::WithAllData({
+        .field_control{StringifyOptions::FieldControl{
+            .suppress = true,
+        }},
+    });
+    MBO_CONFIG_REQUIRE(kOptionsDisabled.AllDataSet(), "Not all data set.");
+    return kOptionsDisabled;
+  }
+
   // Formatting control that mostly produces C++ code.
-  static const StringifyOptions& AsCpp() noexcept;
+  static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsCpp() noexcept {
+    static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions kOptionsCpp = StringifyOptions::WithAllData({
+        .format{StringifyOptions::Format{
+            .key_value_separator = " = ",
+            .pointer_prefix = "",
+            .pointer_suffix = "",
+        }},
+        .field_control{StringifyOptions::FieldControl{
+            .field_disabled = "{/*MboTypesStringifyDisable*/}",
+        }},
+        .key_control{StringifyOptions::KeyControl{
+            .key_prefix = ".",
+        }},
+        .value_control{StringifyOptions::ValueControl{
+            .nullptr_t_str = "nullptr",
+            .nullptr_v_str = "nullptr",
+        }},
+    });
+    MBO_CONFIG_REQUIRE(kOptionsCpp.AllDataSet(), "Not all data set.");
+    return kOptionsCpp;
+  }
 
   // Formatting control that mostly produces JSON data.
   //
@@ -347,10 +380,57 @@ struct StringifyOptions {
   // point: `MboTypesStringifyFieldNames` or `MboTypesStringifyOptions`, the
   // latter possibly with the `StringifyWithFieldNames` adapter. Alternatively,
   // numeric field names will be generated as a last resort.
-  static const StringifyOptions& AsJson() noexcept;
-  static const StringifyOptions& AsJsonPretty() noexcept;
+  static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsJson() noexcept {
+    static MBO_CONFIG_CONSTEXPR_23 StringifyOptions kOptionsJson = StringifyOptions::WithAllData({
+        .format{StringifyOptions::Format{
+            .key_value_separator = ": ",
+            .pointer_prefix = "",
+            .pointer_suffix = "",
+            .smart_ptr_prefix = "",
+            .smart_ptr_suffix = "",
+            .optional_prefix = "",
+            .optional_suffix = "",
+            .container_prefix = "[",
+            .container_suffix = "]",
+            .char_delim = "\"",
+        }},
+        .field_control{StringifyOptions::FieldControl{
+            .suppress_nullptr = true,
+            .suppress_nullopt = true,
+            .suppress_disabled = true,
+        }},
+        .key_control{StringifyOptions::KeyControl{
+            .key_mode = StringifyOptions::KeyMode::kNumericFallback,
+            .key_prefix = "\"",
+            .key_suffix = "\"",
+        }},
+        .value_control{StringifyOptions::ValueControl{
+            .nullptr_t_str = "0",
+            .nullptr_v_str = "0",
+            .nullopt_str = "0",
+        }},
+        .special{StringifyOptions::Special{
+            .pair_first_is_name = true,
+        }},
+    });
+    MBO_CONFIG_REQUIRE(kOptionsJson.AllDataSet(), "Not all data set.");
+    return kOptionsJson;
+  }
 
-  static const StringifyOptions& As(OutputMode mode) noexcept {
+  static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsJsonPretty() noexcept {
+    static MBO_CONFIG_CONSTEXPR_23 StringifyOptions kOptions = []() MBO_CONFIG_CONSTEXPR_23 {
+      StringifyOptions opts = AsJson();
+      Format& format = opts.format.as_data();
+      format.message_suffix = "\n";
+      format.field_indent = "  ";
+      format.field_separator = ",";
+      return opts;
+    }();
+    MBO_CONFIG_REQUIRE(kOptions.AllDataSet(), "Not all data set.");
+    return kOptions;
+  }
+
+  static constexpr const StringifyOptions& As(OutputMode mode) noexcept {
     switch (mode) {
       case OutputMode::kDefault: break;
       case OutputMode::kCpp: return AsCpp();
@@ -427,6 +507,21 @@ struct StringifyFieldOptions {
 };
 
 static_assert(sizeof(StringifyFieldOptions) == 2 * sizeof(void*));
+
+// Control for overall use a Stringify. This controls root options for messages.
+// Note that `root_prefix` and `root_suffix` are streamed without `root_indent`.
+// This means in particular, that is the first line of the output should already be indented, then
+// `root_prefix` should end in `root_indent`.
+struct StringifyRootOptions {
+  std::string_view root_prefix;  // First line prefix - not using root_indent - before message_prefix.
+  std::string_view root_suffix;  // Last line suffix - not using root_indent - after message_suffix.
+  std::string_view root_indent;
+
+  static MBO_CONFIG_CONSTEXPR_23 const StringifyRootOptions& Defaults() {
+    static MBO_CONFIG_CONSTEXPR_23 const StringifyRootOptions kDefaults{};
+    return kDefaults;
+  }
+};
 
 struct StringifyFieldInfo {
   const StringifyFieldOptions options;
@@ -629,18 +724,29 @@ concept HasMboTypesStringifyConvert = requires {
 // Class `Stringify` implements the conversion of any aggregate into a string.
 class Stringify {
  public:
-  static Stringify AsCpp() noexcept { return Stringify(StringifyOptions::AsCpp()); }
-
-  static Stringify AsJson() noexcept { return Stringify(StringifyOptions::AsJson()); }
-
-  static Stringify AsJsonPretty() noexcept { return Stringify(StringifyOptions::AsJsonPretty()); }
-
-  explicit Stringify(const StringifyOptions& root_options = StringifyOptions::AsDefault())
-      : root_options_(root_options), indent_(*this) {
-    MBO_CONFIG_REQUIRE(root_options_.AllDataSet(), "Not all data set: ") << root_options_.DebugStr();
+  static Stringify AsCpp(const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept {
+    return Stringify(StringifyOptions::AsCpp(), root_options);
   }
 
-  explicit Stringify(const StringifyOptions::OutputMode output_mode) : Stringify(StringifyOptions::As(output_mode)) {}
+  static Stringify AsJson(const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept {
+    return Stringify(StringifyOptions::AsJson(), root_options);
+  }
+
+  static Stringify AsJsonPretty(const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept {
+    return Stringify(StringifyOptions::AsJsonPretty(), root_options);
+  }
+
+  explicit Stringify(
+      const StringifyOptions& default_options = StringifyOptions::AsDefault(),
+      const StringifyRootOptions& root_options = StringifyRootOptions::Defaults())
+      : root_options_(root_options), default_options_(default_options), indent_(*this) {
+    MBO_CONFIG_REQUIRE(default_options_.AllDataSet(), "Not all data set: ") << default_options_.DebugStr();
+  }
+
+  explicit Stringify(
+      const StringifyOptions::OutputMode output_mode,
+      const StringifyRootOptions& root_options = StringifyRootOptions::Defaults())
+      : Stringify(StringifyOptions::As(output_mode), root_options) {}
 
   template<typename T>
   requires(std::is_aggregate_v<T>)
@@ -653,9 +759,11 @@ class Stringify {
   template<typename T>
   requires(std::is_aggregate_v<T>)
   void Stream(std::ostream& os, const T& value) const {
-    os << root_options_.format.get({}).message_prefix;
-    StreamImpl(os, {root_options_, root_options_}, value);
-    os << root_options_.format.get({}).message_suffix;
+    os << root_options_.root_prefix;
+    os << default_options_.format.get({}).message_prefix;
+    StreamImpl(os, {default_options_, default_options_}, value);
+    os << default_options_.format.get({}).message_suffix;
+    os << root_options_.root_suffix;
   }
 
  private:
@@ -667,7 +775,11 @@ class Stringify {
     Indent() = delete;
 
     explicit Indent(const Stringify& stringify)
-        : enable_(!stringify.root_options_.format.get({}).field_indent.empty()) {}
+        : enable_(!stringify.default_options_.format.get({}).field_indent.empty()) {
+      if (!stringify.root_options_.root_indent.empty()) {
+        level_.push_back(stringify.root_options_.root_indent);
+      }
+    }
 
     void IncContainer(std::ostream& os, const StringifyOptions::Format& format) {
       os << format.container_prefix;
@@ -862,7 +974,7 @@ class Stringify {
       }(MboTypesStringifyOptions(value, {.options = outer_options, .idx = idx, .name = field_name}));
       return;
     }
-    do_stream({root_options_});  // No customization
+    do_stream({default_options_});  // No customization
   }
 
   static bool StreamFieldKeyEnabled(const StringifyOptions& options, SpecialFieldValue is_special) {
@@ -1120,7 +1232,8 @@ class Stringify {
     }
   }
 
-  const StringifyOptions& root_options_;
+  const StringifyRootOptions& root_options_;
+  const StringifyOptions& default_options_;
   mutable Indent indent_;
 };
 

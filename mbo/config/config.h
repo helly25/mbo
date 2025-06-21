@@ -28,9 +28,9 @@
 #endif
 
 #if __cplusplus >= 202'302L
-# define CONSTEXPR_23 constexpr
+# define MBO_CONFIG_CONSTEXPR_23 constexpr
 #else  // __cplusplus >= 202302L
-# define CONSTEXPR_23
+# define MBO_CONFIG_CONSTEXPR_23
 #endif  // __cplusplus >= 202302L
 
 #endif  // MBO_CONFIG_CONFIG_H_
