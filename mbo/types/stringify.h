@@ -47,7 +47,7 @@ namespace mbo::types {
 
 struct StringifyFieldInfo;
 
-using StringifyFieldInfoString = std::function<std::string_view(const StringifyFieldInfo)>;
+using StringifyFieldInfoString = std::function<std::string_view(const StringifyFieldInfo&)>;
 
 #undef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION
 #if !defined(__clang__) || (__clang_major__ >= 19)
@@ -352,6 +352,7 @@ struct StringifyOptions {
 
   // Formatting control that mostly produces C++ code.
   static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsCpp() noexcept {
+    // NOLINTNEXTLINE(readability-identifier-naming)
     static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions kOptionsCpp = StringifyOptions::WithAllData({
         .format{StringifyOptions::Format{
             .key_value_separator = " = ",
@@ -381,6 +382,7 @@ struct StringifyOptions {
   // latter possibly with the `StringifyWithFieldNames` adapter. Alternatively,
   // numeric field names will be generated as a last resort.
   static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsJson() noexcept {
+    // NOLINTNEXTLINE(readability-identifier-naming)
     static MBO_CONFIG_CONSTEXPR_23 StringifyOptions kOptionsJson = StringifyOptions::WithAllData({
         .format{StringifyOptions::Format{
             .key_value_separator = ": ",
@@ -418,6 +420,7 @@ struct StringifyOptions {
   }
 
   static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsJsonPretty() noexcept {
+    // NOLINTNEXTLINE(readability-identifier-naming)
     static MBO_CONFIG_CONSTEXPR_23 StringifyOptions kOptions = []() MBO_CONFIG_CONSTEXPR_23 {
       StringifyOptions opts = AsJson();
       Format& format = opts.format.as_data();
@@ -455,26 +458,15 @@ static_assert(__is_literal_type(StringifyOptions));
 #endif  // defined(__clang__) || defined(__GNUC__)
 
 struct StringifyFieldOptions {
-  static constexpr const StringifyOptions& GetOuter(
-      const std::variant<const StringifyFieldOptions, const StringifyOptions>& v) {
-    return std::holds_alternative<const StringifyFieldOptions>(v) ? std::get<const StringifyFieldOptions>(v).outer
-                                                                  : std::get<const StringifyOptions>(v);
-  }
-
-  static constexpr const StringifyOptions& GetInner(
-      const std::variant<const StringifyFieldOptions, const StringifyOptions>& v) {
-    return std::holds_alternative<const StringifyFieldOptions>(v) ? std::get<const StringifyFieldOptions>(v).inner
-                                                                  : std::get<const StringifyOptions>(v);
-  }
-
   constexpr ~StringifyFieldOptions() noexcept = default;
+
+  template<typename U>
+  StringifyFieldOptions(U&&) = delete;  // NOLINT(*-missing-std-forward,*-forwarding-reference-overload)
+  template<typename U, typename V>
+  StringifyFieldOptions(U&&, V&&) = delete;  // NOLINT(*-missing-std-forward,*-forwarding-reference-overload)
 
   // NOLINTNEXTLINE(*-explicit-*): Implicit conversion in this direction is pretty intended.
   constexpr StringifyFieldOptions(const StringifyOptions& both) : outer(both), inner(both) {}
-
-  constexpr explicit StringifyFieldOptions(
-      const std::variant<const StringifyFieldOptions, const StringifyOptions>& v) noexcept
-      : outer(GetOuter(v)), inner(GetInner(v)) {}
 
   // NOLINTNEXTLINE(*-swappable-parameters)
   constexpr StringifyFieldOptions(const StringifyOptions& outer, const StringifyOptions& inner) noexcept
@@ -524,7 +516,7 @@ struct StringifyRootOptions {
 };
 
 struct StringifyFieldInfo {
-  const StringifyFieldOptions options;
+  const StringifyFieldOptions options;  // BY VALUE
   std::size_t idx;
   std::string_view name;
 };
@@ -748,8 +740,8 @@ class Stringify {
   explicit Stringify(
       const StringifyOptions& default_options = StringifyOptions::AsDefault(),
       const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept
-      : root_options_(root_options), default_options_(default_options), indent_(*this) {
-    MBO_CONFIG_REQUIRE(default_options_.AllDataSet(), "Not all data set: ") << default_options_.DebugStr();
+      : root_options_(root_options), default_field_options_(default_options), indent_(*this) {
+    MBO_CONFIG_REQUIRE(default_field_options_.AllDataSet(), "Not all data set: ") << default_field_options_.DebugStr();
   }
 
   explicit Stringify(
@@ -769,9 +761,9 @@ class Stringify {
   requires(std::is_aggregate_v<T>)
   void Stream(std::ostream& os, const T& value) const {
     os << root_options_.root_prefix;
-    os << default_options_.format.get({}).message_prefix;
-    StreamImpl(os, {default_options_, default_options_}, value);
-    os << default_options_.format.get({}).message_suffix;
+    os << default_field_options_.outer.format.get({}).message_prefix;
+    StreamImpl(os, default_field_options_, value);
+    os << default_field_options_.outer.format.get({}).message_suffix;
     os << root_options_.root_suffix;
   }
 
@@ -784,7 +776,7 @@ class Stringify {
     Indent() = delete;
 
     explicit Indent(const Stringify& stringify)
-        : enable_(!stringify.default_options_.format.get({}).field_indent.empty()) {
+        : enable_(!stringify.default_field_options_.outer.format.get({}).field_indent.empty()) {
       if (!stringify.root_options_.root_indent.empty()) {
         level_.push_back(stringify.root_options_.root_indent);
       }
@@ -947,43 +939,114 @@ class Stringify {
     if (allow_field_names && idx < std::size(field_names)) {
       field_name = std::data(field_names)[idx];
     }
-    const auto do_stream = [&](const StringifyFieldOptions& inner_options) {
-      const SpecialFieldValue is_special = IsSpecial(field);
-      if (!StreamFieldKeyEnabled(inner_options.outer, is_special)) {
-        return;
-      }
-      if (use_seperator) {
-        os << outer_options.outer.format->field_separator;
-      }
-      use_seperator = true;
-      indent_.StreamIndent(os);
-      if (allow_field_names) {
-        StreamFieldName(os, StringifyFieldInfo{.options = inner_options, .idx = idx, .name = field_name});
-      }
-      StreamValue(os, inner_options, field, allow_field_names);
-    };
     static_assert(!BadMboTypesStringifyOptions<T>, "Provided `BadMboTypesStringifyOptions` has a bad signature.");
+    // Custom can be very expensive on the stack, so only include that call-path if necessary.
     if constexpr (HasMboTypesStringifyOptions<T>) {
-      [&]<typename CustomT>(CustomT&& custom) {
-        if constexpr (std::same_as<std::remove_cvref_t<CustomT>, StringifyFieldOptions>) {
-          MBO_CONFIG_REQUIRE(custom.AllDataSet(), "Not all data is set: ") << custom.DebugStr();
-          do_stream(custom);
-          return;
-        } else {
-          if constexpr (std::is_reference_v<CustomT>) {
-            if (custom.AllDataSet()) {
-              do_stream({custom});
-              return;
-            }
-          }
-          std::optional<const StringifyOptions> copied_options;
-          do_stream(SFO{copied_options.emplace(SO::WithAllRefs(std::forward<CustomT>(custom), outer_options.outer))});
+      StreamFieldCustom(
+          os, outer_options, use_seperator, field, idx, field_name, allow_field_names,
+          MboTypesStringifyOptions(value, {.options = outer_options, .idx = idx, .name = field_name}));
+    } else {
+      // No customization
+      const StringifyFieldInfo field_info{.options{default_field_options_}, .idx = idx, .name = field_name};
+      StreamFieldDo(os, outer_options, field_info, use_seperator, field, allow_field_names);
+    }
+  }
+
+  template<typename Field, typename CustomT>
+  void StreamFieldCustom(
+      std::ostream& os,
+      const StringifyFieldOptions& outer_options,
+      bool& use_seperator,
+      const Field& field,
+      std::size_t idx,
+      std::string_view field_name,
+      bool allow_field_names,
+      CustomT&& custom) const {
+    // The custom handling is expensive only if we have to cache the data. So hand that over to specific functions.
+    if constexpr (std::same_as<std::remove_cvref_t<CustomT>, StringifyFieldOptions>) {
+      if constexpr (std::is_reference_v<CustomT>) {
+        if (custom.AllDataSet()) {
+          // No caching needed for `custom` since we use the reference as is.
+          const StringifyFieldInfo field_info{.options{std::forward<CustomT>(custom)}, .idx = idx, .name = field_name};
+          StreamFieldDo(os, outer_options, field_info, use_seperator, field, allow_field_names);
           return;
         }
-      }(MboTypesStringifyOptions(value, {.options = outer_options, .idx = idx, .name = field_name}));
+      }
+      if (&custom.outer == &custom.inner) {
+        StreamFieldCustomCache(  // Using StringifyOptions
+            os, outer_options, custom.outer, use_seperator, field, idx, field_name, allow_field_names);
+      } else {
+        StreamFieldCustomCache(  // Using StringifyFieldOptions
+            os, outer_options, std::forward<CustomT>(custom), use_seperator, field, idx, field_name, allow_field_names);
+      }
+    } else {
+      if constexpr (std::is_reference_v<CustomT>) {
+        if (custom.AllDataSet()) {
+          // No caching needed for `custom` since we use the reference as is.
+          const StringifyFieldInfo field_info{.options{custom}, .idx = idx, .name = field_name};
+          StreamFieldDo(os, outer_options, field_info, use_seperator, field, allow_field_names);
+          return;
+        }
+      }
+      StreamFieldCustomCache(
+          os, outer_options, std::forward<CustomT>(custom), use_seperator, field, idx, field_name, allow_field_names);
+    }
+  }
+
+  template<typename Field>
+  void StreamFieldCustomCache(
+      std::ostream& os,
+      const StringifyFieldOptions& outer_options,
+      const StringifyFieldOptions& custom,
+      bool& use_seperator,
+      const Field& field,
+      std::size_t idx,
+      std::string_view field_name,
+      bool allow_field_names) const {
+    // VERY EXPENSIVE: close to 2k on the stack
+    const StringifyOptions inner_outer = StringifyOptions::WithAllRefs(custom.outer, outer_options.inner);
+    const StringifyOptions inner_inner = StringifyOptions::WithAllRefs(custom.inner, outer_options.inner);
+    const StringifyFieldInfo field_info{.options{inner_outer, inner_inner}, .idx = idx, .name = field_name};
+    StreamFieldDo(os, outer_options, field_info, use_seperator, field, allow_field_names);
+  }
+
+  template<typename Field, std::same_as<StringifyOptions> CustomT>
+  void StreamFieldCustomCache(
+      std::ostream& os,
+      const StringifyFieldOptions& outer_options,
+      CustomT&& custom,
+      bool& use_seperator,
+      const Field& field,
+      std::size_t idx,
+      std::string_view field_name,
+      bool allow_field_names) const {
+    // VERY EXPENSIVE: close to 1k on the stack
+    const StringifyOptions cached{SO::WithAllRefs(std::forward<CustomT>(custom), outer_options.inner)};
+    const StringifyFieldInfo field_info{.options{cached}, .idx = idx, .name = field_name};
+    StreamFieldDo(os, outer_options, field_info, use_seperator, field, allow_field_names);
+  }
+
+  template<typename Field>
+  void StreamFieldDo(
+      std::ostream& os,
+      const StringifyFieldOptions& outer_options,
+      const StringifyFieldInfo& field_info,
+      bool& use_seperator,
+      const Field& field,
+      bool allow_field_names) const {
+    const SpecialFieldValue is_special = IsSpecial(field);
+    if (!StreamFieldKeyEnabled(field_info.options.outer, is_special)) {
       return;
     }
-    do_stream({default_options_});  // No customization
+    if (use_seperator) {
+      os << outer_options.outer.format->field_separator;
+    }
+    use_seperator = true;
+    indent_.StreamIndent(os);
+    if (allow_field_names) {
+      StreamFieldName(os, field_info);
+    }
+    StreamValue(os, field_info.options, field, allow_field_names);
   }
 
   static bool StreamFieldKeyEnabled(const StringifyOptions& options, SpecialFieldValue is_special) {
@@ -1242,7 +1305,7 @@ class Stringify {
   }
 
   const StringifyRootOptions& root_options_;
-  const StringifyOptions& default_options_;
+  const StringifyFieldOptions default_field_options_;
   mutable Indent indent_;
 };
 

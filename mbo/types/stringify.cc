@@ -18,8 +18,6 @@
 #include <ios>
 #include <sstream>
 
-#include "mbo/config/require.h"
-
 namespace mbo::types {
 
 std::string StringifyOptions::DebugStr() const {
