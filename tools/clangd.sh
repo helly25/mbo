@@ -58,6 +58,7 @@ declare -a CLANGD_LOCATIONS=(
   "bazel-bin/external/llvm_toolchain_llvm/bin/clangd"
   "external/llvm_toolchain_llvm/bin/clangd"
   # System
+  "/opt/homebrew/opt/llvm/bin/clangd"
   "$(which clangd-23)"
   "$(which clangd-22)"
   "$(which clangd-21)"

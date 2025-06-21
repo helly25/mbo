@@ -66,6 +66,7 @@ using ::mbo::types::StringifyFieldInfoString;
 using ::mbo::types::StringifyFieldOptions;
 using ::mbo::types::StringifyNameHandling;
 using ::mbo::types::StringifyOptions;
+using ::mbo::types::StringifyRootOptions;
 using ::mbo::types::StringifyWithFieldNames;
 using ::mbo::types::types_internal::GetFieldNames;
 using ::mbo::types::types_internal::kStructNameSupport;
@@ -972,9 +973,10 @@ TEST_F(StringifyTest, SubStructDynamicIndent) {
 
 TEST_F(StringifyTest, SubStructDynamicIndentAndRootIndent) {
   TestSubStructDynamicIndent data{};
-  const Stringify formatter_1 = Stringify::AsJsonPretty({
+  constexpr StringifyRootOptions kRootOptions1{
       .root_indent = "  ",
-  });
+  };
+  const Stringify formatter_1 = Stringify::AsJsonPretty(kRootOptions1);
   EXPECT_THAT(formatter_1.ToString(data), EqualsText(R"({
     "one": [
       {
@@ -991,11 +993,12 @@ TEST_F(StringifyTest, SubStructDynamicIndentAndRootIndent) {
   }
 )"));
   data.two.emplace(7, 8);
-  const Stringify formatter_2 = Stringify::AsJsonPretty({
+  constexpr StringifyRootOptions kRootOptions2{
       .root_prefix = "<prefix>\n  ",
       .root_suffix = "<suffix>",
       .root_indent = "  ",
-  });
+  };
+  const Stringify formatter_2 = Stringify::AsJsonPretty(kRootOptions2);
   EXPECT_THAT(formatter_2.ToString(data), EqualsText(R"(<prefix>
   {
     "one": [

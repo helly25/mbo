@@ -724,6 +724,11 @@ concept HasMboTypesStringifyConvert = requires {
 // Class `Stringify` implements the conversion of any aggregate into a string.
 class Stringify {
  public:
+  // Prevent passing in temporaries to prevent dangling issues.
+  static Stringify AsCpp(const StringifyRootOptions&&) = delete;
+  static Stringify AsJson(const StringifyRootOptions&&) = delete;
+  static Stringify AsJsonPretty(const StringifyRootOptions&&) = delete;
+
   static Stringify AsCpp(const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept {
     return Stringify(StringifyOptions::AsCpp(), root_options);
   }
@@ -736,16 +741,20 @@ class Stringify {
     return Stringify(StringifyOptions::AsJsonPretty(), root_options);
   }
 
+  explicit Stringify(const StringifyOptions&&) = delete;
+  template<typename SO>
+  explicit Stringify(SO&&, StringifyRootOptions&&) = delete;  // NOLINT(*)
+
   explicit Stringify(
       const StringifyOptions& default_options = StringifyOptions::AsDefault(),
-      const StringifyRootOptions& root_options = StringifyRootOptions::Defaults())
+      const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept
       : root_options_(root_options), default_options_(default_options), indent_(*this) {
     MBO_CONFIG_REQUIRE(default_options_.AllDataSet(), "Not all data set: ") << default_options_.DebugStr();
   }
 
   explicit Stringify(
-      const StringifyOptions::OutputMode output_mode,
-      const StringifyRootOptions& root_options = StringifyRootOptions::Defaults())
+      StringifyOptions::OutputMode output_mode,
+      const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept
       : Stringify(StringifyOptions::As(output_mode), root_options) {}
 
   template<typename T>
