@@ -25,6 +25,8 @@ jobs:
         bazel_config: [asan, cpp23, opt]
         # Using `include` does not make the options show up in the generated config names...
         exclude:
+          - bazel_mode: bzlmod
+            gcc_version: 12
           - bazel_mode: workspace
             gcc_version: 14
           - bazel_mode: workspace
