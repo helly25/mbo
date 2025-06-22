@@ -30,6 +30,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/container/limited_vector.h"
+#include "mbo/testing/matchers.h"
 #include "mbo/types/extend.h"
 #include "mbo/types/extender.h"
 #include "mbo/types/stringify.h"
@@ -51,10 +52,12 @@ namespace {
 
 // NOLINTBEGIN(*-magic-numbers,*-named-parameter)
 
+using ::mbo::testing::EqualsText;
 using ::mbo::types::Extend;
 using ::mbo::types::HasMboTypesStringifyDoNotPrintFieldNames;
 using ::mbo::types::HasMboTypesStringifyFieldNames;
 using ::mbo::types::HasMboTypesStringifyOptions;
+using ::mbo::types::Stringify;
 using ::mbo::types::StringifyFieldInfo;
 using ::mbo::types::StringifyNameHandling;
 using ::mbo::types::StringifyOptions;
@@ -99,7 +102,7 @@ struct ExtenderStringifyTest : ::testing::Test {
 ExtenderStringifyTest::Tester* ExtenderStringifyTest::tester = nullptr;
 
 TEST_F(ExtenderStringifyTest, AllDataSet) {
-  const StringifyOptions& opts = StringifyOptions::AsDefault();
+  const StringifyOptions& opts = Stringify::OptionsDefault();
   EXPECT_TRUE(opts.format.has_value());
   EXPECT_TRUE(opts.field_control.has_value());
   EXPECT_TRUE(opts.key_control.has_value());
@@ -107,7 +110,7 @@ TEST_F(ExtenderStringifyTest, AllDataSet) {
   EXPECT_TRUE(opts.value_control.has_value());
   EXPECT_TRUE(opts.value_overrides.has_value());
   EXPECT_TRUE(opts.special.has_value());
-  EXPECT_TRUE(StringifyOptions::AsDefault().AllDataSet());
+  EXPECT_TRUE(Stringify::OptionsDefault().AllDataSet());
 }
 
 TEST_F(ExtenderStringifyTest, AllExtensionApiPointsAbsent) {
@@ -429,7 +432,7 @@ struct TestStructShorten : Extend<TestStructShorten> {
     keys.key_prefix = "";
     StringifyOptions::ValueControl& vals = opts.value_control.as_data();
     vals.str_max_length = field.idx >= 3 && field.idx <= 4 ? 0U : 1U;
-    vals.str_cutoff_suffix = field.idx < 2 ? StringifyOptions::AsDefault().value_control->str_cutoff_suffix : "**";
+    vals.str_cutoff_suffix = field.idx < 2 ? Stringify::OptionsDefault().value_control->str_cutoff_suffix : "**";
     return opts;
   }
 };
@@ -515,7 +518,7 @@ struct TestStructMoreContainers : Extend<TestStructMoreContainers> {
 
   friend StringifyOptions MboTypesStringifyOptions(const TestStructMoreContainers& v, const StringifyFieldInfo& field) {
     StringifyOptions ret = StringifyWithFieldNames({"one", "two", "three", "four"})(
-        v, StringifyFieldInfo{.options{StringifyOptions::AsJson()}, .idx = field.idx, .name = field.name});
+        v, StringifyFieldInfo{.options{Stringify::OptionsJson()}, .idx = field.idx, .name = field.name});
     if (field.idx == 2) {
       ret.special.as_data().pair_keys = {{"Key", "Val"}};
     }
@@ -527,13 +530,14 @@ TEST_F(ExtenderStringifyTest, MoreContainers) {
   ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructMoreContainers>);
   EXPECT_THAT(
       TestStructMoreContainers{}.ToString(),
-      R"({"one": [1, 2], "two": [{.first: 1, .second: 2}, {.first: 3, .second: 4}], "three": [{.Key: 5, .Val: 6}]})")
+      R"({"one":[1,2], "two":[{.first: 1,.second: 2},{.first: 3,.second: 4}], "three":[{.Key: 5,.Val: 6}]})")
       << "  NOTE: Here we are not providing the defualt Json options down do the pairs. "
          "However, in `three` we have "
          "the provided key/value names.";
   EXPECT_THAT(
-      TestStructMoreContainers{}.ToString(StringifyOptions::AsJson()),
-      R"({"one": [1, 2], "two": [{"first": 1, "second": 2}, {"first": 3, "second": 4}], "three": [{"Key": 5, "Val": 6}]})");
+      TestStructMoreContainers{}.ToString(Stringify::OptionsJson()),
+      R"({"one":[1,2],"two":[{"first":1,"second":2},{"first":3,"second":4}],"three":[{"Key":5,"Val":6}]}
+)");
 }
 
 struct TestStructMoreContainersWithDirectFieldNames : Extend<TestStructMoreContainersWithDirectFieldNames> {
@@ -563,8 +567,9 @@ TEST_F(ExtenderStringifyTest, MoreContainersWithDirectFieldNames) {
   EXPECT_TRUE(HasMboTypesStringifyFieldNames<decltype(TestStructMoreContainersWithDirectFieldNames{})>);
   EXPECT_THAT(MboTypesStringifyFieldNames(TestStructMoreContainersWithDirectFieldNames{}), ElementsAre("1", "2", "3"));
   EXPECT_THAT(
-      TestStructMoreContainersWithDirectFieldNames{}.ToString(StringifyOptions::AsJson()),
-      R"({"1": [1, 2], "2": [{"first": 1, "second": 2}, {"first": 3, "second": 4}], "3": [{"Key": 5, "Val": 6}]})");
+      TestStructMoreContainersWithDirectFieldNames{}.ToString(Stringify::OptionsJson()),
+      R"({"1":[1,2],"2":[{"first":1,"second":2},{"first":3,"second":4}],"3":[{"Key":5,"Val":6}]}
+)");
 }
 
 struct TestStructContainersOfPairs : Extend<TestStructContainersOfPairs> {
@@ -575,13 +580,13 @@ struct TestStructContainersOfPairs : Extend<TestStructContainersOfPairs> {
       const TestStructContainersOfPairs& v,
       const StringifyFieldInfo& field) {
     return StringifyWithFieldNames({"one", "two", "three", "four"})(
-        v, StringifyFieldInfo{.options{StringifyOptions::AsJson()}, .idx = field.idx, .name = field.name});
+        v, StringifyFieldInfo{.options{Stringify::OptionsJson()}, .idx = field.idx, .name = field.name});
   }
 };
 
 TEST_F(ExtenderStringifyTest, ContainersOfPairs) {
   ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructContainersOfPairs>);
-  EXPECT_THAT(TestStructContainersOfPairs{}.ToString(), R"({"one": {"a": 1, "b": 2}, "two": {"c": 3, "d": 4}})");
+  EXPECT_THAT(TestStructContainersOfPairs{}.ToString(), R"({"one":{"a":1,"b":2}, "two":{"c":3,"d":4}})");
 }
 
 TEST_F(ExtenderStringifyTest, PrintWithControl) {
@@ -591,11 +596,13 @@ TEST_F(ExtenderStringifyTest, PrintWithControl) {
 
   const TestStruct v;
   if constexpr (kStructNameSupport) {
-    EXPECT_THAT(v.ToString(StringifyOptions::AsCpp()), R"({.one = 25})");
-    EXPECT_THAT(v.ToString(StringifyOptions::AsJson()), R"({"one": 25})");
+    EXPECT_THAT(v.ToString(Stringify::OptionsCpp()), R"({.one = 25})");
+    EXPECT_THAT(v.ToString(Stringify::OptionsJson()), R"({"one":25}
+)");
   } else {
-    EXPECT_THAT(v.ToString(StringifyOptions::AsCpp()), R"({25})");
-    EXPECT_THAT(v.ToString(StringifyOptions::AsJson()), R"({"0": 25})");
+    EXPECT_THAT(v.ToString(Stringify::OptionsCpp()), R"({25})");
+    EXPECT_THAT(v.ToString(Stringify::OptionsJson()), R"({"0":25}
+)");
   }
 }
 
@@ -615,10 +622,29 @@ TEST_F(ExtenderStringifyTest, NestedDefaults) {
   if constexpr (kStructNameSupport) {
     static constexpr std::string_view kExpectedDef = R"({.one: 11, .two: 25, .three: {.four: 42}})";
     static constexpr std::string_view kExpectedCpp = R"({.one = 11, .two = 25, .three = {.four = 42}})";
-    static constexpr std::string_view kExpectedJson = R"({"one": 11, "two": 25, "three": {"four": 42}})";
+    static constexpr std::string_view kExpectedCppPretty = R"({
+  .one = 11,
+  .two = 25,
+  .three = {
+    .four = 42
+  }
+}
+)";
+    static constexpr std::string_view kExpectedJson = R"({"one":11,"two":25,"three":{"four":42}}
+)";
+    static constexpr std::string_view kExpectedJsonPretty = R"({
+  "one": 11,
+  "two": 25,
+  "three": {
+    "four": 42
+  }
+}
+)";
     EXPECT_THAT(v.ToString(), kExpectedDef);
-    EXPECT_THAT(v.ToString(StringifyOptions::AsCpp()), kExpectedCpp);
-    EXPECT_THAT(v.ToString(StringifyOptions::AsJson()), kExpectedJson);
+    EXPECT_THAT(v.ToString(Stringify::OptionsCpp()), kExpectedCpp);
+    EXPECT_THAT(v.ToString(Stringify::OptionsCppPretty()), EqualsText(kExpectedCppPretty));
+    EXPECT_THAT(v.ToString(Stringify::OptionsJson()), kExpectedJson);
+    EXPECT_THAT(v.ToString(Stringify::OptionsJsonPretty()), EqualsText(kExpectedJsonPretty));
     EXPECT_THAT(v.ToJsonString(), kExpectedJson);
   }
 }
@@ -639,9 +665,10 @@ TEST_F(ExtenderStringifyTest, NestedJsonNumericFallback) {
   };
 
   static constexpr std::string_view kExpectedCpp = R"({11, 25, {42}})";
-  static constexpr std::string_view kExpectedJson = R"({"0": 11, "1": 25, "2": {"0": 42}})";
-  EXPECT_THAT(TestStruct{}.ToString(StringifyOptions::AsCpp()), kExpectedCpp);
-  EXPECT_THAT(TestStruct{}.ToString(StringifyOptions::AsJson()), kExpectedJson);
+  static constexpr std::string_view kExpectedJson = R"({"0":11,"1":25,"2":{"0":42}}
+)";
+  EXPECT_THAT(TestStruct{}.ToString(Stringify::OptionsCpp()), kExpectedCpp);
+  EXPECT_THAT(TestStruct{}.ToString(Stringify::OptionsJson()), kExpectedJson);
   EXPECT_THAT(TestStruct{}.ToJsonString(), kExpectedJson);
 }
 
@@ -653,7 +680,7 @@ struct TestStructCustomNestedJsonNested : Extend<TestStructCustomNestedJsonNeste
       const TestStructCustomNestedJsonNested& v,
       const StringifyFieldInfo& field) {
     return StringifyWithFieldNames({"NESTED_1", "NESTED_2"}, StringifyNameHandling::kOverwrite)(
-        v, StringifyFieldInfo{.options{StringifyOptions::AsJson()}, .idx = field.idx, .name = field.name});
+        v, StringifyFieldInfo{.options{Stringify::OptionsJson()}, .idx = field.idx, .name = field.name});
   }
 };
 
@@ -668,7 +695,7 @@ struct TestStructCustomNestedJson : Extend<TestStructCustomNestedJson> {
       const TestStructCustomNestedJson& v,
       const StringifyFieldInfo& field) {
     return StringifyWithFieldNames({"one", "two", "three", "four", "five"})(
-        v, StringifyFieldInfo{.options{StringifyOptions::AsJson()}, .idx = field.idx, .name = field.name});
+        v, StringifyFieldInfo{.options{Stringify::OptionsJson()}, .idx = field.idx, .name = field.name});
   }
 };
 
@@ -680,11 +707,12 @@ TEST_F(ExtenderStringifyTest, CustomNestedJson) {
   // JSON mode as we fallback to the default options which were not set.
   EXPECT_THAT(
       TestStructCustomNestedJson{}.ToString(),
-      R"({"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"}, {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {.first: 25, .second: 42}})");
+      R"({"one":123, "two":"test", "three":[false,true], "four":[{"NESTED_1":25,"NESTED_2":"foo"},{"NESTED_1":42,"NESTED_2":"bar"}], "five":{.first: 25,.second: 42}})");
 
   EXPECT_THAT(
-      TestStructCustomNestedJson{}.ToString(StringifyOptions::AsJson()),
-      R"({"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"}, {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {"first": 25, "second": 42}})");
+      TestStructCustomNestedJson{}.ToString(Stringify::OptionsJson()),
+      R"({"one":123,"two":"test","three":[false,true],"four":[{"NESTED_1":25,"NESTED_2":"foo"},{"NESTED_1":42,"NESTED_2":"bar"}],"five":{"first":25,"second":42}}
+)");
 }
 
 struct TestStructNonLiteralFields : mbo::types::Extend<TestStructNonLiteralFields> {
@@ -705,7 +733,7 @@ TEST_F(ExtenderStringifyTest, NonLiteralFields) {
   ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructNonLiteralFields>);
 
   EXPECT_THAT(
-      TestStructNonLiteralFields{}.ToString(StringifyOptions::AsCpp()),
+      TestStructNonLiteralFields{}.ToString(Stringify::OptionsCpp()),
       R"({.one = {{.first = 1, .second = 2}, {.first = 2, .second = 3}}, .two = {{.first = 3, .second = 4}}, .three = "three"})");
 }
 
@@ -717,7 +745,7 @@ struct TestExtApiCombo : mbo::types::Extend<TestExtApiCombo> {
   }
 
   friend const StringifyOptions& MboTypesStringifyOptions(const TestExtApiCombo&, const StringifyFieldInfo&) {
-    return StringifyOptions::AsCpp();
+    return Stringify::OptionsCpp();
   }
 };
 
@@ -745,12 +773,14 @@ TEST_F(ExtenderStringifyTest, TestSmartPtr) {
   EXPECT_THAT(
       val.ToString(), R"({.ups: {"foo"}, .upn: <nullptr>, .psv: *{"global"}, .pn: <nullptr>, .npt: std::nullptr_t})");
   EXPECT_THAT(
-      val.ToString(StringifyOptions::AsCpp()),
+      val.ToString(Stringify::OptionsCpp()),
       R"({.ups = {"foo"}, .upn = nullptr, .psv = "global", .pn = nullptr, .npt = nullptr})");
-  EXPECT_THAT(val.ToString(StringifyOptions::AsJson()), R"({"ups": "foo", "psv": "global"})");
+  EXPECT_THAT(val.ToString(Stringify::OptionsJson()), R"({"ups":"foo","psv":"global"}
+)");
 
   const TestSmartPtr val2{.ups = nullptr};
-  EXPECT_THAT(val2.ToString(StringifyOptions::AsJson()), R"({"psv": "global"})");
+  EXPECT_THAT(val2.ToString(Stringify::OptionsJson()), R"({"psv":"global"}
+)");
 }  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
 
 struct TestOptional : Extend<TestOptional> {
@@ -764,8 +794,9 @@ TEST_F(ExtenderStringifyTest, TestOptional) {
   const TestOptional val{};
 
   EXPECT_THAT(val.ToString(), R"({.opt: {"foo"}, .none: std::nullopt})");
-  EXPECT_THAT(val.ToString(StringifyOptions::AsCpp()), R"({.opt = {"foo"}, .none = std::nullopt})");
-  EXPECT_THAT(val.ToString(StringifyOptions::AsJson()), R"({"opt": "foo"})");
+  EXPECT_THAT(val.ToString(Stringify::OptionsCpp()), R"({.opt = {"foo"}, .none = std::nullopt})");
+  EXPECT_THAT(val.ToString(Stringify::OptionsJson()), R"({"opt":"foo"}
+)");
 }
 
 struct TestStringifyDisable : Extend<TestStringifyDisable> {
@@ -791,13 +822,15 @@ TEST_F(ExtenderStringifyTest, TestStringifyDisable) {
   const TestStringifyDisable val{};
 
   EXPECT_THAT(val.ToString(), R"({.sub: {/*MboTypesStringifyDisable*/}})");
-  EXPECT_THAT(val.ToString(StringifyOptions::AsCpp()), R"({.sub = {/*MboTypesStringifyDisable*/}})");
-  EXPECT_THAT(val.ToString(StringifyOptions::AsJson()), R"({})");
+  EXPECT_THAT(val.ToString(Stringify::OptionsCpp()), R"({.sub = {/*MboTypesStringifyDisable*/}})");
+  EXPECT_THAT(val.ToString(Stringify::OptionsJson()), R"({}
+)");
 
   const TestStringifyDisable::None none{};
   EXPECT_THAT(mbo::types::Stringify().ToString(none), R"({/*MboTypesStringifyDisable*/})");
   EXPECT_THAT(mbo::types::Stringify::AsCpp().ToString(none), R"({/*MboTypesStringifyDisable*/})");
-  EXPECT_THAT(mbo::types::Stringify::AsJson().ToString(none), R"()");
+  EXPECT_THAT(mbo::types::Stringify::AsJson().ToString(none), R"(
+)");
 }
 
 // NOLINTEND(*-magic-numbers,*-named-parameter)

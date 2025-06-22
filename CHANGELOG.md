@@ -11,6 +11,7 @@
 * Improved control for `Stringify` with Json output.
   * Updated `StringifyOptions` (breaking change).
   * Updated `StringifyWithFieldNames` (breaking change).
+  * Moved `StringifyOptions` factories to `Stringify` so they can be constexpr even in C++20.
 * Modified `MboTypesStringifyOptions` (breaking change) to be more flexible - but users must deal with the change.
 * Added ability to detect bad `MboTypesStringifyOptions` signatures.
 * Added `StringifyFieldOptions` which holds outer and inner `StringifyOptions`.

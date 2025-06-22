@@ -114,7 +114,7 @@ struct StringifyTest : ::testing::Test {
 StringifyTest::Tester* StringifyTest::tester = nullptr;
 
 TEST_F(StringifyTest, AllDataSet) {
-  const StringifyOptions& opts = StringifyOptions::AsDefault();
+  const StringifyOptions& opts = Stringify::OptionsDefault();
   EXPECT_TRUE(opts.format.has_value());
   EXPECT_TRUE(opts.field_control.has_value());
   EXPECT_TRUE(opts.key_control.has_value());
@@ -122,7 +122,7 @@ TEST_F(StringifyTest, AllDataSet) {
   EXPECT_TRUE(opts.value_control.has_value());
   EXPECT_TRUE(opts.value_overrides.has_value());
   EXPECT_TRUE(opts.special.has_value());
-  EXPECT_TRUE(StringifyOptions::AsDefault().AllDataSet());
+  EXPECT_TRUE(Stringify::OptionsDefault().AllDataSet());
 }
 
 TEST_F(StringifyTest, AllExtensionApiPointsAbsent) {
@@ -503,7 +503,7 @@ struct TestStructShorten {
     keys.key_prefix = "";
     StringifyOptions::ValueControl& vals = opts.value_control.as_data();
     vals.str_max_length = field.idx >= 3 && field.idx <= 4 ? 0U : 1U;
-    vals.str_cutoff_suffix = field.idx < 2 ? StringifyOptions::AsDefault().value_control->str_cutoff_suffix : "**";
+    vals.str_cutoff_suffix = field.idx < 2 ? Stringify::OptionsDefault().value_control->str_cutoff_suffix : "**";
     return opts;
   }
 };
@@ -603,12 +603,12 @@ struct TestStructMoreContainers {
   std::vector<std::pair<int, int>> three = {{5, 6}};
 
   friend StringifyOptions MboTypesStringifyOptions(const TestStructMoreContainers& v, const StringifyFieldInfo& field) {
-    auto ret = StringifyWithFieldNames({"one", "two", "three", "four"})(
-        v, {
-               .options = StringifyOptions::AsJson(),
-               .idx = field.idx,
-               .name = field.name,
-           });
+    const StringifyFieldInfo field_info{
+        .options = Stringify::OptionsJsonLine(),
+        .idx = field.idx,
+        .name = field.name,
+    };
+    auto ret = StringifyWithFieldNames({"one", "two", "three", "four"})(v, field_info);
     if (field.idx == 2) {
       ret.special.as_data().pair_keys = {{"Key", "Val"}};
     }
@@ -625,7 +625,12 @@ TEST_F(StringifyTest, MoreContainers) {
          "the provided key/value names.";
   EXPECT_THAT(
       Stringify::AsJson().ToString(TestStructMoreContainers{}),
-      R"({"one": [1, 2], "two": [{"first": 1, "second": 2}, {"first": 3, "second": 4}], "three": [{"Key": 5, "Val": 6}]})");
+      R"({"one": [1, 2],"two": [{"first":1, "second":2}, {"first":3, "second":4}],"three": [{"Key":5, "Val":6}]}
+)");
+  EXPECT_THAT(
+      Stringify::AsJsonLine().ToString(TestStructMoreContainers{}),
+      R"({"one": [1, 2], "two": [{"first": 1, "second": 2}, {"first": 3, "second": 4}], "three": [{"Key": 5, "Val": 6}]}
+)");
   EXPECT_THAT(
       Stringify::AsJsonPretty().ToString(TestStructMoreContainers{}), EqualsText(
                                                                           R"({
@@ -663,8 +668,9 @@ TEST_F(StringifyTest, MoreContainersWithDirectFieldNames) {
   EXPECT_TRUE(HasMboTypesStringifyFieldNames<decltype(TestStructMoreContainersWithDirectFieldNames{})>);
   EXPECT_THAT(MboTypesStringifyFieldNames(TestStructMoreContainersWithDirectFieldNames{}), ElementsAre("1", "2", "3"));
   EXPECT_THAT(
-      Stringify(StringifyOptions::AsJson()).ToString(TestStructMoreContainersWithDirectFieldNames{}),
-      R"({"1": [1, 2], "2": [{"first": 1, "second": 2}, {"first": 3, "second": 4}], "3": [{"Key": 5, "Val": 6}]})");
+      Stringify(Stringify::OptionsJson()).ToString(TestStructMoreContainersWithDirectFieldNames{}),
+      R"({"1":[1,2],"2":[{"first":1,"second":2},{"first":3,"second":4}],"3":[{"Key":5,"Val":6}]}
+)");
 }
 
 struct TestStructContainersOfPairs {
@@ -676,7 +682,7 @@ struct TestStructContainersOfPairs {
       const StringifyFieldInfo& field) {
     return StringifyWithFieldNames({"one", "two", "three", "four"})(
         v, {
-               .options = StringifyOptions::AsJson(),
+               .options = Stringify::OptionsJson(),
                .idx = field.idx,
                .name = field.name,
            });
@@ -685,8 +691,7 @@ struct TestStructContainersOfPairs {
 
 TEST_F(StringifyTest, ContainersOfPairs) {
   ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructContainersOfPairs>);
-  EXPECT_THAT(
-      Stringify().ToString(TestStructContainersOfPairs{}), R"({"one": {"a": 1, "b": 2}, "two": {"c": 3, "d": 4}})");
+  EXPECT_THAT(Stringify().ToString(TestStructContainersOfPairs{}), R"({"one":{"a":1,"b":2}, "two":{"c":3,"d":4}})");
 }
 
 TEST_F(StringifyTest, PrintWithControl) {
@@ -696,15 +701,21 @@ TEST_F(StringifyTest, PrintWithControl) {
 
   const TestStruct v;
   if constexpr (kStructNameSupport) {
-    EXPECT_THAT(Stringify(StringifyOptions::AsCpp()).ToString(v), R"({.one = 25})");
-    EXPECT_THAT(Stringify(StringifyOptions::AsJson()).ToString(v), R"({"one": 25})");
+    EXPECT_THAT(Stringify(Stringify::OptionsCpp()).ToString(v), R"({.one = 25})");
+    EXPECT_THAT(Stringify(Stringify::OptionsCppPretty()).ToString(v), EqualsText(R"({
+  .one = 25
+}
+)"));
+    EXPECT_THAT(Stringify(Stringify::OptionsJson()).ToString(v), R"({"one":25}
+)");
     EXPECT_THAT(Stringify::AsJsonPretty().ToString(v), EqualsText(R"({
   "one": 25
 }
 )"));
   } else {
-    EXPECT_THAT(Stringify(StringifyOptions::AsCpp()).ToString(v), R"({25})");
-    EXPECT_THAT(Stringify(StringifyOptions::AsJson()).ToString(v), R"({"0": 25})");
+    EXPECT_THAT(Stringify(Stringify::OptionsCpp()).ToString(v), R"({25})");
+    EXPECT_THAT(Stringify(Stringify::OptionsJson()).ToString(v), R"({"0":25}
+)");
     EXPECT_THAT(Stringify::AsJsonPretty().ToString(v), EqualsText(R"({
   "0": 25
 }
@@ -728,19 +739,29 @@ TEST_F(StringifyTest, NestedDefaults) {
   if constexpr (kStructNameSupport) {
     static constexpr std::string_view kExpectedDef = R"({.one: 11, .two: 25, .three: {.four: 42}})";
     static constexpr std::string_view kExpectedCpp = R"({.one = 11, .two = 25, .three = {.four = 42}})";
-    static constexpr std::string_view kExpectedJson = R"({"one": 11, "two": 25, "three": {"four": 42}})";
-    EXPECT_THAT(Stringify().ToString(v), kExpectedDef);
-    EXPECT_THAT(Stringify(StringifyOptions::AsCpp()).ToString(v), kExpectedCpp);
-    EXPECT_THAT(Stringify(StringifyOptions::AsJson()).ToString(v), kExpectedJson);
-    EXPECT_THAT(Stringify::AsJson().ToString(v), kExpectedJson);
-    EXPECT_THAT(Stringify::AsJsonPretty().ToString(v), EqualsText(R"({
+    static constexpr std::string_view kExpectedCppPretty = R"({
+  .one = 11,
+  .two = 25,
+  .three = {
+    .four = 42
+  }
+}
+)";
+    static constexpr std::string_view kExpectedJson = R"({"one":11,"two":25,"three":{"four":42}}
+)";
+    static constexpr std::string_view kExpectedJsonPretty = R"({
   "one": 11,
   "two": 25,
   "three": {
     "four": 42
   }
 }
-)"));
+)";
+    EXPECT_THAT(Stringify().ToString(v), kExpectedDef);
+    EXPECT_THAT(Stringify(Stringify::OptionsCpp()).ToString(v), kExpectedCpp);
+    EXPECT_THAT(Stringify(Stringify::OptionsCppPretty()).ToString(v), kExpectedCppPretty);
+    EXPECT_THAT(Stringify::AsJson().ToString(v), kExpectedJson);
+    EXPECT_THAT(Stringify::AsJsonPretty().ToString(v), EqualsText(kExpectedJsonPretty));
   } else {
     EXPECT_THAT(Stringify::AsJsonPretty().ToString(v), EqualsText(R"({
   "0": 11,
@@ -770,10 +791,11 @@ TEST_F(StringifyTest, NestedJsonNumericFallback) {
 
   const TestStruct v{};
   static constexpr std::string_view kExpectedCpp = R"({11, 25, {42}})";
-  static constexpr std::string_view kExpectedJson = R"({"0": 11, "1": 25, "2": {"0": 42}})";
-  EXPECT_THAT(Stringify(StringifyOptions::AsCpp()).ToString(v), kExpectedCpp);
+  static constexpr std::string_view kExpectedJson = R"({"0":11,"1":25,"2":{"0":42}}
+)";
+  EXPECT_THAT(Stringify(Stringify::OptionsCpp()).ToString(v), kExpectedCpp);
   EXPECT_THAT(Stringify::AsCpp().ToString(v), kExpectedCpp);
-  EXPECT_THAT(Stringify(StringifyOptions::AsJson()).ToString(v), kExpectedJson);
+  EXPECT_THAT(Stringify(Stringify::OptionsJson()).ToString(v), kExpectedJson);
   EXPECT_THAT(Stringify::AsJson().ToString(v), kExpectedJson);
 }
 
@@ -786,7 +808,7 @@ struct TestStructCustomNestedJsonNested {
       const StringifyFieldInfo& field) {
     return StringifyWithFieldNames({"NESTED_1", "NESTED_2"}, StringifyNameHandling::kOverwrite)(
         v, {
-               .options = StringifyOptions::AsJson(),
+               .options = Stringify::OptionsJson(),
                .idx = field.idx,
                .name = field.name,
            });
@@ -805,7 +827,7 @@ struct TestStructCustomNestedJson {
       const StringifyFieldInfo& field) {
     return StringifyWithFieldNames({"one", "two", "three", "four", "five"})(
         v, {
-               .options = StringifyOptions::AsJson(),
+               .options = Stringify::OptionsJson(),
                .idx = field.idx,
                .name = field.name,
            });
@@ -820,11 +842,12 @@ TEST_F(StringifyTest, CustomNestedJson) {
   // BUT: Five uses non JSON mode as we fallback to the default options which were not set.
   EXPECT_THAT(
       Stringify().ToString(TestStructCustomNestedJson{}),
-      R"({"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"}, {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {.first: 25, .second: 42}})");
+      R"({"one":123, "two":"test", "three":[false,true], "four":[{"NESTED_1":25,"NESTED_2":"foo"},{"NESTED_1":42,"NESTED_2":"bar"}], "five":{.first: 25,.second: 42}})");
 
   EXPECT_THAT(
       Stringify::AsJson().ToString(TestStructCustomNestedJson{}),
-      R"({"one": 123, "two": "test", "three": [false, true], "four": [{"NESTED_1": 25, "NESTED_2": "foo"}, {"NESTED_1": 42, "NESTED_2": "bar"}], "five": {"first": 25, "second": 42}})");
+      R"({"one":123,"two":"test","three":[false,true],"four":[{"NESTED_1":25,"NESTED_2":"foo"},{"NESTED_1":42,"NESTED_2":"bar"}],"five":{"first":25,"second":42}}
+)");
 }
 
 struct TestStructNonLiteralFields {
@@ -921,17 +944,17 @@ struct TestSubStructDynamicIndent {
       const TestSubStructDynamicIndent& v,
       const StringifyFieldInfo& field) {
     if (field.idx >= 3) {
-      static const StringifyFieldOptions kDisabled{StringifyOptions::AsDisabled(), StringifyOptions::AsDisabled()};
+      static const StringifyFieldOptions kDisabled{Stringify::OptionsDisabled(), Stringify::OptionsDisabled()};
       return kDisabled;
     }
     if (field.idx != 1 && v.two.size() < 3) {
       return field.options;
     }
     if (v.two.size() < 3) {
-      static const StringifyFieldOptions kShort{StringifyOptions::AsJson(), StringifyOptions::AsJson()};
+      static const StringifyFieldOptions kShort{Stringify::OptionsJsonLine(), Stringify::OptionsJsonLine()};
       return kShort;
     } else {
-      static const StringifyFieldOptions kPretty{StringifyOptions::AsJsonPretty(), StringifyOptions::AsJson()};
+      static const StringifyFieldOptions kPretty{Stringify::OptionsJsonPretty(), Stringify::OptionsJsonLine()};
       return kPretty;
     }
   }
