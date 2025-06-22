@@ -13,23 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This header implements `Stringify`.
-//
-#ifndef MBO_TYPES_STRINGIFY_OSTREAM_H_
-#define MBO_TYPES_STRINGIFY_OSTREAM_H_
+#ifndef MBO_TYPES_INTERNAL_TRAITS_H_
+#define MBO_TYPES_INTERNAL_TRAITS_H_
 
-// IWYU pragma: private, include "mbo/types/extend.h"
+// IWYU pragma: private, include "mbo/types/traits.h"
+// IWYU pragma: friend "mbo/types/internal/.*"
 
 #include <concepts>  // IWYU pragma: keep
-#include <iostream>
 
-#include "mbo/types/stringify.h"
+namespace mbo::types::types_internal {
 
-// Add `Stringify` ostream support to *ALL* types that claim support, see `HasMboTypesStringifySupport`.
-std::ostream& operator<<(std::ostream& os, const mbo::types::HasMboTypesStringifySupport auto& v) {
-  static mbo::types::Stringify sfy;
-  sfy.Stream(os, v);
-  return os;
-}
+// NOLINTBEGIN(*-magic-numbers)
 
-#endif  // MBO_TYPES_STRINGIFY_OSTREAM_H_
+template<typename T>
+concept IsAggregate = std::is_aggregate_v<T>;
+
+template<typename T>
+concept IsEmptyType = std::is_empty_v<T>;
+
+}  // namespace mbo::types::types_internal
+
+#endif  // MBO_TYPES_INTERNAL_TRAITS_H_

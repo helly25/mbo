@@ -16,7 +16,7 @@
 #ifndef MBO_TYPES_INTERNAL_EXTENDER_H_
 #define MBO_TYPES_INTERNAL_EXTENDER_H_
 
-// IWYU pragma private, include "mbo/types/extend.h"
+// IWYU pragma: private, include "mbo/types/extend.h"
 
 #include <array>
 #include <concepts>  // IWYU pragma: keep

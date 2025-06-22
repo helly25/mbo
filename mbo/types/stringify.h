@@ -18,7 +18,7 @@
 #ifndef MBO_TYPES_STRINGIFY_H_
 #define MBO_TYPES_STRINGIFY_H_
 
-// IWYU pragma private, include "mbo/types/extend.h"
+// IWYU pragma: private, include "mbo/types/extend.h"
 
 #include <concepts>  // IWYU pragma: keep
 #include <functional>
@@ -500,6 +500,13 @@ struct StringifyFieldOptions {
 
 static_assert(sizeof(StringifyFieldOptions) == 2 * sizeof(void*));
 
+// Type used by
+struct StringifyFieldInfo {
+  const StringifyFieldOptions options;  // BY VALUE
+  std::size_t idx;
+  std::string_view name;
+};
+
 // Control for overall use a Stringify. This controls root options for messages.
 // Note that `root_prefix` and `root_suffix` are streamed without `root_indent`.
 // This means in particular, that is the first line of the output should already be indented, then
@@ -513,12 +520,6 @@ struct StringifyRootOptions {
     static MBO_CONFIG_CONSTEXPR_23 const StringifyRootOptions kDefaults{};
     return kDefaults;
   }
-};
-
-struct StringifyFieldInfo {
-  const StringifyFieldOptions options;  // BY VALUE
-  std::size_t idx;
-  std::string_view name;
 };
 
 template<typename T>
@@ -564,56 +565,59 @@ void MboTypesStringifyOptions();  // Has no implementation!
 //    * The `std::string_view`:            the name of the field.
 //
 // The implementation must therefore match one of the following signatures:
+//
 // ```
 // friend const FieldOptions& MboTypesStringifyOptions(const T&, const const StringifyFieldInfo&)
 // friend FieldOptions MboTypesStringifyOptions(const T&, const StringifyFieldInfo&)
 // friend const StringifyOptions& MboTypesStringifyOptions(const T&, const const StringifyFieldInfo&)
 // friend StringifyOptions MboTypesStringifyOptions(const T&, const StringifyFieldInfo&)
 // ```
+//
+// If the return type is a const reference and `AllDataSet` returns true, then the value is taken
+// as-is and further stringify operations will use that value. Otherwise, the returned object will
+// be expanded by `WithAllRefs` and cached.
+//
+// Note that caching is fairly expensive since both supported object types are large.
 template<typename T>
 concept HasMboTypesStringifyOptions = requires(const T& v, const StringifyFieldInfo& opts) {
-  { MboTypesStringifyOptions(v, opts) } -> IsSameAsAnyOfRaw<StringifyOptions, StringifyFieldOptions>;
+  {
+    MboTypesStringifyOptions(v, opts)
+  } -> IsSameAsAnyOf<StringifyOptions, const StringifyOptions&, StringifyFieldOptions, const StringifyFieldOptions&>;
 };
 
 namespace types_internal {
-// NOLINTBEGIN(*-identifier-length)
+
 template<typename T>
-concept BadMboTypesStringifyOptions_1 = requires(const T& a1) {
-  { MboTypesStringifyOptions(a1) };
+concept BadMboTypesStringifyOptions_1 = requires(T arg1) {
+  { MboTypesStringifyOptions(arg1) };
 };
 
 template<typename T>
-concept BadMboTypesStringifyOptions_2 = requires(const T& a1, const AnyOtherType<StringifyFieldInfo>& a2) {
-  { MboTypesStringifyOptions(a1, a2) };
+concept BadMboTypesStringifyOptions_2 = requires(T arg1, AnyOtherType<StringifyFieldInfo> arg2) {
+  { MboTypesStringifyOptions(arg1, arg2) };
 };
 
 template<typename T>
-concept BadMboTypesStringifyOptions_3 = requires(const T& a1, const AnyType& a2, const AnyType& a3) {
-  { MboTypesStringifyOptions(a1, a2, a3) };
+concept BadMboTypesStringifyOptions_3 = requires(T arg1, AnyType arg2, AnyType arg3) {
+  { MboTypesStringifyOptions(arg1, arg2, arg3) };
 };
 
 template<typename T>
-concept BadMboTypesStringifyOptions_4 = requires(const T& a1, const AnyType& a2, const AnyType& a3, const AnyType& a4) {
-  { MboTypesStringifyOptions(a1, a2, a3, a4) };
+concept BadMboTypesStringifyOptions_4 = requires(T arg1, AnyType arg2, AnyType arg3, AnyType arg4) {
+  { MboTypesStringifyOptions(arg1, arg2, arg3, arg4) };
 };
 
 template<typename T>
-concept BadMboTypesStringifyOptions_5 =
-    requires(const T& a1, const AnyType& a2, const AnyType& a3, const AnyType& a4, const AnyType& a5) {
-      { MboTypesStringifyOptions(a1, a2, a3, a4, a5) };
+concept BadMboTypesStringifyOptions_5 = requires(T arg1, AnyType arg2, AnyType arg3, AnyType arg4, AnyType arg5) {
+  { MboTypesStringifyOptions(arg1, arg2, arg3, arg4, arg5) };
+};
+
+template<typename T>
+concept BadMboTypesStringifyOptions_6 =
+    requires(T arg1, AnyType arg2, AnyType arg3, AnyType arg4, AnyType arg5, AnyType arg6) {
+      { MboTypesStringifyOptions(arg1, arg2, arg3, arg4, arg5, arg6) };
     };
 
-template<typename T>
-concept BadMboTypesStringifyOptions_6 = requires(
-    const T& a1,
-    const AnyType& a2,
-    const AnyType& a3,
-    const AnyType& a4,
-    const AnyType& a5,
-    const AnyType& a6) {
-  { MboTypesStringifyOptions(a1, a2, a3, a4, a5, a6) };
-};
-// NOLINTEND(*-identifier-length)
 }  // namespace types_internal
 
 // Concept that identifies bad `MboTypesStringifyOptions` signatures.
@@ -749,16 +753,14 @@ class Stringify {
       const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept
       : Stringify(StringifyOptions::As(output_mode), root_options) {}
 
-  template<typename T>
-  requires(std::is_aggregate_v<T>)
+  template<IsAggregate T>
   std::string ToString(const T& value) const {
     std::ostringstream os;
     Stream<T>(os, value);
     return os.str();
   }
 
-  template<typename T>
-  requires(std::is_aggregate_v<T>)
+  template<IsAggregate T>
   void Stream(std::ostream& os, const T& value) const {
     os << root_options_.root_prefix;
     os << default_field_options_.outer.format.get({}).message_prefix;
@@ -823,8 +825,7 @@ class Stringify {
     std::vector<std::string_view> level_;
   };
 
-  template<typename T>
-  requires(std::is_aggregate_v<T>)
+  template<IsAggregate T>
   void StreamImpl(std::ostream& os, const StringifyFieldOptions& options, const T& value) const {
     // It is not allowed to deny field name printing but provide filed names.
     static_assert(!(HasMboTypesStringifyDoNotPrintFieldNames<T> && HasMboTypesStringifyFieldNames<T>));
@@ -1116,35 +1117,43 @@ class Stringify {
   }
 
   template<typename C>
-  requires(::mbo::types::ContainerIsForwardIteratable<C> && !std::convertible_to<C, std::string_view>)
+  requires(
+      ::mbo::types::ContainerIsForwardIteratable<C>
+      && mbo::types::IsPairFirstStr<std::remove_cvref_t<typename C::value_type>>)
   void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
     const SO::Format& format = *options.outer.format;
-    if constexpr (mbo::types::IsPairFirstStr<std::remove_cvref_t<typename C::value_type>>) {
-      if (options.outer.special->pair_first_is_name) {
-        // Each pair element of the container `vs` is an element whose key is the `first` member and
-        // whose value is the `second` member.
-        indent_.IncStruct(os, format);
-        std::string_view sep;
-        std::size_t index = 0;
-        for (const auto& v : vs) {
-          if (index >= options.outer.value_control->container_max_len) {
-            break;
-          }
-          os << sep;
-          indent_.StreamIndent(os);
-          sep = options.outer.format->field_separator;
-          if (allow_field_names) {
-            StreamFieldName(
-                os, StringifyFieldInfo{.options = options, .idx = index, .name = v.first},
-                /*allow_key_override=*/false);
-          }
-          StreamValue(os, options.ToInner(), v.second, allow_field_names);
-          ++index;
+    if (options.outer.special->pair_first_is_name) {
+      // Each pair element of the container `vs` is an element whose key is the `first` member and
+      // whose value is the `second` member.
+      indent_.IncStruct(os, format);
+      std::string_view sep;
+      std::size_t index = 0;
+      for (const auto& v : vs) {
+        if (index >= options.outer.value_control->container_max_len) {
+          break;
         }
-        indent_.DecStruct(os, format);
-        return;
+        os << sep;
+        indent_.StreamIndent(os);
+        sep = options.outer.format->field_separator;
+        if (allow_field_names) {
+          const StringifyFieldInfo field_info{.options = options, .idx = index, .name = v.first};
+          StreamFieldName(os, field_info, /*allow_key_override=*/false);
+        }
+        StreamValue(os, options.ToInner(), v.second, allow_field_names);
+        ++index;
       }
+      indent_.DecStruct(os, format);
+      return;
     }
+  }
+
+  template<typename C>
+  requires(
+      ::mbo::types::ContainerIsForwardIteratable<C>
+      && !mbo::types::IsPairFirstStr<std::remove_cvref_t<typename C::value_type>>
+      && !std::convertible_to<C, std::string_view>)
+  void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
+    const SO::Format& format = *options.outer.format;
     indent_.IncContainer(os, format);
     std::string_view sep;
     std::size_t index = 0;
@@ -1162,7 +1171,7 @@ class Stringify {
 
   template<typename T>
   static constexpr bool kUseStringify = types_internal::IsExtended<T> || HasMboTypesStringifySupport<T>
-                                        || (std::is_aggregate_v<T> && !absl::HasAbslStringify<T>::value);
+                                        || (IsAggregate<T> && !absl::HasAbslStringify<T>::value);
 
   template<typename V>  // NOLINTNEXTLINE(readability-function-cognitive-complexity)
   void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names) const {

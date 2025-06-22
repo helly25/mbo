@@ -33,7 +33,7 @@ namespace mbo::types {
 // Note that we also consider empty aggregates here as we are able to create an
 // empty tuple for them.
 template<typename T>
-concept CanCreateTuple = types_internal::DecomposeCondition<T> || (std::is_aggregate_v<T> && std::is_empty_v<T>);
+concept CanCreateTuple = types_internal::DecomposeCondition<T> || (IsAggregate<T> && IsEmptyType<T>);
 
 // Constructs a tuple from any eligible struct `T`
 //

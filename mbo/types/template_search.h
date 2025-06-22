@@ -16,7 +16,7 @@
 #ifndef MBO_TYPES_TEMPLATE_SEARCH_H_
 #define MBO_TYPES_TEMPLATE_SEARCH_H_
 
-// IWYU pragma private, include "mbo/types/internal/decompose_count.h"
+// IWYU pragma: private, include "mbo/types/internal/decompose_count.h"
 
 #include <cstddef>  // IWYU pragma: keep
 #include <type_traits>

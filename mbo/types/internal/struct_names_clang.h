@@ -123,7 +123,7 @@ class StructMetaBase {
 
   static constexpr std::size_t ComputeFieldCount() {
     std::size_t field_index{0};
-    if constexpr (!std::is_empty_v<T>) {
+    if constexpr (!IsEmptyType<T>) {
       Storage storage{};
       FieldCount(&storage.Get(), field_index);
     }
@@ -131,11 +131,11 @@ class StructMetaBase {
   }
 };
 
-template<typename T, bool = SupportsFieldNames<T> && !std::is_empty_v<T>, bool = SupportsFieldNamesConstexpr<T>>
+template<typename T, bool = SupportsFieldNames<T> && !IsEmptyType<T>, bool = SupportsFieldNamesConstexpr<T>>
 class StructMeta final {
  public:
   static constexpr absl::Span<const std::string_view> GetFieldNames() {
-    if constexpr (std::is_empty_v<T>) {
+    if constexpr (IsEmptyType<T>) {
       return {};
     } else {
       return absl::MakeSpan(kFieldNames);
@@ -184,7 +184,7 @@ class StructMeta final {
   // Older compilers may not allow this to be a `constexpr`.
   inline static constexpr FieldData kFieldData = []() consteval {
     FieldData fields;
-    if constexpr (!std::is_empty_v<T>) {
+    if constexpr (!IsEmptyType<T>) {
       typename StructMetaBase<T>::Storage storage{};
       std::size_t field_index = 0;
       Init(&storage.Get(), fields, field_index);
@@ -194,7 +194,7 @@ class StructMeta final {
 
   inline static constexpr std::array<std::string_view, kFieldCount> kFieldNames = []() consteval {
     std::array<std::string_view, kFieldCount> data;
-    if constexpr (!std::is_empty_v<T>) {
+    if constexpr (!IsEmptyType<T>) {
       for (std::size_t pos = 0; pos < kFieldCount; ++pos) {
         data[pos] = kFieldData[pos].name;
       }
@@ -208,7 +208,7 @@ template<typename T>
 class StructMeta<T, true, false> final {
  public:
   static absl::Span<const std::string_view> GetFieldNames() {
-    if constexpr (std::is_empty_v<T>) {
+    if constexpr (IsEmptyType<T>) {
       return {};
     } else {
       return absl::MakeSpan(kFieldNames);
@@ -256,7 +256,7 @@ class StructMeta<T, true, false> final {
   // Older compilers may not allow this to be a `constexpr`.
   inline static const FieldData kFieldData = []() {
     FieldData fields;
-    if constexpr (!std::is_empty_v<T>) {
+    if constexpr (!IsEmptyType<T>) {
       typename StructMetaBase<T>::Storage storage{};
       std::size_t field_index = 0;
       Init(&storage.Get(), fields, field_index);
@@ -266,7 +266,7 @@ class StructMeta<T, true, false> final {
 
   inline static const auto kFieldNames = []() {
     std::array<std::string_view, kFieldCount> data;
-    if constexpr (!std::is_empty_v<T>) {
+    if constexpr (!IsEmptyType<T>) {
 # if __has_feature(address_sanitizer)
       // In ASAN mode we need to carefully copy the data. Using atomic indexing does it.
       std::atomic_size_t pos = 0;

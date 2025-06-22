@@ -18,7 +18,7 @@
 
 // Max fields: 40
 
-// IWYU pragma private, include "mbo/types/traits.h"
+// IWYU pragma: private, include "mbo/types/traits.h"
 
 #include <limits>
 #include <string>       // IWYU pragma: keep
@@ -29,14 +29,12 @@
 
 #include "mbo/types/internal/cases.h"  // IWYU pragma: keep
 #include "mbo/types/internal/is_braces_constructible.h"
+#include "mbo/types/internal/traits.h"  // IWYU pragma: keep
 #include "mbo/types/template_search.h"  // IWYU pragma: keep
 
 namespace mbo::types::types_internal {
 
 // NOLINTBEGIN(*-magic-numbers)
-
-template<typename T>
-concept IsAggregate = std::is_aggregate_v<std::remove_cvref_t<T>>;
 
 struct NotDecomposableImpl : std::integral_constant<std::size_t, std::numeric_limits<std::size_t>::max()> {};
 
@@ -60,9 +58,9 @@ constexpr std::size_t StructCtorArgCountMaxFunc() {
 
 template<typename T>
 struct StructCtorArgCountMaxImpl
-    : std::integral_constant<
+    : std::integral_constant<  //
           std::size_t,
-          std::is_aggregate_v<T> ? StructCtorArgCountMaxFunc<T, kMaxSupportedFieldCount>() : 0> {};
+          IsAggregate<T> ? StructCtorArgCountMaxFunc<T, kMaxSupportedFieldCount>() : 0> {};
 
 template<typename T>
 struct StructCtorArgCountMaxT : StructCtorArgCountMaxImpl<std::remove_cvref_t<T>> {};
@@ -73,7 +71,7 @@ inline constexpr std::size_t StructCtorArgCountMaxV = StructCtorArgCountMaxT<T>:
 template<typename T, bool kRequireNonEmpty>
 struct AggregateHasBaseRaw
     : std::bool_constant<
-          !std::is_empty_v<T> && std::is_aggregate_v<T>
+          IsAggregate<T> && !IsEmptyType<T>
               ? StructCtorArgCountMaxFunc<T, kMaxSupportedFieldCount, AnyTypeIf<T, true, kRequireNonEmpty>>() != 0
               : false> {};
 
@@ -315,7 +313,7 @@ auto DecomposeCountFunc(T&& v) {
                 }) {
     return overload_set(std::forward<T>(v));
   } else {
-    // Note that we could enable `std::is_aggregate_v<T> && std::is_empty_v<T>` to return 0 for
+    // Note that we could enable `IsAggregate<T> && IsEmptyType<T>` to return 0 for
     // empty, but we are not returning field counts here. We are retuning decompose counts here.
     return std::integral_constant<std::size_t, kNotDecomposableValue>{};
   }
@@ -334,9 +332,9 @@ concept DecomposeCondition = (DecomposeCountImpl<T>::value != kNotDecomposableVa
 template<typename T>
 struct DecomposeInfo final {
   using Type = std::remove_cvref_t<T>;
-  static constexpr bool kIsAggregate = std::is_aggregate_v<Type>;
-  static constexpr bool kIsEmpty = std::is_empty_v<Type>;
-  static constexpr std::size_t kFieldCount = std::is_empty_v<Type> ? 0 : DecomposeCountImpl<Type>::value;
+  static constexpr bool kIsAggregate = IsAggregate<Type>;
+  static constexpr bool kIsEmpty = IsEmptyType<Type>;
+  static constexpr std::size_t kFieldCount = IsEmptyType<Type> ? 0 : DecomposeCountImpl<Type>::value;
   static constexpr std::size_t kDecomposeCount = DecomposeCountImpl<Type>::value;
   static constexpr bool kDecomposable = (kIsAggregate && !kIsEmpty) && (kDecomposeCount != kNotDecomposableValue);
 
@@ -631,11 +629,11 @@ struct CountBases
           CountBasesImpl<T, kRequireEmpty, AggregateFieldCountRawImpl<T>::value>> {};
 
 // Put all into once struct.
-template<typename T, bool = std::is_aggregate_v<std::remove_cvref_t<T>> && !std::is_empty_v<std::remove_cvref_t<T>>>
+template<typename T, bool = IsAggregate<std::remove_cvref_t<T>> && !IsEmptyType<std::remove_cvref_t<T>>>
 struct DecomposeInfo final {
   using Type = std::remove_cvref_t<T>;
-  static constexpr bool kIsAggregate = std::is_aggregate_v<Type>;
-  static constexpr bool kIsEmpty = std::is_empty_v<Type>;
+  static constexpr bool kIsAggregate = IsAggregate<Type>;
+  static constexpr bool kIsEmpty = IsEmptyType<Type>;
   static constexpr std::size_t kInitializerCount = AggregateInitializerCount<Type>::value;
   static constexpr std::size_t kFieldCount = AggregateFieldCountRawImpl<Type>::value;
   static constexpr bool kBadFieldCount =
@@ -686,8 +684,8 @@ struct DecomposeInfo final {
 template<typename T>
 struct DecomposeInfo<T, false> final {
   using Type = std::remove_cvref_t<T>;
-  static constexpr bool kIsAggregate = std::is_aggregate_v<Type>;
-  static constexpr bool kIsEmpty = std::is_empty_v<Type>;
+  static constexpr bool kIsAggregate = IsAggregate<Type>;
+  static constexpr bool kIsEmpty = IsEmptyType<Type>;
   static constexpr std::size_t kInitializerCount = 0;
   static constexpr std::size_t kFieldCount = 0;
   static constexpr bool kBadFieldCount = false;
@@ -747,7 +745,7 @@ struct DecomposeHelper final {
   template<typename U>
   static constexpr auto ToTuple(U&& data) noexcept {
     using UR = std::remove_cvref_t<U>;
-    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<UR> && std::is_empty_v<UR>;
+    constexpr bool kIsEmptyAggregate = IsAggregate<UR> && IsEmptyType<UR>;
     constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<UR>::value;
     static_assert(kNumFields != kNotDecomposableValue);
     if constexpr (kNumFields == 0) {
@@ -1185,7 +1183,7 @@ struct DecomposeHelper final {
   template<typename U>
   static constexpr auto ToTuple(U& data) noexcept {
     using UR = std::remove_cvref_t<U>;
-    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<UR> && std::is_empty_v<UR>;
+    constexpr bool kIsEmptyAggregate = IsAggregate<UR> && IsEmptyType<UR>;
     constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<UR>::value;
     static_assert(kNumFields != kNotDecomposableValue);
     if constexpr (kNumFields == 0) {
@@ -1371,7 +1369,7 @@ struct DecomposeHelper final {
   template<typename U>
   static constexpr auto ToTuple(const U& data) noexcept {
     using UR = std::remove_cvref_t<U>;
-    constexpr bool kIsEmptyAggregate = std::is_aggregate_v<UR> && std::is_empty_v<UR>;
+    constexpr bool kIsEmptyAggregate = IsAggregate<UR> && IsEmptyType<UR>;
     constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl<UR>::value;
     static_assert(kNumFields != kNotDecomposableValue);
     if constexpr (kNumFields == 0) {

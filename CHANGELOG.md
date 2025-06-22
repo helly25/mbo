@@ -16,6 +16,9 @@
 * Added `StringifyFieldOptions` which holds outer and inner `StringifyOptions`.
 * Added `Stringify::AsJsonPretty()` and `StringifyOptions::AsJsonPretty()`.
 * Added `Demangle` to log de-mangled typeid names.
+* Added concept `IsEmptyType` determines whether a type is empty (calls `std::is_empty_v`).
+* Fixed concept `IsAggregate`.
+* Fixed some IWYU pragmas.
 
 # 0.9.0
 
