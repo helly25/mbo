@@ -714,7 +714,7 @@ TEST_F(StringifyTest, PrintWithControl) {
 )"));
   } else {
     EXPECT_THAT(Stringify(Stringify::OptionsCpp()).ToString(v), R"({25})");
-    EXPECT_THAT(Stringify(Stringify::OptionsJson()).ToString(v), R"({"0": 25}
+    EXPECT_THAT(Stringify(Stringify::OptionsJson()).ToString(v), R"({"0":25}
 )");
     EXPECT_THAT(Stringify::AsJsonPretty().ToString(v), EqualsText(R"({
   "0": 25
