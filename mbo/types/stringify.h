@@ -65,10 +65,13 @@ static_assert(__is_literal_type(std::optional<std::variant<int, const StringifyF
 // The objects are very large due to the very detailed ability to control behavior and override
 // actual values.
 //
-// However, the objects support sparness, that is the data is grouped into severl aspects that can
+// However, the objects support sparness, that is the data is grouped into several aspects that can
 // each be unset (nullopt), a const reference or actual materialized data. That enables fast
-// creation and opying beyond the size. Nontheless, the data is large and will impact caches. So
-// creating the options upfront and not specializing structs as much as neccessary is best.
+// creation and copying beyond the size. Nontheless, the data is large and will impact CPU caches.
+// So creating the options upfront and not specializing structs as much as neccessary is best.
+//
+// The implicit constructor create objects that are fully unset, meaning all fields are nullopt.
+// The `Stringify` class provides pre-determined named constexpr factories (e.g. example 3).
 //
 // Construction example 1: Fully unset, which results in all defaults. Here we copy the whole object
 // pretty much byte by byte.
@@ -91,11 +94,11 @@ static_assert(__is_literal_type(std::optional<std::variant<int, const StringifyF
 // ```
 //
 // Construction example 3: Sparse with only format overrides. Unlike before we first copy the format
-// group's defaults from `AsJson()` then override specifics.
+// group's defaults from `Stringify::OptionsJson()` then override specifics.
 //
 // ```c++
 // StringifyOptions opts{[]() {
-//   StringifyOptions opts = StringifyOptions::AsJson();
+//   StringifyOptions opts = Stringify::OptionsJson();
 //   Format& format = opts.format.as_data();
 //   format.message_prefix = "<",
 //   format.message_suffix = ">\n";
@@ -103,23 +106,6 @@ static_assert(__is_literal_type(std::optional<std::variant<int, const StringifyF
 // }()};
 // ```
 struct StringifyOptions {
-  enum class OutputMode {
-    kDefault,
-    kCpp,
-    kJson,
-    kJsonPretty,
-  };
-
-  friend std::ostream& operator<<(std::ostream& os, const OutputMode& value) {
-    switch (value) {
-      case OutputMode::kDefault: break;
-      case OutputMode::kCpp: return os << "OutpuMode::kCpp";
-      case OutputMode::kJson: return os << "OutpuMode::kJson";
-      case OutputMode::kJsonPretty: return os << "OutpuMode::kJsonPretty";
-    }
-    return os << "OutpuMode::kDefault";
-  }
-
   struct Format {
     // Message options:
     std::string_view message_prefix;
@@ -332,117 +318,6 @@ struct StringifyOptions {
     return WithAllRefs(StringifyOptions{options}, defaults);
   }
 
-  // Arbirary default value.
-  static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsDefault() noexcept {
-    static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions kDefaults = WithAllData({});
-    MBO_CONFIG_REQUIRE(kDefaults.AllDataSet(), "Not all data set.");
-    return kDefaults;
-  }
-
-  // Formatting control that disables a field.
-  static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsDisabled() noexcept {
-    static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions kOptionsDisabled = StringifyOptions::WithAllData({
-        .field_control{StringifyOptions::FieldControl{
-            .suppress = true,
-        }},
-    });
-    MBO_CONFIG_REQUIRE(kOptionsDisabled.AllDataSet(), "Not all data set.");
-    return kOptionsDisabled;
-  }
-
-  // Formatting control that mostly produces C++ code.
-  static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsCpp() noexcept {
-    // NOLINTNEXTLINE(readability-identifier-naming)
-    static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions kOptionsCpp = StringifyOptions::WithAllData({
-        .format{StringifyOptions::Format{
-            .key_value_separator = " = ",
-            .pointer_prefix = "",
-            .pointer_suffix = "",
-        }},
-        .field_control{StringifyOptions::FieldControl{
-            .field_disabled = "{/*MboTypesStringifyDisable*/}",
-        }},
-        .key_control{StringifyOptions::KeyControl{
-            .key_prefix = ".",
-        }},
-        .value_control{StringifyOptions::ValueControl{
-            .nullptr_t_str = "nullptr",
-            .nullptr_v_str = "nullptr",
-        }},
-    });
-    MBO_CONFIG_REQUIRE(kOptionsCpp.AllDataSet(), "Not all data set.");
-    return kOptionsCpp;
-  }
-
-  // Formatting control that mostly produces JSON data.
-  //
-  // NOTE: JSON data requires field names. So unless Clang is used only with
-  // types that support field names, they must be provided by an extension API
-  // point: `MboTypesStringifyFieldNames` or `MboTypesStringifyOptions`, the
-  // latter possibly with the `StringifyWithFieldNames` adapter. Alternatively,
-  // numeric field names will be generated as a last resort.
-  static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsJson() noexcept {
-    // NOLINTNEXTLINE(readability-identifier-naming)
-    static MBO_CONFIG_CONSTEXPR_23 StringifyOptions kOptionsJson = StringifyOptions::WithAllData({
-        .format{StringifyOptions::Format{
-            .key_value_separator = ": ",
-            .pointer_prefix = "",
-            .pointer_suffix = "",
-            .smart_ptr_prefix = "",
-            .smart_ptr_suffix = "",
-            .optional_prefix = "",
-            .optional_suffix = "",
-            .container_prefix = "[",
-            .container_suffix = "]",
-            .char_delim = "\"",
-        }},
-        .field_control{StringifyOptions::FieldControl{
-            .suppress_nullptr = true,
-            .suppress_nullopt = true,
-            .suppress_disabled = true,
-        }},
-        .key_control{StringifyOptions::KeyControl{
-            .key_mode = StringifyOptions::KeyMode::kNumericFallback,
-            .key_prefix = "\"",
-            .key_suffix = "\"",
-        }},
-        .value_control{StringifyOptions::ValueControl{
-            .nullptr_t_str = "0",
-            .nullptr_v_str = "0",
-            .nullopt_str = "0",
-        }},
-        .special{StringifyOptions::Special{
-            .pair_first_is_name = true,
-        }},
-    });
-    MBO_CONFIG_REQUIRE(kOptionsJson.AllDataSet(), "Not all data set.");
-    return kOptionsJson;
-  }
-
-  static MBO_CONFIG_CONSTEXPR_23 const StringifyOptions& AsJsonPretty() noexcept {
-    // NOLINTNEXTLINE(readability-identifier-naming)
-    static MBO_CONFIG_CONSTEXPR_23 StringifyOptions kOptions = []() MBO_CONFIG_CONSTEXPR_23 {
-      StringifyOptions opts = AsJson();
-      Format& format = opts.format.as_data();
-      format.message_suffix = "\n";
-      format.field_indent = "  ";
-      format.field_separator = ",";
-      return opts;
-    }();
-    MBO_CONFIG_REQUIRE(kOptions.AllDataSet(), "Not all data set.");
-    return kOptions;
-  }
-
-  static constexpr const StringifyOptions& As(OutputMode mode) noexcept {
-    switch (mode) {
-      case OutputMode::kDefault: break;
-      case OutputMode::kCpp: return AsCpp();
-      case OutputMode::kJson: return AsJson();
-      case OutputMode::kJsonPretty: return AsJsonPretty();
-    }
-    return AsDefault();
-  }
-
   static_assert(__is_literal_type(Format));
   static_assert(__is_literal_type(FieldControl));
   static_assert(__is_literal_type(KeyControl));
@@ -515,11 +390,6 @@ struct StringifyRootOptions {
   std::string_view root_prefix;  // First line prefix - not using root_indent - before message_prefix.
   std::string_view root_suffix;  // Last line suffix - not using root_indent - after message_suffix.
   std::string_view root_indent;
-
-  static MBO_CONFIG_CONSTEXPR_23 const StringifyRootOptions& Defaults() {
-    static MBO_CONFIG_CONSTEXPR_23 const StringifyRootOptions kDefaults{};
-    return kDefaults;
-  }
 };
 
 template<typename T>
@@ -720,21 +590,104 @@ concept HasMboTypesStringifyConvert = requires {
 // Class `Stringify` implements the conversion of any aggregate into a string.
 class Stringify {
  public:
+  enum class OutputMode {
+    kDefault,
+    kCpp,
+    kCppPretty,
+    kJson,
+    kJsonLine,
+    kJsonPretty,
+  };
+
+  friend std::ostream& operator<<(std::ostream& os, const OutputMode& value) {
+    switch (value) {
+      case OutputMode::kDefault: break;
+      case OutputMode::kCpp: return os << "OutpuMode::kCpp";
+      case OutputMode::kCppPretty: return os << "OutpuMode::kCppPretty";
+      case OutputMode::kJson: return os << "OutpuMode::kJson";
+      case OutputMode::kJsonLine: return os << "OutpuMode::kJsonLine";
+      case OutputMode::kJsonPretty: return os << "OutpuMode::kJsonPretty";
+    }
+    return os << "OutpuMode::kDefault";
+  }
+
+  static constexpr const StringifyOptions& OptionsAs(OutputMode mode) noexcept {
+    switch (mode) {
+      case OutputMode::kDefault: break;
+      case OutputMode::kCpp: return OptionsCpp();
+      case OutputMode::kCppPretty: return OptionsCppPretty();
+      case OutputMode::kJson: return OptionsJson();
+      case OutputMode::kJsonLine: return OptionsJsonLine();
+      case OutputMode::kJsonPretty: return OptionsJsonPretty();
+    }
+    return OptionsDefault();
+  }
+
+  // Arbirary default value.
+  static constexpr const StringifyOptions& OptionsDefault() noexcept {
+    MBO_CONFIG_REQUIRE(kOptionsDefaults.AllDataSet(), "Not all data set.");
+    return kOptionsDefaults;
+  }
+
+  // Formatting control that disables a field.
+  static constexpr const StringifyOptions& OptionsDisabled() noexcept {
+    MBO_CONFIG_REQUIRE(kOptionsDisabled.AllDataSet(), "Not all data set.");
+    return kOptionsDisabled;
+  }
+
+  // Formatting control that mostly produces C++ code.
+  static constexpr const StringifyOptions& OptionsCpp() noexcept {
+    MBO_CONFIG_REQUIRE(kOptionsCpp.AllDataSet(), "Not all data set.");
+    return kOptionsCpp;
+  }
+
+  static constexpr const StringifyOptions& OptionsCppPretty() noexcept {
+    MBO_CONFIG_REQUIRE(kOptionsCppPretty.AllDataSet(), "Not all data set.");
+    return kOptionsCppPretty;
+  }
+
+  // Formatting control that mostly produces JSON data.
+  //
+  // NOTE: JSON data requires field names. So unless Clang is used only with
+  // types that support field names, they must be provided by an extension API
+  // point: `MboTypesStringifyFieldNames` or `MboTypesStringifyOptions`, the
+  // latter possibly with the `StringifyWithFieldNames` adapter. Alternatively,
+  // numeric field names will be generated as a last resort.
+  static constexpr const StringifyOptions& OptionsJson() noexcept {
+    MBO_CONFIG_REQUIRE(kOptionsJson.AllDataSet(), "Not all data set.");
+    return kOptionsJson;
+  }
+
+  static constexpr const StringifyOptions& OptionsJsonLine() noexcept {
+    MBO_CONFIG_REQUIRE(kOptionsJsonLine.AllDataSet(), "Not all data set.");
+    return kOptionsJsonLine;
+  }
+
+  static constexpr const StringifyOptions& OptionsJsonPretty() noexcept {
+    MBO_CONFIG_REQUIRE(kOptionsJsonPretty.AllDataSet(), "Not all data set.");
+    return kOptionsJsonPretty;
+  }
+
   // Prevent passing in temporaries to prevent dangling issues.
   static Stringify AsCpp(const StringifyRootOptions&&) = delete;
   static Stringify AsJson(const StringifyRootOptions&&) = delete;
+  static Stringify AsJsonLine(const StringifyRootOptions&&) = delete;
   static Stringify AsJsonPretty(const StringifyRootOptions&&) = delete;
 
-  static Stringify AsCpp(const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept {
-    return Stringify(StringifyOptions::AsCpp(), root_options);
+  static Stringify AsCpp(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
+    return Stringify(OptionsCpp(), root_options);
   }
 
-  static Stringify AsJson(const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept {
-    return Stringify(StringifyOptions::AsJson(), root_options);
+  static Stringify AsJson(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
+    return Stringify(OptionsJson(), root_options);
   }
 
-  static Stringify AsJsonPretty(const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept {
-    return Stringify(StringifyOptions::AsJsonPretty(), root_options);
+  static Stringify AsJsonLine(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
+    return Stringify(OptionsJsonLine(), root_options);
+  }
+
+  static Stringify AsJsonPretty(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
+    return Stringify(OptionsJsonPretty(), root_options);
   }
 
   explicit Stringify(const StringifyOptions&&) = delete;
@@ -742,16 +695,14 @@ class Stringify {
   explicit Stringify(SO&&, StringifyRootOptions&&) = delete;  // NOLINT(*)
 
   explicit Stringify(
-      const StringifyOptions& default_options = StringifyOptions::AsDefault(),
-      const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept
+      const StringifyOptions& default_options = OptionsDefault(),
+      const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept
       : root_options_(root_options), default_field_options_(default_options), indent_(*this) {
     MBO_CONFIG_REQUIRE(default_field_options_.AllDataSet(), "Not all data set: ") << default_field_options_.DebugStr();
   }
 
-  explicit Stringify(
-      StringifyOptions::OutputMode output_mode,
-      const StringifyRootOptions& root_options = StringifyRootOptions::Defaults()) noexcept
-      : Stringify(StringifyOptions::As(output_mode), root_options) {}
+  explicit Stringify(OutputMode output_mode, const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept
+      : Stringify(OptionsAs(output_mode), root_options) {}
 
   template<IsAggregate T>
   std::string ToString(const T& value) const {
@@ -1312,6 +1263,101 @@ class Stringify {
       os << options.value_control->str_cutoff_suffix;
     }
   }
+
+  static constexpr const StringifyOptions kOptionsDefaults = StringifyOptions::WithAllData({});
+  static constexpr const StringifyOptions kOptionsDisabled = StringifyOptions::WithAllData({
+      .field_control{StringifyOptions::FieldControl{
+          .suppress = true,
+      }},
+  });
+
+  static constexpr const StringifyOptions kOptionsCpp = StringifyOptions::WithAllData({
+      .format{StringifyOptions::Format{
+          .message_suffix = "",
+          .field_indent = "",
+          .key_value_separator = " = ",
+          .field_separator = ", ",
+          .pointer_prefix = "",
+          .pointer_suffix = "",
+      }},
+      .field_control{StringifyOptions::FieldControl{
+          .field_disabled = "{/*MboTypesStringifyDisable*/}",
+      }},
+      .key_control{StringifyOptions::KeyControl{
+          .key_prefix = ".",
+      }},
+      .value_control{StringifyOptions::ValueControl{
+          .nullptr_t_str = "nullptr",
+          .nullptr_v_str = "nullptr",
+      }},
+  });
+
+  static constexpr const StringifyOptions kOptionsCppPretty = []() constexpr {
+    StringifyOptions opts = kOptionsCpp;
+    StringifyOptions::Format& format = opts.format.as_data();
+    format.message_suffix = "\n";
+    format.field_indent = "  ";
+    format.field_separator = ",";
+    return opts;
+  }();
+
+  static constexpr StringifyOptions kOptionsJson = StringifyOptions::WithAllData({
+      .format{StringifyOptions::Format{
+          .message_suffix = "\n",
+          .field_indent = "",
+          .key_value_separator = ":",
+          .field_separator = ",",
+          .pointer_prefix = "",
+          .pointer_suffix = "",
+          .smart_ptr_prefix = "",
+          .smart_ptr_suffix = "",
+          .optional_prefix = "",
+          .optional_suffix = "",
+          .container_prefix = "[",
+          .container_suffix = "]",
+          .char_delim = "\"",
+      }},
+      .field_control{StringifyOptions::FieldControl{
+          .suppress_nullptr = true,
+          .suppress_nullopt = true,
+          .suppress_disabled = true,
+      }},
+      .key_control{StringifyOptions::KeyControl{
+          .key_mode = StringifyOptions::KeyMode::kNumericFallback,
+          .key_prefix = "\"",
+          .key_suffix = "\"",
+      }},
+      .value_control{StringifyOptions::ValueControl{
+          .nullptr_t_str = "0",
+          .nullptr_v_str = "0",
+          .nullopt_str = "0",
+      }},
+      .special{StringifyOptions::Special{
+          .pair_first_is_name = true,
+      }},
+  });
+
+  static constexpr StringifyOptions kOptionsJsonLine = []() constexpr {
+    StringifyOptions opts = kOptionsJson;
+    StringifyOptions::Format& format = opts.format.as_data();
+    format.message_suffix = "\n";
+    format.key_value_separator = ": ";
+    format.field_indent = "";
+    format.field_separator = ", ";
+    return opts;
+  }();
+
+  static constexpr StringifyOptions kOptionsJsonPretty = []() constexpr {
+    StringifyOptions opts = kOptionsJson;
+    StringifyOptions::Format& format = opts.format.as_data();
+    format.message_suffix = "\n";
+    format.key_value_separator = ": ";
+    format.field_indent = "  ";
+    format.field_separator = ",";
+    return opts;
+  }();
+
+  static constexpr StringifyRootOptions kRootOptionDefaults = {};
 
   const StringifyRootOptions& root_options_;
   const StringifyFieldOptions default_field_options_;

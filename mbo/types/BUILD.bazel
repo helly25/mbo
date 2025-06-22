@@ -108,6 +108,7 @@ cc_test(
         ":extender_cc",
         ":stringify_cc",
         "//mbo/container:limited_vector_cc",
+        "//mbo/testing:matchers_cc",
         "//mbo/types/internal:struct_names_cc",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/hash:hash_testing",

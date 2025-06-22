@@ -152,7 +152,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
 
  protected:
   // Stream the type to `os` with control via `field_options`.
-  void OStreamFields(std::ostream& os, const StringifyOptions& default_options = StringifyOptions::AsDefault()) const {
+  void OStreamFields(std::ostream& os, const StringifyOptions& default_options = Stringify::OptionsDefault()) const {
     OStreamFieldsStatic(os, static_cast<const Type&>(*this), default_options);
   }
 
@@ -239,13 +239,13 @@ struct Printable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   // Parameter `field_options` must be an instance of `StringifyOptions` or
   // something that can produce those. It defaults to `MboTypesStringifyOptions`
   // if available and otherwise the default `StringifyOptions` will be used.
-  std::string ToString(const StringifyOptions& default_options = StringifyOptions::AsDefault()) const {
+  std::string ToString(const StringifyOptions& default_options = Stringify::OptionsDefault()) const {
     std::ostringstream os;
     this->OStreamFields(os, default_options);
     return os.str();
   }
 
-  std::string ToJsonString() const { return ToString(StringifyOptions::AsJson()); }
+  std::string ToJsonString() const { return ToString(Stringify::OptionsJson()); }
 };
 
 template<typename ExtenderBase>
@@ -357,7 +357,7 @@ struct Comparable final : MakeExtender<"Comparable"_ts, Comparable_> {};
 //
 // const TestStruct value;
 //
-// value.ToString(StringifyOptions::AsJson()));
+// value.ToString(Stringify::OptionsJson()));
 // ```
 //
 // This default Extender is automatically available through `mb::types::Extend`.
