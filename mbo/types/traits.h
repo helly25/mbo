@@ -16,8 +16,8 @@
 #ifndef MBO_TYPES_TRAITS_H_
 #define MBO_TYPES_TRAITS_H_
 
-#include <concepts>
-#include <cstddef>  // IWYU pragma: keep
+#include <concepts>  // IWYU pragma: keep
+#include <cstddef>   // IWYU pragma: keep
 #include <initializer_list>
 #include <iterator>
 #include <memory>
@@ -31,6 +31,7 @@
 
 #include "mbo/types/internal/decompose_count.h"          // IWYU pragma: export
 #include "mbo/types/internal/is_braces_constructible.h"  // IWYU pragma: export
+#include "mbo/types/internal/traits.h"                   // IWYU pragma: export
 #include "mbo/types/tuple.h"                             // IWYU pragma: export
 
 namespace mbo::types {
@@ -38,6 +39,9 @@ namespace mbo::types {
 // Determines whether `std::is_aggrgate_v<T> == true`.
 template<typename T>
 concept IsAggregate = types_internal::IsAggregate<T>;
+
+template<typename T>
+concept IsEmptyType = types_internal::IsEmptyType<T>;
 
 // If `T` is a struct and the below conditions are met, return the number of
 // variable fields it decomposes into.

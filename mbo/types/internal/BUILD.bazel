@@ -70,6 +70,7 @@ cc_library(
     hdrs = [
         "decompose_count.h",
         "is_braces_constructible.h",
+        "traits.h",
     ],
     deps = [
         ":cases_cc",

@@ -213,7 +213,7 @@ TEST_F(TraitsTest, IsBracesContructibleDerived) {
 }
 
 TYPED_TEST(GenTraitsTest, IsAggregate) {
-  EXPECT_THAT(std::is_aggregate_v<TypeParam>, true);
+  EXPECT_THAT(IsAggregate<TypeParam>, true);
 }
 
 TYPED_TEST(GenTraitsTest, IsBracesContructibleGenerateDerived) {

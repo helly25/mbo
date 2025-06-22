@@ -15,7 +15,7 @@
 
 #include "mbo/types/extend.h"
 
-#include <concepts>
+#include <concepts>  // IWYU pragma: keep
 #include <cstddef>
 #include <functional>
 #include <iostream>
@@ -200,8 +200,8 @@ static_assert(kStructNameSupport);
 #endif
 
 TEST_F(ExtendTest, Test) {
-  ASSERT_THAT(std::is_aggregate_v<Extend2>, true);
-  ASSERT_THAT(std::is_empty_v<Extend2>, false);
+  ASSERT_THAT(IsAggregate<Extend2>, true);
+  ASSERT_THAT(IsEmptyType<Extend2>, false);
   ASSERT_THAT(std::is_default_constructible_v<Extend2>, true);
   ASSERT_THAT(types_internal::AggregateHasNonEmptyBase<Extend2>, false);
   ASSERT_THAT(DecomposeCountV<Extend2>, 2);

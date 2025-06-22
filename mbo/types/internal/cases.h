@@ -16,7 +16,7 @@
 #ifndef MBO_TYPES_INTERNAL_CASES_H_
 #define MBO_TYPES_INTERNAL_CASES_H_
 
-// IWYU pragma private, include "mbo/types/cases.h"
+// IWYU pragma: private, include "mbo/types/cases.h"
 
 #include <cstddef>  // IWYU pragma: keep
 #include <type_traits>

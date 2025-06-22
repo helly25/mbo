@@ -21,6 +21,8 @@
 #include <concepts>  // IWYU pragma: keep
 #include <type_traits>
 
+#include "mbo/types/internal/traits.h"  // IWYU pragma: keep
+
 namespace mbo::types::types_internal {
 
 #ifdef __clang__
@@ -67,7 +69,7 @@ struct AnyTypeIf {
       typename T,
       typename = std::enable_if_t<                                         //
           (kBaseOrNot == std::is_base_of_v<std::remove_cvref_t<T>, RawD>)  //
-          &&(!kBaseOrNot || !kRequireNonEmpty || (!std::is_empty_v<std::remove_cvref_t<T>> && kAllowNonEmpty))>>
+          &&(!kBaseOrNot || !kRequireNonEmpty || (!IsEmptyType<std::remove_cvref_t<T>> && kAllowNonEmpty))>>
   constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
@@ -80,7 +82,7 @@ struct AnyEmptyBase {
   template<
       typename T,
       typename =
-          std::enable_if_t<std::is_base_of_v<std::remove_cvref_t<T>, RawD> && std::is_empty_v<std::remove_cvref_t<T>>>>
+          std::enable_if_t<std::is_base_of_v<std::remove_cvref_t<T>, RawD> && IsEmptyType<std::remove_cvref_t<T>>>>
   constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
@@ -93,7 +95,7 @@ struct AnyEmptyBaseOrNonBase {
   template<
       typename T,
       typename =
-          std::enable_if_t<!std::is_base_of_v<std::remove_cvref_t<T>, RawD> || std::is_empty_v<std::remove_cvref_t<T>>>>
+          std::enable_if_t<!std::is_base_of_v<std::remove_cvref_t<T>, RawD> || IsEmptyType<std::remove_cvref_t<T>>>>
   constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
@@ -107,8 +109,8 @@ struct AnyBaseMaybeEmpty {
       typename T,
       typename = std::enable_if_t<
           std::is_base_of_v<std::remove_cvref_t<T>, RawD>
-          && (kIsEmpty == std::is_empty_v<std::remove_cvref_t<T>>
-              || (kAllowNonEmpty && !std::is_empty_v<std::remove_cvref_t<T>>))>>
+          && (kIsEmpty == IsEmptyType<std::remove_cvref_t<T>>
+              || (kAllowNonEmpty && !IsEmptyType<std::remove_cvref_t<T>>))>>
   constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
