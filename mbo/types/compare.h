@@ -16,9 +16,12 @@
 #ifndef MBO_TYPES_COMPARE_H_
 #define MBO_TYPES_COMPARE_H_
 
+#include <cmath>
 #include <compare>  // IWYU pragma: keep
 #include <functional>
 #include <type_traits>
+
+#include "mbo/types/traits.h"  // IWYU pragma: keep
 
 namespace mbo::types {
 
@@ -87,6 +90,31 @@ concept IsCompareLess = types_internal::IsCompareLess<T>::value;
 
 template<typename T>
 concept IsStdLess = types_internal::IsStdLess<T>::value;
+
+template<IsSameAsAnyOf<float, double, long double> Double>
+std::strong_ordering CompareDouble(Double lhs, Double rhs) {
+  const std::partial_ordering comp = lhs <=> rhs;
+  if (comp == std::partial_ordering::less) {
+    return std::strong_ordering::less;
+  } else if (comp == std::partial_ordering::equivalent) {
+    return std::strong_ordering::equivalent;
+  } else if (comp == std::partial_ordering::greater) {
+    return std::strong_ordering::greater;
+  }
+  bool lhs_nan = std::isnan(lhs);
+  bool rhs_nan = std::isnan(rhs);
+  return lhs_nan <=> rhs_nan;
+}
+
+inline std::strong_ordering WeakToStrong(std::weak_ordering order) {
+  if (order == std::weak_ordering::less) {
+    return std::strong_ordering::less;
+  }
+  if (order == std::weak_ordering::greater) {
+    return std::strong_ordering::greater;
+  }
+  return std::strong_ordering::equivalent;
+}
 
 }  // namespace mbo::types
 

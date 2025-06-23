@@ -20,6 +20,13 @@
 * Added concept `IsEmptyType` determines whether a type is empty (calls `std::is_empty_v`).
 * Fixed concept `IsAggregate`.
 * Fixed some IWYU pragmas.
+* Added struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit` (technically moved).
+* Added function `CompareDouble` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.
+* Added function `WeakToStrong` which converts a `std::weak_ordering` to a `std::strong_ordering`.
+* Added concept `IsStringKeyedContainer` which determines whether a type is a container whose elements are pairs and whose keys are convertible to a std::string_view.
+* Added API extension point functoin `MboTypesStringifyValueAccess` which allows to replace a struct with a single value in `Stringify` processing.
+* Added `Stringify` support for empty types and types that match `IsStringKeyedContainer`.
+* Fixed `Stringify` null* epresentations to stream as `null` as opposed to `0`.
 
 # 0.9.0
 

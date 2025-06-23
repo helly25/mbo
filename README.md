@@ -149,7 +149,9 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * meta-type `IfFalseThenVoid`: Helper type that can be used to skip a case.
         * meta-type `IfTrueThenVoid`: Helper type to inject default cases and to ensure the required type expansion is always possible.
     * mbo/types:compare_cc, mbo/types/compare.h
+        * function `CompareDouble` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.
         * comparator `CompareLess` which is compatible to std::Less but allows container optimizations.
+        * function `WeakToStrong` which converts a `std::weak_ordering` to a `std::strong_ordering`.
     * mbo/types:container_proxy_cc, mbo/types/container_proxy.h
         * struct `ContainerProxy` which allows to add container access to other types including smart pointers of containers.
     * mbo/types:extend_cc, mbo/types/extend.h
@@ -188,12 +190,13 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * struct `StringifyOptions` which can be used to control `Stringify` formatting.
         * struct `StringifyRootOptions` which can be used to control outer/root options for streaming/printing structs.
         * API extension point type `MboTypesStringifySupport` which enables `Stringify` support even if not otherwise enabled (disables Abseil stringify support in `Stringify`).
+        * API extension point function `MboTypesStringifyConvert(I, T, V)` allows to control conversion based on field types via a static call to the owning type, receiving the field index, the object and the field value.
         * API extension point type `MboTypesStringifyDisable` which disables `Stringify` support. This allows to prevent
         complex classes (and more importantly fields of complex types) from being printed/streamed using `Stringify`
         * API extension point type `MboTypesStringifyDoNotPrintFieldNames` which if present disables field names in `Stringify`.
         * API extension point function `MboTypesStringifyFieldNames` which adds field names to `Stringify`.
         * API extension point function `MboTypesStringifyOptions` which adds full format control to `Stringify`.
-        * API extension point function `MboTypesStringifyConvert(I, T, V)` allows to control conversion based on field types via a static call to the owning type, receiving the field index, the object and the field value.
+        * API extension point functoin `MboTypesStringifyValueAccess` which allows to replace a struct with a single value in `Stringify` processing.
     * mbo/types:stringify_ostream_cc, mbo/types/stringify_ostream.h
         * operator `std::ostream& operator<<(std::ostream&, const MboTypesStringifySupport auto& v)` - conditioanl automatic ostream support for structs using `Stringify`.
     * mbo/types:traits_cc, mbo/types/traits.h
@@ -216,13 +219,13 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
         * concept `IsOptional` determines whether a type is a `std::optional` type.
         * concept `IsPair` determines whether a type is a `std::pair` type.
-        * concept `IsSet` determines whether a type is a `std::set` type.
         * concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
         * concept `IsSameAsAnyOfRaw` / `NotSameAsAnyOfRaw` which determines whether a type is one of a list of types. Similar to `IsSameAsAnyOf` but applies `std::remove_cvref_t` on all types.
+        * concept `IsSet` determines whether a type is a `std::set` type.
         * concept `IsSmartPtr` determines whether a type is a `std::shared_ptr`, `std::unique_ptr` or `std::weak_ptr`.
           * Can be extended with other smart pointers through `IsSmartPtrImpl`.
+        * concept `IsStringKeyedContainer` which determines whether a type is a container whose elements are pairs and whose keys are convertible to a std::string_view.
         * concept `IsTuple` determines whether a type is a `std::tuple` type.
-        * concept `IsVariant` determines whether a type is a `std::variant` type.
         * concept `IsVector` determines whether a type is a `std::vector` type.
     * mbo/types:template_search_cc, mbo/types/template_search.h:
         * template struct `BinarySearch` implements templated binary search algorithm.
@@ -234,6 +237,10 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * operator `operator"" _ts`: String literal support for Clang, GCC and derived compilers.
     * mbo/types:tuple_cc, mbo/types/tuple.h
         * template struct `TupleCat` which concatenates tuple types.
+    * mbo/types:variant_cc, mbo/types/variant.h
+        * concept `IsVariant` determines whether a type is a `std::variant` type.
+        * concept `IsVariantMemberType` determine whether a `Type` is any of the types in a `Variant`.
+        * struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit`.
 
 ## In addition some Bazel macros are implemented that are not direct part of the library:
 
