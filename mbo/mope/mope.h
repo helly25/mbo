@@ -27,15 +27,9 @@
 #include "absl/status/statusor.h"
 #include "mbo/container/any_scan.h"
 #include "mbo/types/extend.h"
+#include "mbo/types/variant.h"
 
 namespace mbo::mope {
-
-template<class... Ts>
-struct overloaded : Ts... {
-  using Ts::operator()...;
-};
-template<class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
 
 // MOPE: Mope Over Pump Ends - Is a simple templating system.
 //
@@ -117,10 +111,11 @@ class Template {
 
   friend std::ostream& operator<<(std::ostream& os, const Data& data) {
     std::visit(
-        overloaded{
-            [&os](const TagData<Section>& arg) { os << "Section"; },
-            [&os](const TagData<Range>& arg) { os << "Range"; },
-            [&os](const TagData<std::string>& arg) { os << "String: '" << arg.data << "'"; }},
+        mbo::types::Overloaded{
+            [&os](const TagData<Section>& /*arg*/) { os << "Section"; },
+            [&os](const TagData<Range>& /*arg*/) { os << "Range"; },
+            [&os](const TagData<std::string>& arg) { os << "String: '" << arg.data << "'"; },
+        },
         data);
     return os;
   }

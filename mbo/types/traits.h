@@ -26,13 +26,13 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "mbo/types/internal/decompose_count.h"          // IWYU pragma: export
 #include "mbo/types/internal/is_braces_constructible.h"  // IWYU pragma: export
 #include "mbo/types/internal/traits.h"                   // IWYU pragma: export
 #include "mbo/types/tuple.h"                             // IWYU pragma: export
+#include "mbo/types/variant.h"                           // IWYU pragma: export
 
 namespace mbo::types {
 
@@ -355,20 +355,6 @@ concept NotSameAsAnyOfRaw = !IsSameAsAnyOfRaw<std::remove_cvref_t<SameAs>, Ts...
 template<typename SameAs, typename T>
 concept IsSameAsRaw = IsSameAsAnyOfRaw<SameAs, T>;
 
-namespace types_internal {
-
-template<typename T>
-struct IsVariantImpl : std::false_type {};
-
-template<typename... Args>
-struct IsVariantImpl<std::variant<Args...>> : std::true_type {};
-
-}  // namespace types_internal
-
-// Determine whether `T` is a `std::variant<...>` type.
-template<typename T>
-concept IsVariant = types_internal::IsVariantImpl<T>::value;
-
 // Determines whether `T` can be constructed from an empty base and `Args`.
 //
 // This is used in mbo::types::Extend<...>::ConstructFrom{Tuple|Args}.
@@ -433,6 +419,12 @@ concept IsOptional = requires {
 // ```
 template<typename From, typename Into>
 concept ConstructibleInto = std::constructible_from<Into, From>;
+
+// Test whether a type is a container whose elements are pairs and whose keys
+// are convertible to a std::string_view.
+template<typename T>
+concept IsStringKeyedContainer =
+    ContainerIsForwardIteratable<T> && IsPairFirstStr<std::remove_cvref_t<typename T::value_type>>;
 
 }  // namespace mbo::types
 

@@ -536,6 +536,18 @@ template<typename T>
 concept HasMboTypesStringifyFieldNames =
     requires(const T& v) { requires IsFieldNameContainer<decltype(MboTypesStringifyFieldNames(v))>; };
 
+// This breaks `MboStringifyValueAccess` lookup within this namespace.
+void MboTypesStringifyValueAccess();  // Has no implementation!
+
+// Some types function as a value holder, they should not be handled by `Stringify` directly.
+// Instead they will use ADL API extension point `MboTypesStringifyValueAccess`.
+// When implemented, then the value returned will be used instead. That value can be any type that
+// can be handled as either a Stringify supported value-type or container-type.
+template<typename T>
+concept HasMboTypesStringifyValueAccess = !IsVariant<T> && requires(const T& v, const StringifyFieldOptions& options) {
+  { MboTypesStringifyValueAccess(v, options) };  // The return value does not matter.
+};
+
 // Whether Stringify should automatically take affect if `T` is used as a sub field in a Stringify invocation.
 // Otherwise the subfield needs its own support for printing (e.g. Abseil stringify support).
 //
@@ -551,6 +563,7 @@ concept HasMboTypesStringifySupport =               //
     HasMboTypesStringifyDoNotPrintFieldNames<T> ||  // type `MboTypesStringifyDoNotPrintFieldNames`
     HasMboTypesStringifyFieldNames<T> ||            // function `MboTypesStringifyFieldNames`
     HasMboTypesStringifyOptions<T> ||               // function `MboTypesStringifyOptions`
+    HasMboTypesStringifyValueAccess<T> ||           // function `MboTypesStringifyValueAccess`
     requires { typename std::remove_cvref_t<T>::MboTypesStringifySupport; };
 
 enum class StringifyNameHandling {
@@ -704,14 +717,16 @@ class Stringify {
   explicit Stringify(OutputMode output_mode, const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept
       : Stringify(OptionsAs(output_mode), root_options) {}
 
-  template<IsAggregate T>
+  template<typename T>
+  requires(IsAggregate<T> || IsEmptyType<T> || IsStringKeyedContainer<T>)
   std::string ToString(const T& value) const {
     std::ostringstream os;
     Stream<T>(os, value);
     return os.str();
   }
 
-  template<IsAggregate T>
+  template<typename T>
+  requires(IsAggregate<T> || IsEmptyType<T> || IsStringKeyedContainer<T>)
   void Stream(std::ostream& os, const T& value) const {
     os << root_options_.root_prefix;
     os << default_field_options_.outer.format.get({}).message_prefix;
@@ -777,10 +792,21 @@ class Stringify {
   };
 
   template<IsAggregate T>
+  requires(!IsEmptyType<T>)
   void StreamImpl(std::ostream& os, const StringifyFieldOptions& options, const T& value) const {
     // It is not allowed to deny field name printing but provide filed names.
     static_assert(!(HasMboTypesStringifyDoNotPrintFieldNames<T> && HasMboTypesStringifyFieldNames<T>));
     StreamFieldsImpl<T>(os, options, value);
+  }
+
+  template<IsEmptyType T>
+  void StreamImpl(std::ostream& os, const StringifyFieldOptions& options, const T& value) const {
+    StreamFieldsImpl<T>(os, options, value);
+  }
+
+  template<IsStringKeyedContainer T>
+  void StreamImpl(std::ostream& os, const StringifyFieldOptions& options, const T& value) const {
+    StreamValue(os, options, value, true);
   }
 
   template<typename T>
@@ -1067,10 +1093,7 @@ class Stringify {
     }
   }
 
-  template<typename C>
-  requires(
-      ::mbo::types::ContainerIsForwardIteratable<C>
-      && mbo::types::IsPairFirstStr<std::remove_cvref_t<typename C::value_type>>)
+  template<IsStringKeyedContainer C>
   void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
     const SO::Format& format = *options.outer.format;
     if (options.outer.special->pair_first_is_name) {
@@ -1102,7 +1125,7 @@ class Stringify {
   requires(
       ::mbo::types::ContainerIsForwardIteratable<C>
       && !mbo::types::IsPairFirstStr<std::remove_cvref_t<typename C::value_type>>
-      && !std::convertible_to<C, std::string_view>)
+      && !std::convertible_to<C, std::string_view> && !HasMboTypesStringifyValueAccess<C>)
   void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
     const SO::Format& format = *options.outer.format;
     indent_.IncContainer(os, format);
@@ -1120,6 +1143,30 @@ class Stringify {
     indent_.DecContainer(os, format);
   }
 
+  template<IsVariant Variant>
+  void StreamValue(
+      std::ostream& os,
+      const StringifyFieldOptions& options,
+      const Variant& value,
+      bool /*allow_field_names*/) const {
+    std::visit(
+        [&]<typename ArgT>(const ArgT& arg) {
+          if constexpr (IsAggregate<ArgT> || IsStringKeyedContainer<ArgT>) {
+            StreamImpl<ArgT>(os, options, arg);
+          } else {
+            StreamValue(os, options, arg, false);
+          }
+        },
+        value);
+  }
+
+  template<HasMboTypesStringifyValueAccess T>
+  requires(!IsStringKeyedContainer<T>)
+  void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const T& value, bool /*allow_field_names*/)
+      const {
+    StreamValue(os, options, MboTypesStringifyValueAccess(value, options), false);
+  }
+
   template<typename T>
   static constexpr bool kUseStringify = types_internal::IsExtended<T> || HasMboTypesStringifySupport<T>
                                         || (IsAggregate<T> && !absl::HasAbslStringify<T>::value);
@@ -1132,6 +1179,8 @@ class Stringify {
       os << options.outer.field_control->field_disabled;
     } else if constexpr (kUseStringify<RawV>) {
       StreamImpl(os, options, v);
+    } else if constexpr (std::same_as<RawV, std::nullopt_t>) {
+      os << options.outer.value_control->nullopt_str;
     } else if constexpr (std::is_same_v<RawV, std::nullptr_t>) {
       os << options.outer.value_control->nullptr_t_str;
     } else if constexpr (IsSmartPtr<RawV>) {
@@ -1328,9 +1377,9 @@ class Stringify {
           .key_suffix = "\"",
       }},
       .value_control{StringifyOptions::ValueControl{
-          .nullptr_t_str = "0",
-          .nullptr_v_str = "0",
-          .nullopt_str = "0",
+          .nullptr_t_str = "null",
+          .nullptr_v_str = "null",
+          .nullopt_str = "null",
       }},
       .special{StringifyOptions::Special{
           .pair_first_is_name = true,

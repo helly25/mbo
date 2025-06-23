@@ -55,6 +55,7 @@ cc_library(
         "//mbo/status:status_macros_cc",
         "//mbo/strings:parse_cc",
         "//mbo/types:extend_cc",
+        "//mbo/types:variant_cc",
         "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:node_hash_map",
