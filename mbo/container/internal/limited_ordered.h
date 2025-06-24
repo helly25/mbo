@@ -178,6 +178,7 @@ class [[nodiscard]] LimitedOrdered {
     using value_type = LimitedOrdered::value_type;
     using pointer = LimitedOrdered::const_pointer;
     using reference = LimitedOrdered::const_reference;
+    using element_type = LimitedOrdered::value_type;  // Clang 16
 
     constexpr const_iterator() noexcept : pos_(nullptr) {}  // Needed for STL
 
@@ -272,6 +273,7 @@ class [[nodiscard]] LimitedOrdered {
     using value_type = LimitedOrdered::value_type;
     using pointer = LimitedOrdered::pointer;
     using reference = LimitedOrdered::reference;
+    using element_type = LimitedOrdered::value_type;  // Clang 16
 
     constexpr iterator() noexcept : pos_(nullptr) {}  // Needed for STL
 
