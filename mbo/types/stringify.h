@@ -32,6 +32,7 @@
 #include <type_traits>
 #include <variant>
 
+#include "absl/container/btree_map.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/escaping.h"
@@ -133,10 +134,10 @@ struct StringifyOptions {
 
   struct FieldControl {
     // Field options:
-    bool suppress = false;           // Allows complete suppression of the field.
-    bool suppress_nullptr = false;   // Allows complete suppression of nullptr field values.
-    bool suppress_nullopt = false;   // Allows complete suppression of nullopt field values.
-    bool suppress_disabled = false;  // Allows complete suppression of disabled fields.
+    bool suppress : 1 = false;           // Allows complete suppression of the field.
+    bool suppress_nullptr : 1 = false;   // Allows complete suppression of nullptr field values.
+    bool suppress_nullopt : 1 = false;   // Allows complete suppression of nullopt field values.
+    bool suppress_disabled : 1 = false;  // Allows complete suppression of disabled fields.
     std::string_view field_disabled = "{/*MboTypesStringifyDisable*/}";  // Replacement for disabled complex field.
   };
 
@@ -220,11 +221,22 @@ struct StringifyOptions {
 
   // Special types:
 
-  struct Special {
+  // Handling of containers whose first type is convertible to a string.
+  enum StrKeyed {
+    // No special treatment
+    kNormal = 0,
+
     // Containers with Pairs whose `first` type is a string-like automatically
-    // create objects where the keys are the field names. This is useful for JSON.
-    // The types are checked with `IsPairFirstStr`.
-    bool pair_first_is_name = false;
+    // create objects where the keys are the field names. This is useful for
+    // JSON. The types are checked with `IsPairFirstStr`.
+    kFirstIsName,
+
+    // Such containers can also be stringified in alphabetical order.
+    kFirstIsNameOrdered,
+  };
+
+  struct Special {
+    StrKeyed str_keyed = StrKeyed::kNormal;
 
     // For all other cases of pairs, their names can be overwritten.
     std::optional<std::pair<std::string_view, std::string_view>> pair_keys{{"first", "second"}};
@@ -571,7 +583,7 @@ enum class StringifyNameHandling {
   kVerify = 1,     // Verify that the provided name matches the detrmined if possible.
 };
 
-template<typename T, typename ObjectType = mbo::types::types_internal::AnyType>
+template<typename T, typename ObjectType = types_internal::AnyType>
 concept CanProduceStringifyOptions = std::is_assignable_v<
     StringifyOptions,
     std::invoke_result_t<T, ObjectType, std::size_t, std::string_view, const StringifyOptions&>>;
@@ -586,7 +598,7 @@ concept CanProduceStringifyOptions = std::is_assignable_v<
 //
 // Read more about producing `StringifyOptions` in the documnetation for
 // `MboTypesStringifyOptions` and `HasMboTypesStringifyOptions`.
-template<typename T, typename ObjectType = mbo::types::types_internal::AnyType>
+template<typename T, typename ObjectType = types_internal::AnyType>
 concept IsOrCanProduceStringifyOptions =
     std::is_convertible_v<T, StringifyOptions> || CanProduceStringifyOptions<T, ObjectType>;
 
@@ -683,12 +695,17 @@ class Stringify {
 
   // Prevent passing in temporaries to prevent dangling issues.
   static Stringify AsCpp(const StringifyRootOptions&&) = delete;
+  static Stringify AsCppPretty(const StringifyRootOptions&&) = delete;
   static Stringify AsJson(const StringifyRootOptions&&) = delete;
   static Stringify AsJsonLine(const StringifyRootOptions&&) = delete;
   static Stringify AsJsonPretty(const StringifyRootOptions&&) = delete;
 
   static Stringify AsCpp(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
     return Stringify(OptionsCpp(), root_options);
+  }
+
+  static Stringify AsCppPretty(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
+    return Stringify(OptionsCppPretty(), root_options);
   }
 
   static Stringify AsJson(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
@@ -858,13 +875,15 @@ class Stringify {
         },
         [&value]() {
           if constexpr (types_internal::IsExtended<T>) {
-            return value.ToTuple();
+            return [&value] { return value.ToTuple(); };
           } else if constexpr (IsPair<T> || IsTuple<T>) {
-            return value;  // works for pair and tuple.
+            return [&value]() -> const T& {
+              return value;  // works for pair and tuple.
+            };
           } else {
-            return StructToTuple(value);
+            return [&value] { return StructToTuple(value); };
           }
-        }());
+        }()());
   }
 
   template<typename T>
@@ -875,7 +894,7 @@ class Stringify {
       return MboTypesStringifyFieldNames(value);
     } else {
       // Works for both constexpr and static/const aka compile-time and run-time cases.
-      return ::mbo::types::types_internal::GetFieldNames<T>();
+      return types_internal::GetFieldNames<T>();
     }
   }
 
@@ -1095,30 +1114,54 @@ class Stringify {
 
   template<IsStringKeyedContainer C>
   void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
-    const SO::Format& format = *options.outer.format;
-    if (options.outer.special->pair_first_is_name) {
-      // Each pair element of the container `vs` is an element whose key is the `first` member and
-      // whose value is the `second` member.
-      indent_.IncStruct(os, format);
-      std::string_view sep;
-      std::size_t index = 0;
-      for (const auto& v : vs) {
-        if (index >= options.outer.value_control->container_max_len) {
-          break;
+    switch (options.outer.special->str_keyed) {
+      case SO::StrKeyed::kNormal: break;
+      case SO::StrKeyed::kFirstIsName:
+        // Each pair element of the container `vs` is an element whose key is the `first` member and
+        // whose value is the `second` member.
+        StreamStringKeyedContainer(os, options, vs, allow_field_names);
+        return;
+      case SO::StrKeyed::kFirstIsNameOrdered: {
+        absl::btree_map<std::string_view, std::reference_wrapper<const typename C::value_type::second_type>> ordered;
+        std::size_t index = 0;
+        for (const auto& [k, v] : vs) {
+          if (++index > options.outer.value_control->container_max_len) {
+            break;
+          }
+          ordered.emplace(k, v);
         }
-        os << sep;
-        indent_.StreamIndent(os);
-        sep = options.outer.format->field_separator;
-        if (allow_field_names) {
-          const StringifyFieldInfo field_info{.options = options, .idx = index, .name = v.first};
-          StreamFieldName(os, field_info, /*allow_key_override=*/false);
-        }
-        StreamValue(os, options.ToInner(), v.second, allow_field_names);
-        ++index;
+        StreamStringKeyedContainer(os, options, ordered, allow_field_names);
+        return;
       }
-      indent_.DecStruct(os, format);
-      return;
     }
+    StreamContainer(os, options, vs, allow_field_names);
+  }
+
+  template<IsStringKeyedContainer C>
+  void StreamStringKeyedContainer(
+      std::ostream& os,
+      const StringifyFieldOptions& options,
+      const C& vs,
+      bool allow_field_names) const {
+    const SO::Format& format = *options.outer.format;
+    indent_.IncStruct(os, format);
+    std::string_view sep;
+    std::size_t index = 0;
+    for (const auto& v : vs) {
+      if (index >= options.outer.value_control->container_max_len) {
+        break;
+      }
+      os << sep;
+      indent_.StreamIndent(os);
+      sep = options.outer.format->field_separator;
+      if (allow_field_names) {
+        const StringifyFieldInfo field_info{.options = options, .idx = index, .name = v.first};
+        StreamFieldName(os, field_info, /*allow_key_override=*/false);
+      }
+      StreamValue(os, options.ToInner(), v.second, allow_field_names);
+      ++index;
+    }
+    indent_.DecStruct(os, format);
   }
 
   template<typename C>
@@ -1127,6 +1170,13 @@ class Stringify {
       && !mbo::types::IsPairFirstStr<std::remove_cvref_t<typename C::value_type>>
       && !std::convertible_to<C, std::string_view> && !HasMboTypesStringifyValueAccess<C>)
   void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
+    StreamContainer(os, options, vs, allow_field_names);
+  }
+
+  template<typename C>
+  requires(ContainerIsForwardIteratable<C>)
+  void StreamContainer(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names)
+      const {
     const SO::Format& format = *options.outer.format;
     indent_.IncContainer(os, format);
     std::string_view sep;
@@ -1187,9 +1237,11 @@ class Stringify {
       StreamValueSmartPtr(os, options, v, allow_field_names);
     } else if constexpr (std::is_pointer_v<RawV>) {
       StreamValuePointer(os, options, v, allow_field_names);
-    } else if constexpr (mbo::types::IsOptional<RawV>) {
+    } else if constexpr (IsReferenceWrapper<RawV>) {
+      StreamValue(os, options, v.get(), allow_field_names);
+    } else if constexpr (IsOptional<RawV>) {
       StreamValueOptional(os, options, v, allow_field_names);
-    } else if constexpr (mbo::types::IsPair<RawV>) {
+    } else if constexpr (IsPair<RawV>) {
       StreamValuePair(os, options, v, allow_field_names);
     } else if constexpr (std::is_same_v<RawV, char> || std::is_same_v<RawV, unsigned char>) {
       if (options.outer.format->char_delim.empty()) {
@@ -1223,25 +1275,27 @@ class Stringify {
     }
   }
 
-  template<typename V>
+  template<IsPair V>
   void StreamValuePair(std::ostream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names)
       const {
     using RawV = std::remove_cvref_t<V>;
     if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyOptions<RawV>) {
+      std::array<std::string_view, 2> field_names;
       if (options.outer.special->pair_keys.has_value()) {
-        const std::array<std::string_view, 2> field_names{
-            options.outer.special->pair_keys->first,
-            options.outer.special->pair_keys->second,
-        };
-        bool use_seperator = false;
-        indent_.IncStruct(os, *options.outer.format);
-        StreamField(os, options.ToInner(), use_seperator, v, v.first, 0, field_names, allow_field_names);
-        StreamField(os, options.ToInner(), use_seperator, v, v.second, 1, field_names, allow_field_names);
-        indent_.DecStruct(os, *options.outer.format);
-        return;
+        field_names[0] = options.outer.special->pair_keys->first;
+        field_names[1] = options.outer.special->pair_keys->second;
+      } else {
+        field_names[0] = "first";
+        field_names[1] = "second";
       }
+      bool use_seperator = false;
+      indent_.IncStruct(os, *options.outer.format);
+      StreamField(os, options.ToInner(), use_seperator, v, v.first, 0, field_names, allow_field_names);
+      StreamField(os, options.ToInner(), use_seperator, v, v.second, 1, field_names, allow_field_names);
+      indent_.DecStruct(os, *options.outer.format);
+    } else {
+      StreamFieldsImpl(os, options, v, allow_field_names);
     }
-    StreamFieldsImpl(os, options, v, allow_field_names);
   }
 
   template<typename V>
@@ -1382,7 +1436,7 @@ class Stringify {
           .nullopt_str = "null",
       }},
       .special{StringifyOptions::Special{
-          .pair_first_is_name = true,
+          .str_keyed = StringifyOptions::StrKeyed::kFirstIsName,
       }},
   });
 
@@ -1403,6 +1457,8 @@ class Stringify {
     format.key_value_separator = ": ";
     format.field_indent = "  ";
     format.field_separator = ",";
+    StringifyOptions::Special& special = opts.special.as_data();
+    special.str_keyed = StringifyOptions::StrKeyed::kFirstIsNameOrdered;
     return opts;
   }();
 

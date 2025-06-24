@@ -257,6 +257,7 @@ cc_library(
         "//mbo/types/internal:extender_cc",
         "//mbo/types/internal:struct_names_cc",
         "@com_google_absl//absl/cleanup",
+        "@com_google_absl//absl/container:btree",
         "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/log:absl_log",
         "@com_google_absl//absl/strings",

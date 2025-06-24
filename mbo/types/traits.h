@@ -388,6 +388,13 @@ concept IsOptional = requires {
   requires std::same_as<std::optional<typename T::value_type>, T>;
 };
 
+// Determines whether a type is a `std::reference_wrapper`.
+template<typename T>
+concept IsReferenceWrapper = requires {
+  typename T::type;
+  requires std::same_as<std::reference_wrapper<typename T::type>, T>;
+};
+
 // Verify whether `From` can used used to construct a `Into`.
 // That allows the concept to be used for in-place/auto template parameters.
 // See Compiler Explorer debug: https://godbolt.org/z/5vMEeGMMP
