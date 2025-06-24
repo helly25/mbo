@@ -149,7 +149,7 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * meta-type `IfFalseThenVoid`: Helper type that can be used to skip a case.
         * meta-type `IfTrueThenVoid`: Helper type to inject default cases and to ensure the required type expansion is always possible.
     * mbo/types:compare_cc, mbo/types/compare.h
-        * function `CompareDouble` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.
+        * function `CompareFloat` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.
         * comparator `CompareLess` which is compatible to std::Less but allows container optimizations.
         * function `WeakToStrong` which converts a `std::weak_ordering` to a `std::strong_ordering`.
     * mbo/types:container_proxy_cc, mbo/types/container_proxy.h
@@ -200,7 +200,8 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
     * mbo/types:stringify_ostream_cc, mbo/types/stringify_ostream.h
         * operator `std::ostream& operator<<(std::ostream&, const MboTypesStringifySupport auto& v)` - conditioanl automatic ostream support for structs using `Stringify`.
     * mbo/types:traits_cc, mbo/types/traits.h
-        * concept `ConstructibleInto` determined whether one type can be constructed from another. Similar to `std::convertible_to` but with the argument order of `std::constructible_from`.
+        * concept `ConstructibleFrom` implements a variant of `std::constructible_from` that works around its limitations to deal with array args.
+        * concept `ConstructibleInto` determines whether one type can be constructed from another. Similar to `std::convertible_to` but with the argument order of `std::constructible_from`.
         * type alias `ContainerConstIteratorValueType` returned the value-type of the const_iterator of a container.
         * concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.
         * concept `ContainerHasEmplace` determines whether a container has `emplace`.

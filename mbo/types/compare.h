@@ -92,7 +92,7 @@ template<typename T>
 concept IsStdLess = types_internal::IsStdLess<T>::value;
 
 template<IsSameAsAnyOf<float, double, long double> Double>
-std::strong_ordering CompareDouble(Double lhs, Double rhs) {
+std::strong_ordering CompareFloat(Double lhs, Double rhs) {
   const std::partial_ordering comp = lhs <=> rhs;
   if (comp == std::partial_ordering::less) {
     return std::strong_ordering::less;

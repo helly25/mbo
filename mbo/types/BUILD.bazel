@@ -172,6 +172,7 @@ cc_library(
     name = "optional_data_or_ref_cc",
     hdrs = ["optional_data_or_ref.h"],
     deps = [
+        ":traits_cc",
         "//mbo/config:require_cc",
         "//mbo/log:demangle_cc",
         "@com_google_absl//absl/hash",
