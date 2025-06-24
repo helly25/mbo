@@ -239,6 +239,8 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * operator `operator"" _ts`: String literal support for Clang, GCC and derived compilers.
     * mbo/types:tuple_cc, mbo/types/tuple.h
         * template struct `TupleCat` which concatenates tuple types.
+    * mbo/types:typed_view_cc, mbo/types/typed_view.h
+        * template struct `TypedView` a wrapper for STL views that provides type definitions, most importantly `value_type`. That allows such views to be used with GoogleTest container matchers.
     * mbo/types:variant_cc, mbo/types/variant.h
         * concept `IsVariant` determines whether a type is a `std::variant` type.
         * concept `IsVariantMemberType` determine whether a `Type` is any of the types in a `Variant`.
