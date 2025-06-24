@@ -28,12 +28,12 @@ namespace mbo::types {
 template<typename View>
 class TypedView {
  private:
-  using iterator = decltype(std::declval<View&>().begin());
+  using iterator_type = decltype(std::declval<View&>().begin());
 
  public:
-  using value_type = std::iter_value_t<iterator>;
-  using reference = std::iter_reference_t<iterator>;
-  using difference_t = std::iter_difference_t<iterator>;
+  using value_type = std::iter_value_t<iterator_type>;
+  using reference = std::iter_reference_t<iterator_type>;
+  using difference_type = std::iter_difference_t<iterator_type>;
 
   TypedView() = delete;
 
