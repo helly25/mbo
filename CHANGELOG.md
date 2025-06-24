@@ -21,6 +21,7 @@
     * Fixed `Stringify` null* representations to stream as `'null'` as opposed to `0`.
     * Added ability to sort string keyed containers.
 * Improved traits:
+    * Added concept `ConstructibleFrom` implements a variant of `std::constructible_from` that works around its limitations to deal with array args.
     * Added concept `IsEmptyType` determines whether a type is empty (calls `std::is_empty_v`).
     * Fixed concept `IsAggregate` (breaking change).
     * Added concept `IsStringKeyedContainer` which determines whether a type is a container whose elements are pairs and whose keys are convertible to a std::string_view.
@@ -28,7 +29,7 @@
     * Added concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
 * Added `Demangle` to log de-mangled typeid names.
 * Added struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit` (technically moved).
-* Added function `CompareDouble` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.
+* Added function `CompareFloat` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.
 * Added function `WeakToStrong` which converts a `std::weak_ordering` to a `std::strong_ordering`.
 * Fixed some IWYU pragmas.
 

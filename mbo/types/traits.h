@@ -395,6 +395,23 @@ concept IsReferenceWrapper = requires {
   requires std::same_as<std::reference_wrapper<typename T::type>, T>;
 };
 
+// Implements a variant of `std::constructible_from` that works around its limitations to deal with array args.
+//
+// Instead of typing on use of `new` this allows proper concept use:
+// ```
+// template<typename... Args, typename = decltype(::new(std::declval<void*>()) T(std::declval<Args>()...))>
+// template<typename... Args, typename = std::enable_if_t<ConstructibleFrom<T, Args...>>>
+// ```
+//
+// The implementation uses the actual `std::constructible_from` and if that fails tries the alternative way.
+// The alternative first requires `std::destructible` and then tries construction via in-place `new`.
+template<typename T, typename... Args>
+concept ConstructibleFrom =                 //
+    std::constructible_from<T, Args...> ||  //
+    (std::destructible<T> && requires(T value, Args... args) {
+      { ::new (&value) T(args...) } -> std::same_as<T*>;
+    });
+
 // Verify whether `From` can used used to construct a `Into`.
 // That allows the concept to be used for in-place/auto template parameters.
 // See Compiler Explorer debug: https://godbolt.org/z/5vMEeGMMP
@@ -425,7 +442,7 @@ concept IsReferenceWrapper = requires {
 // };
 // ```
 template<typename From, typename Into>
-concept ConstructibleInto = std::constructible_from<Into, From>;
+concept ConstructibleInto = ConstructibleFrom<Into, From>;
 
 // Test whether a type is a container whose elements are pairs and whose keys
 // are convertible to a std::string_view.

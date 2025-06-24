@@ -26,6 +26,7 @@
 #include "absl/strings/str_format.h"
 #include "mbo/config/require.h"
 #include "mbo/log/demangle.h"
+#include "mbo/types/traits.h"  // IWYU pragma: keep
 
 namespace mbo::types {
 
@@ -148,7 +149,7 @@ class OptionalDataOrRef {
     return *this;
   }
 
-  template<typename... Args, typename = decltype(::new(std::declval<void*>()) T(std::declval<Args>()...))>
+  template<typename... Args, typename = std::enable_if_t<ConstructibleFrom<T, Args...>>>
   constexpr OptionalDataOrRef& emplace(Args&&... args) noexcept {
     if (is_val_) {
       std::destroy_at(&union_.val);
@@ -196,7 +197,7 @@ class OptionalDataOrRef {
   // * is `std::nullopt`, then a default value will be emplace and is reference returned.
   // * contains a value, then its reference will be returned.
   // * contains a reference, then that reference is emplace and then its reference returned.
-  template<typename... Args, typename = decltype(::new(std::declval<void*>()) T(std::declval<Args>()...))>
+  template<typename... Args, typename = std::enable_if_t<ConstructibleFrom<T, Args...>>>
   constexpr value_type& as_data(Args&&... args) noexcept {
     if (!is_val_) {
       if (union_.ptr != nullptr) {
