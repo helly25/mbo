@@ -3,30 +3,34 @@
 * Bumped minimum GCC to 13.
 * Added direct support for `-fno-exceptions` irrespective of config setting.
 * Added support for ASAN symbolizer with `--config=clang`.
-* Added concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
 * Added AbslStringify and hash support to `NoDestruct`, `RefWrap`, `Required`.
 * Added struct `OptionalDataOrRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a reference `T&`/`const T&`.
 * Added struct `OptionalDataOrConstRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a const reference `const T&`.
 * Added struct `OptionalRef` similar to `std::optional` but can hold `std::nullopt` or a reference `T&`/`const T&`.
-* Improved control for `Stringify` with Json output.
-  * Updated `StringifyOptions` (breaking change).
-  * Updated `StringifyWithFieldNames` (breaking change).
-  * Moved `StringifyOptions` factories to `Stringify` so they can be constexpr even in C++20.
-* Modified `MboTypesStringifyOptions` (breaking change) to be more flexible - but users must deal with the change.
-* Added ability to detect bad `MboTypesStringifyOptions` signatures.
-* Added `StringifyFieldOptions` which holds outer and inner `StringifyOptions`.
-* Added `Stringify::AsJsonPretty()` and `StringifyOptions::AsJsonPretty()`.
+* Improved `Stringify` (breaking change):
+    * Improved control for `Stringify` with Json output.
+    * Updated `StringifyOptions` (breaking change).
+    * Updated `StringifyWithFieldNames` (breaking change).
+    * Moved `StringifyOptions` factories to `Stringify` so they can be constexpr even in C++20.
+    * Modified `MboTypesStringifyOptions` (breaking change) to be more flexible - but users must deal with the change.
+    * Added ability to detect bad `MboTypesStringifyOptions` signatures.
+    * Added `StringifyFieldOptions` which holds outer and inner `StringifyOptions`.
+    * Added `Stringify::AsJsonPretty()` and `StringifyOptions::AsJsonPretty()`.
+    * Added API extension point functoin `MboTypesStringifyValueAccess` which allows to replace a struct with a single value in `Stringify` processing.
+    * Added `Stringify` support for empty types and types that match `IsStringKeyedContainer`.
+    * Fixed `Stringify` null* representations to stream as `'null'` as opposed to `0`.
+    * Added ability to sort string keyed containers.
+* Improved traits:
+    * Added concept `IsEmptyType` determines whether a type is empty (calls `std::is_empty_v`).
+    * Fixed concept `IsAggregate` (breaking change).
+    * Added concept `IsStringKeyedContainer` which determines whether a type is a container whose elements are pairs and whose keys are convertible to a std::string_view.
+    * Added concept `IsReferenceWrapper` determines whether a type is a `std::reference_wrapper`.
+    * Added concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
 * Added `Demangle` to log de-mangled typeid names.
-* Added concept `IsEmptyType` determines whether a type is empty (calls `std::is_empty_v`).
-* Fixed concept `IsAggregate`.
-* Fixed some IWYU pragmas.
 * Added struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit` (technically moved).
 * Added function `CompareDouble` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.
 * Added function `WeakToStrong` which converts a `std::weak_ordering` to a `std::strong_ordering`.
-* Added concept `IsStringKeyedContainer` which determines whether a type is a container whose elements are pairs and whose keys are convertible to a std::string_view.
-* Added API extension point functoin `MboTypesStringifyValueAccess` which allows to replace a struct with a single value in `Stringify` processing.
-* Added `Stringify` support for empty types and types that match `IsStringKeyedContainer`.
-* Fixed `Stringify` null* epresentations to stream as `null` as opposed to `0`.
+* Fixed some IWYU pragmas.
 
 # 0.9.0
 

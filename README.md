@@ -219,6 +219,7 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * concept `IsBracesConstructibleV` determines whether a type can be constructe from given argument types.
         * concept `IsOptional` determines whether a type is a `std::optional` type.
         * concept `IsPair` determines whether a type is a `std::pair` type.
+        * concept `IsReferenceWrapper` determines whether a type is a `std::reference_wrapper`.
         * concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
         * concept `IsSameAsAnyOfRaw` / `NotSameAsAnyOfRaw` which determines whether a type is one of a list of types. Similar to `IsSameAsAnyOf` but applies `std::remove_cvref_t` on all types.
         * concept `IsSet` determines whether a type is a `std::set` type.
