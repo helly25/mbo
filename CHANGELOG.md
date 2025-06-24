@@ -27,6 +27,7 @@
     * Added concept `IsStringKeyedContainer` which determines whether a type is a container whose elements are pairs and whose keys are convertible to a std::string_view.
     * Added concept `IsReferenceWrapper` determines whether a type is a `std::reference_wrapper`.
     * Added concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
+    * Added template struct `TypedView` a wrapper for STL views that provides type definitions, most importantly `value_type`. That allows such views to be used with GoogleTest container matchers.
 * Added `Demangle` to log de-mangled typeid names.
 * Added struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit` (technically moved).
 * Added function `CompareFloat` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.

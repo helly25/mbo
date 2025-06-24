@@ -404,6 +404,12 @@ cc_test(
 )
 
 cc_library(
+    name = "typed_view_cc",
+    hdrs = ["typed_view.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "variant_cc",
     hdrs = ["variant.h"],
     visibility = ["//visibility:public"],
