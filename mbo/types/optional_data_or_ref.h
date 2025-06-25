@@ -349,6 +349,13 @@ class OptionalDataOrRef {
 template<typename T>
 using OptionalDataOrConstRef = OptionalDataOrRef<T, const T>;
 
+template<typename T>
+concept IsOptionalDataOrRef = requires {
+  typename T::value_type;
+  typename T::reference;
+  requires std::same_as<T, OptionalDataOrRef<typename T::value_type, std::remove_reference_t<typename T::reference>>>;
+};
+
 // NOLINTEND(*-identifier-naming)
 
 }  // namespace mbo::types

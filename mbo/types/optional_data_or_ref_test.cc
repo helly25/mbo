@@ -40,6 +40,7 @@ struct OptionalDataOrRefTest : ::testing::Test {};
 TEST_F(OptionalDataOrRefTest, Constexpr) {
   {
     constexpr OptionalDataOrRef<int> kRef;
+    static_assert(IsOptionalDataOrRef<std::remove_const_t<decltype(kRef)>>);
     EXPECT_THAT(kRef, std::nullopt);
     EXPECT_THAT(kRef, IsNullopt());
     EXPECT_THAT(kRef.has_value(), false);
@@ -50,6 +51,7 @@ TEST_F(OptionalDataOrRefTest, Constexpr) {
   {
     static constexpr std::string_view kStr = "test";
     constexpr OptionalDataOrConstRef<std::string_view> kRef{kStr};
+    static_assert(IsOptionalDataOrRef<std::remove_const_t<decltype(kRef)>>);
     EXPECT_THAT(kRef, "test");
     EXPECT_THAT(kRef, Not(IsNullopt()));
     EXPECT_THAT(kRef.has_value(), true);
@@ -256,6 +258,7 @@ TEST_F(OptionalDataOrRefTest, Compare) {
 
 TEST_F(OptionalDataOrRefTest, ConsRef) {
   OptionalDataOrConstRef<int> ref(42);
+  static_assert(IsOptionalDataOrRef<decltype(ref)>);
   EXPECT_THAT(ref, Eq(42));
   EXPECT_THAT(ref.has_value(), true);
   EXPECT_THAT(ref.HoldsData(), true);

@@ -175,9 +175,11 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * struct `OpaqueValue` an `OpaquePtr` with direct access, comparison and hashing which will not allow a nullptr.
         * struct `OpaqueContainer` an `OpaqueValue` with direct container access.
     * mbo/types:optional_ref_cc, mbo/types/optional_data_or_ref.h
+        * concept `IsOptionalDataOrRef` which determines whether a type is a `OptionalDataOrRef`.
         * struct `OptionalDataOrRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a reference `T&`/`const T&`.
         * struct `OptionalDataOrConstRef` similar to `std::optional` but can hold `std::nullopt`, a type `T` or a const reference `const T&`.
     * mbo/types:optional_ref_cc, mbo/types/optional_ref.h
+        * concept `IsOptionalRef` which determines whether a type is a `OptionalRef`.
         * struct `OptionalRef` similar to `std::optional` but can hold `std::nullopt` or a reference `T&`/`const T&`.
     * mbo/types:ref_wrap_cc, mbo/types/ref_wrap.h
         * template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.
@@ -199,6 +201,8 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * API extension point functoin `MboTypesStringifyValueAccess` which allows to replace a struct with a single value in `Stringify` processing.
     * mbo/types:stringify_ostream_cc, mbo/types/stringify_ostream.h
         * operator `std::ostream& operator<<(std::ostream&, const MboTypesStringifySupport auto& v)` - conditioanl automatic ostream support for structs using `Stringify`.
+        * function `SetStringifyOstreamOutputMode` which sets global Stringify stream options by mode.
+        * function `SetStringifyOstreamOptions` which sets global Stringify stream options.
     * mbo/types:traits_cc, mbo/types/traits.h
         * concept `ConstructibleFrom` implements a variant of `std::constructible_from` that works around its limitations to deal with array args.
         * concept `ConstructibleInto` determines whether one type can be constructed from another. Similar to `std::convertible_to` but with the argument order of `std::constructible_from`.
