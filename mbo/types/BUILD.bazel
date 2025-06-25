@@ -294,9 +294,11 @@ cc_test(
 
 cc_library(
     name = "stringify_ostream_cc",
+    srcs = ["stringify_ostream.cc"],
     hdrs = ["stringify_ostream.h"],
     deps = [
         ":stringify_cc",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 
@@ -305,8 +307,10 @@ cc_test(
     size = "small",
     srcs = ["stringify_ostream_test.cc"],
     deps = [
+        ":extend_cc",
         ":extender_cc",
         ":stringify_ostream_cc",
+        "//mbo/testing:matchers_cc",
         "@com_google_googletest//:gtest",
         "@com_google_googletest//:gtest_main",
     ],

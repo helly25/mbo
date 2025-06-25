@@ -22,13 +22,36 @@
 
 #include <concepts>  // IWYU pragma: keep
 #include <iostream>
+#include <memory>
+#include <ostream>
 
 #include "mbo/types/stringify.h"
 
+namespace mbo::types {
+namespace types_internal {
+
+std::shared_ptr<const Stringify> GetStringifyForOstream();
+
+}  // namespace types_internal
+
+// Set the global Stringify stream options by mode.
+//
+// While this is thread-safe, there is no guarantee that the same options will be used.
+// That is becasue the options could be changed before the intended stream call.
+void SetStringifyOstreamOutputMode(Stringify::OutputMode output_mode);
+
+// Set the global Stringify stream options by `StringifyOptions`.
+//
+// While this is thread-safe, there is no guarantee that the same options will be used.
+// That is becasue the options could be changed before the intended stream call.
+void SetStringifyOstreamOptions(const StringifyOptions& options);
+void SetStringifyOstreamOptions(const StringifyOptions&& options) = delete;
+
+}  // namespace mbo::types
+
 // Add `Stringify` ostream support to *ALL* types that claim support, see `HasMboTypesStringifySupport`.
 std::ostream& operator<<(std::ostream& os, const mbo::types::HasMboTypesStringifySupport auto& v) {
-  static mbo::types::Stringify sfy;
-  sfy.Stream(os, v);
+  mbo::types::types_internal::GetStringifyForOstream()->Stream(os, v);
   return os;
 }
 

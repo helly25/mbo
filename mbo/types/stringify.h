@@ -25,6 +25,7 @@
 #include <iostream>
 #include <limits>
 #include <optional>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -41,6 +42,7 @@
 #include "mbo/types/internal/extender.h"      // IWYU pragma: keep
 #include "mbo/types/internal/struct_names.h"  // IWYU pragma: keep
 #include "mbo/types/optional_data_or_ref.h"
+#include "mbo/types/optional_ref.h"
 #include "mbo/types/traits.h"  // IWYU pragma: keep
 #include "mbo/types/tuple_extras.h"
 
@@ -251,7 +253,7 @@ struct StringifyOptions {
   OptionalDataOrConstRef<Special> special;
 
   template<IsSameAsAnyOf<Format, FieldControl, KeyControl, KeyOverrides, ValueControl, ValueOverrides, Special> T>
-  constexpr const auto& Access() const {
+  constexpr const auto& Access() const noexcept {
     if constexpr (std::same_as<T, Format>) {
       return format;
     } else if constexpr (std::same_as<T, FieldControl>) {
@@ -270,7 +272,7 @@ struct StringifyOptions {
   }
 
   template<IsSameAsAnyOf<Format, FieldControl, KeyControl, KeyOverrides, ValueControl, ValueOverrides, Special> T>
-  static constexpr std::string_view TypeName() {
+  static constexpr std::string_view TypeName() noexcept {
     if constexpr (std::same_as<T, Format>) {
       return "Format";
     } else if constexpr (std::same_as<T, FieldControl>) {
@@ -378,6 +380,15 @@ struct StringifyFieldOptions {
       return outer;
     } else {
       return outer.Access<T>().value();
+    }
+  }
+
+  template<typename T = StringifyOptions>
+  constexpr const auto& Inner() const noexcept {
+    if constexpr (std::same_as<T, StringifyOptions>) {
+      return inner;
+    } else {
+      return inner.Access<T>().value();
     }
   }
 
@@ -624,7 +635,7 @@ class Stringify {
     kJsonPretty,
   };
 
-  friend std::ostream& operator<<(std::ostream& os, const OutputMode& value) {
+  friend constexpr std::ostream& operator<<(std::ostream& os, const OutputMode& value) {
     switch (value) {
       case OutputMode::kDefault: break;
       case OutputMode::kCpp: return os << "OutpuMode::kCpp";
@@ -703,136 +714,162 @@ class Stringify {
   static Stringify AsJsonLine(const StringifyRootOptions&&) = delete;
   static Stringify AsJsonPretty(const StringifyRootOptions&&) = delete;
 
-  static Stringify AsCpp(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
+  static constexpr Stringify AsCpp(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
     return Stringify(OptionsCpp(), root_options);
   }
 
-  static Stringify AsCppPretty(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
+  static constexpr Stringify AsCppPretty(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
     return Stringify(OptionsCppPretty(), root_options);
   }
 
-  static Stringify AsJson(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
+  static constexpr Stringify AsJson(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
     return Stringify(OptionsJson(), root_options);
   }
 
-  static Stringify AsJsonLine(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
+  static constexpr Stringify AsJsonLine(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
     return Stringify(OptionsJsonLine(), root_options);
   }
 
-  static Stringify AsJsonPretty(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
+  static constexpr Stringify AsJsonPretty(const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept {
     return Stringify(OptionsJsonPretty(), root_options);
   }
 
   explicit Stringify(const StringifyOptions&&) = delete;
-  template<typename SO>
-  explicit Stringify(SO&&, StringifyRootOptions&&) = delete;  // NOLINT(*)
+  explicit Stringify(const StringifyOptions&&, const StringifyRootOptions&&) = delete;
+  explicit Stringify(const StringifyOptions&, const StringifyRootOptions&&) = delete;
+  explicit Stringify(const StringifyOptions&&, const StringifyRootOptions&) = delete;
+  explicit Stringify(OutputMode, StringifyRootOptions&&) = delete;  // NOLINT(*)
 
-  explicit Stringify(
+  explicit constexpr Stringify(
       const StringifyOptions& default_options = OptionsDefault(),
       const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept
-      : root_options_(root_options), default_field_options_(default_options), indent_(*this) {
+      : default_root_options_(root_options), default_field_options_(default_options) {
     MBO_CONFIG_REQUIRE(default_field_options_.AllDataSet(), "Not all data set: ") << default_field_options_.DebugStr();
   }
 
-  explicit Stringify(OutputMode output_mode, const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept
+  explicit constexpr Stringify(
+      OutputMode output_mode,
+      const StringifyRootOptions& root_options = kRootOptionDefaults) noexcept
       : Stringify(OptionsAs(output_mode), root_options) {}
 
   template<typename T>
   requires(IsAggregate<T> || IsEmptyType<T> || IsStringKeyedContainer<T>)
-  std::string ToString(const T& value) const {
+  std::string ToString(const T& value, OptionalRef<const StringifyRootOptions> opt_root_options = {}) const {
     std::ostringstream os;
-    Stream<T>(os, value);
+    Stream<T>(os, value, opt_root_options);
     return os.str();
   }
 
   template<typename T>
   requires(IsAggregate<T> || IsEmptyType<T> || IsStringKeyedContainer<T>)
-  void Stream(std::ostream& os, const T& value) const {
-    os << root_options_.root_prefix;
+  void Stream(std::ostream& out, const T& value, OptionalRef<const StringifyRootOptions> opt_root_options = {}) const {
+    const StringifyRootOptions& root_options = opt_root_options ? *opt_root_options : default_root_options_;
+    OStream os(!default_field_options_.outer.format.get({}).field_indent.empty(), out, root_options);
+    os << root_options.root_prefix;
     os << default_field_options_.outer.format.get({}).message_prefix;
     StreamImpl(os, default_field_options_, value);
     os << default_field_options_.outer.format.get({}).message_suffix;
-    os << root_options_.root_suffix;
+    os << root_options.root_suffix;
   }
+
+  const StringifyRootOptions& DebugDefaultRootOptions() const noexcept { return default_root_options_; }
+
+  const StringifyFieldOptions& DebugDefaultFieldOptions() const noexcept { return default_field_options_; }
 
  private:
   using SO = StringifyOptions;
   using SFO = StringifyFieldOptions;
 
-  class Indent {
+  class OStream {
    public:
-    Indent() = delete;
+    ~OStream() noexcept = default;
+    OStream() = delete;
+    OStream(const OStream&) = delete;
+    OStream& operator=(const OStream&) = delete;
+    OStream(OStream&&) = delete;
+    OStream& operator=(OStream&&) = delete;
 
-    explicit Indent(const Stringify& stringify)
-        : enable_(!stringify.default_field_options_.outer.format.get({}).field_indent.empty()) {
-      if (!stringify.root_options_.root_indent.empty()) {
-        level_.push_back(stringify.root_options_.root_indent);
-      }
+    OStream(bool enable_indent, std::ostream& os, const StringifyRootOptions& root_options)
+        : enable_indent_(enable_indent), os_(os) {
+      RootIndent(root_options);
     }
 
-    void IncContainer(std::ostream& os, const StringifyOptions::Format& format) {
-      os << format.container_prefix;
+    template<typename T>
+    OStream& operator<<(const T& v) {
+      os_ << v;
+      return *this;
+    }
+
+    void IncContainer(const StringifyOptions::Format& format) {
+      os_ << format.container_prefix;
       level_.push_back(format.field_indent);
-      enable_ = !format.field_indent.empty();
+      enable_indent_ = !format.field_indent.empty();
     }
 
-    void DecContainer(std::ostream& os, const StringifyOptions::Format& format) {
+    void DecContainer(const StringifyOptions::Format& format) {
       level_.pop_back();
-      StreamIndent(os);
-      os << format.container_suffix;
-      enable_ = level_.empty() || !level_.back().empty();
+      StreamIndent();
+      os_ << format.container_suffix;
+      enable_indent_ = level_.empty() || !level_.back().empty();
     }
 
-    void IncStruct(std::ostream& os, const StringifyOptions::Format& format) {
-      os << format.structure_prefix;
+    void IncStruct(const StringifyOptions::Format& format) {
+      os_ << format.structure_prefix;
       level_.push_back(format.field_indent);
-      enable_ = !format.field_indent.empty();
+      enable_indent_ = !format.field_indent.empty();
     }
 
-    void DecStruct(std::ostream& os, const StringifyOptions::Format& format) {
+    void DecStruct(const StringifyOptions::Format& format) {
       level_.pop_back();
-      StreamIndent(os);
-      os << format.structure_suffix;
-      enable_ = level_.empty() || !level_.back().empty();
+      StreamIndent();
+      os_ << format.structure_suffix;
+      enable_indent_ = level_.empty() || !level_.back().empty();
     }
 
-    void StreamIndent(std::ostream& os) {
-      if (!enable_) {
+    void StreamIndent() {
+      if (!enable_indent_) {
         return;
       }
-      os << "\n";
+      os_ << "\n";
       for (std::string_view level : level_) {
-        os << level;
+        os_ << level;
       }
     }
 
    private:
-    bool enable_ = true;
+    void RootIndent(const StringifyRootOptions& root_options) {
+      if (!root_options.root_indent.empty()) {
+        level_.push_back(root_options.root_indent);
+      }
+    }
+
+    bool enable_indent_ = true;
+    std::ostream& os_;
     std::vector<std::string_view> level_;
   };
 
   template<IsAggregate T>
   requires(!IsEmptyType<T>)
-  void StreamImpl(std::ostream& os, const StringifyFieldOptions& options, const T& value) const {
+  void StreamImpl(OStream& os, const StringifyFieldOptions& options, const T& value) const {
     // It is not allowed to deny field name printing but provide filed names.
     static_assert(!(HasMboTypesStringifyDoNotPrintFieldNames<T> && HasMboTypesStringifyFieldNames<T>));
     StreamFieldsImpl<T>(os, options, value);
   }
 
   template<IsEmptyType T>
-  void StreamImpl(std::ostream& os, const StringifyFieldOptions& options, const T& value) const {
+  void StreamImpl(OStream& os, const StringifyFieldOptions& options, const T& value) const {
     StreamFieldsImpl<T>(os, options, value);
   }
 
   template<IsStringKeyedContainer T>
-  void StreamImpl(std::ostream& os, const StringifyFieldOptions& options, const T& value) const {
+  void StreamImpl(OStream& os, const StringifyFieldOptions& options, const T& value) const {
     StreamValue(os, options, value, true);
   }
 
   template<typename T>
   requires(HasMboTypesStringifyDisable<T>)
   void StreamFieldsImpl(
-      std::ostream& os,
+      OStream& os,
       const StringifyFieldOptions& options,
       const T& /*value*/,
       bool /*allow_field_names*/ = !HasMboTypesStringifyDoNotPrintFieldNames<T>) const {
@@ -859,7 +896,7 @@ class Stringify {
   template<typename T>
   requires(!HasMboTypesStringifyDisable<T>)
   void StreamFieldsImpl(
-      std::ostream& os,
+      OStream& os,
       const StringifyFieldOptions& options,
       const T& value,
       bool use_field_names = !HasMboTypesStringifyDoNotPrintFieldNames<T>) const {
@@ -869,12 +906,12 @@ class Stringify {
     std::apply(
         [&](const auto&... fields) {
           const SO::Format& format = *options.outer.format;
-          indent_.IncStruct(os, format);
+          os.IncStruct(format);
           std::size_t idx{0};
           ((StreamField(os, options, use_sep, value, TsValue<T>(idx, value, fields), idx, field_names, use_field_names),
             ++idx),
            ...);
-          indent_.DecStruct(os, format);
+          os.DecStruct(format);
         },
         [&value]() {
           if constexpr (types_internal::IsExtended<T>) {
@@ -927,7 +964,7 @@ class Stringify {
 
   template<typename T, typename Field, typename FieldNames>
   void StreamField(
-      std::ostream& os,
+      OStream& os,
       const StringifyFieldOptions& outer_options,
       bool& use_seperator,
       const T& value,
@@ -954,7 +991,7 @@ class Stringify {
 
   template<typename Field, typename CustomT>
   void StreamFieldCustom(
-      std::ostream& os,
+      OStream& os,
       const StringifyFieldOptions& outer_options,
       bool& use_seperator,
       const Field& field,
@@ -995,7 +1032,7 @@ class Stringify {
 
   template<typename Field>
   void StreamFieldCustomCache(
-      std::ostream& os,
+      OStream& os,
       const StringifyFieldOptions& outer_options,
       const StringifyFieldOptions& custom,
       bool& use_seperator,
@@ -1012,7 +1049,7 @@ class Stringify {
 
   template<typename Field, std::same_as<StringifyOptions> CustomT>
   void StreamFieldCustomCache(
-      std::ostream& os,
+      OStream& os,
       const StringifyFieldOptions& outer_options,
       CustomT&& custom,
       bool& use_seperator,
@@ -1028,7 +1065,7 @@ class Stringify {
 
   template<typename Field>
   void StreamFieldDo(
-      std::ostream& os,
+      OStream& os,
       const StringifyFieldOptions& outer_options,
       const StringifyFieldInfo& field_info,
       bool& use_seperator,
@@ -1042,7 +1079,7 @@ class Stringify {
       os << outer_options.outer.format->field_separator;
     }
     use_seperator = true;
-    indent_.StreamIndent(os);
+    os.StreamIndent();
     if (allow_field_names) {
       StreamFieldName(os, field_info);
     }
@@ -1076,7 +1113,7 @@ class Stringify {
     return true;
   }
 
-  static void StreamFieldName(std::ostream& os, const StringifyFieldInfo& field, bool allow_key_override = true) {
+  static void StreamFieldName(OStream& os, const StringifyFieldInfo& field, bool allow_key_override = true) {
     const SO::Format& format = *field.options.outer.format;
     const SO::KeyControl& key_control = *field.options.outer.key_control;
     switch (key_control.key_mode) {
@@ -1116,7 +1153,7 @@ class Stringify {
   }
 
   template<IsStringKeyedContainer C>
-  void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
+  void StreamValue(OStream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
     switch (options.outer.special->str_keyed) {
       case SO::StrKeyed::kNormal: break;
       case SO::StrKeyed::kFirstIsName:
@@ -1142,12 +1179,12 @@ class Stringify {
 
   template<IsStringKeyedContainer C>
   void StreamStringKeyedContainer(
-      std::ostream& os,
+      OStream& os,
       const StringifyFieldOptions& options,
       const C& vs,
       bool allow_field_names) const {
     const SO::Format& format = *options.outer.format;
-    indent_.IncStruct(os, format);
+    os.IncStruct(format);
     std::string_view sep;
     std::size_t index = 0;
     for (const auto& v : vs) {
@@ -1155,7 +1192,7 @@ class Stringify {
         break;
       }
       os << sep;
-      indent_.StreamIndent(os);
+      os.StreamIndent();
       sep = options.outer.format->field_separator;
       if (allow_field_names) {
         const StringifyFieldInfo field_info{.options = options, .idx = index, .name = v.first};
@@ -1164,7 +1201,7 @@ class Stringify {
       StreamValue(os, options.ToInner(), v.second, allow_field_names);
       ++index;
     }
-    indent_.DecStruct(os, format);
+    os.DecStruct(format);
   }
 
   template<typename C>
@@ -1172,16 +1209,15 @@ class Stringify {
       ::mbo::types::ContainerIsForwardIteratable<C>
       && !mbo::types::IsPairFirstStr<std::remove_cvref_t<typename C::value_type>>
       && !std::convertible_to<C, std::string_view> && !HasMboTypesStringifyValueAccess<C>)
-  void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
+  void StreamValue(OStream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
     StreamContainer(os, options, vs, allow_field_names);
   }
 
   template<typename C>
   requires(ContainerIsForwardIteratable<C>)
-  void StreamContainer(std::ostream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names)
-      const {
+  void StreamContainer(OStream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
     const SO::Format& format = *options.outer.format;
-    indent_.IncContainer(os, format);
+    os.IncContainer(format);
     std::string_view sep;
     std::size_t index = 0;
     for (const auto& v : vs) {
@@ -1189,19 +1225,16 @@ class Stringify {
         break;
       }
       os << sep;
-      indent_.StreamIndent(os);
+      os.StreamIndent();
       sep = options.outer.format->field_separator;
       StreamValue(os, options.ToInner(), v, allow_field_names);
     }
-    indent_.DecContainer(os, format);
+    os.DecContainer(format);
   }
 
   template<IsVariant Variant>
-  void StreamValue(
-      std::ostream& os,
-      const StringifyFieldOptions& options,
-      const Variant& value,
-      bool /*allow_field_names*/) const {
+  void StreamValue(OStream& os, const StringifyFieldOptions& options, const Variant& value, bool /*allow_field_names*/)
+      const {
     std::visit(
         [&]<typename ArgT>(const ArgT& arg) {
           if constexpr (IsAggregate<ArgT> || IsStringKeyedContainer<ArgT>) {
@@ -1215,7 +1248,7 @@ class Stringify {
 
   template<HasMboTypesStringifyValueAccess T>
   requires(!IsStringKeyedContainer<T>)
-  void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const T& value, bool /*allow_field_names*/)
+  void StreamValue(OStream& os, const StringifyFieldOptions& options, const T& value, bool /*allow_field_names*/)
       const {
     StreamValue(os, options, MboTypesStringifyValueAccess(value, options), false);
   }
@@ -1225,7 +1258,7 @@ class Stringify {
                                         || (IsAggregate<T> && !absl::HasAbslStringify<T>::value);
 
   template<typename V>  // NOLINTNEXTLINE(readability-function-cognitive-complexity)
-  void StreamValue(std::ostream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names) const {
+  void StreamValue(OStream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names) const {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (HasMboTypesStringifyDisable<RawV>) {
@@ -1244,6 +1277,14 @@ class Stringify {
       StreamValue(os, options, v.get(), allow_field_names);
     } else if constexpr (IsOptional<RawV>) {
       StreamValueOptional(os, options, v, allow_field_names);
+    } else if constexpr (IsOptionalDataOrRef<RawV> || IsOptionalRef<RawV>) {
+      if (v.has_value()) {
+        StreamValue(os, options, *v, allow_field_names);
+      } else {
+        StreamValue(os, options, std::nullopt, allow_field_names);
+      }
+    } else if constexpr (std::same_as<RawV, StringifyFieldInfoString>) {
+      StreamValue(os, options, "std::function", allow_field_names);
     } else if constexpr (IsPair<RawV>) {
       StreamValuePair(os, options, v, allow_field_names);
     } else if constexpr (std::is_same_v<RawV, char> || std::is_same_v<RawV, unsigned char>) {
@@ -1279,8 +1320,7 @@ class Stringify {
   }
 
   template<IsPair V>
-  void StreamValuePair(std::ostream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names)
-      const {
+  void StreamValuePair(OStream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names) const {
     using RawV = std::remove_cvref_t<V>;
     if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyOptions<RawV>) {
       std::array<std::string_view, 2> field_names;
@@ -1292,17 +1332,17 @@ class Stringify {
         field_names[1] = "second";
       }
       bool use_seperator = false;
-      indent_.IncStruct(os, *options.outer.format);
+      os.IncStruct(*options.outer.format);
       StreamField(os, options.ToInner(), use_seperator, v, v.first, 0, field_names, allow_field_names);
       StreamField(os, options.ToInner(), use_seperator, v, v.second, 1, field_names, allow_field_names);
-      indent_.DecStruct(os, *options.outer.format);
+      os.DecStruct(*options.outer.format);
     } else {
       StreamFieldsImpl(os, options, v, allow_field_names);
     }
   }
 
   template<typename V>
-  void StreamValueSmartPtr(std::ostream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names)
+  void StreamValueSmartPtr(OStream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names)
       const {
     if (v) {
       os << options.outer.format->smart_ptr_prefix;
@@ -1314,8 +1354,7 @@ class Stringify {
   }
 
   template<typename V>
-  void StreamValuePointer(std::ostream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names)
-      const {
+  void StreamValuePointer(OStream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names) const {
     if (v) {
       os << options.outer.format->pointer_prefix;
       StreamValue(os, options.ToInner(), *v, allow_field_names);
@@ -1326,7 +1365,7 @@ class Stringify {
   }
 
   template<typename V>
-  void StreamValueOptional(std::ostream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names)
+  void StreamValueOptional(OStream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names)
       const {
     if (v.has_value()) {
       os << options.outer.format->optional_prefix;
@@ -1338,7 +1377,7 @@ class Stringify {
   }
 
   template<typename V>
-  static void StreamValueFallback(std::ostream& os, const StringifyOptions& options, const V& v) {
+  static void StreamValueFallback(OStream& os, const StringifyOptions& options, const V& v) {
     if (options.value_control->other_types_direct) {
       if (options.value_overrides->replacement_other.empty()) {
         os << absl::StreamFormat("%v", v);
@@ -1351,7 +1390,7 @@ class Stringify {
     }
   }
 
-  static void StreamValueStr(std::ostream& os, const StringifyOptions& options, std::string_view v) {
+  static void StreamValueStr(OStream& os, const StringifyOptions& options, std::string_view v) {
     if (!options.value_overrides->replacement_str.empty()) {
       os << options.value_overrides->replacement_str;
       return;
@@ -1370,7 +1409,7 @@ class Stringify {
     }
   }
 
-  static constexpr const StringifyOptions kOptionsDefaults = StringifyOptions::WithAllData({});
+  static constexpr const StringifyOptions kOptionsDefaults{StringifyOptions::WithAllData({})};
   static constexpr const StringifyOptions kOptionsDisabled = StringifyOptions::WithAllData({
       .field_control{StringifyOptions::FieldControl{
           .suppress = true,
@@ -1467,9 +1506,10 @@ class Stringify {
 
   static constexpr StringifyRootOptions kRootOptionDefaults = {};
 
-  const StringifyRootOptions& root_options_;
-  const StringifyFieldOptions default_field_options_;
-  mutable Indent indent_;
+  // THERE CANNOT BE ANY NON CONST MEMBERS!
+
+  const StringifyRootOptions& default_root_options_;
+  const StringifyFieldOptions default_field_options_;  // Only stores two references.
 };
 
 // Adapter (not Extender) that injects field names into field control.

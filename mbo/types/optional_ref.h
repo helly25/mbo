@@ -193,6 +193,13 @@ class OptionalRef {
   T* v_ = nullptr;
 };
 
+template<typename T>
+concept IsOptionalRef = requires {
+  typename T::value_type;
+  typename T::reference;
+  requires std::same_as<T, OptionalRef<std::remove_reference_t<typename T::value_type>>>;
+};
+
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_OPTIONAL_REF_H_

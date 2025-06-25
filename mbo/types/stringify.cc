@@ -21,6 +21,20 @@
 namespace mbo::types {
 
 std::string StringifyOptions::DebugStr() const {
+// NOLINTNEXTLINE(*-macro-usage)
+#define SHOW_DEFAULT(name)        \
+  if (this == &Stringify::name()) \
+  return "{} // " #name "\n"
+  SHOW_DEFAULT(OptionsDefault);
+  SHOW_DEFAULT(OptionsDefault);
+  SHOW_DEFAULT(OptionsDisabled);
+  SHOW_DEFAULT(OptionsCpp);
+  SHOW_DEFAULT(OptionsCppPretty);
+  SHOW_DEFAULT(OptionsJson);
+  SHOW_DEFAULT(OptionsJsonLine);
+  SHOW_DEFAULT(OptionsJsonPretty);
+#undef SHOW_DEFAULT
+
   std::ostringstream out;
   out << "{\n";
   ApplyAll(*this, [&out]<typename T>(const T& v) {

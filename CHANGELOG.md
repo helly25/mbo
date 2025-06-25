@@ -20,6 +20,9 @@
     * Added `Stringify` support for empty types and types that match `IsStringKeyedContainer`.
     * Fixed `Stringify` null* representations to stream as `'null'` as opposed to `0`.
     * Added ability to sort string keyed containers.
+    * Added function `SetStringifyOstreamOutputMode` which sets global Stringify stream options by mode.
+    * Added function `SetStringifyOstreamOptions` which sets global Stringify stream options.
+    * Changed `Stringify::ToString` and `Stringify::Stream` to not depend on any mutable member of `Stringify`.
 * Improved traits:
     * Added concept `ConstructibleFrom` implements a variant of `std::constructible_from` that works around its limitations to deal with array args.
     * Added concept `IsEmptyType` determines whether a type is empty (calls `std::is_empty_v`).
@@ -28,6 +31,8 @@
     * Added concept `IsReferenceWrapper` determines whether a type is a `std::reference_wrapper`.
     * Added concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
     * Added template struct `TypedView` a wrapper for STL views that provides type definitions, most importantly `value_type`. That allows such views to be used with GoogleTest container matchers.
+    * Added concept `IsOptionalDataOrRef` which determines whether a type is a `OptionalDataOrRef`.
+    * Added concept `IsOptionalRef` which determines whether a type is a `OptionalRef`.
 * Added `Demangle` to log de-mangled typeid names.
 * Added struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit` (technically moved).
 * Added function `CompareFloat` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.

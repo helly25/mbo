@@ -20,6 +20,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/testing/matchers.h"
+#include "mbo/types/extend.h"
 #include "mbo/types/extender.h"
 
 namespace mbo_other {  // Not using namespace mbo::types
@@ -28,22 +30,60 @@ namespace {
 
 // NOLINTBEGIN(*-magic-numbers,*-named-parameter)
 
+using ::mbo::testing::EqualsText;
+using ::mbo::types::SetStringifyOstreamOutputMode;
+using ::mbo::types::Stringify;
 using ::mbo::types::types_internal::kStructNameSupport;
 using ::testing::Conditional;
 
 struct StringifyOstreamTest : ::testing::Test {};
 
+#if defined(__clang__)
+# pragma clang diagnostic push
+// Calng may get confused about ADL friends
+# pragma clang diagnostic ignored "-Wunneeded-internal-declaration"
+#endif  // defined(__clang__)
+
+struct TestStruct {
+  int one = 11;
+  int two = 25;
+
+  using MboTypesStringifySupport = void;
+
+  friend constexpr auto MboTypesStringifyFieldNames(const TestStruct& /*unused*/) {
+    return std::array<std::string_view, 2>{"one", "two"};
+  }
+};
+
+#if defined(__clang__)
+# pragma clang diagnostic pop
+#endif  // defined(__clang__)
+
 TEST_F(StringifyOstreamTest, OStream) {
-  struct TestStruct {
-    int one = 11;
-    int two = 25;
-
-    using MboTypesStringifySupport = void;
-  };
-
-  std::stringstream os;
-  os << TestStruct{};
-  EXPECT_THAT(os.str(), Conditional(kStructNameSupport, R"({.one: 11, .two: 25})", R"({11, 25})"));
+  {
+    std::stringstream os;
+    os << TestStruct{};
+    EXPECT_THAT(os.str(), Conditional(kStructNameSupport, R"({.one: 11, .two: 25})", R"({11, 25})"));
+  }
+  {
+    SetStringifyOstreamOutputMode(Stringify::OutputMode::kCppPretty);
+    std::stringstream os;
+    os << TestStruct{};
+    EXPECT_THAT(
+        os.str(), Conditional(
+                      kStructNameSupport, EqualsText(R"({
+  .one = 11,
+  .two = 25
+}
+)"),
+                      R"({11, 25})"));
+  }
+  {
+    SetStringifyOstreamOutputMode(Stringify::OutputMode::kDefault);
+    std::stringstream os;
+    os << TestStruct{};
+    EXPECT_THAT(os.str(), Conditional(kStructNameSupport, R"({.one: 11, .two: 25})", R"({11, 25})"));
+  }
 }
 
 TEST_F(StringifyOstreamTest, Nested) {
@@ -122,5 +162,3 @@ TEST_F(StringifyOstreamTest, ExistingAbslStringify) {
 
 }  // namespace
 }  // namespace mbo_other
-
-// Not using namespace mbo::types
