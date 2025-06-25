@@ -450,6 +450,21 @@ template<typename T>
 concept IsStringKeyedContainer =
     ContainerIsForwardIteratable<T> && IsPairFirstStr<std::remove_cvref_t<typename T::value_type>>;
 
+// Type           IsScalar     IsArithmetic IsIntegral   IsFloatingPoint
+// bool           true         true         true         false
+// char           true         true         true         false
+// char const     true         true         true         false
+// int            true         true         true         false
+// int const      true         true         true         false
+// float          true         true         false        true
+// double         true         true         false        true
+// long double    true         true         false        true
+// std::size_t    true         true         true         false
+// int*           true         false        false        false
+// float*         true         false        false        false
+// int&           false        false        false        false
+// float&         false        false        false        false
+// See: https://godbolt.org/z/4sr89s9Y5
 template<typename T>
 concept IsArithmetic = std::is_arithmetic_v<T>;
 
