@@ -225,6 +225,7 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * concept `IsCharArray` determines whether a type is a `char*` or `char[]` related type.
         * concept `IsDecomposable` determines whether a type can be used in static-bindings.
         * concept `IsEmptyType` determines whether a type is empty (calls `std::is_empty_v`).
+        * concept `IsFloatingPoint` determines whether a type is a floating point type (uses `std::floating_point`).
         * concept `IsInitializerList` determines whether a type is `std::initializer<T> type.
         * concept `IsScalar` uses `std::is_scalar_v<T>`.
         * concept `IsOptional` determines whether a type is a `std::optional` type.

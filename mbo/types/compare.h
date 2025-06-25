@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <compare>  // IWYU pragma: keep
+#include <concepts>
 #include <functional>
 #include <limits>
 #include <type_traits>
@@ -92,7 +93,7 @@ concept IsCompareLess = types_internal::IsCompareLess<T>::value;
 template<typename T>
 concept IsStdLess = types_internal::IsStdLess<T>::value;
 
-template<IsSameAsAnyOf<float, double, long double> Double>
+template<std::floating_point Double>
 std::strong_ordering CompareFloat(Double lhs, Double rhs) {
   const std::partial_ordering comp = lhs <=> rhs;
   if (comp == std::partial_ordering::less) {

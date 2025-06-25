@@ -37,8 +37,9 @@
     * Added function `CompareIntegral` which compares two values that are integral-numbers (no float/double, no pointers, no references).
     * Added function `CompareScalar` which compares two values that are numbers/scalar (including pointers, no references).
     * Added concept `IsArithmetic` uses `std::is_arithmetic_v<T>`.
-    * Added concept `IsIntegral` uses `std::is_integral_v<T>`.
+    * Added concept `IsIntegral` uses `std::integral<T>`.
     * Added concept `IsScalar` uses `std::is_scalar_v<T>`.
+    * Added concept `IsFloatingPoint` determines whether a type is a floating point type (uses `std::floating_point`).
 * Added `Demangle` to log de-mangled typeid names.
 * Added struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit` (technically moved).
 * Added function `CompareFloat` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.
