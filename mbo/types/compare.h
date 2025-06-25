@@ -108,7 +108,7 @@ std::strong_ordering CompareFloat(Double lhs, Double rhs) {
   return lhs_nan <=> rhs_nan;
 }
 
-// Compares two values that are scalar-numbers (including float/double, pointers and references).
+// Compares two values that are scalar-numbers (including float/double and pointers, excluding references).
 template<IsScalar Lhs, IsScalar Rhs>
 inline std::strong_ordering CompareScalar(Lhs lhs, Rhs rhs) {
   // if constexpr (IsSameAsAnyOf<Lhs, float, double, long double> || IsSameAsAnyOf<Rhs, float, double, long double>) {
@@ -141,7 +141,7 @@ inline std::strong_ordering CompareScalar(Lhs lhs, Rhs rhs) {
   }
 }
 
-// Compares two values that are scalar-numbers (including foat/double and pointers, but not allowing references).
+// Compares two values that are scalar-numbers (including foat/double, excluding pointers and references).
 template<IsArithmetic Lhs, IsArithmetic Rhs>
 inline std::strong_ordering CompareArithmetic(Lhs lhs, Rhs rhs) {
   return CompareScalar(lhs, rhs);
