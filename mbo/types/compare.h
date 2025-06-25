@@ -19,6 +19,7 @@
 #include <cmath>
 #include <compare>  // IWYU pragma: keep
 #include <functional>
+#include <limits>
 #include <type_traits>
 
 #include "mbo/types/traits.h"  // IWYU pragma: keep
@@ -104,6 +105,45 @@ std::strong_ordering CompareFloat(Double lhs, Double rhs) {
   bool lhs_nan = std::isnan(lhs);
   bool rhs_nan = std::isnan(rhs);
   return lhs_nan <=> rhs_nan;
+}
+
+// Compare two values that are numbers/scalar (includes pointers).
+template<IsScalar Lhs, IsScalar Rhs>
+inline std::strong_ordering CompareScalar(Lhs lhs, Rhs rhs) {
+  // if constexpr (IsSameAsAnyOf<Lhs, float, double, long double> || IsSameAsAnyOf<Rhs, float, double, long double>) {
+  if constexpr (std::same_as<Lhs, Rhs>) {
+    if constexpr (IsSameAsAnyOf<Lhs, float, double, long double>) {
+      return CompareFloat(lhs, rhs);
+    } else {
+      return lhs <=> rhs;
+    }
+  } else {
+    if constexpr (IsSameAsAnyOf<Lhs, float, double, long double> || IsSameAsAnyOf<Rhs, float, double, long double>) {
+      return CompareFloat<long double>(lhs, rhs);
+    } else if constexpr (std::is_signed_v<Lhs> == std::is_signed_v<Rhs>) {
+      return lhs <=> rhs;
+    } else if constexpr (std::is_signed_v<Lhs>) {
+      if (lhs < 0 || rhs > std::numeric_limits<Lhs>::max()) {
+        return std::strong_ordering::less;
+      } else {
+        using Common = std::common_type_t<Lhs, Rhs>;
+        return static_cast<Common>(lhs) <=> static_cast<Common>(rhs);
+      }
+    } else {  // Rhs is signed
+      if (rhs < 0 || lhs > std::numeric_limits<Rhs>::max()) {
+        return std::strong_ordering::greater;
+      } else {
+        using Common = std::common_type_t<Lhs, Rhs>;
+        return static_cast<Common>(lhs) <=> static_cast<Common>(rhs);
+      }
+    }
+  }
+}
+
+// Compare two values that are numbers/scalar (includes pointers).
+template<IsArithmetic Lhs, IsArithmetic Rhs>
+inline std::strong_ordering CompareArithmetic(Lhs lhs, Rhs rhs) {
+  return CompareScalar(lhs, rhs);
 }
 
 inline std::strong_ordering WeakToStrong(std::weak_ordering order) {

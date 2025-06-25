@@ -36,6 +36,12 @@
 
 namespace mbo::types {
 
+template<typename T>
+concept IsArithmetic = std::is_arithmetic_v<T>;
+
+template<typename T>
+concept IsScalar = std::is_scalar_v<T>;
+
 // Determines whether `std::is_aggrgate_v<T> == true`.
 template<typename T>
 concept IsAggregate = types_internal::IsAggregate<T>;
