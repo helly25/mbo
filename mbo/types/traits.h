@@ -40,6 +40,9 @@ template<typename T>
 concept IsArithmetic = std::is_arithmetic_v<T>;
 
 template<typename T>
+concept IsIntegral = std::is_integral_v<T>;
+
+template<typename T>
 concept IsScalar = std::is_scalar_v<T>;
 
 // Determines whether `std::is_aggrgate_v<T> == true`.

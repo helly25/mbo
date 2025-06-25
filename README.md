@@ -149,10 +149,11 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * meta-type `IfFalseThenVoid`: Helper type that can be used to skip a case.
         * meta-type `IfTrueThenVoid`: Helper type to inject default cases and to ensure the required type expansion is always possible.
     * mbo/types:compare_cc, mbo/types/compare.h
-        * function `CompareArithmetic` which compares two values that are numbers (not including pointers).
+        * function `CompareArithmetic` which compares two values that are scalar-numbers (including foat/double and pointers, but not allowing references).
         * function `CompareFloat` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.
+        * function `CompareIntegral` which compares two values that are integral-numbers (no float/double, no pointers, no references).
         * comparator `CompareLess` which is compatible to std::Less but allows container optimizations.
-        * function `CompareScalar` which compares two values that are numbers/scalar (including pointers).
+        * function `CompareScalar` which compares two values that are scalar-numbers (including float/double, pointers and references).
         * function `WeakToStrong` which converts a `std::weak_ordering` to a `std::strong_ordering`.
     * mbo/types:container_proxy_cc, mbo/types/container_proxy.h
         * struct `ContainerProxy` which allows to add container access to other types including smart pointers of containers.
@@ -220,11 +221,12 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * concept `HasDifferenceType` determines whether a type has a `difference_type`.
         * concept `IsAggregate` determines whether a type is an aggregate.
         * concept `IsArithmetic` uses `std::is_arithmetic_v<T>`.
+        * concept `IsBracesConstructibleV` determines whether a type can be constructed from given argument types.
         * concept `IsCharArray` determines whether a type is a `char*` or `char[]` related type.
         * concept `IsDecomposable` determines whether a type can be used in static-bindings.
         * concept `IsEmptyType` determines whether a type is empty (calls `std::is_empty_v`).
         * concept `IsInitializerList` determines whether a type is `std::initializer<T> type.
-        * concept `IsBracesConstructibleV` determines whether a type can be constructed from given argument types.
+        * concept `IsScalar` uses `std::is_scalar_v<T>`.
         * concept `IsOptional` determines whether a type is a `std::optional` type.
         * concept `IsPair` determines whether a type is a `std::pair` type.
         * concept `IsReferenceWrapper` determines whether a type is a `std::reference_wrapper`.

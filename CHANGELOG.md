@@ -33,9 +33,11 @@
     * Added template struct `TypedView` a wrapper for STL views that provides type definitions, most importantly `value_type`. That allows such views to be used with GoogleTest container matchers.
     * Added concept `IsOptionalDataOrRef` which determines whether a type is a `OptionalDataOrRef`.
     * Added concept `IsOptionalRef` which determines whether a type is a `OptionalRef`.
-    * Added function `CompareArithmetic` which compares two values that are numbers (not including pointers).
-    * Added function `CompareScalar` which compares two values that are numbers/scalar (including pointers).
+    * Added function `CompareArithmetic` which compares two values that are scalar-numbers (including foat/double and pointers, but not allowing references).
+    * Added function `CompareIntegral` which compares two values that are integral-numbers (no float/double, no pointers, no references).
+    * Added function `CompareScalar` which compares two values that are numbers/scalar (including pointers, no references).
     * Added concept `IsArithmetic` uses `std::is_arithmetic_v<T>`.
+    * Added concept `IsIntegral` uses `std::is_integral_v<T>`.
     * Added concept `IsScalar` uses `std::is_scalar_v<T>`.
 * Added `Demangle` to log de-mangled typeid names.
 * Added struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit` (technically moved).
