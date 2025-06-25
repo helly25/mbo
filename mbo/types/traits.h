@@ -36,15 +36,6 @@
 
 namespace mbo::types {
 
-template<typename T>
-concept IsArithmetic = std::is_arithmetic_v<T>;
-
-template<typename T>
-concept IsIntegral = std::is_integral_v<T>;
-
-template<typename T>
-concept IsScalar = std::is_scalar_v<T>;
-
 // Determines whether `std::is_aggrgate_v<T> == true`.
 template<typename T>
 concept IsAggregate = types_internal::IsAggregate<T>;
@@ -458,6 +449,18 @@ concept ConstructibleInto = ConstructibleFrom<Into, From>;
 template<typename T>
 concept IsStringKeyedContainer =
     ContainerIsForwardIteratable<T> && IsPairFirstStr<std::remove_cvref_t<typename T::value_type>>;
+
+template<typename T>
+concept IsArithmetic = std::is_arithmetic_v<T>;
+
+template<typename T>
+concept IsIntegral = std::integral<T>;
+
+template<typename T>
+concept IsScalar = std::is_scalar_v<T>;
+
+template<typename T>
+concept IsFloatingPoint = std::floating_point<T>;
 
 }  // namespace mbo::types
 
