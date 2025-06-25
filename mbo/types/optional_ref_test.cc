@@ -33,6 +33,7 @@ struct OptionalRefTest : ::testing::Test {};
 
 TEST_F(OptionalRefTest, Null) {
   OptionalRef<int> ref;
+  static_assert(IsOptionalRef<decltype(ref)>);
   EXPECT_THAT(ref, IsNullopt());
 }
 

@@ -63,26 +63,23 @@ TEST_F(StringifyOstreamTest, OStream) {
   {
     std::stringstream os;
     os << TestStruct{};
-    EXPECT_THAT(os.str(), Conditional(kStructNameSupport, R"({.one: 11, .two: 25})", R"({11, 25})"));
+    EXPECT_THAT(os.str(), R"({.one: 11, .two: 25})");
   }
   {
     SetStringifyOstreamOutputMode(Stringify::OutputMode::kCppPretty);
     std::stringstream os;
     os << TestStruct{};
-    EXPECT_THAT(
-        os.str(), Conditional(
-                      kStructNameSupport, EqualsText(R"({
+    EXPECT_THAT(os.str(), EqualsText(R"({
   .one = 11,
   .two = 25
 }
-)"),
-                      R"({11, 25})"));
+)"));
   }
   {
     SetStringifyOstreamOutputMode(Stringify::OutputMode::kDefault);
     std::stringstream os;
     os << TestStruct{};
-    EXPECT_THAT(os.str(), Conditional(kStructNameSupport, R"({.one: 11, .two: 25})", R"({11, 25})"));
+    EXPECT_THAT(os.str(), R"({.one: 11, .two: 25})");
   }
 }
 
