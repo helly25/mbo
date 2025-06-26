@@ -17,6 +17,7 @@
 #define MBO_TYPES_TYPED_VIEW_H
 
 #include <iterator>
+#include <ranges>
 #include <utility>
 
 // NOLINTBEGIN(readability-identifier-naming)
@@ -26,7 +27,7 @@ namespace mbo::types {
 // Wrapper for STL views that provides type definitions, most importantly `value_type`.
 // That allows such views to be used with GoogleTest container matchers.
 template<typename View>
-class TypedView {
+class TypedView : std::ranges::view_interface<TypedView<View>> {
  private:
   using iterator_type = decltype(std::declval<View&>().begin());
 
@@ -39,11 +40,7 @@ class TypedView {
 
   explicit TypedView(View&& view) : view_(std::move(view)) {}
 
-  auto begin() { return view_.begin(); }
-
   auto begin() const { return view_.begin(); }
-
-  auto end() { return view_.end(); }
 
   auto end() const { return view_.end(); }
 
