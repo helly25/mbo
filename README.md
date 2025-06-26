@@ -154,6 +154,7 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * function `CompareIntegral` which compares two values that are integral-numbers (no float/double, no pointers, no references).
         * comparator `CompareLess` which is compatible to std::Less but allows container optimizations.
         * function `CompareScalar` which compares two values that are scalar-numbers (including float/double and pointers, excluding references).
+        * concept `ThreeWayComparableAsPresented` which is similar to `std::three_way_comparable_with` but we only verify that `L <=> R` can be interpreted as `Cat` in the presented argument order.
         * function `WeakToStrong` which converts a `std::weak_ordering` to a `std::strong_ordering`.
     * mbo/types:container_proxy_cc, mbo/types/container_proxy.h
         * struct `ContainerProxy` which allows to add container access to other types including smart pointers of containers.

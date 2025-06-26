@@ -16,6 +16,7 @@
 #ifndef MBO_TYPES_TRAITS_H_
 #define MBO_TYPES_TRAITS_H_
 
+#include <compare>
 #include <concepts>  // IWYU pragma: keep
 #include <cstddef>   // IWYU pragma: keep
 #include <initializer_list>
@@ -477,6 +478,24 @@ concept IsScalar = std::is_scalar_v<T>;
 template<typename T>
 concept IsFloatingPoint = std::floating_point<T>;
 
+namespace types_internal {
+template<typename T, typename Cat>
+concept ComparesAs = std::same_as<std::common_comparison_category_t<T, Cat>, Cat>;
+
+}  // namespace types_internal
+
+// Similar to `std::three_way_comparable_with` but we only verify that `L <=> R` can be interpreted as `Cat` in the
+// presented argument order.
+//
+// This means there is no need for a common reference - which usually effectively means one side needs to be converted.
+// There is further no requirement for `L <=> L`, `R <=> R` or odering requirements for `L` or `R`.
+//
+// It also means that there is no guaranteed that `R <=> L` is valid.
+template<typename Lhs, typename Rhs, typename Cat = std::partial_ordering>
+concept ThreeWayComparableAsPresented =
+    requires(const std::remove_reference_t<Lhs>& lhs, const std::remove_reference_t<Rhs>& rhs) {
+      { lhs <=> rhs } -> types_internal::ComparesAs<Cat>;
+    };
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_TRAITS_H_

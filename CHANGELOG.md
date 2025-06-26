@@ -40,6 +40,7 @@
     * Added concept `IsIntegral` uses `std::integral<T>`.
     * Added concept `IsScalar` uses `std::is_scalar_v<T>`.
     * Added concept `IsFloatingPoint` determines whether a type is a floating point type (uses `std::floating_point`).
+    * Added concept `ThreeWayComparableAsPresented` which is similar to `std::three_way_comparable_with` but we only verify that `L <=> R` can be interpreted as `Cat` in the presented argument order.
 * Added `Demangle` to log de-mangled typeid names.
 * Added struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit` (technically moved).
 * Added function `CompareFloat` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.

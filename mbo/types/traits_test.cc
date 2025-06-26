@@ -276,6 +276,10 @@ TEST_F(TraitsTest, ConstructInto) {
   EXPECT_FALSE((ConstructibleInto<int, std::string_view>));
 }
 
+static_assert(!ThreeWayComparableAsPresented<double, int, std::strong_ordering>);
+static_assert(!ThreeWayComparableAsPresented<double, int, std::weak_ordering>);
+static_assert(ThreeWayComparableAsPresented<double, int, std::partial_ordering>);
+
 // NOLINTEND(*-runtime-int)
 
 }  // namespace
