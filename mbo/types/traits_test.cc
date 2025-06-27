@@ -15,6 +15,7 @@
 
 #include "mbo/types/traits.h"
 
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -45,12 +46,14 @@ struct TraitsTest : ::testing::Test {
   }
 };
 
-template<IsSameAsAnyOfRaw<int, short> T>
+template<typename T>
+requires IsSameAsAnyOfRaw<T, int, short>
 constexpr bool Tester() noexcept {
   return true;
 }
 
-template<NotSameAsAnyOfRaw<int, short> T>
+template<typename T>
+requires NotSameAsAnyOfRaw<T, int, short>
 constexpr bool Tester() noexcept {
   return false;
 }
@@ -276,9 +279,80 @@ TEST_F(TraitsTest, ConstructInto) {
   EXPECT_FALSE((ConstructibleInto<int, std::string_view>));
 }
 
-static_assert(!ThreeWayComparableAsPresented<double, int, std::strong_ordering>);
-static_assert(!ThreeWayComparableAsPresented<double, int, std::weak_ordering>);
-static_assert(ThreeWayComparableAsPresented<double, int, std::partial_ordering>);
+TEST_F(TraitsTest, ThreeWayComparableTo) {
+  static_assert(!ThreeWayComparableTo<double, int, std::strong_ordering>);
+  static_assert(!ThreeWayComparableTo<double, int, std::weak_ordering>);
+  static_assert(ThreeWayComparableTo<double, int, std::partial_ordering>);
+  static_assert(!ThreeWayComparableTo<int, double, std::strong_ordering>);
+  static_assert(!ThreeWayComparableTo<int, double, std::weak_ordering>);
+  static_assert(ThreeWayComparableTo<int, double, std::partial_ordering>);
+}
+
+namespace three_way_comparable_to_1 {
+struct A {
+  int a;
+};
+
+struct B {
+  std::string b;
+
+  std::weak_ordering operator<=>(A /*unused*/) const { return std::weak_ordering::equivalent; }
+};
+
+// `A <=> B` is defined as `std::weak_ordering` so `std::strong_ordering` is not supported.
+static_assert(!ThreeWayComparableTo<A, B, std::strong_ordering>);
+static_assert(ThreeWayComparableTo<A, B, std::weak_ordering>);
+static_assert(ThreeWayComparableTo<A, B, std::partial_ordering>);
+
+// Since `B <=> A` is not provided, the compiler will use `A <=> B`.
+static_assert(!ThreeWayComparableTo<B, A, std::strong_ordering>);
+static_assert(ThreeWayComparableTo<B, A, std::weak_ordering>);
+static_assert(ThreeWayComparableTo<B, A, std::partial_ordering>);
+}  // namespace three_way_comparable_to_1
+
+namespace three_way_comparable_to_2 {
+
+struct B;
+
+struct A {
+  int a;
+
+  std::weak_ordering operator<=>(B /*unused*/) const = delete;
+};
+
+struct B {
+  std::string b;
+
+  std::weak_ordering operator<=>(A /*unused*/) const { return std::weak_ordering::equivalent; }
+};
+
+// `A <=> B` is deleted, so it is not supported.
+static_assert(!ThreeWayComparableTo<A, B, std::strong_ordering>);
+static_assert(!ThreeWayComparableTo<A, B, std::weak_ordering>);
+static_assert(!ThreeWayComparableTo<A, B, std::partial_ordering>);
+
+// `B <=> A` is provided, so it can be used in this version.
+static_assert(!ThreeWayComparableTo<B, A, std::strong_ordering>);
+static_assert(ThreeWayComparableTo<B, A, std::weak_ordering>);
+static_assert(ThreeWayComparableTo<B, A, std::partial_ordering>);
+
+struct C {
+  std::unique_ptr<int> c;
+
+  std::weak_ordering operator<=>(B /*unused*/) const { return std::weak_ordering::equivalent; }
+};
+
+static_assert(!ThreeWayComparableTo<C, B, std::strong_ordering>);
+static_assert(ThreeWayComparableTo<C, B, std::weak_ordering>);
+static_assert(ThreeWayComparableTo<C, B, std::partial_ordering>);
+
+template<ThreeWayComparableTo<B> T>
+struct X {};
+
+[[maybe_unused]] X<C> test1{};
+// [[maybe_unused]] X<A> test2{}; Does not compile because `A <=> B` is deleted.
+
+}  // namespace three_way_comparable_to_2
 
 // NOLINTEND(*-runtime-int)
 

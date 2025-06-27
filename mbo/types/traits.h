@@ -492,7 +492,7 @@ concept ComparesAs = std::same_as<std::common_comparison_category_t<T, Cat>, Cat
 //
 // It also means that there is no guaranteed that `R <=> L` is valid.
 template<typename Lhs, typename Rhs, typename Cat = std::partial_ordering>
-concept ThreeWayComparableAsPresented =
+concept ThreeWayComparableTo =
     requires(const std::remove_reference_t<Lhs>& lhs, const std::remove_reference_t<Rhs>& rhs) {
       { lhs <=> rhs } -> types_internal::ComparesAs<Cat>;
     };
