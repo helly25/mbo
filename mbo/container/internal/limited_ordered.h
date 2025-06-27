@@ -417,7 +417,7 @@ class [[nodiscard]] LimitedOrdered {
   // Constructors and assignment from other LimitVector/value types.
 
   template<std::forward_iterator It>
-  requires std::constructible_from<RawValue, mbo::types::ForwardIteratorValueType<It>>
+  requires types::ConstructibleFrom<RawValue, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedOrdered(It first, It last, const Compare& key_comp = Compare()) noexcept(!kRequireThrows)
       : key_comp_(key_comp) {
     if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {
@@ -436,12 +436,12 @@ class [[nodiscard]] LimitedOrdered {
   constexpr LimitedOrdered(const std::initializer_list<value_type>& list, const Compare& key_comp = Compare()) noexcept
       : LimitedOrdered(list.begin(), list.end(), key_comp) {}
 
-  template<std::constructible_from<value_type> U>
+  template<types::ConstructibleInto<value_type> U>
   requires(!std::same_as<U, value_type>)
   constexpr LimitedOrdered(const std::initializer_list<U>& list, const Compare& key_comp = Compare()) noexcept
       : LimitedOrdered(list.begin(), list.end(), key_comp) {}
 
-  template<std::constructible_from<value_type> U, auto OtherN>
+  template<types::ConstructibleInto<value_type> U, auto OtherN>
   requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedOrdered& operator=(const std::initializer_list<U>& list) noexcept {
     assign(list);
@@ -449,8 +449,8 @@ class [[nodiscard]] LimitedOrdered {
   }
 
   template<
-      std::constructible_from<Key> OK,
-      std::constructible_from<Mapped> OM,
+      types::ConstructibleInto<Key> OK,
+      types::ConstructibleInto<Mapped> OM,
       typename OV,
       auto OtherN,
       typename OtherCompare>
@@ -466,8 +466,8 @@ class [[nodiscard]] LimitedOrdered {
   }
 
   template<
-      std::constructible_from<Key> OK,
-      std::constructible_from<Mapped> OM,
+      types::ConstructibleInto<Key> OK,
+      types::ConstructibleInto<Mapped> OM,
       typename OV,
       auto OtherN,
       typename OtherCompare>
@@ -736,8 +736,8 @@ class [[nodiscard]] LimitedOrdered {
   }
 
   template<
-      std::constructible_from<Key> OK,
-      std::constructible_from<Mapped> OM,
+      types::ConstructibleInto<Key> OK,
+      types::ConstructibleInto<Mapped> OM,
       typename OV,
       auto OtherN,
       typename OtherCompare>

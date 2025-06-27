@@ -162,7 +162,7 @@ class LimitedVector final {
   // Constructors and assignment from other LimitVector/value types.
 
   template<std::forward_iterator It>
-  requires std::constructible_from<T, mbo::types::ForwardIteratorValueType<It>>
+  requires types::ConstructibleFrom<T, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedVector(It begin, It end) noexcept {
     while (begin < end) {
       emplace_back(*begin++);
@@ -176,7 +176,7 @@ class LimitedVector final {
     }
   }
 
-  template<std::constructible_from<T> U>
+  template<types::ConstructibleInto<T> U>
   constexpr LimitedVector(const std::initializer_list<U>& list) noexcept {
     auto it = list.begin();
     while (it < list.end()) {
@@ -184,14 +184,14 @@ class LimitedVector final {
     }
   }
 
-  template<std::constructible_from<T> U, auto OtherN>
+  template<types::ConstructibleInto<T> U, auto OtherN>
   requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedVector& operator=(const std::initializer_list<U>& list) noexcept {
     assign(list);
     return *this;
   }
 
-  template<std::constructible_from<T> U, auto OtherN>
+  template<types::ConstructibleInto<T> U, auto OtherN>
   requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedVector(const LimitedVector<U, OtherN>& other) noexcept {
     for (; size_ < other.size(); ++size_) {
@@ -199,7 +199,7 @@ class LimitedVector final {
     }
   }
 
-  template<std::constructible_from<T> U, auto OtherN>
+  template<types::ConstructibleInto<T> U, auto OtherN>
   requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedVector& operator=(const LimitedVector<U, OtherN>& other) noexcept {
     clear();
@@ -209,7 +209,7 @@ class LimitedVector final {
     return *this;
   }
 
-  template<std::constructible_from<T> U, auto OtherN>
+  template<types::ConstructibleInto<T> U, auto OtherN>
   requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr explicit LimitedVector(LimitedVector<U, OtherN>&& other) noexcept {
     for (; size_ < other.size(); ++size_) {
@@ -218,7 +218,7 @@ class LimitedVector final {
     other.size_ = 0;
   }
 
-  template<std::constructible_from<T> U, auto OtherN>
+  template<types::ConstructibleInto<T> U, auto OtherN>
   requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
   constexpr LimitedVector& operator=(LimitedVector<U, OtherN>&& other) noexcept {
     clear();
@@ -369,7 +369,7 @@ class LimitedVector final {
     }
   }
 
-  template<std::constructible_from<T> U>
+  template<types::ConstructibleInto<T> U>
   constexpr iterator insert(const_iterator pos, U&& value) {
     MBO_CONFIG_REQUIRE(size_ < Capacity, "Called `insert` at capacity.");
     MBO_CONFIG_REQUIRE(begin() <= pos && pos <= end(), "Invalid `pos`.");
@@ -400,7 +400,7 @@ class LimitedVector final {
   constexpr iterator insert(const_iterator pos, const T& value) { return insert(pos, 1, value); }
 
   template<typename InputIt>
-  requires(std::constructible_from<T, decltype(*std::declval<InputIt>())>)
+  requires(types::ConstructibleFrom<T, decltype(*std::declval<InputIt>())>)
   constexpr iterator insert(const_iterator pos, InputIt first, InputIt last) {
     MBO_CONFIG_REQUIRE(begin() <= pos && pos <= end(), "Invalid `pos`.");
     MBO_CONFIG_REQUIRE(first <= last, "First > Last.");
@@ -420,7 +420,7 @@ class LimitedVector final {
     return dst;
   }
 
-  template<std::constructible_from<T> U>
+  template<types::ConstructibleInto<T> U>
   constexpr iterator insert(const_iterator pos, std::initializer_list<U> list) {
     return insert(pos, list.begin(), list.end());
   }

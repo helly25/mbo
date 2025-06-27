@@ -16,14 +16,15 @@
 #ifndef MBO_TYPES_OPAQUE_H_
 #define MBO_TYPES_OPAQUE_H_
 
-#include <compare>
-#include <concepts>
+#include <compare>   // IWYU pragma: keep
+#include <concepts>  // IWYU pragma: keep
 #include <cstddef>
 #include <memory>
 #include <type_traits>
 
 #include "absl/hash/hash.h"
 #include "mbo/types/container_proxy.h"  // IWYU pragma: export
+#include "mbo/types/traits.h"           // IWYU pragma: keep
 
 namespace mbo::types {
 namespace types_internal {
@@ -79,7 +80,7 @@ struct OpaqueValue {
 
   template<typename... Args>
   explicit OpaqueValue(Args&&... args)
-  requires std::constructible_from<T, Args...>
+  requires ConstructibleFrom<T, Args...>
       : ptr_(MakeOpaquePtr<T>(std::forward<Args>(args)...)) {}
 
   OpaqueValue(OpaqueValue&&) noexcept = default;

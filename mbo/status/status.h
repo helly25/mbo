@@ -20,6 +20,7 @@
 
 #include "absl/status/status.h"    // IWYU pragma: keep
 #include "absl/status/statusor.h"  // IWYU pragma: keep
+#include "mbo/types/traits.h"      // IWYU pragma: keep
 
 namespace mbo::status {
 
@@ -39,7 +40,7 @@ inline absl::Status GetStatus(absl::StatusOr<T>&& v) {
 }
 
 template<typename T>
-requires(std::constructible_from<::absl::Status, T> || std::convertible_to<T, absl::Status>)
+requires(types::ConstructibleFrom<::absl::Status, T> || std::convertible_to<T, absl::Status>)
 inline ::absl::Status GetStatus(T&& status) {
   return absl::Status(std::forward<decltype(status)>(status));
 }

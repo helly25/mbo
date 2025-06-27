@@ -40,11 +40,15 @@
     * Added concept `IsIntegral` uses `std::integral<T>`.
     * Added concept `IsScalar` uses `std::is_scalar_v<T>`.
     * Added concept `IsFloatingPoint` determines whether a type is a floating point type (uses `std::floating_point`).
+    * Added concept `ThreeWayComparableTo` which is similar to `std::three_way_comparable_with` but we only verify that `L <=> R` can be interpreted as `Cat` in the presented argument order.
 * Added `Demangle` to log de-mangled typeid names.
 * Added struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit` (technically moved).
 * Added function `CompareFloat` which can compare two `float`, `double` or `long double` values returning `std::strong_ordering`.
 * Added function `WeakToStrong` which converts a `std::weak_ordering` to a `std::strong_ordering`.
 * Fixed some IWYU pragmas.
+* Fixed some template requirements.
+* Added concept `IsAnyOfSameAs` which determines whether a type is the same as one of a list of types. Unlike `IsSameAsAnyOf` this has the searched typed on the right, so it can be bound in template clauses. The inversion is available as `NotAnyOfSameAs`.
+* Added concept `IsAnyOfSameAsRaw` which determines whether a type is the same as one of a list of types (when const, volatile and reference are removed). Unlike `IsSameAsAnyOfRaw` this has the searched typed on the right, so it can be bound in template clauses. Similar to `IsSameAsAnyOf` but applies `std::remove_cvref_t` on all types. The inversion is available as `NotAnyOfSameAsRaw`.
 
 # 0.9.0
 

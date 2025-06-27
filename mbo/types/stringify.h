@@ -252,7 +252,8 @@ struct StringifyOptions {
   OptionalDataOrConstRef<ValueOverrides> value_overrides;
   OptionalDataOrConstRef<Special> special;
 
-  template<IsSameAsAnyOf<Format, FieldControl, KeyControl, KeyOverrides, ValueControl, ValueOverrides, Special> T>
+  template<typename T>
+  requires IsSameAsAnyOf<T, Format, FieldControl, KeyControl, KeyOverrides, ValueControl, ValueOverrides, Special>
   constexpr const auto& Access() const noexcept {
     if constexpr (std::same_as<T, Format>) {
       return format;
@@ -271,7 +272,8 @@ struct StringifyOptions {
     }
   }
 
-  template<IsSameAsAnyOf<Format, FieldControl, KeyControl, KeyOverrides, ValueControl, ValueOverrides, Special> T>
+  template<typename T>
+  requires IsSameAsAnyOf<T, Format, FieldControl, KeyControl, KeyOverrides, ValueControl, ValueOverrides, Special>
   static constexpr std::string_view TypeName() noexcept {
     if constexpr (std::same_as<T, Format>) {
       return "Format";

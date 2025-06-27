@@ -16,6 +16,7 @@
 #ifndef MBO_TYPES_TRAITS_H_
 #define MBO_TYPES_TRAITS_H_
 
+#include <compare>
 #include <concepts>  // IWYU pragma: keep
 #include <cstddef>   // IWYU pragma: keep
 #include <initializer_list>
@@ -24,6 +25,7 @@
 #include <optional>
 #include <set>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -42,6 +44,55 @@ concept IsAggregate = types_internal::IsAggregate<T>;
 
 template<typename T>
 concept IsEmptyType = types_internal::IsEmptyType<T>;
+
+// Implements a variant of `std::constructible_from` that works around its limitations to deal with array args.
+//
+// Instead of typing on use of `new` this allows proper concept use:
+// ```
+// template<typename... Args, typename = decltype(::new(std::declval<void*>()) T(std::declval<Args>()...))>
+// template<typename... Args, typename = std::enable_if_t<ConstructibleFrom<T, Args...>>>
+// ```
+//
+// The implementation uses the actual `std::constructible_from` and if that fails tries the alternative way.
+// The alternative first requires `std::destructible` and then tries construction via in-place `new`.
+template<typename T, typename... Args>
+concept ConstructibleFrom =                 //
+    std::constructible_from<T, Args...> ||  //
+    (std::destructible<T> && requires(T value, Args... args) {
+      { ::new (&value) T(args...) } -> std::same_as<T*>;
+    });
+
+// Verify whether `From` can used used to construct a `Into`.
+// That allows the concept to be used for in-place/auto template parameters.
+// See Compiler Explorer debug: https://godbolt.org/z/5vMEeGMMP
+//
+// Motivating example:
+//
+// A function that is meant to handle any string-like type (std::string/_view,
+// char*, ...). That still supports perfect forwarding (or move). In order to
+// have a short notation we need the `std::constructible_from` parameter order
+// switched. That is what this concept does.
+//
+// ```
+// struct Type {
+//   Type(ConstructibleInto<std::string> auto&& v) : name_(std::forward<decltype(v)>(v)) {}
+//
+//   const std::string name;
+// };
+// ```
+//
+// Second variant, doing the same:
+//
+// ```
+// struct Type {
+//   template<ConstructibleInto<std::string> Str>
+//   Type(Str&& v) : name_(int, std::forward<decltype(v)>(v)) {}
+//
+//   const std::string name;
+// };
+// ```
+template<typename From, typename Into>
+concept ConstructibleInto = ConstructibleFrom<Into, From>;
 
 // If `T` is a struct and the below conditions are met, return the number of
 // variable fields it decomposes into.
@@ -177,7 +228,7 @@ using GetDifferenceType = types_internal::GetDifferenceTypeImpl<T>::type;
 template<typename Container, typename ValueType>
 concept ContainerHasEmplace = requires(Container container, ValueType new_value) {
   requires ContainerIsForwardIteratable<Container>;
-  requires std::constructible_from<typename Container::value_type, ValueType>;
+  requires ConstructibleFrom<typename Container::value_type, ValueType>;
   { container.emplace(new_value) };  // Only tests whether emplace(<arg>) exists, not whether new_value can be that arg.
 };
 
@@ -185,7 +236,7 @@ concept ContainerHasEmplace = requires(Container container, ValueType new_value)
 template<typename Container, typename ValueType>
 concept ContainerHasEmplaceBack = requires(Container container, ValueType new_value) {
   requires ContainerIsForwardIteratable<Container>;
-  requires std::constructible_from<typename Container::value_type, ValueType>;
+  requires ConstructibleFrom<typename Container::value_type, ValueType>;
   { container.emplace_back(new_value) };
 };
 
@@ -326,34 +377,73 @@ concept IsVector = requires {
 
 namespace types_internal {
 
-template<typename SameAs, typename... Ts>
-concept IsSameAsAnyOfRawImpl = (std::same_as<SameAs, std::remove_cvref_t<Ts>> || ...);
+template<typename SameAsT, std::size_t Idx, typename Types>
+struct IsAnyOfSameAsImpl
+    : std::bool_constant<
+          std::same_as<SameAsT, std::tuple_element_t<Idx, Types>>
+          || std::conditional_t<Idx == 0, std::false_type, IsAnyOfSameAsImpl<SameAsT, Idx - 1, Types>>::value> {};
+
+template<std::size_t Size, typename Tuple>
+concept IsAnyOfSameAs = Size > 1 && IsAnyOfSameAsImpl<std::tuple_element_t<Size - 1U, Tuple>, Size - 2U, Tuple>::value;
 
 }  // namespace types_internal
 
-// Test whether `SameAs` is one of a list of types `Ts` after removing `const`, `volatile` or `&`.
+// Test whether `std::same_as` is true for one of a list of types `Ts`. Also see `IsAnyOfSameAs`.
+//
+// Example: The following example takes an `int` or ` string`.
+//
+// ```
+// template <typename T>
+// requires(IsSameAsAnyOf<T, int, std::string>)
+// void Func(T) {};
+// ```
+template<typename SameAs, typename... Ts>
+concept IsSameAsAnyOf = (std::same_as<SameAs, Ts> || ...);
+
+// Inversion of `IsSameAsAnyOf` - also see `IsAnyOfSameAs`.
+template<typename SameAs, typename... Ts>
+concept NotSameAsAnyOf = !IsSameAsAnyOf<SameAs, Ts...>;
+
+// Test whether `std::same_as` is true for one of a list of types `Ts` after removing `const`,
+// `volatile` or `&`. Also see `IsAnyOfSameAsRaw`.
 //
 // Example: The following example takes any form of `int`
 // or `unsigned` where `const`, `volatile` or `&` are removed. So an `int*` would not be acceptable.
 //
 // ```
-// template <IsSameAsAnyOfRaw<int, unsigned> T>
+// template <typename T>
+// requires(IsSameAsAnyOfRaw<T, int, unsigned>)
 // void Func(T) {};
 // ```
 template<typename SameAs, typename... Ts>
-concept IsSameAsAnyOfRaw = types_internal::IsSameAsAnyOfRawImpl<std::remove_cvref_t<SameAs>, Ts...>;
-
-template<typename SameAs, typename... Ts>
-concept IsSameAsAnyOf = (std::same_as<SameAs, Ts> || ...);
+concept IsSameAsAnyOfRaw = IsSameAsAnyOf<std::remove_cvref_t<SameAs>, std::remove_cvref_t<Ts>...>;
 
 // Inverse of the above. So this prevents specific types. This is necessary when building overload
-// alternatives.
+// alternatives. Also see `NotAnyOfSameAsRaw`.
 template<typename SameAs, typename... Ts>
-concept NotSameAsAnyOfRaw = !IsSameAsAnyOfRaw<std::remove_cvref_t<SameAs>, Ts...>;
+concept NotSameAsAnyOfRaw = !IsSameAsAnyOfRaw<SameAs, Ts...>;
+
+// Similar to `IsSameAsAnyOf` but with order changed to that template binding works.
+//
+// ```
+// template <IsAnyOfSameAs<int, std::string> T>
+// void Func(T) {};
+// ```
+template<typename... Types>
+concept IsAnyOfSameAs = types_internal::IsAnyOfSameAs<sizeof...(Types), std::tuple<Types...>>;
+
+template<typename... Types>
+concept NotAnyOfSameAs = !IsAnyOfSameAs<Types...>;
+
+template<typename... Types>
+concept IsAnyOfSameAsRaw = IsAnyOfSameAs<std::remove_cvref_t<Types>...>;
+
+template<typename... Types>
+concept NotAnyOfSameAsRaw = NotAnyOfSameAs<std::remove_cvref_t<Types>...>;
 
 // Test whether two types are identical after removing `const`, `volatile` or `&`.
 template<typename SameAs, typename T>
-concept IsSameAsRaw = IsSameAsAnyOfRaw<SameAs, T>;
+concept IsSameAsRaw = std::same_as<std::remove_cvref_t<SameAs>, std::remove_cvref_t<T>>;
 
 // Determines whether `T` can be constructed from an empty base and `Args`.
 //
@@ -394,56 +484,6 @@ concept IsReferenceWrapper = requires {
   typename T::type;
   requires std::same_as<std::reference_wrapper<typename T::type>, T>;
 };
-
-// Implements a variant of `std::constructible_from` that works around its limitations to deal with array args.
-//
-// Instead of typing on use of `new` this allows proper concept use:
-// ```
-// template<typename... Args, typename = decltype(::new(std::declval<void*>()) T(std::declval<Args>()...))>
-// template<typename... Args, typename = std::enable_if_t<ConstructibleFrom<T, Args...>>>
-// ```
-//
-// The implementation uses the actual `std::constructible_from` and if that fails tries the alternative way.
-// The alternative first requires `std::destructible` and then tries construction via in-place `new`.
-template<typename T, typename... Args>
-concept ConstructibleFrom =                 //
-    std::constructible_from<T, Args...> ||  //
-    (std::destructible<T> && requires(T value, Args... args) {
-      { ::new (&value) T(args...) } -> std::same_as<T*>;
-    });
-
-// Verify whether `From` can used used to construct a `Into`.
-// That allows the concept to be used for in-place/auto template parameters.
-// See Compiler Explorer debug: https://godbolt.org/z/5vMEeGMMP
-//
-// Motivating example:
-//
-// A function that is meant to handle any string-like type (std::string/_view,
-// char*, ...). That still supports perfect forwarding (or move). In order to
-// have a short notation we need the `std::constructible_from` parameter order
-// switched. That is what this concept does.
-//
-// ```
-// struct Type {
-//   Type(ConstructibleInto<std::string> auto&& v) : name_(std::forward<decltype(v)>(v)) {}
-//
-//   const std::string name;
-// };
-// ```
-//
-// Second variant, doing the same:
-//
-// ```
-// struct Type {
-//   template<ConstructibleInto<std::string> Str>
-//   Type(Str&& v) : name_(int, std::forward<decltype(v)>(v)) {}
-//
-//   const std::string name;
-// };
-// ```
-template<typename From, typename Into>
-concept ConstructibleInto = ConstructibleFrom<Into, From>;
-
 // Test whether a type is a container whose elements are pairs and whose keys
 // are convertible to a std::string_view.
 template<typename T>
@@ -477,6 +517,24 @@ concept IsScalar = std::is_scalar_v<T>;
 template<typename T>
 concept IsFloatingPoint = std::floating_point<T>;
 
+namespace types_internal {
+template<typename T, typename Cat>
+concept ComparesAs = std::same_as<std::common_comparison_category_t<T, Cat>, Cat>;
+
+}  // namespace types_internal
+
+// Similar to `std::three_way_comparable_with` but we only verify that `L <=> R` can be interpreted as `Cat` in the
+// presented argument order.
+//
+// This means there is no need for a common reference - which usually effectively means one side needs to be converted.
+// There is further no requirement for `L <=> L`, `R <=> R` or odering requirements for `L` or `R`.
+//
+// It also means that there is no guaranteed that `R <=> L` is valid.
+template<typename Lhs, typename Rhs, typename Cat = std::partial_ordering>
+concept ThreeWayComparableTo =
+    requires(const std::remove_reference_t<Lhs>& lhs, const std::remove_reference_t<Rhs>& rhs) {
+      { lhs <=> rhs } -> types_internal::ComparesAs<Cat>;
+    };
 }  // namespace mbo::types
 
 #endif  // MBO_TYPES_TRAITS_H_

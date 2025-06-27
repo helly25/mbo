@@ -25,6 +25,7 @@
 #include "absl/status/status.h"    // IWYU pragma: keep
 #include "absl/status/statusor.h"  // IWYU pragma: keep
 #include "absl/strings/cord.h"
+#include "mbo/types/traits.h"  // IWYU pragma: keep
 
 namespace mbo::status {
 
@@ -89,7 +90,7 @@ class StatusBuilder final {
   StatusBuilder& SetAppend() &;
   StatusBuilder&& SetAppend() &&;
 
-  StatusBuilder& SetPayload(std::string_view type_url, std::constructible_from<absl::Cord> auto&& payload) & {
+  StatusBuilder& SetPayload(std::string_view type_url, types::ConstructibleFrom<absl::Cord> auto&& payload) & {
     if (data_) {
       data_->status.SetPayload(type_url, absl::Cord(std::forward<decltype(payload)>(payload)));
     }
