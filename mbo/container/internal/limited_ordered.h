@@ -417,7 +417,7 @@ class [[nodiscard]] LimitedOrdered {
   // Constructors and assignment from other LimitVector/value types.
 
   template<std::forward_iterator It>
-  requires std::constructible_from<RawValue, mbo::types::ForwardIteratorValueType<It>>
+  requires types::ConstructibleFrom<RawValue, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedOrdered(It first, It last, const Compare& key_comp = Compare()) noexcept(!kRequireThrows)
       : key_comp_(key_comp) {
     if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {

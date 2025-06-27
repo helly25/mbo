@@ -220,6 +220,8 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * concept `ContainerHasInputIterator` determines whether a container has `begin`, `end` and `std::input_iterator` compliant iterators.
         * type alias `GetDifferenceType` is either set to the type's `difference_type` or `std::ptrdiff_t`.
         * concept `HasDifferenceType` determines whether a type has a `difference_type`.
+        * concept `IsAnyOfSameAs` which determines whether a type is the same as one of a list of types. Unlike `IsSameAsAnyOf` this has the searched typed on the right, so it can be bound in template clauses. The inversion is available as `NotAnyOfSameAs`.
+        * concept `IsAnyOfSameAsRaw` which determines whether a type is the same as one of a list of types (when const, volatile and reference are removed). Unlike `IsSameAsAnyOfRaw` this has the searched typed on the right, so it can be bound in template clauses. Similar to `IsSameAsAnyOf` but applies `std::remove_cvref_t` on all types. The inversion is available as `NotAnyOfSameAsRaw`.
         * concept `IsAggregate` determines whether a type is an aggregate.
         * concept `IsArithmetic` uses `std::is_arithmetic_v<T>`.
         * concept `IsBracesConstructibleV` determines whether a type can be constructed from given argument types.
@@ -232,8 +234,8 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
         * concept `IsOptional` determines whether a type is a `std::optional` type.
         * concept `IsPair` determines whether a type is a `std::pair` type.
         * concept `IsReferenceWrapper` determines whether a type is a `std::reference_wrapper`.
-        * concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types.
-        * concept `IsSameAsAnyOfRaw` / `NotSameAsAnyOfRaw` which determines whether a type is one of a list of types. Similar to `IsSameAsAnyOf` but applies `std::remove_cvref_t` on all types.
+        * concept `IsSameAsAnyOf` which determines whether a type is the same as one of a list of types. Similar to `IsSameAsAnyOfRaw` but using exact types. The inversion is available as `NotSameAsAnyOf`.
+        * concept `IsSameAsAnyOfRaw` which determines whether a type is one of a list of types. Similar to `IsSameAsAnyOf` but applies `std::remove_cvref_t` on all types. The inversion is available as `NotSameAsAnyOfRaw`.
         * concept `IsScalar` uses `std::is_scalar_v<T>`.
         * concept `IsSet` determines whether a type is a `std::set` type.
         * concept `IsSmartPtr` determines whether a type is a `std::shared_ptr`, `std::unique_ptr` or `std::weak_ptr`.

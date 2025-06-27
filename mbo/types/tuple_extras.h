@@ -97,7 +97,7 @@ struct TupleFieldsConstructibleImpl;
 template<typename Fields, typename Args, std::size_t... Idx>
 struct TupleFieldsConstructibleImpl<Fields, Args, std::index_sequence<Idx...>>
     : std::bool_constant<(
-          std::constructible_from<std::tuple_element_t<Idx, Fields>, std::tuple_element_t<Idx, Args>> && ...)> {};
+          ConstructibleFrom<std::tuple_element_t<Idx, Fields>, std::tuple_element_t<Idx, Args>> && ...)> {};
 
 }  // namespace types_internal
 

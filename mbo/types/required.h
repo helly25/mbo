@@ -22,6 +22,7 @@
 
 #include "absl/hash/hash.h"
 #include "absl/strings/str_format.h"
+#include "mbo/types/traits.h"  // IWYU pragma: keep
 
 namespace mbo::types {
 
@@ -78,11 +79,11 @@ class Required {
   constexpr explicit Required(T v) : value_(std::move(v)) {}
 
   template<typename U>
-  requires(std::constructible_from<T, U> && !std::same_as<T, U>)
+  requires(ConstructibleFrom<T, U> && !std::same_as<T, U>)
   constexpr explicit Required(U&& v) : value_(std::forward<U>(v)) {}
 
   template<typename... Args>
-  requires(std::constructible_from<T, Args...>)
+  requires(ConstructibleFrom<T, Args...>)
   constexpr explicit Required(std::in_place_t /*unused*/, Args&&... args) : value_(std::forward<Args>(args)...) {}
 
   constexpr Required& emplace(T v) {  // NOLINT(readability-identifier-naming)
@@ -92,7 +93,7 @@ class Required {
   }
 
   template<typename... Args>
-  requires(std::constructible_from<T, Args...>)
+  requires(ConstructibleFrom<T, Args...>)
   constexpr Required& emplace(Args&&... args) {  // NOLINT(readability-identifier-naming)
     value_.~T();
     new (&value_) T(std::forward<Args>(args)...);

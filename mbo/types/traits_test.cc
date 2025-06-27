@@ -67,6 +67,25 @@ TEST_F(TraitsTest, Concepts) {
 
   static_assert(!Tester<int*>());
   static_assert(Tester<int&>());
+
+  static_assert(std::same_as<int, int>);
+  static_assert(!std::same_as<int, unsigned>);
+  static_assert(!std::same_as<int, double>);
+
+  static_assert(!IsSameAsAnyOf<int, unsigned, double>);
+  static_assert(IsSameAsAnyOf<int, int, unsigned, double>);  // Uses the first type parameter as the type to check.
+  static_assert(IsSameAsAnyOf<int, unsigned, int, double>);  // Uses the first type parameter as the type to check.
+  static_assert(IsSameAsAnyOf<int, unsigned, double, int>);  // Uses the first type parameter as the type to check.
+  static_assert(!IsSameAsAnyOf<unsigned, double, int, int>);
+  static_assert(!IsSameAsAnyOf<unsigned, int, double, int>);
+
+  static_assert(!IsAnyOfSameAs<int, unsigned, double>);
+  static_assert(!IsAnyOfSameAs<int, unsigned, int, double>);
+  static_assert(!IsAnyOfSameAs<unsigned, double, int>);
+  static_assert(!IsAnyOfSameAs<unsigned, double, short, int>);
+  static_assert(IsAnyOfSameAs<int, unsigned, double, int>);  // Uses the last type parameter as the type to check.
+  static_assert(IsAnyOfSameAs<unsigned, int, double, int>);  // Uses the last type parameter as the type to check.
+  static_assert(IsAnyOfSameAs<unsigned, double, int, int>);  // Uses the last type parameter as the type to check.
 }
 
 template<typename TestType>

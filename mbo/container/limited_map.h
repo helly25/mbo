@@ -102,7 +102,7 @@ class LimitedMap final
   // Constructors and assignment from other LimitMap/value types.
 
   template<std::forward_iterator It>
-  requires std::constructible_from<KeyValueType, mbo::types::ForwardIteratorValueType<It>>
+  requires types::ConstructibleFrom<KeyValueType, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedMap(It begin, It end, const KeyComp& key_comp = KeyComp()) noexcept
       : LimitedBase(begin, end, key_comp) {}
 

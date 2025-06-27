@@ -127,7 +127,7 @@ class OptionalDataOrRef {
   }
 
   template<typename U>
-  requires(std::assignable_from<T&, U> && std::constructible_from<T, U> && !std::same_as<U, T>)
+  requires(std::assignable_from<T&, U> && ConstructibleFrom<T, U> && !std::same_as<U, T>)
   constexpr OptionalDataOrRef& operator=(U&& v) noexcept {
     if constexpr (std::is_rvalue_reference_v<decltype(v)>) {  // NOLINT(*-branch-clone)
       emplace(std::forward<U>(v));

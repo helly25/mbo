@@ -92,7 +92,7 @@ class LimitedSet final : public container_internal::LimitedOrdered<Key, Key, Key
   // Constructors and assignment from other LimitSet/value types.
 
   template<std::forward_iterator It>
-  requires std::constructible_from<Key, mbo::types::ForwardIteratorValueType<It>>
+  requires types::ConstructibleFrom<Key, mbo::types::ForwardIteratorValueType<It>>
   constexpr LimitedSet(It begin, It end, const Compare& key_comp = Compare()) noexcept
       : LimitedBase(begin, end, key_comp) {}
 

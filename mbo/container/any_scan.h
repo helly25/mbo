@@ -372,8 +372,8 @@ class AnyScanImpl {
   template<AcceptableContainer Container>
   requires(
       !kAccessByRef  // This is the ConvertingScan constructor
-      && std::constructible_from<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>>
-      && std::constructible_from<value_type, AccessType>)
+      && types::ConstructibleFrom<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>>
+      && types::ConstructibleFrom<value_type, AccessType>)
   explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
       : funcs_{
             // NOTE: data must be copied here!
@@ -514,7 +514,7 @@ class AnyScan : public container_internal::AnyScanImpl<ValueType, DifferenceType
                 data)) {}
 
   template<::mbo::types::ContainerHasInputIterator Container>
-  requires(std::constructible_from<ValueType, typename std::remove_cvref_t<Container>::value_type>)
+  requires(types::ConstructibleFrom<ValueType, typename std::remove_cvref_t<Container>::value_type>)
   AnyScan(  // NOLINT(*-explicit-constructor,*-explicit-conversions)
       container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kAny> data)
       : AnyScanImpl(std::move(data)) {}
@@ -537,7 +537,7 @@ class ConstScan
                 data)) {}
 
   template<container_internal::AcceptableContainer Container>
-  requires(std::constructible_from<const ValueType, typename std::remove_cvref_t<Container>::value_type>)
+  requires(types::ConstructibleFrom<const ValueType, typename std::remove_cvref_t<Container>::value_type>)
   ConstScan(  // NOLINT(*-explicit-constructor,*-explicit-conversions)
       container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConst> data)
       : AnyScanImpl(std::move(data)) {}
@@ -560,7 +560,7 @@ class ConvertingScan
                 MakeAnyScanData<std::initializer_list<ValueType>, container_internal::ScanMode::kConverting>(data)) {}
 
   template<container_internal::AcceptableContainer Container>
-  requires(std::constructible_from<ValueType, typename std::remove_cvref_t<Container>::value_type>)
+  requires(types::ConstructibleFrom<ValueType, typename std::remove_cvref_t<Container>::value_type>)
   ConvertingScan(  // NOLINT(*-explicit-constructor,*-explicit-conversions)
       container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConverting> data)
       : AnyScanImpl(std::move(data)) {}
