@@ -81,6 +81,12 @@ class LimitedMap final
 
   constexpr explicit LimitedMap(const KeyComp& key_comp) noexcept : LimitedBase(key_comp) {}
 
+  template<types::IsPair... Args>
+  requires(sizeof...(Args) <= kCapacity)
+  constexpr explicit LimitedMap(Args&&... args) {
+    (emplace(std::forward<Args>(args)), ...);
+  }
+
   constexpr LimitedMap(const LimitedMap& other) noexcept : LimitedBase(other) {}
 
   constexpr LimitedMap& operator=(const LimitedMap& other) noexcept {
@@ -342,7 +348,7 @@ constexpr auto ToLimitedMap(KV (&array)[N], const KComp& key_comp = KComp()) {
 
 template<typename KV, std::size_t N, typename KComp = types::CompareLess<typename std::remove_cvref_t<KV>::first_type>>
 requires(types::IsPair<std::remove_cvref_t<KV>>)
-constexpr auto ToLimitedMap(KV (&&array)[N], const KComp& key_comp = KComp()) {
+constexpr auto ToLimitedMap(KV (&&array)[N], const KComp& key_comp = KComp()) {  // NOLINT(*-not-moved)
   LimitedMap<typename std::remove_cvref_t<KV>::first_type, typename std::remove_cvref_t<KV>::second_type, N, KComp>
       result(key_comp);
   for (std::size_t idx = 0; idx < N; ++idx) {
@@ -363,7 +369,7 @@ constexpr auto ToLimitedMap(std::pair<K, V> (&array)[N], const KComp& key_comp =
 
 template<typename K, typename V, std::size_t N, typename KComp = types::CompareLess<K>>
 requires(!types::IsPair<std::remove_cvref_t<K>>)
-constexpr auto ToLimitedMap(std::pair<K, V> (&&array)[N], const KComp& key_comp = KComp()) {
+constexpr auto ToLimitedMap(std::pair<K, V> (&&array)[N], const KComp& key_comp = KComp()) {  // NOLINT(*-not-moved)
   LimitedMap<K, V, N, KComp> result(key_comp);
   for (std::size_t idx = 0; idx < N; ++idx) {
     result.emplace(std::move(array[idx]));

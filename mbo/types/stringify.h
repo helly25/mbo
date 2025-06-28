@@ -474,10 +474,12 @@ void MboTypesStringifyOptions();  // Has no implementation!
 //
 // Note that caching is fairly expensive since both supported object types are large.
 template<typename T>
+concept IsValidMboTypesStringifyOptionsResultType =
+    IsSameAsAnyOf<T, StringifyOptions, const StringifyOptions&, StringifyFieldOptions, const StringifyFieldOptions&>;
+
+template<typename T>
 concept HasMboTypesStringifyOptions = requires(const T& v, const StringifyFieldInfo& opts) {
-  {
-    MboTypesStringifyOptions(v, opts)
-  } -> IsSameAsAnyOf<StringifyOptions, const StringifyOptions&, StringifyFieldOptions, const StringifyFieldOptions&>;
+  { MboTypesStringifyOptions(v, opts) } -> IsValidMboTypesStringifyOptionsResultType;
 };
 
 namespace types_internal {

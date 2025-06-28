@@ -25,7 +25,6 @@
 #include <optional>
 #include <set>
 #include <string_view>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -375,20 +374,7 @@ concept IsVector = requires {
   requires std::same_as<T, std::vector<typename T::value_type, typename T::allocator_type>>;
 };
 
-namespace types_internal {
-
-template<typename SameAsT, std::size_t Idx, typename Types>
-struct IsAnyOfSameAsImpl
-    : std::bool_constant<
-          std::same_as<SameAsT, std::tuple_element_t<Idx, Types>>
-          || std::conditional_t<Idx == 0, std::false_type, IsAnyOfSameAsImpl<SameAsT, Idx - 1, Types>>::value> {};
-
-template<std::size_t Size, typename Tuple>
-concept IsAnyOfSameAs = Size > 1 && IsAnyOfSameAsImpl<std::tuple_element_t<Size - 1U, Tuple>, Size - 2U, Tuple>::value;
-
-}  // namespace types_internal
-
-// Test whether `std::same_as` is true for one of a list of types `Ts`. Also see `IsAnyOfSameAs`.
+// Test whether `std::same_as` is true for one of a list of types `Ts`.
 //
 // Example: The following example takes an `int` or ` string`.
 //
@@ -400,12 +386,12 @@ concept IsAnyOfSameAs = Size > 1 && IsAnyOfSameAsImpl<std::tuple_element_t<Size 
 template<typename SameAs, typename... Ts>
 concept IsSameAsAnyOf = (std::same_as<SameAs, Ts> || ...);
 
-// Inversion of `IsSameAsAnyOf` - also see `IsAnyOfSameAs`.
+// Inversion of `IsSameAsAnyOf`.
 template<typename SameAs, typename... Ts>
 concept NotSameAsAnyOf = !IsSameAsAnyOf<SameAs, Ts...>;
 
 // Test whether `std::same_as` is true for one of a list of types `Ts` after removing `const`,
-// `volatile` or `&`. Also see `IsAnyOfSameAsRaw`.
+// `volatile` or `&`.
 //
 // Example: The following example takes any form of `int`
 // or `unsigned` where `const`, `volatile` or `&` are removed. So an `int*` would not be acceptable.
@@ -419,27 +405,9 @@ template<typename SameAs, typename... Ts>
 concept IsSameAsAnyOfRaw = IsSameAsAnyOf<std::remove_cvref_t<SameAs>, std::remove_cvref_t<Ts>...>;
 
 // Inverse of the above. So this prevents specific types. This is necessary when building overload
-// alternatives. Also see `NotAnyOfSameAsRaw`.
+// alternatives.
 template<typename SameAs, typename... Ts>
 concept NotSameAsAnyOfRaw = !IsSameAsAnyOfRaw<SameAs, Ts...>;
-
-// Similar to `IsSameAsAnyOf` but with order changed to that template binding works.
-//
-// ```
-// template <IsAnyOfSameAs<int, std::string> T>
-// void Func(T) {};
-// ```
-template<typename... Types>
-concept IsAnyOfSameAs = types_internal::IsAnyOfSameAs<sizeof...(Types), std::tuple<Types...>>;
-
-template<typename... Types>
-concept NotAnyOfSameAs = !IsAnyOfSameAs<Types...>;
-
-template<typename... Types>
-concept IsAnyOfSameAsRaw = IsAnyOfSameAs<std::remove_cvref_t<Types>...>;
-
-template<typename... Types>
-concept NotAnyOfSameAsRaw = NotAnyOfSameAs<std::remove_cvref_t<Types>...>;
 
 // Test whether two types are identical after removing `const`, `volatile` or `&`.
 template<typename SameAs, typename T>

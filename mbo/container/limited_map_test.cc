@@ -18,9 +18,9 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <iterator>
-#include <ranges>
-#include <stdexcept>
+#include <iterator>   // IWYU pragma: keep
+#include <ranges>     // IWYU pragma: keep
+#include <stdexcept>  // IWYU pragma: keep
 #include <string>
 #include <string_view>
 #include <utility>

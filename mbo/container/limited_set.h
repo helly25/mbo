@@ -238,6 +238,14 @@ constexpr inline bool operator<(
   return lhs.size() < rhs.size();
 }
 
+template<typename Key, typename... Args>
+requires((types::NotInitializerList<Args> && types::ConstructibleFrom<Key, Args>) && ...)
+inline constexpr auto MakeLimitedSetOf(Args&&... args) noexcept {
+  auto result = LimitedSet<Key, sizeof...(Args)>();
+  (result.emplace(std::forward<Args>(args)), ...);
+  return result;
+}
+
 template<typename Key, auto N = 0, typename Compare = std::less<Key>>
 inline constexpr auto MakeLimitedSet() noexcept {  // Parameter `key_comp` would create a conflict.
   return LimitedSet<Key, N, Compare>();

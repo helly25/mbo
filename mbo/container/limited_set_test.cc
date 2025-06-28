@@ -18,9 +18,8 @@
 #include <array>
 #include <cstddef>
 #include <functional>
-#include <iterator>
-#include <ranges>  // IWYU pragma: keep
-#include <stdexcept>
+#include <ranges>     // IWYU pragma: keep
+#include <stdexcept>  // IWYU pragma: keep
 #include <string>
 #include <string_view>
 #include <type_traits>  // IWYU pragma: keep
@@ -226,6 +225,34 @@ TEST_F(LimitedSetTest, MakeWithStrings) {
   EXPECT_THAT(test, SizeIs(4));
   EXPECT_THAT(test, CapacityIs(4));
   EXPECT_THAT(test, ElementsAre("0", "1", "2", "3"));
+}
+
+TEST_F(LimitedSetTest, MakeWithStringConversions) {
+  class Str {
+   public:
+    Str() = delete;
+
+    explicit Str(std::string_view str) : str_(str) {}
+
+    explicit operator std::string() const { return str_; }
+
+   private:
+    const std::string str_;
+  };
+
+  const auto elements_are = ElementsAre("0", "1", "2", "3");
+  {
+    const std::initializer_list<Str> data{Str{"0"}, Str{"1"}, Str{"2"}, Str{"3"}};
+    const LimitedSet<std::string, 4> test(data);
+    EXPECT_THAT(test, Not(IsEmpty()));
+    EXPECT_THAT(test, SizeIs(4));
+    EXPECT_THAT(test, CapacityIs(4));
+    EXPECT_THAT(test, elements_are);
+  }
+  {
+    const auto test = MakeLimitedSetOf<std::string>(Str{"0"}, Str{"1"}, Str{"2"}, Str{"3"});
+    EXPECT_THAT(test, elements_are);
+  }
 }
 
 TEST_F(LimitedSetTest, ConstructAssignFromSmaller) {
