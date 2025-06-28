@@ -383,6 +383,8 @@ class [[nodiscard]] LimitedOrdered {
 
   constexpr explicit LimitedOrdered(const Compare& key_comp) noexcept : key_comp_(key_comp) {}
 
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)
+
   constexpr LimitedOrdered(const LimitedOrdered& other) noexcept {
     for (; size_ < other.size_; ++size_) {
       std::construct_at(const_cast<RawValue*>(&values_[size_].data), other.values_[size_].data);
@@ -748,7 +750,6 @@ class [[nodiscard]] LimitedOrdered {
       if constexpr (kKeyOnly) {
         std::swap(values_[pos].data, other.values_[pos].data);
       } else {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         std::swap(const_cast<Key&>(values_[pos].data.first), const_cast<Key&>(other.values_[pos].data.first));
         std::swap(values_[pos].data.second, other.values_[pos].data.second);
       }
@@ -923,6 +924,8 @@ class [[nodiscard]] LimitedOrdered {
     ++size_;
     return std::make_pair(dst, true);
   }
+
+  // NOLINTEND(cppcoreguidelines-pro-type-const-cast)
 
   // Read/write access
 

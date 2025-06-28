@@ -46,8 +46,7 @@ struct TraitsTest : ::testing::Test {
   }
 };
 
-template<typename T>
-requires IsSameAsAnyOfRaw<T, int, short>
+template<IsSameAsAnyOfRaw<int, short> T>
 constexpr bool Tester() noexcept {
   return true;
 }
@@ -78,14 +77,6 @@ TEST_F(TraitsTest, Concepts) {
   static_assert(IsSameAsAnyOf<int, unsigned, double, int>);  // Uses the first type parameter as the type to check.
   static_assert(!IsSameAsAnyOf<unsigned, double, int, int>);
   static_assert(!IsSameAsAnyOf<unsigned, int, double, int>);
-
-  static_assert(!IsAnyOfSameAs<int, unsigned, double>);
-  static_assert(!IsAnyOfSameAs<int, unsigned, int, double>);
-  static_assert(!IsAnyOfSameAs<unsigned, double, int>);
-  static_assert(!IsAnyOfSameAs<unsigned, double, short, int>);
-  static_assert(IsAnyOfSameAs<int, unsigned, double, int>);  // Uses the last type parameter as the type to check.
-  static_assert(IsAnyOfSameAs<unsigned, int, double, int>);  // Uses the last type parameter as the type to check.
-  static_assert(IsAnyOfSameAs<unsigned, double, int, int>);  // Uses the last type parameter as the type to check.
 }
 
 template<typename TestType>
@@ -336,13 +327,13 @@ struct B;
 struct A {
   int a;
 
-  std::weak_ordering operator<=>(B /*unused*/) const = delete;
+  std::weak_ordering operator<=>(const B& /*unused*/) const = delete;
 };
 
 struct B {
   std::string b;
 
-  std::weak_ordering operator<=>(A /*unused*/) const { return std::weak_ordering::equivalent; }
+  std::weak_ordering operator<=>(const A& /*unused*/) const { return std::weak_ordering::equivalent; }
 };
 
 // `A <=> B` is deleted, so it is not supported.
@@ -358,12 +349,16 @@ static_assert(ThreeWayComparableTo<B, A, std::partial_ordering>);
 struct C {
   std::unique_ptr<int> c;
 
-  std::weak_ordering operator<=>(B /*unused*/) const { return std::weak_ordering::equivalent; }
+  std::weak_ordering operator<=>(const B& /*unused*/) const { return std::weak_ordering::equivalent; }
 };
 
 static_assert(!ThreeWayComparableTo<C, B, std::strong_ordering>);
 static_assert(ThreeWayComparableTo<C, B, std::weak_ordering>);
 static_assert(ThreeWayComparableTo<C, B, std::partial_ordering>);
+
+static_assert(!ThreeWayComparableTo<B, C, std::strong_ordering>);
+static_assert(ThreeWayComparableTo<B, C, std::weak_ordering>);
+static_assert(ThreeWayComparableTo<B, C, std::partial_ordering>);
 
 template<ThreeWayComparableTo<B> T>
 struct X {};

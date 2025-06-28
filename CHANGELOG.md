@@ -47,8 +47,6 @@
 * Added function `WeakToStrong` which converts a `std::weak_ordering` to a `std::strong_ordering`.
 * Fixed some IWYU pragmas.
 * Fixed some template requirements.
-* Added concept `IsAnyOfSameAs` which determines whether a type is the same as one of a list of types. Unlike `IsSameAsAnyOf` this has the searched typed on the right, so it can be bound in template clauses. The inversion is available as `NotAnyOfSameAs`.
-* Added concept `IsAnyOfSameAsRaw` which determines whether a type is the same as one of a list of types (when const, volatile and reference are removed). Unlike `IsSameAsAnyOfRaw` this has the searched typed on the right, so it can be bound in template clauses. Similar to `IsSameAsAnyOf` but applies `std::remove_cvref_t` on all types. The inversion is available as `NotAnyOfSameAsRaw`.
 
 # 0.9.0
 

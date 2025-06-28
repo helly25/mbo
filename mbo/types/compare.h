@@ -17,8 +17,8 @@
 #define MBO_TYPES_COMPARE_H_
 
 #include <cmath>
-#include <compare>  // IWYU pragma: keep
-#include <concepts>
+#include <compare>   // IWYU pragma: keep
+#include <concepts>  // IWYU pragma: keep
 #include <functional>
 #include <limits>
 #include <type_traits>
@@ -96,31 +96,32 @@ concept IsStdLess = types_internal::IsStdLess<T>::value;
 template<std::floating_point Double>
 std::strong_ordering CompareFloat(Double lhs, Double rhs) {
   const std::partial_ordering comp = lhs <=> rhs;
-  if (comp == std::partial_ordering::less) {
+  if (comp == std::partial_ordering::unordered) {
+    const bool lhs_nan = std::isnan(lhs);
+    const bool rhs_nan = std::isnan(rhs);
+    return lhs_nan <=> rhs_nan;
+  } else if (comp == std::partial_ordering::less) {
     return std::strong_ordering::less;
-  } else if (comp == std::partial_ordering::equivalent) {
-    return std::strong_ordering::equivalent;
   } else if (comp == std::partial_ordering::greater) {
     return std::strong_ordering::greater;
   }
-  bool lhs_nan = std::isnan(lhs);
-  bool rhs_nan = std::isnan(rhs);
-  return lhs_nan <=> rhs_nan;
+  return std::strong_ordering::equivalent;
 }
 
 // Compares two values that are scalar-numbers (including float/double and pointers, excluding references).
 template<IsScalar Lhs, IsScalar Rhs>
 inline std::strong_ordering CompareScalar(Lhs lhs, Rhs rhs) {
-  // if constexpr (IsSameAsAnyOf<Lhs, float, double, long double> || IsSameAsAnyOf<Rhs, float, double, long double>) {
   if constexpr (std::same_as<Lhs, Rhs>) {
-    if constexpr (IsSameAsAnyOf<Lhs, float, double, long double>) {
+    if constexpr (std::floating_point<Lhs>) {
       return CompareFloat(lhs, rhs);
     } else {
       return lhs <=> rhs;
     }
   } else {
-    if constexpr (IsSameAsAnyOf<Lhs, float, double, long double> || IsSameAsAnyOf<Rhs, float, double, long double>) {
+    if constexpr (std::floating_point<Lhs> || std::floating_point<Rhs>) {
       return CompareFloat<long double>(lhs, rhs);
+    } else if constexpr (std::same_as<bool, Lhs> || std::same_as<bool, Rhs>) {
+      return static_cast<bool>(lhs) <=> static_cast<bool>(rhs);
     } else if constexpr (std::is_signed_v<Lhs> == std::is_signed_v<Rhs>) {
       return lhs <=> rhs;
     } else if constexpr (std::is_signed_v<Lhs>) {
