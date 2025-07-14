@@ -123,6 +123,7 @@ class [[nodiscard]] LimitedOrdered {
   static constexpr size_type npos = static_cast<size_type>(-1);  // Result of `index_of` if not found.
 
   struct ValueCompare {
+    // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)
     MBO_ALWAYS_INLINE static constexpr const Key& GetKey(const Key& key) noexcept { return key; }
 
     MBO_ALWAYS_INLINE static constexpr const Key& GetKey(const value_type& val) noexcept
@@ -191,24 +192,24 @@ class [[nodiscard]] LimitedOrdered {
     MBO_ALWAYS_INLINE constexpr pointer operator->() const noexcept { return &pos_->data; }
 
     constexpr const_iterator& operator++() noexcept {
-      ++pos_;
+      ++pos_;  // NOLINT(*-pointer-arithmetic)
       return *this;
     }
 
     constexpr const_iterator& operator--() noexcept {
-      --pos_;
+      --pos_;  // NOLINT(*-pointer-arithmetic)
       return *this;
     }
 
     constexpr const_iterator operator++(int) noexcept {  // NOLINT(cert-dcl21-cpp)
       const auto it = *this;
-      ++pos_;
+      ++pos_;  // NOLINT(*-pointer-arithmetic)
       return it;
     }
 
     constexpr const_iterator operator--(int) noexcept {  // NOLINT(cert-dcl21-cpp)
       const auto it = *this;
-      --pos_;
+      --pos_;  // NOLINT(*-pointer-arithmetic)
       return it;
     }
 
@@ -288,24 +289,24 @@ class [[nodiscard]] LimitedOrdered {
     MBO_ALWAYS_INLINE constexpr explicit operator const_iterator() const noexcept { return const_iterator(pos_); }
 
     constexpr iterator& operator++() noexcept {
-      ++pos_;
+      ++pos_;  // NOLINT(*-pointer-arithmetic)
       return *this;
     }
 
     constexpr iterator& operator--() noexcept {
-      --pos_;
+      --pos_;  // NOLINT(*-pointer-arithmetic)
       return *this;
     }
 
     constexpr iterator operator++(int) noexcept {  // NOLINT(cert-dcl21-cpp)
       const auto it = *this;
-      ++pos_;
+      ++pos_;  // NOLINT(*-pointer-arithmetic)
       return it;
     }
 
     constexpr iterator operator--(int) noexcept {  // NOLINT(cert-dcl21-cpp)
       const auto it = *this;
-      --pos_;
+      --pos_;  // NOLINT(*-pointer-arithmetic)
       return it;
     }
 
@@ -982,6 +983,7 @@ class [[nodiscard]] LimitedOrdered {
 
   static constexpr iterator to_iterator(const const_iterator& pos) noexcept { return iterator(pos.pos); }
 
+  // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)
   static constexpr const Key& GetKey(const Key& key) noexcept { return key; }
 
   static constexpr const Key& GetKey(const Value& val) noexcept

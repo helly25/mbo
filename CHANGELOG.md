@@ -47,6 +47,7 @@
 * Added function `WeakToStrong` which converts a `std::weak_ordering` to a `std::strong_ordering`.
 * Fixed some IWYU pragmas.
 * Fixed some template requirements.
+* Fixed bug in `mbo::strings::ParseString` with access past end of `string_view` for illegal hex and oct escape sequences (introduced in 0.9.0).
 
 # 0.9.0
 

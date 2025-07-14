@@ -59,22 +59,16 @@ static_assert(std::ranges::range<LimitedOrdered<
                   int,
                   LimitedOptions<8, LimitedOptionsFlag::kEmptyDestructor, LimitedOptionsFlag::kRequireSortedInput>{}>>);
 
-template<typename K = int, typename M = int, typename V = int, auto Capacity = 1>
-struct LimitedOrderedTester : public LimitedOrdered<K, M, V, Capacity> {
- public:
-  using typename LimitedOrdered<K, M, V, Capacity>::Data;
-};
-
 struct LimitedOrderedTest : ::testing::Test {
   static void SetUpTestSuite() { absl::InitializeLog(); }
 };
 
 TEST_F(LimitedOrderedTest, ConstexprData) {
-#ifndef NDEBUG
-  // In opt mode the compiler won't initialize the int.
-  constexpr auto kTest = LimitedOrderedTester<>::Data{};
-  EXPECT_THAT(kTest.data, 0);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-#endif
+  constexpr auto kTest = LimitedOrdered<int, int, int, 1>{};
+  EXPECT_THAT(kTest, IsEmpty());
+  EXPECT_THAT(kTest, SizeIs(0));
+  EXPECT_THAT(kTest, CapacityIs(1));
+  EXPECT_THAT(kTest, ElementsAre());
 }
 
 TEST_F(LimitedOrderedTest, ConstexprNoDtor) {
