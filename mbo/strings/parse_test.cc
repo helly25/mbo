@@ -157,7 +157,7 @@ TEST_F(ParseTest, ParseStringErrors) {
   EXPECT_THAT(ParseString({}, "\\"), StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input ends in '\\'."));
   EXPECT_THAT(
       ParseString({}, "\\o"),
-      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad octal C++23 sequence."));
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad octal sequence."));
   EXPECT_THAT(
       ParseString({}, "\\o{"),
       StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad octal C++23 sequence."));

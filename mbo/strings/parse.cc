@@ -29,6 +29,9 @@
 namespace mbo::strings {
 namespace {
 absl::StatusOr<char> ParseOctal(char first_char, std::string_view& data) {
+  if (data.empty()) {
+    return absl::InvalidArgumentError("ParseString input has bad octal sequence.");
+  }
   const bool octal_23 = first_char == 'o';
   if (octal_23) {
     if (data.size() < 3 || data[0] != '{') {
@@ -75,6 +78,9 @@ bool NextHexChar(std::string_view& data, int& hex) {
 }
 
 absl::StatusOr<char> ParseHex(std::string_view& data) {
+  if (data.empty()) {
+    return absl::InvalidArgumentError("ParseString input has bad hex sequence.");
+  }
   const bool hex_23 = data[0] == '{';
   if (hex_23) {
     if (data.size() < 3) {
