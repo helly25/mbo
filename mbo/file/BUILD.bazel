@@ -76,7 +76,7 @@ cc_library(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:str_format",
-        "@re2//:re2",
+        "@re2",
     ],
 )
 
@@ -92,7 +92,7 @@ cc_test(
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@re2//:re2",
+        "@re2",
     ],
 )
 

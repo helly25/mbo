@@ -50,12 +50,12 @@ cc_library(
     deps = [
         "//mbo/file:file_cc",
         "//mbo/status:status_macros_cc",
-        "@bazel_tools//tools/cpp/runfiles",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:str_format",
+        "@bazel_tools//tools/cpp/runfiles",
     ],
 )
 

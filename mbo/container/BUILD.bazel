@@ -164,9 +164,9 @@ cc_library(
         ":limited_set_cc",
         ":limited_vector_cc",
         "//mbo/testing:matchers_cc",
-        "@com_github_google_benchmark//:benchmark",
         "@abseil-cpp//absl/log:initialize",
         "@abseil-cpp//absl/strings",
+        "@com_github_google_benchmark//:benchmark",
     ],
 )
 

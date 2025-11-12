@@ -35,9 +35,9 @@ cc_library(
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
-        "@re2//:re2",
         "@com_helly25_mbo//mbo/container:limited_map_cc",
         "@com_helly25_mbo//mbo/types:no_destruct_cc",
+        "@re2",
     ],
 )
 
@@ -52,7 +52,7 @@ cc_library(
         "//mbo/file:artefact_cc",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/time",
-        "@re2//:re2",
+        "@re2",
     ],
 )
 
@@ -102,7 +102,7 @@ cc_binary(
         "@abseil-cpp//absl/log:initialize",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
-        "@re2//:re2",
+        "@re2",
     ],
 )
 
@@ -118,9 +118,9 @@ cc_test(
         "//mbo/testing:status_cc",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
+        "@com_helly25_mbo//mbo/status:status_macros_cc",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@com_helly25_mbo//mbo/status:status_macros_cc",
     ],
 )
 
