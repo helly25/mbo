@@ -48,6 +48,7 @@
 * Fixed some IWYU pragmas.
 * Fixed some template requirements.
 * Fixed bug in `mbo::strings::ParseString` with access past end of `string_view` for illegal hex and oct escape sequences (introduced in 0.9.0).
+* Updated various dependencies.
 
 # 0.9.0
 

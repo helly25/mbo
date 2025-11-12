@@ -22,7 +22,7 @@ cc_library(
     deps = [
         "//mbo/types:cases_cc",
         "//mbo/types:traits_cc",
-        "@com_google_absl//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_check",
     ],
 )
 
@@ -35,10 +35,10 @@ cc_test(
         ":limited_set_cc",
         ":limited_vector_cc",
         "//mbo/types:traits_cc",
-        "@com_google_absl//absl/hash",
-        "@com_google_absl//absl/strings",
-        "@com_google_googletest//:gtest",
-        "@com_google_googletest//:gtest_main",
+        "@abseil-cpp//absl/hash",
+        "@abseil-cpp//absl/strings",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -58,9 +58,9 @@ cc_test(
         ":limited_set_cc",
         ":limited_vector_cc",
         "//mbo/types:traits_cc",
-        "@com_google_absl//absl/strings",
-        "@com_google_googletest//:gtest",
-        "@com_google_googletest//:gtest_main",
+        "@abseil-cpp//absl/strings",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -73,7 +73,7 @@ cc_library(
         ":limited_ordered_cc",
         "//mbo/types:compare_cc",
         "//mbo/types:traits_cc",
-        "@com_google_absl//absl/log:absl_log",
+        "@abseil-cpp//absl/log:absl_log",
     ],
 )
 
@@ -85,9 +85,9 @@ cc_test(
         ":limited_map_cc",
         "//mbo/config:config_cc",
         "//mbo/testing:matchers_cc",
-        "@com_google_absl//absl/log:initialize",
-        "@com_google_googletest//:gtest",
-        "@com_google_googletest//:gtest_main",
+        "@abseil-cpp//absl/log:initialize",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -107,7 +107,7 @@ cc_library(
         "//mbo/config:require_cc",
         "//mbo/types:compare_cc",
         "//mbo/types:traits_cc",
-        "@com_google_absl//absl/log:absl_log",
+        "@abseil-cpp//absl/log:absl_log",
     ],
 )
 
@@ -120,9 +120,9 @@ cc_test(
         "//mbo/config:config_cc",
         "//mbo/config:require_cc",
         "//mbo/testing:matchers_cc",
-        "@com_google_absl//absl/log:initialize",
-        "@com_google_googletest//:gtest",
-        "@com_google_googletest//:gtest_main",
+        "@abseil-cpp//absl/log:initialize",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -135,7 +135,7 @@ cc_library(
         ":limited_ordered_cc",
         "//mbo/types:compare_cc",
         "//mbo/types:traits_cc",
-        "@com_google_absl//absl/log:absl_log",
+        "@abseil-cpp//absl/log:absl_log",
     ],
 )
 
@@ -148,10 +148,10 @@ cc_test(
         ":limited_set_cc",
         "//mbo/config:config_cc",
         "//mbo/testing:matchers_cc",
-        "@com_google_absl//absl/log:initialize",
-        "@com_google_absl//absl/strings",
-        "@com_google_googletest//:gtest",
-        "@com_google_googletest//:gtest_main",
+        "@abseil-cpp//absl/log:initialize",
+        "@abseil-cpp//absl/strings",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -165,8 +165,8 @@ cc_library(
         ":limited_vector_cc",
         "//mbo/testing:matchers_cc",
         "@com_github_google_benchmark//:benchmark",
-        "@com_google_absl//absl/log:initialize",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/log:initialize",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -192,7 +192,7 @@ cc_library(
         ":limited_options_cc",
         "//mbo/config:require_cc",
         "//mbo/types:traits_cc",
-        "@com_google_absl//absl/log:absl_log",
+        "@abseil-cpp//absl/log:absl_log",
     ],
 )
 
@@ -203,8 +203,8 @@ cc_test(
     deps = [
         ":limited_vector_cc",
         "//mbo/testing:matchers_cc",
-        "@com_google_absl//absl/log:initialize",
-        "@com_google_googletest//:gtest",
-        "@com_google_googletest//:gtest_main",
+        "@abseil-cpp//absl/log:initialize",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )

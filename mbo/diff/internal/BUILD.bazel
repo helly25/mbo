@@ -29,12 +29,12 @@ cc_library(
     hdrs = ["update_absl_log_flags.h"],
     visibility = ["//mbo/diff:__pkg__"],
     deps = [
-        "@com_google_absl//absl/flags:commandlineflag",
-        "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/flags:parse",
-        "@com_google_absl//absl/flags:reflection",
-        "@com_google_absl//absl/log",
-        "@com_google_absl//absl/log:flags",
+        "@abseil-cpp//absl/flags:commandlineflag",
+        "@abseil-cpp//absl/flags:flag",
+        "@abseil-cpp//absl/flags:parse",
+        "@abseil-cpp//absl/flags:reflection",
+        "@abseil-cpp//absl/log",
+        "@abseil-cpp//absl/log:flags",
     ],
 )
 
@@ -47,11 +47,11 @@ cc_library(
         "//mbo/diff:diff_options_cc",
         "//mbo/file:artefact_cc",
         "//mbo/strings:strip_cc",
-        "@com_google_absl//absl/cleanup",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_googlesource_code_re2//:re2",
+        "@abseil-cpp//absl/cleanup",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
+        "@re2//:re2",
     ],
 )
 
@@ -62,8 +62,8 @@ cc_library(
         "//mbo/diff:diff_options_cc",
         "//mbo/file:artefact_cc",
         "//mbo/strings:strip_cc",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -75,8 +75,8 @@ cc_library(
         "//mbo/diff:diff_options_cc",
         "//mbo/file:artefact_cc",
         "//mbo/strings:strip_cc",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_googlesource_code_re2//:re2",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@re2//:re2",
     ],
 )
