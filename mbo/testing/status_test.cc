@@ -391,7 +391,9 @@ TEST_F(StatusMatcherTest, MessagesOfStatusPayloads) {
         MatchAndExplain(matcher, status_abc_content),
         Pair(
             false,
-            "which has a non-matching payload map whose element #1 doesn't match, whose first field does not match"));
+            "which has a non-matching payload map whose element #1 ((\"def\", \"texting\")) has a first field that "
+            "isn't equal to \"url\", or has a second field that isn't equal to \"content\", whose first field does not "
+            "match"));
     EXPECT_THAT(
         MatchAndExplain(matcher, status_abc_another),
         Pair(

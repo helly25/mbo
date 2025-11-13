@@ -78,7 +78,7 @@ def _github_commit_archive(
 
     ```
     github_archive(
-        name = "com_google_absl",
+        name = "abseil-cpp",
         repo = "https://github.com/abseil/abseil-cpp",
         commit = "78be63686ba732b25052be15f8d6dee891c05749",
         sha256 = "bd6ce0bffe724241dbfe53013b8fd05b43f9a277fb7fafd99377d7ef35285866",
@@ -118,7 +118,7 @@ def _github_tag_archive(
 
     ```
     github_archive(
-        name = "com_google_absl",
+        name = "abseil-cpp",
         repo = "https://github.com/abseil/abseil-cpp",
         tag = "20230125.3",
         sha256 = "5366d7e7fa7ba0d915014d387b66d0d002c03236448e1ba9ef98122c13b35c36",

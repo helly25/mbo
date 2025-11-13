@@ -31,7 +31,7 @@ cc_library(
         "//mbo/diff:chunked_diff_cc",
         "//mbo/diff:diff_options_cc",
         "//mbo/file:artefact_cc",
-        "@com_google_absl//absl/status:statusor",
+        "@abseil-cpp//absl/status:statusor",
     ],
 )
 
@@ -44,7 +44,7 @@ cc_library(
         "//mbo/diff:diff_options_cc",
         "//mbo/file:artefact_cc",
         "//mbo/types:no_destruct_cc",
-        "@com_google_absl//absl/log:absl_log",
-        "@com_google_absl//absl/status:statusor",
+        "@abseil-cpp//absl/log:absl_log",
+        "@abseil-cpp//absl/status:statusor",
     ],
 )

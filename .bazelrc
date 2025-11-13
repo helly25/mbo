@@ -24,6 +24,7 @@ common --features=layering_check,parse_headers
 common --define absl=1
 
 common --cxxopt=-std=c++20 --host_cxxopt=-std=c++20 --cxxopt=-Werror
+
 test --test_output=errors
 
 common --copt=-fdiagnostics-color=always
@@ -36,6 +37,9 @@ common:clang --host_cxxopt=-gmlt
 common:clang --linkopt=-fuse-ld=lld
 common:clang --host_linkopt=-fuse-ld=lld
 common:clang --define is_clang=true
+# Some newer Clang versions really do not like '-c':
+# https://github.com/llvm/llvm-project/issues/100909
+common:clang --cxxopt=-Wno-unused-command-line-argument
 
 common:symbolizer --strip=never
 common:symbolizer --run_under=//tools:run_under_symbolizer

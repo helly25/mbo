@@ -61,6 +61,6 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":config_cc",
-        "@com_google_absl//absl/log:absl_log",
+        "@abseil-cpp//absl/log:absl_log",
     ],
 )

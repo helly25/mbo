@@ -15,7 +15,7 @@
 
 """Loads all extra modules used by the workspace."""
 
-load("//bzl:archive.bzl", "github_archive")
+load("//bzl:archive.bzl", "github_archive", "http_archive")
 
 def helly25_mbo_load_extras():
     """Loads all extra modules required by the workspace."""
@@ -37,17 +37,14 @@ def helly25_mbo_load_extras():
     #     0bd3bff40ab51a8e744ccddfd24f311a9df81c2d / sha256-YpBdoaSAXSatJwLcB2yzuZw5Ls/h5+dcWip+h+pVdUo=
     # In order to go past version 1.0.0 we also add the actual fix:
     # * 2024.06.06: https://github.com/bazel-contrib/toolchains_llvm/pull/337: Force Clang modules with LLVM >= 14
+    # Versions:
+    # * 1.4.0 works
+    # * 1.5.0 fails work workspace builds
     if not native.existing_rule("toolchains_llvm"):
-        github_archive(
+        http_archive(
             name = "toolchains_llvm",
-            commit = "0bd3bff40ab51a8e744ccddfd24f311a9df81c2d",
-            repo = "https://github.com/bazel-contrib/toolchains_llvm",
-            integrity = "sha256-YpBdoaSAXSatJwLcB2yzuZw5Ls/h5+dcWip+h+pVdUo=",
+            sha256 = "fded02569617d24551a0ad09c0750dc53a3097237157b828a245681f0ae739f8",
+            strip_prefix = "toolchains_llvm-v1.4.0",
+            canonical_id = "1.4.0",
+            url = "https://github.com/bazel-contrib/toolchains_llvm/releases/download/v1.4.0/toolchains_llvm-v1.4.0.tar.gz",
         )
-        #http_archive(
-        #    name = "toolchains_llvm",
-        #    sha256 = "",
-        #    strip_prefix = "toolchains_llvm-1.0.0",
-        #    canonical_id = "1.0.0",
-        #    url = "https://github.com/bazel-contrib/toolchains_llvm/releases/download/1.0.0/toolchains_llvm-1.0.0.tar.gz",
-        #)
