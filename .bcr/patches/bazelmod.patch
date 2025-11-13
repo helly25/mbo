@@ -11,5 +11,5 @@ index c298a32..658794e 100644
 +# include("//bazelmod:dev.MODULE.bazel")
 +# include("//bazelmod:llvm.MODULE.bazel")
  
- bazel_dep(name = "bazel_skylib", version = "1.7.1")
- bazel_dep(name = "rules_cc", version = "0.1.1")
+ bazel_dep(name = "bazel_skylib", version = "1.8.2")
+ bazel_dep(name = "platforms", version = "1.0.0")

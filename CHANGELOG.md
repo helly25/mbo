@@ -50,6 +50,7 @@
 * Fixed bug in `mbo::strings::ParseString` with access past end of `string_view` for illegal hex and oct escape sequences (introduced in 0.9.0).
 * Updated various dependencies.
 * Renamed old dependency naming styles to new (matching bzlmod and other deps' needs) styles where possible.
+* Removed WORKSPACE support.
 
 # 0.9.0
 
