@@ -19,18 +19,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        bazel_mode: [bzlmod, workspace]
         compiler: [gcc]
         gcc_version: [12, 13, 14]
         bazel_config: [asan, cpp23, opt]
         # Using `include` does not make the options show up in the generated config names...
         exclude:
-          - bazel_mode: bzlmod
-            gcc_version: 12
-          - bazel_mode: workspace
-            gcc_version: 14
-          - bazel_mode: workspace
-            gcc_version: 13
           - bazel_config: asan
             gcc_version: 13
           - bazel_config: asan
@@ -44,7 +37,6 @@ jobs:
     with:
       continue-on-error: false
       os: ${{ matrix.os }}
-      bazel_mode: ${{ matrix.bazel_mode }}
       compiler: ${{ matrix.compiler }}
       gcc_version: ${{ matrix.gcc_version }}
       bazel_config: ${{ matrix.bazel_config }}
@@ -55,7 +47,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-15]
-        bazel_mode: [bzlmod]
         compiler: [gcc, native, clang]
         gcc_version: [13]
         llvm_version: [16.0.4]
@@ -71,7 +62,6 @@ jobs:
     with:
       continue-on-error: false
       os: ${{ matrix.os }}
-      bazel_mode: ${{ matrix.bazel_mode }}
       compiler: ${{ matrix.compiler }}
       gcc_version: ${{ matrix.gcc_version }}
       llvm_version: ${{ matrix.llvm_version }}
@@ -84,7 +74,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-15]
-        bazel_mode: [bzlmod]
         compiler: [clang]
         # MacOS-15: Clang 16.0.0
         # MacOS-25: Clang 17.0.0
@@ -114,7 +103,6 @@ jobs:
     with:
       continue-on-error: true
       os: ${{ matrix.os }}
-      bazel_mode: ${{ matrix.bazel_mode }}
       compiler: ${{ matrix.compiler }}
       llvm_version: ${{ matrix.llvm_version }}
       bazel_config: ${{ matrix.bazel_config }}

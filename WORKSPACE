@@ -13,26 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-workspace(name = "com_helly25_mbo")
-
-load("//bzl/workspace:load_modules.bzl", "helly25_mbo_load_modules")
-
-helly25_mbo_load_modules()
-
-load("//bzl/workspace:init_modules.bzl", "helly25_mbo_init_modules")
-
-helly25_mbo_init_modules()
-
-################################################################################
-
-load("//bzl/workspace:load_extras.bzl", "helly25_mbo_load_extras")
-
-helly25_mbo_load_extras()  # Adds Hedron + LLVM
-
-load("//bzl/workspace:init_extras.bzl", "helly25_mbo_init_extras")
-
-helly25_mbo_init_extras()  # Init Hedron + LLVM
-
-load("//bzl/workspace:init_extras_llvm.bzl", "helly25_mbo_init_extras_llvm")
-
-helly25_mbo_init_extras_llvm()  # Init LLVM/Part 2
+# NOT SUPPORTED

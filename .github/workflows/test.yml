@@ -26,10 +26,6 @@ on:
         description: 'The operating system the tests will be run on.'
         type: string
         default: ubuntu-latest
-      bazel_mode:
-        description: 'The Bazel operation mode (bzlmod, workspace).'
-        type: string
-        default: bzlmod
       compiler:
         description: 'The compiler to use (clang, gcc).'
         type: string
@@ -56,7 +52,7 @@ on:
         default: ''
 
 env:
-  CACHE_KEY_PREFIX: ${{inputs.os}}-${{inputs.bazel_mode}}_${{inputs.compiler}}_${{inputs.compiler == 'clang' && inputs.llvm_version || ''}}_${{inputs.compiler == 'gcc' && inputs.gcc_version || ''}}_${{inputs.bazel_config}}_${{inputs.module_version}}
+  CACHE_KEY_PREFIX: ${{inputs.os}}-bzlmod_${{inputs.compiler}}_${{inputs.compiler == 'clang' && inputs.llvm_version || ''}}_${{inputs.compiler == 'gcc' && inputs.gcc_version || ''}}_${{inputs.bazel_config}}_${{inputs.module_version}}
 
 jobs:
   test:
@@ -92,14 +88,6 @@ jobs:
           CACHE_ROOT=~/.cache
           BAZEL_INIT+=("--output_user_root=${CACHE_ROOT}/bazel")
           BAZEL_ARGS+=("--repository_cache=${CACHE_ROOT}/bazel_repo-cache")
-          if [ "${{inputs.bazel_mode}}" == "workspace" ]; then
-            BAZEL_ARGS+=("--noenable_bzlmod" "--enable_workspace")
-          elif [ "${{inputs.bazel_mode}}" == "bzlmod" ]; then
-            BAZEL_ARGS+=("--enable_bzlmod" "--noenable_workspace")
-          else
-            echo "ERROR: Matrix/Input var 'bazel_mode' must be one of [bzlmod, workspace]."
-            exit 1
-          fi
           if [ "${{inputs.compiler}}" == "clang" ]; then
             BAZEL_ARGS+=("--config=clang")
             unset CC
