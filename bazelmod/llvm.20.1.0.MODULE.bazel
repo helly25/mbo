@@ -20,21 +20,15 @@ bazel_dep(name = "toolchains_llvm", version = "1.5.0")
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 llvm.toolchain(
     name = "llvm_toolchain_llvm",
-    llvm_version = "20.1.0",
-    sha256 = {
-        "darwin-aarch64": "2c42ec26ec50c4bf8b95585f762b9d2f5b385d170dee772d9c1d6c9a7190dcef",
-        "linux-aarch64": "9d1bbf3f6d4d011e3b8b4b585f686bc968474917f37d3b82b4a534f456168c67",
-        "linux-x86_64": "954ac51498519f6ed9540714fb04bc401f70039b296a8160dd1559be380788d7",
-    },
-    strip_prefix = {
-        "darwin-aarch64": "LLVM-20.1.0-macOS-ARM64",
-        "linux-aarch64": "LLVM-20.1.0-Linux-ARM64",
-        "linux-x86_64": "LLVM-20.1.0-Linux-X64",
-    },
-    urls = {
-        "darwin-aarch64": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.0/LLVM-20.1.0-macOS-ARM64.tar.xz"],
-        "linux-aarch64": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.0/LLVM-20.1.0-Linux-ARM64.tar.xz"],
-        "linux-x86_64": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.0/LLVM-20.1.0-Linux-X64.tar.xz"],
+    llvm_version = "20.1.7",
+    extra_llvm_distributions = {
+        # 20.1.7
+        "LLVM-20.1.7-Linux-ARM64.tar.xz": "832f2802a29457dc758f56e26e98558c6cd0e45fcd07186f540cb6e7f4e59385",
+        "LLVM-20.1.7-Linux-X64.tar.xz": "8494c98a774051a40bfe1187a2d6442f4bc107598998bbe1673d9bb1572cfd6f",
+        "LLVM-20.1.7-macOS-ARM64.tar.xz": "6aa75de00575ad0663183b00f00f39992ded611b5136e57649ace1e6a53c0d16",
+        "LLVM-20.1.7-macOS-X64.tar.xz": "ccf82ffe7e136ee49659cb57157856a7963d0950fac3d05aabba0db75bfba26f",
+        "clang+llvm-20.1.7-aarch64-pc-windows-msvc.tar.xz": "4fac201fc680a1a9b4a21cf0f3be522dc31951d39d709a62a2827347ecffc72e",
+        "clang+llvm-20.1.7-armv7a-linux-gnueabihf.tar.gz": "c69e642b93f7dff28ab5278b1d32e1ac1ce51ffc32f264ef4962c749c41424af",
     },
 )
 use_repo(llvm, "llvm_toolchain_llvm")
