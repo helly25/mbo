@@ -108,8 +108,8 @@ class Json {
   template<bool IsConst>
   class value_iterator_t {
    private:
-    using array_iterator = std::conditional_t<IsConst, const_array_iterator, array_iterator>;
-    using object_iterator = std::conditional_t<IsConst, const_object_iterator, object_iterator>;
+    using array_iterator = std::conditional_t<IsConst, Json::const_array_iterator, Json::array_iterator>;
+    using object_iterator = std::conditional_t<IsConst, Json::const_object_iterator, Json::object_iterator>;
 
     using const_iterator = value_iterator_t<true>;
     using mutable_iterator = value_iterator_t<false>;
@@ -223,8 +223,8 @@ class Json {
   template<bool IsConst>
   class ValuesViewT : public std::ranges::view_interface<ValuesViewT<IsConst>> {
    private:
-    using array_iterator = std::conditional_t<IsConst, const_array_iterator, array_iterator>;
-    using object_iterator = std::conditional_t<IsConst, const_object_iterator, object_iterator>;
+    using array_iterator = std::conditional_t<IsConst, Json::const_array_iterator, Json::array_iterator>;
+    using object_iterator = std::conditional_t<IsConst, Json::const_object_iterator, Json::object_iterator>;
 
    public:
     using value_iterator = value_iterator_t<IsConst>;
