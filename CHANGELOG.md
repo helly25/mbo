@@ -1,6 +1,7 @@
 # 0.10.0
 
 * Bumped minimum GCC to 13.
+* Added `mbo/json` which adds JSon write support for almost any structured type. If anything is missing it can easily be added on the client side.
 * Added direct support for `-fno-exceptions` irrespective of config setting.
 * Added support for ASAN symbolizer with `--config=clang`.
 * Added AbslStringify and hash support to `NoDestruct`, `RefWrap`, `Required`.
