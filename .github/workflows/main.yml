@@ -20,16 +20,12 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         compiler: [gcc]
-        gcc_version: [13, 14, 15]
+        gcc_version: [13, 14]
         bazel_config: [asan, cpp23, opt]
         # Using `include` does not make the options show up in the generated config names...
         exclude:
           - bazel_config: asan
-            gcc_version: 14
-          - bazel_config: asan
             gcc_version: 13
-          - bazel_config: cpp23
-            gcc_version: 14
           - bazel_config: cpp23
             gcc_version: 13
 
