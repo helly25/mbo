@@ -41,7 +41,7 @@ VERSION="${1}"
 
 BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' <MODULE.bazel | head -n1)"
 CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' <CHANGELOG.md | head -n1)"
-NEXT_VERSION="$(echo "${VERSION}" | awk -F. '/^(0|[1-9][0-9]*)([.](0|[1-9][0-9]*)){2,}([-+]|$)/{print $1"."$2"."(($3)+1)}')"
+NEXT_VERSION="$(echo "${VERSION}" | awk -F. '/^(0|[1-9][0-9]*)([.](0|[1-9][0-9]*))([.](0|[1-9][0-9]*))+([-+]|$)/{print $1"."$2"."(($3)+1)}')"
 
 if [[ "${BAZELMOD_VERSION}" != "${CHANGELOG_VERSION}" ]]; then
   die "MODULE.bazel (${BAZELMOD_VERSION}) != CHANGELOG.md (${CHANGELOG_VERSION})."
