@@ -65,7 +65,8 @@ jobs:
         if: ${{inputs.compiler == 'gcc' && inputs.gcc_version != ''}}
         run: |
           sudo apt update
-          sudo apt -t=experimental install gcc-${{inputs.gcc_version}} g++-${{inputs.gcc_version}}
+          sudo apt upgrade
+          sudo apt install gcc-${{inputs.gcc_version}} g++-${{inputs.gcc_version}}
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{inputs.gcc_version}} 100 --slave /usr/bin/g++ g++ /usr/bin/g++-${{inputs.gcc_version}} --slave /usr/bin/gcov gcov /usr/bin/gcov-${{inputs.gcc_version}}
           sudo update-alternatives --set gcc /usr/bin/gcc-${{inputs.gcc_version}}
 
