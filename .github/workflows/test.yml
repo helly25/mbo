@@ -61,11 +61,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: bazelbuild/setup-bazelisk@v3
-      - uses: egor-tensin/setup-gcc@v1
-        if: ${{inputs.compiler == 'gcc' && inputs.gcc_version != '' && inputs.gcc_version != '15'}}
-        with:
-          version: ${{inputs.gcc_version}}
-          platform: ${{runner.arch}}
+      - name: Install GCC
+        if: ${{inputs.compiler == 'gcc' && inputs.gcc_version != ''}}
+        run: |
+          sudo apt install gcc-${{inputs.gcc_version}} g++-${{inputs.gcc_version}}
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{inputs.gcc_version}} 100 --slave /usr/bin/g++ g++ /usr/bin/g++-${{inputs.gcc_version}} --slave /usr/bin/gcov gcov /usr/bin/gcov-${{inputs.gcc_version}}
+          sudo update-alternatives --set gcc /usr/bin/gcc-${{inputs.gcc_version}}
 
       - uses: actions/cache/restore@v4
         id: cache_restore
