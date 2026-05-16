@@ -303,24 +303,34 @@ TEST_F(MatcherTest, IsElementOfEmptyDescriptions) {
   EXPECT_THAT(MatchAndExplain(matcher, 0), Pair(false, ""));
 }
 
-TEST_F(MatcherTest, AllKeysAndValuesFromMap) {
+TEST_F(MatcherTest, IsElementOfAllKeysAndValuesFromMap) {
   const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
-  // std::map iterates by sorted key, so order is deterministic.
-  EXPECT_THAT(AllKeys(m), ElementsAre(1, 2));
-  EXPECT_THAT(AllValues(m), ElementsAre("a", "b"));
+  EXPECT_THAT(1, IsElementOf(AllKeys(m)));
+  EXPECT_THAT(2, IsElementOf(AllKeys(m)));
+  EXPECT_THAT(3, Not(IsElementOf(AllKeys(m))));
+  EXPECT_THAT("a", IsElementOf(AllValues(m)));
+  EXPECT_THAT("b", IsElementOf(AllValues(m)));
+  EXPECT_THAT("z", Not(IsElementOf(AllValues(m))));
 }
 
-TEST_F(MatcherTest, AllKeysAndValuesFromEmptyMap) {
+TEST_F(MatcherTest, IsElementOfAllKeysAndValuesFromEmptyMap) {
+  // Empty projection: nothing is an element of it.
   const std::map<int, std::string> m;
-  EXPECT_THAT(AllKeys(m), IsEmpty());
-  EXPECT_THAT(AllValues(m), IsEmpty());
+  EXPECT_THAT(0, Not(IsElementOf(AllKeys(m))));
+  EXPECT_THAT(42, Not(IsElementOf(AllKeys(m))));
+  EXPECT_THAT("", Not(IsElementOf(AllValues(m))));
+  EXPECT_THAT("anything", Not(IsElementOf(AllValues(m))));
 }
 
-TEST_F(MatcherTest, AllKeysFromUnorderedMap) {
+TEST_F(MatcherTest, IsElementOfAllKeysAndValuesFromUnorderedMap) {
+  // Iteration order is irrelevant for the element-on-the-left orientation.
   const std::unordered_map<int, std::string> m{{1, "a"}, {2, "b"}};
-  // Iteration order isn't stable for unordered_map; check membership only.
-  EXPECT_THAT(AllKeys(m), UnorderedElementsAre(1, 2));
-  EXPECT_THAT(AllValues(m), UnorderedElementsAre("a", "b"));
+  EXPECT_THAT(1, IsElementOf(AllKeys(m)));
+  EXPECT_THAT(2, IsElementOf(AllKeys(m)));
+  EXPECT_THAT(99, Not(IsElementOf(AllKeys(m))));
+  EXPECT_THAT("a", IsElementOf(AllValues(m)));
+  EXPECT_THAT("b", IsElementOf(AllValues(m)));
+  EXPECT_THAT("z", Not(IsElementOf(AllValues(m))));
 }
 
 TEST_F(MatcherTest, AllKeysFromMultimapPreservesDuplicates) {
