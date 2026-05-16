@@ -128,7 +128,10 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
   - mbo/testing:matchers_cc, mbo/testing/matchers.h
     - gmock-matcher `CapacityIs` which checks the capacity of a container.
     - gmock-matcher `EqualsText` which compares text using line by line unified text diff.
+    - gmock-matcher `IsElementOf` which checks that a value equals at least one element of a container — the element-on-the-left orientation of gmock's `Contains`. Subject types do not need to be converted to the container's `value_type`.
+    - gmock-matcher `IsKeyOf` which checks that a value equals at least one key of a map (shorthand for "is this key in the map?").
     - gmock-matcher `IsNullopt` which compares its argument agains `std::nullopt`.
+    - gmock-matcher `IsValueOf` which checks that a value equals at least one mapped value of a map (shorthand for "is this value in the map?").
     - gmock-matcher `WhenTransformedBy` which allows to compare containers after transforming them. This sometimes allows for much more concise comparisons where a golden expectation is already available that only differs in a simple transformation.
     - gmock-matcher-modifier `WithDropIndent` which modifies `EqualsText` so that `DropIndent` will be applied to the expected text.
   - mbo/testing:status_cc, mbo/testing/status.h
