@@ -303,81 +303,90 @@ TEST_F(MatcherTest, IsElementOfEmptyDescriptions) {
   EXPECT_THAT(MatchAndExplain(matcher, 0), Pair(false, ""));
 }
 
-TEST_F(MatcherTest, IsElementOfAllKeysAndValuesFromMap) {
+TEST_F(MatcherTest, IsKeyAndIsValueOfMap) {
   const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
-  EXPECT_THAT(1, IsElementOf(AllKeys(m)));
-  EXPECT_THAT(2, IsElementOf(AllKeys(m)));
-  EXPECT_THAT(3, Not(IsElementOf(AllKeys(m))));
-  EXPECT_THAT("a", IsElementOf(AllValues(m)));
-  EXPECT_THAT("b", IsElementOf(AllValues(m)));
-  EXPECT_THAT("z", Not(IsElementOf(AllValues(m))));
+  EXPECT_THAT(1, IsKeyOf(m));
+  EXPECT_THAT(2, IsKeyOf(m));
+  EXPECT_THAT(3, Not(IsKeyOf(m)));
+  EXPECT_THAT("a", IsValueOf(m));
+  EXPECT_THAT("b", IsValueOf(m));
+  EXPECT_THAT("z", Not(IsValueOf(m)));
 }
 
-TEST_F(MatcherTest, IsElementOfAllKeysAndValuesFromEmptyMap) {
-  // Empty projection: nothing is an element of it.
+TEST_F(MatcherTest, IsKeyAndIsValueOfEmptyMap) {
   const std::map<int, std::string> m;
-  EXPECT_THAT(0, Not(IsElementOf(AllKeys(m))));
-  EXPECT_THAT(42, Not(IsElementOf(AllKeys(m))));
-  EXPECT_THAT("", Not(IsElementOf(AllValues(m))));
-  EXPECT_THAT("anything", Not(IsElementOf(AllValues(m))));
+  EXPECT_THAT(0, Not(IsKeyOf(m)));
+  EXPECT_THAT(42, Not(IsKeyOf(m)));
+  EXPECT_THAT("", Not(IsValueOf(m)));
+  EXPECT_THAT("anything", Not(IsValueOf(m)));
 }
 
-TEST_F(MatcherTest, IsElementOfAllKeysAndValuesFromUnorderedMap) {
+TEST_F(MatcherTest, IsKeyAndIsValueOfUnorderedMap) {
   const std::unordered_map<int, std::string> m{{1, "a"}, {2, "b"}};
-  EXPECT_THAT(1, IsElementOf(AllKeys(m)));
-  EXPECT_THAT(2, IsElementOf(AllKeys(m)));
-  EXPECT_THAT(3, Not(IsElementOf(AllKeys(m))));
-  EXPECT_THAT("a", IsElementOf(AllValues(m)));
-  EXPECT_THAT("b", IsElementOf(AllValues(m)));
-  EXPECT_THAT("z", Not(IsElementOf(AllValues(m))));
+  EXPECT_THAT(1, IsKeyOf(m));
+  EXPECT_THAT(2, IsKeyOf(m));
+  EXPECT_THAT(3, Not(IsKeyOf(m)));
+  EXPECT_THAT("a", IsValueOf(m));
+  EXPECT_THAT("b", IsValueOf(m));
+  EXPECT_THAT("z", Not(IsValueOf(m)));
 }
 
-TEST_F(MatcherTest, IsElementOfAllKeysAndValuesFromMultimap) {
+TEST_F(MatcherTest, IsKeyAndIsValueOfMultimap) {
   // multimap allows duplicate keys; from the membership orientation duplicate
   // entries are simply both present.
   const std::multimap<int, std::string> mm{{1, "a"}, {1, "b"}, {2, "c"}};
-  EXPECT_THAT(1, IsElementOf(AllKeys(mm)));
-  EXPECT_THAT(2, IsElementOf(AllKeys(mm)));
-  EXPECT_THAT(3, Not(IsElementOf(AllKeys(mm))));
-  EXPECT_THAT("a", IsElementOf(AllValues(mm)));
-  EXPECT_THAT("b", IsElementOf(AllValues(mm)));
-  EXPECT_THAT("c", IsElementOf(AllValues(mm)));
-  EXPECT_THAT("z", Not(IsElementOf(AllValues(mm))));
+  EXPECT_THAT(1, IsKeyOf(mm));
+  EXPECT_THAT(2, IsKeyOf(mm));
+  EXPECT_THAT(3, Not(IsKeyOf(mm)));
+  EXPECT_THAT("a", IsValueOf(mm));
+  EXPECT_THAT("b", IsValueOf(mm));
+  EXPECT_THAT("c", IsValueOf(mm));
+  EXPECT_THAT("z", Not(IsValueOf(mm)));
 }
 
-TEST_F(MatcherTest, IsKeyOfMap) {
-  const std::map<int, std::string> m{{1, "a"}, {2, "b"}, {3, "c"}};
-  EXPECT_THAT(2, IsKeyOf(m));
-  EXPECT_THAT(0, Not(IsKeyOf(m)));
-}
-
-TEST_F(MatcherTest, IsKeyOfUnorderedMap) {
-  const std::unordered_map<std::string, int> m{{"a", 1}, {"b", 2}};
-  // Hash order is unspecified, but membership semantics are the same.
-  EXPECT_THAT("a", IsKeyOf(m));
-  EXPECT_THAT("b", IsKeyOf(m));
-  EXPECT_THAT("z", Not(IsKeyOf(m)));
-}
-
-TEST_F(MatcherTest, IsKeyOfEmptyMap) {
-  // No keys exist, so nothing is a key.
-  const std::map<int, std::string> m;
-  EXPECT_THAT(42, Not(IsKeyOf(m)));
+TEST_F(MatcherTest, IsKeyOfStringMap) {
+  const std::map<std::string, int> ordered{{"a", 1}, {"b", 2}};
+  const std::unordered_map<std::string, int> unordered{{"a", 1}, {"b", 2}};
+  EXPECT_THAT("a", IsKeyOf(ordered));
+  EXPECT_THAT("a", IsKeyOf(unordered));
+  EXPECT_THAT(std::string_view{"a"}, IsKeyOf(ordered));
+  EXPECT_THAT(std::string_view{"a"}, IsKeyOf(unordered));
+  EXPECT_THAT("z", Not(IsKeyOf(ordered)));
+  EXPECT_THAT("z", Not(IsKeyOf(unordered)));
 }
 
 TEST_F(MatcherTest, IsKeyOfDescriptions) {
   const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
   const ::testing::Matcher<int> matcher = IsKeyOf(m);
-  EXPECT_THAT(Describe(matcher), "is element of {1, 2}");
-  EXPECT_THAT(DescribeNegation(matcher), "is not element of {1, 2}");
+  EXPECT_THAT(Describe(matcher), "is a key of {1, 2}");
+  EXPECT_THAT(DescribeNegation(matcher), "is not a key of {1, 2}");
   EXPECT_THAT(MatchAndExplain(matcher, 1), Pair(true, "which equals element #0 (1)"));
   EXPECT_THAT(MatchAndExplain(matcher, 99), Pair(false, ""));
 }
 
-TEST_F(MatcherTest, IsElementOfAllKeysComposition) {
+TEST_F(MatcherTest, IsKeyOfEmptyMapDescriptions) {
+  const std::map<int, std::string> m;
+  const ::testing::Matcher<int> matcher = IsKeyOf(m);
+  EXPECT_THAT(Describe(matcher), "is a key of {}");
+  EXPECT_THAT(DescribeNegation(matcher), "is not a key of {}");
+  EXPECT_THAT(MatchAndExplain(matcher, 42), Pair(false, ""));
+}
+
+TEST_F(MatcherTest, IsValueOfDescriptions) {
   const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
-  EXPECT_THAT(1, IsElementOf(AllKeys(m)));
-  EXPECT_THAT("a", IsElementOf(AllValues(m)));
+  const ::testing::Matcher<std::string> matcher = IsValueOf(m);
+  EXPECT_THAT(Describe(matcher), "is a value of {\"a\", \"b\"}");
+  EXPECT_THAT(DescribeNegation(matcher), "is not a value of {\"a\", \"b\"}");
+  EXPECT_THAT(MatchAndExplain(matcher, std::string{"a"}), Pair(true, "which equals element #0 (\"a\")"));
+  EXPECT_THAT(MatchAndExplain(matcher, std::string{"z"}), Pair(false, ""));
+}
+
+TEST_F(MatcherTest, IsValueOfEmptyMapDescriptions) {
+  const std::map<int, std::string> m;
+  const ::testing::Matcher<std::string> matcher = IsValueOf(m);
+  EXPECT_THAT(Describe(matcher), "is a value of {}");
+  EXPECT_THAT(DescribeNegation(matcher), "is not a value of {}");
+  EXPECT_THAT(MatchAndExplain(matcher, std::string{"anything"}), Pair(false, ""));
 }
 
 TEST_F(MatcherTest, IsElementOfHeterogeneousComparable) {
@@ -389,22 +398,6 @@ TEST_F(MatcherTest, IsElementOfHeterogeneousComparable) {
   EXPECT_THAT(std::string_view{"alpha"}, IsElementOf(allowed));  // string_view
   EXPECT_THAT(std::string{"alpha"}, IsElementOf(allowed));     // string
   EXPECT_THAT(std::string_view{"gamma"}, Not(IsElementOf(allowed)));
-}
-
-TEST_F(MatcherTest, IsKeyOfHeterogeneousString) {
-  // Same as IsElementOfHeterogeneousComparable but going through the map's
-  // key_type. A caller asking "is key X in m?" should not have to construct
-  // a std::string just to compare against a std::string-keyed map.
-  const std::map<std::string, int> ordered{{"a", 1}, {"b", 2}};
-  const std::unordered_map<std::string, int> unordered{{"a", 1}, {"b", 2}};
-  EXPECT_THAT("a", IsKeyOf(ordered));
-  EXPECT_THAT("a", IsKeyOf(unordered));
-  EXPECT_THAT(std::string_view{"a"}, IsKeyOf(ordered));
-  EXPECT_THAT(std::string_view{"a"}, IsKeyOf(unordered));
-  EXPECT_THAT(std::string{"a"}, IsKeyOf(ordered));
-  EXPECT_THAT(std::string{"a"}, IsKeyOf(unordered));
-  EXPECT_THAT("z", Not(IsKeyOf(ordered)));
-  EXPECT_THAT("z", Not(IsKeyOf(unordered)));
 }
 
 TEST_F(MatcherTest, EqualsText) {

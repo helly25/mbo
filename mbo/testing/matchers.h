@@ -40,24 +40,30 @@ namespace testing_internal {
 // Implementation of the polymorphic `IsElementOf` matcher. Each call to `EXPECT_THAT(value, ...)`
 // instantiates an Impl<Value> via the conversion operator; the comparison inside `MatchAndExplain`
 // uses raw `operator==` so the subject does not need to share `value_type` with the container.
+//
+// `positive_lead` / `negative_lead` are the descriptive prefixes used in failure messages, e.g.
+// "is element of {1, 2}" / "is not element of {1, 2}". `IsKeyOf` and `IsValueOf` substitute "is a
+// key of" / "is a value of" so the message reflects the projection that was applied.
 template<typename Container>
 class IsElementOfMatcher {
  public:
-  explicit IsElementOfMatcher(Container container) : container_(std::move(container)) {}
+  IsElementOfMatcher(Container container, std::string_view positive_lead, std::string_view negative_lead)
+      : container_(std::move(container)), positive_lead_(positive_lead), negative_lead_(negative_lead) {}
 
   template<typename Value>
   operator ::testing::Matcher<Value>() const {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
-    return ::testing::Matcher<Value>(new Impl<const Value&>(container_));
+    return ::testing::Matcher<Value>(new Impl<const Value&>(container_, positive_lead_, negative_lead_));
   }
 
   template<typename Value>
   class Impl : public ::testing::MatcherInterface<Value> {
    public:
-    explicit Impl(Container container) : container_(std::move(container)) {}
+    Impl(Container container, std::string_view positive_lead, std::string_view negative_lead)
+        : container_(std::move(container)), positive_lead_(positive_lead), negative_lead_(negative_lead) {}
 
-    void DescribeTo(::std::ostream* os) const override { DescribeContents(*os, "is element of"); }
+    void DescribeTo(::std::ostream* os) const override { DescribeContents(*os, positive_lead_); }
 
-    void DescribeNegationTo(::std::ostream* os) const override { DescribeContents(*os, "is not element of"); }
+    void DescribeNegationTo(::std::ostream* os) const override { DescribeContents(*os, negative_lead_); }
 
     bool MatchAndExplain(Value value, ::testing::MatchResultListener* listener) const override {
       std::size_t index = 0;
@@ -74,7 +80,7 @@ class IsElementOfMatcher {
     }
 
    private:
-    void DescribeContents(::std::ostream& os, const char* lead) const {
+    void DescribeContents(::std::ostream& os, std::string_view lead) const {
       os << lead << " {";
       bool first = true;
       for (const auto& element : container_) {
@@ -88,10 +94,14 @@ class IsElementOfMatcher {
     }
 
     const Container container_;
+    const std::string_view positive_lead_;
+    const std::string_view negative_lead_;
   };
 
  private:
   const Container container_;
+  const std::string_view positive_lead_;
+  const std::string_view negative_lead_;
 };
 
 }  // namespace testing_internal
@@ -112,17 +122,21 @@ class IsElementOfMatcher {
 // The container is taken by value so temporaries and initializer lists are safe.
 template<typename Container>
 inline testing_internal::IsElementOfMatcher<Container> IsElementOf(Container container) {
-  return testing_internal::IsElementOfMatcher<Container>(std::move(container));
+  return testing_internal::IsElementOfMatcher<Container>(std::move(container), "is element of", "is not element of");
 }
 
 template<typename T>
 inline testing_internal::IsElementOfMatcher<std::vector<T>> IsElementOf(std::initializer_list<T> values) {
-  return testing_internal::IsElementOfMatcher<std::vector<T>>(std::vector<T>(values));
+  return testing_internal::IsElementOfMatcher<std::vector<T>>(
+      std::vector<T>(values), "is element of", "is not element of");
 }
 
+namespace testing_internal {
+
 // Returns the keys of an associative container as a `std::vector<key_type>` in iteration order.
-// Useful for composing with element-oriented matchers, e.g. `IsElementOf(AllKeys(map))`. The
-// argument type must expose a `key_type` typedef, as all STL associative containers do.
+// Internal: used to feed `IsKeyOf` (and other element-oriented matchers composed via
+// `IsElementOf`). Not exposed at namespace scope because the natural calling convention puts
+// the projection on the right of `EXPECT_THAT`, inside another matcher.
 template<typename Map>
 inline std::vector<typename Map::key_type> AllKeys(const Map& m) {
   std::vector<typename Map::key_type> keys;
@@ -134,9 +148,7 @@ inline std::vector<typename Map::key_type> AllKeys(const Map& m) {
 }
 
 // Returns the mapped values of an associative container as a `std::vector<mapped_type>` in
-// iteration order. Useful for composing with element-oriented matchers, e.g.
-// `IsElementOf(AllValues(map))`. The argument type must expose a `mapped_type` typedef, as
-// `std::map`, `std::unordered_map`, and similar do (but `std::set` does not).
+// iteration order. Internal: see `AllKeys` above.
 template<typename Map>
 inline std::vector<typename Map::mapped_type> AllValues(const Map& m) {
   std::vector<typename Map::mapped_type> values;
@@ -147,14 +159,29 @@ inline std::vector<typename Map::mapped_type> AllValues(const Map& m) {
   return values;
 }
 
-// Matcher that asserts the value-under-test equals at least one key of `map`. Convenience
-// short-hand for `IsElementOf(AllKeys(map))`.
+}  // namespace testing_internal
+
+// Matcher that asserts the value-under-test equals at least one key of `map`.
 //
 //   std::map<int, std::string> m = {{1, "a"}, {2, "b"}};
 //   EXPECT_THAT(key, IsKeyOf(m));
 template<typename Map>
 inline auto IsKeyOf(const Map& m) {
-  return IsElementOf(AllKeys(m));
+  auto keys = testing_internal::AllKeys(m);
+  using KeysContainer = decltype(keys);
+  return testing_internal::IsElementOfMatcher<KeysContainer>(std::move(keys), "is a key of", "is not a key of");
+}
+
+// Matcher that asserts the value-under-test equals at least one mapped value of `map`.
+//
+//   std::map<int, std::string> m = {{1, "a"}, {2, "b"}};
+//   EXPECT_THAT(value, IsValueOf(m));
+template<typename Map>
+inline auto IsValueOf(const Map& m) {
+  auto values = testing_internal::AllValues(m);
+  using ValuesContainer = decltype(values);
+  return testing_internal::IsElementOfMatcher<ValuesContainer>(
+      std::move(values), "is a value of", "is not a value of");
 }
 
 namespace testing_internal {
