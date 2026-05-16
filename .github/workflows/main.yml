@@ -1,7 +1,16 @@
 name: Test
 on: [push]
 
+permissions: read-all
+
 jobs:
+  trunk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
+
   pre-commit:
     runs-on: ubuntu-latest
     steps:
@@ -104,7 +113,7 @@ jobs:
       bazel_config: ${{ matrix.bazel_config }}
 
   done:
-    needs: [pre-commit, test-gcc, test-clang, test-bcr]
+    needs: [trunk, pre-commit, test-gcc, test-clang, test-bcr]
     runs-on: ubuntu-latest
     steps:
       - name: Done

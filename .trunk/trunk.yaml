@@ -64,8 +64,8 @@ lint:
     - actionlint@1.7.12
     - buildifier@8.5.1
     - checkov@3.2.529
-    - clang-format@16.0.3
-    - clang-tidy@16.0.3
+    - clang-format@19.1.6
+    - clang-tidy@19.1.7
     - git-diff-check
     - markdownlint@0.48.0
     - prettier@3.8.3
