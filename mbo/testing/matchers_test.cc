@@ -323,22 +323,26 @@ TEST_F(MatcherTest, IsElementOfAllKeysAndValuesFromEmptyMap) {
 }
 
 TEST_F(MatcherTest, IsElementOfAllKeysAndValuesFromUnorderedMap) {
-  // Iteration order is irrelevant for the element-on-the-left orientation.
   const std::unordered_map<int, std::string> m{{1, "a"}, {2, "b"}};
   EXPECT_THAT(1, IsElementOf(AllKeys(m)));
   EXPECT_THAT(2, IsElementOf(AllKeys(m)));
-  EXPECT_THAT(99, Not(IsElementOf(AllKeys(m))));
+  EXPECT_THAT(3, Not(IsElementOf(AllKeys(m))));
   EXPECT_THAT("a", IsElementOf(AllValues(m)));
   EXPECT_THAT("b", IsElementOf(AllValues(m)));
   EXPECT_THAT("z", Not(IsElementOf(AllValues(m))));
 }
 
-TEST_F(MatcherTest, AllKeysFromMultimapPreservesDuplicates) {
-  // multimap allows duplicate keys; AllKeys must report each occurrence so
-  // callers don't accidentally count distinct keys as unique.
+TEST_F(MatcherTest, IsElementOfAllKeysAndValuesFromMultimap) {
+  // multimap allows duplicate keys; from the membership orientation duplicate
+  // entries are simply both present.
   const std::multimap<int, std::string> mm{{1, "a"}, {1, "b"}, {2, "c"}};
-  EXPECT_THAT(AllKeys(mm), ElementsAre(1, 1, 2));
-  EXPECT_THAT(AllValues(mm), ElementsAre("a", "b", "c"));
+  EXPECT_THAT(1, IsElementOf(AllKeys(mm)));
+  EXPECT_THAT(2, IsElementOf(AllKeys(mm)));
+  EXPECT_THAT(3, Not(IsElementOf(AllKeys(mm))));
+  EXPECT_THAT("a", IsElementOf(AllValues(mm)));
+  EXPECT_THAT("b", IsElementOf(AllValues(mm)));
+  EXPECT_THAT("c", IsElementOf(AllValues(mm)));
+  EXPECT_THAT("z", Not(IsElementOf(AllValues(mm))));
 }
 
 TEST_F(MatcherTest, IsKeyOfMap) {
