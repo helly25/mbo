@@ -394,9 +394,9 @@ TEST_F(MatcherTest, IsElementOfHeterogeneousComparable) {
   // gmock's Eq can compare them. The left side does not need to be converted
   // to the container's value_type by the caller.
   const std::vector<std::string> allowed = {"alpha", "beta"};
-  EXPECT_THAT("alpha", IsElementOf(allowed));                  // const char[]
+  EXPECT_THAT("alpha", IsElementOf(allowed));                    // const char[]
   EXPECT_THAT(std::string_view{"alpha"}, IsElementOf(allowed));  // string_view
-  EXPECT_THAT(std::string{"alpha"}, IsElementOf(allowed));     // string
+  EXPECT_THAT(std::string{"alpha"}, IsElementOf(allowed));       // string
   EXPECT_THAT(std::string_view{"gamma"}, Not(IsElementOf(allowed)));
 }
 

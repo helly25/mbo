@@ -180,8 +180,7 @@ template<typename Map>
 inline auto IsValueOf(const Map& m) {
   auto values = testing_internal::AllValues(m);
   using ValuesContainer = decltype(values);
-  return testing_internal::IsElementOfMatcher<ValuesContainer>(
-      std::move(values), "is a value of", "is not a value of");
+  return testing_internal::IsElementOfMatcher<ValuesContainer>(std::move(values), "is a value of", "is not a value of");
 }
 
 namespace testing_internal {
