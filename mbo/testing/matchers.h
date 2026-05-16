@@ -37,9 +37,39 @@ inline auto IsNullopt() {
 
 namespace testing_internal {
 
+// Element-equality used inside `IsElementOf`. Defers to raw `operator==` when the two sides are
+// directly comparable; otherwise falls back to a component-wise comparison for `std::pair`. The
+// pair fallback exists because C++20 made `std::pair::operator==` same-types-only at the standard
+// level (libc++ accepts heterogeneous comparison via implicit pair conversion, libstdc++ does
+// not), and we want `EXPECT_THAT(std::make_pair("a", "b"), IsElementOf(list<pair<string,
+// string>>))` to compile on both.
+template<typename L, typename R>
+concept HasEqualityWith = requires(const L& lhs, const R& rhs) {
+  { lhs == rhs } -> std::convertible_to<bool>;
+};
+
+template<typename T>
+struct IsStdPair : std::false_type {};
+template<typename A, typename B>
+struct IsStdPair<std::pair<A, B>> : std::true_type {};
+
+template<typename L, typename R>
+constexpr bool ElementEqual(const L& lhs, const R& rhs) {
+  if constexpr (HasEqualityWith<L, R>) {
+    return lhs == rhs;
+  } else if constexpr (
+      IsStdPair<std::remove_cvref_t<L>>::value && IsStdPair<std::remove_cvref_t<R>>::value) {
+    return ElementEqual(lhs.first, rhs.first) && ElementEqual(lhs.second, rhs.second);
+  } else {
+    static_assert(HasEqualityWith<L, R>, "IsElementOf: element types are not equality-comparable");
+    return false;
+  }
+}
+
 // Implementation of the polymorphic `IsElementOf` matcher. Each call to `EXPECT_THAT(value, ...)`
 // instantiates an Impl<Value> via the conversion operator; the comparison inside `MatchAndExplain`
-// uses raw `operator==` so the subject does not need to share `value_type` with the container.
+// uses `ElementEqual` (raw `operator==`, with a pair-decomposition fallback) so the subject does
+// not need to share `value_type` with the container.
 //
 // `positive_lead` / `negative_lead` are the descriptive prefixes used in failure messages, e.g.
 // "is element of {1, 2}" / "is not element of {1, 2}". `IsKeyOf` and `IsValueOf` substitute "is a
@@ -68,7 +98,7 @@ class IsElementOfMatcher {
     bool MatchAndExplain(Value value, ::testing::MatchResultListener* listener) const override {
       std::size_t index = 0;
       for (const auto& element : container_) {
-        if (value == element) {
+        if (ElementEqual(value, element)) {
           if (listener->IsInterested()) {
             *listener << "which equals element #" << index << " (" << ::testing::PrintToString(element) << ")";
           }
