@@ -16,6 +16,7 @@
 #include "mbo/testing/matchers.h"
 
 #include <cstddef>
+#include <list>
 #include <map>
 #include <memory>
 #include <set>
@@ -257,6 +258,29 @@ TEST_F(MatcherTest, IsElementOfSet) {
   const std::set<std::string> allowed = {"a", "b", "c"};
   EXPECT_THAT("b", IsElementOf(allowed));
   EXPECT_THAT("z", Not(IsElementOf(allowed)));
+}
+
+TEST_F(MatcherTest, IsElementOfVectorOfStrings) {
+  // String-literal subject (const char[]) against vector<string> elements:
+  // the literal must compile and match without any caller-side conversion.
+  const std::vector<std::string> allowed = {"alpha", "beta", "gamma"};
+  EXPECT_THAT("beta", IsElementOf(allowed));
+  EXPECT_THAT("zeta", Not(IsElementOf(allowed)));
+}
+
+TEST_F(MatcherTest, IsElementOfListOfStringPairs) {
+  // Pair-of-string-literals subject (pair<const char*, const char*>) against
+  // a list<pair<string, string>>: pair::operator== compares componentwise via
+  // string == const char*, so no caller-side conversion is needed for either
+  // half of the pair.
+  const std::list<std::pair<std::string, std::string>> allowed = {
+      {"a", "1"},
+      {"b", "2"},
+      {"c", "3"},
+  };
+  EXPECT_THAT(std::make_pair("b", "2"), IsElementOf(allowed));
+  EXPECT_THAT(std::make_pair("b", "X"), Not(IsElementOf(allowed)));
+  EXPECT_THAT(std::make_pair("z", "9"), Not(IsElementOf(allowed)));
 }
 
 TEST_F(MatcherTest, IsElementOfEmpty) {
