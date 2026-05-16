@@ -255,8 +255,8 @@ TEST_F(MatcherTest, IsElementOfInitializerList) {
 
 TEST_F(MatcherTest, IsElementOfSet) {
   const std::set<std::string> allowed = {"a", "b", "c"};
-  EXPECT_THAT(std::string{"b"}, IsElementOf(allowed));
-  EXPECT_THAT(std::string{"z"}, Not(IsElementOf(allowed)));
+  EXPECT_THAT("b", IsElementOf(allowed));
+  EXPECT_THAT("z", Not(IsElementOf(allowed)));
 }
 
 TEST_F(MatcherTest, IsElementOfEmpty) {
@@ -316,9 +316,9 @@ TEST_F(MatcherTest, IsKeyOfMap) {
 TEST_F(MatcherTest, IsKeyOfUnorderedMap) {
   const std::unordered_map<std::string, int> m{{"a", 1}, {"b", 2}};
   // Hash order is unspecified, but membership semantics are the same.
-  EXPECT_THAT(std::string{"a"}, IsKeyOf(m));
-  EXPECT_THAT(std::string{"b"}, IsKeyOf(m));
-  EXPECT_THAT(std::string{"z"}, Not(IsKeyOf(m)));
+  EXPECT_THAT("a", IsKeyOf(m));
+  EXPECT_THAT("b", IsKeyOf(m));
+  EXPECT_THAT("z", Not(IsKeyOf(m)));
 }
 
 TEST_F(MatcherTest, IsKeyOfEmptyMap) {
@@ -339,7 +339,7 @@ TEST_F(MatcherTest, IsKeyOfDescriptions) {
 TEST_F(MatcherTest, IsElementOfAllKeysComposition) {
   const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
   EXPECT_THAT(1, IsElementOf(AllKeys(m)));
-  EXPECT_THAT(std::string{"a"}, IsElementOf(AllValues(m)));
+  EXPECT_THAT("a", IsElementOf(AllValues(m)));
 }
 
 TEST_F(MatcherTest, IsElementOfHeterogeneousComparable) {
