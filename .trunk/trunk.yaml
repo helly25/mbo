@@ -1,0 +1,82 @@
+# This file controls the behavior of Trunk: https://docs.trunk.io/cli
+# To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
+version: 0.1
+cli:
+  version: 1.25.0
+plugins:
+  sources:
+    - id: trunk
+      ref: v1.10.0
+      uri: https://github.com/trunk-io/plugins
+# Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
+runtimes:
+  enabled:
+    - go@1.21.0
+    - node@22.16.0
+    - python@3.14.4
+# This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
+lint:
+  definitions:
+    - name: buildifier
+      files: [starlark, bazel-build, bazel-workspace]
+      tools: [buildifier]
+      commands:
+        - name: fix
+          run: buildifier --lint=fix "${target}"
+          output: rewrite
+          cache_results: true
+          formatter: true
+          in_place: true
+          batch: true
+          success_codes: [0]
+        - name: warn
+          run: buildifier --lint=warn --format=json --mode=check "${target}"
+          # Custom parser type defined in the trunk cli to handle buildifier's JSON output.
+          output: buildifier
+          cache_results: true
+          batch: true
+          success_codes: [0]
+      suggest_if: files_present
+      direct_configs:
+        - .buildifier.json
+        # Not a native buildifier construct, but useful for 'addTables', see test file
+        - .buildifier-tables.json
+      environment:
+        - name: PATH
+          list: ["${linter}"]
+      known_good_version: 7.1.0
+      version_command:
+        parse_regex: ${semver}
+        run: buildifier --version
+    # Default shfmt config uses -s flag to simplify code but this can cause
+    # unwanted semantic changes
+    - name: shfmt
+      commands:
+        - name: format
+          output: shfmt
+          run: shfmt -w ${target}
+          success_codes: [0, 1]
+          cache_results: true
+          formatter: true
+          batch: true
+          in_place: true
+  enabled:
+    - actionlint@1.7.12
+    - buildifier@8.5.1
+    - checkov@3.2.529
+    - clang-format@19.1.6
+    - clang-tidy@19.1.7
+    - git-diff-check
+    - markdownlint@0.48.0
+    - prettier@3.8.3
+    - shellcheck@0.11.0
+    - shfmt@3.6.0
+    - trivy@0.70.0
+    - trufflehog@3.95.3
+    - yamllint@1.38.0
+actions:
+  enabled:
+    - trunk-announce
+    - trunk-check-pre-push
+    - trunk-fmt-pre-commit
+    - trunk-upgrade-available

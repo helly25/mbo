@@ -14,3 +14,4 @@
 /.bazelrc.user.end
 /MODULE.bazel.lock
 /pr_create_output.txt
+/.trunk/out

@@ -19,37 +19,37 @@ on:
   workflow_call:
     inputs:
       continue-on-error:
-        description: 'Whether to continue on error (e.g. prevent parallel matrix operations to stop).'
+        description: "Whether to continue on error (e.g. prevent parallel matrix operations to stop)."
         type: boolean
         default: false
       os:
-        description: 'The operating system the tests will be run on.'
+        description: "The operating system the tests will be run on."
         type: string
         default: ubuntu-latest
       compiler:
-        description: 'The compiler to use (clang, gcc).'
+        description: "The compiler to use (clang, gcc)."
         type: string
         default: clang
       llvm_version:
-        description: 'The LLVM version to use. This is only for compiler=clang and will be ignored otherwise.'
+        description: "The LLVM version to use. This is only for compiler=clang and will be ignored otherwise."
         type: string
-        default: ''
+        default: ""
       gcc_version:
-        description: 'The GCC version to use. This is only for compiler=gcc and will be ignored otherwise (e.g. 11, 12, 13).'
+        description: "The GCC version to use. This is only for compiler=gcc and will be ignored otherwise (e.g. 11, 12, 13)."
         type: string
-        default: ''
+        default: ""
       bazel_config:
-        description: 'The way how Bazel should operate compilation and tests, one of (asan, fastbuild, opt).'
+        description: "The way how Bazel should operate compilation and tests, one of (asan, fastbuild, opt)."
         type: string
         default: opt
       module_version:
         description: 'Version string for the "MODULE.${module_version}.bazel" to be copied from the bzlmod directory.'
         type: string
-        default: ''
+        default: ""
       module_default:
         description: 'If the "module_version" has this value, then no "MODULE.${module_version}.bazel" will be copied.'
         type: string
-        default: ''
+        default: ""
 
 env:
   CACHE_KEY_PREFIX: ${{inputs.os}}-bzlmod_${{inputs.compiler}}_${{inputs.compiler == 'clang' && inputs.llvm_version || ''}}_${{inputs.compiler == 'gcc' && inputs.gcc_version || ''}}_${{inputs.bazel_config}}_${{inputs.module_version}}
@@ -72,12 +72,12 @@ jobs:
       - uses: actions/cache/restore@v4
         id: cache_restore
         with:
-            path: "~/.cache/bazel"
-            key: ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}-${{github.sha}}
-            restore-keys: |
-              ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}
-              ${{env.CACHE_KEY_PREFIX}}-refs/heads/main
-              ${{env.CACHE_KEY_PREFIX}}
+          path: "~/.cache/bazel"
+          key: ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}
+            ${{env.CACHE_KEY_PREFIX}}-refs/heads/main
+            ${{env.CACHE_KEY_PREFIX}}
 
       - name: Build and Test
         run: |
@@ -102,8 +102,8 @@ jobs:
               mv "${CONTROL_FILE}.new" "${CONTROL_FILE}"
             fi
           elif [ "${{inputs.compiler}}" == "gcc" ]; then
-            export CC=/usr/local/bin/gcc
-            export CXX=/usr/local/bin/g++
+            export CC=/usr/bin/gcc
+            export CXX=/usr/bin/g++
           elif [ "${{inputs.compiler}}" == "native" ]; then
             # Use whatever is found!
             if [ -n "${CC}" ] && [ -x "${which gcc}" ]; then
@@ -142,8 +142,8 @@ jobs:
         if: ${{!startsWith(github.ref, 'refs/tags/')}}
         id: cache_save
         with:
-            path: "~/.cache/bazel"
-            key: ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}-${{github.sha}}
+          path: "~/.cache/bazel"
+          key: ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}-${{github.sha}}
 
       - name: Cleanup old caches
         if: ${{!startsWith(github.ref, 'refs/tags/') && steps.cache_restore.outputs.cache-hit}}
