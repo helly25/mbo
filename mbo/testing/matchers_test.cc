@@ -22,6 +22,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -233,6 +234,139 @@ TEST_F(MatcherTest, WhenTransformedByDescriptions) {
         MatchAndExplain(matcher, std::vector<int>{0, 1, 2, 3, 4}),
         Pair(false, "which (when transformed) doesn't match, which has 5 elements"));
   }
+}
+
+TEST_F(MatcherTest, IsElementOfContainer) {
+  const std::vector<int> allowed = {1, 2, 3};
+  EXPECT_THAT(2, IsElementOf(allowed));
+  EXPECT_THAT(0, Not(IsElementOf(allowed)));
+}
+
+TEST_F(MatcherTest, IsElementOfRvalueContainer) {
+  // Container taken by value, so a temporary survives long enough to match.
+  EXPECT_THAT(2, IsElementOf(std::vector<int>{1, 2, 3}));
+  EXPECT_THAT(0, Not(IsElementOf(std::vector<int>{1, 2, 3})));
+}
+
+TEST_F(MatcherTest, IsElementOfInitializerList) {
+  EXPECT_THAT(2, IsElementOf({1, 2, 3}));
+  EXPECT_THAT(0, Not(IsElementOf({1, 2, 3})));
+}
+
+TEST_F(MatcherTest, IsElementOfSet) {
+  const std::set<std::string> allowed = {"a", "b", "c"};
+  EXPECT_THAT(std::string{"b"}, IsElementOf(allowed));
+  EXPECT_THAT(std::string{"z"}, Not(IsElementOf(allowed)));
+}
+
+TEST_F(MatcherTest, IsElementOfEmpty) {
+  // An empty allowed-set never matches anything (mirrors AnyOfArray of empty).
+  EXPECT_THAT(0, Not(IsElementOf(std::vector<int>{})));
+}
+
+TEST_F(MatcherTest, IsElementOfDescriptions) {
+  const ::testing::Matcher<int> matcher = IsElementOf(std::vector<int>{1, 2, 3});
+  EXPECT_THAT(Describe(matcher), "is element of {1, 2, 3}");
+  EXPECT_THAT(DescribeNegation(matcher), "is not element of {1, 2, 3}");
+  EXPECT_THAT(MatchAndExplain(matcher, 2), Pair(true, "which equals element #1 (2)"));
+  EXPECT_THAT(MatchAndExplain(matcher, 99), Pair(false, ""));
+}
+
+TEST_F(MatcherTest, IsElementOfEmptyDescriptions) {
+  const ::testing::Matcher<int> matcher = IsElementOf(std::vector<int>{});
+  EXPECT_THAT(Describe(matcher), "is element of {}");
+  EXPECT_THAT(DescribeNegation(matcher), "is not element of {}");
+  EXPECT_THAT(MatchAndExplain(matcher, 0), Pair(false, ""));
+}
+
+TEST_F(MatcherTest, AllKeysAndValuesFromMap) {
+  const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
+  // std::map iterates by sorted key, so order is deterministic.
+  EXPECT_THAT(AllKeys(m), ElementsAre(1, 2));
+  EXPECT_THAT(AllValues(m), ElementsAre("a", "b"));
+}
+
+TEST_F(MatcherTest, AllKeysAndValuesFromEmptyMap) {
+  const std::map<int, std::string> m;
+  EXPECT_THAT(AllKeys(m), IsEmpty());
+  EXPECT_THAT(AllValues(m), IsEmpty());
+}
+
+TEST_F(MatcherTest, AllKeysFromUnorderedMap) {
+  const std::unordered_map<int, std::string> m{{1, "a"}, {2, "b"}};
+  // Iteration order isn't stable for unordered_map; check membership only.
+  EXPECT_THAT(AllKeys(m), UnorderedElementsAre(1, 2));
+  EXPECT_THAT(AllValues(m), UnorderedElementsAre("a", "b"));
+}
+
+TEST_F(MatcherTest, AllKeysFromMultimapPreservesDuplicates) {
+  // multimap allows duplicate keys; AllKeys must report each occurrence so
+  // callers don't accidentally count distinct keys as unique.
+  const std::multimap<int, std::string> mm{{1, "a"}, {1, "b"}, {2, "c"}};
+  EXPECT_THAT(AllKeys(mm), ElementsAre(1, 1, 2));
+  EXPECT_THAT(AllValues(mm), ElementsAre("a", "b", "c"));
+}
+
+TEST_F(MatcherTest, IsKeyOfMap) {
+  const std::map<int, std::string> m{{1, "a"}, {2, "b"}, {3, "c"}};
+  EXPECT_THAT(2, IsKeyOf(m));
+  EXPECT_THAT(0, Not(IsKeyOf(m)));
+}
+
+TEST_F(MatcherTest, IsKeyOfUnorderedMap) {
+  const std::unordered_map<std::string, int> m{{"a", 1}, {"b", 2}};
+  // Hash order is unspecified, but membership semantics are the same.
+  EXPECT_THAT(std::string{"a"}, IsKeyOf(m));
+  EXPECT_THAT(std::string{"b"}, IsKeyOf(m));
+  EXPECT_THAT(std::string{"z"}, Not(IsKeyOf(m)));
+}
+
+TEST_F(MatcherTest, IsKeyOfEmptyMap) {
+  // No keys exist, so nothing is a key.
+  const std::map<int, std::string> m;
+  EXPECT_THAT(42, Not(IsKeyOf(m)));
+}
+
+TEST_F(MatcherTest, IsKeyOfDescriptions) {
+  const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
+  const ::testing::Matcher<int> matcher = IsKeyOf(m);
+  EXPECT_THAT(Describe(matcher), "is element of {1, 2}");
+  EXPECT_THAT(DescribeNegation(matcher), "is not element of {1, 2}");
+  EXPECT_THAT(MatchAndExplain(matcher, 1), Pair(true, "which equals element #0 (1)"));
+  EXPECT_THAT(MatchAndExplain(matcher, 99), Pair(false, ""));
+}
+
+TEST_F(MatcherTest, IsElementOfAllKeysComposition) {
+  const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
+  EXPECT_THAT(1, IsElementOf(AllKeys(m)));
+  EXPECT_THAT(std::string{"a"}, IsElementOf(AllValues(m)));
+}
+
+TEST_F(MatcherTest, IsElementOfHeterogeneousComparable) {
+  // value_type of the container can differ from the subject's type as long as
+  // gmock's Eq can compare them. The left side does not need to be converted
+  // to the container's value_type by the caller.
+  const std::vector<std::string> allowed = {"alpha", "beta"};
+  EXPECT_THAT("alpha", IsElementOf(allowed));                  // const char[]
+  EXPECT_THAT(std::string_view{"alpha"}, IsElementOf(allowed));  // string_view
+  EXPECT_THAT(std::string{"alpha"}, IsElementOf(allowed));     // string
+  EXPECT_THAT(std::string_view{"gamma"}, Not(IsElementOf(allowed)));
+}
+
+TEST_F(MatcherTest, IsKeyOfHeterogeneousString) {
+  // Same as IsElementOfHeterogeneousComparable but going through the map's
+  // key_type. A caller asking "is key X in m?" should not have to construct
+  // a std::string just to compare against a std::string-keyed map.
+  const std::map<std::string, int> ordered{{"a", 1}, {"b", 2}};
+  const std::unordered_map<std::string, int> unordered{{"a", 1}, {"b", 2}};
+  EXPECT_THAT("a", IsKeyOf(ordered));
+  EXPECT_THAT("a", IsKeyOf(unordered));
+  EXPECT_THAT(std::string_view{"a"}, IsKeyOf(ordered));
+  EXPECT_THAT(std::string_view{"a"}, IsKeyOf(unordered));
+  EXPECT_THAT(std::string{"a"}, IsKeyOf(ordered));
+  EXPECT_THAT(std::string{"a"}, IsKeyOf(unordered));
+  EXPECT_THAT("z", Not(IsKeyOf(ordered)));
+  EXPECT_THAT("z", Not(IsKeyOf(unordered)));
 }
 
 TEST_F(MatcherTest, EqualsText) {

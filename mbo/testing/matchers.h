@@ -17,7 +17,10 @@
 #define MBO_TESTING_MATCHERS_H_
 
 #include <concepts>  // IWYU pragma: keep
+#include <initializer_list>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "absl/strings/str_split.h"
 #include "gmock/gmock-matchers.h"
@@ -30,6 +33,128 @@ namespace mbo::testing {
 
 inline auto IsNullopt() {
   return ::testing::Eq(std::nullopt);
+}
+
+namespace testing_internal {
+
+// Implementation of the polymorphic `IsElementOf` matcher. Each call to `EXPECT_THAT(value, ...)`
+// instantiates an Impl<Value> via the conversion operator; the comparison inside `MatchAndExplain`
+// uses raw `operator==` so the subject does not need to share `value_type` with the container.
+template<typename Container>
+class IsElementOfMatcher {
+ public:
+  explicit IsElementOfMatcher(Container container) : container_(std::move(container)) {}
+
+  template<typename Value>
+  operator ::testing::Matcher<Value>() const {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+    return ::testing::Matcher<Value>(new Impl<const Value&>(container_));
+  }
+
+  template<typename Value>
+  class Impl : public ::testing::MatcherInterface<Value> {
+   public:
+    explicit Impl(Container container) : container_(std::move(container)) {}
+
+    void DescribeTo(::std::ostream* os) const override { DescribeContents(*os, "is element of"); }
+
+    void DescribeNegationTo(::std::ostream* os) const override { DescribeContents(*os, "is not element of"); }
+
+    bool MatchAndExplain(Value value, ::testing::MatchResultListener* listener) const override {
+      std::size_t index = 0;
+      for (const auto& element : container_) {
+        if (value == element) {
+          if (listener->IsInterested()) {
+            *listener << "which equals element #" << index << " (" << ::testing::PrintToString(element) << ")";
+          }
+          return true;
+        }
+        ++index;
+      }
+      return false;
+    }
+
+   private:
+    void DescribeContents(::std::ostream& os, const char* lead) const {
+      os << lead << " {";
+      bool first = true;
+      for (const auto& element : container_) {
+        if (!first) {
+          os << ", ";
+        }
+        first = false;
+        os << ::testing::PrintToString(element);
+      }
+      os << "}";
+    }
+
+    const Container container_;
+  };
+
+ private:
+  const Container container_;
+};
+
+}  // namespace testing_internal
+
+// Matcher that asserts the value-under-test equals at least one element of `container`.
+//
+// This is the element-on-the-left orientation of `::testing::Contains`: the value is the subject
+// and the container is the search space. Comparison uses raw `operator==` (not `Eq` parameterized
+// on the container's `value_type`), so the subject does not need to be converted to the element
+// type by the caller. A string-literal subject can be tested against a `std::vector<std::string>`,
+// a `std::string_view` subject against a `std::map<std::string, ...>` key set, etc.
+//
+//   std::vector<std::string> allowed = {"a", "b"};
+//   EXPECT_THAT("a", IsElementOf(allowed));                    // const char[]
+//   EXPECT_THAT(std::string_view{"a"}, IsElementOf(allowed));  // string_view
+//   EXPECT_THAT(2, IsElementOf({1, 2, 3}));                    // initializer list
+//
+// The container is taken by value so temporaries and initializer lists are safe.
+template<typename Container>
+inline testing_internal::IsElementOfMatcher<Container> IsElementOf(Container container) {
+  return testing_internal::IsElementOfMatcher<Container>(std::move(container));
+}
+
+template<typename T>
+inline testing_internal::IsElementOfMatcher<std::vector<T>> IsElementOf(std::initializer_list<T> values) {
+  return testing_internal::IsElementOfMatcher<std::vector<T>>(std::vector<T>(values));
+}
+
+// Returns the keys of an associative container as a `std::vector<key_type>` in iteration order.
+// Useful for composing with element-oriented matchers, e.g. `IsElementOf(AllKeys(map))`. The
+// argument type must expose a `key_type` typedef, as all STL associative containers do.
+template<typename Map>
+inline std::vector<typename Map::key_type> AllKeys(const Map& m) {
+  std::vector<typename Map::key_type> keys;
+  keys.reserve(m.size());
+  for (const auto& kv : m) {
+    keys.push_back(kv.first);
+  }
+  return keys;
+}
+
+// Returns the mapped values of an associative container as a `std::vector<mapped_type>` in
+// iteration order. Useful for composing with element-oriented matchers, e.g.
+// `IsElementOf(AllValues(map))`. The argument type must expose a `mapped_type` typedef, as
+// `std::map`, `std::unordered_map`, and similar do (but `std::set` does not).
+template<typename Map>
+inline std::vector<typename Map::mapped_type> AllValues(const Map& m) {
+  std::vector<typename Map::mapped_type> values;
+  values.reserve(m.size());
+  for (const auto& kv : m) {
+    values.push_back(kv.second);
+  }
+  return values;
+}
+
+// Matcher that asserts the value-under-test equals at least one key of `map`. Convenience
+// short-hand for `IsElementOf(AllKeys(map))`.
+//
+//   std::map<int, std::string> m = {{1, "a"}, {2, "b"}};
+//   EXPECT_THAT(key, IsKeyOf(m));
+template<typename Map>
+inline auto IsKeyOf(const Map& m) {
+  return IsElementOf(AllKeys(m));
 }
 
 namespace testing_internal {
