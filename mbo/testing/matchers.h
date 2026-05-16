@@ -50,6 +50,7 @@ concept HasEqualityWith = requires(const L& lhs, const R& rhs) {
 
 template<typename T>
 struct IsStdPair : std::false_type {};
+
 template<typename A, typename B>
 struct IsStdPair<std::pair<A, B>> : std::true_type {};
 
@@ -57,8 +58,7 @@ template<typename L, typename R>
 constexpr bool ElementEqual(const L& lhs, const R& rhs) {
   if constexpr (HasEqualityWith<L, R>) {
     return lhs == rhs;
-  } else if constexpr (
-      IsStdPair<std::remove_cvref_t<L>>::value && IsStdPair<std::remove_cvref_t<R>>::value) {
+  } else if constexpr (IsStdPair<std::remove_cvref_t<L>>::value && IsStdPair<std::remove_cvref_t<R>>::value) {
     return ElementEqual(lhs.first, rhs.first) && ElementEqual(lhs.second, rhs.second);
   } else {
     static_assert(HasEqualityWith<L, R>, "IsElementOf: element types are not equality-comparable");
