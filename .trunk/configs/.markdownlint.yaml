@@ -8,3 +8,6 @@ line_length: false
 spaces: false
 url: false
 whitespace: false
+# CHANGELOG.md uses one top-level heading per version (matching the regex in
+# .pre-commit/check_version.sh and tools/trigger_release.sh).
+single-h1: false

@@ -17,7 +17,10 @@
 #define MBO_TESTING_MATCHERS_H_
 
 #include <concepts>  // IWYU pragma: keep
+#include <initializer_list>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "absl/strings/str_split.h"
 #include "gmock/gmock-matchers.h"
@@ -30,6 +33,184 @@ namespace mbo::testing {
 
 inline auto IsNullopt() {
   return ::testing::Eq(std::nullopt);
+}
+
+namespace testing_internal {
+
+// Element-equality used inside `IsElementOf`. Defers to raw `operator==` when the two sides are
+// directly comparable; otherwise falls back to a component-wise comparison for `std::pair`. The
+// pair fallback exists because C++20 made `std::pair::operator==` same-types-only at the standard
+// level (libc++ accepts heterogeneous comparison via implicit pair conversion, libstdc++ does
+// not), and we want `EXPECT_THAT(std::make_pair("a", "b"), IsElementOf(list<pair<string,
+// string>>))` to compile on both.
+template<typename L, typename R>
+concept HasEqualityWith = requires(const L& lhs, const R& rhs) {
+  { lhs == rhs } -> std::convertible_to<bool>;
+};
+
+template<typename T>
+struct IsStdPair : std::false_type {};
+
+template<typename A, typename B>
+struct IsStdPair<std::pair<A, B>> : std::true_type {};
+
+template<typename L, typename R>
+constexpr bool ElementEqual(const L& lhs, const R& rhs) {
+  if constexpr (HasEqualityWith<L, R>) {
+    return lhs == rhs;
+  } else if constexpr (IsStdPair<std::remove_cvref_t<L>>::value && IsStdPair<std::remove_cvref_t<R>>::value) {
+    return ElementEqual(lhs.first, rhs.first) && ElementEqual(lhs.second, rhs.second);
+  } else {
+    static_assert(HasEqualityWith<L, R>, "IsElementOf: element types are not equality-comparable");
+    return false;
+  }
+}
+
+// Implementation of the polymorphic `IsElementOf` matcher. Each call to `EXPECT_THAT(value, ...)`
+// instantiates an Impl<Value> via the conversion operator; the comparison inside `MatchAndExplain`
+// uses `ElementEqual` (raw `operator==`, with a pair-decomposition fallback) so the subject does
+// not need to share `value_type` with the container.
+//
+// `positive_lead` / `negative_lead` are the descriptive prefixes used in failure messages, e.g.
+// "is element of {1, 2}" / "is not element of {1, 2}". `IsKeyOf` and `IsValueOf` substitute "is a
+// key of" / "is a value of" so the message reflects the projection that was applied.
+template<typename Container>
+class IsElementOfMatcher {
+ public:
+  IsElementOfMatcher(Container container, std::string_view positive_lead, std::string_view negative_lead)
+      : container_(std::move(container)), positive_lead_(positive_lead), negative_lead_(negative_lead) {}
+
+  template<typename Value>
+  operator ::testing::Matcher<Value>() const {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+    return ::testing::Matcher<Value>(new Impl<const Value&>(container_, positive_lead_, negative_lead_));
+  }
+
+  template<typename Value>
+  class Impl : public ::testing::MatcherInterface<Value> {
+   public:
+    Impl(Container container, std::string_view positive_lead, std::string_view negative_lead)
+        : container_(std::move(container)), positive_lead_(positive_lead), negative_lead_(negative_lead) {}
+
+    void DescribeTo(::std::ostream* os) const override { DescribeContents(*os, positive_lead_); }
+
+    void DescribeNegationTo(::std::ostream* os) const override { DescribeContents(*os, negative_lead_); }
+
+    bool MatchAndExplain(Value value, ::testing::MatchResultListener* listener) const override {
+      std::size_t index = 0;
+      for (const auto& element : container_) {
+        if (ElementEqual(value, element)) {
+          if (listener->IsInterested()) {
+            *listener << "which equals element #" << index << " (" << ::testing::PrintToString(element) << ")";
+          }
+          return true;
+        }
+        ++index;
+      }
+      return false;
+    }
+
+   private:
+    void DescribeContents(::std::ostream& os, std::string_view lead) const {
+      os << lead << " {";
+      bool first = true;
+      for (const auto& element : container_) {
+        if (!first) {
+          os << ", ";
+        }
+        first = false;
+        os << ::testing::PrintToString(element);
+      }
+      os << "}";
+    }
+
+    const Container container_;
+    const std::string_view positive_lead_;
+    const std::string_view negative_lead_;
+  };
+
+ private:
+  const Container container_;
+  const std::string_view positive_lead_;
+  const std::string_view negative_lead_;
+};
+
+}  // namespace testing_internal
+
+// Matcher that asserts the value-under-test equals at least one element of `container`.
+//
+// This is the element-on-the-left orientation of `::testing::Contains`: the value is the subject
+// and the container is the search space. Comparison uses raw `operator==` (not `Eq` parameterized
+// on the container's `value_type`), so the subject does not need to be converted to the element
+// type by the caller. A string-literal subject can be tested against a `std::vector<std::string>`,
+// a `std::string_view` subject against a `std::map<std::string, ...>` key set, etc.
+//
+//   std::vector<std::string> allowed = {"a", "b"};
+//   EXPECT_THAT("a", IsElementOf(allowed));                    // const char[]
+//   EXPECT_THAT(std::string_view{"a"}, IsElementOf(allowed));  // string_view
+//   EXPECT_THAT(2, IsElementOf({1, 2, 3}));                    // initializer list
+//
+// The container is taken by value so temporaries and initializer lists are safe.
+template<typename Container>
+inline testing_internal::IsElementOfMatcher<Container> IsElementOf(Container container) {
+  return testing_internal::IsElementOfMatcher<Container>(std::move(container), "is element of", "is not element of");
+}
+
+template<typename T>
+inline testing_internal::IsElementOfMatcher<std::vector<T>> IsElementOf(std::initializer_list<T> values) {
+  return testing_internal::IsElementOfMatcher<std::vector<T>>(
+      std::vector<T>(values), "is element of", "is not element of");
+}
+
+namespace testing_internal {
+
+// Returns the keys of an associative container as a `std::vector<key_type>` in iteration order.
+// Internal: used to feed `IsKeyOf` (and other element-oriented matchers composed via
+// `IsElementOf`). Not exposed at namespace scope because the natural calling convention puts
+// the projection on the right of `EXPECT_THAT`, inside another matcher.
+template<typename Map>
+inline std::vector<typename Map::key_type> AllKeys(const Map& m) {
+  std::vector<typename Map::key_type> keys;
+  keys.reserve(m.size());
+  for (const auto& kv : m) {
+    keys.push_back(kv.first);
+  }
+  return keys;
+}
+
+// Returns the mapped values of an associative container as a `std::vector<mapped_type>` in
+// iteration order. Internal: see `AllKeys` above.
+template<typename Map>
+inline std::vector<typename Map::mapped_type> AllValues(const Map& m) {
+  std::vector<typename Map::mapped_type> values;
+  values.reserve(m.size());
+  for (const auto& kv : m) {
+    values.push_back(kv.second);
+  }
+  return values;
+}
+
+}  // namespace testing_internal
+
+// Matcher that asserts the value-under-test equals at least one key of `map`.
+//
+//   std::map<int, std::string> m = {{1, "a"}, {2, "b"}};
+//   EXPECT_THAT(key, IsKeyOf(m));
+template<typename Map>
+inline auto IsKeyOf(const Map& m) {
+  auto keys = testing_internal::AllKeys(m);
+  using KeysContainer = decltype(keys);
+  return testing_internal::IsElementOfMatcher<KeysContainer>(std::move(keys), "is a key of", "is not a key of");
+}
+
+// Matcher that asserts the value-under-test equals at least one mapped value of `map`.
+//
+//   std::map<int, std::string> m = {{1, "a"}, {2, "b"}};
+//   EXPECT_THAT(value, IsValueOf(m));
+template<typename Map>
+inline auto IsValueOf(const Map& m) {
+  auto values = testing_internal::AllValues(m);
+  using ValuesContainer = decltype(values);
+  return testing_internal::IsElementOfMatcher<ValuesContainer>(std::move(values), "is a value of", "is not a value of");
 }
 
 namespace testing_internal {
