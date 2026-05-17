@@ -1,0 +1,10 @@
+source-path=SCRIPTDIR
+# SC2154 ("referenced but not assigned") fires on env vars injected by the
+# Bazel sh_test runner (BASHTEST_TMPDIR, TEST_SRCDIR, TEST_WORKSPACE,
+# TEST_TMPDIR) and on the GitHub Actions runner (GITHUB_REF_NAME). All
+# legitimately set from outside the script.
+disable=SC2154
+
+# If you're having issues with shellcheck following source, disable the errors via:
+# disable=SC1090
+# disable=SC1091
