@@ -1,7 +1,8 @@
 rules:
-  quoted-strings:
-    required: only-when-needed
-    extra-allowed: ["{|}"]
+  # `quoted-strings: only-when-needed` collides with prettier (which prefers
+  # double quotes for many string values) and creates noise without any
+  # functional difference. Disable it; yamllint's other checks remain.
+  quoted-strings: disable
   empty-values:
     forbid-in-block-mappings: true
     forbid-in-flow-mappings: true

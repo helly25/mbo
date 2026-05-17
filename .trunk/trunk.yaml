@@ -48,6 +48,21 @@ lint:
       version_command:
         parse_regex: ${semver}
         run: buildifier --version
+    # clang-tidy is fundamentally useless without a compile_commands.json. Local
+    # devs generate it via `bazel run @hedron_compile_commands//:refresh_all`;
+    # CI does not. Override the plugin's `run_when` to skip CI so trunk's CI
+    # job doesn't bomb on "<header> file not found".
+    - name: clang-tidy
+      commands:
+        - name: lint
+          output: llvm
+          run: clang-tidy --export-fixes=${tmpfile} ${target} -p ${compile_commands_dir}
+          success_codes: [0, 1]
+          cache_results: true
+          run_from: ${compile_command}
+          read_output_from: tmp_file
+          run_when: [cli, monitor]
+          max_concurrency: 4
   enabled:
     - buildifier@8.5.1
     - checkov@3.2.529

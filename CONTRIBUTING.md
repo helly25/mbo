@@ -10,13 +10,13 @@ All code must adhere to the [RULES.dm](RULES.md) and mostly follows the [Google 
 
 All changes will be verified by the pre-commit rules. In order to check these before committing changes install the tool:
 
-```
+```sh
 pre-commit install
 ```
 
 Once installed the verification can be triggered for all files as follows:
 
-```
+```sh
 pre-commit run -a
 ```
 
