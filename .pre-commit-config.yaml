@@ -118,6 +118,10 @@ repos:
     rev: v19.1.6
     hooks:
       - id: clang-format
+        # The default `types_or` for this hook includes `json`, where
+        # clang-format fights with trunk's prettier (multi-line vs single-line
+        # arrays). Restrict to actual C/C++/CUDA sources.
+        types_or: [c, c++, cuda]
 
   - repo: https://github.com/scop/pre-commit-shfmt
     rev: v3.11.0-1
