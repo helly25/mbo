@@ -5,7 +5,9 @@ with [Google's Abseil library](https://abseil.io/).
 
 The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml).
 
-## The C++ library is organized in functional groups each residing in their own directory.
+## Library organization
+
+The C++ library is organized in functional groups each residing in their own directory:
 
 - Config
   - `namespace mbo::config`
@@ -261,7 +263,9 @@ The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) u
     - concept `IsVariantMemberType` determine whether a `Type` is any of the types in a `Variant`.
     - struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit`.
 
-## In addition some Bazel macros are implemented that are not direct part of the library:
+## Bazel macros not in library
+
+Some additional Bazel macros are implemented that are not direct part of the library:
 
 - bzl:archive.bzl
   - `http_archive`: Simple wrapper that tests whether the archive was already loaded.
@@ -281,7 +285,7 @@ Lint and format are driven by [Trunk](https://docs.trunk.io/cli). Devs are **req
 
 Checkout [Releases](https://github.com/helly25/mbo/releases) or use head ref as follows:
 
-```
+```starlark
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
@@ -295,7 +299,7 @@ http_archive(
 
 Check [Releases](https://github.com/helly25/mbo/releases) for details. All that is needed is a `bazel_dep` instruction with the correct version.
 
-```
+```starlark
 bazel_dep(name = "helly25_mbo", version = "0.0.0")
 ```
 
@@ -315,4 +319,4 @@ Presented at [C++ On Sea 2024](https://cpponsea.uk/2024/session/practical-produc
 Slides are available at:
 <br/>
 <br/>
-[<img src="https://helly25.com/wp-content/uploads/2024/07/Practical-Production-proven-Constexpr-API-Elements_TitleCard-copy-980x551.png">](https://helly25.com/practical-production-proven-constexpr-api-elements/)
+[<img src="https://helly25.com/wp-content/uploads/2024/07/Practical-Production-proven-Constexpr-API-Elements_TitleCard-copy-980x551.png" alt="Practical Production Proven constexpr slides">](https://helly25.com/practical-production-proven-constexpr-api-elements/)

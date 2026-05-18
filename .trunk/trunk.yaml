@@ -48,28 +48,28 @@ lint:
       version_command:
         parse_regex: ${semver}
         run: buildifier --version
-    # Default shfmt config uses -s flag to simplify code but this can cause
-    # unwanted semantic changes
-    - name: shfmt
+    # clang-tidy is fundamentally useless without a compile_commands.json. Local
+    # devs generate it via `bazel run @hedron_compile_commands//:refresh_all`;
+    # CI does not. Override the plugin's `run_when` to skip CI so trunk's CI
+    # job doesn't bomb on "<header> file not found".
+    - name: clang-tidy
       commands:
-        - name: format
-          output: shfmt
-          run: shfmt -w ${target}
+        - name: lint
+          output: llvm
+          run: clang-tidy --export-fixes=${tmpfile} ${target} -p ${compile_commands_dir}
           success_codes: [0, 1]
           cache_results: true
-          formatter: true
-          batch: true
-          in_place: true
+          run_from: ${compile_command}
+          read_output_from: tmp_file
+          run_when: [cli, monitor]
+          max_concurrency: 4
   enabled:
-    - actionlint@1.7.12
     - buildifier@8.5.1
     - checkov@3.2.529
     - clang-tidy@16.0.3
     - git-diff-check
     - markdownlint@0.48.0
     - prettier@3.8.3
-    - shellcheck@0.11.0
-    - shfmt@3.6.0
     - trivy@0.70.0
     - trufflehog@3.95.3
     - yamllint@1.38.0

@@ -1,139 +1,135 @@
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
-  hooks:
-  - id: check-added-large-files
-  - id: check-merge-conflict
-  - id: check-yaml
-  - id: end-of-file-fixer
-    exclude: |
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+        exclude: |
           (?x)(
             ^mbo/diff/tests/abc_whitespace.*$|
             ^mbo/diff/tests/numbers_blanks.*|
             .*[.]patch
           )
-  - id: trailing-whitespace
-    exclude: |
+      - id: trailing-whitespace
+        exclude: |
           (?x)(
             ^mbo/diff/tests/abc_whitespace.*$|
             ^mbo/diff/tests/numbers_blanks.*|
             .*[.]patch
           )
 
-- repo: https://github.com/rhysd/actionlint
-  rev: v1.7.7
-  hooks:
-  - id: actionlint
-    name: Lint GitHub Actions workflow files
-    description: Runs actionlint to lint GitHub Actions workflow files
-    language: golang
-    types: ["yaml"]
-    files: ^\.github/workflows/
-    entry: actionlint
-    args: ["-shellcheck", ""]
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
+        name: Lint GitHub Actions workflow files
+        description: Runs actionlint to lint GitHub Actions workflow files
+        language: golang
+        types: ["yaml"]
+        files: ^\.github/workflows/
+        entry: actionlint
+        args: ["-shellcheck", ""]
 
-- repo: local
-  hooks:
-  - id: mope-uses-external-clang
-    name: mope-uses-external-clang
-    description: |
-      File //mbo/mope/mope.bzl can be configured to find clang-format automatically.
-      However, the repo version must set `_CLANG_FORMAT_BINARY = ""` so that it uses
-      the repo provided version which does not work for Bazel module use.
-    language: pygrep
-    entry: _CLANG_FORMAT_BINARY\s+=\s+"[^"]+"
-    files: mbo/mope/mope.bzl
-  - id: uncomment-bazelmod-includes
-    name: uncomment-bazelmod-includes
-    description: |
-      The repo version of MODULE.bazel may not have commented out includes.
-    language: pygrep
-    entry: \s*#\s*include
-    files: MODULE.bazel
-  - id: bcr-bazelmod-patch-applies
-    name: bcr-bazelmod-patch-applies
-    description: |
-      The patch in .bcr/patches/bazelmod.patch can be applied
-    language: system
-    entry: patch
-    args: ["-p1", "--dry-run", "-fi", ".bcr/patches/bazelmod.patch"]
-    pass_filenames: False
-    types: [text]
-  - id: github-bazelmod-patch-applies
-    name: github-bazelmod-patch-applies
-    description: |
-      The patch in .github/workflows/bazelmod.patch can be applied
-    language: system
-    entry: patch
-    args: ["-p1", "--dry-run", "-fi", ".github/workflows/bazelmod.patch"]
-    pass_filenames: False
-    types: [text]
-  - id: compare-versions
-    name: compare-versions
-    description: |
-      Compare the versions in CHANGELOG.md and MODULES.bazel.
-    language: system
-    entry: .pre-commit/check_version.sh
-    pass_filenames: False
-    types: [text]
-  - id: no-do-not-merge
-    name: No 'DO NOT MERGE'
-    description: |
-      * You can add 'DONOTMERGE', 'DONOTSUBMIT', 'DO NOT MERGE', 'DO NOT SUBMIT', 'DON'T MERGE',
-        'DON'T SUBMIT' or the same with underscores instead of spaces to prevent merging.
-      * To run `pre-commit` without this hook, run `SKIP="no-do-not-merge" pre-commit`.
-    language: pygrep
-    args: [-i]
-    entry: DO([ _]?NOT|N'T)[ _]?(SUBMIT|MERGE)
-    exclude: ^.pre-commit-config.yaml$
-    types: [text]
-  - id: no-todos-without-context
-    name: No TODOs without context
-    description: |
-      * Use descriptive, referenceable TODOs. Examples:
-        * `// TODO(nero.windstriker@helly25.com)`
-        * `# FIXME(https://github.com/helly25/bzl/issues/42)`
-      * From the google style guide:
-        Use FIXME/TODO comments for code that is temporary, a short-term solution.
-        FIXME/TODOs should include the string `FIXME` or `TODO` in all caps, followed by a person's
-        e-mail address, or url with the best context about the problem referenced by the FIXME/TODO.
-      * A bug or other URL reference is better than a person, as the person may become unavailable.
-      * If a developer is referenced then it does not need to be the one writing the FIXME/TODO.
-        * It is more important to note the most knowledgable person.
-        * If you add someone else, first clarify with them.
-      * Concretely, FIXMEs and TODOs without a context are rather pointless. That is, sooner or
-        later noone knows why they were introduced and they will simply get deleted.
-      * It is impossible to systematically find your own TODOs, someone else' or perform any other
-        kind of statictics on them. The issue is that the blame tool tracks the last change, so you
-        would need a tool that can follow the history to the actual introduction of the FIXME/TODOs.
-      * To run `pre-commit` without this hook, run `SKIP="no-todos-without-context" pre-commit`
-    language: pygrep
-    args: [-i]
-    exclude: ^[.]pre-commit-config.yaml$
-    entry: (#|//|/[*]).*(FIXME|TODO)[(](?!(((\w|\w[.-]\w)+@(\w|-)+([.](\w|-)+)*)|(https?://[^)]+))(,[^)]+)?)[)]
-    #      1         1  1          1   1  234           4  4    4 4   5    5 4 3 3              322      2 1
-    types: [text]
+  - repo: local
+    hooks:
+      - id: mope-uses-external-clang
+        name: mope-uses-external-clang
+        description: |
+          File //mbo/mope/mope.bzl can be configured to find clang-format automatically.
+          However, the repo version must set `_CLANG_FORMAT_BINARY = ""` so that it uses
+          the repo provided version which does not work for Bazel module use.
+        language: pygrep
+        entry: _CLANG_FORMAT_BINARY\s+=\s+"[^"]+"
+        files: mbo/mope/mope.bzl
+      - id: uncomment-bazelmod-includes
+        name: uncomment-bazelmod-includes
+        description: |
+          The repo version of MODULE.bazel may not have commented out includes.
+        language: pygrep
+        entry: \s*#\s*include
+        files: MODULE.bazel
+      - id: bcr-bazelmod-patch-applies
+        name: bcr-bazelmod-patch-applies
+        description: |
+          The patch in .bcr/patches/bazelmod.patch can be applied
+        language: system
+        entry: patch
+        args: ["-p1", "--dry-run", "-fi", ".bcr/patches/bazelmod.patch"]
+        pass_filenames: False
+        types: [text]
+      - id: github-bazelmod-patch-applies
+        name: github-bazelmod-patch-applies
+        description: |
+          The patch in .github/workflows/bazelmod.patch can be applied
+        language: system
+        entry: patch
+        args: ["-p1", "--dry-run", "-fi", ".github/workflows/bazelmod.patch"]
+        pass_filenames: False
+        types: [text]
+      - id: compare-versions
+        name: compare-versions
+        description: |
+          Compare the versions in CHANGELOG.md and MODULES.bazel.
+        language: system
+        entry: .pre-commit/check_version.sh
+        pass_filenames: False
+        types: [text]
+      - id: no-do-not-merge
+        name: No 'DO NOT MERGE'
+        description: |
+          * You can add 'DONOTMERGE', 'DONOTSUBMIT', 'DO NOT MERGE', 'DO NOT SUBMIT', 'DON'T MERGE',
+            'DON'T SUBMIT' or the same with underscores instead of spaces to prevent merging.
+          * To run `pre-commit` without this hook, run `SKIP="no-do-not-merge" pre-commit`.
+        language: pygrep
+        args: [-i]
+        entry: DO([ _]?NOT|N'T)[ _]?(SUBMIT|MERGE)
+        exclude: ^.pre-commit-config.yaml$
+        types: [text]
+      - id: no-todos-without-context
+        name: No TODOs without context
+        description: |
+          * Use descriptive, referenceable TODOs. Examples:
+            * `// TODO(nero.windstriker@helly25.com)`
+            * `# FIXME(https://github.com/helly25/bzl/issues/42)`
+          * From the google style guide:
+            Use FIXME/TODO comments for code that is temporary, a short-term solution.
+            FIXME/TODOs should include the string `FIXME` or `TODO` in all caps, followed by a person's
+            e-mail address, or url with the best context about the problem referenced by the FIXME/TODO.
+          * A bug or other URL reference is better than a person, as the person may become unavailable.
+          * If a developer is referenced then it does not need to be the one writing the FIXME/TODO.
+            * It is more important to note the most knowledgable person.
+            * If you add someone else, first clarify with them.
+          * Concretely, FIXMEs and TODOs without a context are rather pointless. That is, sooner or
+            later noone knows why they were introduced and they will simply get deleted.
+          * It is impossible to systematically find your own TODOs, someone else' or perform any other
+            kind of statictics on them. The issue is that the blame tool tracks the last change, so you
+            would need a tool that can follow the history to the actual introduction of the FIXME/TODOs.
+          * To run `pre-commit` without this hook, run `SKIP="no-todos-without-context" pre-commit`
+        language: pygrep
+        args: [-i]
+        exclude: ^[.]pre-commit-config.yaml$
+        entry: (#|//|/[*]).*(FIXME|TODO)[(](?!(((\w|\w[.-]\w)+@(\w|-)+([.](\w|-)+)*)|(https?://[^)]+))(,[^)]+)?)[)]
+        #      1         1  1          1   1  234           4  4    4 4   5    5 4 3 3              322      2 1
+        types: [text]
 
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v19.1.6
+    hooks:
+      - id: clang-format
+        # The default `types_or` for this hook includes `json`, where
+        # clang-format fights with trunk's prettier (multi-line vs single-line
+        # arrays). Restrict to actual C/C++/CUDA sources.
+        types_or: [c, c++, cuda]
 
-- repo: https://github.com/keith/pre-commit-buildifier
-  rev: 8.2.0
-  hooks:
-  - id: buildifier
-  - id: buildifier-lint
-    args: ["--warnings=all"]
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.11.0-1
+    hooks:
+      - id: shfmt
+        args: ["-bn", "-ci", "-i=2", "-w"]
 
-- repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v19.1.6
-  hooks:
-  - id: clang-format
-
-- repo: https://github.com/scop/pre-commit-shfmt
-  rev: v3.11.0-1
-  hooks:
-    - id: shfmt
-      args: ["-bn", "-ci", "-i=2", "-w"]
-
-- repo: https://github.com/koalaman/shellcheck-precommit
-  rev: v0.10.0
-  hooks:
-  - id: shellcheck
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.10.0
+    hooks:
+      - id: shellcheck

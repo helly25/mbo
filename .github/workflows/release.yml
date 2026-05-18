@@ -4,6 +4,8 @@ on:
     tags:
       - "*.*.*"
 
+permissions: read-all
+
 jobs:
   release:
     uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7

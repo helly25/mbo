@@ -4,6 +4,11 @@ on:
     types:
       - closed
 
+# Cache deletion uses secrets.CACHE_ACCESS (a custom PAT), so the default
+# GITHUB_TOKEN does not need write scopes here. Declared explicitly to satisfy
+# checkov CKV2_GHA_1.
+permissions: read-all
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest
