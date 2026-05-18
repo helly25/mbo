@@ -76,6 +76,13 @@ lint:
 actions:
   enabled:
     - trunk-announce
+    - trunk-upgrade-available
+  # `trunk-fmt-pre-commit` and `trunk-check-pre-push` install their own
+  # `.git/hooks/{pre-commit,pre-push}` scripts, which conflicts with
+  # `pre-commit install` (last installer wins). The pre-commit framework is
+  # this repo's single entry point — it owns the git hook and delegates to
+  # trunk via a `local` hook in .pre-commit-config.yaml. Devs run
+  # `pre-commit install` once; CI runs both jobs independently.
+  disabled:
     - trunk-check-pre-push
     - trunk-fmt-pre-commit
-    - trunk-upgrade-available

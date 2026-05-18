@@ -279,7 +279,7 @@ The project only comes with a Bazel BUILD.bazel file and can be added to other B
 
 The project is formatted with specific clang-format settings which require clang 16+ (in case of MacOs LLVM 16+ can be installed using brew). For simplicity in dev mode the project pulls the appropriate clang tools and can be compiled with those tools using `bazel [build|test] --config=clang ...`.
 
-Lint and format are driven by [Trunk](https://docs.trunk.io/cli). Devs are **required** to install the CLI locally — `curl https://get.trunk.io -fsSL | bash` — then run `trunk check` and `trunk fmt` before pushing. The repo enables `trunk-fmt-pre-commit` and `trunk-check-pre-push` so the hooks run automatically once installed. CI runs `trunk check` only (no auto-fixing on the GitHub side); failing lint must be fixed locally and re-pushed.
+Lint and format are driven by [Trunk](https://docs.trunk.io/cli) plus [pre-commit](https://pre-commit.com). Devs are **required** to install both — `curl https://get.trunk.io -fsSL | bash` and `pip install pre-commit` (or your package manager's equivalent) — then run `pre-commit install` once. The pre-commit framework is this repo's single git-hook entry point and delegates `trunk fmt` to trunk on every commit. CI runs both `pre-commit` and `trunk check` jobs; failing lint must be fixed locally and re-pushed.
 
 ### WORKSPACE
 
