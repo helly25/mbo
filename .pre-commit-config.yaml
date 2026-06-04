@@ -133,3 +133,18 @@ repos:
     rev: v0.10.0
     hooks:
       - id: shellcheck
+
+  # Trunk delegate. The pre-commit framework is this repo's single git-hook
+  # entry point; `trunk fmt` is invoked here so devs only ever need to run
+  # `pre-commit install` once. trunk's own `trunk-fmt-pre-commit` action is
+  # disabled in .trunk/trunk.yaml to avoid double-installing the git hook.
+  - repo: local
+    hooks:
+      - id: trunk-fmt
+        name: trunk fmt
+        description: Apply trunk-owned formatters (prettier, buildifier, …)
+        language: system
+        entry: trunk fmt --no-progress
+        pass_filenames: true
+        require_serial: true
+        types_or: [text]
