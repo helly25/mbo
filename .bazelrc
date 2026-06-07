@@ -15,6 +15,10 @@ try-import %workspace%/.bazelrc.user
 
 common --consistent_labels
 common --enable_bzlmod --noenable_workspace
+# Bazel 9 no longer autoloads the legacy native `sh_*` rules. `helly25_bashtest`
+# still defines its targets with the native `sh_library`, so re-enable autoload
+# from `@rules_shell` for the shell rules until that dependency loads them itself.
+common --incompatible_autoload_externally=+sh_library,+sh_binary,+sh_test
 common --noincompatible_enable_cc_toolchain_resolution
 common --incompatible_disallow_empty_glob
 common --nolegacy_external_runfiles
