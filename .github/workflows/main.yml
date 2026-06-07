@@ -56,7 +56,6 @@ jobs:
         gcc_version: [13]
         llvm_version: [16.0.4]
         bazel_config: [opt]
-        module_version: [0.10.0]
         exclude:
           - os: ubuntu-latest
             compiler: native
@@ -71,7 +70,6 @@ jobs:
       gcc_version: ${{ matrix.gcc_version }}
       llvm_version: ${{ matrix.llvm_version }}
       bazel_config: ${{ matrix.bazel_config }}
-      module_version: ${{ matrix.module_version }}
 
   test-clang:
     needs: [pre-commit, test-gcc, test-bcr]

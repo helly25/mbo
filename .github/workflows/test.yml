@@ -44,17 +44,9 @@ on:
         description: "The way how Bazel should operate compilation and tests, one of (asan, fastbuild, opt)."
         type: string
         default: opt
-      module_version:
-        description: 'Version string for the "MODULE.${module_version}.bazel" to be copied from the bzlmod directory.'
-        type: string
-        default: ""
-      module_default:
-        description: 'If the "module_version" has this value, then no "MODULE.${module_version}.bazel" will be copied.'
-        type: string
-        default: ""
 
 env:
-  CACHE_KEY_PREFIX: ${{inputs.os}}-bzlmod_${{inputs.compiler}}_${{inputs.compiler == 'clang' && inputs.llvm_version || ''}}_${{inputs.compiler == 'gcc' && inputs.gcc_version || ''}}_${{inputs.bazel_config}}_${{inputs.module_version}}
+  CACHE_KEY_PREFIX: ${{inputs.os}}-bzlmod_${{inputs.compiler}}_${{inputs.compiler == 'clang' && inputs.llvm_version || ''}}_${{inputs.compiler == 'gcc' && inputs.gcc_version || ''}}_${{inputs.bazel_config}}
 
 jobs:
   test:
@@ -127,11 +119,6 @@ jobs:
             BAZEL_ARGS+=("-c" "opt")
           else
             echo "ERROR: Matrix/Input var 'bazel_config' must be one of [asan, cpp23, fastbuild, opt]."
-          fi
-          if [ -n "${{inputs.module_version}}" ]; then
-            if [ "${{inputs.module_version}}" != "${{inputs.module_default}}" ]; then
-              cp "bazelmod/MODULE.${{inputs.module_version}}.bazel" MODULE.bazel
-            fi
           fi
           [ -n "${CC}" ] && [ -x "${CC}" ] && echo "CC: $(${CC} --version)"
           [ -n "${CXX}" ] && [ -x "${CXX}" ] && echo "CXX: $(${CXX} --version)"
