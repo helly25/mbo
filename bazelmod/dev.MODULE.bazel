@@ -15,11 +15,11 @@
 
 """Extra development modules."""
 
-bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True, repo_name = "bazel_compile_commands_extractor")
 git_override(
     module_name = "hedron_compile_commands",
-    commit = "abb61a688167623088f8768cc9264798df6a9d10",
-    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+    commit = "cc0277ab4fa5dc96b0fc9e45274263a23f37bae6",
+    remote = "https://github.com/helly25/bazel-compile-commands-extractor.git",
 )
 
 bazel_dep(name = "depend_on_what_you_use", version = "0.16.0", dev_dependency = True)
