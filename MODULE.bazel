@@ -36,3 +36,13 @@ bazel_dep(name = "re2", version = "2025-11-05.bcr.1")
 bazel_dep(name = "googletest", version = "1.17.0.bcr.2")
 bazel_dep(name = "google_benchmark", version = "1.9.5", repo_name = "com_github_google_benchmark")
 bazel_dep(name = "helly25_bashtest", version = "0.2.0", repo_name = "com_helly25_bashtest")
+
+# TODO: temporary override to bashtest 0.3.0 (loads sh_* from @rules_shell
+# directly, so --incompatible_autoload_externally is no longer needed). Drop this
+# and bump the bazel_dep to 0.3.0 once it lands in the BCR. Pinned to the 0.3.0
+# tag commit.
+git_override(
+    module_name = "helly25_bashtest",
+    remote = "https://github.com/helly25/bashtest.git",
+    commit = "7fec4a866c96420f26b176f4ac0b5b0d768f2b0f",
+)

@@ -1,7 +1,8 @@
 # 0.11.0
 
-- Bumped Bazel to 9.1.1 (`.bazelversion`). Bazel 9 no longer autoloads the legacy native `sh_*` rules, so `.bazelrc` now enables `--incompatible_autoload_externally=+sh_library,+sh_binary,+sh_test` (needed because `helly25_bashtest` still defines its targets with native `sh_library`).
-- Updated module dependencies: `bazel_skylib` 1.8.2 → 1.9.0, `platforms` 1.0.0 → 1.1.0, `rules_cc` 0.2.14 → 0.2.19, `rules_shell` 0.6.1 → 0.8.0, `re2` 2025-11-05 → 2025-11-05.bcr.1, `googletest` 1.17.0 → 1.17.0.bcr.2, `google_benchmark` 1.9.4 → 1.9.5, `helly25_bashtest` 0.1.0 → 0.2.0, `toolchains_llvm` 1.5.0 → 1.7.0, `depend_on_what_you_use` 0.7.0 → 0.16.0, and the `hedron_compile_commands` pin.
+- Bumped Bazel to 9.1.1 (`.bazelversion`).
+- Updated module dependencies: `bazel_skylib` 1.8.2 → 1.9.0, `platforms` 1.0.0 → 1.1.0, `rules_cc` 0.2.14 → 0.2.19, `rules_shell` 0.6.1 → 0.8.0, `re2` 2025-11-05 → 2025-11-05.bcr.1, `googletest` 1.17.0 → 1.17.0.bcr.2, `google_benchmark` 1.9.4 → 1.9.5, `helly25_bashtest` 0.1.0 → 0.3.0, `toolchains_llvm` 1.5.0 → 1.7.0, `depend_on_what_you_use` 0.7.0 → 0.16.0, and the `hedron_compile_commands` pin.
+- `helly25_bashtest` 0.3.0 loads the `sh_*` rules from `@rules_shell` directly, so Bazel 9 (which no longer autoloads the legacy native `sh_*` rules) needs no `--incompatible_autoload_externally` workaround. Temporarily pinned via `git_override` to the `0.3.0` tag until it lands in the BCR.
 - Bumped `abseil-cpp` 20250814.1 → 20250814.2. Held at the 20250814 series because newer Abseil (20260107+) deprecates the `absl::MutexLock(Mutex*)` constructor that `re2` 2025-11-05 still uses, which fails under `--cxxopt=-Werror`.
 - Bumped the pinned LLVM toolchain 17.0.4 → 20.1.7. LLVM 17.0.4's bundled linker segfaults against the macOS 26 SDK when building tools in the exec configuration (e.g. `//mbo/diff:diff`, which `_diff_test` builds with `cfg=exec`); 20.1.7 links cleanly and compiles the tree without new `-Werror` warnings.
 - Migrated the `_diff_test` `is_windows` select off the deprecated `@bazel_tools//src/conditions:host_windows` to `@platforms//os:windows`.
