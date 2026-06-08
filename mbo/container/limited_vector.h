@@ -149,7 +149,8 @@ class LimitedVector final {
 
   constexpr LimitedVector(LimitedVector&& other) noexcept {
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(const_cast<std::remove_const_t<T>*>(&values_[size_].data), std::move(other.values_[size_].data));
+      std::construct_at(
+          const_cast<std::remove_const_t<T>*>(&values_[size_].data), std::move(other.values_[size_].data));
     }
     other.size_ = 0;
   }
@@ -157,7 +158,8 @@ class LimitedVector final {
   constexpr LimitedVector& operator=(LimitedVector&& other) noexcept {
     clear();
     for (; size_ < other.size_; ++size_) {
-      std::construct_at(const_cast<std::remove_const_t<T>*>(&values_[size_].data), std::move(other.values_[size_].data));
+      std::construct_at(
+          const_cast<std::remove_const_t<T>*>(&values_[size_].data), std::move(other.values_[size_].data));
     }
     other.size_ = 0;
     return *this;
