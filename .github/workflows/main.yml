@@ -51,15 +51,15 @@ jobs:
     secrets: inherit
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-15]
+        os: [ubuntu-latest, macos-26]
         compiler: [gcc, native, clang]
         gcc_version: [13]
-        llvm_version: [16.0.4]
+        llvm_version: [20.1.8]
         bazel_config: [opt]
         exclude:
           - os: ubuntu-latest
             compiler: native
-          - os: macos-15
+          - os: macos-26
             compiler: gcc
 
     uses: ./.github/workflows/test.yml
@@ -76,30 +76,39 @@ jobs:
     secrets: inherit
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-15]
+        os: [ubuntu-latest, macos-26]
         compiler: [clang]
-        # MacOS-15: Clang 16.0.0
-        # MacOS-25: Clang 17.0.0
-        llvm_version: [17.0.4, 19.1.6, 20.1.0]
+        # Hermetic toolchains_llvm clang (independent of the runner's Apple clang).
+        # Ladder: working default (20), macOS native match (21 = Apple clang 21), newest (22).
+        # NOTE: 21.1.8 / 22.1.7 do NOT build mbo yet -- clang 21 tightened constexpr
+        # and breaks struct_names_clang.h field-name reflection. This job is
+        # continue-on-error, so they run as non-blocking tracking rungs (opt only)
+        # until that port lands; then promote the default pin to 21.x.
+        # TODO(llvm-23): add 23.x here once released and listed in toolchains_llvm.
+        llvm_version: [20.1.8, 21.1.8, 22.1.7]
         bazel_config: [asan, cpp23, fastbuild, opt]
         exclude:
-          - os: macos-15
+          # macOS runs the opt config only.
+          - os: macos-26
             bazel_config: asan
-          - os: macos-15
+          - os: macos-26
             bazel_config: cpp23
-          - os: macos-15
+          - os: macos-26
             bazel_config: fastbuild
-          - os: macos-15
-            llvm_version: 20.1.0
-          - llvm_version: 17.0.4
+          # 20.1.8 is the working default -> full config coverage. 21.1.8 / 22.1.7
+          # are known-failing tracking rungs -> opt only (don't burn CI on configs
+          # that can't compile yet).
+          - llvm_version: 21.1.8
             bazel_config: asan
-          - llvm_version: 17.0.4
+          - llvm_version: 21.1.8
             bazel_config: cpp23
-          - llvm_version: 17.0.4
+          - llvm_version: 21.1.8
             bazel_config: fastbuild
-          - llvm_version: 20.1.0
+          - llvm_version: 22.1.7
             bazel_config: asan
-          - llvm_version: 20.1.0
+          - llvm_version: 22.1.7
+            bazel_config: cpp23
+          - llvm_version: 22.1.7
             bazel_config: fastbuild
 
     uses: ./.github/workflows/test.yml

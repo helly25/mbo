@@ -25,6 +25,17 @@ common --define absl=1
 
 common --cxxopt=-std=c++20 --host_cxxopt=-std=c++20 --cxxopt=-Werror
 
+# Don't let our global -Werror be tripped by third-party (external) code; newer
+# compilers keep adding warnings inside dependencies we don't control (clang 21:
+# -Wcharacter-conversion in googletest, -Wthread-safety-analysis in
+# google_benchmark). Two complementary scopes keep -Werror strict for our own code:
+#  - external_include_paths: external repo *headers* become -isystem, so their
+#    warnings are ignored even when our first-party TUs include them.
+#  - per_file_copt on external/* sources: downgrades -Werror when *compiling* an
+#    external repo's own .cc / internal (src/) headers.
+common --features=external_include_paths
+common --per_file_copt=external/.*@-Wno-error
+
 test --test_output=errors
 
 common --copt=-fdiagnostics-color=always
