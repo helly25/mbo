@@ -75,10 +75,9 @@ class StructMetaBase {
    public:
     constexpr Storage() noexcept {
       if constexpr (std::is_default_constructible_v<RawT>) {
-        std::construct_at(const_cast<RawT*>(&storage_.value));
+        std::construct_at(&storage_.value);
       } else {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-        memset(const_cast<char*>(&storage_.temp[0]), 0, sizeof(T));
+        memset(&storage_.temp[0], 0, sizeof(T));
       }
     }
 
@@ -96,7 +95,7 @@ class StructMetaBase {
     constexpr const T& Get() const noexcept { return storage_.value; }
 
    private:
-    const Uninitialized storage_;
+    Uninitialized storage_;
   };
 
   // NOLINTBEGIN(*-swappable-parameters)
