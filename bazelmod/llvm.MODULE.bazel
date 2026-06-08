@@ -20,6 +20,8 @@ bazel_dep(name = "toolchains_llvm", version = "1.7.0")
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 llvm.toolchain(
     name = "llvm_toolchain_llvm",
+    #llvm_version = "20.1.8",
+    llvm_version = "21.1.8",
     extra_llvm_distributions = {
         # 21.1.8 — best native match for macOS (Apple clang 21), but NOT yet the
         # default pin: clang 21 tightened constexpr evaluation and currently breaks
@@ -48,7 +50,6 @@ llvm.toolchain(
         "LLVM-22.1.7-macOS-ARM64.tar.xz": "4177245188b0a30a6539c96b361dea56f253485756bfd8927a6a59e7301e7806",
         "clang+llvm-22.1.7-aarch64-pc-windows-msvc.tar.xz": "9957fee5aeba5f88369c37e127a07034eaa806c2e9e996b14ce5a32a9320653f",
     },
-    llvm_version = "20.1.8",
 )
 use_repo(llvm, "llvm_toolchain_llvm")
 

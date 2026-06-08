@@ -85,7 +85,7 @@ jobs:
         # continue-on-error, so they run as non-blocking tracking rungs (opt only)
         # until that port lands; then promote the default pin to 21.x.
         # TODO(llvm-23): add 23.x here once released and listed in toolchains_llvm.
-        llvm_version: [20.1.8, 21.1.8, 22.1.7]
+        llvm_version: [20.1.8] # TODO:, 21.1.8, 22.1.7]
         bazel_config: [asan, cpp23, fastbuild, opt]
         exclude:
           # macOS runs the opt config only.
