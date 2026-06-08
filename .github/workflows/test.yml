@@ -44,9 +44,13 @@ on:
         description: "The way how Bazel should operate compilation and tests, one of (asan, fastbuild, opt)."
         type: string
         default: opt
+      bazel_version:
+        description: "The Bazel version to pin via `.bazelversion` (e.g. 8.4.2, 9.1.1). If empty the checked-in `.bazelversion` is used as-is."
+        type: string
+        default: ""
 
 env:
-  CACHE_KEY_PREFIX: ${{inputs.os}}-bzlmod_${{inputs.compiler}}_${{inputs.compiler == 'clang' && inputs.llvm_version || ''}}_${{inputs.compiler == 'gcc' && inputs.gcc_version || ''}}_${{inputs.bazel_config}}
+  CACHE_KEY_PREFIX: ${{inputs.os}}-bzlmod_${{inputs.compiler}}_${{inputs.compiler == 'clang' && inputs.llvm_version || ''}}_${{inputs.compiler == 'gcc' && inputs.gcc_version || ''}}_${{inputs.bazel_config}}_bazel${{inputs.bazel_version}}
 
 jobs:
   test:
@@ -73,10 +77,19 @@ jobs:
             ${{env.CACHE_KEY_PREFIX}}-refs/heads/main
             ${{env.CACHE_KEY_PREFIX}}
 
-      - name: Build and Test
+      - name: Setup
+        # Resolve the C++ toolchain selection and the Bazel invocation flags
+        # exactly ONCE, then export them via `$GITHUB_ENV` so that both
+        # "Show compiler" and "Build and Test" consume a single source of truth
+        # (no copy-pasted selection logic that can drift). The only side effect
+        # beyond the environment is mutating `bazelmod/llvm.MODULE.bazel` in the
+        # checkout to pin the requested LLVM version. `BAZEL_INIT`/`BAZEL_ARGS`
+        # are exported as space-separated strings; none of their elements
+        # contain spaces, so later steps re-split them with unquoted expansion.
         run: |
+          set -euo pipefail
           if [ "${{inputs.compiler}}:${{inputs.gcc_version}}" == "gcc:" ]; then
-            echo "ERROR: When compiler=='gcc', then a valid 'compiler_version' must be given."
+            echo "::error::When compiler=='gcc', a valid 'gcc_version' must be given."
             exit 1
           fi
           declare -a BAZEL_INIT=()
@@ -84,10 +97,23 @@ jobs:
           CACHE_ROOT=~/.cache
           BAZEL_INIT+=("--output_user_root=${CACHE_ROOT}/bazel")
           BAZEL_ARGS+=("--repository_cache=${CACHE_ROOT}/bazel_repo-cache")
+          EXPECT=""
           if [ "${{inputs.compiler}}" == "clang" ]; then
+            # We deliberately do NOT clear CC/CXX here (the old `unset CC/CXX`).
+            # Only the `gcc` branch ever exports CC/CXX, each matrix entry runs in
+            # its own fresh job, and GitHub-hosted runners don't pre-set them --
+            # so in a `clang` job they are simply absent. More importantly,
+            # `--config=clang` selects the hermetic toolchains_llvm toolchain via
+            # Bazel toolchain resolution (`--extra_toolchains`), independent of
+            # CC/CXX (those only feed the unused `@local_config_cc` fallback). The
+            # `EXPECT="Clang:"` assertion in "Show compiler" then verifies the
+            # actually-selected compiler, which is a stronger guarantee than the
+            # old blind `unset`. (Note: $GITHUB_ENV cannot truly unset a variable
+            # anyway -- it can only set it empty, and an empty `CC=` can confuse
+            # `@local_config_cc` autoconfig, so clearing it that way would be
+            # worse than leaving it absent.)
             BAZEL_ARGS+=("--config=clang")
-            unset CC
-            unset CXX
+            EXPECT="Clang:"
             if [ -r "bazelmod/llvm.${{inputs.llvm_version}}.MODULE.bazel" ]; then
               cp "bazelmod/llvm.${{inputs.llvm_version}}.MODULE.bazel" bazelmod/llvm.MODULE.bazel
             elif [ -n "${{inputs.llvm_version}}" ]; then
@@ -96,18 +122,20 @@ jobs:
               mv "${CONTROL_FILE}.new" "${CONTROL_FILE}"
             fi
           elif [ "${{inputs.compiler}}" == "gcc" ]; then
-            export CC=/usr/bin/gcc
-            export CXX=/usr/bin/g++
+            echo "CC=/usr/bin/gcc" >> "${GITHUB_ENV}"
+            echo "CXX=/usr/bin/g++" >> "${GITHUB_ENV}"
+            EXPECT="GCC:"
           elif [ "${{inputs.compiler}}" == "native" ]; then
             # Use whatever is found!
-            if [ -n "${CC}" ] && [ -x "${which gcc}" ]; then
-              export CC="${which gcc}"
+            if [ -n "${CC:-}" ] && [ -x "$(which gcc)" ]; then
+              echo "CC=$(which gcc)" >> "${GITHUB_ENV}"
             fi
-            if [ -n "${CXX}" ] && [ -x "${which g++}" ]; then
-              export CC="${which g++}"
+            if [ -n "${CXX:-}" ] && [ -x "$(which g++)" ]; then
+              echo "CXX=$(which g++)" >> "${GITHUB_ENV}"
             fi
           else
-            echo "ERROR: Matrix/Input var 'compiler' must be one of [clang, gcc, native]."
+            echo "::error::Matrix/Input var 'compiler' must be one of [clang, gcc, native]."
+            exit 1
           fi
           if [ "${{inputs.bazel_config}}" == "asan" ]; then
             BAZEL_ARGS+=("-c" "dbg" "--config=asan")
@@ -118,14 +146,67 @@ jobs:
           elif [ "${{inputs.bazel_config}}" == "opt" ]; then
             BAZEL_ARGS+=("-c" "opt")
           else
-            echo "ERROR: Matrix/Input var 'bazel_config' must be one of [asan, cpp23, fastbuild, opt]."
+            echo "::error::Matrix/Input var 'bazel_config' must be one of [asan, cpp23, fastbuild, opt]."
+            exit 1
           fi
-          [ -n "${CC}" ] && [ -x "${CC}" ] && echo "CC: $(${CC} --version)"
-          [ -n "${CXX}" ] && [ -x "${CXX}" ] && echo "CXX: $(${CXX} --version)"
-          echo "BAZEL_INIT: ${BAZEL_INIT[@]}"
-          echo "BAZEL_ARGS: ${BAZEL_ARGS[@]}"
-          bazel "${BAZEL_INIT[@]}" run "${BAZEL_ARGS[@]}" //tools:show_compiler || echo "Cannot determine compiler version!"
-          bazel "${BAZEL_INIT[@]}" test "${BAZEL_ARGS[@]}" //...
+          # Pin the Bazel release that bazelisk launches. bazelisk resolves the
+          # version with this precedence: `USE_BAZEL_VERSION` (env) > `.bazeliskrc`
+          # > `.bazelversion`. We want `.bazelversion` to be the single source of
+          # truth, so we neutralize any inherited `USE_BAZEL_VERSION` by exporting
+          # it empty: bazelisk treats an empty value as "unset" (`len(v) != 0`)
+          # and falls through to `.bazelversion`. (There is no `.bazeliskrc` in
+          # this repo, so nothing else outranks the file.)
+          #
+          # When the caller passes `bazel_version` we overwrite `.bazelversion`;
+          # otherwise the checked-in pin stands. Either way EXPECT_BAZEL records
+          # the version we expect `bazel --version` to report, so "Show compiler"
+          # still fails loudly if bazelisk somehow launched a different release.
+          echo "USE_BAZEL_VERSION=" >> "${GITHUB_ENV}"
+          if [ -n "${{inputs.bazel_version}}" ]; then
+            echo "${{inputs.bazel_version}}" > .bazelversion
+          fi
+          EXPECT_BAZEL="$(tr -d '[:space:]' < .bazelversion 2>/dev/null || true)"
+          echo "BAZEL_INIT=${BAZEL_INIT[*]}" >> "${GITHUB_ENV}"
+          echo "BAZEL_ARGS=${BAZEL_ARGS[*]}" >> "${GITHUB_ENV}"
+          echo "EXPECT=${EXPECT}" >> "${GITHUB_ENV}"
+          echo "EXPECT_BAZEL=${EXPECT_BAZEL}" >> "${GITHUB_ENV}"
+          echo "Resolved BAZEL_INIT: ${BAZEL_INIT[*]}"
+          echo "Resolved BAZEL_ARGS: ${BAZEL_ARGS[*]}"
+          echo "Expected compiler prefix: ${EXPECT:-<none>}"
+          echo "Expected Bazel version: ${EXPECT_BAZEL:-<none>}"
+
+      - name: Show compiler
+        # Probe the actually-selected toolchain (using the flags resolved in
+        # "Setup") and ASSERT it matches what the matrix asked for, so a silent
+        # toolchain fallback fails CI here -- with a clear message -- rather than
+        # producing a green build that used the wrong compiler. Also records the
+        # Bazel version in the log for diagnostics.
+        run: |
+          BAZEL_VERSION="$(bazel --version | awk '{print $2}')"
+          echo "Bazel: ${BAZEL_VERSION}"
+          if [ -n "${EXPECT_BAZEL}" ] && [[ "${EXPECT_BAZEL}" =~ ^[0-9] ]]; then
+            if [ "${BAZEL_VERSION}" != "${EXPECT_BAZEL}" ]; then
+              echo "::error::Expected Bazel version '${EXPECT_BAZEL}' but bazelisk launched '${BAZEL_VERSION}'."
+              exit 1
+            fi
+            echo "OK: Bazel version matches expected '${EXPECT_BAZEL}'."
+          fi
+          COMPILER="$(bazel ${BAZEL_INIT} run ${BAZEL_ARGS} //tools:show_compiler)"
+          echo "Selected compiler: ${COMPILER}"
+          if [ -n "${EXPECT}" ]; then
+            case "${COMPILER}" in
+              "${EXPECT}"*) echo "OK: compiler matches expected prefix '${EXPECT}'." ;;
+              *) echo "::error::Expected compiler prefix '${EXPECT}' but selected '${COMPILER}'."; exit 1 ;;
+            esac
+          fi
+
+      - name: Build and Test
+        run: |
+          [ -n "${CC:-}" ] && [ -x "${CC}" ] && echo "CC: $(${CC} --version)"
+          [ -n "${CXX:-}" ] && [ -x "${CXX}" ] && echo "CXX: $(${CXX} --version)"
+          echo "BAZEL_INIT: ${BAZEL_INIT}"
+          echo "BAZEL_ARGS: ${BAZEL_ARGS}"
+          bazel ${BAZEL_INIT} test ${BAZEL_ARGS} //...
 
       - uses: actions/cache/save@v5
         if: ${{!startsWith(github.ref, 'refs/tags/')}}
