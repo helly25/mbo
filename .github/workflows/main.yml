@@ -98,18 +98,18 @@ jobs:
           # 20.1.8 is the working default -> full config coverage. 21.1.8 / 22.1.7
           # are known-failing tracking rungs -> opt only (don't burn CI on configs
           # that can't compile yet).
-          - llvm_version: 21.1.8
-            bazel_config: asan
-          - llvm_version: 21.1.8
-            bazel_config: cpp23
-          - llvm_version: 21.1.8
-            bazel_config: fastbuild
-          - llvm_version: 22.1.7
-            bazel_config: asan
-          - llvm_version: 22.1.7
-            bazel_config: cpp23
-          - llvm_version: 22.1.7
-            bazel_config: fastbuild
+          #- llvm_version: 21.1.8
+          #  bazel_config: asan
+          #- llvm_version: 21.1.8
+          #  bazel_config: cpp23
+          #- llvm_version: 21.1.8
+          #  bazel_config: fastbuild
+          #- llvm_version: 22.1.7
+          #  bazel_config: asan
+          #- llvm_version: 22.1.7
+          #  bazel_config: cpp23
+          #- llvm_version: 22.1.7
+          #  bazel_config: fastbuild
 
     uses: ./.github/workflows/test.yml
     with:
