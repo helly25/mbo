@@ -89,12 +89,8 @@ jobs:
         compiler: [clang]
         # Hermetic toolchains_llvm clang (independent of the runner's Apple clang).
         # Ladder: working default (20), macOS native match (21 = Apple clang 21), newest (22).
-        # NOTE: 21.1.8 / 22.1.7 do NOT build mbo yet -- clang 21 tightened constexpr
-        # and breaks struct_names_clang.h field-name reflection. This job is
-        # continue-on-error, so they run as non-blocking tracking rungs (opt only)
-        # until that port lands; then promote the default pin to 21.x.
         # TODO(llvm-23): add 23.x here once released and listed in toolchains_llvm.
-        llvm_version: [20.1.8] # TODO:, 21.1.8, 22.1.7]
+        llvm_version: [20.1.8, 21.1.8, 22.1.7]
         bazel_config: [asan, cpp23, fastbuild, opt]
         exclude:
           # macOS runs the opt config only.
@@ -104,21 +100,17 @@ jobs:
             bazel_config: cpp23
           - os: macos-26
             bazel_config: fastbuild
-          # 20.1.8 is the working default -> full config coverage. 21.1.8 / 22.1.7
-          # are known-failing tracking rungs -> opt only (don't burn CI on configs
-          # that can't compile yet).
-          #- llvm_version: 21.1.8
-          #  bazel_config: asan
-          #- llvm_version: 21.1.8
-          #  bazel_config: cpp23
-          #- llvm_version: 21.1.8
-          #  bazel_config: fastbuild
-          #- llvm_version: 22.1.7
-          #  bazel_config: asan
-          #- llvm_version: 22.1.7
-          #  bazel_config: cpp23
-          #- llvm_version: 22.1.7
-          #  bazel_config: fastbuild
+          # 20.1.8 is the default pin -> full config coverage
+          # 21.1.8 less coverage, just check opt
+          # 22.1.7 keep the complex configs, just drop fastbuild
+          - llvm_version: 21.1.8
+            bazel_config: asan
+          - llvm_version: 21.1.8
+            bazel_config: cpp23
+          - llvm_version: 21.1.8
+            bazel_config: fastbuild
+          - llvm_version: 22.1.7
+            bazel_config: fastbuild
 
     uses: ./.github/workflows/test.yml
     with:
