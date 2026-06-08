@@ -10,6 +10,10 @@ common:macos --features=-macos_default_link_flags
 common:macos --features=-supports_dynamic_linker
 common:macos --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
 common:macos --linkopt=-Wl,-undefined,dynamic_lookup --host_linkopt=-Wl,-undefined,dynamic_lookup
+# Apple Silicon only: 11.0 is the earliest arm64 macOS and clears libc++'s
+# `std::filesystem` availability gate (the APIs are "introduced in macOS 10.15").
+common:macos --cxxopt=-mmacosx-version-min=11.0 --host_cxxopt=-mmacosx-version-min=11.0
+common:macos --linkopt=-mmacosx-version-min=11.0 --host_linkopt=-mmacosx-version-min=11.0
 
 try-import %workspace%/.bazelrc.user
 
