@@ -53,7 +53,11 @@ llvm.toolchain(
 )
 use_repo(llvm, "llvm_toolchain_llvm")
 
-register_toolchains(
-    "@llvm_toolchain_llvm//:all",
-    dev_dependency = True,
-)
+# NOTE: We deliberately do NOT `register_toolchains(...)` here. Bazel 9 always
+# performs C++ toolchain resolution (the old
+# `--[no]incompatible_enable_cc_toolchain_resolution` flag is now a no-op), so an
+# unconditionally registered hermetic LLVM toolchain would be selected even for
+# the `gcc`/`native` builds that intentionally do NOT pass `--config=clang`,
+# silently turning every build into a clang build. Instead the toolchain is
+# registered only under `--config=clang` via `--extra_toolchains` in `.bazelrc`,
+# which keeps `gcc`/`native` builds on the autodetected local compiler.

@@ -15,7 +15,6 @@ try-import %workspace%/.bazelrc.user
 
 common --consistent_labels
 common --enable_bzlmod --noenable_workspace
-common --noincompatible_enable_cc_toolchain_resolution
 common --incompatible_disallow_empty_glob
 common --nolegacy_external_runfiles
 common --features=layering_check,parse_headers
@@ -41,7 +40,12 @@ test --test_output=errors
 common --copt=-fdiagnostics-color=always
 common --copt=-fno-exceptions
 
-common:clang --incompatible_enable_cc_toolchain_resolution
+# Register the hermetic LLVM/clang toolchain ONLY for `--config=clang`. Bazel 9
+# always resolves C++ toolchains, so registering it unconditionally (in
+# llvm.MODULE.bazel) would hijack the gcc/native builds that omit this config.
+# `--extra_toolchains` registers it at higher priority than the autodetected
+# local toolchain, so clang wins here and only here.
+common:clang --extra_toolchains=@llvm_toolchain_llvm//:all
 common:clang --//mbo/mope:clang_format=
 common:clang --cxxopt=-gmlt
 common:clang --host_cxxopt=-gmlt
