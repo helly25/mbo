@@ -83,8 +83,6 @@ EXCLUDES=(
 # Build the archive
 git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${TAG}" --worktree-attributes
 
-SHA256="$(shasum -a 256 "${ARCHIVE}" | awk '{print $1}')"
-
 # Print header
 echo "# Version ${TAG}"
 echo "## [Changelog](https://github.com/helly25/${PACKAGE_NAME}/blob/${TAG}/CHANGELOG.md)"
