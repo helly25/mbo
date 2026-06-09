@@ -46,13 +46,15 @@ template<typename T, std::size_t MaxArgs, typename... Args>
 constexpr std::size_t StructCtorArgCountMaxFunc() {
   if constexpr (sizeof...(Args) > MaxArgs) {  // NOLINT(bugprone-branch-clone)
     return 0;
-  } else if constexpr (constexpr std::size_t kCount = StructCtorArgCountMaxFunc<T, MaxArgs, Args..., AnyType>();
-                       kCount) {
-    return kCount;
-  } else if constexpr (IsBracesConstructibleImplT<T, Args...>::value) {
-    return sizeof...(Args);
   } else {
-    return 0;
+    constexpr std::size_t kCount = StructCtorArgCountMaxFunc<T, MaxArgs, Args..., AnyType>();
+    if constexpr (kCount) {
+      return kCount;
+    } else if constexpr (IsBracesConstructibleImplT<T, Args...>::value) {
+      return sizeof...(Args);
+    } else {
+      return 0;
+    }
   }
 }
 
