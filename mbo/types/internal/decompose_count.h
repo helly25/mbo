@@ -118,185 +118,189 @@ auto MakeOverloadedSet(Ts&&... v) {
 template<typename T>
 auto DecomposeCountFunc(T&& v) {
   auto fn1 = [](auto&& v) -> decltype(({
-    auto&& [a1] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 1>{};
   })) { return {}; };
   auto fn2 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 2>{};
   })) { return {}; };
   auto fn3 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 3>{};
   })) { return {}; };
   auto fn4 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 4>{};
   })) { return {}; };
   auto fn5 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 5>{};
   })) { return {}; };
   auto fn6 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 6>{};
   })) { return {}; };
   auto fn7 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 7>{};
   })) { return {}; };
   auto fn8 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 8>{};
   })) { return {}; };
   auto fn9 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 9>{};
   })) { return {}; };
   auto fn10 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 10>{};
   })) { return {}; };
   auto fn11 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 11>{};
   })) { return {}; };
   auto fn12 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 12>{};
   })) { return {}; };
   auto fn13 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13] = std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 13>{};
   })) { return {}; };
   auto fn14 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14] =
+        std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 14>{};
   })) { return {}; };
   auto fn15 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15] =
+        std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 15>{};
   })) { return {}; };
   auto fn16 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16] =
+        std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 16>{};
   })) { return {}; };
   auto fn17 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17] = std::forward<decltype(v)>(v);
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17] =
+        std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 17>{};
   })) { return {}; };
   auto fn18 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 18>{};
   })) { return {}; };
   auto fn19 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 19>{};
   })) { return {}; };
   auto fn20 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 20>{};
   })) { return {}; };
   auto fn21 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 21>{};
   })) { return {}; };
   auto fn22 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 22>{};
   })) { return {}; };
   auto fn23 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 23>{};
   })) { return {}; };
   auto fn24 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 24>{};
   })) { return {}; };
   auto fn25 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 25>{};
   })) { return {}; };
   auto fn26 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 26>{};
   })) { return {}; };
   auto fn27 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 27>{};
   })) { return {}; };
   auto fn28 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 28>{};
   })) { return {}; };
   auto fn29 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 29>{};
   })) { return {}; };
   auto fn30 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 30>{};
   })) { return {}; };
   auto fn31 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 31>{};
   })) { return {}; };
   auto fn32 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 32>{};
   })) { return {}; };
   auto fn33 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 33>{};
   })) { return {}; };
   auto fn34 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 34>{};
   })) { return {}; };
   auto fn35 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 35>{};
   })) { return {}; };
   auto fn36 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 36>{};
   })) { return {}; };
   auto fn37 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 37>{};
   })) { return {}; };
   auto fn38 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 38>{};
   })) { return {}; };
   auto fn39 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 39>{};
   })) { return {}; };
   auto fn40 = [](auto&& v) -> decltype(({
-    auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a40] =
+    [[maybe_unused]] auto&& [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a40] =
         std::forward<decltype(v)>(v);
     std::integral_constant<std::size_t, 40>{};
   })) { return {}; };

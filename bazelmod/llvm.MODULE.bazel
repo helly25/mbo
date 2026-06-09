@@ -15,16 +15,39 @@
 
 """LLVM toolchain."""
 
-bazel_dep(name = "toolchains_llvm", version = "1.5.0")
+bazel_dep(name = "toolchains_llvm", version = "1.7.0")
 
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 llvm.toolchain(
     name = "llvm_toolchain_llvm",
-    llvm_version = "17.0.4",
+    llvm_version = "20.1.8",
+    extra_llvm_distributions = {
+        # 22.1.7 — newest released; a forward-looking rung in the CI clang matrix
+        "LLVM-22.1.7-Linux-ARM64.tar.xz": "118ca2d3ad9da34367e05735317854e7977db45dc4c02a32af58da64c23b8789",
+        "LLVM-22.1.7-Linux-X64.tar.xz": "edb0522b41e261819c06ea437d249f9b8acfa413d3805bc9920eec6fb76ff830",
+        "LLVM-22.1.7-macOS-ARM64.tar.xz": "4177245188b0a30a6539c96b361dea56f253485756bfd8927a6a59e7301e7806",
+        "clang+llvm-22.1.7-aarch64-pc-windows-msvc.tar.xz": "9957fee5aeba5f88369c37e127a07034eaa806c2e9e996b14ce5a32a9320653f",
+        # 21.1.8 — best native match for macOS (Apple clang 21).
+        "LLVM-21.1.8-Linux-ARM64.tar.xz": "65ce0b329514e5643407db2d02a5bd34bf33d159055dafa82825c8385bd01993",
+        "LLVM-21.1.8-Linux-X64.tar.xz": "b3b7f2801d15d50736acea3c73982994d025b01c2f035b91ae3b49d1b575732b",
+        "LLVM-21.1.8-macOS-ARM64.tar.xz": "b95bdd32a33a81ee4d40363aaeb26728a26783fcef26a4d80f65457433ea4669",
+        "clang+llvm-21.1.8-aarch64-pc-windows-msvc.tar.xz": "f214b1226d8de005b5f691dd29d9dfea2b49e22d0de445429916173dbb626f7f",
+        "clang+llvm-21.1.8-armv7a-linux-gnueabihf.tar.gz": "4c25b04275d7b34f47f6a7f8f05ef5518ab391c31c084e8f19e6a89a24f8fa57",
+        # 20.1.8 - the oldest we support, and the default pin.
+        "LLVM-20.1.8-Linux-ARM64.tar.xz": "b855cc17d935fdd83da82206b7a7cfc680095efd1e9e8182c4a05e761958bef8",
+        "LLVM-20.1.8-Linux-X64.tar.xz": "1ead36b3dfcb774b57be530df42bec70ab2d239fbce9889447c7a29a4ddc1ae6",
+        "LLVM-20.1.8-macOS-ARM64.tar.xz": "a9a22f450d35f1f73cd61ab6a17c6f27d8f6051d56197395c1eb397f0c9bbec4",
+        "clang+llvm-20.1.8-aarch64-pc-windows-msvc.tar.xz": "0df3e81e8fe26370dd2b60b9e009d81cd130d3fdc41b257434aa663c5d9f0c13",
+        "clang+llvm-20.1.8-armv7a-linux-gnueabihf.tar.gz": "d2060f7a2259d95d121e6a2ceaa948b7d724c497e6e0b752e39086eaaf1675c6",
+    },
 )
 use_repo(llvm, "llvm_toolchain_llvm")
 
-register_toolchains(
-    "@llvm_toolchain_llvm//:all",
-    dev_dependency = True,
-)
+# NOTE: We deliberately do NOT `register_toolchains(...)` here. Bazel 9 always
+# performs C++ toolchain resolution (the old
+# `--[no]incompatible_enable_cc_toolchain_resolution` flag is now a no-op), so an
+# unconditionally registered hermetic LLVM toolchain would be selected even for
+# the `gcc`/`native` builds that intentionally do NOT pass `--config=clang`,
+# silently turning every build into a clang build. Instead the toolchain is
+# registered only under `--config=clang` via `--extra_toolchains` in `.bazelrc`,
+# which keeps `gcc`/`native` builds on the autodetected local compiler.

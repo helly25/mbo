@@ -77,7 +77,7 @@ def diff_test(
         file_header_use = file_header_use,
         failure_message = failure_message,
         is_windows = select({
-            "@bazel_tools//src/conditions:host_windows": True,
+            "@platforms//os:windows": True,
             "//conditions:default": False,
         }),
         ignore_all_space = ignore_all_space,

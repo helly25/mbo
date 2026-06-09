@@ -3,6 +3,13 @@
 - Added `mbo::testing::IsElementOf(container)` — element-on-the-left orientation of gmock's `Contains`. Iterates with raw `operator==` (with a `std::pair` component-wise fallback) so heterogeneous subject types (string literals, `std::string_view`, etc.) compile without caller-side conversion, on both libc++ and libstdc++.
 - Added `mbo::testing::IsKeyOf(map)` — convenience matcher for "is this value among the keys of the map?". Failure messages report `"is a key of {…}"`.
 - Added `mbo::testing::IsValueOf(map)` — parallel to `IsKeyOf` for mapped values. Failure messages report `"is a value of {…}"`.
+- Bumped Bazel to 9.1.1 (`.bazelversion`).
+- Updated module dependencies: `bazel_skylib` 1.8.2 → 1.9.0, `platforms` 1.0.0 → 1.1.0, `rules_cc` 0.2.14 → 0.2.19, `rules_shell` 0.6.1 → 0.8.0, `re2` 2025-11-05 → 2025-11-05.bcr.1, `googletest` 1.17.0 → 1.17.0.bcr.2, `google_benchmark` 1.9.4 → 1.9.5, `helly25_bashtest` 0.1.0 → 0.3.0, `toolchains_llvm` 1.5.0 → 1.7.0, `depend_on_what_you_use` 0.7.0 → 0.16.0, and the `hedron_compile_commands` pin.
+- `helly25_bashtest` 0.3.0 loads the `sh_*` rules from `@rules_shell` directly, so Bazel 9 (which no longer autoloads the legacy native `sh_*` rules) needs no `--incompatible_autoload_externally` workaround.
+- Bumped `abseil-cpp` 20250814.1 → 20250814.2. Held at the 20250814 series because newer Abseil (20260107+) deprecates the `absl::MutexLock(Mutex*)` constructor that `re2` 2025-11-05 still uses, which fails under `--cxxopt=-Werror`.
+- Bumped the pinned LLVM toolchain 17.0.4 → 20.1.8. LLVM 17.0.4's bundled linker segfaults against the macOS 26 SDK when building tools in the exec configuration (e.g. `//mbo/diff:diff`, which `_diff_test` builds with `cfg=exec`); 20.1.x links cleanly and compiles the tree without new `-Werror` warnings.
+- Migrated the `_diff_test` `is_windows` select off the deprecated `@bazel_tools//src/conditions:host_windows` to `@platforms//os:windows`.
+- Fixed compilation under clang 21 (e.g. Apple clang on macOS 26): its tightened constexpr rules reject placement-`construct_at` into a const-qualified object, so `struct_names_clang.h` and `limited_vector.h` now store the non-const value type.
 
 # 0.10.0
 

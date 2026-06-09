@@ -51,16 +51,23 @@ jobs:
     secrets: inherit
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-15]
+        os: [ubuntu-latest, macos-26]
         compiler: [gcc, native, clang]
         gcc_version: [13]
-        llvm_version: [16.0.4]
+        llvm_version: [20.1.8]
         bazel_config: [opt]
-        module_version: [0.10.0]
+        # Bazel-version compatibility rungs, crossed with the os/compiler combos
+        # below. 7.2.1 is the earliest 7.x that works: MODULE.bazel uses
+        # `include()` (added in 7.2.0, so 7.1.x fails with "name 'include' is not
+        # defined") and the dep `depend_on_what_you_use@0.16.0` declares
+        # `bazel_compatibility: [>=7.2.1]` (so 7.2.0 is rejected too). Plus the
+        # latest 8.x (8.7.0), the latest 9.0.x (9.0.2), and the checked-in
+        # default 9.1.1.
+        bazel_version: [7.2.1, 8.7.0, 9.0.2, 9.1.1]
         exclude:
           - os: ubuntu-latest
             compiler: native
-          - os: macos-15
+          - os: macos-26
             compiler: gcc
 
     uses: ./.github/workflows/test.yml
@@ -71,37 +78,38 @@ jobs:
       gcc_version: ${{ matrix.gcc_version }}
       llvm_version: ${{ matrix.llvm_version }}
       bazel_config: ${{ matrix.bazel_config }}
-      module_version: ${{ matrix.module_version }}
+      bazel_version: ${{ matrix.bazel_version }}
 
   test-clang:
     needs: [pre-commit, test-gcc, test-bcr]
     secrets: inherit
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-15]
+        os: [ubuntu-latest, macos-26]
         compiler: [clang]
-        # MacOS-15: Clang 16.0.0
-        # MacOS-25: Clang 17.0.0
-        llvm_version: [17.0.4, 19.1.6, 20.1.0]
+        # Hermetic toolchains_llvm clang (independent of the runner's Apple clang).
+        # Ladder: working default (20), macOS native match (21 = Apple clang 21), newest (22).
+        # TODO(llvm-23): add 23.x here once released and listed in toolchains_llvm.
+        llvm_version: [20.1.8, 21.1.8, 22.1.7]
         bazel_config: [asan, cpp23, fastbuild, opt]
         exclude:
-          - os: macos-15
+          # macOS runs the opt config only.
+          - os: macos-26
             bazel_config: asan
-          - os: macos-15
+          - os: macos-26
             bazel_config: cpp23
-          - os: macos-15
+          - os: macos-26
             bazel_config: fastbuild
-          - os: macos-15
-            llvm_version: 20.1.0
-          - llvm_version: 17.0.4
+          # 20.1.8 is the default pin -> full config coverage
+          # 21.1.8 less coverage, just check opt
+          # 22.1.7 keep the complex configs, just drop fastbuild
+          - llvm_version: 21.1.8
             bazel_config: asan
-          - llvm_version: 17.0.4
+          - llvm_version: 21.1.8
             bazel_config: cpp23
-          - llvm_version: 17.0.4
+          - llvm_version: 21.1.8
             bazel_config: fastbuild
-          - llvm_version: 20.1.0
-            bazel_config: asan
-          - llvm_version: 20.1.0
+          - llvm_version: 22.1.7
             bazel_config: fastbuild
 
     uses: ./.github/workflows/test.yml
