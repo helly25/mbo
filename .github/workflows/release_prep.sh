@@ -23,7 +23,6 @@ set -euo pipefail
 # Custom args to update as needed.
 PACKAGE_NAME="mbo"
 BAZELMOD_NAME="helly25_mbo"
-WORKSPACE_NAME="com_helly25_mbo"
 PATCHES=(
   ".github/workflows/bazelmod.patch"
 )
@@ -108,49 +107,11 @@ Copy [llvm.MODULE.bazel](https://github.com/helly25/${PACKAGE_NAME}/blob/main/ba
 include("//:llvm.MODULE.bazel")
 \`\`\`
 
-## For Bazel WORKSPACE
+### Using the provided development modules
+
+Copy [dev.MODULE.bazel](https://github.com/helly25/${PACKAGE_NAME}/blob/main/bazelmod/dev.MODULE.bazel) to your repository's root directory and add the following line to your MODULES.bazel file or paste the whole contents into it. It provides the dev-only Hedron compile-commands extractor (generates compile_commands.json for clangd) and depend_on_what_you_use.
 
 \`\`\`bzl
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-http_archive(
-  name = "${WORKSPACE_NAME}",
-  url = "https://github.com/helly25/${PACKAGE_NAME}/releases/download/${TAG}/${ARCHIVE}",
-  sha256 = "${SHA256}",
-  strip_prefix = "${PREFIX}",
-)
-\`\`\`
-
-### Initializing the required modules
-
-The project depends on some additional external repositories that can be added
-manually of by calling the support functions in the user' WORKSPACE file:
-
-\`\`\`bzl
-load("@com_helly25_mbo//bzl/workspace:load_modules.bzl", "helly25_mbo_load_modules")
-
-helly25_mbo_load_modules()
-
-load("@com_helly25_mbo//bzl/workspace:init_modules.bzl", "helly25_mbo_init_modules")
-
-helly25_mbo_init_modules()
-\`\`\`
-
-### Initializing optional extra modules
-
-The project further has some re-usable external components:
-
-\`\`\`bzl
-load("@com_helly25_mbo//bzl/workspace:load_extras.bzl", "helly25_mbo_load_extras")
-
-helly25_mbo_load_extras()  # Adds Hedron + LLVM
-
-load("@com_helly25_mbo//bzl/workspace:init_extras.bzl", "helly25_mbo_init_extras")
-
-helly25_mbo_init_extras()  # Init Hedron + LLVM
-
-load("@com_helly25_mbo//bzl/workspace:init_extras_llvm.bzl", "helly25_mbo_init_extras_llvm")
-
-helly25_mbo_init_extras_llvm()  # Init LLVM/Part 2
+include("//:dev.MODULE.bazel")
 \`\`\`
 EOF
