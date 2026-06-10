@@ -17,25 +17,10 @@
 
 bazel_dep(name = "toolchains_llvm", version = "1.7.0")
 
-# Pinned past 1.7.0: the include-handling reworks up to PR #765 are required for
-# `absolute_paths = True` to build without "absolute path inclusion" errors
-# (1.7.0 alone fails). Drop once a toolchains_llvm release includes them.
-git_override(
-    module_name = "toolchains_llvm",
-    commit = "1b9b565ac017dd69932ca5a41c6a1f5497b1eb21",
-    remote = "https://github.com/helly25/toolchains_llvm.git",
-)
-
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 llvm.toolchain(
     name = "llvm_toolchain_llvm",
     llvm_version = "20.1.8",
-    # Absolute toolchain paths so macOS ASAN's runtime dylib rpath
-    # (`@rpath/libclang_rt.asan_osx_dynamic.dylib`) resolves at test time;
-    # hermetic/relative paths leave it unresolvable. This matches how
-    # toolchains_llvm's own sanitizer tests are configured. We do not use remote
-    # execution, so absolute paths are fine.
-    absolute_paths = True,
     extra_llvm_distributions = {
         # 22.1.7 — newest released; a forward-looking rung in the CI clang matrix
         "LLVM-22.1.7-Linux-ARM64.tar.xz": "118ca2d3ad9da34367e05735317854e7977db45dc4c02a32af58da64c23b8789",
