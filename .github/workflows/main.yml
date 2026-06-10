@@ -93,13 +93,11 @@ jobs:
         llvm_version: [20.1.8, 21.1.8, 22.1.7]
         bazel_config: [asan, cpp23, fastbuild, opt]
         exclude:
-          # macOS runs the opt config only.
+          # macOS + clang + asan is deferred to a follow-up: the asan runtime
+          # needs LLVM >= 22.1.7 (20.1.8's compiler-rt hangs in
+          # FindDynamicShadowStart on macOS 26) plus absolute toolchain paths.
           - os: macos-26
             bazel_config: asan
-          - os: macos-26
-            bazel_config: cpp23
-          - os: macos-26
-            bazel_config: fastbuild
           # 20.1.8 is the default pin -> full config coverage
           # 21.1.8 less coverage, just check opt
           # 22.1.7 keep the complex configs, just drop fastbuild

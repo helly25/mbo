@@ -15,7 +15,8 @@
 
 """Module helly25_mbo"""
 
-# Due to flag and test references to the repo name we use the old name for now.
+# repo_name keeps the old WORKSPACE-era name as a downstream alias; no internal
+# code depends on it anymore. Slated for removal in a future breaking release.
 module(
     name = "helly25_mbo",
     version = "0.11.0",

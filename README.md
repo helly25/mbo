@@ -263,14 +263,6 @@ The C++ library is organized in functional groups each residing in their own dir
     - concept `IsVariantMemberType` determine whether a `Type` is any of the types in a `Variant`.
     - struct `Overloaded` which implements an Overload handler for `std::visit(std::variant<...>)` and `std::variant::visit`.
 
-## Bazel macros not in library
-
-Some additional Bazel macros are implemented that are not direct part of the library:
-
-- bzl:archive.bzl
-  - `http_archive`: Simple wrapper that tests whether the archive was already loaded.
-  - `github_archive`: Specialized archive wrapper that supports github that supports `tagged` releases or commits.
-
 ## Installation and requirements
 
 This repository requires a C++20 compiler (in case of MacOS XCode 15 is needed). This is done so that newer features like `std::source_location` can be used.
@@ -281,20 +273,6 @@ The project is formatted with specific clang-format settings which require clang
 
 Lint and format are driven by [Trunk](https://docs.trunk.io/cli). Devs are **required** to install the CLI locally — `curl https://get.trunk.io -fsSL | bash` — then run `trunk check` and `trunk fmt` before pushing. The repo enables `trunk-fmt-pre-commit` and `trunk-check-pre-push` so the hooks run automatically once installed. CI runs `trunk check` only (no auto-fixing on the GitHub side); failing lint must be fixed locally and re-pushed.
 
-### WORKSPACE
-
-Checkout [Releases](https://github.com/helly25/mbo/releases) or use head ref as follows:
-
-```starlark
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-http_archive(
-  name = "com_helly25_mbo",
-  url = "https://github.com/helly25/mbo/archive/refs/heads/main.tar.gz",
-  # See https://github.com/helly25/mbo/releases for releases.
-)
-```
-
 ### MODULES.bazel
 
 Check [Releases](https://github.com/helly25/mbo/releases) for details. All that is needed is a `bazel_dep` instruction with the correct version.
@@ -303,7 +281,7 @@ Check [Releases](https://github.com/helly25/mbo/releases) for details. All that 
 bazel_dep(name = "helly25_mbo", version = "0.0.0")
 ```
 
-Unlike the `WORKSPACE` installation the `MODULES.bazel` installation from source checkout, the above [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler. This is due to a restriction in Bazel's ability to handle toolchains when Bazel uses MODULES (`--enable_bzlmod` as opposed to `--enable_workspace`). Nonetheless all versions, all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
+The [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler — a restriction in how Bazel handles toolchains under bzlmod. To pull in the bundled toolchain, vendor `bazelmod/llvm.MODULE.bazel` as described in the release notes. Nonetheless all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
 
 ## Presentations
 
