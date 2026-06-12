@@ -17,6 +17,16 @@
 
 bazel_dep(name = "toolchains_llvm", version = "1.7.0")
 
+# Pin to the upstream commit where PR bazel-contrib/toolchains_llvm#769 merged
+# (macOS sanitizer runtime via `dynamic_runtime_lib` + `@loader_path` rpath;
+# fixes #192): asan's `@rpath/libclang_rt...dylib` loads at test runtime without
+# `absolute_paths`. Drop once a toolchains_llvm release includes it.
+git_override(
+    module_name = "toolchains_llvm",
+    commit = "ef8f9fd48593407f8ba76082a73913c0356ff595",
+    remote = "https://github.com/bazel-contrib/toolchains_llvm.git",
+)
+
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 llvm.toolchain(
     name = "llvm_toolchain_llvm",
