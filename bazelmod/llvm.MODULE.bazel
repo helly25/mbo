@@ -17,15 +17,14 @@
 
 bazel_dep(name = "toolchains_llvm", version = "1.7.0")
 
-# Pin to the helly25 fork carrying the macOS sanitizer-runtime rpath fix
-# (upstream PR bazel-contrib/toolchains_llvm#767): asan's
-# `@rpath/libclang_rt...dylib` becomes loadable at test runtime via an
-# `@loader_path` rpath, so macOS asan works without `absolute_paths`. Drop once
-# #767 lands in a release. (Also pulls the post-1.7.0 changes up to #765.)
+# Pin to the upstream commit where PR bazel-contrib/toolchains_llvm#769 merged
+# (macOS sanitizer runtime via `dynamic_runtime_lib` + `@loader_path` rpath;
+# fixes #192): asan's `@rpath/libclang_rt...dylib` loads at test runtime without
+# `absolute_paths`. Drop once a toolchains_llvm release includes it.
 git_override(
     module_name = "toolchains_llvm",
-    commit = "8f690ce3c1c062cc2464678a75db3e6305bee14e",
-    remote = "https://github.com/helly25/toolchains_llvm.git",
+    commit = "ef8f9fd48593407f8ba76082a73913c0356ff595",
+    remote = "https://github.com/bazel-contrib/toolchains_llvm.git",
 )
 
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
