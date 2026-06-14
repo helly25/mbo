@@ -14,3 +14,17 @@ jobs:
     with:
       release_files: mbo-*.tar.gz
       prerelease: true
+
+  # Mirror the release to the Bazel Central Registry (replaces the retired
+  # publish-to-bcr GitHub App). See .github/workflows/publish.yaml.
+  publish:
+    needs: release
+    # Grant what publish.yaml's job requests; overrides the workflow-level
+    # read-all, and a called workflow cannot exceed the caller's permissions.
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish.yaml
+    with:
+      tag_name: ${{ github.ref_name }}
+    secrets:
+      BCR_PUBLISH_TOKEN: ${{ secrets.BCR_PUBLISH_TOKEN }}
