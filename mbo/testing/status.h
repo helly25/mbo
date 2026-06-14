@@ -132,24 +132,46 @@ class IsOkAndHoldsMatcher {
   const InnerMatcher inner_matcher_;
 };
 
-// Implements a status matcher interface to verify a status error code, and
-// error message if set, matches an expected value.
+// `StatusCode` is implicitly convertible from `int` and `absl::StatusCode` so
+// that `StatusIs()` accepts either a literal status code or a gMock matcher over
+// status codes (e.g. `StatusIs(AnyOf(kUnknown, kCancelled))`). Adapted from
+// Abseil's `absl::status_internal::StatusCode`.
+class StatusCode {
+ public:
+  StatusCode(int code) : code_(static_cast<absl::StatusCode>(code)) {}  // NOLINT
+
+  StatusCode(absl::StatusCode code) : code_(code) {}  // NOLINT
+
+  explicit operator int() const { return static_cast<int>(code_); }
+
+  friend bool operator==(const StatusCode& lhs, const StatusCode& rhs) { return lhs.code_ == rhs.code_; }
+
+  friend bool operator!=(const StatusCode& lhs, const StatusCode& rhs) { return lhs.code_ != rhs.code_; }
+
+  friend void PrintTo(const StatusCode& code, std::ostream* os) { *os << absl::StatusCodeToString(code.code_); }
+
+ private:
+  absl::StatusCode code_;
+};
+
+// Implements a status matcher interface to verify that a status code (matched
+// against an `absl::StatusCode` or a code matcher) and the error message (if
+// set) match expected values.
 //
 // Sample usage:
-//   EXPECT_THAT(MyCall(), StatusIs(absl::StatusCode::kNotFound,
-//                                  HasSubstr("message")));
-//
-// Sample output on failure:
-//   Value of: MyCall()
-//   Expected: NOT_FOUND and has substring "message"
-//     Actual: UNKNOWN: descriptive error (of type absl::lts_2020_02_25::Status)
+//   EXPECT_THAT(MyCall(), StatusIs(absl::StatusCode::kNotFound, HasSubstr("message")));
+//   EXPECT_THAT(MyCall(), StatusIs(AnyOf(absl::StatusCode::kNotFound, absl::StatusCode::kUnavailable)));
 class StatusIsMatcher {
  public:
-  StatusIsMatcher(const absl::StatusCode& status_code, const ::testing::Matcher<const std::string&>& message_matcher)
-      : status_code_(status_code), message_matcher_(message_matcher) {}
+  template<typename StatusCodeMatcher, typename MessageMatcher>
+  StatusIsMatcher(StatusCodeMatcher&& code_matcher, MessageMatcher&& message_matcher)
+      : code_matcher_(::testing::MatcherCast<StatusCode>(std::forward<StatusCodeMatcher>(code_matcher))),
+        message_matcher_(::testing::MatcherCast<const std::string&>(std::forward<MessageMatcher>(message_matcher))) {}
 
   void DescribeTo(std::ostream* os) const {
-    *os << status_code_ << " and the message ";
+    *os << "has a status code that ";
+    code_matcher_.DescribeTo(os);
+    *os << ", and has an error message that ";
     message_matcher_.DescribeTo(os);
   }
 
@@ -162,36 +184,26 @@ class StatusIsMatcher {
   template<typename StatusType>
   bool MatchAndExplain(const StatusType& actual, ::testing::MatchResultListener* listener) const {
     const absl::Status& actual_status = ::mbo::status::GetStatus(actual);
-    const bool code_match = actual_status.code() == status_code_;
-    if (status_code_ == absl::StatusCode::kOk && code_match) {
-      return true;
+    const bool code_match = code_matcher_.Matches(StatusCode{actual_status.code()});
+    if (actual_status.code() == absl::StatusCode::kOk && code_match) {
+      return true;  // An OK status carries no message; ignore the message matcher.
     }
     ::testing::StringMatchResultListener inner;
     const bool message_match = message_matcher_.MatchAndExplain(std::string{actual_status.message()}, &inner);
     if (code_match && message_match) {
       return true;
     }
-    if (code_match) {
-      *listener << "which has matching status " << actual_status.code();
-    } else {
-      *listener << "which has status " << actual_status.code() << " that isn't " << status_code_;
-    }
+    *listener << "which has status code " << actual_status.code();
     if (actual_status.code() != absl::StatusCode::kOk) {
       *listener << " and ";
       if (message_match) {
-        *listener << "has a matching message";
+        *listener << "a matching message";
+      } else if (actual_status.message().empty()) {
+        *listener << "an empty message";
       } else {
-        *listener << "has message ";
-        if (actual_status.message().empty()) {
-          *listener << " an empty message ";
-        } else {
-          *listener << "'" << actual_status.message() << "' ";
-        }
-        *listener << "which does not match";
-        if (inner.str().empty()) {
-          *listener << " the expected empty message";
-        } else {
-          *listener << " '" << inner.str() << "'";
+        *listener << "the message '" << actual_status.message() << "'";
+        if (!inner.str().empty()) {
+          *listener << " (" << inner.str() << ")";
         }
       }
     }
@@ -199,7 +211,7 @@ class StatusIsMatcher {
   }
 
  private:
-  const absl::StatusCode status_code_;
+  const ::testing::Matcher<StatusCode> code_matcher_;
   const ::testing::Matcher<const std::string&> message_matcher_;
 };
 
@@ -365,18 +377,22 @@ testing_internal::IsOkAndHoldsMatcher<typename std::decay<InnerMatcher>::type> I
       std::forward<InnerMatcher>(inner_matcher));
 }
 
-// Status matcher that checks the StatusCode for an expected value.
-inline ::testing::PolymorphicMatcher<testing_internal::StatusIsMatcher> StatusIs(const absl::StatusCode& code) {
-  return ::testing::MakePolymorphicMatcher(testing_internal::StatusIsMatcher(code, ::testing::_));
+// Status matcher that checks the status code against `code_matcher`, which may be
+// a literal `absl::StatusCode` or a gMock matcher over status codes.
+template<typename StatusCodeMatcher>
+::testing::PolymorphicMatcher<testing_internal::StatusIsMatcher> StatusIs(StatusCodeMatcher&& code_matcher) {
+  return ::testing::MakePolymorphicMatcher(
+      testing_internal::StatusIsMatcher(std::forward<StatusCodeMatcher>(code_matcher), ::testing::_));
 }
 
-// Status matcher that checks the StatusCode and message for expected values.
-template<typename MessageMatcher>
+// Status matcher that checks both the status code (literal or matcher) and the
+// message against the given matchers.
+template<typename StatusCodeMatcher, typename MessageMatcher>
 ::testing::PolymorphicMatcher<testing_internal::StatusIsMatcher> StatusIs(
-    const absl::StatusCode& code,
-    const MessageMatcher& message_matcher) {
-  return ::testing::MakePolymorphicMatcher(
-      testing_internal::StatusIsMatcher(code, ::testing::MatcherCast<const std::string&>(message_matcher)));
+    StatusCodeMatcher&& code_matcher,
+    MessageMatcher&& message_matcher) {
+  return ::testing::MakePolymorphicMatcher(testing_internal::StatusIsMatcher(
+      std::forward<StatusCodeMatcher>(code_matcher), std::forward<MessageMatcher>(message_matcher)));
 }
 
 // Returns a gMock matcher that matches a Status/StatusOr<> whose status is NOT

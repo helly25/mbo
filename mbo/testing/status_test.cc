@@ -38,11 +38,13 @@ using ::mbo::testing::testing_internal::IsOkAndHoldsMatcher;
 using ::mbo::testing::testing_internal::IsOkMatcher;
 using ::mbo::testing::testing_internal::StatusIsMatcher;
 using ::testing::_;
+using ::testing::AnyOf;
 using ::testing::ElementsAre;
 using ::testing::Ge;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Key;
+using ::testing::Ne;
 using ::testing::Not;
 using ::testing::Pair;
 using ::testing::SizeIs;
@@ -115,54 +117,75 @@ TEST_F(StatusMatcherTest, StatusIs) {
 
   {
     const StatusIsMatcher matcher(absl::StatusCode::kOk, "x");
-    EXPECT_THAT(Describe(matcher), "OK and the message is equal to \"x\"");
-    EXPECT_THAT(DescribeNegation(matcher), "not (OK and the message is equal to \"x\")");
+    EXPECT_THAT(
+        Describe(matcher), "has a status code that is equal to OK, and has an error message that is equal to \"x\"");
+    EXPECT_THAT(
+        DescribeNegation(matcher),
+        "not (has a status code that is equal to OK, and has an error message that is equal to \"x\")");
     EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(true, "")) << "Must ignore status message if Ok";
   }
   {
     const StatusIsMatcher matcher(absl::StatusCode::kOk, "");
-    EXPECT_THAT(Describe(matcher), "OK and the message is equal to \"\"");
-    EXPECT_THAT(DescribeNegation(matcher), "not (OK and the message is equal to \"\")");
+    EXPECT_THAT(
+        Describe(matcher), "has a status code that is equal to OK, and has an error message that is equal to \"\"");
+    EXPECT_THAT(
+        DescribeNegation(matcher),
+        "not (has a status code that is equal to OK, and has an error message that is equal to \"\")");
     EXPECT_THAT(
         MatchAndExplain(matcher, absl::UnknownError("")),
-        Pair(
-            false,
-            "which has status UNKNOWN that isn't OK and has a matching "
-            "message"));
+        Pair(false, "which has status code UNKNOWN and a matching message"));
     EXPECT_THAT(
         MatchAndExplain(matcher, absl::UnknownError("Message")),
-        Pair(
-            false,
-            "which has status UNKNOWN that isn't OK and has message 'Message' which does not match the expected empty "
-            "message"));
+        Pair(false, "which has status code UNKNOWN and the message 'Message'"));
   }
   {
     const StatusIsMatcher matcher(absl::StatusCode::kCancelled, "Wanted");
-    EXPECT_THAT(Describe(matcher), "CANCELLED and the message is equal to \"Wanted\"");
-    EXPECT_THAT(DescribeNegation(matcher), "not (CANCELLED and the message is equal to \"Wanted\")");
-    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(false, "which has status OK that isn't CANCELLED"));
     EXPECT_THAT(
-        MatchAndExplain(matcher, absl::AbortedError("Wanted")), Pair(
-                                                                    false,
-                                                                    "which has status ABORTED that isn't CANCELLED "
-                                                                    "and has a matching message"));
+        Describe(matcher),
+        "has a status code that is equal to CANCELLED, and has an error message that is equal to \"Wanted\"");
+    EXPECT_THAT(
+        DescribeNegation(matcher),
+        "not (has a status code that is equal to CANCELLED, and has an error message that is equal to \"Wanted\")");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(false, "which has status code OK"));
+    EXPECT_THAT(
+        MatchAndExplain(matcher, absl::AbortedError("Wanted")),
+        Pair(false, "which has status code ABORTED and a matching message"));
     EXPECT_THAT(
         MatchAndExplain(matcher, absl::CancelledError("Message")),
-        Pair(
-            false,
-            "which has matching status CANCELLED "
-            "and has message 'Message' which does not match the expected empty message"));
+        Pair(false, "which has status code CANCELLED and the message 'Message'"));
   }
   {
     const StatusIsMatcher matcher(absl::StatusCode::kDataLoss, IsEmpty());
-    EXPECT_THAT(Describe(matcher), "DATA_LOSS and the message is empty");
-    EXPECT_THAT(DescribeNegation(matcher), "not (DATA_LOSS and the message is empty)");
+    EXPECT_THAT(
+        Describe(matcher), "has a status code that is equal to DATA_LOSS, and has an error message that is empty");
+    EXPECT_THAT(
+        DescribeNegation(matcher),
+        "not (has a status code that is equal to DATA_LOSS, and has an error message that is empty)");
     EXPECT_THAT(
         MatchAndExplain(matcher, absl::DataLossError("Message")),
-        Pair(
-            false,
-            "which has matching status DATA_LOSS "
-            "and has message 'Message' which does not match 'whose size is 7'"));
+        Pair(false, "which has status code DATA_LOSS and the message 'Message' (whose size is 7)"));
+  }
+}
+
+TEST_F(StatusMatcherTest, StatusIsWithCodeMatcher) {
+  // The status code argument may be a gMock matcher, not just a literal code.
+  EXPECT_THAT(absl::NotFoundError("nope"), StatusIs(absl::StatusCode::kNotFound));  // literal still works
+  EXPECT_THAT(
+      absl::NotFoundError("nope"), StatusIs(AnyOf(absl::StatusCode::kNotFound, absl::StatusCode::kUnavailable)));
+  EXPECT_THAT(absl::AbortedError("x"), StatusIs(Ne(absl::StatusCode::kOk)));
+  EXPECT_THAT(absl::OkStatus(), Not(StatusIs(Ne(absl::StatusCode::kOk))));
+  EXPECT_THAT(absl::AbortedError("boom"), StatusIs(Ne(absl::StatusCode::kOk), HasSubstr("boom")));
+
+  absl::StatusOr<int> status_or = absl::UnavailableError("down");
+  EXPECT_THAT(status_or, StatusIs(AnyOf(absl::StatusCode::kUnavailable, absl::StatusCode::kDeadlineExceeded)));
+  EXPECT_THAT(status_or, Not(StatusIs(absl::StatusCode::kNotFound)));
+
+  {
+    const StatusIsMatcher matcher(Ne(absl::StatusCode::kOk), _);
+    EXPECT_THAT(
+        Describe(matcher), "has a status code that isn't equal to OK, and has an error message that is anything");
+    EXPECT_THAT(MatchAndExplain(matcher, absl::OkStatus()), Pair(false, "which has status code OK"));
+    EXPECT_THAT(MatchAndExplain(matcher, absl::AbortedError("x")), Pair(true, ""));
   }
 }
 
