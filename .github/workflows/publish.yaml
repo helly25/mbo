@@ -15,6 +15,11 @@ on:
         required: true
   workflow_dispatch: {}
 
+# Deny all by default at the workflow level (checkov CKV2_GHA_1); the publish
+# job opts into contents:write. Empty (not read-all) so this reusable workflow
+# doesn't force the caller to grant every read scope.
+permissions: {}
+
 jobs:
   publish:
     permissions:
