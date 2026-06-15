@@ -2,7 +2,9 @@ name: Release
 on:
   push:
     tags:
-      - "*.*.*"
+      # Numeric semver only (e.g. 0.11.0); releases are <num>.<num>.<num>. This
+      # is stricter than "*.*.*", which also matches things like "v1.2.x".
+      - "[0-9]+.[0-9]+.[0-9]+"
 
 permissions: read-all
 

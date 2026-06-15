@@ -26,6 +26,17 @@ function die() {
 
 git fetch origin main # Make sure the below is relevant
 
+# Must actually be on `main` at exactly origin/main. The tree-diff checks below
+# pass for any branch whose tree matches main (e.g. a just-squash-merged feature
+# branch), so on their own they would let a release be cut off the wrong commit.
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "${BRANCH}" != "main" ]]; then
+  die "Must be run from the 'main' branch (currently on '${BRANCH}')."
+fi
+if [[ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]]; then
+  die "HEAD ($(git rev-parse --short HEAD)) is not at origin/main ($(git rev-parse --short origin/main)); pull first."
+fi
+
 if [[ -n "$(git status --porcelain)" ]]; then
   # Non empty output means non clean branch.
   die "Must be run from clean 'main' branch."
@@ -38,6 +49,11 @@ if [[ -n "$(git diff origin/main --cached --numstat)" ]]; then
 fi
 
 VERSION="${1}"
+
+# Releases are strictly numeric <major>.<minor>.<patch>.
+if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  die "Version must be numeric <major>.<minor>.<patch> (got '${VERSION}')."
+fi
 
 BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' <MODULE.bazel | head -n1)"
 CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' <CHANGELOG.md | head -n1)"
@@ -57,6 +73,16 @@ fi
 
 grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
 
+# Pre-flight: the post-release publish-to-bcr step applies every .bcr/patches/*
+# patch to the released MODULE.bazel. If one no longer applies (e.g. context
+# drift after a dependency bump) it fails at "Create final entry" AFTER the
+# release is already public. Catch it here, before we tag anything.
+for bcr_patch in .bcr/patches/*.patch; do
+  [[ -e "${bcr_patch}" ]] || continue
+  git apply --check "${bcr_patch}" 2>/dev/null ||
+    die "BCR patch '${bcr_patch}' no longer applies to MODULE.bazel; regenerate it before releasing."
+done
+
 git tag -s -a "${VERSION}" \
   -m "New release tag version: '${VERSION}'." \
   -m "$(awk '/^#/{if(NR>1)exit}/^[^#]/{print}' <CHANGELOG.md)"
@@ -64,10 +90,15 @@ git push origin --tags
 
 echo "Next version: ${NEXT_VERSION}"
 
-sed -i "0,/version = \"${VERSION}\"/s/version = \"${VERSION}\"/version = \"${NEXT_VERSION}\"/" MODULE.bazel
+# Bump the module version (the first `version = "X"` line). Portable across BSD
+# (macOS) and GNU sed: BSD `sed -i` needs a backup-suffix arg and `0,/re/` is a
+# GNU-only address, so write to a temp file and use the portable `1,/re/` range.
+sed "1,/version = \"${VERSION}\"/ s/version = \"${VERSION}\"/version = \"${NEXT_VERSION}\"/" MODULE.bazel >MODULE.bazel.tmp
+mv MODULE.bazel.tmp MODULE.bazel
 
-sed -i "1i\
-    # ${NEXT_VERSION}\n" CHANGELOG.md
+# Prepend a new top section for the next version (portable; no `sed -i`).
+{ printf '# %s\n\n' "${NEXT_VERSION}"; cat CHANGELOG.md; } >CHANGELOG.md.tmp
+mv CHANGELOG.md.tmp CHANGELOG.md
 
 NEXT_BRANCH="chore/bump_version_to_${NEXT_VERSION}"
 
