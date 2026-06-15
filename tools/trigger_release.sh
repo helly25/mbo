@@ -79,8 +79,8 @@ grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
 # release is already public. Catch it here, before we tag anything.
 for bcr_patch in .bcr/patches/*.patch; do
   [[ -e "${bcr_patch}" ]] || continue
-  git apply --check "${bcr_patch}" 2>/dev/null ||
-    die "BCR patch '${bcr_patch}' no longer applies to MODULE.bazel; regenerate it before releasing."
+  git apply --check "${bcr_patch}" 2>/dev/null \
+    || die "BCR patch '${bcr_patch}' no longer applies to MODULE.bazel; regenerate it before releasing."
 done
 
 git tag -s -a "${VERSION}" \
@@ -97,7 +97,10 @@ sed "1,/version = \"${VERSION}\"/ s/version = \"${VERSION}\"/version = \"${NEXT_
 mv MODULE.bazel.tmp MODULE.bazel
 
 # Prepend a new top section for the next version (portable; no `sed -i`).
-{ printf '# %s\n\n' "${NEXT_VERSION}"; cat CHANGELOG.md; } >CHANGELOG.md.tmp
+{
+  printf '# %s\n\n' "${NEXT_VERSION}"
+  cat CHANGELOG.md
+} >CHANGELOG.md.tmp
 mv CHANGELOG.md.tmp CHANGELOG.md
 
 NEXT_BRANCH="chore/bump_version_to_${NEXT_VERSION}"
