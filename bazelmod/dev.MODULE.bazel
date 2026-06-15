@@ -22,4 +22,6 @@ git_override(
     remote = "https://github.com/helly25/bazel-compile-commands-extractor.git",
 )
 
+# TODO(helly25): bump once dwyu 1.x no longer drags in boost.filesystem ->
+# boost@1.83.0.bcr.4, whose MODULE.bazel fails module resolution.
 bazel_dep(name = "depend_on_what_you_use", version = "0.16.0", dev_dependency = True)
