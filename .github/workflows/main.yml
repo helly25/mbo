@@ -1,5 +1,10 @@
 name: Test
-on: [push]
+# Branches only — release tags are handled by release.yml. Running this on tag
+# pushes fired the full matrix needlessly and broke `trunk check`, which diffs
+# against `github.event.before` (the prior tag object, gone after a tag move).
+on:
+  push:
+    branches: ["**"]
 
 permissions: read-all
 
