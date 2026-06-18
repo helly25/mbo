@@ -73,15 +73,12 @@ fi
 
 grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
 
-# Pre-flight: the post-release publish-to-bcr step applies every .bcr/patches/*
-# patch to the released MODULE.bazel. If one no longer applies (e.g. context
-# drift after a dependency bump) it fails at "Create final entry" AFTER the
-# release is already public. Catch it here, before we tag anything.
-for bcr_patch in .bcr/patches/*.patch; do
-  [[ -e "${bcr_patch}" ]] || continue
-  git apply --check "${bcr_patch}" 2>/dev/null \
-    || die "BCR patch '${bcr_patch}' no longer applies to MODULE.bazel; regenerate it before releasing."
-done
+# Pre-flight: release_prep.sh applies .github/workflows/bazelmod.patch to the
+# worktree before archiving (it shapes the released MODULE.bazel/mope.bzl). If it
+# no longer applies (e.g. context drift after a dependency bump) the release
+# would tag and then fail mid-build. Catch it here, before we tag anything.
+patch -p1 --dry-run -f -i .github/workflows/bazelmod.patch >/dev/null 2>&1 \
+  || die "Patch .github/workflows/bazelmod.patch no longer applies; regenerate it before releasing."
 
 git tag -s -a "${VERSION}" \
   -m "New release tag version: '${VERSION}'." \
