@@ -1,13 +1,20 @@
+diff --git a/MODULE.bazel b/MODULE.bazel
+index b375818..1669b29 100644
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -27,4 +27,4 @@ module(
+ # For bazelmod usage these have to be provided by the main module - if necessary.
+-include("//bazelmod:dev.MODULE.bazel")
+-include("//bazelmod:llvm.MODULE.bazel")
++# include("//bazelmod:dev.MODULE.bazel")
++# include("//bazelmod:llvm.MODULE.bazel")
+ 
 diff --git a/mbo/mope/mope.bzl b/mbo/mope/mope.bzl
 index 49a47c4..d734764 100644
 --- a/mbo/mope/mope.bzl
 +++ b/mbo/mope/mope.bzl
-@@ -35,7 +35,7 @@ load("//mbo/diff:diff.bzl", "diff_test")
- #    c) `$(which "clang_format")`
- #    d) `clang-format-23` ... `clang-format-15`, `clang-format`
+@@ -37,3 +37,3 @@ load("//mbo/diff:diff.bzl", "diff_test")
  #    e) If even (d) fails, then we will just copy the file.
 -_CLANG_FORMAT_BINARY = ""  # Ignore clang-format from repo with: "clang-format-auto"
 +_CLANG_FORMAT_BINARY = "clang-format-auto"  # Ignore clang-format from repo with: "clang-format-auto"
  
- def _get_clang_format(ctx):
-     """Get the selected clang-format from `--//mbo/mope:clang_format` bazel flag."""
