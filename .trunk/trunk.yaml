@@ -65,11 +65,11 @@ lint:
           max_concurrency: 4
   enabled:
     - buildifier@8.5.1
-    - checkov@3.2.533
+    - checkov@3.3.1
     - clang-tidy@16.0.3
     - git-diff-check
-    - markdownlint@0.48.0
-    - prettier@3.8.3
+    - markdownlint@0.49.0
+    - prettier@3.8.4
     - trivy@0.70.0
     - trufflehog@3.95.3
     - yamllint@1.38.0
