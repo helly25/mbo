@@ -80,8 +80,18 @@ EXCLUDES=(
   done
 } >>.gitattributes
 
-# Build the archive
-git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${TAG}" --worktree-attributes
+# Build the archive from the patched/generated worktree, not the committed
+# "${TAG}" tree: `git archive "${TAG}"` reads the commit and would silently drop
+# the edits above (the bazelmod.patch hunk, the generated BUILD.bazel). Stage the
+# worktree into a THROWAWAY index so the real index/checkout is never touched
+# (nothing to undo afterwards), and archive that tree. export-ignore still
+# applies via the staged .gitattributes (+ --worktree-attributes).
+TMP_INDEX="$(mktemp -u)"
+GIT_INDEX_FILE="${TMP_INDEX}" git read-tree HEAD
+GIT_INDEX_FILE="${TMP_INDEX}" git add --all
+ARCHIVE_TREE="$(GIT_INDEX_FILE="${TMP_INDEX}" git write-tree)"
+rm -f "${TMP_INDEX}"
+git archive --format=tar.gz --prefix="${PREFIX}/" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${TAG}" --worktree-attributes "${ARCHIVE_TREE}"
 
 # Print header
 echo "# Version ${TAG}"

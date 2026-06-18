@@ -1,20 +1,5 @@
-diff --git a/MODULE.bazel b/MODULE.bazel
-index c298a32..658794e 100644
---- a/MODULE.bazel
-+++ b/MODULE.bazel
-@@ -24,8 +24,8 @@ module(name = "helly25_mbo"...)
- 
- # For local development we include LLVM and Hedron-Compile-Commands.
- # For bazelmod usage these have to be provided by the main module - if necessary.
--include("//bazelmod:dev.MODULE.bazel")
--include("//bazelmod:llvm.MODULE.bazel")
-+# include("//bazelmod:dev.MODULE.bazel")
-+# include("//bazelmod:llvm.MODULE.bazel")
- 
- bazel_dep(name = "bazel_skylib", version = "1.8.2")
- bazel_dep(name = "platforms", version = "1.0.0")
 diff --git a/mbo/mope/mope.bzl b/mbo/mope/mope.bzl
-index d80d788..7aeac41 100644
+index 49a47c4..d734764 100644
 --- a/mbo/mope/mope.bzl
 +++ b/mbo/mope/mope.bzl
 @@ -35,7 +35,7 @@ load("//mbo/diff:diff.bzl", "diff_test")
