@@ -1,5 +1,7 @@
 # 0.11.1
 
+- Release/packaging fixes (no API changes): self-contained release archives; hardened `trigger_release.sh`.
+
 # 0.11.0
 
 - Added `mbo::testing::IsElementOf(container)` — element-on-the-left orientation of gmock's `Contains`. Iterates with raw `operator==` (with a `std::pair` component-wise fallback) so heterogeneous subject types (string literals, `std::string_view`, etc.) compile without caller-side conversion, on both libc++ and libstdc++.
