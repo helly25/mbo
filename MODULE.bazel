@@ -19,7 +19,7 @@
 # code depends on it anymore. Slated for removal in a future breaking release.
 module(
     name = "helly25_mbo",
-    version = "0.11.1",
+    version = "0.11.2",
     repo_name = "com_helly25_mbo",
 )
 
