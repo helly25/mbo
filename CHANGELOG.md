@@ -1,3 +1,5 @@
+# 0.11.2
+
 # 0.11.1
 
 - Release/packaging fixes (no API changes): self-contained release archives; hardened `trigger_release.sh`.
