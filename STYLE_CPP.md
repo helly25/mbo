@@ -85,17 +85,134 @@ clang-format picks a layout per line; these two habits steer it toward the reada
   `.clang-tidy performance-unnecessary-value-param` allowlists it (with `absl::StatusOr`
   and `std::string_view`). `StatusOr<T>`'s cost depends on `T`.
 - **Prefer container algorithms** from `absl/algorithm/container.h` (`absl::c_contains`,
-  `c_any_of`, `c_find`, `c_sort`, ...) or C++20 `std::ranges` over hand-rolled loops:
-  range-based (no begin/end), well-named, constexpr-friendly.
+  `c_any_of`, `c_find`, `c_equal`, `c_sort`, ...) or C++20 `std::ranges` over hand-rolled
+  loops: range-based (no begin/end), well-named, constexpr-friendly. A loop that returns
+  on the first match is an `absl::c_any_of` with a lambda; a reserve-then-push copy into a
+  `std::vector` is range construction `std::vector<T>(src.begin(), src.end())`. Keep a raw
+  loop only when it builds a non-trivial structure no algorithm expresses cleanly.
+- **A by-value `std::string_view` is never `const`.** The characters it views are already
+  `const`; making the view itself `const` only disables the view's own API
+  (`remove_prefix`, `remove_suffix`, reassignment) for no benefit. This applies to locals
+  and range-`for` variables. (Not to `std::string_view::size_type`, which is a `size_t`,
+  nor to `absl::Span<const std::string_view>`, where `const` is the element type of an
+  immutable span.)
 - **switch / case**: order case labels alphabetically. Where the cases are a uniform
   mapping (key -> handler or value), prefer a constexpr `mbo::container::LimitedMap`
   lookup over a switch.
 - **No em-dashes** anywhere (code, comments, docs, commit messages). Use a spaced
   hyphen `-`.
 
+## Error handling: `absl::Status` and the MBO status macros
+
+Propagate errors with the macros from `mbo/status/status_macros.h`
+(`@helly25_mbo//mbo/status:status_macros_cc`), not a hand-written
+`if (!x.ok()) return x.status();`.
+
+- **`MBO_RETURN_IF_ERROR(expr)`** evaluates a `Status` or `StatusOr` and returns early if
+  it is not OK. It returns a `mbo::status::StatusBuilder`, which converts to the calling
+  function's `absl::Status` or `absl::StatusOr<T>`, so it works in both.
+- **`MBO_ASSIGN_OR_RETURN(Type var, expr)`** binds the value of a `StatusOr<Type>` to
+  `var` (a new declaration - carry the type - or an existing variable) or returns the
+  status. After it, `var` is the value (not a `StatusOr`); use `var`, not `*var`.
+- **`MBO_MOVE_TO_OR_RETURN(expr, target)`** is the variant whose target may contain commas;
+  the expression comes first so structured bindings work:
+  `MBO_MOVE_TO_OR_RETURN(MakePair(), auto [a, b]);`.
+
+```cpp
+absl::StatusOr<Report> Build(std::string_view path) {
+  MBO_ASSIGN_OR_RETURN(const Config config, LoadConfig(path));  // value, or return status
+  Report report = Analyze(config);
+  MBO_RETURN_IF_ERROR(Persist(report));                         // Status guard
+  return report;
+}
+```
+
+- When you only need the guard but the `StatusOr` value is large and used later through
+  `*expr`, guard on the status to avoid copying the value: `MBO_RETURN_IF_ERROR(big.status());`
+  then use `*big`.
+- **Do not force the macros where they do not fit**: a recovery branch (e.g.
+  `absl::IsNotFound(s)` -> return a default value), a function that returns `bool`/`int`
+  rather than a status, or a CLI path that prints a message and returns an exit code.
+- Pass `absl::Status` by value (see Idioms).
+
+## Output, logging, and `AbslStringify`
+
+- **Never use C strings or `.c_str()`** except to satisfy a C / system API (e.g. building
+  `char* argv[]` for `execvp`); comment why at that one boundary. Keep `std::string` /
+  `std::string_view` end to end - the round-trip out to a `const char*` and back is
+  clutter, not interop.
+- **Never write output through C stdio** (`printf` / `fprintf` / `fputs` to the `stdout` /
+  `stderr` `FILE*`). Use the C++ streams `std::cout` / `std::cerr` (or the logging library).
+  The anti-pattern to delete on sight: `std::fputs(absl::StrCat(...).c_str(), stderr)`.
+- Format with Abseil: `absl::StrCat` for plain concatenation, `absl::StrFormat` for a
+  formatted string, and **`absl::StreamFormat` to write a formatted line straight to a
+  stream with no temporary**: `std::cerr << absl::StreamFormat("wrote %d entries\n", n);`.
+  A plain `<<` is fine for a simple string. Choose per line, but **be consistent within a
+  single function** (do not mix a `StreamFormat` and a `<<` chain in the same function).
+- **Make your types printable with `AbslStringify`, not a hand-rolled `operator<<` /
+  `ToString`.** Abseil's string-conversion extension point is a hidden-friend hook:
+
+  ```cpp
+  struct Point {
+    int x = 0;
+    int y = 0;
+    template<typename Sink>
+    friend void AbslStringify(Sink& sink, const Point& p) {
+      absl::Format(&sink, "(%d, %d)", p.x, p.y);
+    }
+  };
+  ```
+
+  One hook makes the type work with `absl::StrCat`, `absl::StrFormat` / `StreamFormat`
+  `%v`, `absl::StrJoin`, and Abseil logging - and gives GoogleTest readable failure output.
+  `absl::Status` / `StatusOr` already stringify; print them with `%v`.
+
+## Concurrency and thread safety
+
+These are the baseline for any multi-threaded code, not extra credit; threading bugs are
+silent and data-dependent, so the annotations and the sanitizer are the standing guard.
+
+- **Use `absl::Mutex` + `absl::MutexLock`**, not `std::mutex` / `std::lock_guard` or
+  atomics-as-synchronization. Construct the lock from a reference: `absl::MutexLock lock(mu_);`
+  (the pointer constructor is deprecated).
+- **Annotate everything** (`absl/base/thread_annotations.h`): `ABSL_GUARDED_BY(mu_)` on
+  every member the mutex protects, and `ABSL_LOCKS_EXCLUDED` /
+  `ABSL_EXCLUSIVE_LOCKS_REQUIRED` on methods. A comment must state **exactly which members a
+  given mutex guards**, and call out any shared state deliberately left unguarded together
+  with the invariant that keeps it safe (e.g. "each index is handed to exactly one worker,
+  so distinct elements never alias").
+- **If a type has more than one mutex, document their lock-acquisition order** (which is
+  taken before which) so the ordering that prevents deadlock is explicit.
+- **Enforce the annotations**: compile first-party code with clang's `-Wthread-safety`
+  (with `-Werror` an unguarded access becomes a build failure), and add a
+  **ThreadSanitizer CI job** that runs the threaded tests so races are also caught at
+  runtime. Scope the tsan job to the threaded targets; exclude heavy third-party-linked
+  ones so tsan does not rebuild them.
+
+## Protocol Buffers
+
+- **Generated repeated fields and maps are STL-compatible - range-iterate them**, do not
+  index with `field_size()` + `field(i)`. `field_size()` is still fine for `reserve()` and
+  `== 0` emptiness checks; compare two repeated fields with `absl::c_equal`.
+- **Edition 2024**: string accessors default to `string_type = VIEW` and return
+  `std::string_view` (so the by-value-`string_view` rule applies to them); singular fields
+  have **explicit presence** by default, so `set_x(0)` serializes a `0`. To mean "absent",
+  leave the field unset (never call its setter) rather than setting the default.
+- **Build test protos from text, not setters**:
+  `mbo::proto::ParseTextProtoOrDie(R"pb(field: 1 nested { k: "v" })pb")`
+  (`@helly25_proto//mbo/proto:parse_text_proto_cc`). The `R"pb(...)pb"` raw string is what
+  clang-format leaves alone, so the proto stays readable. Do not imperatively `set_` / `add_`
+  your way to a fixture.
+- **Assert on protos structurally** with `mbo::proto::EqualsProto`
+  (`@helly25_proto//mbo/proto:matchers_cc`), which also accepts a text-proto string:
+  `EXPECT_THAT(msg, EqualsProto(R"pb(field: 1)pb"));`. Match a subset with
+  `Partially(EqualsProto(...))`. Never compare serialized strings.
+
 ## Testing (GoogleTest / GoogleMock)
 
-All exported code must be tested. Tests use GoogleTest + GoogleMock with these conventions.
+All exported code must be tested, at every level (unit, integration, and end-to-end where
+it applies). A one-shot manual check or a script you ran once is planning input, never a
+substitute for a committed test. Tests use GoogleTest + GoogleMock with these conventions.
 
 ### Structure
 
@@ -133,7 +250,15 @@ All exported code must be tested. Tests use GoogleTest + GoogleMock with these c
 
 - `EXPECT_THAT(status_or, mbo::testing::IsOk())`, or
   `StatusIs(absl::StatusCode::kInvalidArgument)` to match a specific code.
+- **`IsOkAndHolds(m)`** matches an OK `StatusOr` whose value matches `m` - prefer it over
+  `IsOk()` followed by dereferencing: `EXPECT_THAT(Parse(in), IsOkAndHolds(SizeIs(3)))`.
 - `ASSERT_OK_AND_ASSIGN(const auto value, MakeThing())` asserts OK and binds in one step.
+
+### Protocol-buffer fixtures and matchers
+
+Build proto test data with `mbo::proto::ParseTextProtoOrDie(R"pb(...)pb")` and assert with
+`mbo::proto::EqualsProto` / `Partially(EqualsProto(...))` - never imperative setters or
+serialized-string comparison. See the Protocol Buffers section.
 
 ### Shell / binary-level tests
 
