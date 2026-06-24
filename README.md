@@ -73,6 +73,14 @@ The C++ library is organized in functional groups each residing in their own dir
   - `namespace mbo::hash`
   - mbo/hash:hash_cc, mbo/hash/hash.h
     - function `simple::GetHash(std::string_view)`: A constexpr capable hash function.
+- Json
+  - `namespace mbo::json`
+  - mbo/json:json_cc, mbo/json/json.h
+    - class `Json`: A JSON value/document that can be built from almost any structured type (see `ConvertibleToJson`) and serialized to JSON text.
+    - enum `Json::SerializeMode`: Selects `kCompact`, `kLine`, or `kPretty` JSON output.
+    - function `Json::Serialize`: Returns the JSON value as a `std::string`.
+    - function `Json::Stream`: Writes the JSON value to a `std::ostream`.
+    - concept `ConvertibleToJson`: Determines whether a value can be stored in a `Json`.
 - Log
   - `namespace mbo::log`
   - mbo/log:demangle_cc, mbo/log/demangle.h
