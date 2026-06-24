@@ -94,8 +94,7 @@ clang-format picks a layout per line; these habits steer it toward the readable 
 3. **Force a line break with a comment rather than let clang-format cram a value at the right
    margin.** A long argument - especially a raw string such as a proto `R"pb(...)pb"` - otherwise
    gets packed onto the call line and shoved against the 120 column, unreadable. A trailing
-   comment makes clang-format keep the element on its own line; the bare placeholder for that is
-   written `// NL` ("new line"; a plain trailing `//` does the same, but `// NL` says why):
+   comment makes clang-format keep the element on its own line. Mark it `// NL` ("new line"):
 
    ```cpp
    EXPECT_THAT(  // NL
@@ -103,11 +102,13 @@ clang-format picks a layout per line; these habits steer it toward the readable 
        EqualsProto(R"pb(name: "n" value: 1)pb"));
    ```
 
-   Prefer a _real_ short comment over `// NL` whenever there is something worth saying - it
-   breaks the line the same way and also documents the value; `// NL` is only the fallback when
-   there genuinely is nothing to add. Do **not** reach for `// clang-format off` / `on` to
-   hand-place layout: the `on` is easy to forget, and everything between the two loses every
-   formatting guarantee above.
+   When there is a relevant reason, keep the prefix and add it: `// NL: <short reason>`, preferred
+   over a bare `// NL`. Always keep the `NL` prefix - do not drop to a bare `//` or an unprefixed
+   comment - for two reasons: it marks the comment as load-bearing for layout, so a reader knows
+   that removing it re-crams the line; and the consistent marker is machine-checkable, so a
+   pre-commit rule can verify these lines stay broken. Do **not** reach for `// clang-format off` /
+   `on` to hand-place layout: the `on` is easy to forget, and everything between the two loses
+   every formatting guarantee above.
 
 ## Idioms
 
