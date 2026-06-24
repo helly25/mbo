@@ -11,10 +11,13 @@ an AI assistant) can follow them without reverse-engineering the tooling.
   best-effort basis.
 - **`clang-format`** with [`.clang-format`](.clang-format) formats all C++ code. Run
   it; do not hand-format against it. CI rejects any reformatting diff.
-- **`clang-tidy`** with [`.clang-tidy`](.clang-tidy) lints all C++ code with
-  `WarningsAsErrors: true`, so every finding is a build failure. The enabled set is
-  broad: `abseil-*`, `bugprone-*`, `cppcoreguidelines-*`, `google-*`, `misc-*`,
-  `modernize-*`, `performance-*`, `portability-*`, `readability-*`.
+- **`clang-tidy`** with [`.clang-tidy`](.clang-tidy) (`WarningsAsErrors: true`) runs **locally**
+  via `trunk` (a `trunk check` and the editor daemon) against a `compile_commands.json` you
+  generate with `bazel run @hedron_compile_commands//:refresh_all`. **CI does not run it** (no
+  compile DB there), so CI's hard gate is the compiler `-Werror` in the bazel matrix; still treat
+  a clang-tidy finding as a must-fix before pushing. The enabled set is broad: `abseil-*`,
+  `bugprone-*`, `cppcoreguidelines-*`, `google-*`, `misc-*`, `modernize-*`, `performance-*`,
+  `portability-*`, `readability-*`.
 
 ### What `.clang-format` decides (do not fight it)
 
