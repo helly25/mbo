@@ -311,7 +311,10 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
   `StatusIs(absl::StatusCode::kInvalidArgument)` to match a specific code.
 - **`IsOkAndHolds(m)`** matches an OK `StatusOr` whose value matches `m` - prefer it over
   `IsOk()` followed by dereferencing: `EXPECT_THAT(Parse(in), IsOkAndHolds(SizeIs(3)))`.
-- `ASSERT_OK_AND_ASSIGN(const auto value, MakeThing())` asserts OK and binds in one step.
+- `MBO_ASSERT_OK_AND_ASSIGN(const auto value, MakeThing())` asserts OK and binds in one step.
+- `MBO_ASSERT_OK_AND_MOVE_TO(MakePair(), auto [a, b])` is the move variant whose target may
+  contain commas (so the expression comes first) - the test mirror of `MBO_MOVE_TO_OR_RETURN`,
+  for structured bindings and move-only types.
 
 ### Protocol-buffer fixtures and matchers
 
