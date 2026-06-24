@@ -147,6 +147,12 @@ clang-format picks a layout per line; these habits steer it toward the readable 
   `std::optional<std::reference_wrapper<T>>` or, preferably, mbo's `mbo::types::OptionalRef<T>`
   (`mbo/types/optional_ref.h`) and its related types (e.g. `OptionalDataOrRef` when it may own
   a value or refer to one).
+- **Mark a return value `[[nodiscard]]`** when silently ignoring it is a bug - an
+  `absl::Status` / `StatusOr`, a parsed result, a `Consume...` "did it match?" flag, an acquired
+  handle. The exception is a function _designed_ for its result to be optionally used: a builder
+  method returning `*this` for chaining, or a mutator that also returns the previous value as a
+  convenience. We disable `modernize-use-nodiscard` in `.clang-tidy` precisely because it would
+  blanket-annotate every const method - apply `[[nodiscard]]` by judgment instead.
 - **switch / case**: order case labels alphabetically. Where the cases are a uniform
   mapping (key -> handler or value), prefer a constexpr `mbo::container::LimitedMap`
   lookup over a switch.
