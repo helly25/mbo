@@ -87,7 +87,7 @@ absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_
     }
     const std::string mapping_file = absl::StrCat(test_bin, "/_repo_mapping");
     MBO_ASSIGN_OR_RETURN(const std::string mapping, mbo::file::GetContents(mapping_file));
-    for (const std::string_view line : absl::StrSplit(mapping, '\n')) {
+    for (std::string_view line : absl::StrSplit(mapping, '\n')) {
       const std::vector<std::string_view> parts = absl::StrSplit(line, ',', absl::AllowEmpty());
       if (parts.size() == 3 && parts[1] == workspace) {
         return runfiles->Rlocation(mbo::file::JoinPaths(parts[2], source_rel));

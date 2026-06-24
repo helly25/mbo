@@ -22,6 +22,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/container/btree_map.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
@@ -312,7 +313,7 @@ class StatusHasPayload {
 // Implementation of `StatusPayloads` matcher.
 class StatusPayloads {
  public:
-  explicit StatusPayloads(const ::testing::Matcher<const std::map<std::string, std::string>&>& payload_matcher)
+  explicit StatusPayloads(const ::testing::Matcher<const absl::btree_map<std::string, std::string>&>& payload_matcher)
       : payload_matcher_(payload_matcher) {}
 
   void DescribeTo(std::ostream* os) const {
@@ -328,7 +329,7 @@ class StatusPayloads {
   template<typename StatusType>
   bool MatchAndExplain(const StatusType& actual, ::testing::MatchResultListener* listener) const {
     const absl::Status& actual_status = ::mbo::status::GetStatus(actual);
-    std::map<std::string, std::string> payload_map;
+    absl::btree_map<std::string, std::string> payload_map;
     actual_status.ForEachPayload([&payload_map](std::string_view type_url, const absl::Cord& payload) {
       payload_map.emplace(type_url, payload);
     });
@@ -357,7 +358,7 @@ class StatusPayloads {
   }
 
  private:
-  const ::testing::Matcher<const std::map<std::string, std::string>&> payload_matcher_;
+  const ::testing::Matcher<const absl::btree_map<std::string, std::string>&> payload_matcher_;
 };
 
 }  // namespace testing_internal
@@ -423,7 +424,7 @@ template<typename PayloadMatcher>
 inline ::testing::PolymorphicMatcher<testing_internal::StatusPayloads> StatusPayloads(
     const PayloadMatcher& payload_matcher) {
   return ::testing::MakePolymorphicMatcher(testing_internal::StatusPayloads(
-      ::testing::MatcherCast<const std::map<std::string, std::string>&>(payload_matcher)));
+      ::testing::MatcherCast<const absl::btree_map<std::string, std::string>&>(payload_matcher)));
 }
 
 // NOLINTBEGIN(cppcoreguidelines-macro-usage)

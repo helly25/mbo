@@ -69,7 +69,7 @@ absl::Status Process(const Options& opts) {
   for (const auto& set_kv : absl::GetFlag(FLAGS_set)) {
     const auto [names, value] = std::pair<std::string_view, std::string_view>(absl::StrSplit(set_kv, '='));
     std::vector<std::string_view> section_names = absl::StrSplit(names, ':');
-    const std::string_view key = section_names.back();
+    std::string_view key = section_names.back();
     if (key.empty()) {
       return absl::InvalidArgumentError("No part of the key in `--set=<key>=<value>` may be empty if split by ':'.");
     }
@@ -78,7 +78,7 @@ absl::Status Process(const Options& opts) {
       context_data[key].assign(value);  // Global context_data
     } else {
       auto* section = &mope_template;
-      for (const std::string_view section_name : section_names) {
+      for (std::string_view section_name : section_names) {
         if (section_name.empty()) {
           return absl::InvalidArgumentError(
               "No part of the key in `--set=<key>=<value>` may be empty if split by ':'.");

@@ -124,7 +124,7 @@ struct tstring final {
   }
 
   // String based comparison (run-time), uses `std::string_view::compare`.
-  static constexpr auto compare(const std::string_view other) noexcept { return str().compare(other); }
+  static constexpr auto compare(std::string_view other) noexcept { return str().compare(other); }
 
   static constexpr size_type size() noexcept { return num_chars; }
 
