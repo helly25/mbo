@@ -109,9 +109,14 @@ clang-format picks a layout per line; these habits steer it toward the readable 
    over a bare `// NL`. Always keep the `NL` prefix - do not drop to a bare `//` or an unprefixed
    comment - for two reasons: it marks the comment as load-bearing for layout, so a reader knows
    that removing it re-crams the line; and the consistent marker is machine-checkable, so a
-   pre-commit rule can verify these lines stay broken. Do **not** reach for `// clang-format off` /
-   `on` to hand-place layout: the `on` is easy to forget, and everything between the two loses
-   every formatting guarantee above.
+   pre-commit rule can verify these lines stay broken.
+
+   Reserve `// clang-format off` / `on` for a genuine table or hand-aligned expression that
+   clang-format cannot lay out - `// NL` only _inserts_ breaks, so it cannot keep an over-120
+   line whole or stop a reflow (e.g. a one-line-per-case test table, or a multi-clause
+   `requires(...)`). Do not use it to hand-place ordinary layout, and keep the `off`/`on` pair
+   tight and adjacent so the `on` is never forgotten: everything between the two loses every
+   formatting guarantee above.
 
 ## Idioms
 
