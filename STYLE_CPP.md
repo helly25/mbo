@@ -283,8 +283,15 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
 
 - Assert with **`EXPECT_THAT` / `ASSERT_THAT` + a matcher**, not `EXPECT_EQ` /
   `ASSERT_EQ`: matchers compose and give far better failure messages.
-- **No redundant `Eq` for POD/strings.** `EXPECT_THAT(x, value)` auto-wraps a bare
-  value in `Eq`, so write `EXPECT_THAT(name, "foo")`, not `EXPECT_THAT(name, Eq("foo"))`.
+- **`Eq` is optional - a readability choice, not a rule.** `EXPECT_THAT(x, value)` auto-wraps a
+  bare value in `Eq`, so both forms compile. The value of `EXPECT_THAT` is that the line reads as
+  a sentence - `EXPECT_THAT(foo, Eq(25))` is "expect that foo equals 25" - so keep `Eq` where it
+  makes the assertion read that way, and drop it where the value already carries the meaning
+  (`EXPECT_THAT(name, "foo")`). Inside composite matchers prefer bare elements
+  (`ElementsAre(1, 2, 3)`); `Optional` / `Pointee` are the exception and need the inner `Eq` (see
+  below). Strings sometimes need `StrEq` (e.g. a `char*` subject, where bare `Eq` compares
+  pointers). For booleans, `IsTrue()` / `IsFalse()` usually read better than a bare `true` /
+  `false` or `Eq(true)`: `EXPECT_THAT(found, IsTrue())`.
 - **Floats / doubles**: never `Eq` / `==`; use `FloatEq` / `DoubleEq` (or `Near`).
 - **Optionals**: `EXPECT_THAT(opt, Eq(std::nullopt))` for empty, `Optional(...)` for a
   value. Nested matchers do **not** auto-wrap: `Optional(Eq("x"))` and `Pointee(Eq("x"))`
