@@ -49,10 +49,22 @@ an AI assistant) can follow them without reverse-engineering the tooling.
   `foo/bar.h` and `foo_bar.h` would both yield `FOO_BAR_H_`.
 - Forward-declared symbols must be fully implemented in the same source file (except
   the `Impl`-in-header / implementation-in-`.cc` pattern).
-- Macros: avoid them; if unavoidable prefix `MBO_` (private impl `MBO_PRIVATE_...`) and
-  `#undef` a local macro as soon after its last use as possible.
-- `std::size_t`: use the short `size_t` only in `.cc` files, via `using std::size_t`.
-- Library flags are prefixed by their path/namespace (e.g. `--mbo_log_...`).
+- Macros: avoid them. An **exported** macro (defined in a header for other code to use) is
+  prefixed `MBO_` (private impl `MBO_PRIVATE_...`). A macro **local to one translation unit**
+  - a `.cc` / test file, or a header helper you `#undef` right after its last use - may stay
+    unprefixed (still `UPPER_CASE`); `#undef` a local macro as soon after its last use as
+    possible.
+- **C-library names: use the `std::` form; the unqualified global alias is optional.** A
+  `<cstddef>` / `<cXXX>` header is only required to declare `size_t`, `int64_t`, `memcpy`,
+  ... in `namespace std`; whether it _also_ injects the bare global name is
+  implementation-defined, so we never rely on it.
+  - In **headers**, always fully qualify (`std::size_t`); no namespace-level `using`.
+  - In an **implementation file** (`.cc`), a `using std::size_t;` (or other `using std::...`)
+    is fine where it reads better - bring the name in explicitly rather than leaning on the
+    global alias. Be consistent within a file, but readability outranks consistency.
+- Library flags are prefixed by their path/namespace (e.g. `--mbo_log_timing_min_duration`
+  in `mbo/log`). Application entry-point binaries (`glob`, `diff`, `mope`) may use bare flag
+  names (`--depth`, `--algorithm`, `--template`).
 
 ## Formatting conventions on top of clang-format
 
@@ -90,12 +102,32 @@ clang-format picks a layout per line; these two habits steer it toward the reada
   on the first match is an `absl::c_any_of` with a lambda; a reserve-then-push copy into a
   `std::vector` is range construction `std::vector<T>(src.begin(), src.end())`. Keep a raw
   loop only when it builds a non-trivial structure no algorithm expresses cleanly.
+- **Container choice: prefer the Abseil containers over the bare `std::` ones.** The reason is
+  in their favor, not against `std::`: the Abseil variants are faster, support transparent
+  (heterogeneous) lookup - find in a `std::string`-keyed map with a `std::string_view`, no
+  temporary `std::string` - and `flat_hash_*` stores elements inline for lower memory.
+  - **Never `std::unordered_*`** - no `<unordered_map>` / `<unordered_set>` include, and none
+    of `unordered_map` / `unordered_set` / `unordered_multimap` / `unordered_multiset`. Use
+    `absl::flat_hash_map` / `flat_hash_set`, or the `node_hash_map` / `node_hash_set` variants
+    when you need pointer/reference stability. This holds in tests too - the one exception is a
+    container-compatibility test that deliberately exercises a `std::unordered_*` input.
+  - **Avoid `std::map` / `std::set`** (and the `multi` variants) in library code; prefer
+    `absl::btree_map` / `absl::btree_set`, which keep the same ordered interface but are
+    cache-friendlier. In tests, `std::map` / `std::set` are fine.
+  - Small compile-time tables: `mbo::container::LimitedMap` / `LimitedSet`.
+  - A type-detection trait may name a `std::` container type freely - it must, to recognize it.
 - **A by-value `std::string_view` is never `const`.** The characters it views are already
   `const`; making the view itself `const` only disables the view's own API
   (`remove_prefix`, `remove_suffix`, reassignment) for no benefit. This applies to locals
   and range-`for` variables. (Not to `std::string_view::size_type`, which is a `size_t`,
   nor to `absl::Span<const std::string_view>`, where `const` is the element type of an
   immutable span.)
+- **Do not overload `const T*` to express "optional" or to conflate omission with value.** A
+  raw pointer mixes nullability, the pointed-at value, and ownership/lifetime into one type
+  the caller has to second-guess. For an optional reference use
+  `std::optional<std::reference_wrapper<T>>` or, preferably, mbo's `mbo::types::OptionalRef<T>`
+  (`mbo/types/optional_ref.h`) and its related types (e.g. `OptionalDataOrRef` when it may own
+  a value or refer to one).
 - **switch / case**: order case labels alphabetically. Where the cases are a uniform
   mapping (key -> handler or value), prefer a constexpr `mbo::container::LimitedMap`
   lookup over a switch.
@@ -171,6 +203,8 @@ absl::StatusOr<Report> Build(std::string_view path) {
 
 These are the baseline for any multi-threaded code, not extra credit; threading bugs are
 silent and data-dependent, so the annotations and the sanitizer are the standing guard.
+Most of this repo is single-threaded today, so this section is the standard to apply _when
+you add_ multi-threaded code, not a description of current breadth.
 
 - **Use `absl::Mutex` + `absl::MutexLock`**, not `std::mutex` / `std::lock_guard` or
   atomics-as-synchronization. Construct the lock from a reference: `absl::MutexLock lock(mu_);`
