@@ -15,21 +15,23 @@
 
 #include <memory>
 
+#include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
 #include "mbo/types/stringify.h"
 
 namespace mbo::types {
 namespace {
 
-absl::Mutex g_mx(absl::kConstInit);                      // NOLINT(*-avoid-non-const-global-variables)
-std::shared_ptr<const Stringify> g_stringify = nullptr;  // NOLINT(*-avoid-non-const-global-variables)
+absl::Mutex g_mx(absl::kConstInit);  // NOLINT(*-avoid-non-const-global-variables)
+// NOLINTNEXTLINE(*-avoid-non-const-global-variables)
+std::shared_ptr<const Stringify> g_stringify ABSL_GUARDED_BY(g_mx) = nullptr;
 
 }  // namespace
 
 namespace types_internal {
 
 std::shared_ptr<const Stringify> GetStringifyForOstream() {
-  absl::MutexLock lock(&g_mx);
+  absl::MutexLock lock(g_mx);
   if (g_stringify == nullptr) {
     g_stringify = std::make_shared<Stringify>();
   }
@@ -39,12 +41,12 @@ std::shared_ptr<const Stringify> GetStringifyForOstream() {
 }  // namespace types_internal
 
 void SetStringifyOstreamOutputMode(Stringify::OutputMode output_mode) {
-  absl::MutexLock lock(&g_mx);
+  absl::MutexLock lock(g_mx);
   g_stringify.reset(new Stringify(output_mode));  // NOLINT
 }
 
 void SetStringifyOstreamOptions(const StringifyOptions& options) {
-  absl::MutexLock lock(&g_mx);
+  absl::MutexLock lock(g_mx);
   g_stringify.reset(new Stringify(options));  // NOLINT
 }
 

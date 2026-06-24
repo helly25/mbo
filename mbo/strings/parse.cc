@@ -108,17 +108,17 @@ enum class Quotes { kNone, kSingle, kDouble };
 void HandleQuotes(const ParseOptions& options, char chr, Quotes& quotes, std::string& result) {
   if (options.enable_double_quotes) {
     switch (quotes) {
-      case Quotes::kNone: quotes = chr == '"' ? Quotes::kDouble : Quotes::kSingle; break;
-      case Quotes::kSingle:
-        if (chr == '\'') {
+      case Quotes::kDouble:
+        if (chr == '"') {
           quotes = Quotes::kNone;
         } else {
           result += chr;
           return;
         }
         break;
-      case Quotes::kDouble:
-        if (chr == '"') {
+      case Quotes::kNone: quotes = chr == '"' ? Quotes::kDouble : Quotes::kSingle; break;
+      case Quotes::kSingle:
+        if (chr == '\'') {
           quotes = Quotes::kNone;
         } else {
           result += chr;

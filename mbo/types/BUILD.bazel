@@ -172,6 +172,7 @@ cc_test(
 cc_library(
     name = "optional_data_or_ref_cc",
     hdrs = ["optional_data_or_ref.h"],
+    visibility = ["//visibility:public"],
     deps = [
         ":traits_cc",
         "//mbo/config:require_cc",
@@ -195,6 +196,7 @@ cc_test(
 cc_library(
     name = "optional_ref_cc",
     hdrs = ["optional_ref.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "//mbo/config:require_cc",
         "//mbo/log:demangle_cc",
@@ -300,6 +302,7 @@ cc_library(
     name = "stringify_ostream_cc",
     srcs = ["stringify_ostream.cc"],
     hdrs = ["stringify_ostream.h"],
+    visibility = ["//visibility:public"],
     deps = [
         ":stringify_cc",
         "@abseil-cpp//absl/synchronization",

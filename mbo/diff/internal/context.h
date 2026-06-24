@@ -53,7 +53,7 @@ class Context final {
   }
 
   std::string_view PopFront() noexcept {
-    const std::string_view result = data_.front();
+    std::string_view result = data_.front();
     data_.pop_front();
     return result;
   }

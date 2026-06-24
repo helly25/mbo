@@ -11,10 +11,13 @@ an AI assistant) can follow them without reverse-engineering the tooling.
   best-effort basis.
 - **`clang-format`** with [`.clang-format`](.clang-format) formats all C++ code. Run
   it; do not hand-format against it. CI rejects any reformatting diff.
-- **`clang-tidy`** with [`.clang-tidy`](.clang-tidy) lints all C++ code with
-  `WarningsAsErrors: true`, so every finding is a build failure. The enabled set is
-  broad: `abseil-*`, `bugprone-*`, `cppcoreguidelines-*`, `google-*`, `misc-*`,
-  `modernize-*`, `performance-*`, `portability-*`, `readability-*`.
+- **`clang-tidy`** with [`.clang-tidy`](.clang-tidy) (`WarningsAsErrors: true`) runs **locally**
+  via `trunk` (a `trunk check` and the editor daemon) against a `compile_commands.json` you
+  generate with `bazel run @hedron_compile_commands//:refresh_all`. **CI does not run it** (no
+  compile DB there), so CI's hard gate is the compiler `-Werror` in the bazel matrix; still treat
+  a clang-tidy finding as a must-fix before pushing. The enabled set is broad: `abseil-*`,
+  `bugprone-*`, `cppcoreguidelines-*`, `google-*`, `misc-*`, `modernize-*`, `performance-*`,
+  `portability-*`, `readability-*`.
 
 ### What `.clang-format` decides (do not fight it)
 
@@ -49,14 +52,26 @@ an AI assistant) can follow them without reverse-engineering the tooling.
   `foo/bar.h` and `foo_bar.h` would both yield `FOO_BAR_H_`.
 - Forward-declared symbols must be fully implemented in the same source file (except
   the `Impl`-in-header / implementation-in-`.cc` pattern).
-- Macros: avoid them; if unavoidable prefix `MBO_` (private impl `MBO_PRIVATE_...`) and
-  `#undef` a local macro as soon after its last use as possible.
-- `std::size_t`: use the short `size_t` only in `.cc` files, via `using std::size_t`.
-- Library flags are prefixed by their path/namespace (e.g. `--mbo_log_...`).
+- Macros: avoid them. An **exported** macro (defined in a header for other code to use) is
+  prefixed `MBO_` (private impl `MBO_PRIVATE_...`). A macro **local to one translation unit**
+  - a `.cc` / test file, or a header helper you `#undef` right after its last use - may stay
+    unprefixed (still `UPPER_CASE`); `#undef` a local macro as soon after its last use as
+    possible.
+- **C-library names: use the `std::` form; the unqualified global alias is optional.** A
+  `<cstddef>` / `<cXXX>` header is only required to declare `size_t`, `int64_t`, `memcpy`,
+  ... in `namespace std`; whether it _also_ injects the bare global name is
+  implementation-defined, so we never rely on it.
+  - In **headers**, always fully qualify (`std::size_t`); no namespace-level `using`.
+  - In an **implementation file** (`.cc`), a `using std::size_t;` (or other `using std::...`)
+    is fine where it reads better - bring the name in explicitly rather than leaning on the
+    global alias. Be consistent within a file, but readability outranks consistency.
+- Library flags are prefixed by their path/namespace (e.g. `--mbo_log_timing_min_duration`
+  in `mbo/log`). Application entry-point binaries (`glob`, `diff`, `mope`) may use bare flag
+  names (`--depth`, `--algorithm`, `--template`).
 
 ## Formatting conventions on top of clang-format
 
-clang-format picks a layout per line; these two habits steer it toward the readable one.
+clang-format picks a layout per line; these habits steer it toward the readable one.
 
 1. **No comment at the end of a long line.** Put the comment on its own line _above_
    the element. A trailing `// ...` that pushes a line past 120 makes clang-format
@@ -79,6 +94,30 @@ clang-format picks a layout per line; these two habits steer it toward the reada
    };
    ```
 
+3. **Force a line break with a comment rather than let clang-format cram a value at the right
+   margin.** A long argument - especially a raw string such as a proto `R"pb(...)pb"` - otherwise
+   gets packed onto the call line and shoved against the 120 column, unreadable. A trailing
+   comment makes clang-format keep the element on its own line. Mark it `// NL` ("new line"):
+
+   ```cpp
+   EXPECT_THAT(  // NL
+       message,
+       EqualsProto(R"pb(name: "n" value: 1)pb"));
+   ```
+
+   When there is a relevant reason, keep the prefix and add it: `// NL: <short reason>`, preferred
+   over a bare `// NL`. Always keep the `NL` prefix - do not drop to a bare `//` or an unprefixed
+   comment - for two reasons: it marks the comment as load-bearing for layout, so a reader knows
+   that removing it re-crams the line; and the consistent marker is machine-checkable, so a
+   pre-commit rule can verify these lines stay broken.
+
+   Reserve `// clang-format off` / `on` for a genuine table or hand-aligned expression that
+   clang-format cannot lay out - `// NL` only _inserts_ breaks, so it cannot keep an over-120
+   line whole or stop a reflow (e.g. a one-line-per-case test table, or a multi-clause
+   `requires(...)`). Do not use it to hand-place ordinary layout, and keep the `off`/`on` pair
+   tight and adjacent so the `on` is never forgotten: everything between the two loses every
+   formatting guarantee above.
+
 ## Idioms
 
 - **Pass `absl::Status` by value**, not `const&`: it is a tagged pointer, and
@@ -90,12 +129,38 @@ clang-format picks a layout per line; these two habits steer it toward the reada
   on the first match is an `absl::c_any_of` with a lambda; a reserve-then-push copy into a
   `std::vector` is range construction `std::vector<T>(src.begin(), src.end())`. Keep a raw
   loop only when it builds a non-trivial structure no algorithm expresses cleanly.
+- **Container choice: prefer the Abseil containers over the bare `std::` ones.** The reason is
+  in their favor, not against `std::`: the Abseil variants are faster, support transparent
+  (heterogeneous) lookup - find in a `std::string`-keyed map with a `std::string_view`, no
+  temporary `std::string` - and `flat_hash_*` stores elements inline for lower memory.
+  - **Never `std::unordered_*`** - no `<unordered_map>` / `<unordered_set>` include, and none
+    of `unordered_map` / `unordered_set` / `unordered_multimap` / `unordered_multiset`. Use
+    `absl::flat_hash_map` / `flat_hash_set`, or the `node_hash_map` / `node_hash_set` variants
+    when you need pointer/reference stability. This holds in tests too - the one exception is a
+    container-compatibility test that deliberately exercises a `std::unordered_*` input.
+  - **Avoid `std::map` / `std::set`** (and the `multi` variants) in library code; prefer
+    `absl::btree_map` / `absl::btree_set`, which keep the same ordered interface but are
+    cache-friendlier. In tests, `std::map` / `std::set` are fine.
+  - Small compile-time tables: `mbo::container::LimitedMap` / `LimitedSet`.
+  - A type-detection trait may name a `std::` container type freely - it must, to recognize it.
 - **A by-value `std::string_view` is never `const`.** The characters it views are already
   `const`; making the view itself `const` only disables the view's own API
   (`remove_prefix`, `remove_suffix`, reassignment) for no benefit. This applies to locals
   and range-`for` variables. (Not to `std::string_view::size_type`, which is a `size_t`,
   nor to `absl::Span<const std::string_view>`, where `const` is the element type of an
   immutable span.)
+- **Do not overload `const T*` to express "optional" or to conflate omission with value.** A
+  raw pointer mixes nullability, the pointed-at value, and ownership/lifetime into one type
+  the caller has to second-guess. For an optional reference use
+  `std::optional<std::reference_wrapper<T>>` or, preferably, mbo's `mbo::types::OptionalRef<T>`
+  (`mbo/types/optional_ref.h`) and its related types (e.g. `OptionalDataOrRef` when it may own
+  a value or refer to one).
+- **Mark a return value `[[nodiscard]]`** when silently ignoring it is a bug - an
+  `absl::Status` / `StatusOr`, a parsed result, a `Consume...` "did it match?" flag, an acquired
+  handle. The exception is a function _designed_ for its result to be optionally used: a builder
+  method returning `*this` for chaining, or a mutator that also returns the previous value as a
+  convenience. We disable `modernize-use-nodiscard` in `.clang-tidy` precisely because it would
+  blanket-annotate every const method - apply `[[nodiscard]]` by judgment instead.
 - **switch / case**: order case labels alphabetically. Where the cases are a uniform
   mapping (key -> handler or value), prefer a constexpr `mbo::container::LimitedMap`
   lookup over a switch.
@@ -171,6 +236,8 @@ absl::StatusOr<Report> Build(std::string_view path) {
 
 These are the baseline for any multi-threaded code, not extra credit; threading bugs are
 silent and data-dependent, so the annotations and the sanitizer are the standing guard.
+Most of this repo is single-threaded today, so this section is the standard to apply _when
+you add_ multi-threaded code, not a description of current breadth.
 
 - **Use `absl::Mutex` + `absl::MutexLock`**, not `std::mutex` / `std::lock_guard` or
   atomics-as-synchronization. Construct the lock from a reference: `absl::MutexLock lock(mu_);`
@@ -222,10 +289,20 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
 
 ### Assertions: gmock matchers, not `EXPECT_EQ`
 
-- Assert with **`EXPECT_THAT` / `ASSERT_THAT` + a matcher**, not `EXPECT_EQ` /
-  `ASSERT_EQ`: matchers compose and give far better failure messages.
-- **No redundant `Eq` for POD/strings.** `EXPECT_THAT(x, value)` auto-wraps a bare
-  value in `Eq`, so write `EXPECT_THAT(name, "foo")`, not `EXPECT_THAT(name, Eq("foo"))`.
+- Assert with **`EXPECT_THAT` / `ASSERT_THAT` + a matcher** rather than the comparison macros
+  `EXPECT_EQ` / `NE` / `GT` / `LT` / `GE` / `LE` (and their `ASSERT_` forms): matchers compose and
+  give far better failure messages. The accepted exception is the boolean `EXPECT_TRUE` /
+  `EXPECT_FALSE` (and `ASSERT_TRUE` / `ASSERT_FALSE`), which read fine on their own. Within a
+  single test keep one style - do not mix, say, `EXPECT_TRUE(x)` and `EXPECT_THAT(y, IsTrue())`.
+- **`Eq` is optional - a readability choice, not a rule.** `EXPECT_THAT(x, value)` auto-wraps a
+  bare value in `Eq`, so both forms compile. The value of `EXPECT_THAT` is that the line reads as
+  a sentence - `EXPECT_THAT(foo, Eq(25))` is "expect that foo equals 25" - so keep `Eq` where it
+  makes the assertion read that way, and drop it where the value already carries the meaning
+  (`EXPECT_THAT(name, "foo")`). Inside composite matchers prefer bare elements
+  (`ElementsAre(1, 2, 3)`); `Optional` / `Pointee` are the exception and need the inner `Eq` (see
+  below). Strings sometimes need `StrEq` (e.g. a `char*` subject, where bare `Eq` compares
+  pointers). For booleans, `IsTrue()` / `IsFalse()` usually read better than a bare `true` /
+  `false` or `Eq(true)`: `EXPECT_THAT(found, IsTrue())`.
 - **Floats / doubles**: never `Eq` / `==`; use `FloatEq` / `DoubleEq` (or `Near`).
 - **Optionals**: `EXPECT_THAT(opt, Eq(std::nullopt))` for empty, `Optional(...)` for a
   value. Nested matchers do **not** auto-wrap: `Optional(Eq("x"))` and `Pointee(Eq("x"))`
@@ -252,7 +329,10 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
   `StatusIs(absl::StatusCode::kInvalidArgument)` to match a specific code.
 - **`IsOkAndHolds(m)`** matches an OK `StatusOr` whose value matches `m` - prefer it over
   `IsOk()` followed by dereferencing: `EXPECT_THAT(Parse(in), IsOkAndHolds(SizeIs(3)))`.
-- `ASSERT_OK_AND_ASSIGN(const auto value, MakeThing())` asserts OK and binds in one step.
+- `MBO_ASSERT_OK_AND_ASSIGN(const auto value, MakeThing())` asserts OK and binds in one step.
+- `MBO_ASSERT_OK_AND_MOVE_TO(MakePair(), auto [a, b])` is the move variant whose target may
+  contain commas (so the expression comes first) - the test mirror of `MBO_MOVE_TO_OR_RETURN`,
+  for structured bindings and move-only types.
 
 ### Protocol-buffer fixtures and matchers
 

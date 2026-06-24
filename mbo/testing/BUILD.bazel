@@ -66,6 +66,7 @@ cc_library(
     deps = [
         "//mbo/status:status_cc",
         "//mbo/status:status_macros_cc",
+        "@abseil-cpp//absl/container:btree",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
