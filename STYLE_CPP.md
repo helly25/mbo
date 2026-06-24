@@ -281,8 +281,11 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
 
 ### Assertions: gmock matchers, not `EXPECT_EQ`
 
-- Assert with **`EXPECT_THAT` / `ASSERT_THAT` + a matcher**, not `EXPECT_EQ` /
-  `ASSERT_EQ`: matchers compose and give far better failure messages.
+- Assert with **`EXPECT_THAT` / `ASSERT_THAT` + a matcher** rather than the comparison macros
+  `EXPECT_EQ` / `NE` / `GT` / `LT` / `GE` / `LE` (and their `ASSERT_` forms): matchers compose and
+  give far better failure messages. The accepted exception is the boolean `EXPECT_TRUE` /
+  `EXPECT_FALSE` (and `ASSERT_TRUE` / `ASSERT_FALSE`), which read fine on their own. Within a
+  single test keep one style - do not mix, say, `EXPECT_TRUE(x)` and `EXPECT_THAT(y, IsTrue())`.
 - **`Eq` is optional - a readability choice, not a rule.** `EXPECT_THAT(x, value)` auto-wraps a
   bare value in `Eq`, so both forms compile. The value of `EXPECT_THAT` is that the line reads as
   a sentence - `EXPECT_THAT(foo, Eq(25))` is "expect that foo equals 25" - so keep `Eq` where it
