@@ -15,12 +15,9 @@
 
 """Module helly25_mbo"""
 
-# repo_name keeps the old WORKSPACE-era name as a downstream alias; no internal
-# code depends on it anymore. Slated for removal in a future breaking release.
 module(
     name = "helly25_mbo",
-    version = "0.12.0",
-    repo_name = "com_helly25_mbo",
+    version = "0.13.0",
 )
 
 # For local development we include LLVM and Hedron-Compile-Commands.
