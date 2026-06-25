@@ -59,7 +59,7 @@ fi
 } >BUILD.bazel
 
 # Apply patches
-for patch in "${PATCHES[@]}"; do
+for patch in ${PATCHES[@]+"${PATCHES[@]}"}; do
   patch -s -p 1 <"${patch}"
 done
 
