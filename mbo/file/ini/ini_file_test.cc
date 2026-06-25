@@ -79,7 +79,7 @@ struct IniFileTest : ::testing::Test {
 
 TEST_F(IniFileTest, TestGolden) {
   MBO_ASSERT_OK_AND_MOVE_TO(
-      GatherTests(mbo::testing::RunfilesDirOrDie("@com_helly25_mbo//mbo/file/ini:tests/test.ini")),
+      GatherTests(mbo::testing::RunfilesDirOrDie("//mbo/file/ini:tests/test.ini")),
       const std::map<std::string, std::pair<std::string, std::string>> tests);
   std::size_t file_count = 0;
   for (const auto& [base, files] : tests) {

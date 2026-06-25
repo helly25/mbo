@@ -1,3 +1,7 @@
+# 0.13.0
+
+- Renamed the module repo to `helly25_mbo` and dropped the `com_helly25_mbo` alias (`repo_name`). The last internal user (the `ini_file` golden test) now resolves its runfiles via the repo-relative `//mbo/file/ini:tests/test.ini`, so nothing depends on the old name. Consumers referencing `@com_helly25_mbo//...` must switch to `@helly25_mbo//...`.
+
 # 0.12.0
 
 - Fixed visibility of already-documented APIs whose Bazel `cc_library` targets had defaulted to `//visibility:private` since they were added, so external code could not `deps` them. Now `//visibility:public`: `//mbo/types:optional_ref_cc` (`OptionalRef`), `//mbo/types:optional_data_or_ref_cc` (`OptionalDataOrRef` / `OptionalDataOrConstRef`), and the `//mbo/json:json` / `:json_cc` library - all added in 0.10.0.
