@@ -3,19 +3,15 @@
 # Delegates to the shared reusable workflow in helly25/bzl, which checks out this
 # repo's main, verifies the version in MODULE.bazel and CHANGELOG.md is identical
 # and neither tagged nor released, then runs tools/trigger_release.sh (push the
-# signed tag -> release.yml -> GitHub release + BCR, and open the bump PR).
+# signed tag -> release.yml -> GitHub release + BCR, and open the bump PR). The
+# released version is whatever MODULE.bazel currently holds.
 #
-# Requires the org-level secrets RELEASE_TOKEN, RELEASE_GPG_PRIVATE_KEY and
+# Requires the repo secrets RELEASE_TOKEN, RELEASE_GPG_PRIVATE_KEY and
 # RELEASE_GPG_PASSPHRASE (passed through via `secrets: inherit`).
 name: Trigger Release
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Release version x.y.z (blank = use MODULE.bazel)."
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -30,5 +26,3 @@ jobs:
       contents: read
     uses: helly25/bzl/.github/workflows/trigger_release.yaml@main
     secrets: inherit
-    with:
-      version: ${{ inputs.version }}
