@@ -1,11 +1,10 @@
-# 0.13.0
-
-- Renamed the module repo to `helly25_mbo` and dropped the `com_helly25_mbo` alias (`repo_name`). The last internal user (the `ini_file` golden test) now resolves its runfiles via the repo-relative `//mbo/file/ini:tests/test.ini`, so nothing depends on the old name. Consumers referencing `@com_helly25_mbo//...` must switch to `@helly25_mbo//...`.
-
 # 0.12.0
 
 - Fixed visibility of already-documented APIs whose Bazel `cc_library` targets had defaulted to `//visibility:private` since they were added, so external code could not `deps` them. Now `//visibility:public`: `//mbo/types:optional_ref_cc` (`OptionalRef`), `//mbo/types:optional_data_or_ref_cc` (`OptionalDataOrRef` / `OptionalDataOrConstRef`), and the `//mbo/json:json` / `:json_cc` library - all added in 0.10.0.
 - Made `//mbo/types:stringify_ostream_cc` public (`stringify_ostream.h`): the ostream `<<` integration for `Stringify` / `Extend` types plus the `SetStringifyOstreamOutputMode` / `SetStringifyOstreamOptions` configuration functions.
+- Renamed the module repo to `helly25_mbo` and dropped the `com_helly25_mbo` alias (`repo_name`). The last internal user (the `ini_file` golden test) now resolves its runfiles via the repo-relative `//mbo/file/ini:tests/test.ini`, so nothing depends on the old name. Consumers referencing `@com_helly25_mbo//...` must switch to `@helly25_mbo//...`.
+- Bumped `helly25_bashtest` 0.3.1 -> 0.4.0 and dropped its `com_helly25_bashtest` repo alias (a WORKSPACE-era compatibility name); BUILD files now `load("@helly25_bashtest//bashtest:bashtest.bzl", ...)`. mbo is bzlmod-only (`--noenable_workspace`, no `WORKSPACE` file).
+- Bumped `rules_cc` 0.2.19 -> 0.2.20.
 
 # 0.11.1
 
