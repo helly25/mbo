@@ -1,0 +1,28 @@
+# One-click release. Actions tab -> "Trigger Release" -> "Run workflow" (on main).
+#
+# Delegates to the shared reusable workflow in helly25/bzl, which checks out this
+# repo's main, verifies the version in MODULE.bazel and CHANGELOG.md is identical
+# and neither tagged nor released, then runs tools/trigger_release.sh (push the
+# signed tag -> release.yml -> GitHub release + BCR, and open the bump PR). The
+# released version is whatever MODULE.bazel currently holds.
+#
+# Requires the repo secrets RELEASE_TOKEN, RELEASE_GPG_PRIVATE_KEY and
+# RELEASE_GPG_PASSPHRASE (passed through via `secrets: inherit`).
+name: Trigger Release
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trigger-release
+  cancel-in-progress: false
+
+jobs:
+  trigger-release:
+    permissions:
+      contents: read
+    uses: helly25/bzl/.github/workflows/trigger_release.yaml@main
+    secrets: inherit
