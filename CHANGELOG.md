@@ -1,3 +1,5 @@
+# 0.12.1
+
 # 0.12.0
 
 - Fixed visibility of already-documented APIs whose Bazel `cc_library` targets had defaulted to `//visibility:private` since they were added, so external code could not `deps` them. Now `//visibility:public`: `//mbo/types:optional_ref_cc` (`OptionalRef`), `//mbo/types:optional_data_or_ref_cc` (`OptionalDataOrRef` / `OptionalDataOrConstRef`), and the `//mbo/json:json` / `:json_cc` library - all added in 0.10.0.
