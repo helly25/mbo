@@ -1,6 +1,7 @@
 # 0.13.0
 
 - Renamed the module repo to `helly25_mbo` and dropped the `com_helly25_mbo` alias (`repo_name`). The last internal user (the `ini_file` golden test) now resolves its runfiles via the repo-relative `//mbo/file/ini:tests/test.ini`, so nothing depends on the old name. Consumers referencing `@com_helly25_mbo//...` must switch to `@helly25_mbo//...`.
+- Bumped `helly25_bashtest` 0.3.1 -> 0.4.0 and dropped its `com_helly25_bashtest` repo alias (a WORKSPACE-era compatibility name); BUILD files now `load("@helly25_bashtest//bashtest:bashtest.bzl", ...)`. mbo is bzlmod-only (`--noenable_workspace`, no `WORKSPACE` file).
 
 # 0.12.0
 
