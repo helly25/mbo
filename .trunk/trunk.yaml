@@ -65,17 +65,22 @@ lint:
           max_concurrency: 4
   enabled:
     - buildifier@8.5.1
-    - checkov@3.3.1
+    - checkov@3.3.6
     - clang-tidy@16.0.3
     - git-diff-check
     - markdownlint@0.49.0
-    - prettier@3.8.4
-    - trivy@0.70.0
-    - trufflehog@3.95.3
+    - prettier@3.9.4
+    - trivy@0.72.0
+    - trufflehog@3.95.7
     - yamllint@1.38.0
 actions:
-  enabled:
+  # Git hooks are owned by pre-commit (see .pre-commit-config.yaml). These trunk
+  # actions install git hooks and would take over core.hooksPath, so keep them
+  # disabled so trunk never clobbers pre-commit's clang-format run. Re-enabling
+  # any of them is an obvious diff here and is what a reviewer must reject.
+  disabled:
     - trunk-announce
     - trunk-check-pre-push
     - trunk-fmt-pre-commit
+  enabled:
     - trunk-upgrade-available

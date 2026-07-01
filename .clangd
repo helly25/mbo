@@ -2,7 +2,7 @@ Diagnostics:
     UnusedIncludes: Strict
 
 CompileFlags:
-  Add: -DIS_CLANGD
+  Add: -DIS_CLANGD -std=c++20
 ---
 If:
     PathMatch: .*_test.cc

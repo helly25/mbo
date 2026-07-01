@@ -15,6 +15,34 @@ jobs:
       - uses: actions/checkout@v6
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
+      - name: Trunk must not own git hooks
+        run: |
+          # Git hooks belong to pre-commit (see .pre-commit-config.yaml); trunk's
+          # git-hook actions are disabled in .trunk/trunk.yaml so trunk never
+          # clobbers pre-commit's clang-format run. This can only be checked here:
+          # a pre-commit hook can't (if trunk owned core.hooksPath, pre-commit
+          # would never run), and a trunk linter can't (it runs in an isolated
+          # sandbox blind to the real git config).
+          # 1) Config invariant: no trunk git-hook action may be enabled.
+          enabled="$(yq -r '.actions.enabled // [] | .[]' .trunk/trunk.yaml)"
+          for action in trunk-announce trunk-check-pre-commit trunk-check-pre-push \
+            trunk-check-pre-push-always trunk-fmt-pre-commit trufflehog-pre-commit; do
+            if grep -qxF "${action}" <<<"${enabled}"; then
+              echo "::error::trunk git-hook action '${action}' is enabled in .trunk/trunk.yaml; disable it so pre-commit keeps ownership of git hooks"
+              exit 1
+            fi
+          done
+          # 2) Runtime truth (when trunk is available): sync hooks, then require
+          #    core.hooksPath not point back into trunk's cache.
+          if command -v trunk >/dev/null 2>&1; then
+            trunk git-hooks sync 2>&1 || true
+            hooks_path="$(git config --get core.hooksPath || true)"
+            if [[ "${hooks_path}" == *trunk* ]]; then
+              echo "::error::core.hooksPath is trunk-managed (${hooks_path}); trunk grabbed the git hooks"
+              exit 1
+            fi
+          fi
+          echo "OK: pre-commit owns git hooks; trunk is not managing them"
 
   pre-commit:
     runs-on: ubuntu-latest
