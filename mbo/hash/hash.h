@@ -46,8 +46,8 @@ using Hash64Fn = uint64_t (*)(std::string_view, uint64_t) noexcept;
 // independent builds.
 //
 // The implementation defaults to the current default (`mbo::hash::mh`), but any
-// hash matching `Hash64Fn` can be plugged in as a template argument, e.g.
-// `GetHash<&mbo::hash::mh::GetHash64>(data)`.
+// hash matching `Hash64Fn` can be plugged in as a template argument, and the
+// seed likewise, e.g. `GetHash<&mbo::hash::mh::GetHash64, 0x1234>(data)`.
 //
 // For a fully deterministic, reproducible value (identical at compile time and
 // run time, and across builds) call `GetHash64` / `GetHash128` directly.
@@ -55,9 +55,9 @@ using Hash64Fn = uint64_t (*)(std::string_view, uint64_t) noexcept;
 // Stability: none of these values are guaranteed stable across library versions,
 // none are portable as a persisted/on-the-wire format, and none are suitable for
 // cryptographic use.
-template<Hash64Fn GetHashFn = &::mbo::hash::mh::GetHash64>
-inline constexpr uint64_t GetHash(std::string_view data, uint64_t seed = mh::kDefaultSeed) {
-  return HashMangle(GetHashFn(data, seed));
+template<Hash64Fn GetHashFn = &::mbo::hash::mh::GetHash64, uint64_t Seed = mh::kDefaultSeed>
+inline constexpr uint64_t GetHash(std::string_view data) {
+  return HashMangle(GetHashFn(data, Seed));
 }
 
 }  // namespace mbo::hash
