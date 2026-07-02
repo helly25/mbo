@@ -73,8 +73,11 @@ The C++ library is organized in functional groups each residing in their own dir
   - `namespace mbo::hash`
   - mbo/hash:hash_cc, mbo/hash/hash.h
     - function `GetHash64(std::string_view)` / `GetHash128(std::string_view)`: A constexpr-safe, non-cryptographic hash (result type `Hash128`). Values are not stable across versions and not for persistence.
-    - function `GetHash(std::string_view)`: as `GetHash64` but folded through a per-build (`__DATE__`/`__TIME__`) seed, so values may differ between builds.
+    - function `GetHash(std::string_view)`: as `GetHash64` but folded through a per-build (`__DATE__`/`__TIME__`) seed, so values may differ between builds. Templated over the implementation and seed: `GetHash<&Fn, Seed>(data)`.
     - function `simple::GetHash64(std::string_view)`: the previous hash implementation (`simple::GetHash` is deprecated).
+    - function `fnv1a::GetHash64(std::string_view)`: canonical FNV-1a 64 (constexpr-safe).
+    - function `xxh64::GetHash64(std::string_view)`: canonical XXH64 / xxHash 64-bit (constexpr-safe).
+    - function `murmur3::GetHash64/GetHash128(std::string_view)`: canonical MurmurHash3 x64 128-bit (constexpr-safe).
 - Json
   - `namespace mbo::json`
   - mbo/json:json_cc, mbo/json/json.h

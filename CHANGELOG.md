@@ -3,6 +3,8 @@
 - Added `mbo::hash::GetHash64(std::string_view)` / `GetHash128(std::string_view)` and the `mbo::hash::Hash128` result type - a new constexpr-safe, non-cryptographic hash (namespace `mbo::hash::mh`), now the default behind `mbo::hash::GetHash*`.
 - Deprecated `mbo::hash::simple::GetHash(std::string_view)`; use `mbo::hash::GetHash64()` instead. The previous implementation remains available as `mbo::hash::simple::GetHash64`.
 - `mbo::hash::GetHash` is now a template over the hash implementation and seed (`GetHash<&Fn, Seed>(data)`), defaulting to the current default.
+- Added constexpr-safe, canonical implementations of further hash algorithms, all usable with `GetHash<&Fn>`: `mbo::hash::fnv1a::GetHash64` (FNV-1a 64), `mbo::hash::xxh64::GetHash64` (XXH64), and `mbo::hash::murmur3::GetHash64/GetHash128` (MurmurHash3 x64 128). All produce the published reference values on every platform (little-endian defined).
+- Exposed `mbo::hash::Hash128To64(Hash128)`: folds a 128-bit hash into a well-mixed 64-bit one, e.g. to derive a fold-mixed 64-bit value from `murmur3::GetHash128` (whose `GetHash64` is the canonical `h1` truncation instead).
 - Added the `MBO_HASH_MANGLE` build flag (default `1`); define it to `0` for fully reproducible `GetHash` values (`GetHash == GetHash64`).
 - Hash values are not guaranteed stable across library versions and are not intended for persistence or cryptographic use.
 
