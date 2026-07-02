@@ -35,6 +35,7 @@
 #include <random>
 #include <string>
 #include <string_view>
+#include <tuple>
 
 #include "mbo/hash/hash.h"
 
@@ -102,6 +103,11 @@ struct Murmur3Hash {
     return ::mbo::hash::murmur3::GetHash128(data, seed);
   }
 };
+
+// All registered algorithm descriptors. The typed tests and the benchmark both
+// derive their coverage from this single list, so adding a descriptor here is
+// sufficient to test AND benchmark a new algorithm.
+using AllAlgorithms = std::tuple<SimpleHash, DefaultHash, Fnv1aHash, Xxh64Hash, Murmur3Hash>;
 
 // Detects whether an algorithm provides a 128-bit variant (is "128-bit based").
 template<typename Algo>

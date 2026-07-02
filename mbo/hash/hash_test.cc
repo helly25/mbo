@@ -23,6 +23,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <tuple>
 
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_cat.h"
@@ -53,8 +54,17 @@ constexpr uint64_t kSeed = 5'381;
 template<typename Algo>
 class HashTest : public ::testing::Test {};
 
-using HashAlgorithms =
-    ::testing::Types<algo::SimpleHash, algo::DefaultHash, algo::Fnv1aHash, algo::Xxh64Hash, algo::Murmur3Hash>;
+// Derive the gtest type list from the central algo::AllAlgorithms tuple, so a
+// descriptor added there is automatically tested here.
+template<typename Tuple>
+struct TupleToGtestTypes;
+
+template<typename... Ts>
+struct TupleToGtestTypes<std::tuple<Ts...>> {
+  using type = ::testing::Types<Ts...>;
+};
+
+using HashAlgorithms = TupleToGtestTypes<algo::AllAlgorithms>::type;
 TYPED_TEST_SUITE(HashTest, HashAlgorithms);
 
 // The framework detects 64- vs 128-bit algorithms from the descriptor.
