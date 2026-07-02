@@ -19,17 +19,31 @@
 #include <cstdint>
 #include <string_view>
 
+#include "mbo/hash/hash_fnv1a.h"          // IWYU pragma: export
 #include "mbo/hash/hash_internal_util.h"  // IWYU pragma: export
 #include "mbo/hash/hash_mangle.h"         // IWYU pragma: export
 #include "mbo/hash/hash_mh.h"             // IWYU pragma: export
+#include "mbo/hash/hash_murmur3.h"        // IWYU pragma: export
 #include "mbo/hash/hash_simple.h"         // IWYU pragma: export
 #include "mbo/hash/hash_types.h"          // IWYU pragma: export
+#include "mbo/hash/hash_xxh64.h"          // IWYU pragma: export
 
 namespace mbo::hash {
 
 // Selected current default implementations (see `hash_mh.h`).
 using ::mbo::hash::mh::GetHash128;
 using ::mbo::hash::mh::GetHash64;
+
+// Folds a 128-bit hash into a well-mixed 64-bit one (not a plain truncation).
+//
+// Useful to derive a 64-bit value from any 128-bit based algorithm, e.g. a
+// fold-mixed (non-canonical) 64-bit murmur3:
+//
+//   uint64_t hash = mbo::hash::Hash128To64(mbo::hash::murmur3::GetHash128(data));
+//
+// Note that `murmur3::GetHash64` deliberately returns `h1` instead -- the
+// customary truncation that matches other MurmurHash3 implementations.
+using ::mbo::hash::hash_internal::Hash128To64;
 
 // The signature every pluggable 64-bit hash implementation provides:
 // `(data, seed) -> hash`, constexpr-safe and non-throwing.

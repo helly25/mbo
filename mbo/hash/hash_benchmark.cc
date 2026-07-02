@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <random>
 #include <string>
+#include <tuple>
 
 #include "benchmark/benchmark.h"
 #include "mbo/hash/hash_test_util.h"
@@ -58,15 +59,38 @@ void BmHash128(benchmark::State& state) {
   state.SetLabel(std::string(Algo::Name()));
 }
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
-BENCHMARK_TEMPLATE(BmHash64, algo::SimpleHash)->RangeMultiplier(kRangeMultiplier)->Range(kMinLen, kMaxLen);
-BENCHMARK_TEMPLATE(BmHash64, algo::DefaultHash)->RangeMultiplier(kRangeMultiplier)->Range(kMinLen, kMaxLen);
-BENCHMARK_TEMPLATE(BmHash128, algo::DefaultHash)->RangeMultiplier(kRangeMultiplier)->Range(kMinLen, kMaxLen);
-// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
+// Registers the 64-bit benchmark for one algorithm, plus the 128-bit one where
+// the descriptor provides it (detected via the framework's HasHash128).
+template<typename Algo>
+void RegisterAlgo() {
+  const std::string name(Algo::Name());
+  benchmark::RegisterBenchmark("BmHash64<" + name + ">", BmHash64<Algo>)
+      ->RangeMultiplier(kRangeMultiplier)
+      ->Range(kMinLen, kMaxLen);
+  if constexpr (algo::HasHash128<Algo>) {
+    benchmark::RegisterBenchmark("BmHash128<" + name + ">", BmHash128<Algo>)
+        ->RangeMultiplier(kRangeMultiplier)
+        ->Range(kMinLen, kMaxLen);
+  }
+}
+
+// Registers benchmarks for every descriptor in the central algo::AllAlgorithms
+// list -- an algorithm added there is automatically benchmarked here. The tuple
+// (of empty descriptor structs) is passed by value purely to deduce the pack.
+template<typename... Algos>
+void RegisterAll(std::tuple<Algos...> /*algorithms*/) {
+  (RegisterAlgo<Algos>(), ...);
+}
 
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace
 }  // namespace mbo::hash
 
-BENCHMARK_MAIN();  // NOLINT
+int main(int argc, char** argv) {
+  mbo::hash::RegisterAll(mbo::hash::algo::AllAlgorithms{});
+  benchmark::Initialize(&argc, argv);
+  benchmark::RunSpecifiedBenchmarks();
+  benchmark::Shutdown();
+  return 0;
+}
