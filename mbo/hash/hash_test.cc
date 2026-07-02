@@ -173,6 +173,20 @@ TEST(Hash128Test, Ordering) {
   EXPECT_LT((Hash128{.h1 = 1, .h2 = 9}), (Hash128{.h1 = 2, .h2 = 0}));
 }
 
+// ---------------------------------------------------------------------------
+// HashMangle: a single per-build seed XORed in (see hash_mangle.h). The seed
+// value is build-dependent, so tests only assert seed-independent properties.
+// ---------------------------------------------------------------------------
+TEST(HashMangleTest, IsConstantXorMask) {
+  // HashMangle(x) == x ^ seed, so XORing two mangled values cancels the seed.
+  EXPECT_EQ(HashMangle(0) ^ HashMangle(1), 0ULL ^ 1ULL);
+  EXPECT_EQ(HashMangle(0x1111) ^ HashMangle(0x2222), 0x1111ULL ^ 0x2222ULL);
+}
+
+TEST(HashMangleTest, GetHashAppliesMangle) {
+  EXPECT_EQ(GetHash("hash-mangle-check"), HashMangle(GetHash64("hash-mangle-check")));
+}
+
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace

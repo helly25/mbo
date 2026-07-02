@@ -33,11 +33,12 @@ using ::mbo::hash::mh::GetHash64;
 
 // A fast, constexpr-safe, non-cryptographic hash with a per-build seed.
 //
-// `GetHash` folds `GetHash64` through a `HashMangle` step whose seed is derived
-// from the compiler `__DATE__`/`__TIME__` macros. Its value therefore **may**
-// change from build to build -- though a hermetic build environment (e.g. Bazel)
-// may pin those macros, in which case it stays constant. Use `GetHash` when you
-// want values that are deliberately not comparable across independent builds.
+// `GetHash` folds `GetHash64` through a `HashMangle` step that mixes in one of a
+// small, fixed set of build-derived seeds (bucketed from `__DATE__`/`__TIME__`,
+// see `kMangleSeedCount`). Its value therefore **may** change from build to
+// build -- bounded to that seed set so it stays cache-friendly, and pinned to a
+// single seed in a hermetic build (e.g. Bazel). Use `GetHash` when you want
+// values that are deliberately not comparable across independent builds.
 //
 // For a fully deterministic, reproducible value (identical at compile time and
 // run time, and across builds) call `GetHash64` / `GetHash128` directly.
