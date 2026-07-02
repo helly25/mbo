@@ -31,14 +31,23 @@ namespace mbo::hash {
 using ::mbo::hash::mh::GetHash128;
 using ::mbo::hash::mh::GetHash64;
 
+// The signature every pluggable 64-bit hash implementation provides:
+// `(data, seed) -> hash`, constexpr-safe and non-throwing.
+using Hash64Fn = uint64_t (*)(std::string_view, uint64_t) noexcept;
+
 // A fast, constexpr-safe, non-cryptographic hash with a per-build seed.
 //
-// `GetHash` folds `GetHash64` through a `HashMangle` step that mixes in one of a
-// small, fixed set of build-derived seeds (bucketed from `__DATE__`/`__TIME__`,
-// see `kMangleSeedCount`). Its value therefore **may** change from build to
-// build -- bounded to that seed set so it stays cache-friendly, and pinned to a
-// single seed in a hermetic build (e.g. Bazel). Use `GetHash` when you want
-// values that are deliberately not comparable across independent builds.
+// `GetHash` folds a 64-bit hash implementation through a `HashMangle` step that
+// mixes in one of a small, fixed set of build-derived seeds (bucketed from
+// `__DATE__`/`__TIME__`, see `kMangleSeedCount`). Its value therefore **may**
+// change from build to build -- bounded to that seed set so it stays
+// cache-friendly, and pinned to a single seed in a hermetic build (e.g. Bazel).
+// Use `GetHash` when you want values that are deliberately not comparable across
+// independent builds.
+//
+// The implementation defaults to the current default (`mbo::hash::mh`), but any
+// hash matching `Hash64Fn` can be plugged in as a template argument, e.g.
+// `GetHash<&mbo::hash::mh::GetHash64>(data)`.
 //
 // For a fully deterministic, reproducible value (identical at compile time and
 // run time, and across builds) call `GetHash64` / `GetHash128` directly.
@@ -46,8 +55,9 @@ using ::mbo::hash::mh::GetHash64;
 // Stability: none of these values are guaranteed stable across library versions,
 // none are portable as a persisted/on-the-wire format, and none are suitable for
 // cryptographic use.
-inline constexpr uint64_t GetHash(std::string_view data) {
-  return HashMangle(GetHash64(data));
+template<Hash64Fn GetHashFn = &::mbo::hash::mh::GetHash64>
+inline constexpr uint64_t GetHash(std::string_view data, uint64_t seed = mh::kDefaultSeed) {
+  return HashMangle(GetHashFn(data, seed));
 }
 
 }  // namespace mbo::hash

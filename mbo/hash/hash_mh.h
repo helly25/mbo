@@ -42,6 +42,10 @@ inline constexpr uint64_t kMul2 = 0xC2B2AE3D27D4EB4FULL;
 // (see below). Tuned via //mbo/hash:hash_benchmark.
 inline constexpr std::size_t kSmallInputCutoff = 32;
 
+// Default seed (djb2's initial value). Shared so `mbo::hash::GetHash` folds the
+// same value the bare `GetHash*` functions use by default.
+inline constexpr uint64_t kDefaultSeed = 5'381;
+
 // 128-bit variant: dual-lane rotate-multiply state.
 //
 // Each 8-byte block is folded into both lanes, then the lane is rotated *before*
@@ -49,7 +53,7 @@ inline constexpr std::size_t kSmallInputCutoff = 32;
 // (a plain multiply-then-xor with a small multiplier diffuses far too slowly).
 // The two lanes combine the block differently (xor vs add) and use distinct
 // multipliers so they stay decorrelated.
-constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = 5'381) noexcept {
+constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = kDefaultSeed) noexcept {
   Hash128 hash = {.h1 = seed, .h2 = seed ^ 0xAA55AA55AA55AA55ULL};
 
   const char* ptr = str.data();
@@ -87,7 +91,7 @@ constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = 5'381) noexce
 // state, which wins on throughput once the block loop dominates. (The two paths
 // deliberately produce different values -- GetHash64 is not required to equal a
 // fold of GetHash128.)
-constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = 5'381) noexcept {
+constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = kDefaultSeed) noexcept {
   const std::size_t len = str.size();
   if (len > kSmallInputCutoff) {
     return hash_internal::Hash128To64(GetHash128(str, seed));

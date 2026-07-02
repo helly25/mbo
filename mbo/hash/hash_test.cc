@@ -187,6 +187,21 @@ TEST(HashMangleTest, GetHashAppliesMangle) {
   EXPECT_EQ(GetHash("hash-mangle-check"), HashMangle(GetHash64("hash-mangle-check")));
 }
 
+// A stand-in alternative implementation matching `Hash64Fn`, used to exercise
+// GetHash's pluggability.
+constexpr uint64_t AltHash64(std::string_view data, uint64_t seed) noexcept {
+  return mh::GetHash64(data, seed) ^ 0xABCDEFULL;
+}
+
+TEST(HashMangleTest, GetHashIsPluggable) {
+  // The default template argument matches the bare default call.
+  EXPECT_EQ(GetHash("plug"), GetHash<&mh::GetHash64>("plug"));
+  // Any Hash64Fn flows through the same mangle...
+  EXPECT_EQ(GetHash<&AltHash64>("plug"), HashMangle(AltHash64("plug", mh::kDefaultSeed)));
+  // ...and a different implementation yields a different mangled value.
+  EXPECT_NE(GetHash("plug"), GetHash<&AltHash64>("plug"));
+}
+
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace
