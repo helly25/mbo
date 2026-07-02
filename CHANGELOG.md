@@ -1,4 +1,8 @@
-# 0.12.1
+# 0.13.0
+
+- Added `mbo::hash::GetHash64(std::string_view)` / `GetHash128(std::string_view)` and the `mbo::hash::Hash128` result type - a new constexpr-safe, non-cryptographic hash (namespace `mbo::hash::mh`), now the default behind `mbo::hash::GetHash*`.
+- Deprecated `mbo::hash::simple::GetHash(std::string_view)`; use `mbo::hash::GetHash64()` instead. The previous implementation remains available as `mbo::hash::simple::GetHash64`.
+- Hash values are not guaranteed stable across library versions and are not intended for persistence or cryptographic use.
 
 # 0.12.0
 

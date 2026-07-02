@@ -3,7 +3,7 @@
 This C++20 library provides some general useful building blocks and integrates
 with [Google's Abseil library](https://abseil.io/).
 
-The library is tested with Clang (16+) and GCC (12+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml).
+The library is tested with Clang (20+) and GCC (13+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml).
 
 ## Library organization
 
@@ -72,7 +72,9 @@ The C++ library is organized in functional groups each residing in their own dir
 - Hash
   - `namespace mbo::hash`
   - mbo/hash:hash_cc, mbo/hash/hash.h
-    - function `simple::GetHash(std::string_view)`: A constexpr capable hash function.
+    - function `GetHash64(std::string_view)` / `GetHash128(std::string_view)`: A constexpr-safe, non-cryptographic hash (result type `Hash128`). Values are not stable across versions and not for persistence.
+    - function `GetHash(std::string_view)`: as `GetHash64` but folded through a per-build (`__DATE__`/`__TIME__`) seed, so values may differ between builds.
+    - function `simple::GetHash64(std::string_view)`: the previous hash implementation (`simple::GetHash` is deprecated).
 - Json
   - `namespace mbo::json`
   - mbo/json:json_cc, mbo/json/json.h
@@ -297,7 +299,7 @@ The [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) i
 
 Presented at [C++ On Sea 2024](https://cpponsea.uk/2024/session/practical-production-proven-constexpr-api-elements), this presentation covers the theory behind:
 
-- `mbo::hash::simple::GetHash`,
+- `mbo::hash::simple::GetHash64` (formerly `mbo::hash::simple::GetHash`),
 - `mbo::container::LimitedVector`,
 - `mbo::container::LimitedMap`, and
 - `mbo::container::LimitedSet`.
