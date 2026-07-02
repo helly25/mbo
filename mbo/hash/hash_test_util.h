@@ -66,6 +66,43 @@ struct SimpleHash {
   }
 };
 
+// FNV-1a 64 (canonical values; byte-at-a-time, weak final diffusion).
+struct Fnv1aHash {
+  static constexpr bool kStrongAvalanche = false;
+
+  static constexpr std::string_view Name() { return "fnv1a"; }
+
+  static constexpr uint64_t Get64(std::string_view data, uint64_t seed) {
+    return ::mbo::hash::fnv1a::GetHash64(data, seed);
+  }
+};
+
+// XXH64 (canonical xxHash 64-bit values).
+struct Xxh64Hash {
+  static constexpr bool kStrongAvalanche = true;
+
+  static constexpr std::string_view Name() { return "xxh64"; }
+
+  static constexpr uint64_t Get64(std::string_view data, uint64_t seed) {
+    return ::mbo::hash::xxh64::GetHash64(data, seed);
+  }
+};
+
+// MurmurHash3 x64 128 (canonical values; 128-bit based, Get64 == h1).
+struct Murmur3Hash {
+  static constexpr bool kStrongAvalanche = true;
+
+  static constexpr std::string_view Name() { return "murmur3"; }
+
+  static constexpr uint64_t Get64(std::string_view data, uint64_t seed) {
+    return ::mbo::hash::murmur3::GetHash64(data, seed);
+  }
+
+  static constexpr ::mbo::hash::Hash128 Get128(std::string_view data, uint64_t seed) {
+    return ::mbo::hash::murmur3::GetHash128(data, seed);
+  }
+};
+
 // Detects whether an algorithm provides a 128-bit variant (is "128-bit based").
 template<typename Algo>
 concept HasHash128 = requires(std::string_view data, uint64_t seed) {

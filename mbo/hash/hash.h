@@ -19,11 +19,14 @@
 #include <cstdint>
 #include <string_view>
 
+#include "mbo/hash/hash_fnv1a.h"          // IWYU pragma: export
 #include "mbo/hash/hash_internal_util.h"  // IWYU pragma: export
 #include "mbo/hash/hash_mangle.h"         // IWYU pragma: export
 #include "mbo/hash/hash_mh.h"             // IWYU pragma: export
+#include "mbo/hash/hash_murmur3.h"        // IWYU pragma: export
 #include "mbo/hash/hash_simple.h"         // IWYU pragma: export
 #include "mbo/hash/hash_types.h"          // IWYU pragma: export
+#include "mbo/hash/hash_xxh64.h"          // IWYU pragma: export
 
 namespace mbo::hash {
 

@@ -61,7 +61,11 @@ void BmHash128(benchmark::State& state) {
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
 BENCHMARK_TEMPLATE(BmHash64, algo::SimpleHash)->RangeMultiplier(kRangeMultiplier)->Range(kMinLen, kMaxLen);
 BENCHMARK_TEMPLATE(BmHash64, algo::DefaultHash)->RangeMultiplier(kRangeMultiplier)->Range(kMinLen, kMaxLen);
+BENCHMARK_TEMPLATE(BmHash64, algo::Fnv1aHash)->RangeMultiplier(kRangeMultiplier)->Range(kMinLen, kMaxLen);
+BENCHMARK_TEMPLATE(BmHash64, algo::Xxh64Hash)->RangeMultiplier(kRangeMultiplier)->Range(kMinLen, kMaxLen);
+BENCHMARK_TEMPLATE(BmHash64, algo::Murmur3Hash)->RangeMultiplier(kRangeMultiplier)->Range(kMinLen, kMaxLen);
 BENCHMARK_TEMPLATE(BmHash128, algo::DefaultHash)->RangeMultiplier(kRangeMultiplier)->Range(kMinLen, kMaxLen);
+BENCHMARK_TEMPLATE(BmHash128, algo::Murmur3Hash)->RangeMultiplier(kRangeMultiplier)->Range(kMinLen, kMaxLen);
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
 
 // NOLINTEND(*-magic-numbers)
