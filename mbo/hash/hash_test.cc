@@ -164,6 +164,14 @@ TEST(Murmur3HashTest, Hash64IsH1) {
   EXPECT_EQ(murmur3::GetHash64("truncation-check"), murmur3::GetHash128("truncation-check").h1);
 }
 
+// The documented composition: a fold-mixed (non-canonical) 64-bit value can be
+// derived from any 128-bit based algorithm via the public Hash128To64.
+TEST(Murmur3HashTest, FoldedHash64ByComposition) {
+  constexpr uint64_t kFolded = Hash128To64(murmur3::GetHash128("fold-check"));  // constexpr-safe
+  EXPECT_EQ(kFolded, hash_internal::Hash128To64(murmur3::GetHash128("fold-check")));
+  EXPECT_NE(kFolded, murmur3::GetHash64("fold-check"));  // distinct from the canonical truncation
+}
+
 // ---------------------------------------------------------------------------
 // Known-answer tests: fnv1a / xxh64 / murmur3 must produce the canonical
 // reference values (vectors generated with the reference implementations:

@@ -34,6 +34,17 @@ namespace mbo::hash {
 using ::mbo::hash::mh::GetHash128;
 using ::mbo::hash::mh::GetHash64;
 
+// Folds a 128-bit hash into a well-mixed 64-bit one (not a plain truncation).
+//
+// Useful to derive a 64-bit value from any 128-bit based algorithm, e.g. a
+// fold-mixed (non-canonical) 64-bit murmur3:
+//
+//   uint64_t hash = mbo::hash::Hash128To64(mbo::hash::murmur3::GetHash128(data));
+//
+// Note that `murmur3::GetHash64` deliberately returns `h1` instead -- the
+// customary truncation that matches other MurmurHash3 implementations.
+using ::mbo::hash::hash_internal::Hash128To64;
+
 // The signature every pluggable 64-bit hash implementation provides:
 // `(data, seed) -> hash`, constexpr-safe and non-throwing.
 using Hash64Fn = uint64_t (*)(std::string_view, uint64_t) noexcept;
