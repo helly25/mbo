@@ -662,28 +662,28 @@ TEST_F(TStringTest, FindFirstLast) {
 }
 
 TEST_F(TStringTest, StdHash) {
-  using ::mbo::hash::simple::GetHash;
+  using ::mbo::hash::GetHash64;
   // "bar"_ts
   constexpr tstring<'b', 'a', 'r'> kTsBar;
   using TsBar = decltype(kTsBar);
   const std::size_t k_bar_hash_ts = std::hash<TsBar>{}(kTsBar);
   EXPECT_THAT(std::hash<TsBar>{}(), k_bar_hash_ts);
-  constexpr auto kBarDirectHashTs = GetHash("bar");
+  constexpr auto kBarDirectHashTs = GetHash64("bar");
   EXPECT_THAT(kBarDirectHashTs, Ne(k_bar_hash_ts));
   EXPECT_THAT(kBarDirectHashTs, decltype(kTsBar)::StringHash());
   const std::string_view vs_bar{"bar"};
-  const auto k_bar_volatile_hash_ts = GetHash(vs_bar);
+  const auto k_bar_volatile_hash_ts = GetHash64(vs_bar);
   EXPECT_THAT(k_bar_volatile_hash_ts, kBarDirectHashTs);
   // "foo"_ts
   constexpr tstring<'f', 'o', 'o'> kTsFoo;
   using TsFoo = decltype(kTsFoo);
   const std::size_t k_foo_hash_ts = std::hash<TsFoo>{}(kTsFoo);
   EXPECT_THAT(std::hash<TsFoo>{}(), k_foo_hash_ts);
-  constexpr auto kFooDirectHashTs = GetHash("foo");
+  constexpr auto kFooDirectHashTs = GetHash64("foo");
   EXPECT_THAT(kFooDirectHashTs, Ne(k_foo_hash_ts));
   EXPECT_THAT(kFooDirectHashTs, decltype(kTsFoo)::StringHash());
   const std::string_view vs_foo{"foo"};
-  const auto k_foo_volatile_hash_ts = GetHash(vs_foo);
+  const auto k_foo_volatile_hash_ts = GetHash64(vs_foo);
   EXPECT_THAT(k_foo_volatile_hash_ts, kFooDirectHashTs);
   // hash("bar"_ts) != hash("foo"_ts)
   EXPECT_THAT(k_bar_hash_ts, Ne(k_foo_hash_ts));

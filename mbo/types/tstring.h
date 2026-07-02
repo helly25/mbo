@@ -386,7 +386,7 @@ struct tstring final {
   }
 
   // Returns the value of `GetHash(str())` - so as if this was a `std::string` or `std::string`.
-  static constexpr uint64_t StringHash() { return ::mbo::hash::simple::GetHash(str()); }
+  static constexpr uint64_t StringHash() { return ::mbo::hash::GetHash64(str()); }
 
   // Returns the typed hash, so different from `StringHash` above.
   static constexpr uint64_t Hash() {
