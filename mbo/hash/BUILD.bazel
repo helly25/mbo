@@ -50,6 +50,17 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "hash_no_mangle_test",
+    srcs = ["hash_no_mangle_test.cc"],
+    local_defines = ["MBO_HASH_MANGLE=0"],
+    deps = [
+        ":hash_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_binary(
     name = "hash_benchmark",
     testonly = True,

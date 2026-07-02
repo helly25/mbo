@@ -2,6 +2,8 @@
 
 - Added `mbo::hash::GetHash64(std::string_view)` / `GetHash128(std::string_view)` and the `mbo::hash::Hash128` result type - a new constexpr-safe, non-cryptographic hash (namespace `mbo::hash::mh`), now the default behind `mbo::hash::GetHash*`.
 - Deprecated `mbo::hash::simple::GetHash(std::string_view)`; use `mbo::hash::GetHash64()` instead. The previous implementation remains available as `mbo::hash::simple::GetHash64`.
+- `mbo::hash::GetHash` is now a template over the hash implementation and seed (`GetHash<&Fn, Seed>(data)`), defaulting to the current default.
+- Added the `MBO_HASH_MANGLE` build flag (default `1`); define it to `0` for fully reproducible `GetHash` values (`GetHash == GetHash64`).
 - Hash values are not guaranteed stable across library versions and are not intended for persistence or cryptographic use.
 
 # 0.12.0
