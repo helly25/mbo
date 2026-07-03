@@ -110,6 +110,14 @@ constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = 0) noexcept {
   return hash;
 }
 
+// The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). Note that
+// the canonical XXH64 default seed is 0, not `kDefaultSeed`.
+struct Algorithm {
+  static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) noexcept {
+    return ::mbo::hash::xxh64::GetHash64(data, seed);
+  }
+};
+
 // NOLINTEND(*-magic-numbers,*-pointer-arithmetic)
 
 }  // namespace mbo::hash::xxh64

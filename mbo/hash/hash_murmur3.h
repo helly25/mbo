@@ -104,6 +104,18 @@ constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = 0) noexcept {
   return GetHash128(str, seed).h1;
 }
 
+// The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). Note that
+// the canonical MurmurHash3 default seed is 0, not `kDefaultSeed`.
+struct Algorithm {
+  static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) noexcept {
+    return ::mbo::hash::murmur3::GetHash64(data, seed);
+  }
+
+  static constexpr Hash128 GetHash128(std::string_view data, uint64_t seed = 0) noexcept {
+    return ::mbo::hash::murmur3::GetHash128(data, seed);
+  }
+};
+
 // NOLINTEND(*-magic-numbers,*-pointer-arithmetic)
 
 }  // namespace mbo::hash::murmur3

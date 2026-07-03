@@ -16,6 +16,7 @@
 #ifndef MBO_HASH_HASH_H_
 #define MBO_HASH_HASH_H_
 
+#include <concepts>
 #include <cstdint>
 #include <string_view>
 
@@ -30,9 +31,97 @@
 
 namespace mbo::hash {
 
-// Selected current default implementations (see `hash_mh.h`).
-using ::mbo::hash::mh::GetHash128;
-using ::mbo::hash::mh::GetHash64;
+// Every algorithm is represented by a struct with static member functions
+// `GetHash64` and/or `GetHash128` taking `(std::string_view, uint64_t seed)`
+// (e.g. `mh::Algorithm`, `xxh64::Algorithm`, `murmur3::Algorithm`). These concepts detect what
+// an algorithm provides; `Hasher` below completes any partial algorithm.
+
+template<typename Algo>
+concept HasGetHash64 = requires(std::string_view data, uint64_t seed) {
+  { Algo::GetHash64(data, seed) } noexcept -> std::same_as<uint64_t>;
+};
+
+template<typename Algo>
+concept HasGetHash128 = requires(std::string_view data, uint64_t seed) {
+  { Algo::GetHash128(data, seed) } noexcept -> std::same_as<Hash128>;
+};
+
+template<typename Algo>
+concept IsHashAlgorithm = HasGetHash64<Algo> || HasGetHash128<Algo>;
+
+// Seed perturbation for the synthesized `GetHash128` fallback's second lane.
+inline constexpr uint64_t kSeedFlip = 0x9E3779B97F4A7C15ULL;
+
+// Completes any `IsHashAlgorithm` struct into the full interface, synthesizing
+// whatever the algorithm does not provide natively:
+//
+// - `GetHash64` falls back to folding the 128-bit state (`Hash128To64`).
+// - `GetHash128` falls back to two independently seeded 64-bit passes (`seed`
+//   and `seed ^ kSeedFlip`). Note: such a synthesized 128-bit value retains only
+//   64-bit collision strength per lane.
+// - `GetHash` is always derived: the 64-bit hash folded through `HashMangle`.
+template<IsHashAlgorithm Algo>
+struct Hasher {
+  using Algorithm = Algo;
+
+  static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
+    if constexpr (HasGetHash64<Algo>) {
+      return Algo::GetHash64(data, seed);
+    } else {
+      return hash_internal::Hash128To64(Algo::GetHash128(data, seed));
+    }
+  }
+
+  static constexpr Hash128 GetHash128(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
+    if constexpr (HasGetHash128<Algo>) {
+      return Algo::GetHash128(data, seed);
+    } else {
+      return {.h1 = Algo::GetHash64(data, seed), .h2 = Algo::GetHash64(data, seed ^ kSeedFlip)};
+    }
+  }
+
+  static constexpr uint64_t GetHash(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
+    return HashMangle(GetHash64(data, seed));
+  }
+};
+
+// The selected default algorithm behind the `mbo::hash` entry points.
+using DefaultHashAlgorithm = mh::Algorithm;
+using DefaultHasher = Hasher<DefaultHashAlgorithm>;
+
+// A fast, constexpr-safe, non-cryptographic 64-bit hash.
+//
+// The algorithm defaults to `DefaultHashAlgorithm` and can be replaced with any
+// `IsHashAlgorithm` struct, e.g. `GetHash64<xxh64::Algorithm>(data)` -- including
+// 128-bit-only algorithms, for which the fold fallback applies (see `Hasher`).
+//
+// Stability: values are not guaranteed stable across library versions, are not
+// portable as a persisted/on-the-wire format, and are unsuitable for
+// cryptographic use.
+template<IsHashAlgorithm Algo = DefaultHashAlgorithm>
+constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
+  return Hasher<Algo>::GetHash64(data, seed);
+}
+
+// The 128-bit companion of `GetHash64` (same algorithm selection and stability
+// caveats). For 64-bit-only algorithms the synthesized fallback applies.
+template<IsHashAlgorithm Algo = DefaultHashAlgorithm>
+constexpr Hash128 GetHash128(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
+  return Hasher<Algo>::GetHash128(data, seed);
+}
+
+// As `GetHash64` but folded through `HashMangle`, which mixes in one of a small,
+// fixed set of build-derived seeds (bucketed from `__DATE__`/`__TIME__`, see
+// `kMangleSeedCount`; identity with `MBO_HASH_MANGLE=0`). Its value therefore
+// **may** change from build to build -- bounded to that seed set so it stays
+// cache-friendly, and pinned to a single seed in a hermetic build (e.g. Bazel).
+// Use `GetHash` when values must deliberately not be comparable across
+// independent builds; use `GetHash64` / `GetHash128` for fully deterministic,
+// reproducible values.
+template<IsHashAlgorithm Algo = DefaultHashAlgorithm, uint64_t Seed = kDefaultSeed>
+constexpr uint64_t GetHash(std::string_view data) noexcept {
+  return HashMangle(Hasher<Algo>::GetHash64(data, Seed));
+}
 
 // Folds a 128-bit hash into a well-mixed 64-bit one (not a plain truncation).
 //
@@ -44,35 +133,6 @@ using ::mbo::hash::mh::GetHash64;
 // Note that `murmur3::GetHash64` deliberately returns `h1` instead -- the
 // customary truncation that matches other MurmurHash3 implementations.
 using ::mbo::hash::hash_internal::Hash128To64;
-
-// The signature every pluggable 64-bit hash implementation provides:
-// `(data, seed) -> hash`, constexpr-safe and non-throwing.
-using Hash64Fn = uint64_t (*)(std::string_view, uint64_t) noexcept;
-
-// A fast, constexpr-safe, non-cryptographic hash with a per-build seed.
-//
-// `GetHash` folds a 64-bit hash implementation through a `HashMangle` step that
-// mixes in one of a small, fixed set of build-derived seeds (bucketed from
-// `__DATE__`/`__TIME__`, see `kMangleSeedCount`). Its value therefore **may**
-// change from build to build -- bounded to that seed set so it stays
-// cache-friendly, and pinned to a single seed in a hermetic build (e.g. Bazel).
-// Use `GetHash` when you want values that are deliberately not comparable across
-// independent builds.
-//
-// The implementation defaults to the current default (`mbo::hash::mh`), but any
-// hash matching `Hash64Fn` can be plugged in as a template argument, and the
-// seed likewise, e.g. `GetHash<&mbo::hash::mh::GetHash64, 0x1234>(data)`.
-//
-// For a fully deterministic, reproducible value (identical at compile time and
-// run time, and across builds) call `GetHash64` / `GetHash128` directly.
-//
-// Stability: none of these values are guaranteed stable across library versions,
-// none are portable as a persisted/on-the-wire format, and none are suitable for
-// cryptographic use.
-template<Hash64Fn GetHashFn = &::mbo::hash::mh::GetHash64, uint64_t Seed = mh::kDefaultSeed>
-inline constexpr uint64_t GetHash(std::string_view data) {
-  return HashMangle(GetHashFn(data, Seed));
-}
 
 }  // namespace mbo::hash
 

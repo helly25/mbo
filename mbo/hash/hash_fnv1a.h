@@ -43,6 +43,14 @@ constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = kOffsetBasis
   return hash;
 }
 
+// The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). Note that
+// the canonical FNV-1a default seed is the offset basis, not `kDefaultSeed`.
+struct Algorithm {
+  static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = kOffsetBasis) noexcept {
+    return ::mbo::hash::fnv1a::GetHash64(data, seed);
+  }
+};
+
 }  // namespace mbo::hash::fnv1a
 
 #endif  // MBO_HASH_HASH_FNV1A_H_
