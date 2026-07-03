@@ -360,11 +360,30 @@ TEST(HasherTest, GetHash64FallsBackToFold) {
   EXPECT_EQ(Hasher<Fake128Only>::GetHash64("fold", kSeed), Hash128To64(Fake128Only::GetHash128("fold", kSeed)));
 }
 
-TEST(HasherTest, GetHash128FallsBackToTwoSeededPasses) {
-  const Hash128 hash = Hasher<Fake64Only>::GetHash128("twopass", kSeed);
-  EXPECT_EQ(hash.h1, Fake64Only::GetHash64("twopass", kSeed));
-  EXPECT_EQ(hash.h2, Fake64Only::GetHash64("twopass", kSeed ^ kSeedFlip));
+TEST(HasherTest, GetHash128FallsBackToTwoDecorrelatedPasses) {
+  // The second lane skips the first up-to-8 bytes and injects them via the seed.
+  constexpr std::string_view kData = "twopass-fallback";
+  const Hash128 hash = Hasher<Fake64Only>::GetHash128(kData, kSeed);
+  EXPECT_EQ(hash.h1, Fake64Only::GetHash64(kData, kSeed));
+  const uint64_t head = hash_internal::LoadTail(kData.data(), 8);
+  EXPECT_EQ(hash.h2, Fake64Only::GetHash64(kData.substr(8), kSeed ^ kSeedFlip ^ head));
   EXPECT_NE(hash.h1, hash.h2);
+  // Short inputs (< 8 bytes): the second lane hashes the empty remainder with
+  // all bytes injected via the seed -- still covering every byte.
+  const Hash128 tiny = Hasher<Fake64Only>::GetHash128("abc", kSeed);
+  const uint64_t tiny_head = hash_internal::LoadTail("abc", 3);
+  EXPECT_EQ(tiny.h2, Fake64Only::GetHash64("", kSeed ^ kSeedFlip ^ tiny_head));
+}
+
+TEST(HasherTest, GetHash128FallbackDecorrelatesSeedIgnoringAlgorithms) {
+  // `simple` ignores the seed entirely; a naive two-seed fallback would yield
+  // h1 == h2. The lanes hash different data, so they still differ.
+  const Hash128 hash = Hasher<simple::Algorithm>::GetHash128("longer than eight bytes", kSeed);
+  EXPECT_NE(hash.h1, hash.h2);
+  // And inputs differing only past the first 8 bytes change both lanes.
+  const Hash128 other = Hasher<simple::Algorithm>::GetHash128("longer than eight BYTES", kSeed);
+  EXPECT_NE(hash.h1, other.h1);
+  EXPECT_NE(hash.h2, other.h2);
 }
 
 TEST(HasherTest, GetHashIsMangled64) {

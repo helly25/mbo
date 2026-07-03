@@ -17,6 +17,7 @@
 #define MBO_HASH_HASH_H_
 
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <string_view>
 
@@ -56,9 +57,12 @@ inline constexpr uint64_t kSeedFlip = 0x9E3779B97F4A7C15ULL;
 // whatever the algorithm does not provide natively:
 //
 // - `GetHash64` falls back to folding the 128-bit state (`Hash128To64`).
-// - `GetHash128` falls back to two independently seeded 64-bit passes (`seed`
-//   and `seed ^ kSeedFlip`). Note: such a synthesized 128-bit value retains only
-//   64-bit collision strength per lane.
+// - `GetHash128` falls back to two decorrelated 64-bit passes: the second pass
+//   skips the first up-to-8 bytes but injects them (and `kSeedFlip`) into its
+//   seed. Both lanes thus cover every input byte, yet hash different data, so
+//   the lanes decorrelate even for algorithms with weak or ignored seed
+//   handling. Note: a synthesized 128-bit value is still built from a 64-bit
+//   hash and does not reach true 128-bit collision resistance.
 // - `GetHash` is always derived: the 64-bit hash folded through `HashMangle`.
 template<IsHashAlgorithm Algo>
 struct Hasher {
@@ -76,7 +80,12 @@ struct Hasher {
     if constexpr (HasGetHash128<Algo>) {
       return Algo::GetHash128(data, seed);
     } else {
-      return {.h1 = Algo::GetHash64(data, seed), .h2 = Algo::GetHash64(data, seed ^ kSeedFlip)};
+      const std::size_t skip = data.size() < 8 ? data.size() : 8;        // NOLINT(*-magic-numbers)
+      const uint64_t head = hash_internal::LoadTail(data.data(), skip);  // NOLINT(*-stringview-data-usage)
+      return {
+          .h1 = Algo::GetHash64(data, seed),
+          .h2 = Algo::GetHash64(data.substr(skip), seed ^ kSeedFlip ^ head),
+      };
     }
   }
 
