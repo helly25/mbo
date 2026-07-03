@@ -5,7 +5,7 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 
 ## Easy
 
-- [ ] **Seed-avalanche test**: flip *seed* bits in the typed avalanche test
+- [ ] **Seed-avalanche test**: flip _seed_ bits in the typed avalanche test
       (SMHasher-style); soften/skip for seedless algorithms (`simple`).
 - [ ] **Sparse/structured-key tests**: distinctness over all-zero inputs of
       varying lengths, single-bit keys, and cyclic patterns - catches weak
