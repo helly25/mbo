@@ -80,8 +80,8 @@ struct Hasher {
     if constexpr (HasGetHash128<Algo>) {
       return Algo::GetHash128(data, seed);
     } else {
-      const std::size_t skip = data.size() < 8 ? data.size() : 8;  // NOLINT(*-magic-numbers)
-      const uint64_t head = hash_internal::LoadTail(data.data(), skip);
+      const std::size_t skip = data.size() < 8 ? data.size() : 8;        // NOLINT(*-magic-numbers)
+      const uint64_t head = hash_internal::LoadTail(data.data(), skip);  // NOLINT(*-stringview-data-usage)
       return {
           .h1 = Algo::GetHash64(data, seed),
           .h2 = Algo::GetHash64(data.substr(skip), seed ^ kSeedFlip ^ head),
