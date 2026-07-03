@@ -6,6 +6,7 @@
 - Added constexpr-safe, canonical implementations of further hash algorithms, all usable with `GetHash<&Fn>`: `mbo::hash::fnv1a::GetHash64` (FNV-1a 64), `mbo::hash::xxh64::GetHash64` (XXH64), and `mbo::hash::murmur3::GetHash64/GetHash128` (MurmurHash3 x64 128). All produce the published reference values on every platform (little-endian defined).
 - Exposed `mbo::hash::Hash128To64(Hash128)`: folds a 128-bit hash into a well-mixed 64-bit one, e.g. to derive a fold-mixed 64-bit value from `murmur3::GetHash128` (whose `GetHash64` is the canonical `h1` truncation instead).
 - Added the `MBO_HASH_MANGLE` build flag (default `1`); define it to `0` for fully reproducible `GetHash` values (`GetHash == GetHash64`).
+- Made the default hash substantially faster (changing its values, as allowed by the stability contract): runtime loads now use `memcpy` (gcc never folded the byte-assembly loads - roughly 3x on gcc for **all** algorithms), tail loads use branch-lite overlapping reads, and `mh::GetHash128` processes large inputs (>= 64 bytes) in 32-byte stripes over 4 accumulators with a cross-mixed finalizer - about 2.5-3.7x throughput at >= 256 bytes, now beating `xxh64`.
 - Hash values are not guaranteed stable across library versions and are not intended for persistence or cryptographic use.
 
 # 0.12.0
