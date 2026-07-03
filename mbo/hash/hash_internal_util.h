@@ -113,6 +113,26 @@ constexpr uint64_t Hash128To64(Hash128 hash) noexcept {
   return Fmix64(combined);
 }
 
+// Full 64x64->128 multiply folded to 64 bits by XORing the halves (the core
+// mixer of the xxh3/wyhash algorithm family). Uses `__uint128_t` where the
+// compiler provides it (gcc/clang, constexpr-legal); the portable 32-bit
+// schoolbook multiply otherwise.
+constexpr uint64_t Mul128Fold64(uint64_t lhs, uint64_t rhs) noexcept {
+#if defined(__SIZEOF_INT128__)
+  const auto product = static_cast<unsigned __int128>(lhs) * static_cast<unsigned __int128>(rhs);
+  return static_cast<uint64_t>(product) ^ static_cast<uint64_t>(product >> 64U);
+#else   // defined(__SIZEOF_INT128__)
+  const uint64_t lo_lo = (lhs & 0xFFFFFFFFULL) * (rhs & 0xFFFFFFFFULL);
+  const uint64_t hi_lo = (lhs >> 32U) * (rhs & 0xFFFFFFFFULL);
+  const uint64_t lo_hi = (lhs & 0xFFFFFFFFULL) * (rhs >> 32U);
+  const uint64_t hi_hi = (lhs >> 32U) * (rhs >> 32U);
+  const uint64_t cross = (lo_lo >> 32U) + (hi_lo & 0xFFFFFFFFULL) + lo_hi;
+  const uint64_t upper = (hi_lo >> 32U) + (cross >> 32U) + hi_hi;
+  const uint64_t lower = (cross << 32U) | (lo_lo & 0xFFFFFFFFULL);
+  return lower ^ upper;
+#endif  // defined(__SIZEOF_INT128__)
+}
+
 // NOLINTEND(*-magic-numbers,*-pointer-arithmetic)
 
 }  // namespace mbo::hash::hash_internal
