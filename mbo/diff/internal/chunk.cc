@@ -16,16 +16,12 @@
 #include "mbo/diff/internal/chunk.h"
 
 #include <cstddef>
-#include <list>
-#include <optional>
 #include <string>
 #include <string_view>
-#include <utility>
 
 #include "absl/cleanup/cleanup.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
 #include "mbo/diff/diff_options.h"
+#include "mbo/diff/internal/output.h"
 #include "re2/re2.h"
 
 namespace mbo::diff::diff_internal {
@@ -78,16 +74,6 @@ std::string Chunk::MoveOutput() {
   }
 }
 
-std::string Chunk::ChunkPos(bool empty, std::size_t idx, std::size_t size) {
-  if (empty) {
-    return "0,0";
-  } else if (size == 1) {
-    return absl::StrCat(idx + 1);
-  } else {
-    return absl::StrCat(idx + 1, ",", size);
-  }
-}
-
 void Chunk::CheckContext(std::size_t lhs_idx, std::size_t rhs_idx) {
   if (context_.Empty() && lhs_size_ == 0 && rhs_size_ == 0) {
     lhs_idx_ = lhs_idx;
@@ -98,11 +84,11 @@ void Chunk::CheckContext(std::size_t lhs_idx, std::size_t rhs_idx) {
 
 void Chunk::MoveDiffs() {
   while (!lhs_.empty()) {
-    data_.emplace_back('-', lhs_.front());
+    data_.push_back({.kind = '-', .text = lhs_.front()});
     lhs_.pop_front();
   }
   while (!rhs_.empty()) {
-    data_.emplace_back('+', rhs_.front());
+    data_.push_back({.kind = '+', .text = rhs_.front()});
     rhs_.pop_front();
   }
 }
@@ -110,7 +96,7 @@ void Chunk::MoveDiffs() {
 void Chunk::MoveContext(bool last) {
   std::size_t ctx = last ? context_.HalfSsize() : context_.Size();
   while (ctx-- > 0) {
-    data_.emplace_back(' ', context_.PopFront());
+    data_.push_back({.kind = ' ', .text = context_.PopFront()});
     ++lhs_size_;
     ++rhs_size_;
   }
@@ -132,20 +118,15 @@ void Chunk::OutputChunk() {
     return;
   }
   diff_found_ = true;
-  // Output position and length:
-  // - If there is no content, then line is 0, otherwise use next line,
-  //   whether ot not it has content.
-  // - Do not show length 1
-  if (options_.show_chunk_headers) {
-    absl::StrAppendFormat(
-        &output_, "@@ -%s +%s @@\n",                // Format
-        ChunkPos(lhs_empty_, lhs_idx_, lhs_size_),  // Format
-        ChunkPos(rhs_empty_, rhs_idx_, rhs_size_));
-  }
-  while (!data_.empty()) {
-    absl::StrAppendFormat(&output_, "%c%s\n", data_.front().first, data_.front().second);
-    data_.pop_front();
-  }
+  AppendChunk(
+      output_, options_,
+      {
+          .lhs_idx = lhs_idx_,
+          .rhs_idx = rhs_idx_,
+          .lhs_size = lhs_size_,
+          .rhs_size = rhs_size_,
+      },
+      data_);
 }
 
 void Chunk::Clear() {

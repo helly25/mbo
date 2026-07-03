@@ -44,14 +44,25 @@ cc_library(
     hdrs = ["chunk.h"],
     deps = [
         ":context_cc",
+        ":output_cc",
         "//mbo/diff:diff_options_cc",
-        "//mbo/file:artefact_cc",
         "//mbo/strings:strip_cc",
         "@abseil-cpp//absl/cleanup",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:str_format",
         "@re2",
+    ],
+)
+
+cc_library(
+    name = "output_cc",
+    srcs = ["output.cc"],
+    hdrs = ["output.h"],
+    deps = [
+        "//mbo/diff:diff_options_cc",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
     ],
 )
 

@@ -24,7 +24,7 @@
 namespace mbo::diff {
 
 ChunkedDiff::ChunkedDiff(const file::Artefact& lhs, const file::Artefact& rhs, const DiffOptions& options)
-    : BaseDiff(lhs, rhs, options), chunk_(lhs, rhs, Header(), Options()) {}
+    : BaseDiff(lhs, rhs, options), chunk_(Header(), Options()) {}
 
 absl::StatusOr<std::string> ChunkedDiff::Finalize() {
   while (!LhsData().Done()) {

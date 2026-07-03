@@ -37,12 +37,12 @@ The C++ library is organized in functional groups each residing in their own dir
     - class `LimitedVector`: A space limited, constexpr compliant `vector`.
 - Diff
   - `namespace mbo::diff`
-  - mbo/diff:dff_cc, mbo/diff/diff.h
-    - class `Diff`: A class that implements unified-diffing.
+  - mbo/diff:diff_cc, mbo/diff/diff.h
+    - class `Diff`: A class that implements line based diffing in unified, context or normal output format (`DiffOptions::output_format`), using the Myers minimal diff algorithm by default (`DiffOptions::algorithm` also offers `naive` and `direct`).
   - mbo/diff
-    - binary `unfied_diff`: A binary that performs a unified-diff on two files.
+    - binary `diff`: A binary that diffs two files; defaults to unified format, `--format` selects `unified`, `context` or `normal`, `--algorithm` selects `myers` (default), `naive` or `direct`.
   - mbo/diff:diff_bzl, mbo/diff/diff.bzl
-    - bzl-macro `difftest`: A test rule that compares an output versus a golden file.
+    - bzl-macro `diff_test`: A test rule that compares an output versus a golden file.
 - Files
   - `namespace mbo::files`
   - mbo/file:artefact_cc, mbo/file/artefact.h

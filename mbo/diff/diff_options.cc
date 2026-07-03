@@ -33,7 +33,22 @@ namespace mbo::diff {
 std::optional<DiffOptions::Algorithm> DiffOptions::ParseAlgorithmFlag(std::string_view flag) {
   constexpr auto kFlagMapping = mbo::container::ToLimitedMap<std::string_view, DiffOptions::Algorithm>({
       {"direct", DiffOptions::Algorithm::kDirect},
-      {"unified", DiffOptions::Algorithm::kUnified},
+      {"myers", DiffOptions::Algorithm::kMyers},
+      {"naive", DiffOptions::Algorithm::kNaive},
+      {"unified", DiffOptions::Algorithm::kMyers},  // Deprecated alias; implies unified format.
+  });
+  auto it = kFlagMapping.find(flag);
+  if (it == kFlagMapping.end()) {
+    return std::nullopt;
+  }
+  return it->second;
+}
+
+std::optional<DiffOptions::OutputFormat> DiffOptions::ParseOutputFormatFlag(std::string_view flag) {
+  constexpr auto kFlagMapping = mbo::container::ToLimitedMap<std::string_view, DiffOptions::OutputFormat>({
+      {"context", DiffOptions::OutputFormat::kContext},
+      {"normal", DiffOptions::OutputFormat::kNormal},
+      {"unified", DiffOptions::OutputFormat::kUnified},
   });
   auto it = kFlagMapping.find(flag);
   if (it == kFlagMapping.end()) {
