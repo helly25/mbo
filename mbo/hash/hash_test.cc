@@ -19,12 +19,15 @@
 #include <bit>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <random>
 #include <set>
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <unordered_map>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_cat.h"
 #include "gtest/gtest.h"
@@ -255,6 +258,48 @@ TEST(KnownAnswerTest, Xxh64) {
   }
 }
 
+// Deterministic buffer matching the python generator: byte i = (i*131 + 7) % 256.
+inline std::string PatternBuffer(std::size_t len) {
+  std::string result(len, '\0');
+  for (std::size_t i = 0; i < len; ++i) {
+    result[i] = static_cast<char>(((i * 131) + 7) % 256);
+  }
+  return result;
+}
+
+TEST(KnownAnswerTest, Xxh3) {
+  // Vectors from the reference implementation (python xxhash 3.8.0 / libxxhash
+  // 0.8.x, XXH3_64bits[_withSeed]); lengths cover every dispatch class:
+  // 0, 1..3, 4..8, 9..16, 17..128, 129..240, and >240 (with block boundaries),
+  // plus the seeded custom-secret long path.
+  struct Vector {
+    uint64_t seed;
+    std::size_t len;
+    uint64_t expected;
+  };
+
+  // NOLINTBEGIN(modernize-use-designated-initializers)
+  static constexpr std::array<Vector, 33> kVectors{{
+      {0, 0, 0x2d06800538d394c2ULL},       {0, 1, 0x4c5cca45d0f4811fULL},         {0, 3, 0x6e3e2670e61106acULL},
+      {0, 4, 0x5c4c63133443d03fULL},       {0, 8, 0xf9fd4dd0b04d78f5ULL},         {0, 9, 0x7c20df9712c26edfULL},
+      {0, 16, 0x86abf6baccea0858ULL},      {0, 17, 0xb58bf5dc5022d071ULL},        {0, 32, 0xe3712ed84c04a66eULL},
+      {0, 100, 0x5da67eac6d4093d5ULL},     {0, 128, 0x10d17f72c0ccba41ULL},       {0, 129, 0x1648bdc3db49d1a2ULL},
+      {0, 240, 0xb6cfaf343fab81e6ULL},     {0, 241, 0x956cae592c67279eULL},       {0, 1'024, 0x70bd377d9574f4bbULL},
+      {0, 1'025, 0x66c4487c41e127a7ULL},   {0, 3'000, 0x33a08283bba03e0cULL},     {5'381, 0, 0x0bdb294d2ae928f4ULL},
+      {5'381, 1, 0xccbc30ca28c5b7e8ULL},   {5'381, 3, 0xc12a2fc1e85cfda3ULL},     {5'381, 4, 0x2a3e441637b99decULL},
+      {5'381, 8, 0x3368bd3455763aa3ULL},   {5'381, 9, 0xbf055cc53ba01ac3ULL},     {5'381, 16, 0x22d53e6beb618654ULL},
+      {5'381, 17, 0x6613984cb09ca12fULL},  {5'381, 32, 0xe3183cb5fe6a7771ULL},    {5'381, 100, 0xceb50f7a528f1274ULL},
+      {5'381, 128, 0xb540c9613098d20fULL}, {5'381, 129, 0xc058e3a79595a255ULL},   {5'381, 240, 0x3fcdb3a19eba1245ULL},
+      {5'381, 241, 0xb2cf4aaf8fc38710ULL}, {5'381, 1'024, 0xfb8787295ec29567ULL}, {5'381, 1'025, 0x70b3e67a34b687d0ULL},
+  }};
+  // NOLINTEND(modernize-use-designated-initializers)
+  static_assert(xxh3::GetHash64("") == 0x2d06800538d394c2ULL);  // constexpr-safe & canonical
+  for (const auto& [seed, len, expected] : kVectors) {
+    EXPECT_EQ(xxh3::GetHash64(PatternBuffer(len), seed), expected) << "len: " << len << ", seed: " << seed;
+  }
+  EXPECT_EQ(xxh3::GetHash64(PatternBuffer(3'000), 5'381), 0x9ea762ada6fccc4cULL);
+}
+
 struct KnownAnswer128 {
   uint64_t seed;
   std::string_view data;
@@ -409,6 +454,32 @@ TEST(HasherTest, TopLevelFunctionsArePluggable) {
   EXPECT_NE(GetHash("plug"), (GetHash<xxh64::Algorithm, 999>("plug")));
   // A different algorithm yields a different mangled value.
   EXPECT_NE(GetHash("plug"), GetHash<Fake64Only>("plug"));
+}
+
+// ---------------------------------------------------------------------------
+// Hasher as a transparent container functor, and CombineHashes.
+// ---------------------------------------------------------------------------
+TEST(HasherTest, WorksAsTransparentContainerFunctor) {
+  absl::flat_hash_map<std::string, int, DefaultHasher, std::equal_to<>> map;
+  map["alpha"] = 1;
+  map["beta"] = 2;
+  const std::string_view lookup = "alpha";  // heterogeneous: no temporary std::string
+  const auto it = map.find(lookup);
+  ASSERT_NE(it, map.end());
+  EXPECT_EQ(it->second, 1);
+  std::unordered_map<std::string, int, Hasher<xxh3::Algorithm>, std::equal_to<>> std_map;
+  std_map["gamma"] = 3;
+  EXPECT_EQ(std_map.find(std::string_view("gamma"))->second, 3);
+}
+
+TEST(CombineHashesTest, MixesAndIsOrderDependent) {
+  constexpr uint64_t kHash1 = GetHash64("first");
+  constexpr uint64_t kHash2 = GetHash64("second");
+  constexpr uint64_t kCombined = CombineHashes(kHash1, kHash2);  // constexpr-safe
+  EXPECT_NE(kCombined, kHash1);
+  EXPECT_NE(kCombined, kHash2);
+  EXPECT_NE(kCombined, CombineHashes(kHash2, kHash1));  // order matters
+  EXPECT_EQ(kCombined, CombineHashes(kHash1, kHash2));  // deterministic
 }
 
 // NOLINTEND(*-magic-numbers)

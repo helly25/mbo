@@ -27,6 +27,7 @@ cc_library(
         "hash_murmur3.h",
         "hash_simple.h",
         "hash_types.h",
+        "hash_xxh3.h",
         "hash_xxh64.h",
     ],
     hdrs = ["hash.h"],
@@ -46,6 +47,7 @@ cc_test(
     deps = [
         ":hash_cc",
         ":hash_test_util",
+        "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest",

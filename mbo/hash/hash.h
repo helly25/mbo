@@ -28,6 +28,7 @@
 #include "mbo/hash/hash_murmur3.h"        // IWYU pragma: export
 #include "mbo/hash/hash_simple.h"         // IWYU pragma: export
 #include "mbo/hash/hash_types.h"          // IWYU pragma: export
+#include "mbo/hash/hash_xxh3.h"           // IWYU pragma: export
 #include "mbo/hash/hash_xxh64.h"          // IWYU pragma: export
 
 namespace mbo::hash {
@@ -64,9 +65,19 @@ inline constexpr uint64_t kSeedFlip = 0x9E3779B97F4A7C15ULL;
 //   handling. Note: a synthesized 128-bit value is still built from a 64-bit
 //   hash and does not reach true 128-bit collision resistance.
 // - `GetHash` is always derived: the 64-bit hash folded through `HashMangle`.
+//
+// `Hasher` is also a transparent functor over `GetHash64`, so it drops straight
+// into hash containers with heterogeneous string lookup, e.g.:
+//
+//   absl::flat_hash_map<std::string, V, mbo::hash::DefaultHasher> map;
+//   std::unordered_map<std::string, V, mbo::hash::DefaultHasher, std::equal_to<>> map2;
+//   map.find(std::string_view(...));  // no temporary std::string
 template<IsHashAlgorithm Algo>
 struct Hasher {
   using Algorithm = Algo;
+  using is_transparent = void;
+
+  constexpr uint64_t operator()(std::string_view data) const noexcept { return GetHash64(data); }
 
   static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
     if constexpr (HasGetHash64<Algo>) {
@@ -142,6 +153,13 @@ constexpr uint64_t GetHash(std::string_view data) noexcept {
 // Note that `murmur3::GetHash64` deliberately returns `h1` instead -- the
 // customary truncation that matches other MurmurHash3 implementations.
 using ::mbo::hash::hash_internal::Hash128To64;
+
+// Combines two 64-bit hashes into one (order-dependent, well mixed). Chain for
+// more values: `CombineHashes(CombineHashes(h1, h2), h3)`.
+constexpr uint64_t CombineHashes(uint64_t first, uint64_t second) noexcept {
+  // NOLINTNEXTLINE(*-magic-numbers): boost-style golden-ratio combine, Fmix64-finalized.
+  return hash_internal::Fmix64(first ^ (second + 0x9E3779B97F4A7C15ULL + (first << 6U) + (first >> 2U)));
+}
 
 }  // namespace mbo::hash
 
