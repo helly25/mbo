@@ -50,6 +50,16 @@ inline constexpr uint64_t kMul2 = 0xC2B2AE3D27D4EB4FULL;
 inline constexpr uint64_t kMul3 = 0x165667B19E3779F9ULL;
 inline constexpr uint64_t kMul4 = 0xFF51AFD7ED558CCDULL;
 
+// Input premultiplier: every absorbed block is first multiplied by this
+// full-width odd constant so a single-bit input becomes multi-bit *before* it
+// meets the accumulator. Without it, an input bit that lands on bit 63 after
+// the rotation survives the lane multiply as a single-bit state difference and
+// cancels against the matching bit of the next block (structural collisions
+// among sparse keys, e.g. bit32@block_k == bit63@block_{k+1}; caught by the
+// StructuredKeysAreDistinct test). The residual single-bit case (input bit 63)
+// is diffused by the rotate-then-multiply of the lane itself.
+inline constexpr uint64_t kMulIn = 0x27D4EB2F165667C5ULL;
+
 // Inputs of at most this many bytes use the cheaper single-lane GetHash64 path
 // (see below). Tuned via //mbo/hash:hash_benchmark.
 inline constexpr std::size_t kSmallInputCutoff = 32;
@@ -89,10 +99,10 @@ constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = kDefaultSeed)
     uint64_t acc3 = (hash1 * kMul3) + 1;
     uint64_t acc4 = std::rotl(hash1, 32) ^ kMul4;
     while (remaining >= 32) {
-      acc1 = std::rotl(acc1 ^ hash_internal::Load64(ptr), 31) * kMul1;
-      acc2 = std::rotl(acc2 + hash_internal::Load64(ptr + 8), 27) * kMul2;
-      acc3 = std::rotl(acc3 ^ hash_internal::Load64(ptr + 16), 29) * kMul3;
-      acc4 = std::rotl(acc4 + hash_internal::Load64(ptr + 24), 25) * kMul4;
+      acc1 = std::rotl(acc1 ^ (hash_internal::Load64(ptr) * kMulIn), 31) * kMul1;
+      acc2 = std::rotl(acc2 + (hash_internal::Load64(ptr + 8) * kMulIn), 27) * kMul2;
+      acc3 = std::rotl(acc3 ^ (hash_internal::Load64(ptr + 16) * kMulIn), 29) * kMul3;
+      acc4 = std::rotl(acc4 + (hash_internal::Load64(ptr + 24) * kMulIn), 25) * kMul4;
       ptr += 32;
       remaining -= 32;
     }
@@ -101,13 +111,15 @@ constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = kDefaultSeed)
   }
 
   while (remaining >= 8) {
-    const uint64_t block = hash_internal::Load64(ptr);
+    const uint64_t block = hash_internal::Load64(ptr) * kMulIn;
     hash1 = std::rotl(hash1 ^ block, 31) * kMul1;
     hash2 = std::rotl(hash2 + block, 27) * kMul2;
     ptr += 8;
     remaining -= 8;
   }
   if (remaining > 0) {
+    // No premul needed: a <8-byte tail can never carry bits 62/63, the only
+    // positions where a single-bit state difference survives a lane multiply.
     const uint64_t tail = hash_internal::LoadTail(ptr, remaining);
     hash1 = std::rotl(hash1 ^ tail, 31) * kMul1;
     hash2 = std::rotl(hash2 + tail, 27) * kMul2;
@@ -153,10 +165,11 @@ constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = kDefaultSeed)
   uint64_t hash = seed ^ (static_cast<uint64_t>(len) * kMul2);
   std::size_t pos = 0;
   for (; pos + 8 <= len; pos += 8) {
-    hash ^= hash_internal::Load64(ptr + pos);
+    hash ^= hash_internal::Load64(ptr + pos) * kMulIn;
     hash = std::rotl(hash, 31) * kMul1;
   }
   if (pos < len) {
+    // No premul needed (see GetHash128's tail comment).
     hash ^= hash_internal::LoadTail(ptr + pos, len - pos);
     hash = std::rotl(hash, 27) * kMul2;
   }

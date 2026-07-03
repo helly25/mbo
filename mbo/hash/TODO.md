@@ -5,14 +5,6 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 
 ## Easy
 
-- [ ] **Seed-avalanche test**: flip _seed_ bits in the typed avalanche test
-      (SMHasher-style); soften/skip for seedless algorithms (`simple`).
-- [ ] **Sparse/structured-key tests**: distinctness over all-zero inputs of
-      varying lengths, single-bit keys, and cyclic patterns - catches weak
-      mixing that random-string collision tests hide.
-- [ ] **Big-endian caveat**: document that BE is untested (both load paths
-      byte-assemble there; claimed-correct but no CI runner exercises it).
-
 ## Medium
 
 - [ ] **Mixed-length latency benchmark**: random length per iteration; the

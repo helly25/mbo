@@ -9,6 +9,8 @@
 - Made the default hash substantially faster (changing its values, as allowed by the stability contract): runtime loads now use `memcpy` (gcc never folded the byte-assembly loads - roughly 3x on gcc for **all** algorithms), tail loads use branch-lite overlapping reads, and `mh::GetHash128` processes large inputs (>= 64 bytes) in 32-byte stripes over 4 accumulators with a cross-mixed finalizer - about 2.5-3.7x throughput at >= 256 bytes, now beating `xxh64`.
 - `Hasher<Algo>` is also a transparent functor, usable directly as the hash parameter of `absl`/`std` hash containers with heterogeneous `std::string_view` lookup.
 - Added `mbo::hash::CombineHashes(uint64_t, uint64_t)` (order-dependent, well-mixed combine) and `hash_internal::Mul128Fold64` (constexpr 64x64->128 fold, xxh3/wyhash family core).
+- Hardened the default hash's block rounds (values change): absorbed blocks are premultiplied by a full-width odd constant, closing a sparse-key collision class (single input bits could cancel across adjacent blocks; found by the new structured-key test). Tails (<8 bytes) need no premultiplication - they cannot reach the affected bit positions.
+- Test framework additions: seed-bit avalanche (SMHasher-style; skipped for seedless algorithms) and structured/sparse-key distinctness (all-zero lengths, single-bit keys, cyclic patterns).
 - Hash values are not guaranteed stable across library versions and are not intended for persistence or cryptographic use.
 
 # 0.12.0

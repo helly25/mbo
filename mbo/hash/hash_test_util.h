@@ -22,6 +22,7 @@
 // hash.h) with test metadata:
 //   static constexpr std::string_view Name();
 //   static constexpr bool kStrongAvalanche;  // whether it targets ~50% avalanche
+//   static constexpr bool kSeeded;           // whether the seed parameter is used
 // The public concepts (`HasGetHash64` / `HasGetHash128`) detect whether an
 // algorithm is 64- or 128-bit based. Shared by hash_test.cc and hash_benchmark.cc.
 
@@ -38,6 +39,7 @@ namespace mbo::hash::algo {
 // The current default hash (`mbo::hash::mh`, exposed via `mbo::hash::GetHash*`).
 struct DefaultHash : ::mbo::hash::mh::Algorithm {
   static constexpr bool kStrongAvalanche = true;
+  static constexpr bool kSeeded = true;
 
   static constexpr std::string_view Name() { return "mh"; }
 };
@@ -45,6 +47,7 @@ struct DefaultHash : ::mbo::hash::mh::Algorithm {
 // The previous "simple" implementation (64-bit only; ignores the seed).
 struct SimpleHash : ::mbo::hash::simple::Algorithm {
   static constexpr bool kStrongAvalanche = false;
+  static constexpr bool kSeeded = false;
 
   static constexpr std::string_view Name() { return "simple"; }
 };
@@ -52,6 +55,7 @@ struct SimpleHash : ::mbo::hash::simple::Algorithm {
 // FNV-1a 64 (canonical values; byte-at-a-time, weak final diffusion).
 struct Fnv1aHash : ::mbo::hash::fnv1a::Algorithm {
   static constexpr bool kStrongAvalanche = false;
+  static constexpr bool kSeeded = true;
 
   static constexpr std::string_view Name() { return "fnv1a"; }
 };
@@ -59,6 +63,7 @@ struct Fnv1aHash : ::mbo::hash::fnv1a::Algorithm {
 // XXH64 (canonical xxHash 64-bit values).
 struct Xxh64Hash : ::mbo::hash::xxh64::Algorithm {
   static constexpr bool kStrongAvalanche = true;
+  static constexpr bool kSeeded = true;
 
   static constexpr std::string_view Name() { return "xxh64"; }
 };
@@ -66,6 +71,7 @@ struct Xxh64Hash : ::mbo::hash::xxh64::Algorithm {
 // XXH3 64-bit (canonical values; modern xxHash generation, scalar).
 struct Xxh3Hash : ::mbo::hash::xxh3::Algorithm {
   static constexpr bool kStrongAvalanche = true;
+  static constexpr bool kSeeded = true;
 
   static constexpr std::string_view Name() { return "xxh3"; }
 };
@@ -73,6 +79,7 @@ struct Xxh3Hash : ::mbo::hash::xxh3::Algorithm {
 // MurmurHash3 x64 128 (canonical values; 128-bit based, GetHash64 == h1).
 struct Murmur3Hash : ::mbo::hash::murmur3::Algorithm {
   static constexpr bool kStrongAvalanche = true;
+  static constexpr bool kSeeded = true;
 
   static constexpr std::string_view Name() { return "murmur3"; }
 };

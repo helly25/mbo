@@ -167,6 +167,69 @@ TYPED_TEST(HashTest, Avalanche) {
   }
 }
 
+// Seed avalanche (SMHasher-style): flipping a single *seed* bit should flip
+// ~half the output bits. Skipped for seedless algorithms; weak-avalanche
+// algorithms only need to react (fnv1a's multiplies diffuse upward only, so
+// high seed bits move few output bits).
+TYPED_TEST(HashTest, SeedAvalanche) {
+  if constexpr (!TypeParam::kSeeded) {
+    GTEST_SKIP() << TypeParam::Name() << " ignores the seed";
+  } else {
+    std::mt19937_64 rng(0x5EED5EEDU);  // NOLINT(cert-msc51-cpp,cert-msc32-c): fixed seed keeps this reproducible
+    constexpr int kTrials = 8'000;
+    for (const std::size_t length : std::array<std::size_t, 4>{4, 12, 100, 300}) {
+      std::size_t flipped = 0;
+      for (int trial = 0; trial < kTrials; ++trial) {
+        const std::string data = algo::RandomString(rng, length);
+        const uint64_t seed = rng();
+        const uint64_t seed_bit = uint64_t{1} << (rng() % 64U);
+        flipped += static_cast<std::size_t>(
+            std::popcount(TypeParam::GetHash64(data, seed) ^ TypeParam::GetHash64(data, seed ^ seed_bit)));
+      }
+      const double ratio = static_cast<double>(flipped) / (static_cast<double>(kTrials) * 64.0);
+      if constexpr (TypeParam::kStrongAvalanche) {
+        EXPECT_GT(ratio, 0.45) << "len=" << length << " weak seed avalanche: " << ratio;
+        EXPECT_LT(ratio, 0.55) << "len=" << length << " biased seed avalanche: " << ratio;
+      } else {
+        EXPECT_GT(ratio, 0.05) << "len=" << length << " seed barely reacts: " << ratio;
+      }
+    }
+  }
+}
+
+// Structured/sparse keys (SMHasher-inspired): degenerate input families where
+// weak mixing hides from random-string tests. All inputs are pairwise distinct,
+// so a 64-bit hash is expected to produce zero collisions across the ~1200 keys
+// (birthday bound ~2^-44).
+TYPED_TEST(HashTest, StructuredKeysAreDistinct) {
+  std::set<std::string> inputs;
+  // All-zero inputs of every length 0..256: only the length distinguishes them.
+  for (std::size_t len = 0; len <= 256; ++len) {
+    inputs.insert(std::string(len, '\0'));
+  }
+  // Single-bit keys: exactly one bit set, at every position.
+  for (const std::size_t len : std::array<std::size_t, 2>{16, 64}) {
+    for (std::size_t bit = 0; bit < len * 8; ++bit) {
+      std::string key(len, '\0');
+      key[bit / 8] = static_cast<char>(1U << (bit % 8U));
+      inputs.insert(std::move(key));
+    }
+  }
+  // Cyclic patterns: short periods repeated to a fixed length.
+  for (std::size_t period = 1; period <= 16; ++period) {
+    std::string pattern;
+    for (std::size_t i = 0; i < 48; ++i) {
+      pattern.push_back(static_cast<char>('a' + (i % period)));
+    }
+    inputs.insert(std::move(pattern));
+  }
+  std::set<uint64_t> hashes;
+  for (const std::string& input : inputs) {
+    hashes.insert(TypeParam::GetHash64(input, kSeed));
+  }
+  EXPECT_EQ(hashes.size(), inputs.size()) << "collisions among structured keys";
+}
+
 // 128-bit-only checks; skipped for 64-bit-based algorithms via the detection trait.
 // How GetHash64 relates to GetHash128 is algorithm-specific (mh folds, murmur3 truncates)
 // and covered by per-algorithm tests below.
