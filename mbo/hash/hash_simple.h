@@ -106,6 +106,14 @@ inline constexpr uint64_t GetHash64(std::string_view data) {
   return hash_internal::GetSimpleHash(data);
 }
 
+// The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). This
+// algorithm has no seed support; the seed parameter is ignored.
+struct Algorithm {
+  static constexpr uint64_t GetHash64(std::string_view data, uint64_t /*seed*/ = 0) noexcept {
+    return hash_internal::GetSimpleHash(data);
+  }
+};
+
 // NOLINTEND(*-identifier-naming,*-magic-numbers,*-constant-array-index,*-pointer-arithmetic,*-signed-bitwise)
 
 }  // namespace mbo::hash::simple

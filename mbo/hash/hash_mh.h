@@ -58,9 +58,8 @@ inline constexpr std::size_t kSmallInputCutoff = 32;
 // GetHash128 (see below). Tuned via //mbo/hash:hash_benchmark.
 inline constexpr std::size_t kStripeInputCutoff = 64;
 
-// Default seed (djb2's initial value). Shared so `mbo::hash::GetHash` folds the
-// same value the bare `GetHash*` functions use by default.
-inline constexpr uint64_t kDefaultSeed = 5'381;
+// Default seed; alias of the shared `mbo::hash::kDefaultSeed`.
+inline constexpr uint64_t kDefaultSeed = ::mbo::hash::kDefaultSeed;
 
 // 128-bit variant: dual-lane rotate-multiply state, with a 4-accumulator stripe
 // loop for large inputs.
@@ -163,6 +162,18 @@ constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = kDefaultSeed)
   }
   return hash_internal::Fmix64(hash);
 }
+
+// The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h): static
+// member functions bundling this algorithm for use as a template argument.
+struct Algorithm {
+  static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
+    return ::mbo::hash::mh::GetHash64(data, seed);
+  }
+
+  static constexpr Hash128 GetHash128(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
+    return ::mbo::hash::mh::GetHash128(data, seed);
+  }
+};
 
 // NOLINTEND(*-magic-numbers,*-pointer-arithmetic)
 

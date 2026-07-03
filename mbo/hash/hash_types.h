@@ -27,6 +27,9 @@
 
 namespace mbo::hash {
 
+// Default seed (djb2's initial value) shared by all `mbo::hash` entry points.
+inline constexpr uint64_t kDefaultSeed = 5'381;
+
 // The structured 128-bit hash state produced by `mbo::hash::GetHash128`.
 struct Hash128 {
   uint64_t h1;

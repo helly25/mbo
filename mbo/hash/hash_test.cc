@@ -69,7 +69,7 @@ TYPED_TEST_SUITE(HashTest, HashAlgorithms);
 
 // The framework detects 64- vs 128-bit algorithms from the descriptor.
 TYPED_TEST(HashTest, BitWidthDetection) {
-  EXPECT_EQ((algo::kHashBits<TypeParam>), algo::HasHash128<TypeParam> ? 128 : 64);
+  EXPECT_EQ((algo::kHashBits<TypeParam>), HasGetHash128<TypeParam> ? 128 : 64);
 }
 
 // Compile-time and run-time evaluation must agree. This also guards the loads'
@@ -82,24 +82,24 @@ TYPED_TEST(HashTest, ConstexprMatchesRuntime) {
       "a long probe that spans multiple 32-byte stripes of the large-input hashing loop",
   };
   constexpr std::array<uint64_t, 3> kCompile{
-      TypeParam::Get64(kProbes[0], kSeed),
-      TypeParam::Get64(kProbes[1], kSeed),
-      TypeParam::Get64(kProbes[2], kSeed),
+      TypeParam::GetHash64(kProbes[0], kSeed),
+      TypeParam::GetHash64(kProbes[1], kSeed),
+      TypeParam::GetHash64(kProbes[2], kSeed),
   };
   for (std::size_t i = 0; i < kProbes.size(); ++i) {
     std::string_view runtime = kProbes.at(i);  // non-const forces the runtime path
-    EXPECT_EQ(kCompile.at(i), TypeParam::Get64(runtime, kSeed)) << "probe: \"" << runtime << "\"";
+    EXPECT_EQ(kCompile.at(i), TypeParam::GetHash64(runtime, kSeed)) << "probe: \"" << runtime << "\"";
   }
-  if constexpr (algo::HasHash128<TypeParam>) {
-    constexpr Hash128 kCompile128 = TypeParam::Get128(kProbes[2], kSeed);
+  if constexpr (HasGetHash128<TypeParam>) {
+    constexpr Hash128 kCompile128 = TypeParam::GetHash128(kProbes[2], kSeed);
     std::string_view runtime = kProbes[2];
-    EXPECT_EQ(kCompile128, TypeParam::Get128(runtime, kSeed));
+    EXPECT_EQ(kCompile128, TypeParam::GetHash128(runtime, kSeed));
   }
 }
 
 TYPED_TEST(HashTest, EmptyEqualsNullAndIsNontrivial) {
-  const uint64_t empty = TypeParam::Get64(std::string_view(""), kSeed);
-  const uint64_t null_view = TypeParam::Get64(std::string_view(), kSeed);
+  const uint64_t empty = TypeParam::GetHash64(std::string_view(""), kSeed);
+  const uint64_t null_view = TypeParam::GetHash64(std::string_view(), kSeed);
   EXPECT_EQ(empty, null_view);
   EXPECT_NE(empty, uint64_t{0});
   EXPECT_NE(empty, ~uint64_t{0});
@@ -111,7 +111,7 @@ TYPED_TEST(HashTest, DistinctForDistinctShortInputs) {
   };
   std::set<uint64_t> hashes;
   for (const std::string_view data : kData) {
-    hashes.insert(TypeParam::Get64(data, kSeed));
+    hashes.insert(TypeParam::GetHash64(data, kSeed));
   }
   EXPECT_EQ(hashes.size(), kData.size());
 }
@@ -129,7 +129,7 @@ TYPED_TEST(HashTest, LowCollisionRate) {
   }
   std::set<uint64_t> hashes;
   for (const std::string& input : inputs) {
-    hashes.insert(TypeParam::Get64(input, kSeed));
+    hashes.insert(TypeParam::GetHash64(input, kSeed));
   }
   EXPECT_LE(inputs.size() - hashes.size(), kNumStrings / 2'000'000);
 }
@@ -144,12 +144,12 @@ TYPED_TEST(HashTest, Avalanche) {
     std::size_t flipped = 0;
     for (int trial = 0; trial < kTrials; ++trial) {
       const std::string base = algo::RandomString(rng, length);
-      const uint64_t hash0 = TypeParam::Get64(base, kSeed);
+      const uint64_t hash0 = TypeParam::GetHash64(base, kSeed);
       const std::size_t bit = rng() % (base.size() * 8);
       std::string mutated = base;
       const unsigned mask = 1U << (bit % 8U);
       mutated[bit / 8] = static_cast<char>(static_cast<unsigned>(static_cast<unsigned char>(mutated[bit / 8])) ^ mask);
-      const uint64_t hash1 = TypeParam::Get64(mutated, kSeed);
+      const uint64_t hash1 = TypeParam::GetHash64(mutated, kSeed);
       flipped += static_cast<std::size_t>(std::popcount(hash0 ^ hash1));
     }
     const double ratio = static_cast<double>(flipped) / (static_cast<double>(kTrials) * 64.0);
@@ -165,14 +165,14 @@ TYPED_TEST(HashTest, Avalanche) {
 }
 
 // 128-bit-only checks; skipped for 64-bit-based algorithms via the detection trait.
-// How Get64 relates to Get128 is algorithm-specific (mh folds, murmur3 truncates)
+// How GetHash64 relates to GetHash128 is algorithm-specific (mh folds, murmur3 truncates)
 // and covered by per-algorithm tests below.
 TYPED_TEST(HashTest, Hash128) {
-  if constexpr (algo::HasHash128<TypeParam>) {
-    EXPECT_EQ(TypeParam::Get128("abc", kSeed), TypeParam::Get128("abc", kSeed));  // deterministic
-    EXPECT_NE(TypeParam::Get128("abc", kSeed), TypeParam::Get128("abd", kSeed));  // distinct
+  if constexpr (HasGetHash128<TypeParam>) {
+    EXPECT_EQ(TypeParam::GetHash128("abc", kSeed), TypeParam::GetHash128("abc", kSeed));  // deterministic
+    EXPECT_NE(TypeParam::GetHash128("abc", kSeed), TypeParam::GetHash128("abd", kSeed));  // distinct
     constexpr std::string_view kLong = "this input is longer than the small-input cutoff.";
-    const Hash128 hash = TypeParam::Get128(kLong, kSeed);
+    const Hash128 hash = TypeParam::GetHash128(kLong, kSeed);
     EXPECT_NE(hash.h1, hash.h2);
   } else {
     GTEST_SKIP() << TypeParam::Name() << " is 64-bit only";
@@ -323,22 +323,73 @@ TEST(HashMangleTest, GetHashAppliesMangle) {
   EXPECT_EQ(GetHash("hash-mangle-check"), HashMangle(GetHash64("hash-mangle-check")));
 }
 
-// A stand-in alternative implementation matching `Hash64Fn`, used to exercise
-// GetHash's pluggability.
-constexpr uint64_t AltHash64(std::string_view data, uint64_t seed) noexcept {
-  return mh::GetHash64(data, seed) ^ 0xABCDEFULL;
+// ---------------------------------------------------------------------------
+// Algorithm structs, concepts, and the Hasher interface generator (hash.h).
+// ---------------------------------------------------------------------------
+
+// Fake algorithms exercising the Hasher fallback synthesis.
+struct Fake64Only {
+  static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed) noexcept {
+    return mh::GetHash64(data, seed) ^ 0xABCDEFULL;
+  }
+};
+
+struct Fake128Only {
+  static constexpr Hash128 GetHash128(std::string_view data, uint64_t seed) noexcept {
+    return mh::GetHash128(data, seed);
+  }
+};
+
+// Concept detection over the public algorithm structs and the fakes.
+static_assert(HasGetHash64<mh::Algorithm> && HasGetHash128<mh::Algorithm>);
+static_assert(HasGetHash64<simple::Algorithm> && !HasGetHash128<simple::Algorithm>);
+static_assert(HasGetHash64<fnv1a::Algorithm> && !HasGetHash128<fnv1a::Algorithm>);
+static_assert(HasGetHash64<xxh64::Algorithm> && !HasGetHash128<xxh64::Algorithm>);
+static_assert(HasGetHash64<murmur3::Algorithm> && HasGetHash128<murmur3::Algorithm>);
+static_assert(!HasGetHash64<Fake128Only> && HasGetHash128<Fake128Only>);
+static_assert(IsHashAlgorithm<Fake64Only> && IsHashAlgorithm<Fake128Only>);
+static_assert(!IsHashAlgorithm<int> && !IsHashAlgorithm<Hash128>);
+
+TEST(HasherTest, NativeFunctionsPassThrough) {
+  EXPECT_EQ(Hasher<mh::Algorithm>::GetHash64("pass", kSeed), mh::GetHash64("pass", kSeed));
+  EXPECT_EQ(Hasher<mh::Algorithm>::GetHash128("pass", kSeed), mh::GetHash128("pass", kSeed));
+  EXPECT_EQ(Hasher<murmur3::Algorithm>::GetHash64("pass", kSeed), murmur3::GetHash64("pass", kSeed));
 }
 
-TEST(HashMangleTest, GetHashIsPluggable) {
-  // The default template arguments match the bare default call.
-  EXPECT_EQ(GetHash("plug"), GetHash<&mh::GetHash64>("plug"));
-  // Any Hash64Fn flows through the same mangle...
-  EXPECT_EQ(GetHash<&AltHash64>("plug"), HashMangle(AltHash64("plug", mh::kDefaultSeed)));
-  // ...and a different implementation yields a different mangled value.
-  EXPECT_NE(GetHash("plug"), GetHash<&AltHash64>("plug"));
-  // The seed is a template constant too (parens guard the macro comma).
-  EXPECT_EQ((GetHash<&mh::GetHash64, 999>("plug")), HashMangle(mh::GetHash64("plug", 999)));
-  EXPECT_NE(GetHash("plug"), (GetHash<&mh::GetHash64, 999>("plug")));
+TEST(HasherTest, GetHash64FallsBackToFold) {
+  EXPECT_EQ(Hasher<Fake128Only>::GetHash64("fold", kSeed), Hash128To64(Fake128Only::GetHash128("fold", kSeed)));
+}
+
+TEST(HasherTest, GetHash128FallsBackToTwoSeededPasses) {
+  const Hash128 hash = Hasher<Fake64Only>::GetHash128("twopass", kSeed);
+  EXPECT_EQ(hash.h1, Fake64Only::GetHash64("twopass", kSeed));
+  EXPECT_EQ(hash.h2, Fake64Only::GetHash64("twopass", kSeed ^ kSeedFlip));
+  EXPECT_NE(hash.h1, hash.h2);
+}
+
+TEST(HasherTest, GetHashIsMangled64) {
+  EXPECT_EQ(Hasher<xxh64::Algorithm>::GetHash("mangle", kSeed), HashMangle(xxh64::GetHash64("mangle", kSeed)));
+}
+
+TEST(HasherTest, TopLevelFunctionsUseDefaultAlgorithm) {
+  // The bare entry points equal the default algorithm (and remain constexpr).
+  constexpr uint64_t kHash64 = GetHash64("top");
+  EXPECT_EQ(kHash64, (DefaultHasher::GetHash64("top")));
+  constexpr Hash128 kHash128 = GetHash128("top");
+  EXPECT_EQ(kHash128, (DefaultHasher::GetHash128("top")));
+  EXPECT_EQ(GetHash("top"), HashMangle(kHash64));
+}
+
+TEST(HasherTest, TopLevelFunctionsArePluggable) {
+  // Any algorithm struct can replace the default...
+  EXPECT_EQ(GetHash64<xxh64::Algorithm>("plug", kSeed), xxh64::GetHash64("plug", kSeed));
+  EXPECT_EQ(GetHash128<Fake64Only>("plug", kSeed), (Hasher<Fake64Only>::GetHash128("plug", kSeed)));
+  // ...including in the mangled form, with the seed as a template constant
+  // (parens guard the macro comma).
+  EXPECT_EQ((GetHash<xxh64::Algorithm, 999>("plug")), HashMangle(xxh64::GetHash64("plug", 999)));
+  EXPECT_NE(GetHash("plug"), (GetHash<xxh64::Algorithm, 999>("plug")));
+  // A different algorithm yields a different mangled value.
+  EXPECT_NE(GetHash("plug"), GetHash<Fake64Only>("plug"));
 }
 
 // NOLINTEND(*-magic-numbers)

@@ -40,34 +40,34 @@ void BmHash64(benchmark::State& state) {
   std::mt19937_64 rng(0x1234);  // NOLINT(cert-msc51-cpp,cert-msc32-c): fixed data per length
   const std::string data = algo::RandomString(rng, length);
   for (auto _ : state) {
-    benchmark::DoNotOptimize(Algo::Get64(data, kSeed));
+    benchmark::DoNotOptimize(Algo::GetHash64(data, kSeed));
   }
   state.SetBytesProcessed(state.iterations() * static_cast<int64_t>(length));
   state.SetLabel(std::string(Algo::Name()));
 }
 
 template<typename Algo>
-requires algo::HasHash128<Algo>
+requires HasGetHash128<Algo>
 void BmHash128(benchmark::State& state) {
   const auto length = static_cast<std::size_t>(state.range(0));
   std::mt19937_64 rng(0x1234);  // NOLINT(cert-msc51-cpp,cert-msc32-c): fixed data per length
   const std::string data = algo::RandomString(rng, length);
   for (auto _ : state) {
-    benchmark::DoNotOptimize(Algo::Get128(data, kSeed));
+    benchmark::DoNotOptimize(Algo::GetHash128(data, kSeed));
   }
   state.SetBytesProcessed(state.iterations() * static_cast<int64_t>(length));
   state.SetLabel(std::string(Algo::Name()));
 }
 
 // Registers the 64-bit benchmark for one algorithm, plus the 128-bit one where
-// the descriptor provides it (detected via the framework's HasHash128).
+// the descriptor provides it (detected via the public HasGetHash128 concept).
 template<typename Algo>
 void RegisterAlgo() {
   const std::string name(Algo::Name());
   benchmark::RegisterBenchmark("BmHash64<" + name + ">", BmHash64<Algo>)
       ->RangeMultiplier(kRangeMultiplier)
       ->Range(kMinLen, kMaxLen);
-  if constexpr (algo::HasHash128<Algo>) {
+  if constexpr (HasGetHash128<Algo>) {
     benchmark::RegisterBenchmark("BmHash128<" + name + ">", BmHash128<Algo>)
         ->RangeMultiplier(kRangeMultiplier)
         ->Range(kMinLen, kMaxLen);
