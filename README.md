@@ -72,12 +72,16 @@ The C++ library is organized in functional groups each residing in their own dir
 - Hash
   - `namespace mbo::hash`
   - mbo/hash:hash_cc, mbo/hash/hash.h
-    - function `GetHash64(std::string_view)` / `GetHash128(std::string_view)`: A constexpr-safe, non-cryptographic hash (result type `Hash128`). Values are not stable across versions and not for persistence.
-    - function `GetHash(std::string_view)`: as `GetHash64` but folded through a per-build (`__DATE__`/`__TIME__`) seed, so values may differ between builds. Templated over the implementation and seed: `GetHash<&Fn, Seed>(data)`.
+    - function `GetHash64(std::string_view, seed)` / `GetHash128(std::string_view, seed)`: A constexpr-safe, non-cryptographic hash (the current default, `mbo::hash::mh`). Values are not stable across versions and not for persistence.
+    - function `GetHash(std::string_view)`: as `GetHash64` but folded through `HashMangle`, so values may differ between builds. Templated over the implementation and seed: `GetHash<&Fn, Seed>(data)`.
+    - function `HashMangle(uint64_t)`: XORs one of a small set of per-build (`__DATE__`/`__TIME__` bucketed) seeds into a hash; identity when compiled with `MBO_HASH_MANGLE=0` (for fully reproducible `GetHash` values).
+    - struct `Hash128`: The 128-bit result type (`h1`, `h2`); ordered (`<=>`) and Abseil hash/stringify compatible.
+    - function `Hash128To64(Hash128)`: Folds a 128-bit hash into a well-mixed 64-bit one, e.g. `Hash128To64(murmur3::GetHash128(data))`.
+    - type `Hash64Fn`: The pluggable 64-bit hash signature `uint64_t(*)(std::string_view, uint64_t) noexcept` accepted by `GetHash<&Fn>`.
     - function `simple::GetHash64(std::string_view)`: the previous hash implementation (`simple::GetHash` is deprecated).
-    - function `fnv1a::GetHash64(std::string_view)`: canonical FNV-1a 64 (constexpr-safe).
-    - function `xxh64::GetHash64(std::string_view)`: canonical XXH64 / xxHash 64-bit (constexpr-safe).
-    - function `murmur3::GetHash64/GetHash128(std::string_view)`: canonical MurmurHash3 x64 128-bit (constexpr-safe).
+    - function `fnv1a::GetHash64(std::string_view, seed)`: canonical FNV-1a 64 (constexpr-safe).
+    - function `xxh64::GetHash64(std::string_view, seed)`: canonical XXH64 / xxHash 64-bit (constexpr-safe).
+    - function `murmur3::GetHash64/GetHash128(std::string_view, seed)`: canonical MurmurHash3 x64 128-bit (constexpr-safe; `GetHash64` is the customary `h1` truncation).
 - Json
   - `namespace mbo::json`
   - mbo/json:json_cc, mbo/json/json.h
