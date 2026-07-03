@@ -18,8 +18,11 @@
 
 // IWYU pragma: private, include "mbo/hash/hash.h"
 
+#include <bit>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
+#include <type_traits>
 
 #include "mbo/hash/hash_types.h"
 
@@ -37,11 +40,24 @@ constexpr uint64_t Fmix64(uint64_t val) noexcept {
   return val;
 }
 
-// Loads 8 bytes as a **little-endian** `uint64_t`. Assembling the word from bytes
-// (rather than `std::bit_cast`) makes the result endian-independent, so hashes
-// match across platforms; it is constexpr-safe and compilers fold it to a single
-// load on little-endian targets (a load + byte-swap on big-endian).
+// Loads 8 bytes as a **little-endian** `uint64_t`, endian-independently, so hash
+// values match across platforms.
+//
+// At run time on little-endian targets this is a plain `memcpy`, which every
+// compiler folds into a single load. The byte-assembly loop remains for constant
+// evaluation (where `memcpy` is not allowed) and for big-endian targets. Clang
+// folds the loop into a single load as well, but gcc does NOT (verified on
+// gcc 13: 8x movzx+or, ~3x slower hashing) -- hence the explicit `memcpy` path.
+// Both paths produce identical values; the ConstexprMatchesRuntime test guards
+// this equality.
 constexpr uint64_t Load64(const char* ptr) noexcept {
+  if (!std::is_constant_evaluated()) {
+    if constexpr (std::endian::native == std::endian::little) {
+      uint64_t result = 0;
+      std::memcpy(&result, ptr, 8);
+      return result;
+    }
+  }
   uint64_t result = 0;
   for (std::size_t i = 0; i < 8; ++i) {
     result |= static_cast<uint64_t>(static_cast<uint8_t>(ptr[i])) << (i * 8U);
@@ -51,6 +67,13 @@ constexpr uint64_t Load64(const char* ptr) noexcept {
 
 // Loads 4 bytes as a **little-endian** `uint32_t` (same rationale as `Load64`).
 constexpr uint32_t Load32(const char* ptr) noexcept {
+  if (!std::is_constant_evaluated()) {
+    if constexpr (std::endian::native == std::endian::little) {
+      uint32_t result = 0;
+      std::memcpy(&result, ptr, 4);
+      return result;
+    }
+  }
   uint32_t result = 0;
   for (std::size_t i = 0; i < 4; ++i) {
     result |= static_cast<uint32_t>(static_cast<uint8_t>(ptr[i])) << (i * 8U);
@@ -60,7 +83,22 @@ constexpr uint32_t Load32(const char* ptr) noexcept {
 
 // Loads the 1..8 remaining tail bytes as a little-endian `uint64_t` without any
 // out-of-bounds reads.
+//
+// The runtime path for >= 4 bytes uses two overlapping 4-byte loads instead of a
+// per-byte loop: `lo` covers bytes [0..3], `hi << ((n-4)*8)` covers bytes
+// [n-4..n-1], and in the overlap both operands carry the same byte at the same
+// bit position, so the OR reproduces the exact little-endian value (the
+// canonical known-answer tests verify path equality).
 constexpr uint64_t LoadTail(const char* ptr, std::size_t remaining) noexcept {
+  if (!std::is_constant_evaluated()) {
+    if constexpr (std::endian::native == std::endian::little) {
+      if (remaining >= 4) {
+        const uint64_t low = Load32(ptr);
+        const uint64_t high = Load32(ptr + remaining - 4);
+        return low | (high << ((remaining - 4) * 8U));
+      }
+    }
+  }
   uint64_t result = 0;
   for (std::size_t i = 0; i < remaining; ++i) {
     result |= static_cast<uint64_t>(static_cast<uint8_t>(ptr[i])) << (i * 8U);
