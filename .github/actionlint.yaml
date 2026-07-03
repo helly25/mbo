@@ -1,0 +1,8 @@
+# Configuration for actionlint (run via pre-commit).
+self-hosted-runner:
+  # Not actually self-hosted: newer GitHub-hosted runner images that the pinned
+  # actionlint release does not know about yet. The `test-*` jobs already use
+  # macos-26 via `${{inputs.os}}` (which actionlint cannot resolve); this makes
+  # the label usable in literal `runs-on`/matrix values too.
+  labels:
+    - macos-26

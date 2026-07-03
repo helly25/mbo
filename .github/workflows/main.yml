@@ -55,6 +55,32 @@ jobs:
       - uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
 
+  benchmark:
+    # Informational only (hence continue-on-error): shared runners are noisy, so
+    # these numbers are for architecture/compiler shape comparisons (x86_64 gcc
+    # vs arm64 Apple clang) and gross regressions, not precise gating. Results
+    # appear in the job log and as a JSON artifact per OS.
+    continue-on-error: true
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-26]
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: bazelbuild/setup-bazelisk@v3
+      - name: Run hash benchmark
+        run: |
+          bazel run -c opt //mbo/hash:hash_benchmark -- \
+            --benchmark_min_time=0.2s \
+            --benchmark_repetitions=3 \
+            --benchmark_report_aggregates_only=true \
+            --benchmark_out="${GITHUB_WORKSPACE}/hash_benchmark.json" \
+            --benchmark_out_format=json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hash-benchmark-${{matrix.os}}
+          path: hash_benchmark.json
+
   test-gcc:
     needs: pre-commit
     secrets: inherit
@@ -154,7 +180,7 @@ jobs:
       bazel_config: ${{ matrix.bazel_config }}
 
   done:
-    needs: [trunk, pre-commit, test-gcc, test-clang, test-bcr]
+    needs: [trunk, pre-commit, benchmark, test-gcc, test-clang, test-bcr]
     if: always()
     runs-on: ubuntu-latest
     steps:
