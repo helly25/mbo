@@ -1,4 +1,4 @@
-# mbo/digest - message digests (planned; implementation in progress)
+# mbo/digest - message digests
 
 Spec-based, fast, constexpr-compatible, Apache-licensed, no-nonsense message
 digest implementations - the digest counterpart of [mbo/hash](../hash/README.md).
@@ -6,9 +6,12 @@ digest implementations - the digest counterpart of [mbo/hash](../hash/README.md)
 ## What this library is
 
 - **Spec-frozen algorithms, transcribed from their specifications** and pinned
-  against the official test vectors (NIST CAVP / RFC): SHA-1, SHA-224/256 (and
-  the wider SHA-2 family), SHA-3, BLAKE2b/BLAKE3, HMAC over any of them, and
-  MD5 for legacy interop.
+  against independently generated reference vectors (FIPS/RFC examples plus
+  padding-boundary and million-byte inputs). Implemented: SHA-224/256,
+  SHA-384/512, SHA-512/224, SHA-512/256 (FIPS 180-4), SHA3-224/256/384/512
+  (FIPS 202), BLAKE2b (RFC 7693), `Hmac<Algo>` over any of them (RFC 2104),
+  and SHA-1 + MD5 for legacy interop (both loudly marked collision-broken).
+  Planned: BLAKE3 (tree mode; its own PR).
 - **constexpr-safe**: every digest computable at compile time and at run time
   with identical results.
 - **Apache-2.0, hermetic, verifiable**: original transcriptions with upstream
