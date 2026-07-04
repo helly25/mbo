@@ -18,12 +18,14 @@
 
 // IWYU pragma: private, include "mbo/digest/digest.h"
 
-#include <array>
-#include <concepts>  // IWYU pragma: keep
-#include <cstddef>
-#include <cstdint>
-#include <string_view>
-#include <type_traits>
+// IWYU pragma keep on every include: all uses in this header sit inside
+// requires-clauses, which include checkers do not see through.
+#include <array>        // IWYU pragma: keep
+#include <concepts>     // IWYU pragma: keep
+#include <cstddef>      // IWYU pragma: keep
+#include <cstdint>      // IWYU pragma: keep
+#include <string_view>  // IWYU pragma: keep
+#include <type_traits>  // IWYU pragma: keep
 
 namespace mbo::digest {
 

@@ -16,7 +16,7 @@
 #ifndef MBO_HASH_HASH_H_
 #define MBO_HASH_HASH_H_
 
-#include <concepts>
+#include <concepts>  // IWYU pragma: keep (std::same_as appears only inside requires-clauses)
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
