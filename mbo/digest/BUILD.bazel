@@ -64,5 +64,5 @@ cc_binary(
 bashtest(
     name = "digest_cli_sh_test",
     srcs = ["digest_cli_sh_test.sh"],
-    data = [":digest"],
+    data = [":digest"] + glob(["testdata/digest_cli_sh_test/**"]),
 )

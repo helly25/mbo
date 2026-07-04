@@ -77,13 +77,20 @@ function test::default_algorithm_is_sha256() {
   [[ ${out} == "${SHA256_ABC}  ${ABC}" ]] || die "Default is not sha256: '${out}'"
 }
 
-function test::all_algorithms_produce_hex_lines() {
+# The output matrix: the same input files under every algorithm, each
+# compared against an expected output generated with independent references
+# (python hashlib / the official blake3 module) - never with this binary.
+function test::algorithm_output_matrix() {
   local algorithm
-  for algorithm in md5 sha1 sha224 sha256 sha384 sha512 sha512-224 sha512-256 \
-    sha3-224 sha3-256 sha3-384 sha3-512 shake128 shake256 blake2b blake2b-256 blake3; do
-    local out
-    out="$("${DIGEST}" --algorithm="${algorithm}" "${ABC}")" || die "digest failed for ${algorithm}."
-    [[ ${out} =~ ^[0-9a-f]+\ \ .+$ ]] || die "Malformed output for ${algorithm}: '${out}'"
+  for algorithm in "${ALL_ALGORITHMS[@]}"; do
+    local expected="${TESTDATA}/${algorithm}.out"
+    [[ -r ${expected} ]] || die "Missing expected output testdata for ${algorithm}."
+    (
+      cd "${TESTDATA}" \
+        && "${DIGEST}" --algorithm="${algorithm}" input1.txt input2.txt empty.txt \
+          >"${TEST_TMPDIR}/${algorithm}.out"
+    ) || die "digest failed for ${algorithm}."
+    diff -u "${expected}" "${TEST_TMPDIR}/${algorithm}.out" || die "Output mismatch for ${algorithm}."
   done
 }
 
