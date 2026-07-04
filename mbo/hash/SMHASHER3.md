@@ -57,5 +57,25 @@ collision batteries pass; the failures cluster in two areas:
   lane derivation, targeting the Seed* families). Core-round hardening remains a
   TODO; `mh` stays available as a non-default algorithm.
 
+## Re-run after seed hardening: 183 / 188
+
+Re-running the identical battery after the seed finalization (`Fmix64(seed)`
+before lane derivation, part of the same change set that made rapidhash the
+default) confirms the analysis: **all Seed\* families now pass**
+(SeedBlockLen, SeedBlockOffset, SeedBIC, SeedBitflip), as does PerlinNoise.
+
+```text
+Overall result: FAIL            ( 183 / 188 passed)
+Failures:
+    BIC                 : [3, 11, 15]
+    Sparse              : [9/4]
+    Bitflip             : [4]
+```
+
+The remaining five failures are exactly the core-round diffusion cluster
+(one rotate-multiply per lane per absorb does not reach full bit
+independence); fixing them means strengthening the round at a throughput
+cost - tracked in TODO.md.
+
 The full log is not committed (10k+ lines); regenerate with the methodology
 above.
