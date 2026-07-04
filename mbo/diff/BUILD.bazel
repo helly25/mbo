@@ -152,5 +152,5 @@ bzl_library(
 bashtest(
     name = "diff_cli_sh_test",
     srcs = ["diff_cli_sh_test.sh"],
-    data = [":diff"],
+    data = [":diff"] + glob(["testdata/diff_cli_sh_test/**"]),
 )

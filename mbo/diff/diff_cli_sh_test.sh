@@ -28,6 +28,15 @@ source "${helly25_bashtest}"
 
 DIFF="${TEST_SRCDIR}/${TEST_WORKSPACE}/mbo/diff/diff"
 declare -r DIFF
+TESTDATA="${TEST_SRCDIR}/${TEST_WORKSPACE}/mbo/diff/testdata/diff_cli_sh_test"
+declare -r TESTDATA
+
+# The full engine and format matrix. Every combination must have an expected
+# output in testdata; a missing file fails the matrix test, so an engine or
+# format added without coverage (or an unsupported combination) is spotted
+# immediately.
+declare -ra ALGORITHMS=(myers naive direct)
+declare -ra FORMATS=(unified context normal side-by-side)
 
 [[ -x ${DIFF} ]] || die "Program diff not found."
 
@@ -58,12 +67,33 @@ function test::unified_alias_rejects_other_formats() {
 }
 
 function test::all_algorithms_and_formats_accepted() {
-  for algorithm in myers naive direct; do
-    for format in unified context normal side-by-side; do
+  for algorithm in "${ALGORITHMS[@]}"; do
+    for format in "${FORMATS[@]}"; do
       "${DIFF}" --algorithm="${algorithm}" --format="${format}" "${LHS}" "${LHS}" >/dev/null 2>&1 \
         || die "Rejected: --algorithm=${algorithm} --format=${format}"
     done
   done
+}
+
+function test::engine_format_matrix() {
+  # Per (engine, format) expected outputs on the Myers paper example
+  # (ABCABBA vs CBABAC), where every engine legitimately differs: myers is
+  # minimal (5 edits), naive resyncs greedily (7), direct pairs by position.
+  for algorithm in "${ALGORITHMS[@]}"; do
+    for format in "${FORMATS[@]}"; do
+      local expected="${TESTDATA}/engine_${algorithm}_${format}.txt"
+      [[ -f "${expected}" ]] || die "Missing expected output '${expected}': untested combination."
+      "${DIFF}" --algorithm="${algorithm}" --format="${format}" --context=0 --file_header_use=none --width=30 \
+        "${TESTDATA}/engine.lhs.txt" "${TESTDATA}/engine.rhs.txt" >"${TEST_TMPDIR}/matrix.out" || true
+      expect_files_eq "${expected}" "${TEST_TMPDIR}/matrix.out"
+    done
+  done
+}
+
+function test::minimal_flag_changes_myers() {
+  "${DIFF}" --algorithm=myers --minimal --context=0 --file_header_use=none \
+    "${TESTDATA}/engine.lhs.txt" "${TESTDATA}/engine.rhs.txt" >"${TEST_TMPDIR}/minimal.out" || true
+  expect_files_eq "${TESTDATA}/engine_myers_minimal_unified.txt" "${TEST_TMPDIR}/minimal.out"
 }
 
 function test::width_controls_side_by_side() {
