@@ -11,10 +11,6 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
       SMHASHER3.md): keep-with-caveat, harden (seed finalization is cheap,
       core rounds are not), or make `rapidhash` the `DefaultHashAlgorithm`.
 
-- [ ] **XXH3-128** (`XXH3_128bits`): the modern fast file-checksum format;
-      natural extension of the existing XXH3-64 machinery, would be the third
-      128-bit-native algorithm.
-
 ## Hard / needs design
 
 - [ ] **Streaming/incremental API** (`init/update/final` state per algorithm):
