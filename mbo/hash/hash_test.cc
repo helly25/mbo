@@ -230,6 +230,60 @@ TYPED_TEST(HashTest, StructuredKeysAreDistinct) {
   EXPECT_EQ(hashes.size(), inputs.size()) << "collisions among structured keys";
 }
 
+// Streaming: any chunking of the input must produce exactly the one-shot
+// value. Lengths cross every dispatch tier; split points are random,
+// including empty chunks. Skipped for algorithms without streaming support.
+TYPED_TEST(HashTest, StreamingMatchesOneShot) {
+  if constexpr (!HasStreaming<TypeParam>) {
+    GTEST_SKIP() << TypeParam::Name() << " has no streaming form";
+  } else {
+    std::mt19937_64 rng(0x57AE0A1U);  // NOLINT(cert-msc51-cpp,cert-msc32-c): reproducible
+    for (const std::size_t length : std::array<std::size_t, 8>{0, 5, 12, 32, 33, 64, 96, 300}) {
+      const std::string data = algo::RandomString(rng, length);
+      const uint64_t expected = TypeParam::GetHash64(data, kSeed);
+      for (int trial = 0; trial < 50; ++trial) {
+        Streamer<TypeParam> stream(kSeed);
+        std::size_t pos = 0;
+        while (pos < data.size()) {
+          const std::size_t chunk = rng() % (data.size() - pos + 2);  // may be 0 or overshoot-clamped
+          stream.Update(std::string_view(data).substr(pos, chunk));
+          pos += std::min(chunk, data.size() - pos);
+        }
+        ASSERT_EQ(stream.Finalize(), expected) << TypeParam::Name() << " len=" << length << " trial=" << trial;
+      }
+      // Byte-at-a-time, and everything-at-once.
+      Streamer<TypeParam> byte_stream(kSeed);
+      for (const char chr : data) {
+        byte_stream.Update(std::string_view(&chr, 1));
+      }
+      EXPECT_EQ(byte_stream.Finalize(), expected) << TypeParam::Name() << " len=" << length << " (byte-wise)";
+      EXPECT_EQ(Streamer<TypeParam>(kSeed).Update(data).Finalize(), expected) << TypeParam::Name();
+    }
+  }
+}
+
+// Streaming support is intentional per algorithm: canonical forms exist for
+// xxh64 and siphash, mh defines its own; rapidhash has no canonical streaming.
+static_assert(HasStreaming<mh::Algorithm>);
+static_assert(HasStreaming<xxh64::Algorithm>);
+static_assert(HasStreaming<siphash::Algorithm>);
+static_assert(!HasStreaming<rapidhash::Algorithm>);
+static_assert(!HasStreaming<fnv1a::Algorithm> && !HasStreaming<simple::Algorithm>);
+static_assert(!HasStreaming<xxh3::Algorithm> && !HasStreaming<murmur3::Algorithm>);
+
+TEST(StreamerTest, NonDestructiveFinalizeAndConstexpr) {
+  Streamer<mh::Algorithm> stream;
+  stream.Update("part1-");
+  const uint64_t partial = stream.Finalize();
+  EXPECT_EQ(partial, GetHash64("part1-"));
+  stream.Update("part2");  // Continue after peeking.
+  EXPECT_EQ(stream.Finalize(), GetHash64("part1-part2"));
+  // Fully constexpr streaming.
+  constexpr uint64_t kStreamed = Streamer<siphash::Algorithm>(7).Update("const").Update("expr").Finalize();
+  static_assert(kStreamed == siphash::Algorithm::GetHash64("constexpr", 7));
+  EXPECT_EQ(kStreamed, siphash::Algorithm::GetHash64("constexpr", 7));
+}
+
 // 128-bit-only checks; skipped for 64-bit-based algorithms via the detection trait.
 // How GetHash64 relates to GetHash128 is algorithm-specific (mh folds, murmur3 truncates)
 // and covered by per-algorithm tests below.

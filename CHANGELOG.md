@@ -24,6 +24,7 @@
 - Added `mbo::hash::Hash64To32(uint64_t)`: XOR-fold shrink to 32 bits (all 64 bits contribute; the official FNV shrinking recommendation, safe for every algorithm).
 - Added `mbo::hash::GetHash32<Algo>(data, seed)` and `Hasher<Algo>::GetHash32` with the `HasGetHash32` concept: algorithms may provide a native 32-bit variant; otherwise the XOR-fold of the 64-bit hash is synthesized.
 - Added a mixed-length latency benchmark (`BmHash64Latency`): unpredictable key sizes with a serialized dependency chain, measuring what hash-table workloads actually pay.
+- Added streaming/incremental hashing: the `HasStreaming` concept and `Streamer<Algo>` wrapper (`Update(...).Finalize()`, non-destructive, constexpr-safe), with chunked results guaranteed equal to the one-shot value. Implemented for `mh`, `xxh64` (canonical streaming semantics), and `siphash`; `rapidhash` has no canonical streaming form and honestly opts out.
 - Hash values are not guaranteed stable across library versions and are not intended for persistence or cryptographic use.
 
 # 0.12.0
