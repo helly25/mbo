@@ -17,7 +17,9 @@
 #define MBO_DIFF_INTERNAL_DATA_H_
 
 #include <cstddef>
+#include <deque>
 #include <string>
+#include <string_view>
 
 #include "mbo/diff/diff_options.h"
 
@@ -27,7 +29,9 @@ class Data {
  public:
   struct LineCache final {
     std::string_view line;
-    std::string processed;
+    // The comparison text: `line` itself (or a sub-range of it) unless a
+    // rebuilding transformation applied, in which case it views `owned_`.
+    std::string_view processed;
     bool matches_ignore = false;
   };
 
@@ -68,19 +72,25 @@ class Data {
   static LineCache Process(
       const DiffOptions& options,
       const std::optional<DiffOptions::RegexReplace>& regex_replace,
-      std::string_view line);
+      std::string_view line,
+      std::deque<std::string>& owned);
 
   static std::vector<LineCache> SplitAndAdaptLastLine(
       const DiffOptions& options,
       const std::optional<DiffOptions::RegexReplace>& regex_replace,
       std::string_view text,
       bool got_nl,
-      std::string_view last_line);
+      std::string_view last_line,
+      std::deque<std::string>& owned);
 
   const DiffOptions& options_;
   const std::optional<DiffOptions::RegexReplace>& regex_replace_;
   const bool got_nl_ = true;
   const std::string last_line_no_nl_;
+  // Backing storage for rebuilt `LineCache::processed` values. A deque never
+  // moves its elements, so the views stay valid. Must precede `text_` (its
+  // initializer fills this).
+  std::deque<std::string> owned_;
   const std::vector<LineCache> text_;
   std::size_t idx_ = 0;
 };

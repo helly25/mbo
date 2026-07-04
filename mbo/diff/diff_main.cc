@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <filesystem>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -51,7 +52,7 @@ ABSL_FLAG(  //
     context,
     3,
     "Produces a diff with number of context lines. This defaults to '0' if '--algorithm=direct' or "
-    "'--format=normal'.");
+    "'--format=normal', and to unbounded (full files) if '--format=side-by-side'.");
 ABSL_FLAG(  //
     std::string,
     file_header_use,
@@ -67,9 +68,12 @@ ABSL_FLAG(  //
     format,
     "unified",
     R"(Diff output format:
-- context: Context format like `diff -c`.
-- normal:  Normal format like plain `diff` (defaults '--context' to '0' and shows no file headers).
-- unified: Unified format like `diff -u` or `git diff`.
+- context:      Context format like `diff -c`.
+- normal:       Normal format like plain `diff` (defaults '--context' to '0' and shows no file headers).
+- side-by-side: Two columns with '|'/'<'/'>' gutter markers like `diff -y --expand-tabs`; for
+                eyeballing, not for `patch`. Uses '--width' and defaults '--context' to unbounded
+                (full files); an explicit '--context' renders only the chunks around changes.
+- unified:      Unified format like `diff -u` or `git diff`.
 )");
 ABSL_FLAG(  //
     bool,
@@ -149,6 +153,11 @@ ABSL_FLAG(  //
     false,
     "Sets the time to the unix epoch 0.");
 ABSL_FLAG(  //
+    std::size_t,
+    width,
+    130,  // NOLINT(*-magic-numbers)
+    "Total output width used by '--format=side-by-side'.");
+ABSL_FLAG(  //
     std::string,
     strip_comments,
     "",
@@ -218,10 +227,15 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
       << "The deprecated '--algorithm=unified' alias implies '--format=unified'.";
   const bool is_direct = algorithm == Diff::Options::Algorithm::kDirect;
   const bool is_normal = output_format == Diff::Options::OutputFormat::kNormal;
+  const bool is_side_by_side = output_format == Diff::Options::OutputFormat::kSideBySide;
+  // Side-by-side shows the full files by default (halved to keep the context
+  // size arithmetic overflow free); direct and normal formats show none.
+  const std::size_t default_context = is_side_by_side ? std::numeric_limits<std::size_t>::max() / 2 : 0;
   const Diff::Options diff_options{
       .algorithm = *algorithm,
       .output_format = *output_format,
-      .context_size = GetFlagOrDefault(FLAGS_context, is_direct || is_normal, 0),
+      .context_size = GetFlagOrDefault(FLAGS_context, is_direct || is_normal || is_side_by_side, default_context),
+      .side_by_side_width = absl::GetFlag(FLAGS_width),
       .file_header_use = *Diff::Options::ParseFileHeaderUse(absl::GetFlag(FLAGS_file_header_use)),
       .ignore_blank_lines = absl::GetFlag(FLAGS_ignore_blank_lines),
       .ignore_case = absl::GetFlag(FLAGS_ignore_case),
