@@ -30,8 +30,9 @@
 // one code path for compile time and run time. Unkeyed sequential mode with a
 // selectable digest size (the RFC's `digest_length` parameter; `blake2b` is
 // the full 64-byte form, `blake2b_256` the common 32-byte form). Little-endian
-// throughout. Native keying (the RFC's key block) is a possible future
-// addition; keyed digesting is otherwise HMAC's job (digest_hmac.h).
+// throughout. Native keying (the RFC's key block, keys up to 64 bytes) is
+// provided via `DigestKeyed` / `StreamInitKeyed` - BLAKE2 was designed as its
+// own MAC, no HMAC construction needed.
 namespace mbo::digest {
 
 // NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters)
@@ -135,6 +136,26 @@ constexpr State Init() noexcept {
   return state;
 }
 
+// Keyed initialization (RFC 7693, section 2.9): the key length enters the
+// parameter block, and the zero-padded key becomes the first data block. Keys
+// longer than 64 bytes are not defined by the RFC; excess bytes are ignored
+// (precondition: key.size() <= 64, enforced at constant evaluation by the
+// KeyedDigest known-answer tests).
+template<std::size_t DigestSize>
+constexpr State KeyedInit(std::string_view key) noexcept {
+  State state = Init<DigestSize>();
+  if (key.empty()) {
+    return state;
+  }
+  const std::size_t key_len = key.size() < 64 ? key.size() : 64;
+  state.hash[0] ^= static_cast<uint64_t>(key_len) << 8U;
+  for (std::size_t i = 0; i < key_len; ++i) {
+    state.buffer[i] = key[i];
+  }
+  state.buffered = kBlockSize;  // The zero-padded key block counts in full.
+  return state;
+}
+
 constexpr void Update(State& state, std::string_view data) noexcept {
   const char* ptr = data.data();
   std::size_t remaining = data.size();
@@ -185,7 +206,16 @@ struct Blake2bAlgorithm {
     return Finalize<kDigestSize>(state);
   }
 
+  // Native keyed mode (key up to 64 bytes; see KeyedInit above).
+  static constexpr DigestType DigestKeyed(std::string_view key, std::string_view message) noexcept {
+    State state = KeyedInit<kDigestSize>(key);
+    Update(state, message);
+    return Finalize<kDigestSize>(state);
+  }
+
   static constexpr StreamState StreamInit() noexcept { return Init<kDigestSize>(); }
+
+  static constexpr StreamState StreamInitKeyed(std::string_view key) noexcept { return KeyedInit<kDigestSize>(key); }
 
   static constexpr void StreamUpdate(StreamState& state, std::string_view data) noexcept { Update(state, data); }
 

@@ -21,6 +21,7 @@ cc_library(
     name = "digest_cc",
     srcs = [
         "digest_blake2b.h",
+        "digest_blake3.h",
         "digest_concepts.h",
         "digest_hmac.h",
         "digest_md5.h",
@@ -28,6 +29,7 @@ cc_library(
         "digest_sha256.h",
         "digest_sha3.h",
         "digest_sha512.h",
+        "digest_shake.h",
     ],
     hdrs = ["digest.h"],
     visibility = ["//visibility:public"],

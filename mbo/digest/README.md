@@ -10,8 +10,9 @@ digest implementations - the digest counterpart of [mbo/hash](../hash/README.md)
   padding-boundary and million-byte inputs). Implemented: SHA-224/256,
   SHA-384/512, SHA-512/224, SHA-512/256 (FIPS 180-4), SHA3-224/256/384/512
   (FIPS 202), BLAKE2b (RFC 7693), `Hmac<Algo>` over any of them (RFC 2104),
-  and SHA-1 + MD5 for legacy interop (both loudly marked collision-broken).
-  Planned: BLAKE3 (tree mode; its own PR).
+  BLAKE3 (XOF, keyed, and derive-key modes; pinned against the official
+  test-vector suite), SHAKE128/256 (FIPS 202 XOFs), and SHA-1 + MD5 for
+  legacy interop (both loudly marked collision-broken).
 - **constexpr-safe**: every digest computable at compile time and at run time
   with identical results.
 - **Apache-2.0, hermetic, verifiable**: original transcriptions with upstream

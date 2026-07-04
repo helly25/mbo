@@ -73,6 +73,14 @@ https://github.com/aappleby/smhasher
   domain. The author hereby disclaims copyright to this source code.
 
 --------------------------------------------------------------------------------
+BLAKE3 (mbo/digest/digest_blake3.h)
+https://github.com/BLAKE3-team/BLAKE3
+
+  BLAKE3 was designed by Jack O'Connor, Jean-Philippe Aumasson, Samuel Neves,
+  and Zooko Wilcox-O'Hearn. The official implementations are released under
+  CC0-1.0 OR Apache-2.0. This repository contains an original constexpr
+  transcription following the public specification.
+
 SipHash (mbo/hash/hash_siphash.h)
 https://github.com/veorq/SipHash
 

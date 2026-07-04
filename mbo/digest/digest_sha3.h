@@ -134,21 +134,38 @@ constexpr void Update(State& state, std::string_view data) noexcept {
   }
 }
 
-// Domain separation + padding (FIPS 202, section 6.1: append the two SHA-3
-// domain bits then pad10*1, i.e. XOR 0x06 at the current position and 0x80
-// into the last rate byte), one final permute, then squeeze `DigestSize`
-// bytes (little-endian lanes). Takes the state by value (peekable finalize).
-template<std::size_t DigestSize, std::size_t Rate>
-constexpr std::array<uint8_t, DigestSize> Finalize(State state) noexcept {
-  static_assert(DigestSize < Rate && Rate <= 200);
-  XorByte(state, state.pos, static_cast<char>(0x06));
+// Domain separation + padding (FIPS 202, section 6.1: append the domain bits
+// then pad10*1, i.e. XOR the domain byte at the current position and 0x80
+// into the last rate byte), then squeeze `OutputSize` bytes (little-endian
+// lanes), permuting between rate-sized output blocks. The domain byte is 0x06
+// for the SHA-3 digests and 0x1F for the SHAKE XOFs (digest_shake.h). Takes
+// the state by value (peekable finalize).
+template<std::size_t OutputSize, std::size_t Rate>
+constexpr std::array<uint8_t, OutputSize> FinalizeXof(State state, uint8_t domain) noexcept {
+  static_assert(OutputSize > 0 && Rate <= 200);
+  XorByte(state, state.pos, static_cast<char>(domain));
   XorByte(state, Rate - 1, static_cast<char>(0x80));
   KeccakF(state.lanes);
-  std::array<uint8_t, DigestSize> digest = {};
-  for (std::size_t i = 0; i < DigestSize; ++i) {
-    digest[i] = static_cast<uint8_t>(state.lanes[i / 8] >> (8 * (i % 8)));
+  std::array<uint8_t, OutputSize> digest = {};
+  std::size_t written = 0;
+  while (true) {
+    const std::size_t take = OutputSize - written < Rate ? OutputSize - written : Rate;
+    for (std::size_t i = 0; i < take; ++i) {
+      digest[written + i] = static_cast<uint8_t>(state.lanes[i / 8] >> (8 * (i % 8)));
+    }
+    written += take;
+    if (written == OutputSize) {
+      return digest;
+    }
+    KeccakF(state.lanes);
   }
-  return digest;
+}
+
+// The fixed-size SHA-3 finalize: domain byte 0x06, single squeeze block.
+template<std::size_t DigestSize, std::size_t Rate>
+constexpr std::array<uint8_t, DigestSize> Finalize(State state) noexcept {
+  static_assert(DigestSize < Rate);
+  return FinalizeXof<DigestSize, Rate>(state, 0x06);
 }
 
 // The four variants differ only in rate and output length; this template
