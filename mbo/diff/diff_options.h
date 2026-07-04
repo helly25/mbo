@@ -112,6 +112,10 @@ struct DiffOptions final {
   bool ignore_all_space : 1 = false;
   bool ignore_consecutive_space : 1 = false;
   bool ignore_trailing_space : 1 = false;
+  // Disables the `kMyers` cost cap: diffs are guaranteed minimal at the price
+  // of O((L+R)*D) worst case time on highly divergent inputs (like GNU
+  // `diff --minimal`). No effect on the other algorithms.
+  bool minimal : 1 = false;
   bool show_chunk_headers : 1 = true;
   bool skip_left_deletions : 1 = false;
 
