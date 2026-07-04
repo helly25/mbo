@@ -19,6 +19,7 @@
 #include <cmath>
 #include <cstddef>
 #include <deque>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -70,7 +71,8 @@ DiffMyers::DiffMyers(const file::Artefact& lhs, const file::Artefact& rhs, const
     : ChunkedDiff(lhs, rhs, options) {
   const std::size_t lhs_size = LhsData().Size();
   const std::size_t rhs_size = RhsData().Size();
-  max_cost_ = std::max<std::size_t>(64, ISqrt(lhs_size + rhs_size));
+  max_cost_ =
+      options.minimal ? std::numeric_limits<std::size_t>::max() : std::max<std::size_t>(64, ISqrt(lhs_size + rhs_size));
   const std::size_t v_size = 2 * (std::max(lhs_size, rhs_size) + 2) + 1;
   fwd_.assign(v_size, kOutside);
   bwd_.assign(v_size, kOutside);

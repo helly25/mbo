@@ -12,7 +12,9 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
       strengthening the absorb round, i.e. trading some throughput; the
       alternative is replacing the algorithm outright. Either way the `mh`
       name may change. The seed families were addressed by seed finalization;
-      `rapidhash` is the default since then (see SMHASHER3.md).
+      `rapidhash` is the default since then (see SMHASHER3.md). The native
+      128-bit variant additionally needs lane decorrelation (163/188; see
+      SMHASHER3.md's failure analysis).
 
 ## Hard / needs design
 

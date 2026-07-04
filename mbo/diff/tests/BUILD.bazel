@@ -59,6 +59,15 @@ diff_test_formats_test(
 )
 
 diff_test_test(
+    name = "abc_axc_side_by_side_w40_diff_test",
+    expected_diff = "abc_axc_side_by_side_w40.diff.txt",
+    file_new = "axc.txt",
+    file_old = "abc.txt",
+    format = "side-by-side",
+    width = 40,
+)
+
+diff_test_test(
     name = "same_unified_diff_test",
     # Exercises the deprecated 'unified' algorithm alias (now called 'naive').
     algorithm = "unified",
@@ -249,6 +258,7 @@ diff_test_formats_test(
     expected_diffs = {
         "context": "direct_formats_context.diff.txt",
         "normal": "direct_formats_normal.diff.txt",
+        "side-by-side": "direct_formats_side_by_side.diff.txt",
         "unified": "direct_formats_unified.diff.txt",
     },
     file_new = "direct.rhs.txt",

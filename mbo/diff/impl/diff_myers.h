@@ -41,7 +41,8 @@ namespace mbo::diff {
 // Complexity is O((L+R)*D) time and O(L+R) space where D is the number of
 // differing lines. Once a subdivision exceeds a cost of max(64, sqrt(L+R))
 // it splits at the furthest reaching path found so far (the same heuristic
-// git uses), which bounds pathological inputs at the expense of minimality.
+// git uses), which bounds pathological inputs at the expense of minimality;
+// `DiffOptions::minimal` disables the cap.
 class DiffMyers final : private ChunkedDiff {
  public:
   static absl::StatusOr<std::string> FileDiff(
