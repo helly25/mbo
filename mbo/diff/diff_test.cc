@@ -788,6 +788,22 @@ TEST_F(DiffTest, NormalFormatDirectAlgorithm) {
   )txt"))));
 }
 
+TEST_F(DiffTest, SideBySideFormatDirectAlgorithm) {
+  // The direct algorithm flushes each line pair separately; side-by-side
+  // pairs every one-pair block into a '|' row.
+  EXPECT_THAT(
+      mbo::diff::Diff::FileDiff(
+          {ToLines("123"), "lhs"}, {ToLines("xy3"), "rhs"},
+          {
+              .algorithm = Diff::Options::Algorithm::kDirect,
+              .output_format = Diff::Options::OutputFormat::kSideBySide,
+              .context_size = 0,
+              .side_by_side_width = 20,
+          }),
+      IsOkAndHolds("1        | x\n"
+                   "2        | y\n"));
+}
+
 TEST_F(DiffTest, NormalFormatNoChunkHeaders) {
   EXPECT_THAT(
       Diff(
@@ -824,6 +840,7 @@ TEST_F(DiffTest, FormatsIgnoreBlankLines) {
            Diff::Options::OutputFormat::kUnified,
            Diff::Options::OutputFormat::kContext,
            Diff::Options::OutputFormat::kNormal,
+           Diff::Options::OutputFormat::kSideBySide,
        }) {
     EXPECT_THAT(
         Diff(
