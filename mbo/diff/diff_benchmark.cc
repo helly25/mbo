@@ -42,6 +42,8 @@ struct Case {
   file::Artefact lhs;
   file::Artefact rhs;
   bool ignore_case = false;
+  bool ignore_trailing_space = false;
+  bool ignore_all_space = false;
 };
 
 std::string NumberedLines(std::size_t count, std::string_view tag) {
@@ -66,10 +68,15 @@ std::string EditedLines(std::size_t count, std::string_view tag, std::size_t eve
 
 // Distinct long mixed-case lines; every `edit_every`-th line differs (none
 // for 0). Stresses the tokenizer rather than the middle snake search.
-std::string LongLines(std::size_t count, std::size_t width, std::size_t edit_every) {
+std::string LongLines(
+    std::size_t count,
+    std::size_t width,
+    std::size_t edit_every,
+    std::string_view pattern = "aBcDeFgHiJkLmNoP",
+    std::string_view suffix = "") {
   std::string pad;
   while (pad.size() < width) {
-    pad += "aBcDeFgHiJkLmNoP";
+    pad += pattern;
   }
   pad.resize(width);
   std::string text;
@@ -77,7 +84,7 @@ std::string LongLines(std::size_t count, std::size_t width, std::size_t edit_eve
     if (edit_every != 0 && i % edit_every == 0) {
       absl::StrAppend(&text, "edited-", i, "\n");
     } else {
-      absl::StrAppend(&text, "line-", i, "-", pad, "\n");
+      absl::StrAppend(&text, "line-", i, "-", pad, suffix, "\n");
     }
   }
   return text;
@@ -111,13 +118,30 @@ const std::vector<Case>& Cases() {
       {"disjoint_2k", {NumberedLines(2'000, "left-"), "lhs"}, {NumberedLines(2'000, "right-"), "rhs"}},
       {"tokenize_20k_long", {LongLines(20'000, 120, 0), "lhs"}, {LongLines(20'000, 120, 500), "rhs"}},
       {"tokenize_20k_long_icase", {LongLines(20'000, 120, 0), "lhs"}, {LongLines(20'000, 120, 500), "rhs"}, true},
+      // Lines differing only in trailing space: the strip is a pure suffix trim.
+      {.name = "tokenize_20k_trail_space",
+       .lhs = {LongLines(20'000, 120, 0, "aBcDeFgHiJkLmNoP", "  "), "lhs"},
+       .rhs = {LongLines(20'000, 120, 500, "aBcDeFgHiJkLmNoP", " "), "rhs"},
+       .ignore_trailing_space = true},
+      // Lines differing only in internal spacing: every line gets rebuilt.
+      // The width is a multiple of the pattern length so both sides strip to
+      // identical text.
+      {.name = "tokenize_20k_all_space",
+       .lhs = {LongLines(20'000, 108, 0, "aB cD eF gH iJ kL "), "lhs"},
+       .rhs = {LongLines(20'000, 108, 500, "aBcD eFg HiJ kL   "), "rhs"},
+       .ignore_all_space = true},
   };
   return *kCases;
 }
 
 void BmDiff(benchmark::State& state, DiffOptions::Algorithm algorithm, std::size_t case_idx) {
   const Case& bm_case = Cases()[case_idx];
-  const DiffOptions options{.algorithm = algorithm, .ignore_case = bm_case.ignore_case};
+  const DiffOptions options{
+      .algorithm = algorithm,
+      .ignore_case = bm_case.ignore_case,
+      .ignore_all_space = bm_case.ignore_all_space,
+      .ignore_trailing_space = bm_case.ignore_trailing_space,
+  };
   for (auto unused : state) {
     auto result = Diff::FileDiff(bm_case.lhs, bm_case.rhs, options);
     benchmark::DoNotOptimize(result);
