@@ -32,6 +32,15 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 
 ## Non-goals (decided)
 
+- A build option excluding the notice-bearing transcriptions (rapidhash MIT,
+  xxHash BSD-2): the obligations are satisfied by shipping NOTICE; a flag
+  would flip the default algorithm per build configuration (same footgun
+  class rejected for auto-MBO_HASH_MANGLE) and double the CI matrix. The
+  granular path already exists - the algorithm headers are self-contained, so
+  notice-free consumers can include only the attribution-free set (mh,
+  simple, fnv1a, murmur3, siphash); per-algorithm cc_library targets can be
+  added compatibly if such a consumer ever materializes.
+
 - MD5 (and SHA-\*) as a library offering: MD5 looks cryptographic and is
   broken; both are out of scope. Our fast file-identity answer is XXH3(-128).
   Should digest interop ever become a real need, prefer an in-repo, constexpr,
