@@ -4,6 +4,24 @@ One-off run recorded 2026-07-04 (see TODO.md). SMHasher3 is the research-grade
 hash test battery (successor of SMHasher); passing it is the community bar for
 a production-quality general-purpose hash.
 
+## Current state: 183 / 188 (five failures remaining)
+
+After the seed hardening that accompanied the default switch to rapidhash
+(`Fmix64(seed)` before lane derivation), the battery result is:
+
+```text
+Overall result: FAIL            ( 183 / 188 passed)
+Failures:
+    BIC                 : [3, 11, 15]
+    Sparse              : [9/4]
+    Bitflip             : [4]
+```
+
+The five remaining failures are the core-round diffusion cluster (one
+rotate-multiply per lane per absorb does not reach full bit independence);
+fixing them means strengthening the round at a throughput cost - tracked in
+TODO.md as part of the "mh is WIP" item.
+
 ## Methodology
 
 - SMHasher3 @ gitlab.com/fwojcik/smhasher3, HEAD of 2026-07-04, built with
@@ -15,7 +33,7 @@ a production-quality general-purpose hash.
   64-bit output, seeded.
 - Full default battery: `./SMHasher3 mbo_mh64` (~712 s).
 
-## Result: FAIL — 147 / 188
+## Initial run (historical): FAIL — 147 / 188
 
 ```text
 Failures:
@@ -57,25 +75,12 @@ collision batteries pass; the failures cluster in two areas:
   lane derivation, targeting the Seed* families). Core-round hardening remains a
   TODO; `mh` stays available as a non-default algorithm.
 
-## Re-run after seed hardening: 183 / 188
+## From 147 to 183
 
-Re-running the identical battery after the seed finalization (`Fmix64(seed)`
-before lane derivation, part of the same change set that made rapidhash the
-default) confirms the analysis: **all Seed\* families now pass**
-(SeedBlockLen, SeedBlockOffset, SeedBIC, SeedBitflip), as does PerlinNoise.
-
-```text
-Overall result: FAIL            ( 183 / 188 passed)
-Failures:
-    BIC                 : [3, 11, 15]
-    Sparse              : [9/4]
-    Bitflip             : [4]
-```
-
-The remaining five failures are exactly the core-round diffusion cluster
-(one rotate-multiply per lane per absorb does not reach full bit
-independence); fixing them means strengthening the round at a throughput
-cost - tracked in TODO.md.
+The seed finalization cleared **all Seed\* families** (SeedBlockLen,
+SeedBlockOffset, SeedBIC, SeedBitflip) and PerlinNoise in a single cheap
+change, confirming the interpretation above; the initial run's failure list is
+kept for the record. Current state: see the top of this document.
 
 The full log is not committed (10k+ lines); regenerate with the methodology
 above.
