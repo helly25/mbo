@@ -30,6 +30,13 @@ exactly the code that most needs verifying. We implement the functions
 in-repo, verify them against the published vectors, and ship them under one
 license with one [NOTICE](../../NOTICE) file.
 
+## The `digest` binary
+
+`bazel run //mbo/digest:digest -- [-a <algorithm>] <file>...` prints
+checksum-style `<hash>  <file>` lines (the `sha256sum`/`shasum` format;
+`--reverse` swaps the columns, `-` reads stdin). All library algorithms are
+selectable; see `--help`.
+
 ## Honest guidance per algorithm
 
 - **MD5**: ubiquitous legacy file checksum. Fine for detecting _accidental_
