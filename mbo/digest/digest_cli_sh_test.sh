@@ -120,6 +120,10 @@ function test::ignore_directories_skips_silently() {
     || die "Expected exit code 0 with --ignore_directories."
   [[ -s "${TEST_TMPDIR}/skip.err" ]] && die "Expected no error output with --ignore_directories."
   [[ ${out} == "${SHA256_ABC}  ${ABC}" ]] || die "Expected only the regular file to be hashed."
+  out="$("${DIGEST}" -d "${BASHTEST_TMPDIR}" "${ABC}" 2>"${TEST_TMPDIR}/skip_short.err")" \
+    || die "Expected exit code 0 with -d."
+  [[ -s "${TEST_TMPDIR}/skip_short.err" ]] && die "Expected no error output with -d."
+  [[ ${out} == "${SHA256_ABC}  ${ABC}" ]] || die "Expected only the regular file to be hashed with -d."
 }
 
 function test::missing_file_is_an_error() {
