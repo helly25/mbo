@@ -40,8 +40,10 @@ def diff_test(
         regex_replace_lhs = "",
         regex_replace_rhs = "",
         show_chunk_headers = True,
+        skip_left_deletions = False,
         strip_comments = "",
         strip_parsed_comments = True,
+        width = -1,
         **kwargs):
     """Create a diff test that compares `file_old` vs `file_new`.
 
@@ -66,8 +68,10 @@ def diff_test(
         regex_replace_lhs:        Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.
         regex_replace_rhs:        Regular expression and replacement for right side: <sep><regex><sep><replace><sep>.
         show_chunk_headers:       Whether to show the chunk headers.
+        skip_left_deletions:      Ignore left deletions.
         strip_comments:           Strip out anything starting from `strip_comments`.
         strip_parsed_comments:    Whether to parse lines when stripping comments.
+        width:                    Total output width for format = 'side-by-side' (-1 = tool default).
         **kwargs:                 Keyword args to pass down to native rules.
     """
     if algorithm == "unified" and format != "unified":
@@ -95,8 +99,10 @@ def diff_test(
         regex_replace_lhs = regex_replace_lhs,
         regex_replace_rhs = regex_replace_rhs,
         show_chunk_headers = show_chunk_headers,
+        skip_left_deletions = skip_left_deletions,
         strip_comments = strip_comments,
         strip_parsed_comments = strip_parsed_comments,
+        width = width,
         **kwargs
     )
 
@@ -177,6 +183,8 @@ fi
                 regex_replace_lhs = shell.quote(ctx.attr.regex_replace_lhs),
                 regex_replace_rhs = shell.quote(ctx.attr.regex_replace_rhs),
                 show_chunk_headers = bool_arg(ctx.attr.show_chunk_headers),
+                skip_left_deletions = bool_arg(ctx.attr.skip_left_deletions),
+                width = "" if ctx.attr.width == -1 else "--width=%d" % ctx.attr.width,
                 strip_comments = shell.quote(ctx.attr.strip_comments),
                 strip_file_header_prefix = shell.quote(strip_file_header_prefix),
                 strip_parsed_comments = bool_arg(ctx.attr.strip_parsed_comments),
@@ -275,12 +283,20 @@ _diff_test = rule(
             doc = "Whether to show the chunk headers.",
             default = True,
         ),
+        "skip_left_deletions": attr.bool(
+            doc = "Ignore left deletions.",
+            default = False,
+        ),
         "strip_comments": attr.string(
             doc = "Strip out any thing starting from `strip_comments`.",
         ),
         "strip_parsed_comments": attr.bool(
             doc = "Whether to parse lines when stripping comments.",
             default = True,
+        ),
+        "width": attr.int(
+            default = -1,
+            doc = "Total output width for format = 'side-by-side' (-1 = tool default).",
         ),
         "_diff_tool": attr.label(
             doc = "The diff tool executable.",

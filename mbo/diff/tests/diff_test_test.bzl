@@ -38,8 +38,10 @@ def diff_test_test(
         regex_replace_lhs = "",
         regex_replace_rhs = "",
         show_chunk_headers = True,
+        skip_left_deletions = False,
         strip_comments = "",
         strip_parsed_comments = True,
+        width = -1,
         **kwargs):
     """Create a diff test that compares `file_old` vs `file_new`.
 
@@ -64,8 +66,10 @@ def diff_test_test(
         regex_replace_lhs:        Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.
         regex_replace_rhs:        Regular expression and replacement for right side: <sep><regex><sep><replace><sep>.
         show_chunk_headers:       Whether to show the chunk headers.
+        skip_left_deletions:      Ignore left deletions.
         strip_comments:           Strip out anything starting from `strip_comments`.
         strip_parsed_comments:    Whether to parse lines when stripping comments.
+        width:                    Total output width for format = 'side-by-side' (-1 = tool default).
         **kwargs:                 Keyword args to pass down to native rules.
     """
     if algorithm == "unified" and format != "unified":
@@ -96,6 +100,8 @@ def diff_test_test(
                 --regex_replace_lhs={regex_replace_lhs} \\
                 --regex_replace_rhs={regex_replace_rhs} \\
                 --show_chunk_headers={show_chunk_headers} \\
+                --skip_left_deletions={skip_left_deletions} \\
+                {width} \\
                 --strip_comments={strip_comments} \\
                 --strip_file_header_prefix={strip_file_header_prefix} \\
                 --strip_parsed_comments={strip_parsed_comments} \\
@@ -117,6 +123,8 @@ def diff_test_test(
             regex_replace_lhs = shell.quote(regex_replace_lhs),
             regex_replace_rhs = shell.quote(regex_replace_rhs),
             show_chunk_headers = bool_arg(show_chunk_headers),
+            skip_left_deletions = bool_arg(skip_left_deletions),
+            width = "" if width == -1 else "--width=%d" % width,
             strip_comments = shell.quote(strip_comments),
             strip_file_header_prefix = shell.quote(strip_file_header_prefix),
             strip_parsed_comments = bool_arg(strip_parsed_comments),
