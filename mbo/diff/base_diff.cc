@@ -31,9 +31,19 @@ namespace mbo::diff {
 
 std::string BaseDiff::FileHeaders(const file::Artefact& lhs, const file::Artefact& rhs, const DiffOptions& options) {
   std::string output;
-  if (options.file_header_use != DiffOptions::FileHeaderUse::kNone) {
-    absl::StrAppend(&output, "--- ", SelectFileHeader(lhs, lhs, rhs, options), "\n");
-    absl::StrAppend(&output, "+++ ", SelectFileHeader(rhs, lhs, rhs, options), "\n");
+  if (options.file_header_use == DiffOptions::FileHeaderUse::kNone) {
+    return output;
+  }
+  switch (options.output_format) {
+    case DiffOptions::OutputFormat::kUnified:
+      absl::StrAppend(&output, "--- ", SelectFileHeader(lhs, lhs, rhs, options), "\n");
+      absl::StrAppend(&output, "+++ ", SelectFileHeader(rhs, lhs, rhs, options), "\n");
+      break;
+    case DiffOptions::OutputFormat::kContext:
+      absl::StrAppend(&output, "*** ", SelectFileHeader(lhs, lhs, rhs, options), "\n");
+      absl::StrAppend(&output, "--- ", SelectFileHeader(rhs, lhs, rhs, options), "\n");
+      break;
+    case DiffOptions::OutputFormat::kNormal: break;  // Normal diff output has no file header lines.
   }
   return output;
 }

@@ -19,7 +19,8 @@
 
 #include "absl/status/statusor.h"
 #include "mbo/diff/impl/diff_direct.h"
-#include "mbo/diff/impl/diff_unified.h"
+#include "mbo/diff/impl/diff_myers.h"
+#include "mbo/diff/impl/diff_naive.h"
 #include "mbo/file/artefact.h"
 
 namespace mbo::diff {
@@ -29,8 +30,9 @@ absl::StatusOr<std::string> Diff::FileDiff(
     const file::Artefact& rhs,
     const Options& options) {
   switch (options.algorithm) {
-    case Diff::Options::Algorithm::kUnified: return DiffUnified::FileDiff(lhs, rhs, options);
+    case Diff::Options::Algorithm::kNaive: return DiffNaive::FileDiff(lhs, rhs, options);
     case Diff::Options::Algorithm::kDirect: return DiffDirect::FileDiff(lhs, rhs, options);
+    case Diff::Options::Algorithm::kMyers: return DiffMyers::FileDiff(lhs, rhs, options);
   }
   return absl::InvalidArgumentError("Unknown algorithm selected.");
 }

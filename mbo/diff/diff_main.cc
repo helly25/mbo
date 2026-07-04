@@ -39,16 +39,19 @@
 ABSL_FLAG(  //
     std::string,
     algorithm,
-    "unified",
-    R"(Diff algorigth:
-- unified: Like diff -u or git diff.
+    "myers",
+    R"(Diff algorithm:
 - direct:  Direct side-by-side comparison.
+- myers:   Myers diff, produces minimal diffs like GNU diff and git (default).
+- naive:   Naive line diff that resynchronizes on the closest matching line (not minimal).
+The old name 'unified' remains a deprecated alias for 'myers' and implies '--format=unified'.
 )");
 ABSL_FLAG(  //
     std::size_t,
     context,
     3,
-    "Produces a diff with number of context lines. This defaults to '0' if '--algorithm=direct'.");
+    "Produces a diff with number of context lines. This defaults to '0' if '--algorithm=direct' or "
+    "'--format=normal'.");
 ABSL_FLAG(  //
     std::string,
     file_header_use,
@@ -58,6 +61,15 @@ ABSL_FLAG(  //
 - left:  The left and right header both use left file name.
 - none:  Show no file header.
 - right: The left and right header both use right file name.
+)");
+ABSL_FLAG(  //
+    std::string,
+    format,
+    "unified",
+    R"(Diff output format:
+- context: Context format like `diff -c`.
+- normal:  Normal format like plain `diff` (defaults '--context' to '0' and shows no file headers).
+- unified: Unified format like `diff -u` or `git diff`.
 )");
 ABSL_FLAG(  //
     bool,
@@ -199,10 +211,17 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
   const std::optional<Diff::Options::Algorithm> algorithm =
       Diff::Options::ParseAlgorithmFlag(absl::GetFlag(FLAGS_algorithm));
   ABSL_QCHECK(algorithm) << "Unknown algorithm";
+  const std::optional<Diff::Options::OutputFormat> output_format =
+      Diff::Options::ParseOutputFormatFlag(absl::GetFlag(FLAGS_format));
+  ABSL_QCHECK(output_format) << "Unknown format";
+  ABSL_QCHECK(absl::GetFlag(FLAGS_algorithm) != "unified" || output_format == Diff::Options::OutputFormat::kUnified)
+      << "The deprecated '--algorithm=unified' alias implies '--format=unified'.";
   const bool is_direct = algorithm == Diff::Options::Algorithm::kDirect;
+  const bool is_normal = output_format == Diff::Options::OutputFormat::kNormal;
   const Diff::Options diff_options{
       .algorithm = *algorithm,
-      .context_size = GetFlagOrDefault(FLAGS_context, is_direct, 0),
+      .output_format = *output_format,
+      .context_size = GetFlagOrDefault(FLAGS_context, is_direct || is_normal, 0),
       .file_header_use = *Diff::Options::ParseFileHeaderUse(absl::GetFlag(FLAGS_file_header_use)),
       .ignore_blank_lines = absl::GetFlag(FLAGS_ignore_blank_lines),
       .ignore_case = absl::GetFlag(FLAGS_ignore_case),
@@ -258,6 +277,7 @@ int main(int argc, char* argv[]) {
     [ <flags>> ] <old/lef> <new/right>
 
     Performs a unified diff (diff -du) between files <old/left> and <new/right>.
+    Other output formats ('context', 'normal') can be selected with '--format'.
   )"));
   absl::InitializeLog();
   const std::vector<char*> args = absl::ParseCommandLine(argc, argv);

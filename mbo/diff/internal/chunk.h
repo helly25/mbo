@@ -19,10 +19,11 @@
 #include <cstddef>
 #include <list>
 #include <string>
+#include <vector>
 
 #include "mbo/diff/diff_options.h"
 #include "mbo/diff/internal/context.h"
-#include "mbo/file/artefact.h"
+#include "mbo/diff/internal/output.h"
 
 namespace mbo::diff::diff_internal {
 
@@ -31,12 +32,8 @@ class Chunk {
   Chunk() = delete;
   ~Chunk() = default;
 
-  Chunk(const file::Artefact& lhs, const file::Artefact& rhs, std::string header, const DiffOptions& options)
-      : options_(options),
-        lhs_empty_(lhs.data.empty()),
-        rhs_empty_(rhs.data.empty()),
-        output_(std::move(header)),
-        context_(options) {}
+  Chunk(std::string header, const DiffOptions& options)
+      : options_(options), output_(std::move(header)), context_(options) {}
 
   Chunk(const Chunk&) = delete;
   Chunk& operator=(const Chunk&) = delete;
@@ -50,8 +47,6 @@ class Chunk {
   std::string MoveOutput();
 
  private:
-  static std::string ChunkPos(bool empty, std::size_t idx, std::size_t size);
-
   void CheckContext(std::size_t lhs_idx, std::size_t rhs_idx);
 
   void MoveContext(bool last);
@@ -61,11 +56,9 @@ class Chunk {
   void Clear();
 
   const DiffOptions& options_;
-  const bool lhs_empty_ = false;
-  const bool rhs_empty_ = false;
   std::string output_;
   Context context_;
-  std::list<std::pair<char, std::string_view>> data_;
+  std::vector<ChunkEntry> data_;
   std::list<std::string_view> lhs_;
   std::list<std::string_view> rhs_;
   std::size_t lhs_idx_ = 0;

@@ -24,9 +24,10 @@ def diff_test_test(
         file_new,
         *,
         expected_diff,
-        algorithm = "unified",
+        algorithm = "myers",
         context = -1,
         file_header_use = "both",
+        format = "unified",
         ignore_all_space = False,
         ignore_consecutive_space = False,
         ignore_blank_lines = False,
@@ -49,9 +50,10 @@ def diff_test_test(
         file_old:                 The old file.
         file_new:                 The new file.
         expected_diff:            The expected diff result.
-        algorithm:                Algorithm to use ('unified', 'direct', etc).
-        context:                  Produces a diff with number of context lines (defaults to 0 for direct diff, 3 otherwise).
+        algorithm:                Algorithm to use ('myers', 'naive', 'direct'; 'unified' is a deprecated alias for 'myers').
+        context:                  Produces a diff with number of context lines (defaults to 0 for direct diff and normal format, 3 otherwise).
         file_header_use:          Select which file header to use.
+        format:                   Output format to use ('unified', 'context', 'normal').
         ignore_all_space:         Ignore all leading, trailing, and consecutive internal whitespace changes.
         ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
         ignore_blank_lines:       Ignore chunks which include only blank lines.
@@ -66,6 +68,8 @@ def diff_test_test(
         strip_parsed_comments:    Whether to parse lines when stripping comments.
         **kwargs:                 Keyword args to pass down to native rules.
     """
+    if algorithm == "unified" and format != "unified":
+        fail("The deprecated algorithm = \"unified\" alias implies format = \"unified\" (got \"{}\").".format(format))
     strip_file_header_prefix = "external/(com_)?helly25_mbo[^/]*/"
     native.genrule(
         name = name + "_diff",
@@ -81,6 +85,7 @@ def diff_test_test(
                 --algorithm={algorithm} \\
                 {context} \\
                 --file_header_use={file_header_use} \\
+                --format={format} \\
                 --ignore_all_space={ignore_all_space} \\
                 --ignore_consecutive_space={ignore_consecutive_space} \\
                 --ignore_blank_lines={ignore_blank_lines} \\
@@ -101,6 +106,7 @@ def diff_test_test(
             algorithm = shell.quote(algorithm),
             context = "" if context == -1 else "--context=%d" % context,
             file_header_use = shell.quote(file_header_use),
+            format = shell.quote(format),
             ignore_all_space = bool_arg(ignore_all_space),
             ignore_consecutive_space = bool_arg(ignore_consecutive_space),
             ignore_blank_lines = bool_arg(ignore_blank_lines),
@@ -125,3 +131,41 @@ def diff_test_test(
         file_new = name + ".diff",
         **kwargs
     )
+
+def diff_test_formats_test(
+        name,
+        file_old,
+        file_new,
+        *,
+        expected_diffs,
+        algorithms = ["myers"],
+        **kwargs):
+    """Create one `diff_test_test` per algorithm and output format for the same file pair.
+
+    Every output format has its own expected golden file. The same per-format
+    golden is shared across all `algorithms`, so list multiple algorithms only
+    for inputs on which they produce identical diffs (they differ where the
+    naive algorithm is not minimal).
+
+    Args:
+        name:           Base name of the tests; the targets are named
+                        `<name>_<algorithm>_<format>_diff_test` (the algorithm part is dropped
+                        if only one algorithm is given).
+        file_old:       The old file.
+        file_new:       The new file.
+        expected_diffs: Dict of output format ('unified', 'context', 'normal') to expected diff result.
+        algorithms:     List of algorithms ('naive', 'myers', 'direct') to run each format with.
+        **kwargs:       Keyword args to pass down to `diff_test_test`.
+    """
+    for algorithm in algorithms:
+        for format, expected_diff in expected_diffs.items():
+            test_name = "{}_{}_diff_test".format(name, format) if len(algorithms) == 1 else "{}_{}_{}_diff_test".format(name, algorithm, format)
+            diff_test_test(
+                name = test_name,
+                file_old = file_old,
+                file_new = file_new,
+                algorithm = algorithm,
+                expected_diff = expected_diff,
+                format = format,
+                **kwargs
+            )

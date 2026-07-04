@@ -52,6 +52,10 @@ jobs:
         with:
           python-version: "3.13"
       - uses: pre-commit/action@v3.0.1
+        env:
+          # The `trunk` job runs the full `trunk check`; do not also run trunk
+          # from pre-commit in CI (see the trunk-fmt hook).
+          SKIP: trunk-fmt
       - uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
 
