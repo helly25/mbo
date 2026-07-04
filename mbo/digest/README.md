@@ -1,7 +1,7 @@
 # mbo/digest - message digests (planned; implementation in progress)
 
 Spec-based, fast, constexpr-compatible, Apache-licensed, no-nonsense message
-digest implementations - the digest counterpart of [mbo/hash](../hash).
+digest implementations - the digest counterpart of [mbo/hash](../hash/README.md).
 
 ## What this library is
 
@@ -12,7 +12,7 @@ digest implementations - the digest counterpart of [mbo/hash](../hash).
 - **constexpr-safe**: every digest computable at compile time and at run time
   with identical results.
 - **Apache-2.0, hermetic, verifiable**: original transcriptions with upstream
-  attribution where due (see the repository-root NOTICE); reproducible builds;
+  attribution where due (see the repository-root [NOTICE](../../NOTICE)); reproducible builds;
   no vendored binaries, no live-at-head dependencies.
 
 ## Why not depend on a crypto library (BoringSSL et al.)
@@ -24,7 +24,7 @@ library dependency buys nothing here and costs a lot: BoringSSL is explicitly
 of non-reproducible release archives - an unverifiable supply chain for
 exactly the code that most needs verifying. We implement the functions
 in-repo, verify them against the published vectors, and ship them under one
-license with one NOTICE file.
+license with one [NOTICE](../../NOTICE) file.
 
 ## Honest guidance per algorithm
 
@@ -33,7 +33,7 @@ license with one NOTICE file.
   cost seconds) - never use it where untrusted parties influence content.
 - **SHA-1**: collision-broken (SHAttered); legacy interop only.
 - **SHA-2 / SHA-3 / BLAKE**: current-generation; use SHA-256 for adversarial
-  integrity, BLAKE3/XXH128 (the latter in mbo/hash) for fast file identity.
+  integrity, BLAKE3/XXH128 (the latter in [mbo/hash](../hash/README.md)) for fast file identity.
 
 ## What this library will never be
 
