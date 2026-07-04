@@ -1,0 +1,4 @@
+# The actual BUILD file for the external `@xxhash_reference` repo is
+# xxhash.BUILD.bazel (deliberately not named BUILD.bazel at repo paths that
+# Bazel would load as a helly25_mbo package).
+exports_files(["xxhash.BUILD.bazel"])

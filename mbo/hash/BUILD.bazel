@@ -71,6 +71,11 @@ cc_test(
 cc_test(
     name = "hash_differential_test",
     srcs = ["hash_differential_test.cc"],
+    # `manual`: depends on @xxhash_reference, which only exists when the dev
+    # module is loaded (bazelmod/dev.MODULE.bazel) - i.e. when helly25_mbo is
+    # the root module. Wildcards used by consumers must not analyze it; CI runs
+    # it explicitly (see .github/workflows/test.yml).
+    tags = ["manual"],
     deps = [
         ":hash_cc",
         ":hash_test_util",

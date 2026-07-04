@@ -36,25 +36,4 @@ bazel_dep(name = "re2", version = "2025-11-05.bcr.1")
 bazel_dep(name = "googletest", version = "1.17.0.bcr.2")
 bazel_dep(name = "google_benchmark", version = "1.9.5", repo_name = "com_github_google_benchmark")
 
-# Reference xxHash for the hash differential test (test-only). Used directly via
-# http_archive because the BCR module's BUILD file predates Bazel 9's rule
-# autoload removal; header-only via XXH_INLINE_ALL.
-http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-http_archive(
-    name = "xxhash_reference",
-    build_file_content = '''load("@rules_cc//cc:defs.bzl", "cc_library")
-
-cc_library(
-    name = "xxhash",
-    hdrs = ["xxhash.h"],
-    defines = ["XXH_INLINE_ALL"],
-    includes = ["."],
-    visibility = ["//visibility:public"],
-)
-''',
-    integrity = "sha256-quYI3+ghPf0F2QmldxjvgvMHIsOSNEWD0/OQUMfymoA=",
-    strip_prefix = "xxHash-0.8.3",
-    urls = ["https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.3.tar.gz"],
-)
 bazel_dep(name = "helly25_bashtest", version = "0.4.0")
