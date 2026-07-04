@@ -37,6 +37,7 @@ def diff_test(
         ignore_matching_chunks = True,
         ignore_matching_lines = "",
         ignore_trailing_space = False,
+        minimal = False,
         regex_replace_lhs = "",
         regex_replace_rhs = "",
         show_chunk_headers = True,
@@ -65,6 +66,7 @@ def diff_test(
         ignore_matching_chunks:   Whether `ignore_matching_lines` applies to chunks or single lines.
         ignore_matching_lines:    Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
         ignore_trailing_space:    Ignore traling whitespace changes.
+        minimal:                  Guarantee minimal 'myers' diffs (disables its cost cap).
         regex_replace_lhs:        Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.
         regex_replace_rhs:        Regular expression and replacement for right side: <sep><regex><sep><replace><sep>.
         show_chunk_headers:       Whether to show the chunk headers.
@@ -96,6 +98,7 @@ def diff_test(
         ignore_matching_lines = ignore_matching_lines,
         ignore_matching_chunks = ignore_matching_chunks,
         ignore_trailing_space = ignore_trailing_space,
+        minimal = minimal,
         regex_replace_lhs = regex_replace_lhs,
         regex_replace_rhs = regex_replace_rhs,
         show_chunk_headers = show_chunk_headers,
@@ -180,6 +183,7 @@ fi
                 ignore_matching_chunks = bool_arg(ctx.attr.ignore_matching_chunks),
                 ignore_matching_lines = shell.quote(ctx.attr.ignore_matching_lines),
                 ignore_trailing_space = bool_arg(ctx.attr.ignore_trailing_space),
+                minimal = bool_arg(ctx.attr.minimal),
                 regex_replace_lhs = shell.quote(ctx.attr.regex_replace_lhs),
                 regex_replace_rhs = shell.quote(ctx.attr.regex_replace_rhs),
                 show_chunk_headers = bool_arg(ctx.attr.show_chunk_headers),
@@ -270,6 +274,10 @@ _diff_test = rule(
         ),
         "is_windows": attr.bool(
             mandatory = True,
+        ),
+        "minimal": attr.bool(
+            doc = "Guarantee minimal 'myers' diffs (disables its cost cap).",
+            default = False,
         ),
         "regex_replace_lhs": attr.string(
             doc = "Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.",

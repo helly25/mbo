@@ -35,6 +35,7 @@ def diff_test_test(
         ignore_matching_chunks = True,
         ignore_matching_lines = "",
         ignore_trailing_space = False,
+        minimal = False,
         regex_replace_lhs = "",
         regex_replace_rhs = "",
         show_chunk_headers = True,
@@ -63,6 +64,7 @@ def diff_test_test(
         ignore_matching_chunks:   Whether `ignore_matching_lines` applies to chanks or single lines.
         ignore_matching_lines:    Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
         ignore_trailing_space:    Ignore traling whitespace changes.
+        minimal:                  Guarantee minimal 'myers' diffs (disables its cost cap).
         regex_replace_lhs:        Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.
         regex_replace_rhs:        Regular expression and replacement for right side: <sep><regex><sep><replace><sep>.
         show_chunk_headers:       Whether to show the chunk headers.
@@ -97,6 +99,7 @@ def diff_test_test(
                 --ignore_matching_chunks={ignore_matching_chunks} \\
                 --ignore_matching_lines={ignore_matching_lines} \\
                 --ignore_trailing_space={ignore_trailing_space} \\
+                --minimal={minimal} \\
                 --regex_replace_lhs={regex_replace_lhs} \\
                 --regex_replace_rhs={regex_replace_rhs} \\
                 --show_chunk_headers={show_chunk_headers} \\
@@ -120,6 +123,7 @@ def diff_test_test(
             ignore_matching_chunks = bool_arg(ignore_matching_chunks),
             ignore_matching_lines = shell.quote(ignore_matching_lines),
             ignore_trailing_space = bool_arg(ignore_trailing_space),
+            minimal = bool_arg(minimal),
             regex_replace_lhs = shell.quote(regex_replace_lhs),
             regex_replace_rhs = shell.quote(regex_replace_rhs),
             show_chunk_headers = bool_arg(show_chunk_headers),
