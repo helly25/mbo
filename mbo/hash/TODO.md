@@ -7,8 +7,9 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 
 ## Medium
 
-- [ ] **Run SMHasher3 against `mh`** once, record results (external tool, not
-      CI): the credibility bar for a novel construction.
+- [ ] **Decide mh's fate as default** given the SMHasher3 FAIL (147/188, see
+      SMHASHER3.md): keep-with-caveat, harden (seed finalization is cheap,
+      core rounds are not), or make `rapidhash` the `DefaultHashAlgorithm`.
 
 ## Hard / needs design
 
