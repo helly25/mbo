@@ -18,22 +18,33 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "hash_internal_util",
+    hdrs = [
+        "hash_internal_util.h",
+        "hash_types.h",
+    ],
+    # Shared load/mix primitives. mbo/digest builds on these (the big-endian
+    # loads used by digest specifications live here too, so the dual-path
+    # byte-load logic exists exactly once).
+    visibility = ["//mbo/digest:__pkg__"],
+)
+
+cc_library(
     name = "hash_cc",
     srcs = [
         "hash_fnv1a.h",
-        "hash_internal_util.h",
         "hash_mangle.h",
         "hash_mh.h",
         "hash_murmur3.h",
         "hash_rapidhash.h",
         "hash_simple.h",
         "hash_siphash.h",
-        "hash_types.h",
         "hash_xxh3.h",
         "hash_xxh64.h",
     ],
     hdrs = ["hash.h"],
     visibility = ["//visibility:public"],
+    deps = [":hash_internal_util"],
 )
 
 cc_library(

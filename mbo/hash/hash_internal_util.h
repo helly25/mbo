@@ -65,6 +65,28 @@ constexpr uint64_t Load64(const char* ptr) noexcept {
   return result;
 }
 
+// Loads 4 bytes as a **big-endian** `uint32_t`. The message-digest
+// specifications (SHA-1/SHA-2, FIPS 180-4; see mbo/digest) are big-endian,
+// unlike the hash algorithms in this library; the primitive lives here so the
+// dual-path byte-load logic exists exactly once. The runtime path is `memcpy`
+// plus a byteswap on little-endian targets (same rationale as `Load64`).
+constexpr uint32_t Load32BE(const char* ptr) noexcept {
+  if (!std::is_constant_evaluated()) {
+#if defined(__GNUC__) || defined(__clang__)
+    uint32_t result = 0;
+    std::memcpy(&result, ptr, 4);
+    if constexpr (std::endian::native == std::endian::little) {
+      result = __builtin_bswap32(result);
+    }
+    return result;
+#endif  // defined(__GNUC__) || defined(__clang__)
+  }
+  return (static_cast<uint32_t>(static_cast<uint8_t>(ptr[0])) << 24U)
+         | (static_cast<uint32_t>(static_cast<uint8_t>(ptr[1])) << 16U)
+         | (static_cast<uint32_t>(static_cast<uint8_t>(ptr[2])) << 8U)
+         | static_cast<uint32_t>(static_cast<uint8_t>(ptr[3]));
+}
+
 // Loads 4 bytes as a **little-endian** `uint32_t` (same rationale as `Load64`).
 constexpr uint32_t Load32(const char* ptr) noexcept {
   if (!std::is_constant_evaluated()) {
