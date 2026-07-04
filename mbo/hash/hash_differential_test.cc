@@ -69,6 +69,25 @@ TEST(DifferentialTest, Xxh3MatchesReference) {
   }
 }
 
+TEST(DifferentialTest, Xxh3_128MatchesReference) {
+  std::mt19937_64 rng(0xD1FF128U);  // NOLINT(cert-msc51-cpp,cert-msc32-c): reproducible
+  const auto check = [](std::string_view data, uint64_t seed) {
+    const XXH128_hash_t ref = XXH3_128bits_withSeed(data.data(), data.size(), seed);
+    const Hash128 ours = xxh3::GetHash128(data, seed);
+    ASSERT_EQ(ours, (Hash128{.h1 = ref.low64, .h2 = ref.high64})) << "len: " << data.size() << ", seed: " << seed;
+  };
+  for (int trial = 0; trial < 20'000; ++trial) {
+    const std::string data = algo::RandomString(rng, rng() % 300);
+    check(data, rng());
+    check(data, 0);
+  }
+  for (const std::size_t len : {241UL, 1'023UL, 1'024UL, 1'025UL, 2'048UL, 100'000UL}) {
+    const std::string data = algo::RandomString(rng, len);
+    check(data, 77);
+    check(data, 0);
+  }
+}
+
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace

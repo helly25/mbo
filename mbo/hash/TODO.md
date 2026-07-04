@@ -10,10 +10,6 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 - [ ] **Run SMHasher3 against `mh`** once, record results (external tool, not
       CI): the credibility bar for a novel construction.
 
-- [ ] **XXH3-128** (`XXH3_128bits`): the modern fast file-checksum format;
-      natural extension of the existing XXH3-64 machinery, would be the third
-      128-bit-native algorithm.
-
 ## Hard / needs design
 
 - [ ] **Streaming/incremental API** (`init/update/final` state per algorithm):
