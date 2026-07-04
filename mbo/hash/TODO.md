@@ -7,10 +7,12 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 
 ## Medium
 
-- [ ] **Harden mh's core rounds** (BIC / Sparse / Bitflip / PerlinNoise
-      SMHasher3 families): requires strengthening the absorb round, i.e.
-      trading some throughput. The seed families were addressed by seed
-      finalization; `rapidhash` is the default since then (see SMHASHER3.md).
+- [ ] **mh is WIP - harden, optimize, replace, or rename**: the remaining
+      SMHasher3 core-round failures (BIC / Sparse / Bitflip) require
+      strengthening the absorb round, i.e. trading some throughput; the
+      alternative is replacing the algorithm outright. Either way the `mh`
+      name may change. The seed families were addressed by seed finalization;
+      `rapidhash` is the default since then (see SMHASHER3.md).
 
 ## Hard / needs design
 

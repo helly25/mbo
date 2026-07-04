@@ -31,6 +31,11 @@
 // algorithm. No longer the default behind `mbo::hash::GetHash*` (see
 // SMHASHER3.md); fast in hot-loop throughput benchmarks, constexpr-safe, and
 // streaming-capable.
+//
+// WORK IN PROGRESS: `mh` is under active development. It may be made faster,
+// have its rounds strengthened (values would change, as the stability
+// contract allows), be replaced entirely, or be renamed -- do not depend on
+// the `mh` namespace or its values beyond a single build.
 
 // Codegen-only hint (does not affect constant evaluation); see GetHash64Large.
 // NOLINTBEGIN(*-macro-usage)
