@@ -837,6 +837,90 @@ TEST_F(DiffTest, FormatsIgnoreBlankLines) {
   }
 }
 
+TEST_F(DiffTest, SideBySideFormat) {
+  // Side-by-side rows keep meaningful leading whitespace, so these tests
+  // compare the raw output rather than using the DropIndent based helper.
+  const auto diff = [](std::string_view lhs, std::string_view rhs, const Diff::Options& options) {
+    return mbo::diff::Diff::FileDiff({std::string(lhs), "lhs"}, {std::string(rhs), "rhs"}, options);
+  };
+  const Diff::Options options{
+      .output_format = Diff::Options::OutputFormat::kSideBySide,
+      .side_by_side_width = 20,
+  };
+  // Changed pairs get '|'; the library default context (3) spans these whole
+  // files, so common lines show like `diff -y` does by default.
+  EXPECT_THAT(
+      diff(ToLines("a1b"), ToLines("a2b"), options), IsOkAndHolds("a          a\n"
+                                                                  "1        | 2\n"
+                                                                  "b          b\n"));
+  // Insertions get '>' with an empty left cell.
+  EXPECT_THAT(
+      diff(ToLines("ab"), ToLines("arb"), options), IsOkAndHolds("a          a\n"
+                                                                 "         > r\n"
+                                                                 "b          b\n"));
+  // Deletions get '<' with nothing to the right.
+  EXPECT_THAT(
+      diff(ToLines("alb"), ToLines("ab"), options), IsOkAndHolds("a          a\n"
+                                                                 "l        <\n"
+                                                                 "b          b\n"));
+  // Uneven change blocks pair by index, the excess renders one-sided.
+  EXPECT_THAT(
+      diff(ToLines("axyb"), ToLines("azb"), options), IsOkAndHolds("a          a\n"
+                                                                   "x        | z\n"
+                                                                   "y        <\n"
+                                                                   "b          b\n"));
+}
+
+TEST_F(DiffTest, SideBySideFormatDetails) {
+  const auto diff = [](std::string_view lhs, std::string_view rhs, const Diff::Options& options) {
+    return mbo::diff::Diff::FileDiff({std::string(lhs), "lhs"}, {std::string(rhs), "rhs"}, options);
+  };
+  // The "no newline" marker renders as its own full width line per side.
+  EXPECT_THAT(
+      diff(
+          "l", "r",
+          {
+              .output_format = Diff::Options::OutputFormat::kSideBySide,
+              .side_by_side_width = 20,
+          }),
+      IsOkAndHolds("l        | r\n"
+                   "\\ No newline at end of file\n"
+                   "\\ No newline at end of file\n"));
+  // Cells truncate at the column width (20 -> 8 chars per column).
+  EXPECT_THAT(
+      diff(
+          "aaaaaaaaaaaa\n", "bbbbbbbbbbbb\n",
+          {
+              .output_format = Diff::Options::OutputFormat::kSideBySide,
+              .side_by_side_width = 20,
+          }),
+      IsOkAndHolds("aaaaaaaa | bbbbbbbb\n"));
+  // Explicit context renders compact, like `diff -y --suppress-common-lines`.
+  EXPECT_THAT(
+      diff(
+          ToLines("123456789ac0"), ToLines("1234ab7890"),
+          {
+              .output_format = Diff::Options::OutputFormat::kSideBySide,
+              .context_size = 0,
+              .side_by_side_width = 20,
+          }),
+      IsOkAndHolds("5        | a\n"
+                   "6        | b\n"
+                   "a        <\n"
+                   "c        <\n"));
+  // Degenerate widths clamp to one character columns.
+  EXPECT_THAT(
+      diff(
+          ToLines("a1b"), ToLines("a2b"),
+          {
+              .output_format = Diff::Options::OutputFormat::kSideBySide,
+              .side_by_side_width = 5,
+          }),
+      IsOkAndHolds("a   a\n"
+                   "1 | 2\n"
+                   "b   b\n"));
+}
+
 TEST_F(DiffTest, MyersAlgorithm) {
   const Diff::Options options{.algorithm = Diff::Options::Algorithm::kMyers};
   // On inputs where the naive algorithm is already minimal the output is

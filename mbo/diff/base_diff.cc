@@ -43,7 +43,8 @@ std::string BaseDiff::FileHeaders(const file::Artefact& lhs, const file::Artefac
       absl::StrAppend(&output, "*** ", SelectFileHeader(lhs, lhs, rhs, options), "\n");
       absl::StrAppend(&output, "--- ", SelectFileHeader(rhs, lhs, rhs, options), "\n");
       break;
-    case DiffOptions::OutputFormat::kNormal: break;  // Normal diff output has no file header lines.
+    case DiffOptions::OutputFormat::kNormal:
+    case DiffOptions::OutputFormat::kSideBySide: break;  // These formats have no file header lines.
   }
   return output;
 }
