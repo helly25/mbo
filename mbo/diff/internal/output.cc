@@ -15,8 +15,11 @@
 
 #include "mbo/diff/internal/output.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 #include "absl/strings/str_cat.h"
@@ -182,6 +185,81 @@ void AppendNormal(
   }
 }
 
+void AppendSideBySide(
+    std::string& output,
+    const DiffOptions& options,
+    const ChunkRange& /*range*/,
+    const std::vector<ChunkEntry>& entries) {
+  // Two space-padded columns with a 3 character ' X ' gutter: ' ' for common
+  // lines, '|' for changed pairs, '<' for lhs only lines, '>' for rhs only
+  // lines. Rows are right-stripped and cells truncate at the column width.
+  // The trailing "no newline" marker riding on a line's text is emitted as
+  // its own full-width line after the affected row (per side).
+  constexpr std::size_t kGutter = 3;
+  const std::size_t width = options.side_by_side_width;
+  const std::size_t col = width > kGutter + 1 ? (width - kGutter) / 2 : 1;
+  // Splits an entry text into its cell text and the "no newline" marker.
+  const auto split = [](std::string_view text) -> std::pair<std::string_view, std::string_view> {
+    const std::size_t pos = text.find('\n');
+    if (pos == std::string_view::npos) {
+      return {text, {}};
+    }
+    return {text.substr(0, pos), text.substr(pos + 1)};
+  };
+  const auto row = [&output, col](std::string_view lhs, char marker, std::string_view rhs) {
+    std::string line;
+    line.reserve(col + kGutter + std::min(col, rhs.size()));
+    line.append(lhs.substr(0, std::min(col, lhs.size())));
+    line.append(col - std::min(col, lhs.size()), ' ');
+    line.append(1, ' ');
+    line.append(1, marker);
+    line.append(1, ' ');
+    line.append(rhs.substr(0, std::min(col, rhs.size())));
+    while (!line.empty() && line.back() == ' ') {
+      line.pop_back();
+    }
+    absl::StrAppend(&output, line, "\n");
+  };
+  const auto extras = [&output](std::string_view lhs_extra, std::string_view rhs_extra) {
+    if (!lhs_extra.empty()) {
+      absl::StrAppend(&output, lhs_extra, "\n");
+    }
+    if (!rhs_extra.empty()) {
+      absl::StrAppend(&output, rhs_extra, "\n");
+    }
+  };
+  const std::size_t num = entries.size();
+  std::size_t pos = 0;
+  while (pos < num) {
+    if (entries[pos].kind == ' ') {
+      const auto [text, extra] = split(entries[pos].text);
+      row(text, ' ', text);
+      extras(extra, {});  // Both sides share the line, show the marker once.
+      ++pos;
+      continue;
+    }
+    const std::size_t del_begin = pos;
+    while (pos < num && entries[pos].kind == '-') {
+      ++pos;
+    }
+    const std::size_t del_end = pos;
+    while (pos < num && entries[pos].kind == '+') {
+      ++pos;
+    }
+    const std::size_t add_end = pos;
+    const std::size_t dels = del_end - del_begin;
+    const std::size_t adds = add_end - del_end;
+    for (std::size_t idx = 0; idx < std::max(dels, adds); ++idx) {
+      const bool has_lhs = idx < dels;
+      const bool has_rhs = idx < adds;
+      const auto [lhs, lhs_extra] = split(has_lhs ? entries[del_begin + idx].text : std::string_view());
+      const auto [rhs, rhs_extra] = split(has_rhs ? entries[del_end + idx].text : std::string_view());
+      row(lhs, has_lhs && has_rhs ? '|' : has_lhs ? '<' : '>', rhs);
+      extras(lhs_extra, rhs_extra);
+    }
+  }
+}
+
 }  // namespace
 
 void AppendChunk(
@@ -193,6 +271,7 @@ void AppendChunk(
     case DiffOptions::OutputFormat::kUnified: AppendUnified(output, options, range, entries); return;
     case DiffOptions::OutputFormat::kContext: AppendContext(output, options, range, entries); return;
     case DiffOptions::OutputFormat::kNormal: AppendNormal(output, options, range, entries); return;
+    case DiffOptions::OutputFormat::kSideBySide: AppendSideBySide(output, options, range, entries); return;
   }
 }
 
