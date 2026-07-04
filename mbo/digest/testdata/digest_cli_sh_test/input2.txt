@@ -1,0 +1,4 @@
+Line one of the second input.
+Line two, slightly longer to cross small tails.
+Line three pads this file well past a 128-byte compression block so wide-block algorithms exercise their loop.
+Line four ends without much ado.

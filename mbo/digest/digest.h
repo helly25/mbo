@@ -23,6 +23,7 @@
 #include <string_view>
 
 #include "mbo/digest/digest_blake2b.h"   // IWYU pragma: export
+#include "mbo/digest/digest_blake3.h"    // IWYU pragma: export
 #include "mbo/digest/digest_concepts.h"  // IWYU pragma: export
 #include "mbo/digest/digest_hmac.h"      // IWYU pragma: export
 #include "mbo/digest/digest_md5.h"       // IWYU pragma: export
@@ -30,6 +31,7 @@
 #include "mbo/digest/digest_sha256.h"    // IWYU pragma: export
 #include "mbo/digest/digest_sha3.h"      // IWYU pragma: export
 #include "mbo/digest/digest_sha512.h"    // IWYU pragma: export
+#include "mbo/digest/digest_shake.h"     // IWYU pragma: export
 
 // Message digests: spec-based, constexpr-safe, vector-pinned transcriptions
 // (see README.md for the charter, including what this library will never be).
@@ -42,7 +44,9 @@
 // - `sha256`, `sha224` - SHA-2, 32-bit words (FIPS 180-4)
 // - `sha512`, `sha384`, `sha512_224`, `sha512_256` - SHA-2, 64-bit words
 // - `sha3_224`, `sha3_256`, `sha3_384`, `sha3_512` - SHA-3 (FIPS 202)
-// - `blake2b`, `blake2b_256` - BLAKE2b (RFC 7693)
+// - `blake2b`, `blake2b_256` - BLAKE2b (RFC 7693; native keying included)
+// - `blake3` - BLAKE3 (XOF, keyed, and derive-key modes; see its header)
+// - `shake128`, `shake256` - the FIPS 202 XOFs (`Algorithm<N>` for fixed N)
 // - `sha1`, `md5` - legacy interop only; COLLISION-BROKEN (see their headers)
 //
 // `Hmac<Algo>` / `HmacStreamer<Algo>` (digest_hmac.h) provide the keyed MAC
