@@ -18,7 +18,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <deque>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
@@ -27,6 +29,7 @@
 #include "mbo/diff/diff_options.h"
 #include "mbo/diff/internal/data.h"
 #include "mbo/file/artefact.h"
+#include "mbo/hash/hash.h"
 
 namespace mbo::diff {
 namespace {
@@ -34,6 +37,11 @@ namespace {
 // Sentinel written just outside the current diagonal window: smaller than any
 // reachable x, so the boundary comparisons pick the interior neighbor.
 constexpr std::ptrdiff_t kOutside = -1;
+
+// Hash for the interning keys (`std::string_view`s, see `Tokenize`).
+struct TokenHash {
+  std::size_t operator()(std::string_view text) const noexcept { return mbo::hash::GetHash64(text); }
+};
 
 std::size_t ISqrt(std::size_t value) {
   return static_cast<std::size_t>(std::sqrt(static_cast<double>(value)));
@@ -79,9 +87,17 @@ void DiffMyers::Tokenize() {
   // `ignore_matching_lines` are all mutually equal (they share one token),
   // all other lines compare by their preprocessed text, case folded for
   // `ignore_case`.
+  //
+  // Keys are `std::string_view`s into the preprocessed line cache (which
+  // outlives the tokens), so no line is copied. Under `ignore_case` each
+  // line is folded once into a reused buffer (fast word-wise hashing and
+  // exact equality beat fold-aware per-byte functors, measured in
+  // `diff_benchmark`); only distinct folded lines get stable arena storage.
   constexpr Token kIgnoreToken = 0;
-  absl::flat_hash_map<std::string, Token> ids;
   const bool fold = Options().ignore_case;
+  absl::flat_hash_map<std::string_view, Token, TokenHash> ids;
+  std::string fold_buffer;
+  std::deque<std::string> fold_arena;
   const auto tokenize = [&](const diff_internal::Data& data, std::vector<Token>& tokens) {
     tokens.reserve(data.Size());
     for (std::size_t pos = 0; pos < data.Size(); ++pos) {
@@ -90,8 +106,19 @@ void DiffMyers::Tokenize() {
         tokens.push_back(kIgnoreToken);
         continue;
       }
-      const auto [it, inserted] = ids.try_emplace(
-          fold ? absl::AsciiStrToLower(cache.processed) : cache.processed, static_cast<Token>(ids.size() + 1));
+      std::string_view key = cache.processed;
+      if (fold) {
+        fold_buffer.assign(key);
+        absl::AsciiStrToLower(&fold_buffer);
+        key = fold_buffer;
+      }
+      auto it = ids.find(key);
+      if (it == ids.end()) {
+        if (fold) {
+          key = fold_arena.emplace_back(fold_buffer);
+        }
+        it = ids.emplace(key, static_cast<Token>(ids.size() + 1)).first;
+      }
       tokens.push_back(it->second);
     }
   };

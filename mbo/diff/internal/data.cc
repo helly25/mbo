@@ -103,14 +103,12 @@ Data::LineCache Data::Process(
     std::string_view line) {
   std::string processed;
   if (options.ignore_all_space) {
-    std::string stripped;
-    stripped.reserve(line.length());
+    processed.reserve(line.length());
     for (const char chr : line) {
       if (!absl::ascii_isspace(chr)) {
-        stripped.push_back(chr);
+        processed.push_back(chr);
       }
     }
-    processed = stripped;
   } else if (options.ignore_consecutive_space) {
     processed = line;
     absl::RemoveExtraAsciiWhitespace(&processed);
