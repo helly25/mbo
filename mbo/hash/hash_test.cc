@@ -230,6 +230,60 @@ TYPED_TEST(HashTest, StructuredKeysAreDistinct) {
   EXPECT_EQ(hashes.size(), inputs.size()) << "collisions among structured keys";
 }
 
+// Streaming: any chunking of the input must produce exactly the one-shot
+// value. Lengths cross every dispatch tier; split points are random,
+// including empty chunks. Skipped for algorithms without streaming support.
+TYPED_TEST(HashTest, StreamingMatchesOneShot) {
+  if constexpr (!HasStreaming<TypeParam>) {
+    GTEST_SKIP() << TypeParam::Name() << " has no streaming form";
+  } else {
+    std::mt19937_64 rng(0x57AE0A1U);  // NOLINT(cert-msc51-cpp,cert-msc32-c): reproducible
+    for (const std::size_t length : std::array<std::size_t, 8>{0, 5, 12, 32, 33, 64, 96, 300}) {
+      const std::string data = algo::RandomString(rng, length);
+      const uint64_t expected = TypeParam::GetHash64(data, kSeed);
+      for (int trial = 0; trial < 50; ++trial) {
+        Streamer<TypeParam> stream(kSeed);
+        std::size_t pos = 0;
+        while (pos < data.size()) {
+          const std::size_t chunk = rng() % (data.size() - pos + 2);  // may be 0 or overshoot-clamped
+          stream.Update(std::string_view(data).substr(pos, chunk));
+          pos += std::min(chunk, data.size() - pos);
+        }
+        ASSERT_EQ(stream.Finalize(), expected) << TypeParam::Name() << " len=" << length << " trial=" << trial;
+      }
+      // Byte-at-a-time, and everything-at-once.
+      Streamer<TypeParam> byte_stream(kSeed);
+      for (const char chr : data) {
+        byte_stream.Update(std::string_view(&chr, 1));
+      }
+      EXPECT_EQ(byte_stream.Finalize(), expected) << TypeParam::Name() << " len=" << length << " (byte-wise)";
+      EXPECT_EQ(Streamer<TypeParam>(kSeed).Update(data).Finalize(), expected) << TypeParam::Name();
+    }
+  }
+}
+
+// Streaming support is intentional per algorithm: canonical forms exist for
+// xxh64 and siphash, mh defines its own; rapidhash has no canonical streaming.
+static_assert(HasStreaming<mh::Algorithm>);
+static_assert(HasStreaming<xxh64::Algorithm>);
+static_assert(HasStreaming<siphash::Algorithm>);
+static_assert(!HasStreaming<rapidhash::Algorithm>);
+static_assert(!HasStreaming<fnv1a::Algorithm> && !HasStreaming<simple::Algorithm>);
+static_assert(!HasStreaming<xxh3::Algorithm> && !HasStreaming<murmur3::Algorithm>);
+
+TEST(StreamerTest, NonDestructiveFinalizeAndConstexpr) {
+  Streamer<mh::Algorithm> stream;
+  stream.Update("part1-");
+  const uint64_t partial = stream.Finalize();
+  EXPECT_EQ(partial, GetHash64("part1-"));
+  stream.Update("part2");  // Continue after peeking.
+  EXPECT_EQ(stream.Finalize(), GetHash64("part1-part2"));
+  // Fully constexpr streaming.
+  constexpr uint64_t kStreamed = Streamer<siphash::Algorithm>(7).Update("const").Update("expr").Finalize();
+  static_assert(kStreamed == siphash::Algorithm::GetHash64("constexpr", 7));
+  EXPECT_EQ(kStreamed, siphash::Algorithm::GetHash64("constexpr", 7));
+}
+
 // 128-bit-only checks; skipped for 64-bit-based algorithms via the detection trait.
 // How GetHash64 relates to GetHash128 is algorithm-specific (mh folds, murmur3 truncates)
 // and covered by per-algorithm tests below.
@@ -443,6 +497,63 @@ TEST(KnownAnswerTest, Rapidhash) {
   static_assert(rapidhash::GetHash64("") == 0x0338dc4be2cecdaeULL);  // constexpr-safe & canonical
   for (const auto& [seed, len, expected] : kVectors) {
     EXPECT_EQ(rapidhash::GetHash64(PatternBuffer(len), seed), expected) << "len: " << len << ", seed: " << seed;
+  }
+}
+
+TEST(KnownAnswerTest, Xxh3_128) {
+  // Vectors from the reference implementation (python xxhash 3.8.0,
+  // XXH3_128bits[_withSeed]); expected = {low64 (h1), high64 (h2)}. Lengths
+  // cover every dispatch class and block boundary. For >240-byte inputs and
+  // 1..3-byte inputs, h1 equals GetHash64 by construction.
+  struct Vector {
+    uint64_t seed;
+    std::size_t len;
+    uint64_t low;
+    uint64_t high;
+  };
+
+  // NOLINTBEGIN(modernize-use-designated-initializers)
+  static constexpr std::array<Vector, 34> kVectors{{
+      {0, 0, 0x6001c324468d497fULL, 0x99aa06d3014798d8ULL},
+      {0, 1, 0x4c5cca45d0f4811fULL, 0x495b62073ef70ca4ULL},
+      {0, 3, 0x6e3e2670e61106acULL, 0x390cdc5b4a895dd7ULL},
+      {0, 4, 0x3d668af6f2a44d77ULL, 0xaa6e2f274640a3f4ULL},
+      {0, 8, 0x61ddbe7f31a6100dULL, 0x6a86a3bda6af4e3dULL},
+      {0, 9, 0x8c7b67fd458a936bULL, 0x664c7ca18afd6255ULL},
+      {0, 16, 0xe2ce54a7c19c730dULL, 0x7f9a218b0425449aULL},
+      {0, 17, 0x8d96ef110fcdebb4ULL, 0x66fc23f6439dbd77ULL},
+      {0, 32, 0xfd357cf6cb2dda18ULL, 0x49a11ee743d6d342ULL},
+      {0, 100, 0x580b061a98a5a9b4ULL, 0x76b536586de98b82ULL},
+      {0, 128, 0xff361dec1385710aULL, 0xaec730751478556cULL},
+      {0, 129, 0x4545b3a09738e31aULL, 0x98cd36ccbb557926ULL},
+      {0, 240, 0x3f2c53e72293711fULL, 0x5293e17bf553903dULL},
+      {0, 241, 0x956cae592c67279eULL, 0xb53840fe3fedf161ULL},
+      {0, 1'024, 0x70bd377d9574f4bbULL, 0xf69630613f24324dULL},
+      {0, 1'025, 0x66c4487c41e127a7ULL, 0x621af7b8277effa4ULL},
+      {0, 3'000, 0x33a08283bba03e0cULL, 0x90cabc4f5f596032ULL},
+      {5'381, 0, 0xce9f957039fdfc5aULL, 0x51865a392947f8dbULL},
+      {5'381, 1, 0xccbc30ca28c5b7e8ULL, 0x7622b2da7e568976ULL},
+      {5'381, 3, 0xc12a2fc1e85cfda3ULL, 0xeb7681683a87cfa8ULL},
+      {5'381, 4, 0xd74e8b038484beb8ULL, 0x30626fb0abe7e0a2ULL},
+      {5'381, 8, 0x6501d98f6c92abb7ULL, 0x18e64d34e23f847cULL},
+      {5'381, 9, 0x453e08063e480293ULL, 0xbe71aeab4444476fULL},
+      {5'381, 16, 0x4ad713f8bcec42e9ULL, 0xd867bc71bf82ff3fULL},
+      {5'381, 17, 0x7aea83eff72b6b01ULL, 0xd9dd05c9b72241deULL},
+      {5'381, 32, 0x1c6b245f85ac99b9ULL, 0x59a4ce9e3a818c70ULL},
+      {5'381, 100, 0x2bf8d43dc240d0dbULL, 0xce8901ad7e0e83c5ULL},
+      {5'381, 128, 0xb84fff09698d0212ULL, 0xeec2a7402cec2480ULL},
+      {5'381, 129, 0xe8bb102fa40f11d1ULL, 0x90e15ba935a9ee21ULL},
+      {5'381, 240, 0xb46c9006ebb69097ULL, 0x27b92db776ed0086ULL},
+      {5'381, 241, 0xb2cf4aaf8fc38710ULL, 0xbbc5d75a22a0c6a3ULL},
+      {5'381, 1'024, 0xfb8787295ec29567ULL, 0xb1f1768e717216d8ULL},
+      {5'381, 1'025, 0x70b3e67a34b687d0ULL, 0x7da1762539688ba6ULL},
+      {5'381, 3'000, 0x9ea762ada6fccc4cULL, 0x12b04835843a0d28ULL},
+  }};
+  // NOLINTEND(modernize-use-designated-initializers)
+  static_assert(xxh3::GetHash128("").h1 == 0x6001c324468d497fULL);  // constexpr-safe & canonical
+  for (const auto& [seed, len, low, high] : kVectors) {
+    const Hash128 hash = xxh3::GetHash128(PatternBuffer(len), seed);
+    EXPECT_EQ(hash, (Hash128{.h1 = low, .h2 = high})) << "len: " << len << ", seed: " << seed;
   }
 }
 

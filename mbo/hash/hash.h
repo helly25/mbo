@@ -131,6 +131,49 @@ struct Hasher {
   }
 };
 
+// Streaming (incremental) hashing: an algorithm MAY provide
+//
+//   struct StreamState;                                  // opaque state
+//   static StreamState StreamInit(uint64_t seed);
+//   static void StreamUpdate(StreamState&, std::string_view chunk);
+//   static uint64_t StreamFinalize(StreamState);         // by value: peekable
+//
+// with the contract that any chunking of the input produces exactly the
+// one-shot `GetHash64` value. Not every algorithm can stream faithfully
+// (e.g. rapidhash has no canonical streaming form) -- absence is honest.
+template<typename Algo>
+concept HasStreaming = requires(typename Algo::StreamState state, std::string_view data, uint64_t seed) {
+  { Algo::StreamInit(seed) } noexcept -> std::same_as<typename Algo::StreamState>;
+  { Algo::StreamUpdate(state, data) } noexcept;
+  { Algo::StreamFinalize(state) } noexcept -> std::same_as<uint64_t>;
+};
+
+// Object-style convenience wrapper over an algorithm's streaming interface:
+//
+//   mbo::hash::Streamer<mh::Algorithm> stream;   // or Streamer(seed)
+//   stream.Update(part1).Update(part2);
+//   uint64_t hash = stream.Finalize();           // == GetHash64(part1 + part2)
+template<HasStreaming Algo>
+class Streamer {
+ public:
+  using Algorithm = Algo;
+
+  constexpr Streamer() noexcept : state_(Algo::StreamInit(kDefaultSeed)) {}
+
+  constexpr explicit Streamer(uint64_t seed) noexcept : state_(Algo::StreamInit(seed)) {}
+
+  constexpr Streamer& Update(std::string_view data) noexcept {
+    Algo::StreamUpdate(state_, data);
+    return *this;
+  }
+
+  // Non-destructive: the streamer can continue to be updated afterwards.
+  [[nodiscard]] constexpr uint64_t Finalize() const noexcept { return Algo::StreamFinalize(state_); }
+
+ private:
+  typename Algo::StreamState state_;
+};
+
 // The selected default algorithm behind the `mbo::hash` entry points.
 using DefaultHashAlgorithm = mh::Algorithm;
 using DefaultHasher = Hasher<DefaultHashAlgorithm>;

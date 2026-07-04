@@ -26,10 +26,10 @@
 #include "mbo/hash/hash_internal_util.h"
 #include "mbo/hash/hash_xxh64.h"
 
-// XXH3 (64-bit): a constexpr-safe scalar implementation of the modern xxHash
+// XXH3 (64- and 128-bit): a constexpr-safe scalar implementation of the modern xxHash
 // generation (https://xxhash.com, spec BSD-2-Clause; transcribed from the
-// reference implementation v0.8.2). Produces the canonical `XXH3_64bits` /
-// `XXH3_64bits_withSeed` values on every platform (little-endian defined),
+// reference implementation v0.8.2). Produces the canonical `XXH3_64bits[_withSeed]`
+// and `XXH3_128bits[_withSeed]` values on every platform (little-endian defined),
 // verified against reference vectors. Scalar only -- the reference's SIMD
 // kernels produce the same values but are not constexpr-compatible.
 namespace mbo::hash::xxh3 {
@@ -248,6 +248,147 @@ constexpr std::array<char, kSecretSize> InitCustomSecret(uint64_t seed) noexcept
   return secret;
 }
 
+constexpr uint64_t Mult32To64(uint64_t lhs, uint64_t rhs) noexcept {
+  return (lhs & 0xFFFFFFFFULL) * (rhs & 0xFFFFFFFFULL);
+}
+
+constexpr Hash128 Len0To16_128(const char* input, std::size_t len, uint64_t seed) noexcept {
+  if (len > 8) {  // 9..16
+    const uint64_t bitflip_lo = (hash_internal::Load64(kSecret + 32) ^ hash_internal::Load64(kSecret + 40)) - seed;
+    const uint64_t bitflip_hi = (hash_internal::Load64(kSecret + 48) ^ hash_internal::Load64(kSecret + 56)) + seed;
+    const uint64_t input_lo = hash_internal::Load64(input);
+    uint64_t input_hi = hash_internal::Load64(input + len - 8);
+    Hash128 m128 = hash_internal::Mult128(input_lo ^ input_hi ^ bitflip_lo, xxh64::kPrime1);
+    m128.h1 += static_cast<uint64_t>(len - 1) << 54U;
+    input_hi ^= bitflip_hi;
+    m128.h2 += input_hi + Mult32To64(static_cast<uint32_t>(input_hi), kPrime32_2 - 1);
+    m128.h1 ^= Swap64(m128.h2);
+    Hash128 h128 = hash_internal::Mult128(m128.h1, xxh64::kPrime2);
+    h128.h2 += m128.h2 * xxh64::kPrime2;
+    h128.h1 = Avalanche(h128.h1);
+    h128.h2 = Avalanche(h128.h2);
+    return h128;
+  }
+  if (len >= 4) {  // 4..8
+    seed ^= static_cast<uint64_t>(Swap32(static_cast<uint32_t>(seed))) << 32U;
+    const uint64_t input_lo = hash_internal::Load32(input);
+    const uint64_t input_hi = hash_internal::Load32(input + len - 4);
+    const uint64_t input64 = input_lo + (input_hi << 32U);
+    const uint64_t bitflip = (hash_internal::Load64(kSecret + 16) ^ hash_internal::Load64(kSecret + 24)) + seed;
+    Hash128 m128 = hash_internal::Mult128(input64 ^ bitflip, xxh64::kPrime1 + (len << 2U));
+    m128.h2 += m128.h1 << 1U;
+    m128.h1 ^= m128.h2 >> 3U;
+    m128.h1 ^= m128.h1 >> 35U;
+    m128.h1 *= kPrimeMx2;
+    m128.h1 ^= m128.h1 >> 28U;
+    m128.h2 = Avalanche(m128.h2);
+    return m128;
+  }
+  if (len > 0) {  // 1..3
+    const auto chr1 = static_cast<uint8_t>(input[0]);
+    const auto chr2 = static_cast<uint8_t>(input[len >> 1U]);
+    const auto chr3 = static_cast<uint8_t>(input[len - 1]);
+    const uint32_t combined_lo = (static_cast<uint32_t>(chr1) << 16U) | (static_cast<uint32_t>(chr2) << 24U)
+                                 | static_cast<uint32_t>(chr3) | (static_cast<uint32_t>(len) << 8U);
+    const uint32_t combined_hi = std::rotl(Swap32(combined_lo), 13);
+    const uint64_t bitflip_lo = (static_cast<uint64_t>(hash_internal::Load32(kSecret))
+                                 ^ static_cast<uint64_t>(hash_internal::Load32(kSecret + 4)))
+                                + seed;
+    const uint64_t bitflip_hi = (static_cast<uint64_t>(hash_internal::Load32(kSecret + 8))
+                                 ^ static_cast<uint64_t>(hash_internal::Load32(kSecret + 12)))
+                                - seed;
+    return {
+        .h1 = Xxh64Avalanche(static_cast<uint64_t>(combined_lo) ^ bitflip_lo),
+        .h2 = Xxh64Avalanche(static_cast<uint64_t>(combined_hi) ^ bitflip_hi),
+    };
+  }
+  return {
+      .h1 = Xxh64Avalanche(seed ^ hash_internal::Load64(kSecret + 64) ^ hash_internal::Load64(kSecret + 72)),
+      .h2 = Xxh64Avalanche(seed ^ hash_internal::Load64(kSecret + 80) ^ hash_internal::Load64(kSecret + 88)),
+  };
+}
+
+constexpr Hash128 Mix32B(
+    Hash128 acc,
+    const char* input1,
+    const char* input2,
+    const char* secret,
+    uint64_t seed) noexcept {
+  acc.h1 += Mix16B(input1, secret, seed);
+  acc.h1 ^= hash_internal::Load64(input2) + hash_internal::Load64(input2 + 8);
+  acc.h2 += Mix16B(input2, secret + 16, seed);
+  acc.h2 ^= hash_internal::Load64(input1) + hash_internal::Load64(input1 + 8);
+  return acc;
+}
+
+constexpr Hash128 Finalize128(Hash128 acc, std::size_t len, uint64_t seed) noexcept {
+  Hash128 h128 = {
+      .h1 = acc.h1 + acc.h2,
+      .h2 = (acc.h1 * xxh64::kPrime1) + (acc.h2 * xxh64::kPrime4) + ((len - seed) * xxh64::kPrime2),
+  };
+  h128.h1 = Avalanche(h128.h1);
+  h128.h2 = 0ULL - Avalanche(h128.h2);
+  return h128;
+}
+
+constexpr Hash128 Len17To128_128(const char* input, std::size_t len, uint64_t seed) noexcept {
+  Hash128 acc = {.h1 = len * xxh64::kPrime1, .h2 = 0};
+  if (len > 32) {
+    if (len > 64) {
+      if (len > 96) {
+        acc = Mix32B(acc, input + 48, input + len - 64, kSecret + 96, seed);
+      }
+      acc = Mix32B(acc, input + 32, input + len - 48, kSecret + 64, seed);
+    }
+    acc = Mix32B(acc, input + 16, input + len - 32, kSecret + 32, seed);
+  }
+  acc = Mix32B(acc, input, input + len - 16, kSecret, seed);
+  return Finalize128(acc, len, seed);
+}
+
+constexpr Hash128 Len129To240_128(const char* input, std::size_t len, uint64_t seed) noexcept {
+  constexpr std::size_t kStartOffset = 3;  // XXH3_MIDSIZE_STARTOFFSET
+  constexpr std::size_t kLastOffset = 17;  // XXH3_MIDSIZE_LASTOFFSET
+  constexpr std::size_t kSecretSizeMin = 136;
+
+  Hash128 acc = {.h1 = len * xxh64::kPrime1, .h2 = 0};
+  for (std::size_t i = 32; i < 160; i += 32) {
+    acc = Mix32B(acc, input + i - 32, input + i - 16, kSecret + i - 32, seed);
+  }
+  acc.h1 = Avalanche(acc.h1);
+  acc.h2 = Avalanche(acc.h2);
+  for (std::size_t i = 160; i <= len; i += 32) {
+    acc = Mix32B(acc, input + i - 32, input + i - 16, kSecret + kStartOffset + i - 160, seed);
+  }
+  acc = Mix32B(acc, input + len - 16, input + len - 32, kSecret + kSecretSizeMin - kLastOffset - 16, 0ULL - seed);
+  return Finalize128(acc, len, seed);
+}
+
+constexpr Hash128 HashLong128(const char* input, std::size_t len, const char* secret) noexcept {
+  std::array<uint64_t, kAccNb> acc = {
+      kPrime32_3,     xxh64::kPrime1, xxh64::kPrime2, xxh64::kPrime3,
+      xxh64::kPrime4, kPrime32_2,     xxh64::kPrime5, kPrime32_1,
+  };
+
+  const std::size_t nb_blocks = (len - 1) / kBlockLen;
+  for (std::size_t block = 0; block < nb_blocks; ++block) {
+    for (std::size_t stripe = 0; stripe < kStripesPerBlock; ++stripe) {
+      Accumulate512(acc, input + (block * kBlockLen) + (stripe * kStripeLen), secret + (stripe * 8));
+    }
+    ScrambleAcc(acc, secret + kSecretSize - kStripeLen);
+  }
+  const std::size_t stripes = ((len - 1) - (kBlockLen * nb_blocks)) / kStripeLen;
+  for (std::size_t stripe = 0; stripe < stripes; ++stripe) {
+    Accumulate512(acc, input + (nb_blocks * kBlockLen) + (stripe * kStripeLen), secret + (stripe * 8));
+  }
+  Accumulate512(acc, input + len - kStripeLen, secret + kSecretSize - kStripeLen - 7);
+
+  return {
+      .h1 = MergeAccs(acc, secret + 11, len * xxh64::kPrime1),
+      .h2 = MergeAccs(acc, secret + kSecretSize - 64 - 11, ~(len * xxh64::kPrime2)),
+  };
+}
+
 }  // namespace xxh3_internal
 
 // Canonical XXH3 64-bit hash (`XXH3_64bits` for seed 0, `XXH3_64bits_withSeed`
@@ -271,11 +412,37 @@ constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = 0) noexcept {
   return xxh3_internal::HashLong(ptr, len, secret.data());
 }
 
+// Canonical XXH3 128-bit hash (`XXH3_128bits` / `XXH3_128bits_withSeed`;
+// default seed 0). `h1` is the canonical low 64 bits, `h2` the high 64 bits.
+// For inputs > 240 bytes `h1` equals `GetHash64` by construction.
+constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = 0) noexcept {
+  const char* ptr = str.data();
+  const std::size_t len = str.size();
+  if (len <= 16) {
+    return xxh3_internal::Len0To16_128(ptr, len, seed);
+  }
+  if (len <= 128) {
+    return xxh3_internal::Len17To128_128(ptr, len, seed);
+  }
+  if (len <= xxh3_internal::kMidSizeMax) {
+    return xxh3_internal::Len129To240_128(ptr, len, seed);
+  }
+  if (seed == 0) {
+    return xxh3_internal::HashLong128(ptr, len, xxh3_internal::kSecret);
+  }
+  const std::array<char, xxh3_internal::kSecretSize> secret = xxh3_internal::InitCustomSecret(seed);
+  return xxh3_internal::HashLong128(ptr, len, secret.data());
+}
+
 // The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). Note that
 // the canonical XXH3 default seed is 0, not `kDefaultSeed`.
 struct Algorithm {
   static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) noexcept {
     return ::mbo::hash::xxh3::GetHash64(data, seed);
+  }
+
+  static constexpr Hash128 GetHash128(std::string_view data, uint64_t seed = 0) noexcept {
+    return ::mbo::hash::xxh3::GetHash128(data, seed);
   }
 };
 

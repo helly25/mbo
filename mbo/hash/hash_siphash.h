@@ -18,6 +18,7 @@
 
 // IWYU pragma: private, include "mbo/hash/hash.h"
 
+#include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -64,6 +65,15 @@ constexpr void SipRound(State& state) noexcept {
   state.v1 = std::rotl(state.v1, 17);
   state.v1 ^= state.v2;
   state.v2 = std::rotl(state.v2, 32);
+}
+
+template<int CompressionRounds>
+constexpr void Absorb(State& state, uint64_t word) noexcept {
+  state.v3 ^= word;
+  for (int round = 0; round < CompressionRounds; ++round) {
+    SipRound(state);
+  }
+  state.v0 ^= word;
 }
 
 }  // namespace siphash_internal
@@ -126,6 +136,69 @@ constexpr uint64_t GetHash64Sip13(std::string_view data, uint64_t key0, uint64_t
 struct Algorithm {
   static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) noexcept {
     return SipHash<2, 4>(data, seed, hash_internal::Fmix64(seed));
+  }
+
+  // Streaming interface (see `mbo::hash::HasStreaming`); SipHash is a block
+  // ARX construction, so streaming is its native mode. Chunked updates produce
+  // exactly the one-shot GetHash64 value.
+  struct StreamState {
+    siphash_internal::State state;
+    std::array<char, 8> buffer;
+    std::size_t buffered;
+    std::size_t total;
+  };
+
+  static constexpr StreamState StreamInit(uint64_t seed) noexcept {
+    const uint64_t key0 = seed;
+    const uint64_t key1 = hash_internal::Fmix64(seed);
+    return {
+        .state =
+            {
+                .v0 = 0x736f6d6570736575ULL ^ key0,
+                .v1 = 0x646f72616e646f6dULL ^ key1,
+                .v2 = 0x6c7967656e657261ULL ^ key0,
+                .v3 = 0x7465646279746573ULL ^ key1,
+            },
+        .buffer = {},
+        .buffered = 0,
+        .total = 0,
+    };
+  }
+
+  static constexpr void StreamUpdate(StreamState& stream, std::string_view data) noexcept {
+    stream.total += data.size();
+    const char* ptr = data.data();
+    std::size_t remaining = data.size();
+    if (stream.buffered > 0) {
+      while (stream.buffered < 8 && remaining > 0) {
+        stream.buffer[stream.buffered++] = *ptr++;  // NOLINT(*-constant-array-index)
+        --remaining;
+      }
+      if (stream.buffered < 8) {
+        return;
+      }
+      siphash_internal::Absorb<2>(stream.state, hash_internal::Load64(stream.buffer.data()));
+      stream.buffered = 0;
+    }
+    while (remaining >= 8) {
+      siphash_internal::Absorb<2>(stream.state, hash_internal::Load64(ptr));
+      ptr += 8;  // NOLINT(*-pointer-arithmetic)
+      remaining -= 8;
+    }
+    for (std::size_t i = 0; i < remaining; ++i) {
+      stream.buffer[stream.buffered++] = ptr[i];  // NOLINT(*-constant-array-index,*-pointer-arithmetic)
+    }
+  }
+
+  static constexpr uint64_t StreamFinalize(StreamState stream) noexcept {
+    const uint64_t last = (stream.buffered > 0 ? hash_internal::LoadTail(stream.buffer.data(), stream.buffered) : 0)
+                          | (static_cast<uint64_t>(stream.total & 0xFFU) << 56U);
+    siphash_internal::Absorb<2>(stream.state, last);
+    stream.state.v2 ^= 0xFFU;
+    for (int round = 0; round < 4; ++round) {
+      siphash_internal::SipRound(stream.state);
+    }
+    return stream.state.v0 ^ stream.state.v1 ^ stream.state.v2 ^ stream.state.v3;
   }
 };
 
