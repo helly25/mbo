@@ -25,12 +25,14 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 - Streaming for `xxh3` and `murmur3` (reference streaming semantics exist;
   deferred), and possibly a canonical-values streaming benchmark.
 
-## Future (separate library)
+## Done (separate library)
 
-- **mbo/digest**: charter and scope in [mbo/digest/README.md](../digest/README.md)
-  (SHA-1/224/256 and wider SHA-2, SHA-3, BLAKE2b/3, HMAC, MD5 for interop;
-  permanent non-goals AEAD/signatures/KEX/RNG/TLS). Shares the streaming API
-  designed for mbo/hash. Next up.
+- **mbo/digest**: implemented per the charter in
+  [mbo/digest/README.md](../digest/README.md) - SHA-2 (224/256/384/512,
+  512/224, 512/256), SHA-3, SHAKE128/256, BLAKE2b (incl. native keying),
+  BLAKE3 (XOF/keyed/derive-key), HMAC, SHA-1 + MD5 interop, and the `digest`
+  CLI binary. Remaining ideas (unscheduled): cSHAKE/KMAC, HKDF, a `--check`
+  mode for the CLI.
 
 ## Non-goals (decided)
 
