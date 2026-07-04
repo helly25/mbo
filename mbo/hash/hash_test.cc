@@ -17,6 +17,7 @@
 
 #include <array>
 #include <bit>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -264,6 +265,9 @@ TYPED_TEST(HashTest, StreamingMatchesOneShot) {
 
 // Streaming support is intentional per algorithm: canonical forms exist for
 // xxh64 and siphash, mh defines its own; rapidhash has no canonical streaming.
+static_assert(std::same_as<DefaultHashAlgorithm, rapidhash::Algorithm>);
+static_assert(std::same_as<Default128HashAlgorithm, xxh3::Algorithm>);
+
 static_assert(HasStreaming<mh::Algorithm>);
 static_assert(HasStreaming<xxh64::Algorithm>);
 static_assert(HasStreaming<siphash::Algorithm>);
@@ -275,9 +279,9 @@ TEST(StreamerTest, NonDestructiveFinalizeAndConstexpr) {
   Streamer<mh::Algorithm> stream;
   stream.Update("part1-");
   const uint64_t partial = stream.Finalize();
-  EXPECT_EQ(partial, GetHash64("part1-"));
+  EXPECT_EQ(partial, mh::GetHash64("part1-"));
   stream.Update("part2");  // Continue after peeking.
-  EXPECT_EQ(stream.Finalize(), GetHash64("part1-part2"));
+  EXPECT_EQ(stream.Finalize(), mh::GetHash64("part1-part2"));
   // Fully constexpr streaming.
   constexpr uint64_t kStreamed = Streamer<siphash::Algorithm>(7).Update("const").Update("expr").Finalize();
   static_assert(kStreamed == siphash::Algorithm::GetHash64("constexpr", 7));
@@ -703,8 +707,8 @@ TEST(HasherTest, GetHash32NativeAndFallback) {
   // Native 32-bit variant passes through...
   EXPECT_EQ(Hasher<FakeWith32>::GetHash32("native", kSeed), 0xC0FFEE42U);
   // ...everything else XOR-folds the 64-bit hash.
-  constexpr uint32_t kFolded = Hasher<mh::Algorithm>::GetHash32("fold", kSeed);  // constexpr-safe
-  EXPECT_EQ(kFolded, Hash64To32(mh::GetHash64("fold", kSeed)));
+  constexpr uint32_t kFolded = Hasher<rapidhash::Algorithm>::GetHash32("fold", kSeed);  // constexpr-safe
+  EXPECT_EQ(kFolded, Hash64To32(rapidhash::GetHash64("fold", kSeed)));
   EXPECT_EQ(GetHash32("fold", kSeed), kFolded);  // top-level entry point, default algorithm
   EXPECT_EQ(GetHash32<xxh64::Algorithm>("fold", kSeed), Hash64To32(xxh64::GetHash64("fold", kSeed)));
 }
@@ -714,11 +718,14 @@ TEST(HasherTest, GetHashIsMangled64) {
 }
 
 TEST(HasherTest, TopLevelFunctionsUseDefaultAlgorithm) {
-  // The bare entry points equal the default algorithm (and remain constexpr).
+  // The bare entry points equal their default algorithms (and stay constexpr):
+  // rapidhash for 64-bit/mangled, xxh3 (128-bit native) for GetHash128.
   constexpr uint64_t kHash64 = GetHash64("top");
   EXPECT_EQ(kHash64, (DefaultHasher::GetHash64("top")));
+  EXPECT_EQ(kHash64, rapidhash::GetHash64("top", kDefaultSeed));
   constexpr Hash128 kHash128 = GetHash128("top");
-  EXPECT_EQ(kHash128, (DefaultHasher::GetHash128("top")));
+  EXPECT_EQ(kHash128, (Hasher<Default128HashAlgorithm>::GetHash128("top")));
+  EXPECT_EQ(kHash128, xxh3::GetHash128("top", kDefaultSeed));
   EXPECT_EQ(GetHash("top"), HashMangle(kHash64));
 }
 

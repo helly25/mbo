@@ -51,9 +51,11 @@ collision batteries pass; the failures cluster in two areas:
 - It is NOT SMHasher3-clean, unlike `rapidhash` and `xxh3` (both pass the
   full battery upstream, are canonical, and are already in this library --
   and rapidhash additionally wins the mixed-length latency benchmark).
-- Decision recorded in TODO.md: whether to (a) keep `mh` as the default with
-  this caveat documented, (b) harden `mh` (seed finalization is cheap; core
-  rounds are not), or (c) switch `DefaultHashAlgorithm` to `rapidhash`.
+- **Decision (2026-07-04): (b) + (c).** `rapidhash` is now
+  `DefaultHashAlgorithm` (with 128-bit-native `xxh3` as `Default128HashAlgorithm`),
+  and `mh`'s seed handling was hardened (seed finalized through `Fmix64` before
+  lane derivation, targeting the Seed* families). Core-round hardening remains a
+  TODO; `mh` stays available as a non-default algorithm.
 
 The full log is not committed (10k+ lines); regenerate with the methodology
 above.

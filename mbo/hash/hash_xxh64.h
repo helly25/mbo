@@ -26,6 +26,12 @@
 
 #include "mbo/hash/hash_internal_util.h"
 
+// Upstream attribution: xxHash - Copyright (C) 2012-present Yann Collet,
+// BSD 2-Clause License (https://github.com/Cyan4973/xxHash). This file is a
+// constexpr transcription of the
+// algorithm; the full upstream license text is reproduced in the
+// repository-root NOTICE file.
+
 // XXH64: a constexpr-safe implementation of the xxHash 64-bit algorithm
 // (https://xxhash.com, algorithm spec is BSD-2-Clause). Produces the canonical
 // XXH64 values (the algorithm is little-endian defined; loads here are

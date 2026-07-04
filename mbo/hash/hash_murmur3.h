@@ -26,6 +26,10 @@
 #include "mbo/hash/hash_internal_util.h"
 #include "mbo/hash/hash_types.h"
 
+// Upstream attribution: MurmurHash3 by Austin Appleby, placed in the public
+// domain (https://github.com/aappleby/smhasher). This file is a constexpr
+// transcription of the algorithm.
+
 // MurmurHash3 x64 128-bit (Austin Appleby; public domain): a constexpr-safe
 // implementation producing the canonical MurmurHash3_x64_128 values (`h1` is the
 // first 8 output bytes, `h2` the second; the algorithm is little-endian defined,

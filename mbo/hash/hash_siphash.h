@@ -26,6 +26,10 @@
 
 #include "mbo/hash/hash_internal_util.h"
 
+// Upstream attribution: SipHash by Jean-Philippe Aumasson and Daniel J.
+// Bernstein; reference implementation released under CC0
+// (https://github.com/veorq/SipHash). This file is a constexpr transcription.
+
 // SipHash (Aumasson & Bernstein; reference implementation CC0/public domain):
 // a keyed PRF designed to resist hash-flooding DoS attacks -- THE algorithm for
 // hashing untrusted keys (used by the hash tables of Python, Ruby, Rust, ...).

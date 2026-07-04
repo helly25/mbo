@@ -27,8 +27,10 @@
 #include "mbo/hash/hash_internal_util.h"
 #include "mbo/hash/hash_types.h"
 
-// The `mbo::hash::mh` ("mbo hash") implementation -- the current default behind
-// `mbo::hash::GetHash*`.
+// The `mbo::hash::mh` ("mbo hash") implementation -- this library's own
+// algorithm. No longer the default behind `mbo::hash::GetHash*` (see
+// SMHASHER3.md); fast in hot-loop throughput benchmarks, constexpr-safe, and
+// streaming-capable.
 
 // Codegen-only hint (does not affect constant evaluation); see GetHash64Large.
 // NOLINTBEGIN(*-macro-usage)
@@ -91,6 +93,11 @@ constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = kDefaultSeed)
   const std::size_t len = str.size();
   std::size_t remaining = len;
 
+  // Finalize the seed before it derives any lane: structured seeds (e.g.
+  // seeds that mirror input blocks) must not correlate with the input.
+  // SMHasher3's SeedBlockLen/SeedBlockOffset/SeedBIC families fail without
+  // this (see SMHASHER3.md).
+  seed = hash_internal::Fmix64(seed);
   uint64_t hash1 = seed;
   uint64_t hash2 = seed ^ 0xAA55AA55AA55AA55ULL;
 
@@ -163,7 +170,8 @@ constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = kDefaultSeed)
   }
 
   const char* ptr = str.data();
-  uint64_t hash = seed ^ (static_cast<uint64_t>(len) * kMul2);
+  // Seed finalization: see GetHash128.
+  uint64_t hash = hash_internal::Fmix64(seed) ^ (static_cast<uint64_t>(len) * kMul2);
   std::size_t pos = 0;
   for (; pos + 8 <= len; pos += 8) {
     hash ^= hash_internal::Load64(ptr + pos) * kMulIn;
@@ -205,7 +213,8 @@ struct Algorithm {
   };
 
   static constexpr StreamState StreamInit(uint64_t seed) noexcept {
-    return {.acc = {}, .buffer = {}, .buffered = 0, .total = 0, .seed = seed, .striping = false};
+    // Stores the finalized seed (see GetHash128's seed finalization).
+    return {.acc = {}, .buffer = {}, .buffered = 0, .total = 0, .seed = hash_internal::Fmix64(seed), .striping = false};
   }
 
   static constexpr void StreamUpdate(StreamState& stream, std::string_view data) noexcept {
@@ -249,7 +258,20 @@ struct Algorithm {
   static constexpr uint64_t StreamFinalize(StreamState stream) noexcept {
     const std::string_view rest(stream.buffer.data(), stream.buffered);
     if (stream.total <= kSmallInputCutoff) {
-      return ::mbo::hash::mh::GetHash64(rest, stream.seed);  // Whole input is still buffered.
+      // Whole input is still buffered; replay the small path (stream.seed is
+      // already finalized, so inline the body rather than re-finalizing).
+      const char* small_ptr = rest.data();
+      uint64_t hash = stream.seed ^ (static_cast<uint64_t>(stream.total) * kMul2);
+      std::size_t pos = 0;
+      for (; pos + 8 <= rest.size(); pos += 8) {
+        hash ^= hash_internal::Load64(small_ptr + pos) * kMulIn;
+        hash = std::rotl(hash, 31) * kMul1;
+      }
+      if (pos < rest.size()) {
+        hash ^= hash_internal::LoadTail(small_ptr + pos, rest.size() - pos);
+        hash = std::rotl(hash, 27) * kMul2;
+      }
+      return hash_internal::Fmix64(hash);
     }
     uint64_t hash1 = stream.seed;
     uint64_t hash2 = stream.seed ^ 0xAA55AA55AA55AA55ULL;

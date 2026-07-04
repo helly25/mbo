@@ -174,8 +174,16 @@ class Streamer {
   typename Algo::StreamState state_;
 };
 
-// The selected default algorithm behind the `mbo::hash` entry points.
-using DefaultHashAlgorithm = mh::Algorithm;
+// The selected default algorithms behind the `mbo::hash` entry points.
+//
+// 64-bit (and the mangled `GetHash`): rapidhash - SMHasher3-clean, canonical,
+// and the best mixed-length latency in this library's benchmarks. 128-bit:
+// xxh3 - SMHasher3-clean, canonical, and 128-bit *native* (rapidhash has no
+// 128-bit form; defaulting `GetHash128` to a synthesized fallback would be a
+// silent quality downgrade). The in-house `mh` algorithm remains available as
+// `mh::Algorithm` (see SMHASHER3.md for why it is no longer the default).
+using DefaultHashAlgorithm = rapidhash::Algorithm;
+using Default128HashAlgorithm = xxh3::Algorithm;
 using DefaultHasher = Hasher<DefaultHashAlgorithm>;
 
 // A fast, constexpr-safe, non-cryptographic 64-bit hash.
@@ -194,7 +202,7 @@ constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = kDefaultSeed
 
 // The 128-bit companion of `GetHash64` (same algorithm selection and stability
 // caveats). For 64-bit-only algorithms the synthesized fallback applies.
-template<IsHashAlgorithm Algo = DefaultHashAlgorithm>
+template<IsHashAlgorithm Algo = Default128HashAlgorithm>
 constexpr Hash128 GetHash128(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
   return Hasher<Algo>::GetHash128(data, seed);
 }

@@ -72,7 +72,7 @@ The C++ library is organized in functional groups each residing in their own dir
 - Hash
   - `namespace mbo::hash`
   - mbo/hash:hash_cc, mbo/hash/hash.h
-    - function `GetHash64<Algo>(std::string_view, seed)` / `GetHash128<Algo>(std::string_view, seed)`: A constexpr-safe, non-cryptographic hash; the algorithm defaults to `DefaultHashAlgorithm` (`mbo::hash::mh`) and can be replaced by any `IsHashAlgorithm` struct. Values are not stable across versions and not for persistence. Big-endian targets are supported by construction (byte-assembled loads) but not exercised by CI.
+    - function `GetHash64<Algo>(std::string_view, seed)` / `GetHash128<Algo>(std::string_view, seed)`: A constexpr-safe, non-cryptographic hash; the algorithm defaults to `DefaultHashAlgorithm` (`rapidhash`; `GetHash128` defaults to the 128-bit-native `xxh3`) and can be replaced by any `IsHashAlgorithm` struct. Values are not stable across versions and not for persistence. Big-endian targets are supported by construction (byte-assembled loads) but not exercised by CI.
     - function `GetHash32<Algo>(std::string_view, seed)`: 32-bit companion; uses an algorithm's native 32-bit variant where provided, else the XOR-fold of the 64-bit hash.
     - function `GetHash<Algo, Seed>(std::string_view)`: as `GetHash64` but folded through `HashMangle`, so values may differ between builds.
     - concept `HasGetHash32` / `HasGetHash64` / `HasGetHash128`: Detect which static member functions an algorithm struct provides; `IsHashAlgorithm` requires a 64- or 128-bit one.
@@ -89,7 +89,8 @@ The C++ library is organized in functional groups each residing in their own dir
     - function `xxh64::GetHash64(std::string_view, seed)`: canonical XXH64 / xxHash 64-bit (constexpr-safe).
     - function `xxh3::GetHash64/GetHash128(std::string_view, seed)`: canonical XXH3 64- and 128-bit (modern xxHash generation, the fast file-checksum format; scalar; constexpr-safe).
     - function `murmur3::GetHash64/GetHash128(std::string_view, seed)`: canonical MurmurHash3 x64 128-bit (constexpr-safe; `GetHash64` is the customary `h1` truncation).
-    - function `rapidhash::GetHash64(std::string_view, seed)`: canonical rapidhash V3 (wyhash family; best small-key latency; constexpr-safe).
+    - function `rapidhash::GetHash64(std::string_view, seed)`: canonical rapidhash V3 (wyhash family; best small-key latency; SMHasher3-clean; constexpr-safe). The default algorithm.
+    - function `mh::GetHash64/GetHash128(std::string_view, seed)`: this library's own algorithm (fast hot-loop throughput, streaming-capable; not SMHasher3-clean, see mbo/hash/SMHASHER3.md).
     - function `siphash::GetHash64(std::string_view, key0, key1)` / `siphash::SipHash<C, D>(...)`: canonical SipHash-2-4 (and -1-3 via `GetHash64Sip13`) - keyed, hash-flooding resistant; adversarial protection requires a secret key.
 - Json
   - `namespace mbo::json`
@@ -310,6 +311,14 @@ bazel_dep(name = "helly25_mbo", version = "0.0.0")
 The [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler — a restriction in how Bazel handles toolchains under bzlmod. To pull in the bundled toolchain, vendor `bazelmod/llvm.MODULE.bazel` as described in the release notes. Nonetheless all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
 
 ## Presentations
+
+## Third-party components
+
+The hash library contains constexpr transcriptions of third-party algorithms
+(rapidhash, xxHash/XXH3, MurmurHash3, SipHash, FNV-1a). Upstream copyright
+notices and license texts are reproduced in the repository-root
+[NOTICE](NOTICE) file; the project itself is Apache-2.0 (see
+[LICENSE](LICENSE)).
 
 ### Practical Production-proven Constexpr API Elements
 

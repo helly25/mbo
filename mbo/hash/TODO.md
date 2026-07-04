@@ -7,9 +7,10 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 
 ## Medium
 
-- [ ] **Decide mh's fate as default** given the SMHasher3 FAIL (147/188, see
-      SMHASHER3.md): keep-with-caveat, harden (seed finalization is cheap,
-      core rounds are not), or make `rapidhash` the `DefaultHashAlgorithm`.
+- [ ] **Harden mh's core rounds** (BIC / Sparse / Bitflip / PerlinNoise
+      SMHasher3 families): requires strengthening the absorb round, i.e.
+      trading some throughput. The seed families were addressed by seed
+      finalization; `rapidhash` is the default since then (see SMHASHER3.md).
 
 ## Hard / needs design
 

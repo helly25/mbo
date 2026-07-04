@@ -25,6 +25,11 @@
 
 #include "mbo/hash/hash_internal_util.h"
 
+// Upstream attribution: rapidhash - Copyright (C) 2025 Nicolas De Carli, MIT
+// License; based on 'wyhash' by Wang Yi. This file is a constexpr
+// transcription of https://github.com/Nicoshev/rapidhash; the full upstream
+// license text is reproduced in the repository-root NOTICE file.
+
 // rapidhash V3 (Nicolas De Carli; MIT-licensed, based on wyhash): the modern
 // wyhash-family small-key latency champion and SMHasher3-clean. This is a
 // constexpr-safe transcription of the reference implementation's default

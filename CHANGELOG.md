@@ -25,6 +25,9 @@
 - Added `mbo::hash::GetHash32<Algo>(data, seed)` and `Hasher<Algo>::GetHash32` with the `HasGetHash32` concept: algorithms may provide a native 32-bit variant; otherwise the XOR-fold of the 64-bit hash is synthesized.
 - Added a mixed-length latency benchmark (`BmHash64Latency`): unpredictable key sizes with a serialized dependency chain, measuring what hash-table workloads actually pay.
 - Added streaming/incremental hashing: the `HasStreaming` concept and `Streamer<Algo>` wrapper (`Update(...).Finalize()`, non-destructive, constexpr-safe), with chunked results guaranteed equal to the one-shot value. Implemented for `mh`, `xxh64` (canonical streaming semantics), and `siphash`; `rapidhash` has no canonical streaming form and honestly opts out.
+- Changed the default algorithms: `GetHash64`/`GetHash`/`GetHash32` now default to `rapidhash` (SMHasher3-clean, canonical, best mixed-length latency) and `GetHash128` to the 128-bit-native `xxh3` (also SMHasher3-clean). The in-house `mh` stays available; an SMHasher3 evaluation (mbo/hash/SMHASHER3.md) found it not clean (147/188).
+- Hardened `mh`'s seed handling (values change): the seed is finalized through `Fmix64` before deriving any lane, addressing SMHasher3's Seed* failure families.
+- Added a repository-root `NOTICE` file reproducing the upstream notices of the transcribed algorithms (rapidhash MIT, xxHash BSD-2, MurmurHash3/SipHash/FNV public domain or CC0); README links it.
 - Hash values are not guaranteed stable across library versions and are not intended for persistence or cryptographic use.
 
 # 0.12.0

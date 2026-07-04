@@ -26,6 +26,12 @@
 #include "mbo/hash/hash_internal_util.h"
 #include "mbo/hash/hash_xxh64.h"
 
+// Upstream attribution: xxHash - Copyright (C) 2019-present Yann Collet,
+// BSD 2-Clause License (https://github.com/Cyan4973/xxHash). This file is a
+// constexpr transcription of the
+// algorithm; the full upstream license text is reproduced in the
+// repository-root NOTICE file.
+
 // XXH3 (64- and 128-bit): a constexpr-safe scalar implementation of the modern xxHash
 // generation (https://xxhash.com, spec BSD-2-Clause; transcribed from the
 // reference implementation v0.8.2). Produces the canonical `XXH3_64bits[_withSeed]`
