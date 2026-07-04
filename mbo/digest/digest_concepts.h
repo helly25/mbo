@@ -19,7 +19,7 @@
 // IWYU pragma: private, include "mbo/digest/digest.h"
 
 #include <array>
-#include <concepts>
+#include <concepts>  // IWYU pragma: keep
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
