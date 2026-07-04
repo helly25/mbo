@@ -51,7 +51,21 @@ concept HasGetHash128 = requires(std::string_view data, uint64_t seed) {
 };
 
 template<typename Algo>
+concept HasGetHash32 = requires(std::string_view data, uint64_t seed) {
+  { Algo::GetHash32(data, seed) } noexcept -> std::same_as<uint32_t>;
+};
+
+template<typename Algo>
 concept IsHashAlgorithm = HasGetHash64<Algo> || HasGetHash128<Algo>;
+
+// Shrinks a 64-bit hash to 32 bits by XOR-folding the halves, so all 64 input
+// bits contribute. For the strong algorithms plain truncation would also be
+// sound (their finalizers give uniform low bits), but the fold is the correct
+// default for every algorithm -- e.g. FNV-1a's low bits are biased, and
+// XOR-folding is that algorithm's official shrinking recommendation.
+constexpr uint32_t Hash64To32(uint64_t hash) noexcept {
+  return static_cast<uint32_t>(hash ^ (hash >> 32U));
+}
 
 // Seed perturbation for the synthesized `GetHash128` fallback's second lane.
 inline constexpr uint64_t kSeedFlip = 0x9E3779B97F4A7C15ULL;
@@ -66,6 +80,8 @@ inline constexpr uint64_t kSeedFlip = 0x9E3779B97F4A7C15ULL;
 //   the lanes decorrelate even for algorithms with weak or ignored seed
 //   handling. Note: a synthesized 128-bit value is still built from a 64-bit
 //   hash and does not reach true 128-bit collision resistance.
+// - `GetHash32` falls back to XOR-folding the 64-bit hash (`Hash64To32`);
+//   algorithms with a native 32-bit variant provide `GetHash32` themselves.
 // - `GetHash` is always derived: the 64-bit hash folded through `HashMangle`.
 //
 // `Hasher` is also a transparent functor over `GetHash64`, so it drops straight
@@ -102,6 +118,14 @@ struct Hasher {
     }
   }
 
+  static constexpr uint32_t GetHash32(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
+    if constexpr (HasGetHash32<Algo>) {
+      return Algo::GetHash32(data, seed);
+    } else {
+      return Hash64To32(GetHash64(data, seed));
+    }
+  }
+
   static constexpr uint64_t GetHash(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
     return HashMangle(GetHash64(data, seed));
   }
@@ -132,6 +156,14 @@ constexpr Hash128 GetHash128(std::string_view data, uint64_t seed = kDefaultSeed
   return Hasher<Algo>::GetHash128(data, seed);
 }
 
+// The 32-bit companion (same algorithm selection and stability caveats). Uses
+// the algorithm's native 32-bit variant where provided; otherwise the XOR-fold
+// of the 64-bit hash (see `Hash64To32`).
+template<IsHashAlgorithm Algo = DefaultHashAlgorithm>
+constexpr uint32_t GetHash32(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
+  return Hasher<Algo>::GetHash32(data, seed);
+}
+
 // As `GetHash64` but folded through `HashMangle`, which mixes in one of a small,
 // fixed set of build-derived seeds (bucketed from `__DATE__`/`__TIME__`, see
 // `kMangleSeedCount`; identity with `MBO_HASH_MANGLE=0`). Its value therefore
@@ -155,15 +187,6 @@ constexpr uint64_t GetHash(std::string_view data) noexcept {
 // Note that `murmur3::GetHash64` deliberately returns `h1` instead -- the
 // customary truncation that matches other MurmurHash3 implementations.
 using ::mbo::hash::hash_internal::Hash128To64;
-
-// Shrinks a 64-bit hash to 32 bits by XOR-folding the halves, so all 64 input
-// bits contribute. For the strong algorithms plain truncation would also be
-// sound (their finalizers give uniform low bits), but the fold is the correct
-// default for every algorithm -- e.g. FNV-1a's low bits are biased, and
-// XOR-folding is that algorithm's official shrinking recommendation.
-constexpr uint32_t Hash64To32(uint64_t hash) noexcept {
-  return static_cast<uint32_t>(hash ^ (hash >> 32U));
-}
 
 // Combines two 64-bit hashes into one (order-dependent, well mixed). Chain for
 // more values: `CombineHashes(CombineHashes(h1, h2), h3)`.

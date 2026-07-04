@@ -531,6 +531,16 @@ struct Fake128Only {
   }
 };
 
+struct FakeWith32 {
+  static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed) noexcept {
+    return mh::GetHash64(data, seed);
+  }
+
+  static constexpr uint32_t GetHash32(std::string_view /*data*/, uint64_t /*seed*/) noexcept {
+    return 0xC0FFEE42U;  // sentinel: proves native pass-through
+  }
+};
+
 // Concept detection over the public algorithm structs and the fakes.
 static_assert(HasGetHash64<mh::Algorithm> && HasGetHash128<mh::Algorithm>);
 static_assert(HasGetHash64<simple::Algorithm> && !HasGetHash128<simple::Algorithm>);
@@ -538,6 +548,7 @@ static_assert(HasGetHash64<fnv1a::Algorithm> && !HasGetHash128<fnv1a::Algorithm>
 static_assert(HasGetHash64<xxh64::Algorithm> && !HasGetHash128<xxh64::Algorithm>);
 static_assert(HasGetHash64<murmur3::Algorithm> && HasGetHash128<murmur3::Algorithm>);
 static_assert(!HasGetHash64<Fake128Only> && HasGetHash128<Fake128Only>);
+static_assert(HasGetHash32<FakeWith32> && !HasGetHash32<mh::Algorithm>);
 static_assert(IsHashAlgorithm<Fake64Only> && IsHashAlgorithm<Fake128Only>);
 static_assert(!IsHashAlgorithm<int> && !IsHashAlgorithm<Hash128>);
 
@@ -575,6 +586,16 @@ TEST(HasherTest, GetHash128FallbackDecorrelatesSeedIgnoringAlgorithms) {
   const Hash128 other = Hasher<simple::Algorithm>::GetHash128("longer than eight BYTES", kSeed);
   EXPECT_NE(hash.h1, other.h1);
   EXPECT_NE(hash.h2, other.h2);
+}
+
+TEST(HasherTest, GetHash32NativeAndFallback) {
+  // Native 32-bit variant passes through...
+  EXPECT_EQ(Hasher<FakeWith32>::GetHash32("native", kSeed), 0xC0FFEE42U);
+  // ...everything else XOR-folds the 64-bit hash.
+  constexpr uint32_t kFolded = Hasher<mh::Algorithm>::GetHash32("fold", kSeed);  // constexpr-safe
+  EXPECT_EQ(kFolded, Hash64To32(mh::GetHash64("fold", kSeed)));
+  EXPECT_EQ(GetHash32("fold", kSeed), kFolded);  // top-level entry point, default algorithm
+  EXPECT_EQ(GetHash32<xxh64::Algorithm>("fold", kSeed), Hash64To32(xxh64::GetHash64("fold", kSeed)));
 }
 
 TEST(HasherTest, GetHashIsMangled64) {
