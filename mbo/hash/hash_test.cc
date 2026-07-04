@@ -91,12 +91,12 @@ TYPED_TEST(HashTest, ConstexprMatchesRuntime) {
       TypeParam::GetHash64(kProbes[2], kSeed),
   };
   for (std::size_t i = 0; i < kProbes.size(); ++i) {
-    std::string_view runtime = kProbes.at(i);  // non-const forces the runtime path
+    std::string_view runtime = kProbes.at(i);  // NOLINT(misc-const-correctness): non-const forces the runtime path
     EXPECT_EQ(kCompile.at(i), TypeParam::GetHash64(runtime, kSeed)) << "probe: \"" << runtime << "\"";
   }
   if constexpr (HasGetHash128<TypeParam>) {
     constexpr Hash128 kCompile128 = TypeParam::GetHash128(kProbes[2], kSeed);
-    std::string_view runtime = kProbes[2];
+    std::string_view runtime = kProbes[2];  // NOLINT(misc-const-correctness): non-const forces the runtime path
     EXPECT_EQ(kCompile128, TypeParam::GetHash128(runtime, kSeed));
   }
 }
@@ -141,8 +141,10 @@ TYPED_TEST(HashTest, LowCollisionRate) {
 // Avalanche: flipping a single input bit should flip ~half the output bits.
 // Lengths chosen to exercise every input tier: tail-only (4), single-lane loop
 // (12), stripes + remainder (100), and multiple stripes (300).
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TYPED_TEST(HashTest, Avalanche) {
-  std::mt19937_64 rng(0xA5A5A5A5U);  // NOLINT(cert-msc51-cpp,cert-msc32-c): fixed seed keeps this reproducible
+  std::mt19937_64 rng(0xA5A5A5A5U);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed seed
+                                     // keeps this reproducible
   constexpr int kTrials = 8'000;
   for (const std::size_t length : std::array<std::size_t, 4>{4, 12, 100, 300}) {
     std::size_t flipped = 0;
@@ -172,11 +174,13 @@ TYPED_TEST(HashTest, Avalanche) {
 // ~half the output bits. Skipped for seedless algorithms; weak-avalanche
 // algorithms only need to react (fnv1a's multiplies diffuse upward only, so
 // high seed bits move few output bits).
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TYPED_TEST(HashTest, SeedAvalanche) {
   if constexpr (!TypeParam::kSeeded) {
     GTEST_SKIP() << TypeParam::Name() << " ignores the seed";
   } else {
-    std::mt19937_64 rng(0x5EED5EEDU);  // NOLINT(cert-msc51-cpp,cert-msc32-c): fixed seed keeps this reproducible
+    std::mt19937_64 rng(0x5EED5EEDU);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed seed
+                                       // keeps this reproducible
     constexpr int kTrials = 8'000;
     for (const std::size_t length : std::array<std::size_t, 4>{4, 12, 100, 300}) {
       std::size_t flipped = 0;
@@ -234,11 +238,13 @@ TYPED_TEST(HashTest, StructuredKeysAreDistinct) {
 // Streaming: any chunking of the input must produce exactly the one-shot
 // value. Lengths cross every dispatch tier; split points are random,
 // including empty chunks. Skipped for algorithms without streaming support.
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TYPED_TEST(HashTest, StreamingMatchesOneShot) {
   if constexpr (!HasStreaming<TypeParam>) {
     GTEST_SKIP() << TypeParam::Name() << " has no streaming form";
   } else {
-    std::mt19937_64 rng(0x57AE0A1U);  // NOLINT(cert-msc51-cpp,cert-msc32-c): reproducible
+    std::mt19937_64 rng(
+        0x57AE0A1U);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): reproducible
     for (const std::size_t length : std::array<std::size_t, 8>{0, 5, 12, 32, 33, 64, 96, 300}) {
       const std::string data = algo::RandomString(rng, length);
       const uint64_t expected = TypeParam::GetHash64(data, kSeed);
@@ -504,7 +510,7 @@ TEST(KnownAnswerTest, Rapidhash) {
   }
 }
 
-TEST(KnownAnswerTest, Xxh3_128) {
+TEST(KnownAnswerTest, Xxh3Hash128) {
   // Vectors from the reference implementation (python xxhash 3.8.0,
   // XXH3_128bits[_withSeed]); expected = {low64 (h1), high64 (h2)}. Lengths
   // cover every dispatch class and block boundary. For >240-byte inputs and
@@ -682,7 +688,7 @@ TEST(HasherTest, GetHash128FallsBackToTwoDecorrelatedPasses) {
   constexpr std::string_view kData = "twopass-fallback";
   const Hash128 hash = Hasher<Fake64Only>::GetHash128(kData, kSeed);
   EXPECT_EQ(hash.h1, Fake64Only::GetHash64(kData, kSeed));
-  const uint64_t head = hash_internal::LoadTail(kData.data(), 8);
+  const uint64_t head = hash_internal::LoadTail(kData.data(), 8);  // NOLINT(*-stringview-data-usage): size passed
   EXPECT_EQ(hash.h2, Fake64Only::GetHash64(kData.substr(8), kSeed ^ kSeedFlip ^ head));
   EXPECT_NE(hash.h1, hash.h2);
   // Short inputs (< 8 bytes): the second lane hashes the empty remainder with

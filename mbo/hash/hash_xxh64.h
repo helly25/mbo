@@ -39,7 +39,7 @@
 // xxHash implementations and tools.
 namespace mbo::hash::xxh64 {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
 
 inline constexpr uint64_t kPrime1 = 0x9E3779B185EBCA87ULL;
 inline constexpr uint64_t kPrime2 = 0xC2B2AE3D27D4EB4FULL;
@@ -132,10 +132,10 @@ struct Algorithm {
   // reference XXH64 streaming state; chunked updates produce exactly the
   // one-shot (canonical) value.
   struct StreamState {
-    std::array<uint64_t, 4> acc;
-    std::array<char, 32> buffer;
-    std::size_t buffered;
-    std::size_t total;
+    std::array<uint64_t, 4> acc = {};
+    std::array<char, 32> buffer = {};
+    std::size_t buffered = 0;
+    std::size_t total = 0;
   };
 
   static constexpr StreamState StreamInit(uint64_t seed) noexcept {
@@ -194,7 +194,7 @@ struct Algorithm {
   }
 };
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
 
 }  // namespace mbo::hash::xxh64
 

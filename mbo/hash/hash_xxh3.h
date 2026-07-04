@@ -70,9 +70,12 @@ inline constexpr std::size_t kMidSizeMax = 240;
 
 inline constexpr uint64_t kPrimeMx1 = 0x165667919E3779F9ULL;
 inline constexpr uint64_t kPrimeMx2 = 0x9FB21C651E98DF25ULL;
+// NOLINTBEGIN(readability-identifier-naming): canonical XXH_PRIME32_* names.
 inline constexpr uint64_t kPrime32_1 = 0x9E3779B1ULL;
 inline constexpr uint64_t kPrime32_2 = 0x85EBCA77ULL;
 inline constexpr uint64_t kPrime32_3 = 0xC2B2AE3DULL;
+
+// NOLINTEND(readability-identifier-naming)
 
 constexpr uint32_t Swap32(uint32_t value) noexcept {
   return ((value << 24U) & 0xFF000000U) | ((value << 8U) & 0x00FF0000U) | ((value >> 8U) & 0x0000FF00U)
@@ -258,6 +261,7 @@ constexpr uint64_t Mult32To64(uint64_t lhs, uint64_t rhs) noexcept {
   return (lhs & 0xFFFFFFFFULL) * (rhs & 0xFFFFFFFFULL);
 }
 
+// NOLINTNEXTLINE(readability-identifier-naming): mirrors the reference function name.
 constexpr Hash128 Len0To16_128(const char* input, std::size_t len, uint64_t seed) noexcept {
   if (len > 8) {  // 9..16
     const uint64_t bitflip_lo = (hash_internal::Load64(kSecret + 32) ^ hash_internal::Load64(kSecret + 40)) - seed;
@@ -337,6 +341,7 @@ constexpr Hash128 Finalize128(Hash128 acc, std::size_t len, uint64_t seed) noexc
   return h128;
 }
 
+// NOLINTNEXTLINE(readability-identifier-naming): mirrors the reference function name.
 constexpr Hash128 Len17To128_128(const char* input, std::size_t len, uint64_t seed) noexcept {
   Hash128 acc = {.h1 = len * xxh64::kPrime1, .h2 = 0};
   if (len > 32) {
@@ -352,6 +357,7 @@ constexpr Hash128 Len17To128_128(const char* input, std::size_t len, uint64_t se
   return Finalize128(acc, len, seed);
 }
 
+// NOLINTNEXTLINE(readability-identifier-naming): mirrors the reference function name.
 constexpr Hash128 Len129To240_128(const char* input, std::size_t len, uint64_t seed) noexcept {
   constexpr std::size_t kStartOffset = 3;  // XXH3_MIDSIZE_STARTOFFSET
   constexpr std::size_t kLastOffset = 17;  // XXH3_MIDSIZE_LASTOFFSET

@@ -34,7 +34,7 @@ namespace {
 // NOLINTBEGIN(*-magic-numbers)
 
 TEST(DifferentialTest, Xxh64MatchesReference) {
-  std::mt19937_64 rng(0xD1FF64U);  // NOLINT(cert-msc51-cpp,cert-msc32-c): reproducible
+  std::mt19937_64 rng(0xD1FF64U);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): reproducible
   for (int trial = 0; trial < 20'000; ++trial) {
     const std::size_t len = rng() % 300;
     const std::string data = algo::RandomString(rng, len);
@@ -49,8 +49,9 @@ TEST(DifferentialTest, Xxh64MatchesReference) {
   }
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST(DifferentialTest, Xxh3MatchesReference) {
-  std::mt19937_64 rng(0xD1FF33U);  // NOLINT(cert-msc51-cpp,cert-msc32-c): reproducible
+  std::mt19937_64 rng(0xD1FF33U);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): reproducible
   for (int trial = 0; trial < 20'000; ++trial) {
     const std::size_t len = rng() % 300;
     const std::string data = algo::RandomString(rng, len);
@@ -69,8 +70,8 @@ TEST(DifferentialTest, Xxh3MatchesReference) {
   }
 }
 
-TEST(DifferentialTest, Xxh3_128MatchesReference) {
-  std::mt19937_64 rng(0xD1FF128U);  // NOLINT(cert-msc51-cpp,cert-msc32-c): reproducible
+TEST(DifferentialTest, Xxh3Hash128MatchesReference) {
+  std::mt19937_64 rng(0xD1FF128U);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): reproducible
   const auto check = [](std::string_view data, uint64_t seed) {
     const XXH128_hash_t ref = XXH3_128bits_withSeed(data.data(), data.size(), seed);
     const Hash128 ours = xxh3::GetHash128(data, seed);

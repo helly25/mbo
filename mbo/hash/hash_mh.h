@@ -209,12 +209,12 @@ struct Algorithm {
   }
 
   struct StreamState {
-    std::array<uint64_t, 4> acc;
-    std::array<char, 64> buffer;
-    std::size_t buffered;
-    std::size_t total;
-    uint64_t seed;
-    bool striping;
+    std::array<uint64_t, 4> acc = {};
+    std::array<char, 64> buffer = {};
+    std::size_t buffered = 0;
+    std::size_t total = 0;
+    uint64_t seed = 0;
+    bool striping = false;
   };
 
   static constexpr StreamState StreamInit(uint64_t seed) noexcept {
