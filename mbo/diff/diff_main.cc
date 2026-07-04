@@ -122,6 +122,12 @@ ABSL_FLAG(  //
     0,
     "Read (and compare) at most the given number of lines (ignored if 0).");
 ABSL_FLAG(  //
+    bool,
+    minimal,
+    false,
+    "Guarantees minimal diffs for '--algorithm=myers' by disabling its cost cap (like GNU `diff "
+    "--minimal`). Slower on large, highly divergent inputs. No effect on the other algorithms.");
+ABSL_FLAG(  //
     std::string,
     regex_replace_lhs,
     "",
@@ -242,6 +248,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
       .ignore_all_space = absl::GetFlag(FLAGS_ignore_all_space),
       .ignore_consecutive_space = absl::GetFlag(FLAGS_ignore_consecutive_space),
       .ignore_trailing_space = absl::GetFlag(FLAGS_ignore_trailing_space),
+      .minimal = absl::GetFlag(FLAGS_minimal),
       .show_chunk_headers = GetFlagOrDefault(FLAGS_show_chunk_headers, is_direct, false),
       .skip_left_deletions = absl::GetFlag(FLAGS_skip_left_deletions),
       .ignore_matching_lines = [&]() -> std::optional<RE2> {
@@ -288,10 +295,11 @@ namespace fs = std::filesystem;
 
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage(mbo::strings::DropIndent(R"(
-    [ <flags>> ] <old/lef> <new/right>
+    [ <flags> ] <old/left> <new/right>
 
     Performs a unified diff (diff -du) between files <old/left> and <new/right>.
-    Other output formats ('context', 'normal') can be selected with '--format'.
+    Other output formats ('context', 'normal', 'side-by-side') can be selected
+    with '--format', the algorithm ('myers', 'naive', 'direct') with '--algorithm'.
   )"));
   absl::InitializeLog();
   const std::vector<char*> args = absl::ParseCommandLine(argc, argv);

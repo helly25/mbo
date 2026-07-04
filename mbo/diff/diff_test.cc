@@ -788,6 +788,22 @@ TEST_F(DiffTest, NormalFormatDirectAlgorithm) {
   )txt"))));
 }
 
+TEST_F(DiffTest, SideBySideFormatDirectAlgorithm) {
+  // The direct algorithm flushes each line pair separately; side-by-side
+  // pairs every one-pair block into a '|' row.
+  EXPECT_THAT(
+      mbo::diff::Diff::FileDiff(
+          {ToLines("123"), "lhs"}, {ToLines("xy3"), "rhs"},
+          {
+              .algorithm = Diff::Options::Algorithm::kDirect,
+              .output_format = Diff::Options::OutputFormat::kSideBySide,
+              .context_size = 0,
+              .side_by_side_width = 20,
+          }),
+      IsOkAndHolds("1        | x\n"
+                   "2        | y\n"));
+}
+
 TEST_F(DiffTest, NormalFormatNoChunkHeaders) {
   EXPECT_THAT(
       Diff(
@@ -824,6 +840,7 @@ TEST_F(DiffTest, FormatsIgnoreBlankLines) {
            Diff::Options::OutputFormat::kUnified,
            Diff::Options::OutputFormat::kContext,
            Diff::Options::OutputFormat::kNormal,
+           Diff::Options::OutputFormat::kSideBySide,
        }) {
     EXPECT_THAT(
         Diff(
@@ -1169,6 +1186,50 @@ TEST_F(DiffTest, IgnoreCaseWithIgnoreMatchingLines) {
         IsOkAndHolds(IsEmpty()))
         << "algorithm: " << static_cast<int>(algorithm);
   }
+}
+
+TEST_F(DiffTest, MyersMinimalOption) {
+  // With enough noisy lines the cost cap makes the default myers result
+  // non-minimal; `minimal` disables the cap. Both variants must apply
+  // cleanly, the minimal one with strictly fewer edits on this fixed input.
+  std::mt19937 rng(20'260'704);  // NOLINT(*-magic-numbers)
+  const auto make_file = [&rng](std::size_t lines) {
+    std::string text;
+    for (std::size_t i = 0; i < lines; ++i) {
+      absl::StrAppend(&text, "line-", rng() % 40, "\n");  // NOLINT(*-magic-numbers)
+    }
+    return text;
+  };
+  const std::string lhs = make_file(300);
+  const std::string rhs = make_file(300);
+  const auto count_edits = [](std::string_view diff) {
+    std::size_t edits = 0;
+    for (const std::string_view line : absl::StrSplit(diff, '\n')) {
+      edits += !line.empty() && (line[0] == '-' || line[0] == '+') ? 1 : 0;
+    }
+    return edits;
+  };
+  const auto run = [&](bool minimal) {
+    return mbo::diff::Diff::FileDiff(
+        {lhs, "lhs"}, {rhs, "rhs"},
+        {
+            .algorithm = Diff::Options::Algorithm::kMyers,
+            .context_size = 0,
+            .file_header_use = Diff::Options::FileHeaderUse::kNone,
+            .minimal = minimal,
+        });
+  };
+  const auto capped = run(false);
+  const auto minimal = run(true);
+  ASSERT_THAT(capped, IsOk());
+  ASSERT_THAT(minimal, IsOk());
+  const std::optional<std::string> capped_applied = ApplyUnifiedDiff(lhs, *capped);
+  const std::optional<std::string> minimal_applied = ApplyUnifiedDiff(lhs, *minimal);
+  ASSERT_TRUE(capped_applied.has_value());
+  ASSERT_TRUE(minimal_applied.has_value());
+  EXPECT_EQ(*capped_applied, rhs);
+  EXPECT_EQ(*minimal_applied, rhs);
+  EXPECT_LT(count_edits(*minimal), count_edits(*capped));
 }
 
 TEST_F(DiffTest, RegexReplace) {

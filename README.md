@@ -40,7 +40,7 @@ The C++ library is organized in functional groups each residing in their own dir
   - mbo/diff:diff_cc, mbo/diff/diff.h
     - class `Diff`: A class that implements line based diffing in unified, context, normal or side-by-side output format (`DiffOptions::output_format`), using the Myers minimal diff algorithm by default (`DiffOptions::algorithm` also offers `naive` and `direct`).
   - mbo/diff
-    - binary `diff`: A binary that diffs two files; defaults to unified format, `--format` selects `unified`, `context`, `normal` or `side-by-side` (`--width`), `--algorithm` selects `myers` (default), `naive` or `direct`.
+    - binary `diff`: A binary that diffs two files; defaults to unified format, `--format` selects `unified`, `context`, `normal` or `side-by-side` (`--width`), `--algorithm` selects `myers` (default), `naive` or `direct`; `--minimal` guarantees minimal `myers` diffs.
   - mbo/diff:diff_bzl, mbo/diff/diff.bzl
     - bzl-macro `diff_test`: A test rule that compares an output versus a golden file.
 - Files

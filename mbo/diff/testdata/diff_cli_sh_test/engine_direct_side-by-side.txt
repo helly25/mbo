@@ -1,0 +1,6 @@
+A             | C
+C             | A
+A             | B
+B             | A
+B             | C
+A             <
