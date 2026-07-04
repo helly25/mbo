@@ -73,19 +73,23 @@ The C++ library is organized in functional groups each residing in their own dir
   - `namespace mbo::hash`
   - mbo/hash:hash_cc, mbo/hash/hash.h
     - function `GetHash64<Algo>(std::string_view, seed)` / `GetHash128<Algo>(std::string_view, seed)`: A constexpr-safe, non-cryptographic hash; the algorithm defaults to `DefaultHashAlgorithm` (`mbo::hash::mh`) and can be replaced by any `IsHashAlgorithm` struct. Values are not stable across versions and not for persistence. Big-endian targets are supported by construction (byte-assembled loads) but not exercised by CI.
+    - function `GetHash32<Algo>(std::string_view, seed)`: 32-bit companion; uses an algorithm's native 32-bit variant where provided, else the XOR-fold of the 64-bit hash.
     - function `GetHash<Algo, Seed>(std::string_view)`: as `GetHash64` but folded through `HashMangle`, so values may differ between builds.
-    - concept `HasGetHash64` / `HasGetHash128`: Detect which static member functions an algorithm struct provides; `IsHashAlgorithm` requires at least one.
+    - concept `HasGetHash32` / `HasGetHash64` / `HasGetHash128`: Detect which static member functions an algorithm struct provides; `IsHashAlgorithm` requires a 64- or 128-bit one.
     - struct `Hasher<Algo>`: Completes any `IsHashAlgorithm` struct into the full `GetHash64`/`GetHash128`/`GetHash` interface, synthesizing what is missing (fold for 64; two decorrelated passes for 128 -- the second skips the first up-to-8 bytes and injects them via the seed; mangle for `GetHash`). Also a transparent functor over `GetHash64`, so it drops into `absl`/`std` hash containers with heterogeneous `string_view` lookup.
     - algorithm structs `mh::Algorithm`, `simple::Algorithm`, `fnv1a::Algorithm`, `xxh64::Algorithm`, `murmur3::Algorithm`: the per-algorithm plug-ins for `GetHash*<Algo>` / `Hasher<Algo>`.
     - function `HashMangle(uint64_t)`: XORs one of a small set of per-build (`__DATE__`/`__TIME__` bucketed) seeds into a hash; identity when compiled with `MBO_HASH_MANGLE=0` (for fully reproducible `GetHash` values).
     - struct `Hash128`: The 128-bit result type (`h1`, `h2`); ordered (`<=>`) and Abseil hash/stringify compatible.
     - function `Hash128To64(Hash128)`: Folds a 128-bit hash into a well-mixed 64-bit one, e.g. `Hash128To64(murmur3::GetHash128(data))`.
     - function `CombineHashes(uint64_t, uint64_t)`: Combines two hashes (order-dependent, well mixed).
+    - function `Hash64To32(uint64_t)`: Shrinks a hash to 32 bits by XOR-folding the halves (the correct default for all algorithms, incl. weak-low-bit ones like FNV-1a).
     - function `simple::GetHash64(std::string_view)`: the previous hash implementation (`simple::GetHash` is deprecated).
     - function `fnv1a::GetHash64(std::string_view, seed)`: canonical FNV-1a 64 (constexpr-safe).
     - function `xxh64::GetHash64(std::string_view, seed)`: canonical XXH64 / xxHash 64-bit (constexpr-safe).
     - function `xxh3::GetHash64(std::string_view, seed)`: canonical XXH3 64-bit (modern xxHash generation, scalar; constexpr-safe).
     - function `murmur3::GetHash64/GetHash128(std::string_view, seed)`: canonical MurmurHash3 x64 128-bit (constexpr-safe; `GetHash64` is the customary `h1` truncation).
+    - function `rapidhash::GetHash64(std::string_view, seed)`: canonical rapidhash V3 (wyhash family; best small-key latency; constexpr-safe).
+    - function `siphash::GetHash64(std::string_view, key0, key1)` / `siphash::SipHash<C, D>(...)`: canonical SipHash-2-4 (and -1-3 via `GetHash64Sip13`) - keyed, hash-flooding resistant; adversarial protection requires a secret key.
 - Json
   - `namespace mbo::json`
   - mbo/json:json_cc, mbo/json/json.h

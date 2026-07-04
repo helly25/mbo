@@ -76,6 +76,22 @@ struct Xxh3Hash : ::mbo::hash::xxh3::Algorithm {
   static constexpr std::string_view Name() { return "xxh3"; }
 };
 
+// rapidhash V3 (canonical values; wyhash family).
+struct RapidHash : ::mbo::hash::rapidhash::Algorithm {
+  static constexpr bool kStrongAvalanche = true;
+  static constexpr bool kSeeded = true;
+
+  static constexpr std::string_view Name() { return "rapidhash"; }
+};
+
+// SipHash-2-4 (canonical values; keyed PRF, key derived from the seed).
+struct SipHash24Hash : ::mbo::hash::siphash::Algorithm {
+  static constexpr bool kStrongAvalanche = true;
+  static constexpr bool kSeeded = true;
+
+  static constexpr std::string_view Name() { return "siphash24"; }
+};
+
 // MurmurHash3 x64 128 (canonical values; 128-bit based, GetHash64 == h1).
 struct Murmur3Hash : ::mbo::hash::murmur3::Algorithm {
   static constexpr bool kStrongAvalanche = true;
@@ -87,7 +103,8 @@ struct Murmur3Hash : ::mbo::hash::murmur3::Algorithm {
 // All registered algorithm descriptors. The typed tests and the benchmark both
 // derive their coverage from this single list, so adding a descriptor here is
 // sufficient to test AND benchmark a new algorithm.
-using AllAlgorithms = std::tuple<SimpleHash, DefaultHash, Fnv1aHash, Xxh64Hash, Xxh3Hash, Murmur3Hash>;
+using AllAlgorithms =
+    std::tuple<SimpleHash, DefaultHash, Fnv1aHash, Xxh64Hash, Xxh3Hash, RapidHash, SipHash24Hash, Murmur3Hash>;
 
 // The bit width the algorithm is based on: 128 if it exposes a 128-bit variant.
 template<typename Algo>

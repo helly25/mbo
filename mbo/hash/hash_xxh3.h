@@ -36,7 +36,7 @@ namespace mbo::hash::xxh3 {
 
 // The 192-byte secret is kept as a plain char array so `hash_internal::Load64`
 // reads it constexpr-safely and memcpy-foldably; hence the c-array/decay waivers.
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-avoid-c-arrays,*-array-to-pointer-decay)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-avoid-c-arrays,*-array-to-pointer-decay,*-constant-array-index,*-easily-swappable-parameters)
 
 namespace xxh3_internal {
 
@@ -279,7 +279,7 @@ struct Algorithm {
   }
 };
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-avoid-c-arrays,*-array-to-pointer-decay)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-avoid-c-arrays,*-array-to-pointer-decay,*-constant-array-index,*-easily-swappable-parameters)
 
 }  // namespace mbo::hash::xxh3
 

@@ -1,0 +1,3 @@
+# Intentionally (almost) empty: third_party holds per-dependency directories
+# with BUILD files and patches for external archives (see bazelmod/*.MODULE.bazel);
+# nothing here is a target of helly25_mbo itself.

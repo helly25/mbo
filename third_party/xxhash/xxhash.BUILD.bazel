@@ -1,0 +1,10 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "xxhash",
+    testonly = True,
+    hdrs = ["xxhash.h"],
+    defines = ["XXH_INLINE_ALL"],
+    includes = ["."],
+    visibility = ["@helly25_mbo//mbo/hash:__pkg__"],
+)

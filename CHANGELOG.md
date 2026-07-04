@@ -19,6 +19,11 @@
 - Added `mbo::hash::CombineHashes(uint64_t, uint64_t)` (order-dependent, well-mixed combine) and `hash_internal::Mul128Fold64` (constexpr 64x64->128 fold, xxh3/wyhash family core).
 - Hardened the default hash's block rounds (values change): absorbed blocks are premultiplied by a full-width odd constant, closing a sparse-key collision class (single input bits could cancel across adjacent blocks; found by the new structured-key test). Tails (<8 bytes) need no premultiplication - they cannot reach the affected bit positions.
 - Test framework additions: seed-bit avalanche (SMHasher-style; skipped for seedless algorithms) and structured/sparse-key distinctness (all-zero lengths, single-bit keys, cyclic patterns).
+- Added canonical, constexpr-safe `mbo::hash::rapidhash::GetHash64` (rapidhash V3, wyhash family - best small-key latency) and `mbo::hash::siphash::GetHash64` / `SipHash<C, D>` (SipHash-2-4/-1-3, the keyed hash-flooding-resistant PRF), both verified against reference vectors.
+- Added a differential test comparing the xxh64/xxh3 implementations bit-for-bit against the actual reference library (test-only `xxhash` archive) over randomized inputs, seeds, and lengths.
+- Added `mbo::hash::Hash64To32(uint64_t)`: XOR-fold shrink to 32 bits (all 64 bits contribute; the official FNV shrinking recommendation, safe for every algorithm).
+- Added `mbo::hash::GetHash32<Algo>(data, seed)` and `Hasher<Algo>::GetHash32` with the `HasGetHash32` concept: algorithms may provide a native 32-bit variant; otherwise the XOR-fold of the 64-bit hash is synthesized.
+- Added a mixed-length latency benchmark (`BmHash64Latency`): unpredictable key sizes with a serialized dependency chain, measuring what hash-table workloads actually pay.
 - Hash values are not guaranteed stable across library versions and are not intended for persistence or cryptographic use.
 
 # 0.12.0

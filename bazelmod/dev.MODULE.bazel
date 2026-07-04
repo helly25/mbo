@@ -25,3 +25,18 @@ git_override(
 # TODO(helly25): bump once dwyu 1.x no longer drags in boost.filesystem ->
 # boost@1.83.0.bcr.4, whose MODULE.bazel fails module resolution.
 bazel_dep(name = "depend_on_what_you_use", version = "0.16.0", dev_dependency = True)
+
+# Reference xxHash for //mbo/hash:hash_differential_test (dev/test only). Used
+# directly via http_archive because the BCR module's BUILD file predates
+# Bazel 9's rule autoload removal; header-only via XXH_INLINE_ALL. The BUILD
+# file lives in //third_party/xxhash.
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "xxhash_reference",
+    build_file = "//third_party/xxhash:xxhash.BUILD.bazel",
+    dev_dependency = True,
+    integrity = "sha256-quYI3+ghPf0F2QmldxjvgvMHIsOSNEWD0/OQUMfymoA=",
+    strip_prefix = "xxHash-0.8.3",
+    urls = ["https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.3.tar.gz"],
+)
