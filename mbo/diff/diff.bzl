@@ -26,9 +26,10 @@ def diff_test(
         file_new,
         *,
         file_header_use = "both",
-        algorithm = "unified",
+        algorithm = "myers",
         context = -1,
         failure_message = "",
+        format = "unified",
         ignore_all_space = False,
         ignore_consecutive_space = False,
         ignore_blank_lines = False,
@@ -51,9 +52,10 @@ def diff_test(
         file_old:                 The old file.
         file_new:                 The new file.
         file_header_use:          Select which file header to use.
-        algorithm:                Algorithm to use ('unified', 'direct', etc).
-        context:                  Produces a diff with number of context lines (defaults to 0 for direct diff, 3 otherwise).
+        algorithm:                Algorithm to use ('myers', 'naive', 'direct'; 'unified' is a deprecated alias for 'myers' implying unified format).
+        context:                  Produces a diff with number of context lines (defaults to 0 for direct diff and normal format, 3 otherwise).
         failure_message:          Additional message to log if the files don't match.
+        format:                   Output format to use ('unified', 'context', 'normal').
         ignore_all_space:         Ignore all leading, trailing, and consecutive internal whitespace changes.
         ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
         ignore_blank_lines:       Ignore chunks which include only blank lines.
@@ -68,6 +70,8 @@ def diff_test(
         strip_parsed_comments:    Whether to parse lines when stripping comments.
         **kwargs:                 Keyword args to pass down to native rules.
     """
+    if algorithm == "unified" and format != "unified":
+        fail("The deprecated algorithm = \"unified\" alias implies format = \"unified\" (got \"{}\").".format(format))
     _diff_test(
         name = name,
         file_old = file_old,
@@ -76,6 +80,7 @@ def diff_test(
         context = context,
         file_header_use = file_header_use,
         failure_message = failure_message,
+        format = format,
         is_windows = select({
             "@platforms//os:windows": True,
             "//conditions:default": False,
@@ -134,6 +139,7 @@ if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
     --algorithm={algorithm} \
     {context} \
     --file_header_use={file_header_use} \
+    --format={format} \
     --ignore_all_space={ignore_all_space} \
     --ignore_consecutive_space={ignore_consecutive_space} \
     --ignore_blank_lines={ignore_blank_lines} \
@@ -160,6 +166,7 @@ fi
                 algorithm = shell.quote(ctx.attr.algorithm),
                 context = "" if ctx.attr.context == -1 else "--context=%d" % ctx.attr.context,
                 file_header_use = shell.quote(ctx.attr.file_header_use),
+                format = shell.quote(ctx.attr.format),
                 ignore_all_space = bool_arg(ctx.attr.ignore_all_space),
                 ignore_consecutive_space = bool_arg(ctx.attr.ignore_consecutive_space),
                 ignore_blank_lines = bool_arg(ctx.attr.ignore_blank_lines),
@@ -190,9 +197,9 @@ fi
 _diff_test = rule(
     attrs = {
         "algorithm": attr.string(
-            default = "unified",
-            doc = "The diff algorithm to use.",
-            values = ["direct", "unified"],
+            default = "myers",
+            doc = "The diff algorithm to use ('unified' is a deprecated alias for 'myers', implying unified format).",
+            values = ["direct", "myers", "naive", "unified"],
         ),
         "context": attr.int(
             default = -1,
@@ -215,6 +222,11 @@ _diff_test = rule(
             allow_single_file = True,
             doc = "The old (left) file of the comparison.",
             mandatory = True,
+        ),
+        "format": attr.string(
+            default = "unified",
+            doc = "The diff output format to use.",
+            values = ["context", "normal", "unified"],
         ),
         "ignore_all_space": attr.bool(
             doc = "Ignore all leading, trailing, and consecutive internal whitespace changes.",

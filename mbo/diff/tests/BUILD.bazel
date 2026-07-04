@@ -15,7 +15,7 @@
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//mbo/diff:diff.bzl", "diff_test")
-load("//mbo/diff/tests:diff_test_test.bzl", "diff_test_test")
+load("//mbo/diff/tests:diff_test_test.bzl", "diff_test_formats_test", "diff_test_test")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -42,20 +42,43 @@ diff_test_test(
     file_old = "abc.txt",
 )
 
-diff_test_test(
-    name = "abc_axc_unified_diff_test",
-    algorithm = "unified",
-    expected_diff = "abc_axc.diff.txt",
+diff_test_formats_test(
+    name = "abc_axc",
+    algorithms = [
+        "myers",
+        "naive",
+    ],
+    expected_diffs = {
+        "context": "abc_axc_context.diff.txt",
+        "normal": "abc_axc_normal.diff.txt",
+        "unified": "abc_axc.diff.txt",
+    },
     file_new = "axc.txt",
     file_old = "abc.txt",
 )
 
 diff_test_test(
     name = "same_unified_diff_test",
+    # Exercises the deprecated 'unified' algorithm alias (now called 'naive').
     algorithm = "unified",
     expected_diff = "same_unified.diff.txt",
     file_new = "abc.txt",
     file_old = "abc_same.txt",
+)
+
+diff_test_formats_test(
+    name = "multi_chunk",
+    algorithms = [
+        "myers",
+        "naive",
+    ],
+    expected_diffs = {
+        "context": "multi_chunk_context.diff.txt",
+        "normal": "multi_chunk_normal.diff.txt",
+        "unified": "multi_chunk_unified.diff.txt",
+    },
+    file_new = "direct.rhs.txt",
+    file_old = "direct.lhs.txt",
 )
 
 diff_test_test(
@@ -95,9 +118,13 @@ diff_test_test(
     file_old = "abc.txt",
 )
 
-diff_test_test(
-    name = "abc_axc_comments_stripped_diff_test",
-    expected_diff = "abc_axc_comments_stripped.diff.txt",
+diff_test_formats_test(
+    name = "abc_axc_comments_stripped",
+    algorithms = [
+        "myers",
+        "naive",
+    ],
+    expected_diffs = {"unified": "abc_axc_comments_stripped.diff.txt"},
     file_new = "axc_comments.txt",
     file_old = "abc.txt",
     strip_comments = "#",
@@ -110,9 +137,13 @@ diff_test(
     ignore_case = True,
 )
 
-diff_test_test(
-    name = "abc_caps_diff_test",
-    expected_diff = "abc_caps.diff.txt",
+diff_test_formats_test(
+    name = "abc_caps",
+    algorithms = [
+        "myers",
+        "naive",
+    ],
+    expected_diffs = {"unified": "abc_caps.diff.txt"},
     file_new = "abc_caps.txt",
     file_old = "abc.txt",
 )
@@ -208,4 +239,16 @@ diff_test_test(
     file_new = "direct.rhs.txt",
     file_old = "direct.lhs.txt",
     show_chunk_headers = True,
+)
+
+diff_test_formats_test(
+    name = "direct_formats",
+    algorithms = ["direct"],
+    expected_diffs = {
+        "context": "direct_formats_context.diff.txt",
+        "normal": "direct_formats_normal.diff.txt",
+        "unified": "direct_formats_unified.diff.txt",
+    },
+    file_new = "direct.rhs.txt",
+    file_old = "direct.lhs.txt",
 )

@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_DIFF_IMPL_DIFF_UNIFIED_H_
-#define MBO_DIFF_IMPL_DIFF_UNIFIED_H_
+#ifndef MBO_DIFF_IMPL_DIFF_NAIVE_H_
+#define MBO_DIFF_IMPL_DIFF_NAIVE_H_
 
 #include <cstddef>
 #include <string>
@@ -26,31 +26,30 @@
 
 namespace mbo::diff {
 
-// Unified diff implementation.
+// Naive line diff implementation (previously misnamed `unified`, which is an
+// output format rather than an algorithm).
 //
-// The implementation is in no way meant to be optimized. It rather aims at
-// matching `diff -du` output API as close as possible. Documentation used:
+// The implementation is in no way meant to be optimized. On a mismatch it
+// greedily resynchronizes on the closest matching line pair, which keeps the
+// extra ignore/strip options easy to reason about, but does not produce
+// minimal diffs (see `DiffMyers` for that). Documentation used:
 // https://en.wikipedia.org/wiki/Diff#Unified_format
 // https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html
-//
-// Most implementations follow LCS (longest common subsequence) approach. Here
-// we implement shortest diff approach, both of which work well with the `patch`
-// tool.
 //
 // The complexity of the algorithm used is O(L*R) in the worst case. In practise
 // the algorithm is closer to O(max(L,R)) for small differences. In detail the
 // algorithm has a complexity of O(max(L,R)+dL*R+L*dR).
-class DiffUnified final : private ChunkedDiff {
+class DiffNaive final : private ChunkedDiff {
  public:
   static absl::StatusOr<std::string> FileDiff(
       const file::Artefact& lhs,
       const file::Artefact& rhs,
       const DiffOptions& options);
 
-  DiffUnified() = delete;
+  DiffNaive() = delete;
 
  protected:
-  DiffUnified(const file::Artefact& lhs, const file::Artefact& rhs, const DiffOptions& options)
+  DiffNaive(const file::Artefact& lhs, const file::Artefact& rhs, const DiffOptions& options)
       : ChunkedDiff(lhs, rhs, options) {}
 
   absl::StatusOr<std::string> Compute() {
@@ -69,4 +68,4 @@ class DiffUnified final : private ChunkedDiff {
 
 }  // namespace mbo::diff
 
-#endif  // MBO_DIFF_IMPL_DIFF_UNIFIED_H_
+#endif  // MBO_DIFF_IMPL_DIFF_NAIVE_H_

@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mbo/diff/impl/diff_unified.h"
+#include "mbo/diff/impl/diff_naive.h"
 
 #include <cstddef>
 #include <string_view>
@@ -33,23 +33,23 @@ std::size_t AbsDiff(std::size_t lhs, std::size_t rhs) {
 }
 }  // namespace
 
-absl::StatusOr<std::string> DiffUnified::FileDiff(
+absl::StatusOr<std::string> DiffNaive::FileDiff(
     const file::Artefact& lhs,
     const file::Artefact& rhs,
     const DiffOptions& options) {
   if (lhs.data == rhs.data) {
     return std::string();
   }
-  return DiffUnified(lhs, rhs, options).Compute();
+  return DiffNaive(lhs, rhs, options).Compute();
 }
 
-void DiffUnified::LoopBoth() {
+void DiffNaive::LoopBoth() {
   while (More() && CompareEq(0, 0)) {
     PushEqual();
   }
 }
 
-std::tuple<std::size_t, std::size_t, bool> DiffUnified::FindNextRight() {
+std::tuple<std::size_t, std::size_t, bool> DiffNaive::FindNextRight() {
   std::size_t lhs = 1;  // L+0 != R+0 -> start at lhs = 1, R1 = 0
   std::size_t rhs = 0;
   bool equal = false;
@@ -70,7 +70,7 @@ std::tuple<std::size_t, std::size_t, bool> DiffUnified::FindNextRight() {
   return {lhs, rhs, equal};
 }
 
-std::tuple<std::size_t, std::size_t, bool> DiffUnified::FindNextLeft() {
+std::tuple<std::size_t, std::size_t, bool> DiffNaive::FindNextLeft() {
   std::size_t lhs = 0;
   std::size_t rhs = 1;  // L+0 != R+0 -> start at L2 = 0, rhs = 1
   bool equal = false;
@@ -91,7 +91,7 @@ std::tuple<std::size_t, std::size_t, bool> DiffUnified::FindNextLeft() {
   return {lhs, rhs, equal};
 }
 
-bool DiffUnified::PastMaxDiffChunkLength(std::size_t& loop) {
+bool DiffNaive::PastMaxDiffChunkLength(std::size_t& loop) {
   if (++loop > Options().max_diff_chunk_length) {
     static constexpr std::string_view kMsg = "Maximum loop count reached";
     ABSL_LOG(ERROR) << kMsg;
@@ -101,7 +101,7 @@ bool DiffUnified::PastMaxDiffChunkLength(std::size_t& loop) {
   return false;
 }
 
-bool DiffUnified::FindNext() {
+bool DiffNaive::FindNext() {
   auto [lhs1, rhs1, eq1] = FindNextRight();
   auto [lhs2, rhs2, eq2] = FindNextLeft();
   if (eq1 && (!eq2 || AbsDiff(lhs1, rhs1) < AbsDiff(lhs2, rhs2))) {
@@ -131,7 +131,7 @@ bool DiffUnified::FindNext() {
   return false;
 }
 
-void DiffUnified::Loop() {
+void DiffNaive::Loop() {
   while (More()) {
     LoopBoth();
     std::size_t loop = 0;
