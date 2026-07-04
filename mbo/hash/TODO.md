@@ -14,10 +14,6 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
       name may change. The seed families were addressed by seed finalization;
       `rapidhash` is the default since then (see SMHASHER3.md).
 
-- [ ] **XXH3-128** (`XXH3_128bits`): the modern fast file-checksum format;
-      natural extension of the existing XXH3-64 machinery, would be the third
-      128-bit-native algorithm.
-
 ## Hard / needs design
 
 (empty)
