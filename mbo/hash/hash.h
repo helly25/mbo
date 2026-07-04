@@ -64,7 +64,7 @@ concept IsHashAlgorithm = HasGetHash64<Algo> || HasGetHash128<Algo>;
 // default for every algorithm -- e.g. FNV-1a's low bits are biased, and
 // XOR-folding is that algorithm's official shrinking recommendation.
 constexpr uint32_t Hash64To32(uint64_t hash) noexcept {
-  return static_cast<uint32_t>(hash ^ (hash >> 32U));
+  return static_cast<uint32_t>(hash ^ (hash >> 32U));  // NOLINT(*-magic-numbers)
 }
 
 // Seed perturbation for the synthesized `GetHash128` fallback's second lane.
@@ -93,7 +93,7 @@ inline constexpr uint64_t kSeedFlip = 0x9E3779B97F4A7C15ULL;
 template<IsHashAlgorithm Algo>
 struct Hasher {
   using Algorithm = Algo;
-  using is_transparent = void;
+  using is_transparent = void;  // NOLINT(readability-identifier-naming): STL heterogeneous-lookup protocol name.
 
   constexpr uint64_t operator()(std::string_view data) const noexcept { return GetHash64(data); }
 

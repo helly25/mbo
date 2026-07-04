@@ -38,7 +38,8 @@ constexpr int kRangeMultiplier = 4;
 template<typename Algo>
 void BmHash64(benchmark::State& state) {
   const auto length = static_cast<std::size_t>(state.range(0));
-  std::mt19937_64 rng(0x1234);  // NOLINT(cert-msc51-cpp,cert-msc32-c): fixed data per length
+  std::mt19937_64 rng(
+      0x1234);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
   const std::string data = algo::RandomString(rng, length);
   for (auto _ : state) {
     benchmark::DoNotOptimize(Algo::GetHash64(data, kSeed));
@@ -51,7 +52,8 @@ template<typename Algo>
 requires HasGetHash128<Algo>
 void BmHash128(benchmark::State& state) {
   const auto length = static_cast<std::size_t>(state.range(0));
-  std::mt19937_64 rng(0x1234);  // NOLINT(cert-msc51-cpp,cert-msc32-c): fixed data per length
+  std::mt19937_64 rng(
+      0x1234);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
   const std::string data = algo::RandomString(rng, length);
   for (auto _ : state) {
     benchmark::DoNotOptimize(Algo::GetHash128(data, kSeed));
@@ -67,7 +69,8 @@ void BmHash128(benchmark::State& state) {
 template<typename Algo>
 void BmHash64Latency(benchmark::State& state) {
   const auto max_len = static_cast<std::size_t>(state.range(0));
-  std::mt19937_64 rng(0x1a7e9c1);          // NOLINT(cert-msc51-cpp,cert-msc32-c): fixed key set per run
+  std::mt19937_64 rng(
+      0x1a7e9c1);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed key set per run
   constexpr std::size_t kNumKeys = 1'024;  // power of two for cheap masking
   std::vector<std::string> keys;
   keys.reserve(kNumKeys);

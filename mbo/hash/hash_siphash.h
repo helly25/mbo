@@ -146,10 +146,10 @@ struct Algorithm {
   // ARX construction, so streaming is its native mode. Chunked updates produce
   // exactly the one-shot GetHash64 value.
   struct StreamState {
-    siphash_internal::State state;
-    std::array<char, 8> buffer;
-    std::size_t buffered;
-    std::size_t total;
+    siphash_internal::State state = {};
+    std::array<char, 8> buffer = {};
+    std::size_t buffered = 0;
+    std::size_t total = 0;
   };
 
   static constexpr StreamState StreamInit(uint64_t seed) noexcept {

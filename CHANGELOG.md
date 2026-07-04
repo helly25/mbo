@@ -29,6 +29,8 @@
 - Hardened `mh`'s seed handling (values change): the seed is finalized through `Fmix64` before deriving any lane, addressing SMHasher3's Seed* failure families. `mh` is work in progress: it may be optimized, strengthened, replaced, or renamed.
 - Added a repository-root `NOTICE` file reproducing the upstream notices of the transcribed algorithms (rapidhash MIT, xxHash BSD-2, MurmurHash3/SipHash/FNV public domain or CC0); README links it.
 - Hash values are not guaranteed stable across library versions and are not intended for persistence or cryptographic use.
+- Added the `mbo/digest` library (charter: `mbo/digest/README.md`): spec-transcribed, constexpr-safe message digests with identical compile-time and runtime values. First algorithms: **SHA-256** and **SHA-224** (FIPS 180-4), providing one-shot `<ns>::Digest(std::string_view)`, per-algorithm `Algorithm` structs with the `IsDigestAlgorithm`/`HasStreaming` concepts, the incremental `mbo::digest::Streamer` wrapper (peekable finalize), and `ToHexString`. Pinned to the FIPS example vectors, padding-boundary lengths (55/56/63/64/65) and the million-'a' vector, all cross-generated with an independent reference.
+- Factored the shared load primitives into the new `//mbo/hash:hash_internal_util` target (used by `mbo/digest`) and added the big-endian `hash_internal::Load32BE` (digest specifications are big-endian) with the same `memcpy`-based runtime path as the little-endian loads.
 
 # 0.12.0
 
