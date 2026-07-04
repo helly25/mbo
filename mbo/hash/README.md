@@ -16,11 +16,12 @@ implementations. Algorithm reference and API listing: see the
 - **constexpr-safe single path**: compile-time and run-time evaluation always
   agree; streaming (where provided) equals the one-shot value by contract.
 - **Apache-2.0 with clean attribution**: transcription notices live in the
-  repository-root NOTICE; LICENSE stays pure Apache-2.0. No crypto-library
+  repository-root [NOTICE](../../NOTICE); [LICENSE](../../LICENSE) stays pure
+  Apache-2.0. No crypto-library
   dependencies - digests and hashes are spec-frozen pure functions that we
   verify against official vectors instead of trusting an unverifiable supply
-  chain (see mbo/digest/README.md for the full argument).
+  chain (see [mbo/digest/README.md](../digest/README.md) for the full argument).
 - **Not cryptographic**: values are neither stable across versions nor safe
   against adversaries (SipHash with a secret seed is the DoS-resistant
   option). For message digests (SHA-2, MD5 interop, ...) see
-  [mbo/digest](../digest).
+  [mbo/digest](../digest/README.md).
