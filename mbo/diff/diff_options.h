@@ -56,6 +56,14 @@ struct DiffOptions final {
     // Normal output: `RaR`/`RdR`/`RcR` commands whose lines use the prefixes
     // '< '/'> ', without context lines or file headers (like plain `diff`).
     kNormal = 2,
+
+    // Side-by-side output: two space-padded columns of `side_by_side_width`
+    // total width with a 3-char ' X ' gutter, X being ' ' (common), '|'
+    // (changed), '<' (left only) or '>' (right only). Like `diff -y
+    // --expand-tabs`; meant for eyeballing, not for `patch`. The CLI defaults
+    // `--context` to unbounded here (full files); an explicit context renders
+    // only the chunks around changes.
+    kSideBySide = 3,
   };
 
   enum class FileHeaderUse {
@@ -90,6 +98,11 @@ struct DiffOptions final {
   OutputFormat output_format = OutputFormat::kUnified;
 
   std::size_t context_size = 3;
+
+  // Total width of `OutputFormat::kSideBySide` output (two columns of
+  // `(side_by_side_width - 3) / 2` characters plus the gutter); longer lines
+  // are truncated.
+  std::size_t side_by_side_width = 130;  // NOLINT(*-magic-numbers)
 
   FileHeaderUse file_header_use = FileHeaderUse::kBoth;
 
