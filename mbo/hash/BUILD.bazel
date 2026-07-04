@@ -25,7 +25,9 @@ cc_library(
         "hash_mangle.h",
         "hash_mh.h",
         "hash_murmur3.h",
+        "hash_rapidhash.h",
         "hash_simple.h",
+        "hash_siphash.h",
         "hash_types.h",
         "hash_xxh3.h",
         "hash_xxh64.h",
@@ -63,6 +65,18 @@ cc_test(
         ":hash_cc",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "hash_differential_test",
+    srcs = ["hash_differential_test.cc"],
+    deps = [
+        ":hash_cc",
+        ":hash_test_util",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@xxhash_reference//:xxhash",
     ],
 )
 

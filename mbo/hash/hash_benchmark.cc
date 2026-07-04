@@ -20,6 +20,7 @@
 #include <random>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "benchmark/benchmark.h"
 #include "mbo/hash/hash_test_util.h"
@@ -59,6 +60,29 @@ void BmHash128(benchmark::State& state) {
   state.SetLabel(std::string(Algo::Name()));
 }
 
+// Latency benchmark: keys of unpredictable random length in [0, max_len], and
+// each hash result selects the next key, serializing the chain. This defeats
+// the branch predictor on the size dispatch and measures latency rather than
+// hot-loop throughput -- the cost profile hash-table workloads actually pay.
+template<typename Algo>
+void BmHash64Latency(benchmark::State& state) {
+  const auto max_len = static_cast<std::size_t>(state.range(0));
+  std::mt19937_64 rng(0x1a7e9c1);          // NOLINT(cert-msc51-cpp,cert-msc32-c): fixed key set per run
+  constexpr std::size_t kNumKeys = 1'024;  // power of two for cheap masking
+  std::vector<std::string> keys;
+  keys.reserve(kNumKeys);
+  for (std::size_t i = 0; i < kNumKeys; ++i) {
+    keys.push_back(algo::RandomString(rng, rng() % (max_len + 1)));
+  }
+  uint64_t hash = 0;
+  for (auto _ : state) {
+    hash = Algo::GetHash64(keys[hash & (kNumKeys - 1)], kSeed);
+    benchmark::DoNotOptimize(hash);
+  }
+  state.SetItemsProcessed(state.iterations());
+  state.SetLabel(std::string(Algo::Name()));
+}
+
 // Registers the 64-bit benchmark for one algorithm, plus the 128-bit one where
 // the descriptor provides it (detected via the public HasGetHash128 concept).
 template<typename Algo>
@@ -72,6 +96,7 @@ void RegisterAlgo() {
         ->RangeMultiplier(kRangeMultiplier)
         ->Range(kMinLen, kMaxLen);
   }
+  benchmark::RegisterBenchmark("BmHash64Latency<" + name + ">", BmHash64Latency<Algo>)->Arg(16)->Arg(64)->Arg(1'024);
 }
 
 // Registers benchmarks for every descriptor in the central algo::AllAlgorithms

@@ -26,7 +26,9 @@
 #include "mbo/hash/hash_mangle.h"         // IWYU pragma: export
 #include "mbo/hash/hash_mh.h"             // IWYU pragma: export
 #include "mbo/hash/hash_murmur3.h"        // IWYU pragma: export
+#include "mbo/hash/hash_rapidhash.h"      // IWYU pragma: export
 #include "mbo/hash/hash_simple.h"         // IWYU pragma: export
+#include "mbo/hash/hash_siphash.h"        // IWYU pragma: export
 #include "mbo/hash/hash_types.h"          // IWYU pragma: export
 #include "mbo/hash/hash_xxh3.h"           // IWYU pragma: export
 #include "mbo/hash/hash_xxh64.h"          // IWYU pragma: export
