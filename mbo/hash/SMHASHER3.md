@@ -9,11 +9,11 @@ numbers are directly comparable.
 ## Results
 
 | Algorithm   | Bits | Role in mbo/hash         | SMHasher3 result | Failures                                                                                                |
-| ----------- | ---- | ------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------- |
-| `rapidhash` | 64   | default (64/mangle)      | PASS - 188 / 188 | none                                                                                                    |
-| `mh`        | 64   | in-house, WIP            | FAIL - 183 / 188 | BIC [3, 11, 15], Sparse [9/4], Bitflip [4]                                                              |
-| `xxh64`     | 64   | canonical algorithm      | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                      |
-| `xxh3`-64   | 64   | 64-bit sibling of `xxh3` | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3] |
+| ----------- | ---: | ------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------- |
+| `rapidhash` |   64 | default (64/mangle)      | PASS - 188 / 188 | none                                                                                                    |
+| `mh`        |   64 | in-house, WIP            | FAIL - 183 / 188 | BIC [3, 11, 15], Sparse [9/4], Bitflip [4]                                                              |
+| `xxh64`     |   64 | canonical algorithm      | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                      |
+| `xxh3`-64   |   64 | 64-bit sibling of `xxh3` | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3] |
 
 Reading the results:
 
