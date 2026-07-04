@@ -1192,7 +1192,7 @@ TEST_F(DiffTest, MyersMinimalOption) {
   // With enough noisy lines the cost cap makes the default myers result
   // non-minimal; `minimal` disables the cap. Both variants must apply
   // cleanly, the minimal one with strictly fewer edits on this fixed input.
-  std::mt19937 rng(20260704);  // NOLINT(*-magic-numbers)
+  std::mt19937 rng(20'260'704);  // NOLINT(*-magic-numbers)
   const auto make_file = [&rng](std::size_t lines) {
     std::string text;
     for (std::size_t i = 0; i < lines; ++i) {
