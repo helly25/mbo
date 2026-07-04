@@ -64,6 +64,8 @@ diff_test_test(
     file_new = "axc.txt",
     file_old = "abc.txt",
     format = "side-by-side",
+    # Proves the bzl plumbing; the output of this trivial input is unaffected.
+    minimal = True,
     width = 40,
 )
 

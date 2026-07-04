@@ -52,6 +52,19 @@ function test::equal_files_exit_zero() {
   return 0
 }
 
+function test::exit_codes_follow_posix_diff() {
+  # 0 = equal (covered above), 1 = different, 2 = trouble.
+  local rc=0
+  "${DIFF}" "${LHS}" "${RHS}" >/dev/null 2>&1 || rc=$?
+  [[ ${rc} == 1 ]] || die "Expected exit code 1 for differing files, got ${rc}."
+  rc=0
+  "${DIFF}" "${LHS}" "${BASHTEST_TMPDIR}/does-not-exist.txt" >/dev/null 2>&1 || rc=$?
+  [[ ${rc} == 2 ]] || die "Expected exit code 2 for an unreadable input, got ${rc}."
+  rc=0
+  "${DIFF}" "${LHS}" >/dev/null 2>&1 || rc=$?
+  [[ ${rc} == 2 ]] || die "Expected exit code 2 for bad usage, got ${rc}."
+}
+
 function test::unified_alias_selects_unified_format() {
   if "${DIFF}" --algorithm=unified --file_header_use=none "${LHS}" "${RHS}" >"${TEST_TMPDIR}/alias.out" 2>&1; then
     die "Expected exit code 1 for differing files."

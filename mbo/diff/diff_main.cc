@@ -213,14 +213,20 @@ T GetFlagOrDefault(const absl::Flag<T>& flag, bool override_default, const U& ne
   }
 }
 
+// Exit codes follow the POSIX diff contract: 0 = inputs are equal,
+// 1 = inputs differ, 2 = trouble (unreadable input, internal error, usage).
+constexpr int kExitEqual = 0;
+constexpr int kExitDifferent = 1;
+constexpr int kExitTrouble = 2;
+
 int Diff(std::string_view lhs_name, std::string_view rhs_name) {
   const auto lhs = Read(lhs_name);
   if (!lhs.ok()) {
-    return 1;
+    return kExitTrouble;
   }
   const auto rhs = Read(rhs_name);
   if (!rhs.ok()) {
-    return 1;
+    return kExitTrouble;
   }
   const std::string strip_comments = absl::GetFlag(FLAGS_strip_comments);
   const std::optional<Diff::Options::Algorithm> algorithm =
@@ -280,13 +286,13 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
   const auto result = Diff::FileDiff(*lhs, *rhs, diff_options);
   if (!result.ok()) {
     ABSL_LOG(ERROR) << "ERROR: " << result.status();
-    return 1;
+    return kExitTrouble;
   }
   if (!result->empty()) {
     std::cout << *result;
-    return 1;
+    return kExitDifferent;
   }
-  return 0;
+  return kExitEqual;
 }
 
 }  // namespace
@@ -307,7 +313,7 @@ int main(int argc, char* argv[]) {
   if (args.size() != 3) {  // [0] = program
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     std::cerr << "Exactly two files are required. Use: " << fs::path(argv[0]).filename().string() << " --help\n";
-    return 1;
+    return kExitTrouble;
   }
   return Diff(args[1], args[2]);
 }
