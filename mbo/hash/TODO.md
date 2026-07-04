@@ -12,8 +12,12 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 
 ## Hard / needs design
 
-- [ ] **Streaming/incremental API** (`init/update/final` state per algorithm):
-      xxhash/abseil parity for chunked input. Only with a concrete use case.
+(empty)
+
+## Future
+
+- Streaming for `xxh3` and `murmur3` (reference streaming semantics exist;
+  deferred), and possibly a canonical-values streaming benchmark.
 
 ## Future (separate library)
 

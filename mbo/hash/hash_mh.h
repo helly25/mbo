@@ -18,6 +18,7 @@
 
 // IWYU pragma: private, include "mbo/hash/hash.h"
 
+#include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -176,8 +177,15 @@ constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = kDefaultSeed)
   return hash_internal::Fmix64(hash);
 }
 
-// The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h): static
-// member functions bundling this algorithm for use as a template argument.
+// Streaming interface on the algorithm struct (see `mbo::hash::HasStreaming`).
+//
+// Chunked updates produce exactly the one-shot GetHash64 value. The state
+// buffers at most 64 bytes: the one-shot dispatch depends on the total length
+// (single-lane <= kSmallInputCutoff; 4-accumulator stripes from
+// kStripeInputCutoff), so processing starts only once 64 bytes have been seen
+// -- from then on every full 32-byte stripe is consumed exactly as the
+// one-shot stripe loop would, and Finalize replays the remaining (< 32
+// buffered) bytes through the same 2-lane block/tail/finalizer code.
 struct Algorithm {
   static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
     return ::mbo::hash::mh::GetHash64(data, seed);
@@ -185,6 +193,99 @@ struct Algorithm {
 
   static constexpr Hash128 GetHash128(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
     return ::mbo::hash::mh::GetHash128(data, seed);
+  }
+
+  struct StreamState {
+    std::array<uint64_t, 4> acc;
+    std::array<char, 64> buffer;
+    std::size_t buffered;
+    std::size_t total;
+    uint64_t seed;
+    bool striping;
+  };
+
+  static constexpr StreamState StreamInit(uint64_t seed) noexcept {
+    return {.acc = {}, .buffer = {}, .buffered = 0, .total = 0, .seed = seed, .striping = false};
+  }
+
+  static constexpr void StreamUpdate(StreamState& stream, std::string_view data) noexcept {
+    stream.total += data.size();
+    const char* ptr = data.data();
+    std::size_t remaining = data.size();
+    while (remaining > 0) {
+      while (stream.buffered < 64 && remaining > 0) {
+        stream.buffer[stream.buffered++] = *ptr++;  // NOLINT(*-constant-array-index,*-pointer-arithmetic)
+        --remaining;
+      }
+      if (stream.buffered < 64) {
+        return;  // Everything buffered; dispatch not decided yet or stripes drained.
+      }
+      if (!stream.striping) {  // Total input is >= 64: enter the stripe tier.
+        const uint64_t hash1 = stream.seed;
+        stream.acc = {
+            hash1 + kMul1,
+            (stream.seed ^ 0xAA55AA55AA55AA55ULL) + kMul2,
+            (hash1 * kMul3) + 1,
+            std::rotl(hash1, 32) ^ kMul4,
+        };
+        stream.striping = true;
+      }
+      std::size_t consumed = 0;
+      while (stream.buffered - consumed >= 32) {
+        const char* block = stream.buffer.data() + consumed;
+        stream.acc[0] = std::rotl(stream.acc[0] ^ (hash_internal::Load64(block) * kMulIn), 31) * kMul1;
+        stream.acc[1] = std::rotl(stream.acc[1] + (hash_internal::Load64(block + 8) * kMulIn), 27) * kMul2;
+        stream.acc[2] = std::rotl(stream.acc[2] ^ (hash_internal::Load64(block + 16) * kMulIn), 29) * kMul3;
+        stream.acc[3] = std::rotl(stream.acc[3] + (hash_internal::Load64(block + 24) * kMulIn), 25) * kMul4;
+        consumed += 32;
+      }
+      for (std::size_t i = 0; consumed + i < stream.buffered; ++i) {  // Keep the < 32-byte rest.
+        stream.buffer[i] = stream.buffer[consumed + i];               // NOLINT(*-constant-array-index)
+      }
+      stream.buffered -= consumed;
+    }
+  }
+
+  static constexpr uint64_t StreamFinalize(StreamState stream) noexcept {
+    const std::string_view rest(stream.buffer.data(), stream.buffered);
+    if (stream.total <= kSmallInputCutoff) {
+      return ::mbo::hash::mh::GetHash64(rest, stream.seed);  // Whole input is still buffered.
+    }
+    uint64_t hash1 = stream.seed;
+    uint64_t hash2 = stream.seed ^ 0xAA55AA55AA55AA55ULL;
+    const char* ptr = rest.data();
+    std::size_t remaining = rest.size();
+    if (stream.striping) {  // The one-shot stripe loop also eats a final full stripe.
+      while (remaining >= 32) {
+        stream.acc[0] = std::rotl(stream.acc[0] ^ (hash_internal::Load64(ptr) * kMulIn), 31) * kMul1;
+        stream.acc[1] = std::rotl(stream.acc[1] + (hash_internal::Load64(ptr + 8) * kMulIn), 27) * kMul2;
+        stream.acc[2] = std::rotl(stream.acc[2] ^ (hash_internal::Load64(ptr + 16) * kMulIn), 29) * kMul3;
+        stream.acc[3] = std::rotl(stream.acc[3] + (hash_internal::Load64(ptr + 24) * kMulIn), 25) * kMul4;
+        ptr += 32;
+        remaining -= 32;
+      }
+      hash1 = ((std::rotl(stream.acc[0], 1) + std::rotl(stream.acc[2], 7)) * kMul1) + stream.acc[1];
+      hash2 = ((std::rotl(stream.acc[1], 12) + std::rotl(stream.acc[3], 18)) * kMul2) + stream.acc[2];
+    }
+    while (remaining >= 8) {
+      const uint64_t block = hash_internal::Load64(ptr) * kMulIn;
+      hash1 = std::rotl(hash1 ^ block, 31) * kMul1;
+      hash2 = std::rotl(hash2 + block, 27) * kMul2;
+      ptr += 8;
+      remaining -= 8;
+    }
+    if (remaining > 0) {
+      const uint64_t tail = hash_internal::LoadTail(ptr, remaining);
+      hash1 = std::rotl(hash1 ^ tail, 31) * kMul1;
+      hash2 = std::rotl(hash2 + tail, 27) * kMul2;
+    }
+    hash1 ^= stream.total;
+    hash2 += stream.total;
+    hash1 += hash2;
+    hash2 += hash1;
+    hash1 = hash_internal::Fmix64(hash1);
+    hash2 = hash_internal::Fmix64(hash2);
+    return hash_internal::Hash128To64({.h1 = hash1, .h2 = hash2});
   }
 };
 
