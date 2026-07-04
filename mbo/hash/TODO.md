@@ -25,12 +25,10 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 
 ## Future (separate library)
 
-- **mbo/digest**: constexpr, spec-frozen message digests pinned against
-  official vectors (SHA-2 256/512, SHA-3, BLAKE2b/3, HMAC; legacy MD5 + SHA-1
-  for interop, loudly marked broken/deprecated). Deliberately named _digest_,
-  not "crypto": AEAD, signatures, key exchange, RNG, and TLS are permanent
-  non-goals (actual cryptography needs maintained implementations and
-  side-channel expertise). Shares the streaming API designed for mbo/hash.
+- **mbo/digest**: charter and scope in [mbo/digest/README.md](../digest/README.md)
+  (SHA-1/224/256 and wider SHA-2, SHA-3, BLAKE2b/3, HMAC, MD5 for interop;
+  permanent non-goals AEAD/signatures/KEX/RNG/TLS). Shares the streaming API
+  designed for mbo/hash. Next up.
 
 ## Non-goals (decided)
 
@@ -43,14 +41,10 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
   simple, fnv1a, murmur3, siphash); per-algorithm cc_library targets can be
   added compatibly if such a consumer ever materializes.
 
-- MD5 (and SHA-\*) as a library offering: MD5 looks cryptographic and is
-  broken; both are out of scope. Our fast file-identity answer is XXH3(-128).
-  Should digest interop ever become a real need, prefer an in-repo, constexpr,
-  NIST-vector-verified transcription (the pipeline used for xxh3/rapidhash/
-  siphash) over a crypto-library dependency: digests are spec-frozen pure
-  functions, whereas e.g. BoringSSL is live-at-head, unversioned, and has a
-  history of non-reproducible archives - unverifiable supply chain for exactly
-  the code that most needs verifying.
+- Message digests in _this_ library: MD5/SHA-1/SHA-2 etc. belong to
+  [mbo/digest](../digest/README.md) (spec-based, constexpr, vector-pinned,
+  Apache-licensed - see its README for scope and for the stance against
+  BoringSSL-style dependencies).
 
 - SIMD kernels (XXH3-vector, HighwayHash class): incompatible with the
   constexpr single-path design; a dual-path SIMD kernel would duplicate whole

@@ -70,7 +70,7 @@ The C++ library is organized in functional groups each residing in their own dir
   - mbo/file/ini:ini_file_cc, mbo/file/ini/ini_file.h
     - class `IniFile`: A simple INI file reader.
 - Hash
-  - `namespace mbo::hash`
+  - `namespace mbo::hash` - principles and library docs: [mbo/hash/README.md](mbo/hash/README.md)
   - mbo/hash:hash_cc, mbo/hash/hash.h
     - function `GetHash64<Algo>(std::string_view, seed)` / `GetHash128<Algo>(std::string_view, seed)`: A constexpr-safe, non-cryptographic hash; the algorithm defaults to `DefaultHashAlgorithm` (`rapidhash`; `GetHash128` defaults to the 128-bit-native `xxh3`) and can be replaced by any `IsHashAlgorithm` struct. Values are not stable across versions and not for persistence. Big-endian targets are supported by construction (byte-assembled loads) but not exercised by CI.
     - function `GetHash32<Algo>(std::string_view, seed)`: 32-bit companion; uses an algorithm's native 32-bit variant where provided, else the XOR-fold of the 64-bit hash.
