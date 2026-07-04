@@ -618,6 +618,14 @@ TEST(HasherTest, WorksAsTransparentContainerFunctor) {
   EXPECT_EQ(std_map.find(std::string_view("gamma"))->second, 3);
 }
 
+TEST(Hash64To32Test, FoldsBothHalves) {
+  constexpr uint32_t kFolded = Hash64To32(0x123456780000FFFFULL);  // constexpr-safe
+  EXPECT_EQ(kFolded, 0x1234A987U);
+  // Values differing only in the high half still shrink to different values.
+  EXPECT_NE(Hash64To32(0xAAAA000012345678ULL), Hash64To32(0xBBBB000012345678ULL));
+  EXPECT_EQ(Hash64To32(0), 0U);
+}
+
 TEST(CombineHashesTest, MixesAndIsOrderDependent) {
   constexpr uint64_t kHash1 = GetHash64("first");
   constexpr uint64_t kHash2 = GetHash64("second");

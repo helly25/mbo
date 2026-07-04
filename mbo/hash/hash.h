@@ -156,6 +156,15 @@ constexpr uint64_t GetHash(std::string_view data) noexcept {
 // customary truncation that matches other MurmurHash3 implementations.
 using ::mbo::hash::hash_internal::Hash128To64;
 
+// Shrinks a 64-bit hash to 32 bits by XOR-folding the halves, so all 64 input
+// bits contribute. For the strong algorithms plain truncation would also be
+// sound (their finalizers give uniform low bits), but the fold is the correct
+// default for every algorithm -- e.g. FNV-1a's low bits are biased, and
+// XOR-folding is that algorithm's official shrinking recommendation.
+constexpr uint32_t Hash64To32(uint64_t hash) noexcept {
+  return static_cast<uint32_t>(hash ^ (hash >> 32U));
+}
+
 // Combines two 64-bit hashes into one (order-dependent, well mixed). Chain for
 // more values: `CombineHashes(CombineHashes(h1, h2), h3)`.
 constexpr uint64_t CombineHashes(uint64_t first, uint64_t second) noexcept {
