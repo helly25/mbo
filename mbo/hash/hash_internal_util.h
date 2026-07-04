@@ -87,6 +87,26 @@ constexpr uint32_t Load32BE(const char* ptr) noexcept {
          | static_cast<uint32_t>(static_cast<uint8_t>(ptr[3]));
 }
 
+// Loads 8 bytes as a **big-endian** `uint64_t` (same rationale as `Load32BE`;
+// used by the 64-bit-word digest specifications, e.g. SHA-512).
+constexpr uint64_t Load64BE(const char* ptr) noexcept {
+  if (!std::is_constant_evaluated()) {
+#if defined(__GNUC__) || defined(__clang__)
+    uint64_t result = 0;
+    std::memcpy(&result, ptr, 8);
+    if constexpr (std::endian::native == std::endian::little) {
+      result = __builtin_bswap64(result);
+    }
+    return result;
+#endif  // defined(__GNUC__) || defined(__clang__)
+  }
+  uint64_t result = 0;
+  for (std::size_t i = 0; i < 8; ++i) {
+    result = (result << 8U) | static_cast<uint64_t>(static_cast<uint8_t>(ptr[i]));
+  }
+  return result;
+}
+
 // Loads 4 bytes as a **little-endian** `uint32_t` (same rationale as `Load64`).
 constexpr uint32_t Load32(const char* ptr) noexcept {
   if (!std::is_constant_evaluated()) {

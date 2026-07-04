@@ -17,44 +17,37 @@
 #define MBO_DIGEST_DIGEST_H_
 
 #include <array>
-#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
-#include <type_traits>
 
-#include "mbo/digest/digest_sha256.h"  // IWYU pragma: export
+#include "mbo/digest/digest_blake2b.h"   // IWYU pragma: export
+#include "mbo/digest/digest_concepts.h"  // IWYU pragma: export
+#include "mbo/digest/digest_hmac.h"      // IWYU pragma: export
+#include "mbo/digest/digest_md5.h"       // IWYU pragma: export
+#include "mbo/digest/digest_sha1.h"      // IWYU pragma: export
+#include "mbo/digest/digest_sha256.h"    // IWYU pragma: export
+#include "mbo/digest/digest_sha3.h"      // IWYU pragma: export
+#include "mbo/digest/digest_sha512.h"    // IWYU pragma: export
 
 // Message digests: spec-based, constexpr-safe, vector-pinned transcriptions
 // (see README.md for the charter, including what this library will never be).
 //
-// Each algorithm lives in its own namespace (e.g. `mbo::digest::sha256`) and
-// provides:
-// - a one-shot `Digest(std::string_view) -> std::array<uint8_t, kDigestSize>`,
-// - an `Algorithm` struct satisfying the concepts below, usable with the
-//   `Streamer` wrapper for incremental input.
+// Each algorithm lives in its own namespace and provides a one-shot
+// `Digest(std::string_view) -> std::array<uint8_t, kDigestSize>` plus an
+// `Algorithm` struct satisfying `IsDigestAlgorithm` and `HasStreaming`
+// (digest_concepts.h), usable with the `Streamer` wrapper below:
 //
-// Unlike `mbo::hash`, digests take no seed - keyed digesting is HMAC's job
-// (planned, see README.md).
+// - `sha256`, `sha224` - SHA-2, 32-bit words (FIPS 180-4)
+// - `sha512`, `sha384`, `sha512_224`, `sha512_256` - SHA-2, 64-bit words
+// - `sha3_224`, `sha3_256`, `sha3_384`, `sha3_512` - SHA-3 (FIPS 202)
+// - `blake2b`, `blake2b_256` - BLAKE2b (RFC 7693)
+// - `sha1`, `md5` - legacy interop only; COLLISION-BROKEN (see their headers)
+//
+// `Hmac<Algo>` / `HmacStreamer<Algo>` (digest_hmac.h) provide the keyed MAC
+// over any of them. Digest algorithms themselves take no seed.
 namespace mbo::digest {
-
-// A digest algorithm: fixed-size output, one-shot interface.
-template<typename Algo>
-concept IsDigestAlgorithm = requires(std::string_view data) {
-  requires std::same_as<std::remove_const_t<decltype(Algo::kDigestSize)>, std::size_t>;
-  requires std::same_as<typename Algo::DigestType, std::array<uint8_t, Algo::kDigestSize>>;
-  { Algo::Digest(data) } noexcept -> std::same_as<typename Algo::DigestType>;
-};
-
-// Streaming (incremental) interface. `StreamFinalize` takes the state by
-// value, so a stream can be finalized ("peeked") and then continued.
-template<typename Algo>
-concept HasStreaming = requires(typename Algo::StreamState state, std::string_view data) {
-  { Algo::StreamInit() } noexcept -> std::same_as<typename Algo::StreamState>;
-  { Algo::StreamUpdate(state, data) } noexcept;
-  { Algo::StreamFinalize(state) } noexcept -> std::same_as<typename Algo::DigestType>;
-};
 
 // Streaming wrapper:
 //

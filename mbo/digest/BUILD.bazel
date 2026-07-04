@@ -19,7 +19,16 @@ package(default_visibility = ["//visibility:private"])
 
 cc_library(
     name = "digest_cc",
-    srcs = ["digest_sha256.h"],
+    srcs = [
+        "digest_blake2b.h",
+        "digest_concepts.h",
+        "digest_hmac.h",
+        "digest_md5.h",
+        "digest_sha1.h",
+        "digest_sha256.h",
+        "digest_sha3.h",
+        "digest_sha512.h",
+    ],
     hdrs = ["digest.h"],
     visibility = ["//visibility:public"],
     deps = ["//mbo/hash:hash_internal_util"],
