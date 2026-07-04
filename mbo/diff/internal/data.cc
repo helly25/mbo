@@ -52,7 +52,7 @@ Data::Data(
       regex_replace_(regex_replace),
       got_nl_(absl::ConsumeSuffix(&text, "\n")),
       last_line_no_nl_(LastLineIfNoNewLine(text, got_nl_)),
-      text_(SplitAndAdaptLastLine(options_, regex_replace_, text, got_nl_, last_line_no_nl_)) {}
+      text_(SplitAndAdaptLastLine(options_, regex_replace_, text, got_nl_, last_line_no_nl_, owned_)) {}
 
 std::string Data::LastLineIfNoNewLine(std::string_view text, bool got_nl) {
   if (got_nl) {
@@ -72,7 +72,8 @@ std::vector<Data::LineCache> Data::SplitAndAdaptLastLine(
     const std::optional<DiffOptions::RegexReplace>& regex_replace,
     std::string_view text,
     bool got_nl,
-    std::string_view last_line) {
+    std::string_view last_line,
+    std::deque<std::string>& owned) {
   if (!got_nl && text.empty()) {
     // This means a zero-length input (not just a single new-line).
     // For that case `diff -du` does not show 'No newline at end of file'.
@@ -80,9 +81,9 @@ std::vector<Data::LineCache> Data::SplitAndAdaptLastLine(
   }
   const std::size_t count = std::count_if(text.begin(), text.end(), [](char chr) { return chr == '\n'; });
   std::vector<LineCache> result;
-  result.reserve(count > 0 ? count : 1);
+  result.reserve(count + 1);  // N newlines split into N + 1 lines.
   for (std::string_view line : absl::StrSplit(text, '\n')) {
-    result.push_back(Process(options, regex_replace, line));
+    result.push_back(Process(options, regex_replace, line, owned));
   }
   if (!got_nl) {
     if (!result.empty()) {
@@ -90,7 +91,7 @@ std::vector<Data::LineCache> Data::SplitAndAdaptLastLine(
     }
     result.push_back({
         .line = last_line,
-        .processed = std::string{last_line},
+        .processed = last_line,
         .matches_ignore = false,
     });
   }
@@ -100,38 +101,58 @@ std::vector<Data::LineCache> Data::SplitAndAdaptLastLine(
 Data::LineCache Data::Process(
     const DiffOptions& options,
     const std::optional<DiffOptions::RegexReplace>& regex_replace,
-    std::string_view line) {
-  std::string processed;
+    std::string_view line,
+    std::deque<std::string>& owned) {
+  // `processed` stays a view of `line` (or a sub-range of it) through pure
+  // trimming/truncation transformations. Only rebuilding transformations
+  // materialize a string; the last one gets moved into `owned` (whose
+  // elements never move) so the returned view stays valid.
+  std::string_view processed = line;
+  std::string storage;
+  bool has_storage = false;
+  const auto own = [&](std::string&& value) {
+    storage = std::move(value);
+    processed = storage;
+    has_storage = true;
+  };
   if (options.ignore_all_space) {
-    processed.reserve(line.length());
+    std::string stripped;
+    stripped.reserve(line.length());
     for (const char chr : line) {
       if (!absl::ascii_isspace(chr)) {
-        processed.push_back(chr);
+        stripped.push_back(chr);
       }
     }
+    own(std::move(stripped));
   } else if (options.ignore_consecutive_space) {
-    processed = line;
-    absl::RemoveExtraAsciiWhitespace(&processed);
+    std::string collapsed{line};
+    absl::RemoveExtraAsciiWhitespace(&collapsed);
+    own(std::move(collapsed));
   } else if (options.ignore_trailing_space) {
-    processed = absl::StripTrailingAsciiWhitespace(line);
-  } else {
-    processed = line;
+    processed = absl::StripTrailingAsciiWhitespace(processed);  // A pure suffix trim.
   }
   std::visit(
       Select{
           [&](DiffOptions::NoCommentStripping) {},
           [&](const mbo::strings::StripCommentArgs& args) {
+            // A pure truncation (plus trailing whitespace strip).
             processed = mbo::strings::StripLineComments(processed, args);
           },
           [&](const mbo::strings::StripParsedCommentArgs& args) {
-            const auto line_or = mbo::strings::StripParsedLineComments(processed, args);
+            auto line_or = mbo::strings::StripParsedLineComments(processed, args);
             if (line_or.ok()) {
-              processed = *std::move(line_or);
+              own(*std::move(line_or));
             }
           }},
       options.strip_comments);
   if (regex_replace.has_value()) {
-    RE2::Replace(&processed, *regex_replace->regex, regex_replace->replace);
+    std::string replaced{processed};
+    if (RE2::Replace(&replaced, *regex_replace->regex, regex_replace->replace)) {
+      own(std::move(replaced));
+    }
+  }
+  if (has_storage) {
+    processed = owned.emplace_back(std::move(storage));
   }
   return {
       .line = line,
