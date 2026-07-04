@@ -114,6 +114,14 @@ function test::directory_is_an_error_but_processing_continues() {
   [[ ${out} == "${SHA256_ABC}  ${ABC}" ]] || die "Expected the regular file still to be hashed."
 }
 
+function test::ignore_directories_skips_silently() {
+  local out
+  out="$("${DIGEST}" --ignore_directories "${BASHTEST_TMPDIR}" "${ABC}" 2>"${TEST_TMPDIR}/skip.err")" \
+    || die "Expected exit code 0 with --ignore_directories."
+  [[ -s "${TEST_TMPDIR}/skip.err" ]] && die "Expected no error output with --ignore_directories."
+  [[ ${out} == "${SHA256_ABC}  ${ABC}" ]] || die "Expected only the regular file to be hashed."
+}
+
 function test::missing_file_is_an_error() {
   if "${DIGEST}" "${BASHTEST_TMPDIR}/does-not-exist" 2>"${TEST_TMPDIR}/missing.err"; then
     die "Expected exit code 1 for a missing file."

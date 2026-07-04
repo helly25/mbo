@@ -51,6 +51,11 @@ ABSL_FLAG(  //
     "Short alias for --algorithm (like `shasum -a`); takes precedence when set.");
 ABSL_FLAG(  //
     bool,
+    ignore_directories,
+    false,
+    "Silently skip directory arguments instead of reporting them as errors.");
+ABSL_FLAG(  //
+    bool,
     reverse,
     false,
     "Print '<file>  <hash>' instead of the checksum-style '<hash>  <file>'.");
@@ -133,8 +138,10 @@ int Run(DigestFunc digest, const std::vector<std::string_view>& files) {
     const fs::path path(file_name);
     std::error_code error;
     if (fs::is_directory(path, error)) {
-      std::cerr << file_name << ": Is a directory (not supported).\n";
-      result = 1;
+      if (!absl::GetFlag(FLAGS_ignore_directories)) {
+        std::cerr << file_name << ": Is a directory (not supported).\n";
+        result = 1;
+      }
       continue;
     }
     std::ifstream input(path, std::ios::binary);
@@ -158,7 +165,8 @@ int main(int argc, char* argv[]) {
     Prints one '<hash>  <file>' line per file (matching the sha256sum/shasum
     output format; '--reverse' swaps the columns). The algorithm is selected
     with '--algorithm' or its short alias '-a' (default sha256). '-' reads
-    standard input. Directories are errors.
+    standard input. Directories are errors unless '--ignore_directories'
+    silently skips them.
   )"));
   absl::InitializeLog();
   const std::vector<char*> args = absl::ParseCommandLine(argc, argv);
