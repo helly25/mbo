@@ -53,7 +53,7 @@ def diff_test_test(
         algorithm:                Algorithm to use ('myers', 'naive', 'direct'; 'unified' is a deprecated alias for 'myers').
         context:                  Produces a diff with number of context lines (defaults to 0 for direct diff and normal format, 3 otherwise).
         file_header_use:          Select which file header to use.
-        format:                   Output format to use ('unified', 'context', 'normal').
+        format:                   Output format to use ('unified', 'context', 'normal', 'side-by-side').
         ignore_all_space:         Ignore all leading, trailing, and consecutive internal whitespace changes.
         ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
         ignore_blank_lines:       Ignore chunks which include only blank lines.

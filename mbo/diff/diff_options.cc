@@ -48,6 +48,7 @@ std::optional<DiffOptions::OutputFormat> DiffOptions::ParseOutputFormatFlag(std:
   constexpr auto kFlagMapping = mbo::container::ToLimitedMap<std::string_view, DiffOptions::OutputFormat>({
       {"context", DiffOptions::OutputFormat::kContext},
       {"normal", DiffOptions::OutputFormat::kNormal},
+      {"side-by-side", DiffOptions::OutputFormat::kSideBySide},
       {"unified", DiffOptions::OutputFormat::kUnified},
   });
   auto it = kFlagMapping.find(flag);

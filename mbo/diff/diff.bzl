@@ -55,7 +55,7 @@ def diff_test(
         algorithm:                Algorithm to use ('myers', 'naive', 'direct'; 'unified' is a deprecated alias for 'myers' implying unified format).
         context:                  Produces a diff with number of context lines (defaults to 0 for direct diff and normal format, 3 otherwise).
         failure_message:          Additional message to log if the files don't match.
-        format:                   Output format to use ('unified', 'context', 'normal').
+        format:                   Output format to use ('unified', 'context', 'normal', 'side-by-side').
         ignore_all_space:         Ignore all leading, trailing, and consecutive internal whitespace changes.
         ignore_consecutive_space: Ignore all whitespace changes, even if one line has whitespace where the other line has none.
         ignore_blank_lines:       Ignore chunks which include only blank lines.
@@ -226,7 +226,12 @@ _diff_test = rule(
         "format": attr.string(
             default = "unified",
             doc = "The diff output format to use.",
-            values = ["context", "normal", "unified"],
+            values = [
+                "context",
+                "normal",
+                "side-by-side",
+                "unified",
+            ],
         ),
         "ignore_all_space": attr.bool(
             doc = "Ignore all leading, trailing, and consecutive internal whitespace changes.",
