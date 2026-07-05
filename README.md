@@ -85,26 +85,28 @@ The C++ library is organized in functional groups each residing in their own dir
 - Hash
   - `namespace mbo::hash` - principles and library docs: [mbo/hash/README.md](mbo/hash/README.md)
   - mbo/hash:hash_cc, mbo/hash/hash.h
-    - function `GetHash64<Algo>(std::string_view, seed)` / `GetHash128<Algo>(std::string_view, seed)`: A constexpr-safe, non-cryptographic hash; the algorithm defaults to `DefaultHashAlgorithm` (`rapidhash`; `GetHash128` defaults to the 128-bit-native `xxh3`) and can be replaced by any `IsHashAlgorithm` struct. Values are not stable across versions and not for persistence. Big-endian targets are supported by construction (byte-assembled loads) but not exercised by CI.
+    - function `GetHash64<Algo>(std::string_view, seed)` / `GetHash128<Algo>(std::string_view, seed)`: A constexpr-safe, non-cryptographic hash; the algorithms default to the in-house mumbo/jumbo family (`mumbo` for 64-bit, `jumbo` for the native 128-bit - both SMHasher3-clean, see [mbo/hash/README.md](mbo/hash/README.md)) and can be replaced by any `IsHashAlgorithm` struct. Values are not stable across versions and not for persistence. Big-endian targets are supported by construction (byte-assembled loads) but not exercised by CI.
     - function `GetHash32<Algo>(std::string_view, seed)`: 32-bit companion; uses an algorithm's native 32-bit variant where provided, else the XOR-fold of the 64-bit hash.
     - function `GetHash<Algo, Seed>(std::string_view)`: as `GetHash64` but folded through `HashMangle`, so values may differ between builds.
     - concept `HasGetHash32` / `HasGetHash64` / `HasGetHash128`: Detect which static member functions an algorithm struct provides; `IsHashAlgorithm` requires a 64- or 128-bit one.
     - struct `Hasher<Algo>`: Completes any `IsHashAlgorithm` struct into the full `GetHash64`/`GetHash128`/`GetHash` interface, synthesizing what is missing (fold for 64; two decorrelated passes for 128 -- the second skips the first up-to-8 bytes and injects them via the seed; mangle for `GetHash`). Also a transparent functor over `GetHash64`, so it drops into `absl`/`std` hash containers with heterogeneous `string_view` lookup.
-    - algorithm structs `rapidhash::Algorithm`, `xxh3::Algorithm`, `xxh64::Algorithm`, `murmur3::Algorithm`, `siphash::Algorithm`, `fnv1a::Algorithm`, `mh::Algorithm`, `simple::Algorithm`: the per-algorithm plug-ins for `GetHash*<Algo>` / `Hasher<Algo>`.
+    - algorithm structs `mumbo::Algorithm`, `jumbo::Algorithm`, `murmur3::Algorithm`, `siphash::Algorithm`, `fnv1a::Algorithm`, `simple::Algorithm` (plus `rapidhash::Algorithm`, `xxh3::Algorithm`, `xxh64::Algorithm` via `hash_extra.h`): the per-algorithm plug-ins for `GetHash*<Algo>` / `Hasher<Algo>`.
     - function `HashMangle(uint64_t)`: XORs one of a small set of per-build (`__DATE__`/`__TIME__` bucketed) seeds into a hash; identity when compiled with `MBO_HASH_MANGLE=0` (for fully reproducible `GetHash` values).
     - struct `Hash128`: The 128-bit result type (`h1`, `h2`); ordered (`<=>`) and Abseil hash/stringify compatible.
     - function `Hash128To64(Hash128)`: Folds a 128-bit hash into a well-mixed 64-bit one, e.g. `Hash128To64(murmur3::GetHash128(data))`.
     - function `CombineHashes(uint64_t, uint64_t)`: Combines two hashes (order-dependent, well mixed).
     - function `Hash64To32(uint64_t)`: Shrinks a hash to 32 bits by XOR-folding the halves (the correct default for all algorithms, incl. weak-low-bit ones like FNV-1a).
-    - concept `HasStreaming` / class `Streamer<Algo>`: incremental hashing (`Update(...).Update(...).Finalize()`), guaranteed equal to the one-shot value; provided by `mh`, `xxh64`, and `siphash` (rapidhash has no canonical streaming form).
+    - concept `HasStreaming` / class `Streamer<Algo>`: incremental hashing (`Update(...).Update(...).Finalize()`), guaranteed equal to the one-shot value; provided by `mumbo`, `xxh64`, and `siphash` (rapidhash has no canonical streaming form).
     - function `simple::GetHash64(std::string_view)`: the previous hash implementation (`simple::GetHash` is deprecated).
     - function `fnv1a::GetHash64(std::string_view, seed)`: canonical FNV-1a 64 (constexpr-safe).
-    - function `xxh64::GetHash64(std::string_view, seed)`: canonical XXH64 / xxHash 64-bit (constexpr-safe).
-    - function `xxh3::GetHash64/GetHash128(std::string_view, seed)`: canonical XXH3 64- and 128-bit (modern xxHash generation, the fast file-checksum format; scalar; constexpr-safe).
+    - function `xxh64::GetHash64(std::string_view, seed)`: canonical XXH64 / xxHash 64-bit (constexpr-safe; in `hash_extra.h`, see below).
+    - function `xxh3::GetHash64/GetHash128(std::string_view, seed)`: canonical XXH3 64- and 128-bit (modern xxHash generation, the fast file-checksum format; scalar; constexpr-safe; in `hash_extra.h`).
     - function `murmur3::GetHash64/GetHash128(std::string_view, seed)`: canonical MurmurHash3 x64 128-bit (constexpr-safe; `GetHash64` is the customary `h1` truncation).
-    - function `rapidhash::GetHash64(std::string_view, seed)`: canonical rapidhash V3 (wyhash family; best small-key latency; SMHasher3-clean; constexpr-safe). The default algorithm.
-    - function `mh::GetHash64/GetHash128(std::string_view, seed)`: this library's own algorithm (fast hot-loop throughput, streaming-capable; not SMHasher3-clean, see mbo/hash/README.md). **Work in progress**: may be optimized, strengthened, replaced, or renamed.
+    - function `rapidhash::GetHash64(std::string_view, seed)`: canonical rapidhash V3 (wyhash family; SMHasher3-clean; constexpr-safe; in `hash_extra.h`).
+    - function `mumbo::GetHash64` / `jumbo::GetHash128` (`mbo/hash/hash_mumbo.h`): the in-house mumbo/jumbo family and default - widening-multiply ("MUM") based, SMHasher3 PASS 188/188 in both widths (the only clean native 128 measured), best mixed-length latency, streaming-capable, notice-free.
     - function `siphash::GetHash64(std::string_view, key0, key1)` / `siphash::SipHash<C, D>(...)`: canonical SipHash-2-4 (and -1-3 via `GetHash64Sip13`) - keyed, hash-flooding resistant; adversarial protection requires a secret key.
+  - mbo/hash:hash_extra_cc, mbo/hash/hash_extra.h
+    - The NOTICE-bearing transcriptions (`rapidhash` MIT; `xxh64`/`xxh3` BSD-2-Clause) as an opt-in target: linking it requires shipping the repository-root [NOTICE](NOTICE); the default hash_cc target is notice-free (see "Third-party components").
 - Json
   - `namespace mbo::json`
   - mbo/json:json_cc, mbo/json/json.h
@@ -352,10 +354,10 @@ NOTICE entries required for **license compliance** - for these algorithms the
 licensed reference implementation effectively is the specification, and the
 transcription follows its expression:
 
-| Header                                      | Bazel rule         | Upstream                                           | License      |
-| ------------------------------------------- | ------------------ | -------------------------------------------------- | ------------ |
-| mbo/hash/hash_rapidhash.h                   | //mbo/hash:hash_cc | [rapidhash](https://github.com/Nicoshev/rapidhash) | MIT          |
-| mbo/hash/hash_xxh64.h, mbo/hash/hash_xxh3.h | //mbo/hash:hash_cc | [xxHash](https://github.com/Cyan4973/xxHash)       | BSD-2-Clause |
+| Header                                      | Bazel rule               | Upstream                                           | License      |
+| ------------------------------------------- | ------------------------ | -------------------------------------------------- | ------------ |
+| mbo/hash/hash_rapidhash.h                   | //mbo/hash:hash_extra_cc | [rapidhash](https://github.com/Nicoshev/rapidhash) | MIT          |
+| mbo/hash/hash_xxh64.h, mbo/hash/hash_xxh3.h | //mbo/hash:hash_extra_cc | [xxHash](https://github.com/Cyan4973/xxHash)       | BSD-2-Clause |
 
 NOTICE entries that are **courtesy attribution only** - public-domain/CC0
 upstreams with no notice obligation, recorded for provenance (and to preempt
@@ -371,7 +373,9 @@ license-scanner findings of structural similarity):
 Everything else is original helly25 code. In particular, all algorithms
 implemented from public standards carry no upstream code and need no notices:
 SHA-1/SHA-2/SHA-3/SHAKE (FIPS 180-4 / FIPS 202), MD5 (RFC 1321), BLAKE2b
-(RFC 7693), and HMAC (RFC 2104). Practical rule: a distribution that includes
-code from `//mbo/hash:hash_cc` - directly or transitively - must retain
-[NOTICE](NOTICE); `//mbo/digest:digest_cc` on its own carries no compliance
-obligation (its only NOTICE entry is courtesy).
+(RFC 7693), and HMAC (RFC 2104), and the default hash algorithms (the
+in-house mumbo/jumbo family) are original code. Practical rule: only a
+distribution that includes code from `//mbo/hash:hash_extra_cc` - directly or
+transitively - must retain [NOTICE](NOTICE); the default `//mbo/hash:hash_cc`
+and `//mbo/digest:digest_cc` carry no compliance obligation (the digest
+library's only NOTICE entry is courtesy).

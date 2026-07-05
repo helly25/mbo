@@ -26,11 +26,14 @@
 #include "mbo/hash/hash_internal_util.h"
 #include "mbo/hash/hash_types.h"
 
-// mumbo -- this library's own hash algorithm and the default behind
-// `mbo::hash::GetHash*` (64-bit, native 128-bit, and streaming). The name is
-// MUM + mbo: everything is built on the widening 64x64->128 multiply folded
-// to 64 bits (`hash_internal::Mul128Fold64`, the "MUM" mixer) -- one multiply
-// absorbs 16 input bytes and diffuses full-width in both directions.
+// mumbo & jumbo -- this library's own hash family and the defaults behind
+// `mbo::hash::GetHash*`: `mumbo` fronts the 64-bit form (plus streaming),
+// `jumbo` fronts the native 128-bit form; both `Algorithm` structs are
+// complete (each delegates the other width), so either plugs in anywhere.
+// The name is MUM + mbo: everything is built on the widening 64x64->128
+// multiply folded to 64 bits (`hash_internal::Mul128Fold64`, the "MUM"
+// mixer) -- one multiply absorbs 16 input bytes and diffuses full-width in
+// both directions.
 //
 // Quality: SMHasher3 PASS 188/188 in BOTH the 64-bit and the native 128-bit
 // form -- the only clean 128-bit result measured on our rig; performance and
@@ -203,8 +206,9 @@ constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = kDefaultSeed)
   return mumbo_internal::Finish(val_a, val_b, seed, len);
 }
 
-// Native 128-bit form: two lanes with different secrets and swapped operand
-// roles cover the same input; see the header comment.
+// Native 128-bit form (fronted by the `jumbo` namespace below): two lanes
+// with different secrets and swapped operand roles cover the same input; see
+// the header comment.
 // NOLINTNEXTLINE(readability-function-cognitive-complexity): tiered by design.
 constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = kDefaultSeed) noexcept {
   const char* ptr = str.data();
@@ -354,5 +358,27 @@ struct Algorithm {
 // NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters)
 
 }  // namespace mbo::hash::mumbo
+
+// jumbo -- the native 128-bit face of the mumbo family ("mumbo jumbo"): the
+// same implementation core, fronted for 128-bit use and serving as
+// `Default128HashAlgorithm`. Both directions delegate, so `jumbo::Algorithm`
+// is as complete as `mumbo::Algorithm` -- they differ only in name and role.
+namespace mbo::hash::jumbo {
+
+inline constexpr uint64_t kDefaultSeed = ::mbo::hash::kDefaultSeed;
+
+constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = kDefaultSeed) noexcept {
+  return ::mbo::hash::mumbo::GetHash128(str, seed);
+}
+
+constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = kDefaultSeed) noexcept {
+  return ::mbo::hash::mumbo::GetHash64(str, seed);
+}
+
+// The algorithm struct: inherits the complete mumbo surface (64/128 and
+// streaming) under the 128-bit-fronted name.
+struct Algorithm : ::mbo::hash::mumbo::Algorithm {};
+
+}  // namespace mbo::hash::jumbo
 
 #endif  // MBO_HASH_HASH_MUMBO_H_

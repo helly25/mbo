@@ -57,12 +57,13 @@ one-shot hashes of fixed sizes.
 
 | Algorithm | 1B       | 16B      | 64B      | 256B     | 1KiB     | 4KiB    |
 | --------- | -------- | -------- | -------- | -------- | -------- | ------- |
-| mumbo     | 4.04     | **3.59** | 6.55     | **13.8** | **31.6** | **124** |
+| jumbo     | 4.04     | **3.59** | 6.55     | **13.8** | **31.6** | **124** |
 | xxh3      | **2.45** | 3.69     | **5.20** | 33.5     | 67.4     | 212     |
 
 Reading the results: `mumbo` and `rapidhash` trade blows within a few percent
 across the 64-bit board - rapidhash by a hair at 64-1024 bytes, mumbo leads
-bulk (4 KiB) - while `mumbo`-128 is the fastest 128-bit hash from 16 bytes up
+bulk (4 KiB) - while `jumbo` (the family's native 128) is the fastest 128-bit
+hash from 16 bytes up
 (1.7-2.4x xxh3-128 beyond 256 bytes); xxh3-128 keeps the tiny-key lead.
 
 ## Quality: SMHasher3
@@ -81,7 +82,7 @@ numbers are directly comparable.
 | `rapidhash` |   64 | extra (`hash_extra_cc`)          | PASS - 188 / 188 | none                                                                                                                                                                          |
 | `xxh3`      |   64 | extra (`hash_extra_cc`)          | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]                                                                       |
 | `xxh64`     |   64 | extra (`hash_extra_cc`)          | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                            |
-| `mumbo`     |  128 | default (128)                    | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `jumbo`     |  128 | default (128)                    | PASS - 188 / 188 | none                                                                                                                                                                          |
 | `xxh3`      |  128 | extra (`hash_extra_cc`)          | FAIL - 162 / 188 | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8] |
 
 Reading the results:
@@ -90,12 +91,14 @@ Reading the results:
   `xxh3` pass the original battery, and most of their failures above are in
   the newer `Seed*` families (weak seed handling), which the original battery
   does not probe.
-- `mumbo` and `rapidhash` are the only clean passes; `mumbo` (128) is the
-  only clean 128-bit result we have measured on this rig - every other tested
+- `mumbo` and `rapidhash` are the only clean passes; `jumbo` (the
+  mumbo family's native 128, "mumbo jumbo") is the only clean 128-bit result
+  we have measured on this rig - every other tested
   128-bit variant fails more of the battery than its 64-bit sibling, because
   the wider output gives the statistics more surface to catch bias and lane
   correlation on.
-- `mumbo` is the default in all forms; the extras remain available for
+- The mumbo/jumbo family is the default in all forms; the extras remain
+  available for
   canonical-value interop via `hash_extra.h` (`//mbo/hash:hash_extra_cc`,
   which carries the third-party NOTICE obligations - see the repository-root
   NOTICE).
@@ -115,8 +118,8 @@ benchmark plus both SMHasher3 batteries):
 3. v3 (188/188 both widths): data loads into both product operands (products
    quadratic in the data), the length folded into the seed, distinct
    bulk-chain initializers.
-4. v4 (SMHasher3 re-verification in flight at the time of writing): the
-   length moved from the seed into
+4. v4 (64-bit re-verified PASS 188/188; the 128-bit battery result is
+   recorded in the table above): the length moved from the seed into
    the finalizer's product operands - equally protective, but known only at
    finalize, which is what makes streaming possible; the 128-bit lane seeds
    derive from secret pairs distinct from the 64-bit chain, so no lane ever
@@ -136,7 +139,7 @@ benchmark plus both SMHasher3 batteries):
   transfer; the built-in `XXH3-128` ran its NEON implementation on this rig,
   which produces the identical canonical values).
 - `mumbo` was transcribed standalone into a plugin source (registered as
-  `mumbo-64` and `mumbo-128`, seeded), matching `hash_mumbo.h` at the current
+  `mumbo-64` and `jumbo-128`, seeded), matching `hash_mumbo.h` at the current
   commit.
 - Full default battery per hash: `./SMHasher3 <name>` (~12 minutes each).
   Full logs are not committed; regenerate as above.

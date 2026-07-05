@@ -14,9 +14,11 @@ two classes:
    - rapidhash (MIT): mbo/hash/hash_rapidhash.h
    - xxHash / XXH64 / XXH3 (BSD-2-Clause): mbo/hash/hash_xxh64.h and
      mbo/hash/hash_xxh3.h
-   Both ship in the Bazel rule //mbo/hash:hash_cc (header mbo/hash/hash.h);
-   distributions containing that rule's code - directly or transitively -
-   must retain this NOTICE file.
+   Both ship exclusively in the opt-in Bazel rule //mbo/hash:hash_extra_cc
+   (header mbo/hash/hash_extra.h); distributions containing that rule's code
+   - directly or transitively - must retain this NOTICE file. The default
+   //mbo/hash:hash_cc (header mbo/hash/hash.h, incl. the default mumbo/jumbo
+   algorithms) contains no notice-bearing code.
 
 2. Courtesy attribution - public-domain/CC0 upstreams with no notice
    obligation, recorded for provenance:

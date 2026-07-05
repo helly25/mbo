@@ -174,14 +174,15 @@ class Streamer {
 
 // The selected default algorithms behind the `mbo::hash` entry points.
 //
-// The default algorithm for 64-bit, 128-bit, the mangled `GetHash`, and
-// streaming: the in-house `mumbo` - SMHasher3-clean in BOTH widths (the only
-// clean native 128 measured on our rig), best mixed-length latency, and free
-// of third-party license notices (the NOTICE-bearing transcriptions rapidhash
-// and xxh3/xxh64 live in hash_extra.h / //mbo/hash:hash_extra_cc; see
-// README.md for the quality and performance comparison).
+// The default algorithms: the in-house mumbo/jumbo family - `mumbo` fronts
+// 64-bit, the mangled `GetHash`, and streaming; `jumbo` fronts the native
+// 128-bit form. SMHasher3-clean in BOTH widths (the only clean native 128
+// measured on our rig), best mixed-length latency, and free of third-party
+// license notices (the NOTICE-bearing transcriptions rapidhash and
+// xxh3/xxh64 live in hash_extra.h / //mbo/hash:hash_extra_cc; see README.md
+// for the quality and performance comparison).
 using DefaultHashAlgorithm = mumbo::Algorithm;
-using Default128HashAlgorithm = mumbo::Algorithm;
+using Default128HashAlgorithm = jumbo::Algorithm;
 using DefaultHasher = Hasher<DefaultHashAlgorithm>;
 
 // A fast, constexpr-safe, non-cryptographic 64-bit hash.

@@ -272,7 +272,7 @@ TYPED_TEST(HashTest, StreamingMatchesOneShot) {
 // Streaming support is intentional per algorithm: canonical forms exist for
 // xxh64 and siphash, mh defines its own; rapidhash has no canonical streaming.
 static_assert(std::same_as<DefaultHashAlgorithm, mumbo::Algorithm>);
-static_assert(std::same_as<Default128HashAlgorithm, mumbo::Algorithm>);
+static_assert(std::same_as<Default128HashAlgorithm, jumbo::Algorithm>);
 
 static_assert(HasStreaming<mumbo::Algorithm>);
 static_assert(HasStreaming<xxh64::Algorithm>);
@@ -307,6 +307,14 @@ TYPED_TEST(HashTest, Hash128) {
   } else {
     GTEST_SKIP() << TypeParam::Name() << " is 64-bit only";
   }
+}
+
+// The jumbo face is the same family: both directions delegate.
+TEST(MumboHashTest, JumboIsTheSameFamily) {
+  constexpr std::string_view kData = "mumbo jumbo";
+  EXPECT_EQ(jumbo::GetHash128(kData, kSeed), mumbo::GetHash128(kData, kSeed));
+  EXPECT_EQ(jumbo::GetHash64(kData, kSeed), mumbo::GetHash64(kData, kSeed));
+  static_assert(HasStreaming<jumbo::Algorithm>);
 }
 
 // mumbo-specific: the 64-bit form and the 128-bit lanes are deliberately
@@ -733,7 +741,7 @@ TEST(HasherTest, TopLevelFunctionsUseDefaultAlgorithm) {
   EXPECT_EQ(kHash64, mumbo::GetHash64("top", kDefaultSeed));
   constexpr Hash128 kHash128 = GetHash128("top");
   EXPECT_EQ(kHash128, (Hasher<Default128HashAlgorithm>::GetHash128("top")));
-  EXPECT_EQ(kHash128, mumbo::GetHash128("top", kDefaultSeed));
+  EXPECT_EQ(kHash128, jumbo::GetHash128("top", kDefaultSeed));
   EXPECT_EQ(GetHash("top"), HashMangle(kHash64));
 }
 
