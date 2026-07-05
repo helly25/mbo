@@ -31,8 +31,7 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
   [mbo/digest/README.md](../digest/README.md) - SHA-2 (224/256/384/512,
   512/224, 512/256), SHA-3, SHAKE128/256, BLAKE2b (incl. native keying),
   BLAKE3 (XOF/keyed/derive-key), HMAC, SHA-1 + MD5 interop, and the `digest`
-  CLI binary. Remaining ideas (unscheduled): cSHAKE/KMAC, HKDF, a `--check`
-  mode for the CLI.
+  CLI binary. Remaining ideas (unscheduled): cSHAKE/KMAC, HKDF.
 
 ## Non-goals (decided)
 
