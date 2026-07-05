@@ -43,6 +43,19 @@ The C++ library is organized in functional groups each residing in their own dir
     - binary `diff`: A binary that diffs two files; defaults to unified format, `--format` selects `unified`, `context`, `normal` or `side-by-side` (`--width`), `--algorithm` selects `myers` (default), `naive` or `direct`; `--minimal` guarantees minimal `myers` diffs.
   - mbo/diff:diff_bzl, mbo/diff/diff.bzl
     - bzl-macro `diff_test`: A test rule that compares an output versus a golden file.
+- Digest
+  - `namespace mbo::digest` - principles and library docs: [mbo/digest/README.md](mbo/digest/README.md)
+  - mbo/digest:digest_cc, mbo/digest/digest.h
+    - function `<algo>::Digest(std::string_view)`: constexpr-safe, spec-transcribed, vector-pinned message digests; one namespace per algorithm: `sha224`/`sha256`/`sha384`/`sha512`/`sha512_224`/`sha512_256` (FIPS 180-4), `sha3_224`/`sha3_256`/`sha3_384`/`sha3_512` (FIPS 202), `blake2b`/`blake2b_256` (RFC 7693), `blake3`, and `sha1`/`md5` (legacy interop only; **collision-broken**).
+    - function `shake128::Digest<N>` / `shake256::Digest<N>`: the FIPS 202 XOFs - any output length (`Algorithm<N>` for a fixed size; different lengths share their prefix).
+    - function `blake3::DigestXof<N>` / `blake3::DigestKeyed` / `blake3::DeriveKey<N>`: BLAKE3's XOF, keyed, and KDF modes (official-test-vector pinned).
+    - function `blake2b::Algorithm::DigestKeyed` / `StreamInitKeyed`: BLAKE2b native keying (RFC 7693; keys up to 64 bytes) - BLAKE2 is its own MAC.
+    - concept `IsDigestAlgorithm` / `HasStreaming`: the algorithm plug-in contract (per-algorithm `Algorithm` structs).
+    - class `Streamer<Algo>`: incremental digesting (`Update(...).Update(...).Finalize()`; peekable finalize), guaranteed equal to the one-shot value.
+    - struct `Hmac<Algo>` / class `HmacStreamer<Algo>`: HMAC (RFC 2104) over any streaming digest (HMAC-SHA3 uses rate-sized blocks per NIST).
+    - function `ToHexString(digest)`: lowercase hex, matching `hexdigest()`/`sha256sum` presentation.
+  - mbo/digest
+    - binary `digest`: checksum-style CLI, byte-compatible with `sha256sum`/`shasum` output; `-a`/`--algorithm` selects any library algorithm, `--reverse` swaps the columns, `-d`/`--ignore_directories` skips directories, `-` reads stdin.
 - Files
   - `namespace mbo::files`
   - mbo/file:artefact_cc, mbo/file/artefact.h
@@ -77,7 +90,7 @@ The C++ library is organized in functional groups each residing in their own dir
     - function `GetHash<Algo, Seed>(std::string_view)`: as `GetHash64` but folded through `HashMangle`, so values may differ between builds.
     - concept `HasGetHash32` / `HasGetHash64` / `HasGetHash128`: Detect which static member functions an algorithm struct provides; `IsHashAlgorithm` requires a 64- or 128-bit one.
     - struct `Hasher<Algo>`: Completes any `IsHashAlgorithm` struct into the full `GetHash64`/`GetHash128`/`GetHash` interface, synthesizing what is missing (fold for 64; two decorrelated passes for 128 -- the second skips the first up-to-8 bytes and injects them via the seed; mangle for `GetHash`). Also a transparent functor over `GetHash64`, so it drops into `absl`/`std` hash containers with heterogeneous `string_view` lookup.
-    - algorithm structs `mh::Algorithm`, `simple::Algorithm`, `fnv1a::Algorithm`, `xxh64::Algorithm`, `murmur3::Algorithm`: the per-algorithm plug-ins for `GetHash*<Algo>` / `Hasher<Algo>`.
+    - algorithm structs `rapidhash::Algorithm`, `xxh3::Algorithm`, `xxh64::Algorithm`, `murmur3::Algorithm`, `siphash::Algorithm`, `fnv1a::Algorithm`, `mh::Algorithm`, `simple::Algorithm`: the per-algorithm plug-ins for `GetHash*<Algo>` / `Hasher<Algo>`.
     - function `HashMangle(uint64_t)`: XORs one of a small set of per-build (`__DATE__`/`__TIME__` bucketed) seeds into a hash; identity when compiled with `MBO_HASH_MANGLE=0` (for fully reproducible `GetHash` values).
     - struct `Hash128`: The 128-bit result type (`h1`, `h2`); ordered (`<=>`) and Abseil hash/stringify compatible.
     - function `Hash128To64(Hash128)`: Folds a 128-bit hash into a well-mixed 64-bit one, e.g. `Hash128To64(murmur3::GetHash128(data))`.
@@ -312,14 +325,6 @@ The [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) i
 
 ## Presentations
 
-## Third-party components
-
-The hash library contains constexpr transcriptions of third-party algorithms
-(rapidhash, xxHash/XXH3, MurmurHash3, SipHash, FNV-1a). Upstream copyright
-notices and license texts are reproduced in the repository-root
-[NOTICE](NOTICE) file; the project itself is Apache-2.0 (see
-[LICENSE](LICENSE)).
-
 ### Practical Production-proven Constexpr API Elements
 
 Presented at [C++ On Sea 2024](https://cpponsea.uk/2024/session/practical-production-proven-constexpr-api-elements), this presentation covers the theory behind:
@@ -333,3 +338,40 @@ Slides are available at:
 <br/>
 <br/>
 [<img src="https://helly25.com/wp-content/uploads/2024/07/Practical-Production-proven-Constexpr-API-Elements_TitleCard-copy-980x551.png" alt="Practical Production Proven constexpr slides">](https://helly25.com/practical-production-proven-constexpr-api-elements/)
+
+## Third-party components
+
+The hash and digest libraries contain constexpr transcriptions of third-party
+algorithms. The transcriptions are original code, but some closely follow
+their reference implementations; the repository-root [NOTICE](NOTICE) file
+reproduces the upstream notices, and the list below tracks exactly which
+headers and Bazel rules make it apply. The project itself is Apache-2.0 (see
+[LICENSE](LICENSE)).
+
+NOTICE entries required for **license compliance** - for these algorithms the
+licensed reference implementation effectively is the specification, and the
+transcription follows its expression:
+
+| Header                                      | Bazel rule         | Upstream                                           | License      |
+| ------------------------------------------- | ------------------ | -------------------------------------------------- | ------------ |
+| mbo/hash/hash_rapidhash.h                   | //mbo/hash:hash_cc | [rapidhash](https://github.com/Nicoshev/rapidhash) | MIT          |
+| mbo/hash/hash_xxh64.h, mbo/hash/hash_xxh3.h | //mbo/hash:hash_cc | [xxHash](https://github.com/Cyan4973/xxHash)       | BSD-2-Clause |
+
+NOTICE entries that are **courtesy attribution only** - public-domain/CC0
+upstreams with no notice obligation, recorded for provenance (and to preempt
+license-scanner findings of structural similarity):
+
+| Header                     | Bazel rule             | Upstream    | License                             |
+| -------------------------- | ---------------------- | ----------- | ----------------------------------- |
+| mbo/hash/hash_murmur3.h    | //mbo/hash:hash_cc     | MurmurHash3 | public domain                       |
+| mbo/hash/hash_siphash.h    | //mbo/hash:hash_cc     | SipHash     | CC0 / public domain                 |
+| mbo/hash/hash_fnv1a.h      | //mbo/hash:hash_cc     | FNV-1a      | public domain                       |
+| mbo/digest/digest_blake3.h | //mbo/digest:digest_cc | BLAKE3      | CC0-1.0 OR Apache-2.0 (CC0 elected) |
+
+Everything else is original helly25 code. In particular, all algorithms
+implemented from public standards carry no upstream code and need no notices:
+SHA-1/SHA-2/SHA-3/SHAKE (FIPS 180-4 / FIPS 202), MD5 (RFC 1321), BLAKE2b
+(RFC 7693), and HMAC (RFC 2104). Practical rule: a distribution that includes
+code from `//mbo/hash:hash_cc` - directly or transitively - must retain
+[NOTICE](NOTICE); `//mbo/digest:digest_cc` on its own carries no compliance
+obligation (its only NOTICE entry is courtesy).

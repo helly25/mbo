@@ -3,9 +3,30 @@ Copyright (c) The helly25 authors (helly25.com)
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
 
-This product contains constexpr transcriptions of third-party hash algorithms
-in mbo/hash/. The transcriptions are original code, but they closely follow
-their reference implementations; the upstream notices are reproduced here.
+This product contains constexpr transcriptions of third-party hash and digest
+algorithms. The transcriptions are original code, but they closely follow
+their reference implementations; the upstream notices are reproduced below in
+two classes:
+
+1. License compliance - required by the upstream license because the licensed
+   reference implementation effectively is the specification and the
+   transcription follows its expression:
+   - rapidhash (MIT): mbo/hash/hash_rapidhash.h
+   - xxHash / XXH64 / XXH3 (BSD-2-Clause): mbo/hash/hash_xxh64.h and
+     mbo/hash/hash_xxh3.h
+   Both ship in the Bazel rule //mbo/hash:hash_cc (header mbo/hash/hash.h);
+   distributions containing that rule's code - directly or transitively -
+   must retain this NOTICE file.
+
+2. Courtesy attribution - public-domain/CC0 upstreams with no notice
+   obligation, recorded for provenance:
+   - MurmurHash3, SipHash, FNV-1a: in //mbo/hash:hash_cc
+   - BLAKE3 (CC0-1.0 OR Apache-2.0; CC0 elected): mbo/digest/digest_blake3.h
+     in //mbo/digest:digest_cc
+
+Algorithms implemented from public standards (FIPS 180-4, FIPS 202, RFC 1321,
+RFC 2104, RFC 7693) are original code and carry no upstream notices. See the
+"Third-party components" section of README.md for the full reference list.
 
 --------------------------------------------------------------------------------
 rapidhash (mbo/hash/hash_rapidhash.h)
