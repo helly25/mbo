@@ -78,18 +78,17 @@ numbers are directly comparable.
 
 ### Results
 
-| Algorithm   | Bits | Role in mbo/hash              | SMHasher3 result | Failures                                                                                                                                                                      |
-| ----------- | ---: | ----------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `rapidhash` |   64 | default (64/mangle)           | PASS - 188 / 188 | none                                                                                                                                                                          |
-| `mh2`       |   64 | in-house, EXPERIMENTAL        | FAIL - 177 / 188 | Zeroes, Permutation [4/8-byte blocks, 0+low/high bit], SeedZeroes [1280, 8448] (v2; v3 fix in test)                                                                           |
-| `mh2`       |  128 | in-house, EXPERIMENTAL        | (running)        | -                                                                                                                                                                             |
-| `mh`        |   64 | in-house, WIP                 | FAIL - 183 / 188 | BIC [3, 11, 15], Sparse [9/4], Bitflip [4]                                                                                                                                    |
-| `xxh64`     |   64 | canonical algorithm           | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                            |
-| `xxh3`      |   64 | 64-bit sibling of the default | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]                                                                       |
-| `mh`        |  128 | in-house, WIP                 | FAIL - 163 / 188 | BIC [3, 11, 15], Zeroes, Sparse [9/4], Permutation [4-byte keys, 10 variants], TwoBytes [20], Bitflip [4], SeedZeroes [1280, 8448], SeedBlockOffset [0-5]                     |
-| `xxh3`      |  128 | default (128)                 | FAIL - 162 / 188 | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8] |
-
-Reading the results:
+| Algorithm            | Bits | Role in mbo/hash              | SMHasher3 result | Failures                                                                                                                                                                      |
+| -------------------- | ---: | ----------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rapidhash`          |   64 | default (64/mangle)           | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `mh2`                |   64 | in-house, EXPERIMENTAL        | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `mh`                 |   64 | in-house, WIP                 | FAIL - 183 / 188 | BIC [3, 11, 15], Sparse [9/4], Bitflip [4]                                                                                                                                    |
+| `xxh64`              |   64 | canonical algorithm           | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                            |
+| `xxh3`               |   64 | 64-bit sibling of the default | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]                                                                       |
+| `mh2`                |  128 | in-house, EXPERIMENTAL        | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `mh`                 |  128 | in-house, WIP                 | FAIL - 163 / 188 | BIC [3, 11, 15], Zeroes, Sparse [9/4], Permutation [4-byte keys, 10 variants], TwoBytes [20], Bitflip [4], SeedZeroes [1280, 8448], SeedBlockOffset [0-5]                     |
+| `xxh3`               |  128 | default (128)                 | FAIL - 162 / 188 | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8] |
+| Reading the results: |
 
 - SMHasher3 is substantially stricter than the original SMHasher: `xxh64` and
   `xxh3` pass the original battery, and most of their failures above are in
@@ -153,7 +152,7 @@ non-adversarial table hash with no value-stability guarantee.
   transfer; the built-in `XXH3-128` ran its NEON implementation on this rig,
   which produces the identical canonical values).
 - `mh` was transcribed standalone into `hashes/mbo_mh.cpp` (registered as
-  `mbo-mh64` and `mbo-mh128`, seeded), matching `hash_mh.h` at the current
-  commit.
+  `mbo-mh64`/`mbo-mh128` and `mbo-mh2-64`/`mbo-mh2-128`, seeded), matching
+  `hash_mh.h` / `hash_mh2.h` at the current commit.
 - Full default battery per hash: `./SMHasher3 <name>` (~12 minutes each).
   Full logs are not committed; regenerate as above.
