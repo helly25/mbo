@@ -56,7 +56,7 @@ hardware, the _relative_ picture is the point). Bold = fastest per size.
 dependency (what hash-table workloads feel); the throughput tables are
 one-shot hashes of fixed sizes.
 
-### Mixed-length latency (ns/hash, lower is better):
+### Mixed-length latency (ns/hash, lower is better)
 
 | max len | mumbo | rapidhash | xxh3 | xxh64    | murmur3 | siphash | fnv1a | simple   |
 | ------: | ----- | --------- | ---- | -------- | ------- | ------- | ----- | -------- |
@@ -64,7 +64,7 @@ one-shot hashes of fixed sizes.
 |      64 | 11.9  | 12.2      | 12.3 | **10.3** | 20.1    | 28.7    | 12.3  | 23.3     |
 |    1024 | 27.2  | **26.7**  | 37.8 | 69.1     | 72.4    | 239     | 610   | 312      |
 
-### 64-bit one-shot throughput (ns/op; last column GiB/s at 4 KiB):
+### 64-bit one-shot throughput (ns/op; last column GiB/s at 4 KiB)
 
 | Algorithm | 1B       | 16B      | 64B      | 256B     | 1KiB     | 4KiB     | 4KiB GiB/s |
 | --------- | -------- | -------- | -------- | -------- | -------- | -------- | ---------- |
@@ -77,7 +77,7 @@ one-shot hashes of fixed sizes.
 | fnv1a     | **0.52** | 7.07     | 41.3     | 298      | 1361     | 5864     | 0.65       |
 | simple    | 0.92     | 2.50     | 10.5     | 69.9     | 457      | 1736     | 2.2        |
 
-### 128-bit one-shot throughput (ns/op; native-128 algorithms only):
+### 128-bit one-shot throughput (ns/op; native-128 algorithms only)
 
 | Algorithm | 1B       | 16B      | 64B      | 256B     | 1KiB     | 4KiB    |
 | --------- | -------- | -------- | -------- | -------- | -------- | ------- |
