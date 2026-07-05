@@ -6,7 +6,15 @@ This product is licensed under the Apache License, Version 2.0 (see LICENSE).
 This product contains constexpr transcriptions of third-party hash and digest
 algorithms. The transcriptions are original code, but they closely follow
 their reference implementations; the upstream notices are reproduced below in
-two classes:
+two classes.
+
+Applicability: every entry below applies only to distributions that actually
+contain the referenced files - i.e. that build/link the named Bazel rule
+(directly or transitively). A binary or source distribution that does not
+include //mbo/hash:hash_extra_cc carries none of the compliance entries and
+may omit them; the courtesy entries impose no obligation either way. When in
+doubt, ship this NOTICE file as a whole - reproducing an inapplicable notice
+is harmless, omitting an applicable one is not.
 
 1. License compliance - required by the upstream license because the licensed
    reference implementation effectively is the specification and the
@@ -15,10 +23,12 @@ two classes:
    - xxHash / XXH64 / XXH3 (BSD-2-Clause): mbo/hash/hash_xxh64.h and
      mbo/hash/hash_xxh3.h
    Both ship exclusively in the opt-in Bazel rule //mbo/hash:hash_extra_cc
-   (header mbo/hash/hash_extra.h); distributions containing that rule's code
-   - directly or transitively - must retain this NOTICE file. The default
+   (header mbo/hash/hash_extra.h): these notices apply if and only if that
+   rule's code is included - directly or transitively. The default
    //mbo/hash:hash_cc (header mbo/hash/hash.h, incl. the default mumbo/jumbo
-   algorithms) contains no notice-bearing code.
+   algorithms) contains no notice-bearing code, so distributions built
+   without hash_extra_cc carry no third-party notice obligations from this
+   repository at all.
 
 2. Courtesy attribution - public-domain/CC0 upstreams with no notice
    obligation, recorded for provenance:
