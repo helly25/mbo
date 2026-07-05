@@ -117,6 +117,12 @@ ABSL_FLAG(  //
     false,
     "Ignore trailing whitespace changes (like `git diff ignore-space-at-eol`).");
 ABSL_FLAG(  //
+    bool,
+    ignore_missing_final_newline,
+    false,
+    "Ignore a missing final newline: a file with and one without a trailing newline compare equal "
+    "(the `\\ No newline at end of file` marker is suppressed).");
+ABSL_FLAG(  //
     std::size_t,
     max_lines,
     0,
@@ -254,6 +260,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
       .ignore_all_space = absl::GetFlag(FLAGS_ignore_all_space),
       .ignore_consecutive_space = absl::GetFlag(FLAGS_ignore_consecutive_space),
       .ignore_trailing_space = absl::GetFlag(FLAGS_ignore_trailing_space),
+      .ignore_missing_final_newline = absl::GetFlag(FLAGS_ignore_missing_final_newline),
       .minimal = absl::GetFlag(FLAGS_minimal),
       .show_chunk_headers = GetFlagOrDefault(FLAGS_show_chunk_headers, is_direct, false),
       .skip_left_deletions = absl::GetFlag(FLAGS_skip_left_deletions),

@@ -319,6 +319,22 @@ TEST_F(DiffTest, Diff) {
   )txt"))));
 }
 
+TEST_F(DiffTest, EmptyTimeFormatOmitsHeaderTimestamp) {
+  // An empty `time_format` yields a git-style header (name only, no timestamp), so the output is
+  // reproducible regardless of the files' mtimes or the local time zone.
+  EXPECT_THAT(
+      Diff({ToLines("a1b"), "lhs"}, {ToLines("a2b"), "rhs"}, {.time_format = ""}),
+      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+    --- lhs
+    +++ rhs
+    @@ -1,3 +1,3 @@
+     a
+    -1
+    +2
+     b
+  )txt"))));
+}
+
 TEST_F(DiffTest, Multi1) {
   EXPECT_THAT(
       Diff(
@@ -1118,6 +1134,9 @@ TEST_F(DiffTest, AlgorithmFeatureMatrix) {
   expect_empty("ignore_trailing_space", "a\t \nb\n", "a\nb\n", [](Algorithm algo) {
     return Diff::Options{.algorithm = algo, .ignore_trailing_space = true};
   });
+  expect_empty("ignore_missing_final_newline", "a\nb\n", "a\nb", [](Algorithm algo) {
+    return Diff::Options{.algorithm = algo, .ignore_missing_final_newline = true};
+  });
   // Trailing blank lines: a blank-only chunk for all algorithms (the direct
   // algorithm pairs lines positionally, so mid-file blank insertions pair
   // non-blank content and are reported by design).
@@ -1145,6 +1164,17 @@ TEST_F(DiffTest, AlgorithmFeatureMatrix) {
     EXPECT_THAT(Diff({"aBc\n", "lhs"}, {"AbC\n", "rhs"}, {.algorithm = algorithm}), IsOkAndHolds(Not(IsEmpty())))
         << "algorithm: " << static_cast<int>(algorithm);
   }
+}
+
+TEST_F(DiffTest, IgnoreMissingFinalNewline) {
+  // With the option, the same content with and without a trailing newline compares equal ...
+  EXPECT_THAT(
+      Diff({"a\nb\n", "lhs"}, {"a\nb", "rhs"}, {.ignore_missing_final_newline = true}), IsOkAndHolds(IsEmpty()));
+  // ... while without it the missing terminator is reported (the default behavior).
+  EXPECT_THAT(Diff({"a\nb\n", "lhs"}, {"a\nb", "rhs"}), IsOkAndHolds(Not(IsEmpty())));
+  // The option only ignores the terminator; it never adds or drops a line, so an empty file stays
+  // distinct from a single empty line.
+  EXPECT_THAT(Diff({"", "lhs"}, {"\n", "rhs"}, {.ignore_missing_final_newline = true}), IsOkAndHolds(Not(IsEmpty())));
 }
 
 TEST_F(DiffTest, IgnoreCaseWithIgnoreMatchingLines) {

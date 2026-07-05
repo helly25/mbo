@@ -112,6 +112,9 @@ struct DiffOptions final {
   bool ignore_all_space : 1 = false;
   bool ignore_consecutive_space : 1 = false;
   bool ignore_trailing_space : 1 = false;
+  // Ignore a missing final newline: a file with and one without a trailing newline compare equal
+  // (the `\ No newline at end of file` marker is suppressed). Does not equate "" with "\n".
+  bool ignore_missing_final_newline : 1 = false;
   // Disables the `kMyers` cost cap: diffs are guaranteed minimal at the price
   // of O((L+R)*D) worst case time on highly divergent inputs (like GNU
   // `diff --minimal`). No effect on the other algorithms.
@@ -133,6 +136,9 @@ struct DiffOptions final {
   // work with an internal cost cap instead and `kDirect` needs no bound.
   std::size_t max_diff_chunk_length = 1'337'000;  // NOLINT(*-magic-numbers)
 
+  // The `absl::FormatTime` pattern for each file's timestamp in the unified/context header.
+  // An empty string omits the timestamp entirely, producing a git-style header (`--- name`)
+  // whose output is reproducible across machines and time zones.
   std::string time_format = "%F %H:%M:%E3S %z";
 };
 

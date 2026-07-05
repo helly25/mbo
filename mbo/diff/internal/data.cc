@@ -85,7 +85,11 @@ std::vector<Data::LineCache> Data::SplitAndAdaptLastLine(
   for (std::string_view line : absl::StrSplit(text, '\n')) {
     result.push_back(Process(options, regex_replace, line, owned));
   }
-  if (!got_nl) {
+  // A missing final newline normally makes the last line carry the `\ No newline at end of file`
+  // marker, so it differs from the same content with a trailing newline. `ignore_missing_final_newline`
+  // suppresses the marker (the last line is processed like any other), equating the two forms. The
+  // zero-length-input guard above still fires on the real `got_nl`, so "" is never equated with "\n".
+  if (!got_nl && !options.ignore_missing_final_newline) {
     if (!result.empty()) {
       result.pop_back();
     }

@@ -37,6 +37,7 @@ def diff_test(
         ignore_matching_chunks = True,
         ignore_matching_lines = "",
         ignore_trailing_space = False,
+        ignore_missing_final_newline = False,
         minimal = False,
         regex_replace_lhs = "",
         regex_replace_rhs = "",
@@ -66,6 +67,7 @@ def diff_test(
         ignore_matching_chunks:   Whether `ignore_matching_lines` applies to chunks or single lines.
         ignore_matching_lines:    Ignore lines that match this regexp (https://github.com/google/re2/wiki/Syntax).
         ignore_trailing_space:    Ignore traling whitespace changes.
+        ignore_missing_final_newline: Ignore a missing final newline (a file with and one without a trailing newline compare equal).
         minimal:                  Guarantee minimal 'myers' diffs (disables its cost cap).
         regex_replace_lhs:        Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.
         regex_replace_rhs:        Regular expression and replacement for right side: <sep><regex><sep><replace><sep>.
@@ -98,6 +100,7 @@ def diff_test(
         ignore_matching_lines = ignore_matching_lines,
         ignore_matching_chunks = ignore_matching_chunks,
         ignore_trailing_space = ignore_trailing_space,
+        ignore_missing_final_newline = ignore_missing_final_newline,
         minimal = minimal,
         regex_replace_lhs = regex_replace_lhs,
         regex_replace_rhs = regex_replace_rhs,
@@ -156,6 +159,7 @@ if ! {diff_tool} "${{OLD}}" "${{NEW}}" \
     --ignore_matching_chunks={ignore_matching_chunks} \
     --ignore_matching_lines={ignore_matching_lines} \
     --ignore_trailing_space={ignore_trailing_space} \
+    --ignore_missing_final_newline={ignore_missing_final_newline} \
     --regex_replace_lhs={regex_replace_lhs} \
     --regex_replace_rhs={regex_replace_rhs} \
     --show_chunk_headers={show_chunk_headers} \
@@ -183,6 +187,7 @@ fi
                 ignore_matching_chunks = bool_arg(ctx.attr.ignore_matching_chunks),
                 ignore_matching_lines = shell.quote(ctx.attr.ignore_matching_lines),
                 ignore_trailing_space = bool_arg(ctx.attr.ignore_trailing_space),
+                ignore_missing_final_newline = bool_arg(ctx.attr.ignore_missing_final_newline),
                 minimal = bool_arg(ctx.attr.minimal),
                 regex_replace_lhs = shell.quote(ctx.attr.regex_replace_lhs),
                 regex_replace_rhs = shell.quote(ctx.attr.regex_replace_rhs),
@@ -270,6 +275,10 @@ _diff_test = rule(
         ),
         "ignore_trailing_space": attr.bool(
             doc = "Ignore traling whitespace changes.",
+            default = False,
+        ),
+        "ignore_missing_final_newline": attr.bool(
+            doc = "Ignore a missing final newline (a file with and one without a trailing newline compare equal).",
             default = False,
         ),
         "is_windows": attr.bool(
