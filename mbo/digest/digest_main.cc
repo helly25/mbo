@@ -14,6 +14,8 @@
 // limitations under the License.
 
 #include <array>
+#include <cctype>
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -64,6 +66,39 @@ ABSL_FLAG(  //
     reverse,
     false,
     "Print '<file>  <hash>' instead of the checksum-style '<hash>  <file>'.");
+ABSL_FLAG(  //
+    bool,
+    check,
+    false,
+    "Verify instead of compute: the file arguments are checksum files ('<hash>  <file>' lines as produced by this "
+    "tool or by sha256sum/shasum; '*' binary markers and uppercase hex are accepted). Each listed file is "
+    "re-digested with the selected --algorithm and reported as OK / FAILED. See also --quiet, --status, "
+    "--ignore_missing, and --strict.");
+ABSL_FLAG(  //
+    bool,
+    c,
+    false,
+    "Short alias for --check.");
+ABSL_FLAG(  //
+    bool,
+    quiet,
+    false,
+    "With --check: do not print OK for each successfully verified file.");
+ABSL_FLAG(  //
+    bool,
+    status,
+    false,
+    "With --check: print nothing; the exit code carries the result.");
+ABSL_FLAG(  //
+    bool,
+    ignore_missing,
+    false,
+    "With --check: silently skip listed files that cannot be read (still fails if no file was verified).");
+ABSL_FLAG(  //
+    bool,
+    strict,
+    false,
+    "With --check: exit non-zero for improperly formatted checksum lines.");
 
 // NOLINTEND(*avoid-non-const-global-variables,*abseil-no-namespace)
 
@@ -92,32 +127,38 @@ using DigestFunc = std::string (*)(std::istream&);
 struct NamedAlgorithm {
   std::string_view name;
   DigestFunc func;
+  std::size_t hex_length;  // Expected hex-digest length for --check parsing.
 };
 
+template<typename Algo>
+constexpr NamedAlgorithm Entry(std::string_view name) {
+  return {.name = name, .func = &HexDigestStream<Algo>, .hex_length = 2 * Algo::kDigestSize};
+}
+
 constexpr auto kAlgorithms = std::to_array<NamedAlgorithm>({
-    {.name = "md5", .func = &HexDigestStream<md5::Algorithm>},
-    {.name = "sha1", .func = &HexDigestStream<sha1::Algorithm>},
-    {.name = "sha224", .func = &HexDigestStream<sha224::Algorithm>},
-    {.name = "sha256", .func = &HexDigestStream<sha256::Algorithm>},
-    {.name = "sha384", .func = &HexDigestStream<sha384::Algorithm>},
-    {.name = "sha512", .func = &HexDigestStream<sha512::Algorithm>},
-    {.name = "sha512-224", .func = &HexDigestStream<sha512_224::Algorithm>},
-    {.name = "sha512-256", .func = &HexDigestStream<sha512_256::Algorithm>},
-    {.name = "sha3-224", .func = &HexDigestStream<sha3_224::Algorithm>},
-    {.name = "sha3-256", .func = &HexDigestStream<sha3_256::Algorithm>},
-    {.name = "sha3-384", .func = &HexDigestStream<sha3_384::Algorithm>},
-    {.name = "sha3-512", .func = &HexDigestStream<sha3_512::Algorithm>},
-    {.name = "shake128", .func = &HexDigestStream<shake128::Algorithm<kShakeOutputSize>>},
-    {.name = "shake256", .func = &HexDigestStream<shake256::Algorithm<kShakeOutputSize>>},
-    {.name = "blake2b", .func = &HexDigestStream<blake2b::Algorithm>},
-    {.name = "blake2b-256", .func = &HexDigestStream<blake2b_256::Algorithm>},
-    {.name = "blake3", .func = &HexDigestStream<blake3::Algorithm>},
+    Entry<md5::Algorithm>("md5"),
+    Entry<sha1::Algorithm>("sha1"),
+    Entry<sha224::Algorithm>("sha224"),
+    Entry<sha256::Algorithm>("sha256"),
+    Entry<sha384::Algorithm>("sha384"),
+    Entry<sha512::Algorithm>("sha512"),
+    Entry<sha512_224::Algorithm>("sha512-224"),
+    Entry<sha512_256::Algorithm>("sha512-256"),
+    Entry<sha3_224::Algorithm>("sha3-224"),
+    Entry<sha3_256::Algorithm>("sha3-256"),
+    Entry<sha3_384::Algorithm>("sha3-384"),
+    Entry<sha3_512::Algorithm>("sha3-512"),
+    Entry<shake128::Algorithm<kShakeOutputSize>>("shake128"),
+    Entry<shake256::Algorithm<kShakeOutputSize>>("shake256"),
+    Entry<blake2b::Algorithm>("blake2b"),
+    Entry<blake2b_256::Algorithm>("blake2b-256"),
+    Entry<blake3::Algorithm>("blake3"),
 });
 
-DigestFunc FindAlgorithm(std::string_view name) {
+const NamedAlgorithm* FindAlgorithm(std::string_view name) {
   for (const NamedAlgorithm& algorithm : kAlgorithms) {
     if (algorithm.name == name) {
-      return algorithm.func;
+      return &algorithm;
     }
   }
   return nullptr;
@@ -129,6 +170,118 @@ void Print(std::string_view hex, std::string_view file_name) {
   } else {
     std::cout << hex << "  " << file_name << "\n";
   }
+}
+
+// One checksum line: "<hex><space><space-or-*><filename>". Returns false for
+// improperly formatted lines (wrong hex length for the algorithm, non-hex
+// characters, missing separator).
+// NOLINTNEXTLINE(*-easily-swappable-parameters): out-params in output order.
+bool ParseChecksumLine(
+    std::string_view line,
+    std::size_t hex_length,
+    std::string_view& hex,
+    std::string_view& file_name) {
+  if (line.size() < hex_length + 3 || line[hex_length] != ' '
+      || (line[hex_length + 1] != ' ' && line[hex_length + 1] != '*')) {
+    return false;
+  }
+  hex = line.substr(0, hex_length);
+  for (const char chr : hex) {
+    if (std::isxdigit(static_cast<unsigned char>(chr)) == 0) {
+      return false;
+    }
+  }
+  file_name = line.substr(hex_length + 2);
+  return !file_name.empty();
+}
+
+std::string ToLowerHex(std::string_view hex) {
+  std::string lower(hex);
+  for (char& chr : lower) {
+    chr = static_cast<char>(std::tolower(static_cast<unsigned char>(chr)));
+  }
+  return lower;
+}
+
+struct CheckStats {
+  std::size_t verified = 0;
+  std::size_t mismatched = 0;
+  std::size_t unreadable = 0;
+  std::size_t malformed = 0;
+};
+
+// Verifies all lines of one checksum stream (see the --check flag).
+void CheckStream(const NamedAlgorithm& algorithm, std::istream& sums, CheckStats& stats) {
+  const bool quiet = absl::GetFlag(FLAGS_quiet) || absl::GetFlag(FLAGS_status);
+  const bool silent = absl::GetFlag(FLAGS_status);
+  const bool ignore_missing = absl::GetFlag(FLAGS_ignore_missing);
+  std::string line;
+  while (std::getline(sums, line)) {
+    if (line.empty()) {
+      continue;
+    }
+    std::string_view hex;
+    std::string_view file_name;
+    if (!ParseChecksumLine(line, algorithm.hex_length, hex, file_name)) {
+      ++stats.malformed;
+      continue;
+    }
+    std::ifstream input{fs::path(file_name), std::ios::binary};
+    if (!input) {
+      if (!ignore_missing) {
+        ++stats.unreadable;
+        if (!silent) {
+          std::cout << file_name << ": FAILED open or read\n";
+        }
+      }
+      continue;
+    }
+    if (algorithm.func(input) == ToLowerHex(hex)) {
+      ++stats.verified;
+      if (!quiet) {
+        std::cout << file_name << ": OK\n";
+      }
+    } else {
+      ++stats.mismatched;
+      if (!silent) {
+        std::cout << file_name << ": FAILED\n";
+      }
+    }
+  }
+}
+
+// Verifies all checksum files ('-' = stdin); returns the process exit code.
+int RunCheck(const NamedAlgorithm& algorithm, const std::vector<std::string_view>& files) {
+  CheckStats stats;
+  for (const std::string_view file_name : files) {
+    if (file_name == "-") {
+      CheckStream(algorithm, std::cin, stats);
+      continue;
+    }
+    std::ifstream sums{fs::path(file_name), std::ios::binary};
+    if (!sums) {
+      std::cerr << file_name << ": Cannot read checksum file.\n";
+      return 1;
+    }
+    CheckStream(algorithm, sums, stats);
+  }
+  const bool silent = absl::GetFlag(FLAGS_status);
+  auto warn = [&](std::size_t count, std::string_view what) {
+    if (count > 0 && !silent) {
+      std::cerr << "digest: WARNING: " << count << " " << what << "\n";
+    }
+  };
+  warn(stats.malformed, "line(s) are improperly formatted");
+  warn(stats.unreadable, "listed file(s) could not be read");
+  warn(stats.mismatched, "computed checksum(s) did NOT match");
+  if (absl::GetFlag(FLAGS_ignore_missing) && stats.verified == 0 && stats.mismatched == 0) {
+    if (!silent) {
+      std::cerr << "digest: no file was verified\n";
+    }
+    return 1;
+  }
+  const bool strict_failure = absl::GetFlag(FLAGS_strict) && stats.malformed > 0;
+  return (stats.mismatched > 0 || stats.unreadable > 0 || strict_failure) ? 1 : 0;
 }
 
 // Digests all `files` ('-' = stdin); returns the process exit code. Errors
@@ -172,6 +325,10 @@ int main(int argc, char* argv[]) {
     with '--algorithm' or its short alias '-a' (default sha256). '-' reads
     standard input. Directories are errors unless '--ignore_directories'
     (short: '-d') silently skips them.
+
+    With '--check' (short: '-c') the arguments are checksum files instead and
+    every listed file is verified ('OK' / 'FAILED'); the format matches
+    sha256sum/shasum, so sum files are interchangeable in both directions.
   )"));
   absl::InitializeLog();
   const std::vector<char*> args = absl::ParseCommandLine(argc, argv);
@@ -179,8 +336,8 @@ int main(int argc, char* argv[]) {
   if (algorithm_name.empty()) {
     algorithm_name = absl::GetFlag(FLAGS_algorithm);
   }
-  const mbo::digest::DigestFunc digest = mbo::digest::FindAlgorithm(algorithm_name);
-  if (digest == nullptr) {
+  const mbo::digest::NamedAlgorithm* algorithm = mbo::digest::FindAlgorithm(algorithm_name);
+  if (algorithm == nullptr) {
     std::cerr << "Unknown --algorithm '" << algorithm_name
               << "'. Use: " << std::filesystem::path(args[0]).filename().string() << " --help\n";
     return 1;
@@ -191,5 +348,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   const std::vector<std::string_view> files(args.begin() + 1, args.end());
-  return mbo::digest::Run(digest, files);
+  if (absl::GetFlag(FLAGS_check) || absl::GetFlag(FLAGS_c)) {
+    return mbo::digest::RunCheck(*algorithm, files);
+  }
+  return mbo::digest::Run(algorithm->func, files);
 }

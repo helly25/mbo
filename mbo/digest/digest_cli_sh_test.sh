@@ -16,8 +16,10 @@
 # limitations under the License.
 
 # Tests the `digest` binary's CLI surface: algorithm selection, the
-# checksum-style output format, --reverse, stdin, multi-file processing and
-# the error paths (directory, missing file, unknown algorithm).
+# checksum-style output format, --reverse, stdin, multi-file processing,
+# --check verification (roundtrip, coreutils interop format, corruption,
+# quiet/status/strict/ignore_missing) and the error paths (directory,
+# missing file, unknown algorithm).
 
 # shellcheck disable=SC2317 # Functions are called by bashtest
 
@@ -131,6 +133,86 @@ function test::ignore_directories_skips_silently() {
     || die "Expected exit code 0 with -d."
   [[ -s "${TEST_TMPDIR}/skip_short.err" ]] && die "Expected no error output with -d."
   [[ ${out} == "${SHA256_ABC}  ${ABC}" ]] || die "Expected only the regular file to be hashed with -d."
+}
+
+function test::check_roundtrip_ok() {
+  local dir="${TEST_TMPDIR}/roundtrip"
+  mkdir -p "${dir}"
+  cd "${dir}" || die "cd failed."
+  printf 'abc' >f1.txt
+  printf 'hello' >f2.txt
+  "${DIGEST}" -a blake3 f1.txt f2.txt >sums.txt || die "digest failed."
+  local out
+  out="$("${DIGEST}" -a blake3 --check sums.txt)" || die "Expected exit 0 for a clean roundtrip."
+  [[ ${out} == $'f1.txt: OK\nf2.txt: OK' ]] || die "Wrong check output: '${out}'"
+  out="$("${DIGEST}" -a blake3 -c - <sums.txt)" || die "Expected exit 0 for stdin check."
+  [[ ${out} == $'f1.txt: OK\nf2.txt: OK' ]] || die "Wrong stdin check output: '${out}'"
+}
+
+function test::check_accepts_coreutils_format() {
+  local dir="${TEST_TMPDIR}/coreutils"
+  mkdir -p "${dir}"
+  cd "${dir}" || die "cd failed."
+  printf 'abc' >abc.txt
+  local upper
+  upper="$(tr '[:lower:]' '[:upper:]' <<<"${SHA256_ABC}")"
+  printf '%s *abc.txt\n' "${upper}" >sums.txt
+  local out
+  out="$("${DIGEST}" --check sums.txt)" || die "Expected exit 0 for '*' marker + uppercase hex."
+  [[ ${out} == "abc.txt: OK" ]] || die "Wrong output: '${out}'"
+}
+
+function test::check_detects_corruption() {
+  local dir="${TEST_TMPDIR}/corrupt"
+  mkdir -p "${dir}"
+  cd "${dir}" || die "cd failed."
+  printf 'abc' >f.txt
+  "${DIGEST}" f.txt >sums.txt || die "digest failed."
+  printf 'CORRUPT' >f.txt
+  local out
+  if out="$("${DIGEST}" --check sums.txt 2>"${TEST_TMPDIR}/warn.err")"; then
+    die "Expected exit 1 for a corrupted file."
+  fi
+  [[ ${out} == "f.txt: FAILED" ]] || die "Wrong output: '${out}'"
+  grep -q "did NOT match" "${TEST_TMPDIR}/warn.err" || die "Expected a NOT-match warning."
+  out="$("${DIGEST}" --check --quiet sums.txt 2>/dev/null)" && die "Expected exit 1 with --quiet."
+  [[ ${out} == "f.txt: FAILED" ]] || die "--quiet must still print FAILED: '${out}'"
+  out="$("${DIGEST}" --check --status sums.txt 2>&1)" && die "Expected exit 1 with --status."
+  [[ -z ${out} ]] || die "--status must print nothing: '${out}'"
+}
+
+function test::check_missing_and_ignore_missing() {
+  local dir="${TEST_TMPDIR}/missing"
+  mkdir -p "${dir}"
+  cd "${dir}" || die "cd failed."
+  printf 'abc' >present.txt
+  "${DIGEST}" present.txt >sums.txt || die "digest failed."
+  printf '%s  gone.txt\n' "${SHA256_ABC}" >>sums.txt
+  local out
+  if out="$("${DIGEST}" --check --quiet sums.txt 2>/dev/null)"; then
+    die "Expected exit 1 for an unreadable listed file."
+  fi
+  [[ ${out} == "gone.txt: FAILED open or read" ]] || die "Wrong output: '${out}'"
+  "${DIGEST}" --check --quiet --ignore_missing sums.txt >/dev/null || die "Expected exit 0 with --ignore_missing."
+  printf '%s  gone.txt\n' "${SHA256_ABC}" >only_missing.txt
+  if "${DIGEST}" --check --quiet --ignore_missing only_missing.txt >/dev/null 2>"${TEST_TMPDIR}/none.err"; then
+    die "Expected exit 1 when no file was verified."
+  fi
+  grep -q "no file was verified" "${TEST_TMPDIR}/none.err" || die "Expected a no-file-verified message."
+}
+
+function test::check_strict_rejects_malformed() {
+  local dir="${TEST_TMPDIR}/strict"
+  mkdir -p "${dir}"
+  cd "${dir}" || die "cd failed."
+  printf 'abc' >f.txt
+  "${DIGEST}" f.txt >sums.txt || die "digest failed."
+  printf 'this is not a checksum line\n' >>sums.txt
+  "${DIGEST}" --check --quiet sums.txt 2>"${TEST_TMPDIR}/fmt.err" || die "Malformed lines alone must not fail without --strict."
+  grep -q "improperly formatted" "${TEST_TMPDIR}/fmt.err" || die "Expected a format warning."
+  if "${DIGEST}" --check --quiet --strict sums.txt >/dev/null 2>&1; then
+    die "Expected exit 1 with --strict."
+  fi
 }
 
 function test::missing_file_is_an_error() {
