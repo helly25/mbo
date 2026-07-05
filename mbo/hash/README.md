@@ -75,15 +75,16 @@ numbers are directly comparable.
 
 ### Results
 
-| Algorithm            | Bits | Role in mbo/hash                 | SMHasher3 result | Failures                                                                                                                                                                      |
-| -------------------- | ---: | -------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mumbo`              |   64 | default (64/32/mangle/streaming) | PASS - 188 / 188 | none                                                                                                                                                                          |
-| `rapidhash`          |   64 | extra (`hash_extra_cc`)          | PASS - 188 / 188 | none                                                                                                                                                                          |
-| `xxh3`               |   64 | extra (`hash_extra_cc`)          | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]                                                                       |
-| `xxh64`              |   64 | extra (`hash_extra_cc`)          | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                            |
-| `mumbo`              |  128 | default (128)                    | PASS - 188 / 188 | none                                                                                                                                                                          |
-| `xxh3`               |  128 | extra (`hash_extra_cc`)          | FAIL - 162 / 188 | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8] |
-| Reading the results: |
+| Algorithm   | Bits | Role in mbo/hash                 | SMHasher3 result | Failures                                                                                                                                                                      |
+| ----------- | ---: | -------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mumbo`     |   64 | default (64/32/mangle/streaming) | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `rapidhash` |   64 | extra (`hash_extra_cc`)          | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `xxh3`      |   64 | extra (`hash_extra_cc`)          | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]                                                                       |
+| `xxh64`     |   64 | extra (`hash_extra_cc`)          | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                            |
+| `mumbo`     |  128 | default (128)                    | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `xxh3`      |  128 | extra (`hash_extra_cc`)          | FAIL - 162 / 188 | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8] |
+
+Reading the results:
 
 - SMHasher3 is substantially stricter than the original SMHasher: `xxh64` and
   `xxh3` pass the original battery, and most of their failures above are in

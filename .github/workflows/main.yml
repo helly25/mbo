@@ -60,6 +60,7 @@ jobs:
         if: always()
 
   benchmark:
+    needs: [trunk, pre-commit]
     # Informational only (hence continue-on-error): shared runners are noisy, so
     # these numbers are for architecture/compiler shape comparisons (x86_64 gcc
     # vs arm64 Apple clang) and gross regressions, not precise gating. Results
@@ -86,7 +87,7 @@ jobs:
           path: hash_benchmark.json
 
   test-gcc:
-    needs: pre-commit
+    needs: [trunk, pre-commit]
     secrets: inherit
     strategy:
       matrix:
@@ -110,7 +111,7 @@ jobs:
       bazel_config: ${{ matrix.bazel_config }}
 
   test-bcr:
-    needs: [pre-commit, test-gcc]
+    needs: [trunk, pre-commit, test-gcc]
     secrets: inherit
     strategy:
       matrix:
@@ -144,7 +145,7 @@ jobs:
       bazel_version: ${{ matrix.bazel_version }}
 
   test-clang:
-    needs: [pre-commit, test-gcc, test-bcr]
+    needs: [trunk, pre-commit, test-gcc, test-bcr]
     secrets: inherit
     strategy:
       matrix:
