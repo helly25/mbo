@@ -34,14 +34,10 @@ cc_library(
     srcs = [
         "hash_fnv1a.h",
         "hash_mangle.h",
-        "hash_mh.h",
-        "hash_mh2.h",
+        "hash_mumbo.h",
         "hash_murmur3.h",
-        "hash_rapidhash.h",
         "hash_simple.h",
         "hash_siphash.h",
-        "hash_xxh3.h",
-        "hash_xxh64.h",
     ],
     hdrs = ["hash.h"],
     visibility = ["//visibility:public"],
@@ -49,10 +45,31 @@ cc_library(
 )
 
 cc_library(
+    name = "hash_extra_cc",
+    srcs = [
+        "hash_rapidhash.h",
+        "hash_xxh3.h",
+        "hash_xxh64.h",
+    ],
+    hdrs = ["hash_extra.h"],
+    # NOTICE-bearing transcriptions (rapidhash MIT, xxHash BSD-2): kept out of
+    # the default hash_cc so distributions that do not link this target carry
+    # no third-party notice obligations (see NOTICE and README.md).
+    visibility = ["//visibility:public"],
+    deps = [
+        ":hash_cc",
+        ":hash_internal_util",
+    ],
+)
+
+cc_library(
     name = "hash_test_util",
     testonly = True,
     hdrs = ["hash_test_util.h"],
-    deps = [":hash_cc"],
+    deps = [
+        ":hash_cc",
+        ":hash_extra_cc",
+    ],
 )
 
 cc_test(

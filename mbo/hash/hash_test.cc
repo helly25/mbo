@@ -271,10 +271,10 @@ TYPED_TEST(HashTest, StreamingMatchesOneShot) {
 
 // Streaming support is intentional per algorithm: canonical forms exist for
 // xxh64 and siphash, mh defines its own; rapidhash has no canonical streaming.
-static_assert(std::same_as<DefaultHashAlgorithm, rapidhash::Algorithm>);
-static_assert(std::same_as<Default128HashAlgorithm, xxh3::Algorithm>);
+static_assert(std::same_as<DefaultHashAlgorithm, mumbo::Algorithm>);
+static_assert(std::same_as<Default128HashAlgorithm, mumbo::Algorithm>);
 
-static_assert(HasStreaming<mh::Algorithm>);
+static_assert(HasStreaming<mumbo::Algorithm>);
 static_assert(HasStreaming<xxh64::Algorithm>);
 static_assert(HasStreaming<siphash::Algorithm>);
 static_assert(!HasStreaming<rapidhash::Algorithm>);
@@ -282,12 +282,12 @@ static_assert(!HasStreaming<fnv1a::Algorithm> && !HasStreaming<simple::Algorithm
 static_assert(!HasStreaming<xxh3::Algorithm> && !HasStreaming<murmur3::Algorithm>);
 
 TEST(StreamerTest, NonDestructiveFinalizeAndConstexpr) {
-  Streamer<mh::Algorithm> stream;
+  Streamer<mumbo::Algorithm> stream;
   stream.Update("part1-");
   const uint64_t partial = stream.Finalize();
-  EXPECT_EQ(partial, mh::GetHash64("part1-"));
+  EXPECT_EQ(partial, mumbo::GetHash64("part1-"));
   stream.Update("part2");  // Continue after peeking.
-  EXPECT_EQ(stream.Finalize(), mh::GetHash64("part1-part2"));
+  EXPECT_EQ(stream.Finalize(), mumbo::GetHash64("part1-part2"));
   // Fully constexpr streaming.
   constexpr uint64_t kStreamed = Streamer<siphash::Algorithm>(7).Update("const").Update("expr").Finalize();
   static_assert(kStreamed == siphash::Algorithm::GetHash64("constexpr", 7));
@@ -309,11 +309,13 @@ TYPED_TEST(HashTest, Hash128) {
   }
 }
 
-// mh-specific: above the small-input cutoff the 64-bit variant folds the 128-bit state.
-TEST(MhHashTest, Hash64FoldsHash128AboveCutoff) {
-  constexpr std::string_view kLong = "this input is longer than the small-input cutoff.";
-  static_assert(kLong.size() > mh::kSmallInputCutoff);
-  EXPECT_EQ(mh::GetHash64(kLong, kSeed), hash_internal::Hash128To64(mh::GetHash128(kLong, kSeed)));
+// mumbo-specific: the 64-bit form and the 128-bit lanes are deliberately
+// independent chains - none is a fold or truncation of another.
+TEST(MumboHashTest, Hash64IsNotAFoldOfHash128) {
+  constexpr std::string_view kLong = "this input is longer than the small-key cutoff, well past it.";
+  const Hash128 hash128 = mumbo::GetHash128(kLong, kSeed);
+  EXPECT_NE(mumbo::GetHash64(kLong, kSeed), hash_internal::Hash128To64(hash128));
+  EXPECT_NE(mumbo::GetHash64(kLong, kSeed), hash128.h1);
 }
 
 // murmur3-specific: the 64-bit variant is the canonical `h1` truncation.
@@ -642,19 +644,19 @@ TEST(HashMangleTest, GetHashAppliesMangle) {
 // Fake algorithms exercising the Hasher fallback synthesis.
 struct Fake64Only {
   static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed) noexcept {
-    return mh::GetHash64(data, seed) ^ 0xABCDEFULL;
+    return mumbo::GetHash64(data, seed) ^ 0xABCDEFULL;
   }
 };
 
 struct Fake128Only {
   static constexpr Hash128 GetHash128(std::string_view data, uint64_t seed) noexcept {
-    return mh::GetHash128(data, seed);
+    return mumbo::GetHash128(data, seed);
   }
 };
 
 struct FakeWith32 {
   static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed) noexcept {
-    return mh::GetHash64(data, seed);
+    return mumbo::GetHash64(data, seed);
   }
 
   static constexpr uint32_t GetHash32(std::string_view /*data*/, uint64_t /*seed*/) noexcept {
@@ -663,19 +665,19 @@ struct FakeWith32 {
 };
 
 // Concept detection over the public algorithm structs and the fakes.
-static_assert(HasGetHash64<mh::Algorithm> && HasGetHash128<mh::Algorithm>);
+static_assert(HasGetHash64<mumbo::Algorithm> && HasGetHash128<mumbo::Algorithm>);
 static_assert(HasGetHash64<simple::Algorithm> && !HasGetHash128<simple::Algorithm>);
 static_assert(HasGetHash64<fnv1a::Algorithm> && !HasGetHash128<fnv1a::Algorithm>);
 static_assert(HasGetHash64<xxh64::Algorithm> && !HasGetHash128<xxh64::Algorithm>);
 static_assert(HasGetHash64<murmur3::Algorithm> && HasGetHash128<murmur3::Algorithm>);
 static_assert(!HasGetHash64<Fake128Only> && HasGetHash128<Fake128Only>);
-static_assert(HasGetHash32<FakeWith32> && !HasGetHash32<mh::Algorithm>);
+static_assert(HasGetHash32<FakeWith32> && !HasGetHash32<mumbo::Algorithm>);
 static_assert(IsHashAlgorithm<Fake64Only> && IsHashAlgorithm<Fake128Only>);
 static_assert(!IsHashAlgorithm<int> && !IsHashAlgorithm<Hash128>);
 
 TEST(HasherTest, NativeFunctionsPassThrough) {
-  EXPECT_EQ(Hasher<mh::Algorithm>::GetHash64("pass", kSeed), mh::GetHash64("pass", kSeed));
-  EXPECT_EQ(Hasher<mh::Algorithm>::GetHash128("pass", kSeed), mh::GetHash128("pass", kSeed));
+  EXPECT_EQ(Hasher<mumbo::Algorithm>::GetHash64("pass", kSeed), mumbo::GetHash64("pass", kSeed));
+  EXPECT_EQ(Hasher<mumbo::Algorithm>::GetHash128("pass", kSeed), mumbo::GetHash128("pass", kSeed));
   EXPECT_EQ(Hasher<murmur3::Algorithm>::GetHash64("pass", kSeed), murmur3::GetHash64("pass", kSeed));
 }
 
@@ -715,7 +717,7 @@ TEST(HasherTest, GetHash32NativeAndFallback) {
   // ...everything else XOR-folds the 64-bit hash.
   constexpr uint32_t kFolded = Hasher<rapidhash::Algorithm>::GetHash32("fold", kSeed);  // constexpr-safe
   EXPECT_EQ(kFolded, Hash64To32(rapidhash::GetHash64("fold", kSeed)));
-  EXPECT_EQ(GetHash32("fold", kSeed), kFolded);  // top-level entry point, default algorithm
+  EXPECT_EQ(GetHash32("fold", kSeed), Hash64To32(GetHash64("fold", kSeed)));  // top-level, default algorithm
   EXPECT_EQ(GetHash32<xxh64::Algorithm>("fold", kSeed), Hash64To32(xxh64::GetHash64("fold", kSeed)));
 }
 
@@ -724,14 +726,14 @@ TEST(HasherTest, GetHashIsMangled64) {
 }
 
 TEST(HasherTest, TopLevelFunctionsUseDefaultAlgorithm) {
-  // The bare entry points equal their default algorithms (and stay constexpr):
-  // rapidhash for 64-bit/mangled, xxh3 (128-bit native) for GetHash128.
+  // The bare entry points equal their default algorithm (and stay constexpr):
+  // mumbo for 64-bit, 128-bit, and the mangled GetHash.
   constexpr uint64_t kHash64 = GetHash64("top");
   EXPECT_EQ(kHash64, (DefaultHasher::GetHash64("top")));
-  EXPECT_EQ(kHash64, rapidhash::GetHash64("top", kDefaultSeed));
+  EXPECT_EQ(kHash64, mumbo::GetHash64("top", kDefaultSeed));
   constexpr Hash128 kHash128 = GetHash128("top");
   EXPECT_EQ(kHash128, (Hasher<Default128HashAlgorithm>::GetHash128("top")));
-  EXPECT_EQ(kHash128, xxh3::GetHash128("top", kDefaultSeed));
+  EXPECT_EQ(kHash128, mumbo::GetHash128("top", kDefaultSeed));
   EXPECT_EQ(GetHash("top"), HashMangle(kHash64));
 }
 

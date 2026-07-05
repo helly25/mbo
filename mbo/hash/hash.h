@@ -24,21 +24,17 @@
 #include "mbo/hash/hash_fnv1a.h"          // IWYU pragma: export
 #include "mbo/hash/hash_internal_util.h"  // IWYU pragma: export
 #include "mbo/hash/hash_mangle.h"         // IWYU pragma: export
-#include "mbo/hash/hash_mh.h"             // IWYU pragma: export
-#include "mbo/hash/hash_mh2.h"            // IWYU pragma: export
+#include "mbo/hash/hash_mumbo.h"          // IWYU pragma: export
 #include "mbo/hash/hash_murmur3.h"        // IWYU pragma: export
-#include "mbo/hash/hash_rapidhash.h"      // IWYU pragma: export
 #include "mbo/hash/hash_simple.h"         // IWYU pragma: export
 #include "mbo/hash/hash_siphash.h"        // IWYU pragma: export
 #include "mbo/hash/hash_types.h"          // IWYU pragma: export
-#include "mbo/hash/hash_xxh3.h"           // IWYU pragma: export
-#include "mbo/hash/hash_xxh64.h"          // IWYU pragma: export
 
 namespace mbo::hash {
 
 // Every algorithm is represented by a struct with static member functions
 // `GetHash64` and/or `GetHash128` taking `(std::string_view, uint64_t seed)`
-// (e.g. `mh::Algorithm`, `xxh64::Algorithm`, `murmur3::Algorithm`). These concepts detect what
+// (e.g. `mumbo::Algorithm`, `murmur3::Algorithm`). These concepts detect what
 // an algorithm provides; `Hasher` below completes any partial algorithm.
 
 template<typename Algo>
@@ -141,7 +137,8 @@ struct Hasher {
 //
 // with the contract that any chunking of the input produces exactly the
 // one-shot `GetHash64` value. Not every algorithm can stream faithfully
-// (e.g. rapidhash has no canonical streaming form) -- absence is honest.
+// (e.g. rapidhash in hash_extra.h has no canonical streaming form) -- absence
+// is honest.
 template<typename Algo>
 concept HasStreaming = requires(typename Algo::StreamState state, std::string_view data, uint64_t seed) {
   { Algo::StreamInit(seed) } noexcept -> std::same_as<typename Algo::StreamState>;
@@ -151,7 +148,7 @@ concept HasStreaming = requires(typename Algo::StreamState state, std::string_vi
 
 // Object-style convenience wrapper over an algorithm's streaming interface:
 //
-//   mbo::hash::Streamer<mh::Algorithm> stream;   // or Streamer(seed)
+//   mbo::hash::Streamer<mumbo::Algorithm> stream;   // or Streamer(seed)
 //   stream.Update(part1).Update(part2);
 //   uint64_t hash = stream.Finalize();           // == GetHash64(part1 + part2)
 template<HasStreaming Algo>
@@ -177,20 +174,20 @@ class Streamer {
 
 // The selected default algorithms behind the `mbo::hash` entry points.
 //
-// 64-bit (and the mangled `GetHash`): rapidhash - SMHasher3-clean, canonical,
-// and the best mixed-length latency in this library's benchmarks. 128-bit:
-// xxh3 - SMHasher3-clean, canonical, and 128-bit *native* (rapidhash has no
-// 128-bit form; defaulting `GetHash128` to a synthesized fallback would be a
-// silent quality downgrade). The in-house `mh` algorithm remains available as
-// `mh::Algorithm` (see README.md for why it is no longer the default).
-using DefaultHashAlgorithm = rapidhash::Algorithm;
-using Default128HashAlgorithm = xxh3::Algorithm;
+// The default algorithm for 64-bit, 128-bit, the mangled `GetHash`, and
+// streaming: the in-house `mumbo` - SMHasher3-clean in BOTH widths (the only
+// clean native 128 measured on our rig), best mixed-length latency, and free
+// of third-party license notices (the NOTICE-bearing transcriptions rapidhash
+// and xxh3/xxh64 live in hash_extra.h / //mbo/hash:hash_extra_cc; see
+// README.md for the quality and performance comparison).
+using DefaultHashAlgorithm = mumbo::Algorithm;
+using Default128HashAlgorithm = mumbo::Algorithm;
 using DefaultHasher = Hasher<DefaultHashAlgorithm>;
 
 // A fast, constexpr-safe, non-cryptographic 64-bit hash.
 //
 // The algorithm defaults to `DefaultHashAlgorithm` and can be replaced with any
-// `IsHashAlgorithm` struct, e.g. `GetHash64<xxh64::Algorithm>(data)` -- including
+// `IsHashAlgorithm` struct, e.g. `GetHash64<murmur3::Algorithm>(data)` -- including
 // 128-bit-only algorithms, for which the fold fallback applies (see `Hasher`).
 //
 // Stability: values are not guaranteed stable across library versions, are not
