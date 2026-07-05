@@ -133,6 +133,9 @@ struct DiffOptions final {
   // work with an internal cost cap instead and `kDirect` needs no bound.
   std::size_t max_diff_chunk_length = 1'337'000;  // NOLINT(*-magic-numbers)
 
+  // The `absl::FormatTime` pattern for each file's timestamp in the unified/context header.
+  // An empty string omits the timestamp entirely, producing a git-style header (`--- name`)
+  // whose output is reproducible across machines and time zones.
   std::string time_format = "%F %H:%M:%E3S %z";
 };
 

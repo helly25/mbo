@@ -57,7 +57,13 @@ std::string BaseDiff::FileHeader(const file::Artefact& info, const DiffOptions& 
     name = info.name;
     RE2::Consume(&name, options.strip_file_header_prefix);
   }
-  return absl::StrCat(info.name.empty() ? "-" : name, " ", absl::FormatTime(options.time_format, info.time, info.tz));
+  const std::string_view display = info.name.empty() ? "-" : name;
+  // An empty `time_format` omits the timestamp entirely, yielding a git-style header (`--- name`)
+  // whose output is reproducible across machines and time zones (no per-file mtime).
+  if (options.time_format.empty()) {
+    return std::string(display);
+  }
+  return absl::StrCat(display, " ", absl::FormatTime(options.time_format, info.time, info.tz));
 }
 
 std::string BaseDiff::SelectFileHeader(

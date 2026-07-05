@@ -319,6 +319,22 @@ TEST_F(DiffTest, Diff) {
   )txt"))));
 }
 
+TEST_F(DiffTest, EmptyTimeFormatOmitsHeaderTimestamp) {
+  // An empty `time_format` yields a git-style header (name only, no timestamp), so the output is
+  // reproducible regardless of the files' mtimes or the local time zone.
+  EXPECT_THAT(
+      Diff({ToLines("a1b"), "lhs"}, {ToLines("a2b"), "rhs"}, {.time_format = ""}),
+      IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(R"txt(
+    --- lhs
+    +++ rhs
+    @@ -1,3 +1,3 @@
+     a
+    -1
+    +2
+     b
+  )txt"))));
+}
+
 TEST_F(DiffTest, Multi1) {
   EXPECT_THAT(
       Diff(
