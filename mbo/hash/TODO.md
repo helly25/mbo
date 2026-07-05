@@ -7,14 +7,15 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
 
 ## Medium
 
-- [ ] **mh is WIP - harden, optimize, replace, or rename**: the remaining
-      SMHasher3 core-round failures (BIC / Sparse / Bitflip) require
-      strengthening the absorb round, i.e. trading some throughput; the
-      alternative is replacing the algorithm outright. Either way the `mh`
-      name may change. The seed families were addressed by seed finalization;
-      `rapidhash` is the default since then (see SMHASHER3.md). The native
-      128-bit variant additionally needs lane decorrelation (163/188; see
-      SMHASHER3.md's failure analysis).
+- [ ] **mh2 end-game decisions**: `mh2` (widening-multiply redesign) passes
+      SMHasher3 188/188 in both widths - the only clean native 128 we have
+      measured - and leads the mixed-length latency and bulk-throughput
+      benchmarks (see README.md). Open decisions: (a) keep or drop the
+      original `mh` (it loses everywhere except tiny-key one-shot
+      throughput and has streaming, which mh2 does not yet); (b) whether
+      `mh2` takes over the 64-bit and/or 128-bit defaults from
+      rapidhash/xxh3 (which would make the defaults NOTICE-free and reopen
+      the hash_extra split); (c) final name; (d) streaming for mh2.
 
 ## Hard / needs design
 

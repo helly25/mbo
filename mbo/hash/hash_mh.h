@@ -29,7 +29,7 @@
 
 // The `mbo::hash::mh` ("mbo hash") implementation -- this library's own
 // algorithm. No longer the default behind `mbo::hash::GetHash*` (see
-// SMHASHER3.md); fast in hot-loop throughput benchmarks, constexpr-safe, and
+// README.md's SMHasher3 section); fast in hot-loop throughput benchmarks, constexpr-safe, and
 // streaming-capable.
 //
 // WORK IN PROGRESS: `mh` is under active development. It may be made faster,
@@ -101,7 +101,7 @@ constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = kDefaultSeed)
   // Finalize the seed before it derives any lane: structured seeds (e.g.
   // seeds that mirror input blocks) must not correlate with the input.
   // SMHasher3's SeedBlockLen/SeedBlockOffset/SeedBIC families fail without
-  // this (see SMHASHER3.md).
+  // this (see README.md).
   seed = hash_internal::Fmix64(seed);
   uint64_t hash1 = seed;
   uint64_t hash2 = seed ^ 0xAA55AA55AA55AA55ULL;

@@ -35,6 +35,7 @@ cc_library(
         "hash_fnv1a.h",
         "hash_mangle.h",
         "hash_mh.h",
+        "hash_mh2.h",
         "hash_murmur3.h",
         "hash_rapidhash.h",
         "hash_simple.h",

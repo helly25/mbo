@@ -103,7 +103,7 @@ The C++ library is organized in functional groups each residing in their own dir
     - function `xxh3::GetHash64/GetHash128(std::string_view, seed)`: canonical XXH3 64- and 128-bit (modern xxHash generation, the fast file-checksum format; scalar; constexpr-safe).
     - function `murmur3::GetHash64/GetHash128(std::string_view, seed)`: canonical MurmurHash3 x64 128-bit (constexpr-safe; `GetHash64` is the customary `h1` truncation).
     - function `rapidhash::GetHash64(std::string_view, seed)`: canonical rapidhash V3 (wyhash family; best small-key latency; SMHasher3-clean; constexpr-safe). The default algorithm.
-    - function `mh::GetHash64/GetHash128(std::string_view, seed)`: this library's own algorithm (fast hot-loop throughput, streaming-capable; not SMHasher3-clean, see mbo/hash/SMHASHER3.md). **Work in progress**: may be optimized, strengthened, replaced, or renamed.
+    - function `mh::GetHash64/GetHash128(std::string_view, seed)`: this library's own algorithm (fast hot-loop throughput, streaming-capable; not SMHasher3-clean, see mbo/hash/README.md). **Work in progress**: may be optimized, strengthened, replaced, or renamed.
     - function `siphash::GetHash64(std::string_view, key0, key1)` / `siphash::SipHash<C, D>(...)`: canonical SipHash-2-4 (and -1-3 via `GetHash64Sip13`) - keyed, hash-flooding resistant; adversarial protection requires a secret key.
 - Json
   - `namespace mbo::json`

@@ -25,6 +25,7 @@
 #include "mbo/hash/hash_internal_util.h"  // IWYU pragma: export
 #include "mbo/hash/hash_mangle.h"         // IWYU pragma: export
 #include "mbo/hash/hash_mh.h"             // IWYU pragma: export
+#include "mbo/hash/hash_mh2.h"            // IWYU pragma: export
 #include "mbo/hash/hash_murmur3.h"        // IWYU pragma: export
 #include "mbo/hash/hash_rapidhash.h"      // IWYU pragma: export
 #include "mbo/hash/hash_simple.h"         // IWYU pragma: export
@@ -181,7 +182,7 @@ class Streamer {
 // xxh3 - SMHasher3-clean, canonical, and 128-bit *native* (rapidhash has no
 // 128-bit form; defaulting `GetHash128` to a synthesized fallback would be a
 // silent quality downgrade). The in-house `mh` algorithm remains available as
-// `mh::Algorithm` (see SMHASHER3.md for why it is no longer the default).
+// `mh::Algorithm` (see README.md for why it is no longer the default).
 using DefaultHashAlgorithm = rapidhash::Algorithm;
 using Default128HashAlgorithm = xxh3::Algorithm;
 using DefaultHasher = Hasher<DefaultHashAlgorithm>;
