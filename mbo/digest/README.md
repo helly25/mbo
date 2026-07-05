@@ -34,8 +34,9 @@ license with one [NOTICE](../../NOTICE) file.
 
 `bazel run //mbo/digest:digest -- [-a <algorithm>] <file>...` prints
 checksum-style `<hash>  <file>` lines (the `sha256sum`/`shasum` format;
-`--reverse` swaps the columns, `-` reads stdin). All library algorithms are
-selectable; see `--help`.
+`--reverse` swaps the columns, `-d`/`--ignore_directories` silently skips
+directories, `-` reads stdin). All library algorithms are selectable; see
+`--help`.
 
 ## Honest guidance per algorithm
 

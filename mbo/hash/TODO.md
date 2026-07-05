@@ -43,7 +43,12 @@ Gap analysis vs state of the art (SMHasher3, abseil, xxhash/wyhash ecosystems),
   granular path already exists - the algorithm headers are self-contained, so
   notice-free consumers can include only the attribution-free set (mh,
   simple, fnv1a, murmur3, siphash); per-algorithm cc_library targets can be
-  added compatibly if such a consumer ever materializes.
+  added compatibly if such a consumer ever materializes. A
+  `//mbo/hash:hash_extra_cc` split was also considered and rejected: the
+  compliance-relevant algorithms (rapidhash, xxh3) are the constexpr defaults
+  baked into hash.h - no registration mechanism can inject a default at link
+  time under constant evaluation - so a split could only move the courtesy
+  entries, which carry no obligation to begin with.
 
 - Message digests in _this_ library: MD5/SHA-1/SHA-2 etc. belong to
   [mbo/digest](../digest/README.md) (spec-based, constexpr, vector-pinned,
