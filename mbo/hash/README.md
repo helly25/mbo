@@ -191,8 +191,8 @@ benchmark plus both SMHasher3 batteries):
 3. v3 (188/188 both widths): data loads into both product operands (products
    quadratic in the data), the length folded into the seed, distinct
    bulk-chain initializers.
-4. v4 (64-bit re-verified PASS 188/188; the 128-bit battery result is
-   recorded in the table above): the length moved from the seed into
+4. v4 (re-verified PASS 188/188 in both widths): the length moved from the
+   seed into
    the finalizer's product operands - equally protective, but known only at
    finalize, which is what makes streaming possible; the 128-bit lane seeds
    derive from secret pairs distinct from the 64-bit chain, so no lane ever
