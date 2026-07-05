@@ -2,9 +2,8 @@
 
 Spec-based, fast, constexpr-compatible, Apache-licensed, no-nonsense hash
 implementations. Algorithm reference and API listing: see the
-[repository README](../../README.md); design decisions and roadmap:
-[TODO.md](TODO.md). Quality (SMHasher3) and performance measurements for all
-algorithms: below.
+[repository README](../../README.md). Quality (SMHasher3) and performance
+measurements for all algorithms: below.
 
 ## Principles
 
