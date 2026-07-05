@@ -33,9 +33,9 @@ algorithms: below.
 | ----------- | ------ | --------------------------------- | ----------------------- | ------ | --------- | -------------- |
 | `mumbo`     | 64     | `hash.h` (default 64/32/mangle)   | none (in-house)         | yes    | yes       | PASS           |
 | `jumbo`     | 128    | `hash.h` (default 128)            | none (in-house)         | yes    | yes (64)  | PASS           |
-| `murmur3`   | 64/128 | `hash.h`                          | none (public domain)    | yes    | no        | (measuring)    |
-| `siphash`   | 64     | `hash.h`                          | none (CC0)              | keyed  | yes       | (measuring)    |
-| `fnv1a`     | 64     | `hash.h`                          | none (public domain)    | yes    | no        | (measuring)    |
+| `murmur3`   | 64/128 | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (123)     |
+| `siphash`   | 64     | `hash.h`                          | none (CC0)              | keyed  | yes       | PASS (186)     |
+| `fnv1a`     | 64     | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (7!)      |
 | `simple`    | 64     | `hash.h`                          | none (in-house)         | no     | no        | n/a (legacy)   |
 | `rapidhash` | 64     | `hash_extra.h` + `:hash_extra_cc` | **MIT - ship NOTICE**   | yes    | no        | PASS           |
 | `xxh64`     | 64     | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | yes       | FAIL (181)     |
@@ -107,11 +107,14 @@ numbers are directly comparable.
 
 | Algorithm   | Bits | Role in mbo/hash                 | SMHasher3 result | Failures                                                                                                                                                                      |
 | ----------- | ---: | -------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fnv1a`     |   64 | `hash.h`                         | FAIL - 7 / 186   | nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster                                        |
 | `mumbo`     |   64 | default (64/32/mangle/streaming) | PASS - 188 / 188 | none                                                                                                                                                                          |
 | `rapidhash` |   64 | extra (`hash_extra_cc`)          | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `siphash`   |   64 | `hash.h` (keyed PRF)             | PASS - 186 / 186 | none                                                                                                                                                                          |
 | `xxh3`      |   64 | extra (`hash_extra_cc`)          | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]                                                                       |
 | `xxh64`     |   64 | extra (`hash_extra_cc`)          | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                            |
 | `jumbo`     |  128 | default (128)                    | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `murmur3`   |  128 | `hash.h`                         | FAIL - 123 / 188 | BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)                                                                                                        |
 | `xxh3`      |  128 | extra (`hash_extra_cc`)          | FAIL - 162 / 188 | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8] |
 
 Reading the results:
@@ -126,6 +129,10 @@ Reading the results:
   128-bit variant fails more of the battery than its 64-bit sibling, because
   the wider output gives the statistics more surface to catch bias and lane
   correlation on.
+- Of the classics: `siphash` (a keyed PRF) is clean, as security designs must
+  be; `murmur3` (2011) fails the modern battery broadly; and `fnv1a` - the
+  algorithm family behind many `std::hash` implementations - passes 7 of 186
+  tests. Numbers worth remembering when defaulting to `std::hash`.
 - The mumbo/jumbo family is the default in all forms; the extras remain
   available for
   canonical-value interop via `hash_extra.h` (`//mbo/hash:hash_extra_cc`,
@@ -162,7 +169,8 @@ benchmark plus both SMHasher3 batteries):
   needed: a missing `<cstdlib>` include in `lib/AEStest.cpp`, and replacing
   `-march=native` in CMakeLists.txt, which emits SHA3 `eor3` instructions the
   container toolchain rejects).
-- `rapidhash`, `XXH3-64`, `XXH-64`, and `XXH3-128` are SMHasher3's built-in
+- `rapidhash`, `XXH3-64`, `XXH-64`, `XXH3-128`, `FNV-1a-64`,
+  `MurmurHash3-128`, and `SipHash-2-4` are SMHasher3's built-in
   registrations of the same reference algorithms our headers transcribe
   (transcriptions are vector- and differential-verified equal, so the results
   transfer; the built-in `XXH3-128` ran its NEON implementation on this rig,
