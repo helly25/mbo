@@ -56,7 +56,7 @@ hardware, the _relative_ picture is the point). Bold = fastest per size.
 dependency (what hash-table workloads feel); the throughput tables are
 one-shot hashes of fixed sizes.
 
-### Mixed-length latency (ns/hash, lower is better):
+### Mixed-length latency (ns/hash, lower is better)
 
 | max len | mumbo | rapidhash | xxh3 | xxh64    | murmur3 | siphash | fnv1a | simple   |
 | ------: | ----- | --------- | ---- | -------- | ------- | ------- | ----- | -------- |
@@ -64,7 +64,7 @@ one-shot hashes of fixed sizes.
 |      64 | 11.9  | 12.2      | 12.3 | **10.3** | 20.1    | 28.7    | 12.3  | 23.3     |
 |    1024 | 27.2  | **26.7**  | 37.8 | 69.1     | 72.4    | 239     | 610   | 312      |
 
-### 64-bit one-shot throughput (ns/op; last column GiB/s at 4 KiB):
+### 64-bit one-shot throughput (ns/op; last column GiB/s at 4 KiB)
 
 | Algorithm | 1B       | 16B      | 64B      | 256B     | 1KiB     | 4KiB     | 4KiB GiB/s |
 | --------- | -------- | -------- | -------- | -------- | -------- | -------- | ---------- |
@@ -77,7 +77,7 @@ one-shot hashes of fixed sizes.
 | fnv1a     | **0.52** | 7.07     | 41.3     | 298      | 1361     | 5864     | 0.65       |
 | simple    | 0.92     | 2.50     | 10.5     | 69.9     | 457      | 1736     | 2.2        |
 
-### 128-bit one-shot throughput (ns/op; native-128 algorithms only):
+### 128-bit one-shot throughput (ns/op; native-128 algorithms only)
 
 | Algorithm | 1B       | 16B      | 64B      | 256B     | 1KiB     | 4KiB    |
 | --------- | -------- | -------- | -------- | -------- | -------- | ------- |
@@ -93,6 +93,44 @@ hash from 16 bytes up
 the classic algorithms, `fnv1a` wins the 1-byte corner (one multiply per
 byte, no setup) but is 10-70x slower beyond small keys, and `siphash` pays
 its PRF security in speed; neither is latency-competitive even at 16 bytes.
+
+### Performance across platforms
+
+The CI benchmark job measures every push on two architectures (mean of 3
+repetitions; values `ubuntu-latest` x86_64 gcc / `macos-26` arm64 Apple
+clang, ns/op, from the PR #235 run). Shared runners are noisy - these numbers
+are for architecture/compiler _shape_ comparisons, not absolutes; entries
+marked `*` are gcc constant-folding artifacts on fixed-size lanes.
+
+Mixed-length latency:
+
+| max len | mumbo       | rapidhash       | xxh3         | xxh64       | murmur3     | siphash   | fnv1a       | simple      |
+| ------: | ----------- | --------------- | ------------ | ----------- | ----------- | --------- | ----------- | ----------- |
+|      16 | 7.5 / 9.8   | 8.1 / 10.9      | 7.7 / 12.0   | 12.6 / 14.1 | 12.4 / 16.1 | 15 / 22   | 12.5 / 13.2 | 20.4 / 9.8  |
+|      64 | 9.3 / 11.2  | 10.1 / 11.4     | 3.6* / 12.6  | 25.4 / 21.4 | 15.7 / 20.1 | 22 / 35   | 0.9* / 38.1 | 69.9 / 26.7 |
+|    1024 | 41.4 / 29.2 | **18.9 / 27.4** | 111.5 / 44.2 | 120 / 74.6  | 105 / 78.4  | 216 / 282 | 581 / 570   | 837 / 374   |
+
+64-bit one-shot:
+
+|  size | mumbo           | rapidhash       | xxh3          | xxh64       |
+| ----: | --------------- | --------------- | ------------- | ----------- |
+|   16B | 3.1 / 3.0       | 3.4 / **2.3**   | **1.7** / 2.6 | 5.4 / 3.5   |
+|  256B | 23.2 / 12.5     | **13.6 / 9.5**  | 121.8 / 40.4  | 33.6 / 19.5 |
+| 4 KiB | 275 / **103.0** | **183** / 102.6 | 749 / 210     | 445 / 308   |
+
+128-bit one-shot:
+
+|  size | jumbo           | xxh3          | murmur3     |
+| ----: | --------------- | ------------- | ----------- |
+|   16B | 9.3 / 4.4       | **3.2 / 3.7** | 9.0 / 8.9   |
+|  256B | **19.6 / 13.3** | 128.5 / 43.8  | 47.9 / 53.6 |
+| 4 KiB | **184 / 127**   | 683 / 214     | 721 / 863   |
+
+Cross-platform reading: the mumbo/rapidhash near-tie holds on both
+architectures (rapidhash leads x86_64-gcc bulk; they tie on arm64), `jumbo`
+is the fastest 128-bit hash from 256 bytes up on both platforms, and the
+xxh3 mid-size dip plus the fnv1a/siphash/simple profiles reproduce
+everywhere.
 
 ## Quality: SMHasher3
 
