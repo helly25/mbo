@@ -55,7 +55,7 @@ The C++ library is organized in functional groups each residing in their own dir
     - struct `Hmac<Algo>` / class `HmacStreamer<Algo>`: HMAC (RFC 2104) over any streaming digest (HMAC-SHA3 uses rate-sized blocks per NIST).
     - function `ToHexString(digest)`: lowercase hex, matching `hexdigest()`/`sha256sum` presentation.
   - mbo/digest
-    - binary `digest`: checksum-style CLI, byte-compatible with `sha256sum`/`shasum` output; `-a`/`--algorithm` selects any library algorithm, `--reverse` swaps the columns, `-d`/`--ignore_directories` skips directories, `-` reads stdin.
+    - binary `digest`: checksum-style CLI, byte-compatible with `sha256sum`/`shasum` output; `-a`/`--algorithm` selects any library algorithm, `-c`/`--check` verifies checksum files (coreutils-interchangeable; `--quiet`, `--status`, `--ignore_missing`, `--strict`), `--reverse` swaps the columns, `-d`/`--ignore_directories` skips directories, `-` reads stdin.
 - Files
   - `namespace mbo::files`
   - mbo/file:artefact_cc, mbo/file/artefact.h
