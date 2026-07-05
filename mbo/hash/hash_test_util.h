@@ -32,16 +32,16 @@
 #include <string_view>
 #include <tuple>
 
-#include "mbo/hash/hash.h"
+#include "mbo/hash/hash_extra.h"
 
 namespace mbo::hash::algo {
 
 // The current default hash (`mbo::hash::mh`, exposed via `mbo::hash::GetHash*`).
-struct DefaultHash : ::mbo::hash::mh::Algorithm {
+struct MumboHash : ::mbo::hash::mumbo::Algorithm {
   static constexpr bool kStrongAvalanche = true;
   static constexpr bool kSeeded = true;
 
-  static constexpr std::string_view Name() { return "mh"; }
+  static constexpr std::string_view Name() { return "mumbo"; }
 };
 
 // The previous "simple" implementation (64-bit only; ignores the seed).
@@ -104,7 +104,7 @@ struct Murmur3Hash : ::mbo::hash::murmur3::Algorithm {
 // derive their coverage from this single list, so adding a descriptor here is
 // sufficient to test AND benchmark a new algorithm.
 using AllAlgorithms =
-    std::tuple<SimpleHash, DefaultHash, Fnv1aHash, Xxh64Hash, Xxh3Hash, RapidHash, SipHash24Hash, Murmur3Hash>;
+    std::tuple<SimpleHash, MumboHash, Fnv1aHash, Xxh64Hash, Xxh3Hash, RapidHash, SipHash24Hash, Murmur3Hash>;
 
 // The bit width the algorithm is based on: 128 if it exposes a 128-bit variant.
 template<typename Algo>
