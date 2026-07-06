@@ -21,8 +21,8 @@ Three entry points, split by contract:
   constant, so values do not compare across independently configured builds.
   Use when hash values must not quietly become load-bearing (persisted tables,
   golden values, cross-build protocols) - the instability is the feature.
-  Still constexpr; flags and design rationale in the build-seed mangle section
-  below.
+  Still constexpr; semantics and design rationale in the build-seed mangle
+  section, the flags in the Configuration section below.
 - **`hash_extra.h` / `:hash_extra_cc` - NOTICE-bearing algorithms.** Canonical
   rapidhash, xxh3, and xxh64 transcriptions, for interop with externally
   defined values and for comparison. Shipping a binary that links this target

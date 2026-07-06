@@ -92,11 +92,6 @@ The C++ library is organized in functional groups each residing in their own dir
     - algorithm structs `mumbo::Algorithm`, `jumbo::Algorithm`, `murmur3::Algorithm`, `siphash::Algorithm`, `fnv1a::Algorithm`, `simple::Algorithm` (plus `rapidhash::Algorithm`, `xxh3::Algorithm`, `xxh64::Algorithm` via `hash_extra.h`): the per-algorithm plug-ins for `GetHash*<Algo>` / `Hasher<Algo>`.
     - struct `Hash128`: The 128-bit result type (`h1`, `h2`); ordered (`<=>`) and Abseil hash/stringify compatible.
     - function `Hash128To64(Hash128)`: Folds a 128-bit hash into a well-mixed 64-bit one, e.g. `Hash128To64(murmur3::GetHash128(data))`.
-  - mbo/hash:hash_mangle_cc, mbo/hash/hash_mangle.h
-    - function `GetHash<Algo, Seed>(std::string_view)`: as `GetHash64` but XORed with one build-selected constant, so values deliberately do not compare across independently configured builds (still constexpr).
-    - function `HashMangle(uint64_t)`: XORs the build-selected mangle constant into a hash; identity when built with `--//mbo/hash:mangle_seed_buckets=0` (fully reproducible, `GetHash == GetHash64`).
-    - struct `MangledHasher<Algo>`: `Hasher<Algo>` extended with the mangled `GetHash`; the functor form applies the mangle.
-    - custom Bazel flags `--//mbo/hash:mangle_seed` (any printable-ASCII string, folded - together with the module version from `MODULE.bazel`, so every release rotates the constant by construction - to a bucket inside the generation rule so build caches converge) and `--//mbo/hash:mangle_seed_buckets` (default `8`; `0` disables, `1` pins one stable constant across releases and seeds): select the constant; only `hash_mangle_cc` dependents rebuild on rotation.
     - function `CombineHashes(uint64_t, uint64_t)`: Combines two hashes (order-dependent, well mixed).
     - function `Hash64To32(uint64_t)`: Shrinks a hash to 32 bits by XOR-folding the halves (the correct default for all algorithms, incl. weak-low-bit ones like FNV-1a).
     - concept `HasStreaming` / class `Streamer<Algo>`: incremental hashing (`Update(...).Update(...).Finalize()`), guaranteed equal to the one-shot value; provided by `mumbo`, `xxh64`, and `siphash` (rapidhash has no canonical streaming form).
@@ -108,6 +103,12 @@ The C++ library is organized in functional groups each residing in their own dir
     - function `rapidhash::GetHash64(std::string_view, seed)`: canonical rapidhash V3 (wyhash family; SMHasher3-clean; constexpr-safe; in `hash_extra.h`).
     - function `mumbo::GetHash64` / `jumbo::GetHash128` (`mbo/hash/hash_mumbo.h`): the in-house mumbo/jumbo family and default - widening-multiply ("MUM") based, SMHasher3 PASS 188/188 in both widths (the only clean native 128 measured), best mixed-length latency, streaming-capable, notice-free.
     - function `siphash::GetHash64(std::string_view, key0, key1)` / `siphash::SipHash<C, D>(...)`: canonical SipHash-2-4 (and -1-3 via `GetHash64Sip13`) - keyed, hash-flooding resistant; adversarial protection requires a secret key.
+  - mbo/hash:hash_mangle_cc, mbo/hash/hash_mangle.h
+    - function `GetHash<Algo, Seed>(std::string_view)`: as `GetHash64` but XORed with one build-selected constant, so values deliberately do not compare across independently configured builds (still constexpr).
+    - function `HashMangle(uint64_t)`: XORs the build-selected mangle constant into a hash; identity when built with `--//mbo/hash:mangle_seed_buckets=0` (fully reproducible, `GetHash == GetHash64`).
+    - struct `MangledHasher<Algo>`: `Hasher<Algo>` extended with the mangled `GetHash`; the functor form applies the mangle.
+    - Custom Bazel flag `--//mbo/hash:mangle_seed`: any printable-ASCII string (user name, release tag, date) selecting the mangle constant; folded - together with the module version from `MODULE.bazel`, so every release rotates the constant by construction - to a bucket inside the generation rule, so build caches converge. Only `hash_mangle_cc` dependents rebuild on rotation.
+    - Custom Bazel flag `--//mbo/hash:mangle_seed_buckets`: bucket count bounding the variation (default `8`); `0` disables the mangle (`GetHash == GetHash64`), `1` pins one stable constant across releases and seeds.
   - mbo/hash:hash_extra_cc, mbo/hash/hash_extra.h
     - The NOTICE-bearing transcriptions (`rapidhash` MIT; `xxh64`/`xxh3` BSD-2-Clause) as an opt-in target: linking it requires shipping the repository-root [NOTICE](NOTICE); the default hash_cc target is notice-free (see "Third-party components").
 - Json
