@@ -207,49 +207,60 @@ The two frameworks compose rather than compete - pick by contract:
 ## Performance
 
 Measured with `bazel run -c opt //mbo/hash:hash_benchmark` (Apple Silicon
-arm64, clang; same build and machine for every row - absolute numbers vary by
-hardware, the _relative_ picture is the point). Bold = fastest per size.
-`BmHash64Latency` chains unpredictable key sizes through a serialized
-dependency (what hash-table workloads feel); the throughput tables are
-one-shot hashes of fixed sizes.
+arm64, Apple clang; one shared machine, so absolute numbers carry run-to-run
+noise - the _relative_ picture and the per-size cliffs are the point). Bold =
+fastest per size. Key lengths straddle the dispatch-tier and
+small-string-optimization boundaries: 7/8 bracket the fully-unrolled `<= 8`
+path, 15/16 the `<= 16` path (15 is also the libstdc++ SSO cap), 22 the libc++
+SSO cap, 32 the proposed small-key cap, 63/64 the short-chain tier edge.
+
+### 64-bit one-shot throughput (ns/op, median; lower is better)
+
+| Algorithm | 1B       | 7B       | 8B       | 15B      | 16B      | 22B      | 32B      | 63B      | 64B      | 256B     | 1Ki       | 4Ki       |
+| --------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | --------- | --------- |
+| mumbo     | 2.42     | 2.36     | 2.11     | 2.45     | 2.42     | 2.49     | 2.49     | 3.78     | 3.62     | 8.67     | 23.89     | **82.99** |
+| rapidhash | 2.09     | 1.76     | 1.75     | 1.76     | 1.76     | **2.10** | **2.09** | **2.89** | **2.95** | **7.85** | **23.29** | 86.48     |
+| xxh3      | 1.77     | 1.61     | 1.59     | **1.75** | **1.75** | 2.41     | 2.41     | 3.94     | 3.83     | 27.56    | 60.75     | 180.0     |
+| xxh64     | 1.91     | 2.85     | 2.28     | 3.66     | 2.71     | 3.91     | 5.12     | 10.41    | 6.71     | 16.21    | 55.58     | 228.9     |
+| murmur3   | 2.73     | 2.95     | 2.95     | 3.74     | 4.20     | 4.68     | 5.62     | 8.24     | 8.84     | 33.67    | 166.1     | 709.1     |
+| siphash24 | 6.90     | 6.79     | 9.27     | 9.58     | 12.31    | 12.37    | 18.78    | 28.88    | 32.31    | 122.2    | 482.5     | 1926      |
+| fnv1a     | **0.49** | 2.84     | 3.24     | 6.21     | 6.58     | 9.18     | 15.47    | 40.57    | 41.37    | 289.9    | 1357      | 5654      |
+| simple    | 0.82     | **1.19** | **1.40** | 1.94     | 2.22     | 2.88     | 4.26     | 9.37     | 9.79     | 68.49    | 390.8     | 1737      |
+
+### 128-bit one-shot throughput (ns/op, median; native-128 algorithms only)
+
+| Algorithm | 1B       | 7B       | 8B       | 15B      | 16B      | 22B      | 32B      | 63B      | 64B      | 256B      | 1Ki       | 4Ki       |
+| --------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | --------- | --------- | --------- |
+| jumbo     | 3.27     | 3.20     | 3.21     | 3.27     | 3.31     | 3.85     | 3.87     | **5.37** | 6.29     | **10.60** | **32.13** | **125.8** |
+| xxh3      | **2.28** | **2.33** | **2.28** | **2.73** | **2.72** | **3.81** | **3.77** | 5.38     | **5.44** | 29.82     | 61.72     | 182.8     |
+| murmur3   | 2.93     | 3.10     | 3.05     | 3.61     | 3.96     | 4.56     | 5.71     | 8.23     | 8.75     | 33.74     | 166.0     | 710.4     |
 
 ### Mixed-length latency (ns/hash, lower is better)
 
+Each hash result selects the next key, serializing the dependency chain and
+defeating the size-dispatch branch predictor - the cost profile a hash table
+actually pays (as opposed to the hot, size-predictable throughput loop above).
+
 | max len | mumbo | rapidhash | xxh3 | xxh64    | murmur3 | siphash | fnv1a | simple   |
 | ------: | ----- | --------- | ---- | -------- | ------- | ------- | ----- | -------- |
-|      16 | 10.3  | 10.2      | 11.7 | 13.7     | 15.8    | 18.8    | 13.1  | **10.1** |
-|      64 | 11.9  | 12.2      | 12.3 | **10.3** | 20.1    | 28.7    | 12.3  | 23.3     |
-|    1024 | 27.2  | **26.7**  | 37.8 | 69.1     | 72.4    | 239     | 610   | 312      |
+|      16 | 9.58  | 10.3      | 11.1 | 13.8     | 15.3    | 18.8    | 13.1  | **9.46** |
+|      64 | 11.5  | 11.7      | 12.5 | **10.3** | 19.9    | 28.6    | 11.8  | 23.4     |
+|    1024 | 27.4  | **26.9**  | 39.7 | 68.5     | 70.2    | 235     | 613   | 302      |
 
-### 64-bit one-shot throughput (ns/op; last column GiB/s at 4 KiB)
-
-| Algorithm | 1B       | 16B      | 64B      | 256B     | 1KiB     | 4KiB     | 4KiB GiB/s |
-| --------- | -------- | -------- | -------- | -------- | -------- | -------- | ---------- |
-| mumbo     | 2.37     | 2.42     | 3.90     | 9.32     | 23.9     | **83.0** | **46.1**   |
-| rapidhash | 2.43     | 2.06     | **3.37** | **7.97** | **22.8** | 84.4     | 45.3       |
-| xxh3      | 1.91     | **1.75** | 5.86     | 33.7     | 67.3     | 217      | 17.7       |
-| xxh64     | 1.92     | 3.00     | 6.93     | 17.7     | 59.1     | 313      | 12.3       |
-| murmur3   | 2.84     | 4.20     | 9.06     | 34.8     | 167      | 712      | 5.4        |
-| siphash   | 6.69     | 12.2     | 32.3     | 122      | 499      | 1924     | 2.0        |
-| fnv1a     | **0.52** | 7.07     | 41.3     | 298      | 1361     | 5864     | 0.65       |
-| simple    | 0.92     | 2.50     | 10.5     | 69.9     | 457      | 1736     | 2.2        |
-
-### 128-bit one-shot throughput (ns/op; native-128 algorithms only)
-
-| Algorithm | 1B       | 16B      | 64B      | 256B     | 1KiB     | 4KiB    |
-| --------- | -------- | -------- | -------- | -------- | -------- | ------- |
-| jumbo     | 4.04     | **3.59** | 6.55     | **13.8** | **31.6** | **124** |
-| xxh3      | **2.45** | 3.69     | **5.20** | 33.5     | 67.4     | 212     |
-| murmur3   | 3.15     | 3.97     | 9.71     | 33.8     | 168      | 733     |
-
-Reading the results: `mumbo` and `rapidhash` trade blows within a few percent
-across the 64-bit board - rapidhash by a hair at 64-1024 bytes, mumbo leads
-bulk (4 KiB) - while `jumbo` (the family's native 128) is the fastest 128-bit
-hash from 16 bytes up
-(1.7-2.4x xxh3-128 beyond 256 bytes); xxh3-128 keeps the tiny-key lead. Of
-the classic algorithms, `fnv1a` wins the 1-byte corner (one multiply per
-byte, no setup) but is 10-70x slower beyond small keys, and `siphash` pays
-its PRF security in speed; neither is latency-competitive even at 16 bytes.
+Reading the results: on the 64-bit throughput board `rapidhash` is the
+small-key leader - it holds ~1.75 ns flat through 16 bytes while `mumbo` runs
+~2.4 ns, so mumbo pays roughly 0.3-0.7 ns on keys that fit a `std::string`
+inline (2.45 ns at the 15-byte libstdc++ SSO cap, 2.49 ns at the 22-byte
+libc++ cap). That gap is mumbo's deliberate price: the two-multiply finalizer
+that earns the clean 188/188 in BOTH widths. It narrows through the mid-sizes
+(rapidhash leads 22 B-1 KiB by a hair) and mumbo retakes the 4 KiB bulk. In
+the latency chain - what a hash table feels - mumbo is the fastest strong
+algorithm at 16 bytes (9.58 ns) and level with rapidhash at 1 KiB, so the
+throughput deficit does not carry into the dependency-bound case. For 128-bit,
+`xxh3` leads to 64 bytes but `jumbo` pulls decisively ahead from 256 bytes up
+(1.5-2.9x beyond) and is the only SMHasher3-clean native 128 on the rig.
+`fnv1a` and `simple` win the 1-8 byte corner (minimal setup) but collapse past
+small keys, and `siphash` pays its PRF security throughout.
 
 ### Performance across platforms
 

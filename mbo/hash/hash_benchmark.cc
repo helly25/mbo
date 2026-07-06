@@ -16,6 +16,7 @@
 // Length-bucketed throughput benchmark comparing the hash algorithms (see
 // hash_test_util.h). Run with: bazel run -c opt //mbo/hash:hash_benchmark
 
+#include <array>
 #include <cstdint>
 #include <random>
 #include <string>
@@ -31,9 +32,13 @@ namespace {
 // NOLINTBEGIN(*-magic-numbers)
 
 constexpr uint64_t kSeed = 5'381;
-constexpr int kMinLen = 1;
-constexpr int kMaxLen = 4'096;
-constexpr int kRangeMultiplier = 4;
+
+// Throughput key lengths, chosen to straddle the dispatch-tier boundaries and
+// the small-string-optimization cutoffs so every cliff is visible: 7/8 bracket
+// the end of the fully-unrolled <=8 path, 15/16 the <=16 path (15 is also the
+// libstdc++ SSO cap), 22 the libc++ SSO cap, 32 the proposed small-key cap,
+// 63/64 the short-chain tier edge, and 256/1024/4096 the bulk throughput.
+constexpr std::array<int, 12> kThroughputSizes = {1, 7, 8, 15, 16, 22, 32, 63, 64, 256, 1'024, 4'096};
 
 template<typename Algo>
 void BmHash64(benchmark::State& state) {
@@ -91,13 +96,15 @@ void BmHash64Latency(benchmark::State& state) {
 template<typename Algo>
 void RegisterAlgo() {
   const std::string name(Algo::Name());
-  benchmark::RegisterBenchmark("BmHash64<" + name + ">", BmHash64<Algo>)
-      ->RangeMultiplier(kRangeMultiplier)
-      ->Range(kMinLen, kMaxLen);
+  auto* const hash64 = benchmark::RegisterBenchmark("BmHash64<" + name + ">", BmHash64<Algo>);
+  for (const int size : kThroughputSizes) {
+    hash64->Arg(size);
+  }
   if constexpr (HasGetHash128<Algo>) {
-    benchmark::RegisterBenchmark("BmHash128<" + name + ">", BmHash128<Algo>)
-        ->RangeMultiplier(kRangeMultiplier)
-        ->Range(kMinLen, kMaxLen);
+    auto* const hash128 = benchmark::RegisterBenchmark("BmHash128<" + name + ">", BmHash128<Algo>);
+    for (const int size : kThroughputSizes) {
+      hash128->Arg(size);
+    }
   }
   benchmark::RegisterBenchmark("BmHash64Latency<" + name + ">", BmHash64Latency<Algo>)->Arg(16)->Arg(64)->Arg(1'024);
 }
