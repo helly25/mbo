@@ -161,6 +161,49 @@ the current version; `//mbo/hash:hash_mangle_seed_default_test` keeps it
 byte-identical to the generated header, and a version bump regenerates it
 (command in the file's header comment).
 
+## Abseil interop
+
+The two frameworks compose rather than compete - pick by contract:
+`absl::Hash` is per-process randomized and tuned for tiny in-process keys;
+`mbo::hash` is canonical, cross-platform, constexpr, and streamable.
+
+- **Containers**: `DefaultHasher` (any `Hasher<Algo>` / `MangledHasher<Algo>`)
+  drops into `absl`/`std` hash containers as the `Hash` parameter for string
+  keys, with heterogeneous `string_view` lookup - this replaces absl's native
+  hashing for byte keys outright.
+- **Injecting mbo values into absl combining**: compute the mbo hash - via
+  `Streamer` for chunked content - and combine the resulting integer like any
+  other field. In-repo precedent: `Hash128` and `mbo::types::tstring` do
+  exactly this.
+
+  ```cpp
+  template<typename H>
+  friend H AbslHashValue(H state, const Document& doc) {
+    mbo::hash::Streamer<mbo::hash::DefaultHashAlgorithm> stream;
+    for (std::string_view chunk : doc.chunks) {
+      stream.Update(chunk);
+    }
+    return H::combine(std::move(state), stream.Finalize(), doc.id);
+  }
+  ```
+
+  The mbo value itself stays deterministic; the surrounding absl hash remains
+  per-process seeded (which is what a container wants). Use the mangled
+  `GetHash` instead of `GetHash64` where the injected value itself must not be
+  comparable across builds.
+
+- **The other direction needs care**: folding `absl::HashOf(x)` into mbo
+  values (e.g. via `CombineHashes`) imports absl's per-process randomization -
+  the result is no longer stable across runs, let alone builds. Only do this
+  for values that never leave the process.
+- **Replacing `absl::Hash` for arbitrary types**: possible by design but a
+  deliberate project, not a flag. `AbslHashValue` is framework-agnostic: any
+  hash state implementing `combine` / `combine_contiguous` (plus unordered
+  support) can execute every existing `AbslHashValue` overload, so a
+  mumbo-backed state could swap the algorithm underneath all absl-hashable
+  types. Worth it only when structured types need canonical or constexpr
+  hashing; for byte keys the container functor above already does the job.
+
 ## Performance
 
 Measured with `bazel run -c opt //mbo/hash:hash_benchmark` (Apple Silicon
