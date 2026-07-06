@@ -23,7 +23,6 @@
 
 #include "mbo/hash/hash_fnv1a.h"          // IWYU pragma: export
 #include "mbo/hash/hash_internal_util.h"  // IWYU pragma: export
-#include "mbo/hash/hash_mangle.h"         // IWYU pragma: export
 #include "mbo/hash/hash_mumbo.h"          // IWYU pragma: export
 #include "mbo/hash/hash_murmur3.h"        // IWYU pragma: export
 #include "mbo/hash/hash_simple.h"         // IWYU pragma: export
@@ -79,7 +78,9 @@ inline constexpr uint64_t kSeedFlip = 0x9E3779B97F4A7C15ULL;
 //   hash and does not reach true 128-bit collision resistance.
 // - `GetHash32` falls back to XOR-folding the 64-bit hash (`Hash64To32`);
 //   algorithms with a native 32-bit variant provide `GetHash32` themselves.
-// - `GetHash` is always derived: the 64-bit hash folded through `HashMangle`.
+//
+// The build-mangled `GetHash` lives in `mbo/hash/hash_mangle.h`
+// (`//mbo/hash:hash_mangle_cc`), which extends `Hasher` as `MangledHasher`.
 //
 // `Hasher` is also a transparent functor over `GetHash64`, so it drops straight
 // into hash containers with heterogeneous string lookup, e.g.:
@@ -121,10 +122,6 @@ struct Hasher {
     } else {
       return Hash64To32(GetHash64(data, seed));
     }
-  }
-
-  static constexpr uint64_t GetHash(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
-    return HashMangle(GetHash64(data, seed));
   }
 };
 
@@ -175,12 +172,10 @@ class Streamer {
 // The selected default algorithms behind the `mbo::hash` entry points.
 //
 // The default algorithms: the in-house mumbo/jumbo family - `mumbo` fronts
-// 64-bit, the mangled `GetHash`, and streaming; `jumbo` fronts the native
-// 128-bit form. SMHasher3-clean in BOTH widths (the only clean native 128
-// measured on our rig), best mixed-length latency, and free of third-party
-// license notices (the NOTICE-bearing transcriptions rapidhash and
-// xxh3/xxh64 live in hash_extra.h / //mbo/hash:hash_extra_cc; see README.md
-// for the quality and performance comparison).
+// 64-bit and streaming; `jumbo` fronts the native 128-bit form. SMHasher3-clean in BOTH widths (the only clean native
+// 128 measured on our rig), best mixed-length latency, and free of third-party license notices (the NOTICE-bearing
+// transcriptions rapidhash and xxh3/xxh64 live in hash_extra.h / //mbo/hash:hash_extra_cc; see README.md for the
+// quality and performance comparison).
 using DefaultHashAlgorithm = mumbo::Algorithm;
 using Default128HashAlgorithm = jumbo::Algorithm;
 using DefaultHasher = Hasher<DefaultHashAlgorithm>;
@@ -214,18 +209,9 @@ constexpr uint32_t GetHash32(std::string_view data, uint64_t seed = kDefaultSeed
   return Hasher<Algo>::GetHash32(data, seed);
 }
 
-// As `GetHash64` but folded through `HashMangle`, which mixes in one of a small,
-// fixed set of build-derived seeds (bucketed from `__DATE__`/`__TIME__`, see
-// `kMangleSeedCount`; identity with `MBO_HASH_MANGLE=0`). Its value therefore
-// **may** change from build to build -- bounded to that seed set so it stays
-// cache-friendly, and pinned to a single seed in a hermetic build (e.g. Bazel).
-// Use `GetHash` when values must deliberately not be comparable across
-// independent builds; use `GetHash64` / `GetHash128` for fully deterministic,
-// reproducible values.
-template<IsHashAlgorithm Algo = DefaultHashAlgorithm, uint64_t Seed = kDefaultSeed>
-constexpr uint64_t GetHash(std::string_view data) noexcept {
-  return HashMangle(Hasher<Algo>::GetHash64(data, Seed));
-}
+// The build-mangled `GetHash` - `GetHash64` XORed with one build-selected
+// constant, so values deliberately do not compare across independent builds -
+// lives in `mbo/hash/hash_mangle.h` (`//mbo/hash:hash_mangle_cc`).
 
 // Folds a 128-bit hash into a well-mixed 64-bit one (not a plain truncation).
 //

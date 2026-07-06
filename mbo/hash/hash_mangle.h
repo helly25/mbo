@@ -16,81 +16,81 @@
 #ifndef MBO_HASH_HASH_MANGLE_H_
 #define MBO_HASH_HASH_MANGLE_H_
 
-// IWYU pragma: private, include "mbo/hash/hash.h"
+// The build-seed mangle: `GetHash` / `MangledHasher` equal `GetHash64` XORed
+// with ONE build-selected constant, so values deliberately do not compare
+// across independently configured builds - precomputed tables or persisted
+// values cannot silently become load-bearing. Everything stays constexpr: the
+// constant is generated into a header (`hash_mangle_seed_gen.h`) by folding
+// the module's own version (from MODULE.bazel via `native.module_version()` -
+// every release rotates the constant by construction, for free: a release
+// recompiles dependents anyway) with the custom Bazel flags
+//
+//   --//mbo/hash:mangle_seed          any printable-ASCII string (user name,
+//                                     release tag, date, ...), folded to a
+//                                     bucket inside the generation rule
+//   --//mbo/hash:mangle_seed_buckets  0 disables (`GetHash == GetHash64`),
+//                                     1 pins one stable constant across
+//                                     releases and seeds,
+//                                     N bounds variation to N constants
+//
+// Neither the raw seed string nor the version ever reaches a C++ action key,
+// so build/remote caches see at most N + 1 header variants and converge no
+// matter how often the seed rotates. Only `//mbo/hash:hash_mangle_cc`
+// dependents rebuild on rotation; `hash.h` / `//mbo/hash:hash_cc` values are
+// fully deterministic and never exposed to seed variation. One constant
+// applies per program: linking objects compiled under different flag values
+// is an ODR violation (within a single Bazel build consistency is structural
+// - there is one generated header per configuration).
 
 #include <cstdint>
 #include <string_view>
 
-#include "mbo/hash/hash_simple.h"
+#include "mbo/hash/hash.h"
+
+#if __has_include("mbo/hash/hash_mangle_seed_gen.h")
+# include "mbo/hash/hash_mangle_seed_gen.h"  // IWYU pragma: export
+#else
+# include "mbo/hash/internal/hash_mangle_seed.h.in"  // IWYU pragma: export
+# if __STDC_VERSION__ >= 202'311L
+#  if !defined(IS_CLANGD)
+#   warning "The correctly generated header is not available. Falling back to template."
+#  endif  // !defined(IS_CLANGD)
+# endif   // __STDC_VERSION__ >= 202311L
+#endif
 
 namespace mbo::hash {
 
-// NOLINTBEGIN(*-macro-usage)
-#define MBO_CONSTANT_P(expression, fallback) (fallback)
-#ifdef __has_builtin
-# if __has_builtin(__builtin_constant_p)
-#  undef MBO_CONSTANT_P
-#  define MBO_CONSTANT_P(expression, fallback) __builtin_constant_p(expression)
-# endif
-#endif
-// NOLINTEND(*-macro-usage)
-
-// MBO_HASH_MANGLE enables (1, default) or disables (0) the per-build seed mangle.
-// Disable it for fully reproducible `mbo::hash::GetHash` values -- identical
-// across builds, so `GetHash == GetHash64` -- e.g. for reproducible builds or
-// golden tests. Set it consistently for ALL translation units / build configs of
-// a program: `HashMangle` is `inline constexpr`, so mixing values across TUs is
-// an ODR violation, and tying it to the -O level or NDEBUG would make debug and
-// release builds disagree (a worse footgun than the mangle it removes). Hence it
-// is one explicit, build-wide switch, not automatic.
-#if !defined(MBO_HASH_MANGLE)
-# define MBO_HASH_MANGLE 1  // NOLINT(*-macro-usage)
-#endif
-
-// Number of distinct per-build mangle seeds.
-//
-// The mangle mixes a build-derived seed into a hash so precomputed inputs cannot
-// be relied on across builds. Deriving the seed directly from `__DATE__` /
-// `__TIME__` yields a *full 64-bit*, effectively unbounded seed that changes
-// every compile -- which bakes a different constant into every build and so
-// defeats reproducible builds and build caches. Bounding the seed to a small,
-// fixed set of buckets keeps a little per-build variation while capping the
-// number of possible outputs (so caches converge). Use a power of two in
-// {4, 8, 16}; set to 1 to disable variation entirely.
-inline constexpr uint64_t kMangleSeedCount = 16;
-
-// Mixes `data` with one of `kMangleSeedCount` build-derived seeds (constexpr safe).
-//
-// The `__DATE__` / `__TIME__` hash only *selects* a bucket via `% kMangleSeedCount`;
-// the bucket is then expanded into a full-width constant so the whole hash is
-// mangled, not just its low bits. A hermetic build (e.g. Bazel pinning these
-// macros) collapses to a single, stable bucket. With MBO_HASH_MANGLE=0 this is
-// the identity.
-inline constexpr uint64_t HashMangle(uint64_t data) {
-#if MBO_HASH_MANGLE
-  constexpr uint64_t kBase = 5'008'709'998'333'326'415ULL;
-  constexpr uint64_t kSpread = 0x9E3779B97F4A7C15ULL;  // full-width odd: spreads a bucket across all bits
-
-  constexpr uint64_t kDateTime =  //
-      0ULL
-# if defined(__DATE__)
-      ^ (MBO_CONSTANT_P(__DATE__, 1) == 0 ? 0 : simple::GetHash64(std::string_view(__DATE__)))
-# endif
-# if defined(__TIME__)
-      ^ (MBO_CONSTANT_P(__TIME__, 1) == 0 ? 0 : simple::GetHash64(std::string_view(__TIME__)))
-# elif defined(__TIMESTAMP__)
-      ^ (MBO_CONSTANT_P(__TIMESTAMP__, 1) == 0 ? 0 : simple::GetHash64(std::string_view(__TIMESTAMP__)))
-# endif
-      ;
-  constexpr uint64_t kBucket = kDateTime % kMangleSeedCount;  // 0 .. kMangleSeedCount-1
-  constexpr uint64_t kSeed = kBase ^ (kBucket * kSpread);
-  return data ^ kSeed;
-#else   // MBO_HASH_MANGLE
-  return data;
-#endif  // MBO_HASH_MANGLE
+// XORs the build-selected mangle constant into `data` (identity when built
+// with `--//mbo/hash:mangle_seed_buckets=0`). An XOR mask is deliberately
+// trivial to strip - the mangle guards against accidental dependence on hash
+// values, not against adversaries (for that see `siphash` with a secret seed).
+inline constexpr uint64_t HashMangle(uint64_t data) noexcept {
+  return data ^ kMangleConstant;
 }
 
-#undef MBO_CONSTANT_P  // Be gone.
+// As `GetHash64` but folded through `HashMangle`, so values **may** change
+// between differently configured builds (see the flags above). Use `GetHash`
+// when values must deliberately not be comparable across independent builds;
+// use `GetHash64` / `GetHash128` for fully deterministic, reproducible values.
+template<IsHashAlgorithm Algo = DefaultHashAlgorithm, uint64_t Seed = kDefaultSeed>
+constexpr uint64_t GetHash(std::string_view data) noexcept {
+  return HashMangle(Hasher<Algo>::GetHash64(data, Seed));
+}
+
+// `Hasher<Algo>` extended with the mangled `GetHash`; the functor form applies
+// the mangle as well (the inherited deterministic interface remains available).
+template<IsHashAlgorithm Algo>
+struct MangledHasher : Hasher<Algo> {
+  using is_transparent = void;  // NOLINT(readability-identifier-naming): STL heterogeneous-lookup protocol name.
+
+  constexpr uint64_t operator()(std::string_view data) const noexcept { return GetHash(data); }
+
+  static constexpr uint64_t GetHash(std::string_view data, uint64_t seed = kDefaultSeed) noexcept {
+    return HashMangle(Hasher<Algo>::GetHash64(data, seed));
+  }
+};
+
+using DefaultMangledHasher = MangledHasher<DefaultHashAlgorithm>;
 
 }  // namespace mbo::hash
 

@@ -13,9 +13,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@bazel_skylib//rules:common_settings.bzl", "int_flag", "string_flag")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("//mbo/diff:diff.bzl", "diff_test")
+load(":internal/hash_mangle_seed.bzl", "mangle_seed_gen")
 
 package(default_visibility = ["//visibility:private"])
+
+# Create custom bazel flag `--//mbo/hash:mangle_seed`: any printable-ASCII
+# string (user name, release tag, date, ...) selecting the mangle constant.
+# Folded to a bucket inside `mangle_seed_gen`, so caches converge (see
+# `hash_mangle.h`).
+string_flag(
+    name = "mangle_seed",
+    build_setting_default = "",
+    visibility = ["//visibility:private"],
+)
+
+# Create custom bazel flag `--//mbo/hash:mangle_seed_buckets`: 0 disables the
+# mangle (`GetHash == GetHash64`), 1 pins one stable nonzero constant, N
+# bounds the per-seed variation to N constants.
+int_flag(
+    name = "mangle_seed_buckets",
+    build_setting_default = 8,
+    visibility = ["//visibility:private"],
+)
+
+bzl_library(
+    name = "hash_mangle_seed_bzl",
+    srcs = ["internal/hash_mangle_seed.bzl"],
+    visibility = ["//visibility:private"],
+    deps = ["@bazel_skylib//rules:common_settings"],
+)
+
+mangle_seed_gen(
+    name = "hash_mangle_seed_gen",
+    output = "hash_mangle_seed_gen.h",
+    visibility = ["//visibility:private"],
+)
+
+# Pins the non-Bazel fallback: under default flags the generated header must
+# be byte-identical to the checked-in template. Fails when defaults or the
+# fold change without updating `internal/hash_mangle_seed.h.in`.
+diff_test(
+    name = "hash_mangle_seed_default_test",
+    file_new = "hash_mangle_seed_gen.h",
+    file_old = "internal/hash_mangle_seed.h.in",
+)
 
 cc_library(
     name = "hash_internal_util",
@@ -33,7 +78,6 @@ cc_library(
     name = "hash_cc",
     srcs = [
         "hash_fnv1a.h",
-        "hash_mangle.h",
         "hash_mumbo.h",
         "hash_murmur3.h",
         "hash_simple.h",
@@ -42,6 +86,17 @@ cc_library(
     hdrs = ["hash.h"],
     visibility = ["//visibility:public"],
     deps = [":hash_internal_util"],
+)
+
+cc_library(
+    name = "hash_mangle_cc",
+    srcs = ["hash_mangle_seed_gen.h"],
+    hdrs = ["hash_mangle.h"],
+    # The build-seed mangle (`GetHash`, `MangledHasher`): kept out of
+    # `hash_cc` so plain hash users are never exposed to (and never rebuilt
+    # for) the `--//mbo/hash:mangle_seed*` flag settings.
+    visibility = ["//visibility:public"],
+    deps = [":hash_cc"],
 )
 
 cc_library(
@@ -87,11 +142,16 @@ cc_test(
 )
 
 cc_test(
-    name = "hash_no_mangle_test",
-    srcs = ["hash_no_mangle_test.cc"],
-    local_defines = ["MBO_HASH_MANGLE=0"],
+    name = "hash_mangle_test",
+    srcs = ["hash_mangle_test.cc"],
+    # Verifies the configuration it is built under in both directions:
+    # enabled => `GetHash` differs from `GetHash64`, disabled => identical
+    # (CI additionally runs it with `--//mbo/hash:mangle_seed_buckets=0`,
+    # see .github/workflows/test.yml).
     deps = [
         ":hash_cc",
+        ":hash_mangle_cc",
+        ":hash_test_util",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
