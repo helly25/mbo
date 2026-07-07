@@ -77,10 +77,10 @@ cc_library(
 cc_library(
     name = "hash_cc",
     srcs = [
+        "hash_dumbo.h",
         "hash_fnv1a.h",
         "hash_mumbo.h",
         "hash_murmur3.h",
-        "hash_simple.h",
         "hash_siphash.h",
     ],
     hdrs = ["hash.h"],

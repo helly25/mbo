@@ -12,7 +12,7 @@
 - Fixed `mbo::diff` unified output for empty ranges (pure insertions or deletions, visible with `--context=0`): the chunk header now references the line _preceding_ the gap (e.g. `@@ -2,0 +3 @@` instead of `@@ -3,0 +3 @@`), matching GNU diff. Previously `patch` applied such hunks one line too late.
 - Split the `mbo::diff` chunk rendering out of `mbo/diff/internal/chunk.cc` into `mbo/diff/internal/output.{h,cc}` (`diff_internal::AppendChunk`); `Chunk` now only accumulates and filters.
 - Added `mbo::hash::GetHash64(std::string_view)` / `GetHash128(std::string_view)` and the `mbo::hash::Hash128` result type - constexpr-safe, non-cryptographic hashing; the default algorithm is the in-house `mumbo` (see below).
-- Deprecated `mbo::hash::simple::GetHash(std::string_view)`; use `mbo::hash::GetHash64()` instead. The previous implementation remains available as `mbo::hash::simple::GetHash64`.
+- Renamed the legacy in-house hash `mbo::hash::simple` to `mbo::hash::dumbo` (the -umbo family's weak member: 64-bit, weak mixing, kept for comparison only) and **removed** the deprecated `simple::GetHash` wrapper and the `mbo::hash::simple` namespace outright - pre-1.0, so no compatibility alias is kept and existing `mbo::hash::simple::*` users must migrate. Use `mbo::hash::GetHash64` (mumbo) for real hashing; `mbo::hash::dumbo::GetHash64(data, seed)` remains for comparison. `dumbo` also gained (weak) seed support - the seed is folded into the initial state at negligible cost, so it now reacts to the seed (`dumbo::GetHash64` takes an optional `seed`).
 - All `mbo::hash` entry points (`GetHash64`, `GetHash128`, `GetHash`) are now templates over an algorithm struct (default `DefaultHashAlgorithm`, i.e. `mbo::hash::mumbo`). Every algorithm provides a `<ns>::Algorithm` struct with static `GetHash64`/`GetHash128` members; the concepts `HasGetHash64`/`HasGetHash128`/`IsHashAlgorithm` detect what is available, and `Hasher<Algo>` completes partial algorithms with fallbacks (128->64 fold; for a missing 128 two decorrelated 64-bit passes where the second skips the first up-to-8 bytes and injects them via the seed, so both lanes cover every byte and differ even for seed-ignoring algorithms).
 - Added constexpr-safe, canonical implementations of further hash algorithms, all usable as algorithm structs with `GetHash64<Algo>`: `mbo::hash::fnv1a::GetHash64` (FNV-1a 64), `mbo::hash::xxh64::GetHash64` (XXH64), `mbo::hash::xxh3::GetHash64` (XXH3 64-bit, scalar), and `mbo::hash::murmur3::GetHash64/GetHash128` (MurmurHash3 x64 128). All produce the published reference values on every platform (little-endian defined).
 - Exposed `mbo::hash::Hash128To64(Hash128)`: folds a 128-bit hash into a well-mixed 64-bit one, e.g. to derive a fold-mixed 64-bit value from `murmur3::GetHash128` (whose `GetHash64` is the canonical `h1` truncation instead).
@@ -307,7 +307,7 @@
 - Fixed internal consistencies.
 - Updated `mope` to allow comments by setting a section to nothing: `{{#section=}}...{{/section}}`.
 - Added concept `IsTuple` which determines whether a type is a `std::tuple`.
-- Added `mbo::hash::simple::GetHash(std::string_view)` which is constexpr safe.
+- Added `mbo::hash::simple::GetHash(std::string_view)` which is constexpr safe. (Renamed to `mbo::hash::dumbo` in 0.13.0.)
 - Added hash support to tstring.
 
 # 0.2.25
