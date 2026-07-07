@@ -32,9 +32,10 @@ even invert the true ordering. So we:
 mbo/hash/measurements/
   README.md                    # this design doc
   MODULE.bazel                 # separate dev module (isolates plotting deps)
-  hash_benchmark_report.py     # run / store / tables / plot (stdlib only)
+  hash_benchmark_report.py     # run / store / tables / plot / smhasher (stdlib only)
+  build_smhasher3.sh           # reproducible SMHasher3 build (clone + fixes + container gcc)
   hash_benchmark_results.json  # canonical distilled results (committed provenance for the README tables)
-  data/                        # complete raw datasets (see "Data storage")
+  data/                        # complete raw datasets + SMHasher3 logs (see "Data storage")
 ```
 
 The C++ benchmark itself (`mbo/hash/hash_benchmark.cc`,
@@ -138,14 +139,19 @@ SMHasher3 battery over a set of algorithms (default `all`, which **includes the
 legacy `simple`**) and stores a pass/fail + failing-family summary as JSON with
 the same provenance, plus each run's full log under `data/`.
 
-It drives a **built SMHasher3 executable** (`--smhasher3`). The third-party
-algorithms are SMHasher3 built-ins; the in-house `mumbo`/`jumbo`/`simple` need a
-patched SMHasher3 that registers them (`mumbo-64`, `jumbo-128`, `simple-64` -
-matching the transcription used for the README quality table). Building that
-harness (SMHasher3 in a linux/arm64 gcc container + the in-house registrations)
-is the outstanding piece; the registration names live in `_SMHASHER_NAMES` and
-are confirmed against `SMHasher3 --list` (override with a different mapping if a
-version renames them).
+It drives a **built SMHasher3 executable** (`--smhasher3`). `build_smhasher3.sh`
+is the reproducible build: it clones SMHasher3 at the pinned commit, applies the
+two documented fixes (missing `<cstdlib>` in `lib/AEStest.cpp`; replace
+`-march=native`), and builds it with gcc in a container - matching the
+methodology in `../README.md`. The third-party algorithms are SMHasher3
+built-ins and work immediately.
+
+The in-house `mumbo`/`jumbo`/`dumbo` still need a **registration source** dropped
+into SMHasher3's `hashes/` tree before the build (a transcription registering
+`mumbo-64` / `jumbo-128` / `dumbo-64`, matching `hash_mumbo.h` / `hash_dumbo.h`)
+
+- that plugin is the outstanding piece. Registration names live in
+  `_SMHASHER_NAMES` and are confirmed against `SMHasher3 --list`.
 
 ## Output filenames
 
@@ -164,10 +170,10 @@ for architecture/compiler shape comparison, not a gate.
 
 ## Open items
 
-- **SMHasher3 harness**: the `smhasher` mode drives a built SMHasher3, but the
-  build itself (container + in-house `mumbo`/`jumbo`/`simple` registrations) is
-  not yet scripted here - it is the outstanding verification gate for any
-  value-changing hash work.
+- **SMHasher3 in-house plugin**: `build_smhasher3.sh` builds stock SMHasher3
+  (third-party algorithms verify today), but the `mumbo`/`jumbo`/`dumbo`
+  registration source is not written yet - it is the verification gate for any
+  value-changing hash work. Run on merged `main` for an authoritative result.
 - Plotter: self-contained SVG is implemented (`plot`); decide whether to commit
   a generated curve or render it on demand.
 - Optional guard: a check that the README tables match the committed canonical
