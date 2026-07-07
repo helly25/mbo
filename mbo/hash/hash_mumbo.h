@@ -99,34 +99,34 @@ struct SmallInput {
 constexpr SmallInput LoadSmall(const char* ptr, std::size_t len) noexcept {
   // NOLINTNEXTLINE(readability-identifier-length): byte-widening helper.
   const auto u8 = [](char chr) constexpr { return static_cast<uint64_t>(static_cast<uint8_t>(chr)); };
-  switch (len) {
-    case 0: return {.a = 0, .b = 0};
-    case 1: {
-      const uint64_t val = u8(ptr[0]);
-      return {.a = (val << 45U) | val, .b = (val << 45U) | val};
+  // If-ladder, common 4..16 range gated first: the dense switch compiled to a
+  // jump table (indirect branch + table load) that dominated the small-key
+  // cost; here 9..16 (the bulk of hashed string keys, and of the SSO range)
+  // resolve on the first compare. Values are byte-identical to the previous
+  // switch at every length.
+  if (len >= 4) {
+    if (len >= 9) {  // 9..16: two 64-bit loads overlapping the end.
+      return {.a = Load64(ptr), .b = Load64(ptr + len - 8)};
     }
-    case 2: {
-      const uint64_t val = (u8(ptr[0]) << 45U) | (u8(ptr[1]) << 8U) | u8(ptr[0]);
-      return {.a = val, .b = val};
-    }
-    case 3: {
-      const uint64_t val = (u8(ptr[0]) << 45U) | (u8(ptr[1]) << 8U) | u8(ptr[2]);
-      return {.a = val, .b = val};
-    }
-    case 4: {
-      const uint64_t val = Load32(ptr);
-      return {.a = val, .b = val};
-    }
-    case 5: return {.a = Load32(ptr), .b = Load32(ptr + 1)};
-    case 6: return {.a = Load32(ptr), .b = Load32(ptr + 2)};
-    case 7: return {.a = Load32(ptr), .b = Load32(ptr + 3)};
-    case 8: {
+    if (len == 8) {
       const uint64_t val = Load64(ptr);
       return {.a = val, .b = val};
     }
-    default:  // 9..16: two loads overlapping the end.
-      return {.a = Load64(ptr), .b = Load64(ptr + len - 8)};
+    return {.a = Load32(ptr), .b = Load32(ptr + len - 4)};  // 4..7 (len 4 -> both equal)
   }
+  if (len == 3) {
+    const uint64_t val = (u8(ptr[0]) << 45U) | (u8(ptr[1]) << 8U) | u8(ptr[2]);
+    return {.a = val, .b = val};
+  }
+  if (len == 2) {
+    const uint64_t val = (u8(ptr[0]) << 45U) | (u8(ptr[1]) << 8U) | u8(ptr[0]);
+    return {.a = val, .b = val};
+  }
+  if (len == 1) {
+    const uint64_t val = u8(ptr[0]);
+    return {.a = (val << 45U) | val, .b = (val << 45U) | val};
+  }
+  return {.a = 0, .b = 0};
 }
 
 // The shared two-multiply finalizer. Keeps BOTH halves of the first widening
