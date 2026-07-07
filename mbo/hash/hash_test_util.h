@@ -44,10 +44,10 @@ struct MumboHash : ::mbo::hash::mumbo::Algorithm {
   static constexpr std::string_view Name() { return "mumbo"; }
 };
 
-// The legacy in-house "dumbo" implementation (64-bit only; ignores the seed).
+// The legacy in-house "dumbo" implementation (64-bit; weakly seeded).
 struct DumboHash : ::mbo::hash::dumbo::Algorithm {
   static constexpr bool kStrongAvalanche = false;
-  static constexpr bool kSeeded = false;
+  static constexpr bool kSeeded = true;
 
   static constexpr std::string_view Name() { return "dumbo"; }
 };

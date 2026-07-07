@@ -95,7 +95,7 @@ The C++ library is organized in functional groups each residing in their own dir
     - function `CombineHashes(uint64_t, uint64_t)`: Combines two hashes (order-dependent, well mixed).
     - function `Hash64To32(uint64_t)`: Shrinks a hash to 32 bits by XOR-folding the halves (the correct default for all algorithms, incl. weak-low-bit ones like FNV-1a).
     - concept `HasStreaming` / class `Streamer<Algo>`: incremental hashing (`Update(...).Update(...).Finalize()`), guaranteed equal to the one-shot value; provided by `mumbo`, `xxh64`, and `siphash` (rapidhash has no canonical streaming form).
-    - function `dumbo::GetHash64(std::string_view)`: the legacy in-house hash (64-bit, unseeded, weak; kept for comparison only - use `GetHash64` / mumbo instead). Formerly `mbo::hash::simple`.
+    - function `dumbo::GetHash64(std::string_view, seed)`: the legacy in-house hash (64-bit, weakly seeded, weak mixing; kept for comparison only - use `GetHash64` / mumbo instead). Formerly `mbo::hash::simple`.
     - function `fnv1a::GetHash64(std::string_view, seed)`: canonical FNV-1a 64 (constexpr-safe).
     - function `xxh64::GetHash64(std::string_view, seed)`: canonical XXH64 / xxHash 64-bit (constexpr-safe; in `hash_extra.h`, see below).
     - function `xxh3::GetHash64/GetHash128(std::string_view, seed)`: canonical XXH3 64- and 128-bit (modern xxHash generation, the fast file-checksum format; scalar; constexpr-safe; in `hash_extra.h`).

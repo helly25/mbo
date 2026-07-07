@@ -28,8 +28,8 @@ namespace mbo::hash::dumbo {
 // NOLINTBEGIN(*-identifier-naming,*-magic-numbers,*-constant-array-index,*-pointer-arithmetic,*-signed-bitwise)
 
 // `dumbo` is the library's legacy in-house 64-bit hash (the -umbo family's weak
-// member: no seed support, does not pass SMHasher3). Kept for comparison only;
-// use `mbo::hash::GetHash64` (mumbo) instead.
+// member: only weakly seeded, does not pass SMHasher3). Kept for comparison
+// only; use `mbo::hash::GetHash64` (mumbo) instead.
 //
 // TODO(helly25): dumbo is worth a little improvement work rather than pure
 // museum-keeping - it is competitive for tiny strings (its 1-8 byte throughput
@@ -39,11 +39,14 @@ namespace mbo::hash::dumbo {
 // keys" option instead of a deprecated relic. Any change is SMHasher3-gated.
 namespace hash_internal {
 
-inline constexpr uint64_t GetDumboHash(std::string_view data) {
+inline constexpr uint64_t GetDumboHash(std::string_view data, uint64_t seed) {
   constexpr uint64_t kArbitrary = 5'008'709'998'333'326'415ULL;
   constexpr uint64_t kPrimeNum10k = 104'729ULL;
+  // The seed is folded into the initial state and then carried through the
+  // multiply chain, so it perturbs every output bit at negligible cost (one
+  // XOR). Cheap, but weak - dumbo does not aim for cryptographic seed mixing.
   if (data.empty()) {
-    return 0x892df5cfULL ^ kArbitrary;  // Arbitrary number (neither 0 nor -1).
+    return (0x892df5cfULL ^ kArbitrary) ^ seed;  // Arbitrary number (neither 0 nor -1).
   }
   // Below we use an optimized form that directly reads from memory (using`memcpy`). However, that
   // is not allowed in a constant evaluated expression (assign result to constexpr var). In order to
@@ -57,7 +60,7 @@ inline constexpr uint64_t GetDumboHash(std::string_view data) {
   if (std::is_constant_evaluated()) {
     std::size_t len = data.length();
     std::size_t pos = 0;
-    uint64_t result = kArbitrary + len;
+    uint64_t result = (kArbitrary + len) ^ seed;
     while (len >= 4) {
       uint64_t add = 0;
       add += data[pos++];
@@ -78,7 +81,7 @@ inline constexpr uint64_t GetDumboHash(std::string_view data) {
   } else {
     const char* str = data.data();
     const char* end = data.end() - 3;
-    uint64_t result = kArbitrary + data.length();
+    uint64_t result = (kArbitrary + data.length()) ^ seed;
     uint64_t add = 0;
     while (str < end) {
       std::memcpy(&add, str, 4);
@@ -106,15 +109,16 @@ inline constexpr uint64_t GetDumboHash(std::string_view data) {
 
 }  // namespace hash_internal
 
-inline constexpr uint64_t GetHash64(std::string_view data) {
-  return hash_internal::GetDumboHash(data);
+inline constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) {
+  return hash_internal::GetDumboHash(data, seed);
 }
 
-// The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). This
-// algorithm has no seed support; the seed parameter is ignored.
+// The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). Seeded, but
+// only weakly (the seed is folded into the initial state); dumbo is the legacy
+// comparison hash, not a strong mixer.
 struct Algorithm {
-  static constexpr uint64_t GetHash64(std::string_view data, uint64_t /*seed*/ = 0) noexcept {
-    return hash_internal::GetDumboHash(data);
+  static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) noexcept {
+    return hash_internal::GetDumboHash(data, seed);
   }
 };
 
