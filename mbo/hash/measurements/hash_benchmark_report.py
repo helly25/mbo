@@ -18,9 +18,10 @@
 
 See mbo/hash/measurements/README.md for the full design. Summary:
 
-- Sub-nanosecond numbers on a shared machine => aggregate by MINIMUM over
-  repetitions (approximates uncontended cost; reproducible where medians are
-  not) and apply google/benchmark precautions (random interleaving, warmup).
+- Sub-nanosecond numbers on a shared machine => aggregate by the MEAN OF THE
+  k FASTEST reps (k = reps/3): the low tail approximates the uncontended cost
+  (contention only adds time) and rejects the single-sample fluke a pure
+  minimum keeps; apply google/benchmark precautions (interleaving, warmup).
 - Store the full run context (date, git revision + dirty flag, host, CPU,
   load, cpu_scaling) so every number is attributable.
 - JSON storage (google/benchmark emits JSON natively; no transcode).

@@ -136,7 +136,7 @@ as `data/YYYYMMDD_HHMMSS_...`.
 
 `hash_benchmark_report.py smhasher --algos all --smhasher3 <path>` runs the
 SMHasher3 battery over a set of algorithms (default `all`, which **includes the
-legacy `simple`**) and stores a pass/fail + failing-family summary as JSON with
+legacy `dumbo`**) and stores a pass/fail + failing-family summary as JSON with
 the same provenance, plus each run's full log under `data/`.
 
 It drives a **built SMHasher3 executable** (`--smhasher3`). `build_smhasher3.sh`
