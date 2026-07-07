@@ -148,7 +148,7 @@ constexpr uint64_t Finish2(uint64_t val_a, uint64_t val_b, uint64_t seed, uint64
 
 // One 128-byte bulk block over the eight chains.
 constexpr void BulkBlock(std::array<uint64_t, 8>& chain, const char* ptr) noexcept {
-  for (std::size_t i = 0; i < 8; ++i) {  // NOLINT(*-constant-array-index)
+  for (std::size_t i = 0; i < 8; ++i) {  // NOLINTNEXTLINE(*-constant-array-index)
     chain[i] = Mul128Fold64(Load64(ptr + (16 * i)) ^ kSecret[4 + i], Load64(ptr + (16 * i) + 8) ^ chain[i]);
   }
 }
@@ -292,6 +292,7 @@ struct Algorithm {
   }
 
   static constexpr void StreamUpdate(StreamState& state, std::string_view data) noexcept {
+    // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
     const char* ptr = data.data();
     std::size_t remaining = data.size();
     state.total += remaining;
@@ -330,6 +331,7 @@ struct Algorithm {
         state.last16[16 - len + i] = data[i];
       }
     }
+    // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)
   }
 
   // Takes the state by value: the caller's stream stays valid (peekable).

@@ -31,6 +31,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_cat.h"
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/hash/hash_test_util.h"
 
@@ -46,6 +47,13 @@
 
 namespace mbo::hash {
 namespace {
+
+using ::testing::Eq;
+using ::testing::Gt;
+using ::testing::Le;
+using ::testing::Lt;
+using ::testing::Ne;
+using ::testing::SizeIs;
 
 // NOLINTBEGIN(*-magic-numbers)
 
@@ -71,9 +79,26 @@ struct TupleToGtestTypes<std::tuple<Ts...>> {
 using HashAlgorithms = TupleToGtestTypes<algo::AllAlgorithms>::type;
 TYPED_TEST_SUITE(HashTest, HashAlgorithms);
 
+// Empty fixtures for the non-typed suites below (TEST_F convention).
+struct CombineHashesTest : ::testing::Test {};
+
+struct Hash128Test : ::testing::Test {};
+
+struct Hash64To32Test : ::testing::Test {};
+
+struct HasherTest : ::testing::Test {};
+
+struct KnownAnswerTest : ::testing::Test {};
+
+struct MumboHashTest : ::testing::Test {};
+
+struct Murmur3HashTest : ::testing::Test {};
+
+struct StreamerTest : ::testing::Test {};
+
 // The framework detects 64- vs 128-bit algorithms from the descriptor.
 TYPED_TEST(HashTest, BitWidthDetection) {
-  EXPECT_EQ((algo::kHashBits<TypeParam>), HasGetHash128<TypeParam> ? 128 : 64);
+  EXPECT_THAT((algo::kHashBits<TypeParam>), Eq(HasGetHash128<TypeParam> ? 128 : 64));
 }
 
 // Compile-time and run-time evaluation must agree. This also guards the loads'
@@ -92,21 +117,21 @@ TYPED_TEST(HashTest, ConstexprMatchesRuntime) {
   };
   for (std::size_t i = 0; i < kProbes.size(); ++i) {
     std::string_view runtime = kProbes.at(i);  // NOLINT(misc-const-correctness): non-const forces the runtime path
-    EXPECT_EQ(kCompile.at(i), TypeParam::GetHash64(runtime, kSeed)) << "probe: \"" << runtime << "\"";
+    EXPECT_THAT(kCompile.at(i), Eq(TypeParam::GetHash64(runtime, kSeed))) << "probe: \"" << runtime << "\"";
   }
   if constexpr (HasGetHash128<TypeParam>) {
     constexpr Hash128 kCompile128 = TypeParam::GetHash128(kProbes[2], kSeed);
     std::string_view runtime = kProbes[2];  // NOLINT(misc-const-correctness): non-const forces the runtime path
-    EXPECT_EQ(kCompile128, TypeParam::GetHash128(runtime, kSeed));
+    EXPECT_THAT(kCompile128, Eq(TypeParam::GetHash128(runtime, kSeed)));
   }
 }
 
 TYPED_TEST(HashTest, EmptyEqualsNullAndIsNontrivial) {
   const uint64_t empty = TypeParam::GetHash64(std::string_view(""), kSeed);
   const uint64_t null_view = TypeParam::GetHash64(std::string_view(), kSeed);
-  EXPECT_EQ(empty, null_view);
-  EXPECT_NE(empty, uint64_t{0});
-  EXPECT_NE(empty, ~uint64_t{0});
+  EXPECT_THAT(empty, Eq(null_view));
+  EXPECT_THAT(empty, Ne(uint64_t{0}));
+  EXPECT_THAT(empty, Ne(~uint64_t{0}));
 }
 
 TYPED_TEST(HashTest, DistinctForDistinctShortInputs) {
@@ -117,7 +142,7 @@ TYPED_TEST(HashTest, DistinctForDistinctShortInputs) {
   for (const std::string_view data : kData) {
     hashes.insert(TypeParam::GetHash64(data, kSeed));
   }
-  EXPECT_EQ(hashes.size(), kData.size());
+  EXPECT_THAT(hashes, SizeIs(kData.size()));
 }
 
 TYPED_TEST(HashTest, LowCollisionRate) {
@@ -135,13 +160,13 @@ TYPED_TEST(HashTest, LowCollisionRate) {
   for (const std::string& input : inputs) {
     hashes.insert(TypeParam::GetHash64(input, kSeed));
   }
-  EXPECT_LE(inputs.size() - hashes.size(), kNumStrings / 2'000'000);
+  EXPECT_THAT(inputs.size() - hashes.size(), Le(kNumStrings / 2'000'000));
 }
 
 // Avalanche: flipping a single input bit should flip ~half the output bits.
 // Lengths chosen to exercise every input tier: tail-only (4), single-lane loop
 // (12), stripes + remainder (100), and multiple stripes (300).
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+// NOLINTNEXTLINE(readability-function-cognitive-complexity): nested per-length trial loops read clearer inline.
 TYPED_TEST(HashTest, Avalanche) {
   std::mt19937_64 rng(0xA5A5A5A5U);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed seed
                                      // keeps this reproducible
@@ -160,12 +185,12 @@ TYPED_TEST(HashTest, Avalanche) {
     }
     const double ratio = static_cast<double>(flipped) / (static_cast<double>(kTrials) * 64.0);
     if constexpr (TypeParam::kStrongAvalanche) {
-      EXPECT_GT(ratio, 0.45) << "len=" << length << " weak avalanche: " << ratio;
-      EXPECT_LT(ratio, 0.55) << "len=" << length << " biased avalanche: " << ratio;
+      EXPECT_THAT(ratio, Gt(0.45)) << "len=" << length << " weak avalanche: " << ratio;
+      EXPECT_THAT(ratio, Lt(0.55)) << "len=" << length << " biased avalanche: " << ratio;
     } else {
       // Weak algorithms only need to react at all; e.g. `simple` sits at ~0.07
       // for 4-byte inputs (a documented weakness of its short-input handling).
-      EXPECT_GT(ratio, 0.05) << "len=" << length << " barely reacts: " << ratio;
+      EXPECT_THAT(ratio, Gt(0.05)) << "len=" << length << " barely reacts: " << ratio;
     }
   }
 }
@@ -174,7 +199,7 @@ TYPED_TEST(HashTest, Avalanche) {
 // ~half the output bits. Skipped for seedless algorithms; weak-avalanche
 // algorithms only need to react (fnv1a's multiplies diffuse upward only, so
 // high seed bits move few output bits).
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+// NOLINTNEXTLINE(readability-function-cognitive-complexity): nested per-length trial loops read clearer inline.
 TYPED_TEST(HashTest, SeedAvalanche) {
   if constexpr (!TypeParam::kSeeded) {
     GTEST_SKIP() << TypeParam::Name() << " ignores the seed";
@@ -193,10 +218,10 @@ TYPED_TEST(HashTest, SeedAvalanche) {
       }
       const double ratio = static_cast<double>(flipped) / (static_cast<double>(kTrials) * 64.0);
       if constexpr (TypeParam::kStrongAvalanche) {
-        EXPECT_GT(ratio, 0.45) << "len=" << length << " weak seed avalanche: " << ratio;
-        EXPECT_LT(ratio, 0.55) << "len=" << length << " biased seed avalanche: " << ratio;
+        EXPECT_THAT(ratio, Gt(0.45)) << "len=" << length << " weak seed avalanche: " << ratio;
+        EXPECT_THAT(ratio, Lt(0.55)) << "len=" << length << " biased seed avalanche: " << ratio;
       } else {
-        EXPECT_GT(ratio, 0.05) << "len=" << length << " seed barely reacts: " << ratio;
+        EXPECT_THAT(ratio, Gt(0.05)) << "len=" << length << " seed barely reacts: " << ratio;
       }
     }
   }
@@ -232,19 +257,19 @@ TYPED_TEST(HashTest, StructuredKeysAreDistinct) {
   for (const std::string& input : inputs) {
     hashes.insert(TypeParam::GetHash64(input, kSeed));
   }
-  EXPECT_EQ(hashes.size(), inputs.size()) << "collisions among structured keys";
+  EXPECT_THAT(hashes, SizeIs(inputs.size())) << "collisions among structured keys";
 }
 
 // Streaming: any chunking of the input must produce exactly the one-shot
 // value. Lengths cross every dispatch tier; split points are random,
 // including empty chunks. Skipped for algorithms without streaming support.
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+// NOLINTNEXTLINE(readability-function-cognitive-complexity): random re-chunking trial loops read clearer inline.
 TYPED_TEST(HashTest, StreamingMatchesOneShot) {
   if constexpr (!HasStreaming<TypeParam>) {
     GTEST_SKIP() << TypeParam::Name() << " has no streaming form";
   } else {
-    std::mt19937_64 rng(
-        0x57AE0A1U);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): reproducible
+    // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): reproducible
+    std::mt19937_64 rng(0x57AE0A1U);
     for (const std::size_t length : std::array<std::size_t, 8>{0, 5, 12, 32, 33, 64, 96, 300}) {
       const std::string data = algo::RandomString(rng, length);
       const uint64_t expected = TypeParam::GetHash64(data, kSeed);
@@ -256,15 +281,15 @@ TYPED_TEST(HashTest, StreamingMatchesOneShot) {
           stream.Update(std::string_view(data).substr(pos, chunk));
           pos += std::min(chunk, data.size() - pos);
         }
-        ASSERT_EQ(stream.Finalize(), expected) << TypeParam::Name() << " len=" << length << " trial=" << trial;
+        ASSERT_THAT(stream.Finalize(), Eq(expected)) << TypeParam::Name() << " len=" << length << " trial=" << trial;
       }
       // Byte-at-a-time, and everything-at-once.
       Streamer<TypeParam> byte_stream(kSeed);
       for (const char chr : data) {
         byte_stream.Update(std::string_view(&chr, 1));
       }
-      EXPECT_EQ(byte_stream.Finalize(), expected) << TypeParam::Name() << " len=" << length << " (byte-wise)";
-      EXPECT_EQ(Streamer<TypeParam>(kSeed).Update(data).Finalize(), expected) << TypeParam::Name();
+      EXPECT_THAT(byte_stream.Finalize(), Eq(expected)) << TypeParam::Name() << " len=" << length << " (byte-wise)";
+      EXPECT_THAT(Streamer<TypeParam>(kSeed).Update(data).Finalize(), Eq(expected)) << TypeParam::Name();
     }
   }
 }
@@ -281,17 +306,17 @@ static_assert(!HasStreaming<rapidhash::Algorithm>);
 static_assert(!HasStreaming<fnv1a::Algorithm> && !HasStreaming<simple::Algorithm>);
 static_assert(!HasStreaming<xxh3::Algorithm> && !HasStreaming<murmur3::Algorithm>);
 
-TEST(StreamerTest, NonDestructiveFinalizeAndConstexpr) {
+TEST_F(StreamerTest, NonDestructiveFinalizeAndConstexpr) {
   Streamer<mumbo::Algorithm> stream;
   stream.Update("part1-");
   const uint64_t partial = stream.Finalize();
-  EXPECT_EQ(partial, mumbo::GetHash64("part1-"));
+  EXPECT_THAT(partial, Eq(mumbo::GetHash64("part1-")));
   stream.Update("part2");  // Continue after peeking.
-  EXPECT_EQ(stream.Finalize(), mumbo::GetHash64("part1-part2"));
+  EXPECT_THAT(stream.Finalize(), Eq(mumbo::GetHash64("part1-part2")));
   // Fully constexpr streaming.
   constexpr uint64_t kStreamed = Streamer<siphash::Algorithm>(7).Update("const").Update("expr").Finalize();
   static_assert(kStreamed == siphash::Algorithm::GetHash64("constexpr", 7));
-  EXPECT_EQ(kStreamed, siphash::Algorithm::GetHash64("constexpr", 7));
+  EXPECT_THAT(kStreamed, Eq(siphash::Algorithm::GetHash64("constexpr", 7)));
 }
 
 // 128-bit-only checks; skipped for 64-bit-based algorithms via the detection trait.
@@ -299,44 +324,44 @@ TEST(StreamerTest, NonDestructiveFinalizeAndConstexpr) {
 // and covered by per-algorithm tests below.
 TYPED_TEST(HashTest, Hash128) {
   if constexpr (HasGetHash128<TypeParam>) {
-    EXPECT_EQ(TypeParam::GetHash128("abc", kSeed), TypeParam::GetHash128("abc", kSeed));  // deterministic
-    EXPECT_NE(TypeParam::GetHash128("abc", kSeed), TypeParam::GetHash128("abd", kSeed));  // distinct
+    EXPECT_THAT(TypeParam::GetHash128("abc", kSeed), Eq(TypeParam::GetHash128("abc", kSeed)));  // deterministic
+    EXPECT_THAT(TypeParam::GetHash128("abc", kSeed), Ne(TypeParam::GetHash128("abd", kSeed)));  // distinct
     constexpr std::string_view kLong = "this input is longer than the small-input cutoff.";
     const Hash128 hash = TypeParam::GetHash128(kLong, kSeed);
-    EXPECT_NE(hash.h1, hash.h2);
+    EXPECT_THAT(hash.h1, Ne(hash.h2));
   } else {
     GTEST_SKIP() << TypeParam::Name() << " is 64-bit only";
   }
 }
 
 // The jumbo face is the same family: both directions delegate.
-TEST(MumboHashTest, JumboIsTheSameFamily) {
+TEST_F(MumboHashTest, JumboIsTheSameFamily) {
   constexpr std::string_view kData = "mumbo jumbo";
-  EXPECT_EQ(jumbo::GetHash128(kData, kSeed), mumbo::GetHash128(kData, kSeed));
-  EXPECT_EQ(jumbo::GetHash64(kData, kSeed), mumbo::GetHash64(kData, kSeed));
+  EXPECT_THAT(jumbo::GetHash128(kData, kSeed), Eq(mumbo::GetHash128(kData, kSeed)));
+  EXPECT_THAT(jumbo::GetHash64(kData, kSeed), Eq(mumbo::GetHash64(kData, kSeed)));
   static_assert(HasStreaming<jumbo::Algorithm>);
 }
 
 // mumbo-specific: the 64-bit form and the 128-bit lanes are deliberately
 // independent chains - none is a fold or truncation of another.
-TEST(MumboHashTest, Hash64IsNotAFoldOfHash128) {
+TEST_F(MumboHashTest, Hash64IsNotAFoldOfHash128) {
   constexpr std::string_view kLong = "this input is longer than the small-key cutoff, well past it.";
   const Hash128 hash128 = mumbo::GetHash128(kLong, kSeed);
-  EXPECT_NE(mumbo::GetHash64(kLong, kSeed), hash_internal::Hash128To64(hash128));
-  EXPECT_NE(mumbo::GetHash64(kLong, kSeed), hash128.h1);
+  EXPECT_THAT(mumbo::GetHash64(kLong, kSeed), Ne(hash_internal::Hash128To64(hash128)));
+  EXPECT_THAT(mumbo::GetHash64(kLong, kSeed), Ne(hash128.h1));
 }
 
 // murmur3-specific: the 64-bit variant is the canonical `h1` truncation.
-TEST(Murmur3HashTest, Hash64IsH1) {
-  EXPECT_EQ(murmur3::GetHash64("truncation-check"), murmur3::GetHash128("truncation-check").h1);
+TEST_F(Murmur3HashTest, Hash64IsH1) {
+  EXPECT_THAT(murmur3::GetHash64("truncation-check"), Eq(murmur3::GetHash128("truncation-check").h1));
 }
 
 // The documented composition: a fold-mixed (non-canonical) 64-bit value can be
 // derived from any 128-bit based algorithm via the public Hash128To64.
-TEST(Murmur3HashTest, FoldedHash64ByComposition) {
+TEST_F(Murmur3HashTest, FoldedHash64ByComposition) {
   constexpr uint64_t kFolded = Hash128To64(murmur3::GetHash128("fold-check"));  // constexpr-safe
-  EXPECT_EQ(kFolded, hash_internal::Hash128To64(murmur3::GetHash128("fold-check")));
-  EXPECT_NE(kFolded, murmur3::GetHash64("fold-check"));  // distinct from the canonical truncation
+  EXPECT_THAT(kFolded, Eq(hash_internal::Hash128To64(murmur3::GetHash128("fold-check"))));
+  EXPECT_THAT(kFolded, Ne(murmur3::GetHash64("fold-check")));  // distinct from the canonical truncation
 }
 
 // ---------------------------------------------------------------------------
@@ -355,7 +380,7 @@ struct KnownAnswer64 {
   uint64_t expected;
 };
 
-TEST(KnownAnswerTest, Fnv1a) {
+TEST_F(KnownAnswerTest, Fnv1a) {
   // Canonical FNV-1a 64 with the standard offset basis.
   static constexpr std::array<KnownAnswer64, 6> kVectors{{
       {fnv1a::kOffsetBasis, "", 0xcbf29ce484222325ULL},
@@ -367,11 +392,11 @@ TEST(KnownAnswerTest, Fnv1a) {
   }};
   static_assert(fnv1a::GetHash64("") == 0xcbf29ce484222325ULL);  // constexpr-safe & canonical
   for (const auto& [seed, data, expected] : kVectors) {
-    EXPECT_EQ(fnv1a::GetHash64(data, seed), expected) << "input: \"" << data << "\"";
+    EXPECT_THAT(fnv1a::GetHash64(data, seed), Eq(expected)) << "input: \"" << data << "\"";
   }
 }
 
-TEST(KnownAnswerTest, Xxh64) {
+TEST_F(KnownAnswerTest, Xxh64) {
   static constexpr std::array<KnownAnswer64, 13> kVectors{{
       // seed 0; lengths cover <4, 4..7, 8..31, one 32-byte stripe, and beyond.
       {0, "", 0xef46db3751d8e999ULL},
@@ -391,7 +416,7 @@ TEST(KnownAnswerTest, Xxh64) {
   }};
   static_assert(xxh64::GetHash64("") == 0xef46db3751d8e999ULL);  // constexpr-safe & canonical
   for (const auto& [seed, data, expected] : kVectors) {
-    EXPECT_EQ(xxh64::GetHash64(data, seed), expected) << "input: \"" << data << "\", seed: " << seed;
+    EXPECT_THAT(xxh64::GetHash64(data, seed), Eq(expected)) << "input: \"" << data << "\", seed: " << seed;
   }
 }
 
@@ -404,7 +429,7 @@ inline std::string PatternBuffer(std::size_t len) {
   return result;
 }
 
-TEST(KnownAnswerTest, Xxh3) {
+TEST_F(KnownAnswerTest, Xxh3) {
   // Vectors from the reference implementation (python xxhash 3.8.0 / libxxhash
   // 0.8.x, XXH3_64bits[_withSeed]); lengths cover every dispatch class:
   // 0, 1..3, 4..8, 9..16, 17..128, 129..240, and >240 (with block boundaries),
@@ -432,12 +457,12 @@ TEST(KnownAnswerTest, Xxh3) {
   // NOLINTEND(modernize-use-designated-initializers)
   static_assert(xxh3::GetHash64("") == 0x2d06800538d394c2ULL);  // constexpr-safe & canonical
   for (const auto& [seed, len, expected] : kVectors) {
-    EXPECT_EQ(xxh3::GetHash64(PatternBuffer(len), seed), expected) << "len: " << len << ", seed: " << seed;
+    EXPECT_THAT(xxh3::GetHash64(PatternBuffer(len), seed), Eq(expected)) << "len: " << len << ", seed: " << seed;
   }
-  EXPECT_EQ(xxh3::GetHash64(PatternBuffer(3'000), 5'381), 0x9ea762ada6fccc4cULL);
+  EXPECT_THAT(xxh3::GetHash64(PatternBuffer(3'000), 5'381), Eq(0x9ea762ada6fccc4cULL));
 }
 
-TEST(KnownAnswerTest, SipHash) {
+TEST_F(KnownAnswerTest, SipHash) {
   // Vectors generated with the reference implementation (python siphash24
   // bindings); key = spec key (k0=0x0706050403020100, k1=0x0F0E0D0C0B0A0908),
   // inputs = PatternBuffer. The empty-input value matches the vector table of
@@ -478,16 +503,17 @@ TEST(KnownAnswerTest, SipHash) {
   // NOLINTEND(modernize-use-designated-initializers)
   static_assert(siphash::GetHash64("", kKey0, kKey1) == 0x726fdb47dd0e0e31ULL);  // constexpr-safe & canonical
   for (const auto& [len, expected] : kSip24) {
-    EXPECT_EQ(siphash::GetHash64(PatternBuffer(len), kKey0, kKey1), expected) << "sip24 len: " << len;
+    EXPECT_THAT(siphash::GetHash64(PatternBuffer(len), kKey0, kKey1), Eq(expected)) << "sip24 len: " << len;
   }
   for (const auto& [len, expected] : kSip13) {
-    EXPECT_EQ(siphash::GetHash64Sip13(PatternBuffer(len), kKey0, kKey1), expected) << "sip13 len: " << len;
+    EXPECT_THAT(siphash::GetHash64Sip13(PatternBuffer(len), kKey0, kKey1), Eq(expected)) << "sip13 len: " << len;
   }
   // The Algorithm struct derives the key from the seed.
-  EXPECT_EQ(siphash::Algorithm::GetHash64("derived", 42), siphash::GetHash64("derived", 42, hash_internal::Fmix64(42)));
+  EXPECT_THAT(
+      siphash::Algorithm::GetHash64("derived", 42), Eq(siphash::GetHash64("derived", 42, hash_internal::Fmix64(42))));
 }
 
-TEST(KnownAnswerTest, Rapidhash) {
+TEST_F(KnownAnswerTest, Rapidhash) {
   // Vectors generated by compiling the reference rapidhash.h (V3, FAST
   // variant) and hashing PatternBuffer; lengths cover every dispatch branch:
   // 0, 1..3, 4..7, 8..16, the 17..112 ladder, the wide loop (113/224/225/448),
@@ -516,11 +542,11 @@ TEST(KnownAnswerTest, Rapidhash) {
   // NOLINTEND(modernize-use-designated-initializers)
   static_assert(rapidhash::GetHash64("") == 0x0338dc4be2cecdaeULL);  // constexpr-safe & canonical
   for (const auto& [seed, len, expected] : kVectors) {
-    EXPECT_EQ(rapidhash::GetHash64(PatternBuffer(len), seed), expected) << "len: " << len << ", seed: " << seed;
+    EXPECT_THAT(rapidhash::GetHash64(PatternBuffer(len), seed), Eq(expected)) << "len: " << len << ", seed: " << seed;
   }
 }
 
-TEST(KnownAnswerTest, Xxh3Hash128) {
+TEST_F(KnownAnswerTest, Xxh3Hash128) {
   // Vectors from the reference implementation (python xxhash 3.8.0,
   // XXH3_128bits[_withSeed]); expected = {low64 (h1), high64 (h2)}. Lengths
   // cover every dispatch class and block boundary. For >240-byte inputs and
@@ -573,7 +599,7 @@ TEST(KnownAnswerTest, Xxh3Hash128) {
   static_assert(xxh3::GetHash128("").h1 == 0x6001c324468d497fULL);  // constexpr-safe & canonical
   for (const auto& [seed, len, low, high] : kVectors) {
     const Hash128 hash = xxh3::GetHash128(PatternBuffer(len), seed);
-    EXPECT_EQ(hash, (Hash128{.h1 = low, .h2 = high})) << "len: " << len << ", seed: " << seed;
+    EXPECT_THAT(hash, Eq((Hash128{.h1 = low, .h2 = high}))) << "len: " << len << ", seed: " << seed;
   }
 }
 
@@ -583,7 +609,7 @@ struct KnownAnswer128 {
   Hash128 expected;
 };
 
-TEST(KnownAnswerTest, Murmur3) {
+TEST_F(KnownAnswerTest, Murmur3) {
   static constexpr std::array<KnownAnswer128, 13> kVectors{{
       // seed 0; lengths cover empty, tail-only, one 16-byte block, block+tail.
       {0, "", {.h1 = 0x0000000000000000ULL, .h2 = 0x0000000000000000ULL}},
@@ -603,7 +629,7 @@ TEST(KnownAnswerTest, Murmur3) {
   }};
   static_assert(murmur3::GetHash128("").h1 == 0);  // constexpr-safe & canonical
   for (const auto& [seed, data, expected] : kVectors) {
-    EXPECT_EQ(murmur3::GetHash128(data, seed), expected) << "input: \"" << data << "\", seed: " << seed;
+    EXPECT_THAT(murmur3::GetHash128(data, seed), Eq(expected)) << "input: \"" << data << "\", seed: " << seed;
   }
 }
 
@@ -612,37 +638,23 @@ TEST(KnownAnswerTest, Murmur3) {
 // ---------------------------------------------------------------------------
 // Hash128 value-type behaviour (not per-algorithm).
 // ---------------------------------------------------------------------------
-TEST(Hash128Test, AbslStringifyRendersHex) {
+TEST_F(Hash128Test, AbslStringifyRendersHex) {
   const Hash128 hash{.h1 = 0x0123456789abcdefULL, .h2 = 0xfedcba9876543210ULL};
-  EXPECT_EQ(absl::StrCat(hash), "0x0123456789abcdeffedcba9876543210");
+  EXPECT_THAT(absl::StrCat(hash), Eq("0x0123456789abcdeffedcba9876543210"));
 }
 
-TEST(Hash128Test, AbslHashValueUsableAsKey) {
+TEST_F(Hash128Test, AbslHashValueUsableAsKey) {
   absl::flat_hash_set<Hash128> seen;
   seen.insert(Hash128{.h1 = 1, .h2 = 2});
   seen.insert(Hash128{.h1 = 1, .h2 = 2});
   seen.insert(Hash128{.h1 = 3, .h2 = 4});
-  EXPECT_EQ(seen.size(), 2U);
+  EXPECT_THAT(seen, SizeIs(2));
 }
 
-TEST(Hash128Test, Ordering) {
-  EXPECT_EQ((Hash128{.h1 = 1, .h2 = 2}), (Hash128{.h1 = 1, .h2 = 2}));
-  EXPECT_LT((Hash128{.h1 = 1, .h2 = 2}), (Hash128{.h1 = 1, .h2 = 3}));
-  EXPECT_LT((Hash128{.h1 = 1, .h2 = 9}), (Hash128{.h1 = 2, .h2 = 0}));
-}
-
-// ---------------------------------------------------------------------------
-// HashMangle: a single per-build seed XORed in (see hash_mangle.h). The seed
-// value is build-dependent, so tests only assert seed-independent properties.
-// ---------------------------------------------------------------------------
-TEST(HashMangleTest, IsConstantXorMask) {
-  // HashMangle(x) == x ^ seed, so XORing two mangled values cancels the seed.
-  EXPECT_EQ(HashMangle(0) ^ HashMangle(1), 0ULL ^ 1ULL);
-  EXPECT_EQ(HashMangle(0x1111) ^ HashMangle(0x2222), 0x1111ULL ^ 0x2222ULL);
-}
-
-TEST(HashMangleTest, GetHashAppliesMangle) {
-  EXPECT_EQ(GetHash("hash-mangle-check"), HashMangle(GetHash64("hash-mangle-check")));
+TEST_F(Hash128Test, Ordering) {
+  EXPECT_THAT((Hash128{.h1 = 1, .h2 = 2}), Eq((Hash128{.h1 = 1, .h2 = 2})));
+  EXPECT_THAT((Hash128{.h1 = 1, .h2 = 2}), Lt((Hash128{.h1 = 1, .h2 = 3})));
+  EXPECT_THAT((Hash128{.h1 = 1, .h2 = 9}), Lt((Hash128{.h1 = 2, .h2 = 0})));
 }
 
 // ---------------------------------------------------------------------------
@@ -683,112 +695,102 @@ static_assert(HasGetHash32<FakeWith32> && !HasGetHash32<mumbo::Algorithm>);
 static_assert(IsHashAlgorithm<Fake64Only> && IsHashAlgorithm<Fake128Only>);
 static_assert(!IsHashAlgorithm<int> && !IsHashAlgorithm<Hash128>);
 
-TEST(HasherTest, NativeFunctionsPassThrough) {
-  EXPECT_EQ(Hasher<mumbo::Algorithm>::GetHash64("pass", kSeed), mumbo::GetHash64("pass", kSeed));
-  EXPECT_EQ(Hasher<mumbo::Algorithm>::GetHash128("pass", kSeed), mumbo::GetHash128("pass", kSeed));
-  EXPECT_EQ(Hasher<murmur3::Algorithm>::GetHash64("pass", kSeed), murmur3::GetHash64("pass", kSeed));
+TEST_F(HasherTest, NativeFunctionsPassThrough) {
+  EXPECT_THAT(Hasher<mumbo::Algorithm>::GetHash64("pass", kSeed), Eq(mumbo::GetHash64("pass", kSeed)));
+  EXPECT_THAT(Hasher<mumbo::Algorithm>::GetHash128("pass", kSeed), Eq(mumbo::GetHash128("pass", kSeed)));
+  EXPECT_THAT(Hasher<murmur3::Algorithm>::GetHash64("pass", kSeed), Eq(murmur3::GetHash64("pass", kSeed)));
 }
 
-TEST(HasherTest, GetHash64FallsBackToFold) {
-  EXPECT_EQ(Hasher<Fake128Only>::GetHash64("fold", kSeed), Hash128To64(Fake128Only::GetHash128("fold", kSeed)));
+TEST_F(HasherTest, GetHash64FallsBackToFold) {
+  EXPECT_THAT(Hasher<Fake128Only>::GetHash64("fold", kSeed), Eq(Hash128To64(Fake128Only::GetHash128("fold", kSeed))));
 }
 
-TEST(HasherTest, GetHash128FallsBackToTwoDecorrelatedPasses) {
+TEST_F(HasherTest, GetHash128FallsBackToTwoDecorrelatedPasses) {
   // The second lane skips the first up-to-8 bytes and injects them via the seed.
   constexpr std::string_view kData = "twopass-fallback";
   const Hash128 hash = Hasher<Fake64Only>::GetHash128(kData, kSeed);
-  EXPECT_EQ(hash.h1, Fake64Only::GetHash64(kData, kSeed));
+  EXPECT_THAT(hash.h1, Eq(Fake64Only::GetHash64(kData, kSeed)));
   const uint64_t head = hash_internal::LoadTail(kData.data(), 8);  // NOLINT(*-stringview-data-usage): size passed
-  EXPECT_EQ(hash.h2, Fake64Only::GetHash64(kData.substr(8), kSeed ^ kSeedFlip ^ head));
-  EXPECT_NE(hash.h1, hash.h2);
+  EXPECT_THAT(hash.h2, Eq(Fake64Only::GetHash64(kData.substr(8), kSeed ^ kSeedFlip ^ head)));
+  EXPECT_THAT(hash.h1, Ne(hash.h2));
   // Short inputs (< 8 bytes): the second lane hashes the empty remainder with
   // all bytes injected via the seed -- still covering every byte.
   const Hash128 tiny = Hasher<Fake64Only>::GetHash128("abc", kSeed);
   const uint64_t tiny_head = hash_internal::LoadTail("abc", 3);
-  EXPECT_EQ(tiny.h2, Fake64Only::GetHash64("", kSeed ^ kSeedFlip ^ tiny_head));
+  EXPECT_THAT(tiny.h2, Eq(Fake64Only::GetHash64("", kSeed ^ kSeedFlip ^ tiny_head)));
 }
 
-TEST(HasherTest, GetHash128FallbackDecorrelatesSeedIgnoringAlgorithms) {
+TEST_F(HasherTest, GetHash128FallbackDecorrelatesSeedIgnoringAlgorithms) {
   // `simple` ignores the seed entirely; a naive two-seed fallback would yield
   // h1 == h2. The lanes hash different data, so they still differ.
   const Hash128 hash = Hasher<simple::Algorithm>::GetHash128("longer than eight bytes", kSeed);
-  EXPECT_NE(hash.h1, hash.h2);
+  EXPECT_THAT(hash.h1, Ne(hash.h2));
   // And inputs differing only past the first 8 bytes change both lanes.
   const Hash128 other = Hasher<simple::Algorithm>::GetHash128("longer than eight BYTES", kSeed);
-  EXPECT_NE(hash.h1, other.h1);
-  EXPECT_NE(hash.h2, other.h2);
+  EXPECT_THAT(hash.h1, Ne(other.h1));
+  EXPECT_THAT(hash.h2, Ne(other.h2));
 }
 
-TEST(HasherTest, GetHash32NativeAndFallback) {
+TEST_F(HasherTest, GetHash32NativeAndFallback) {
   // Native 32-bit variant passes through...
-  EXPECT_EQ(Hasher<FakeWith32>::GetHash32("native", kSeed), 0xC0FFEE42U);
+  EXPECT_THAT(Hasher<FakeWith32>::GetHash32("native", kSeed), Eq(0xC0FFEE42U));
   // ...everything else XOR-folds the 64-bit hash.
   constexpr uint32_t kFolded = Hasher<rapidhash::Algorithm>::GetHash32("fold", kSeed);  // constexpr-safe
-  EXPECT_EQ(kFolded, Hash64To32(rapidhash::GetHash64("fold", kSeed)));
-  EXPECT_EQ(GetHash32("fold", kSeed), Hash64To32(GetHash64("fold", kSeed)));  // top-level, default algorithm
-  EXPECT_EQ(GetHash32<xxh64::Algorithm>("fold", kSeed), Hash64To32(xxh64::GetHash64("fold", kSeed)));
+  EXPECT_THAT(kFolded, Eq(Hash64To32(rapidhash::GetHash64("fold", kSeed))));
+  EXPECT_THAT(GetHash32("fold", kSeed), Eq(Hash64To32(GetHash64("fold", kSeed))));  // top-level, default algorithm
+  EXPECT_THAT(GetHash32<xxh64::Algorithm>("fold", kSeed), Eq(Hash64To32(xxh64::GetHash64("fold", kSeed))));
 }
 
-TEST(HasherTest, GetHashIsMangled64) {
-  EXPECT_EQ(Hasher<xxh64::Algorithm>::GetHash("mangle", kSeed), HashMangle(xxh64::GetHash64("mangle", kSeed)));
-}
-
-TEST(HasherTest, TopLevelFunctionsUseDefaultAlgorithm) {
+TEST_F(HasherTest, TopLevelFunctionsUseDefaultAlgorithm) {
   // The bare entry points equal their default algorithm (and stay constexpr):
-  // mumbo for 64-bit, 128-bit, and the mangled GetHash.
+  // mumbo for 64-bit, jumbo for 128-bit.
   constexpr uint64_t kHash64 = GetHash64("top");
-  EXPECT_EQ(kHash64, (DefaultHasher::GetHash64("top")));
-  EXPECT_EQ(kHash64, mumbo::GetHash64("top", kDefaultSeed));
+  EXPECT_THAT(kHash64, Eq((DefaultHasher::GetHash64("top"))));
+  EXPECT_THAT(kHash64, Eq(mumbo::GetHash64("top", kDefaultSeed)));
   constexpr Hash128 kHash128 = GetHash128("top");
-  EXPECT_EQ(kHash128, (Hasher<Default128HashAlgorithm>::GetHash128("top")));
-  EXPECT_EQ(kHash128, jumbo::GetHash128("top", kDefaultSeed));
-  EXPECT_EQ(GetHash("top"), HashMangle(kHash64));
+  EXPECT_THAT(kHash128, Eq((Hasher<Default128HashAlgorithm>::GetHash128("top"))));
+  EXPECT_THAT(kHash128, Eq(jumbo::GetHash128("top", kDefaultSeed)));
 }
 
-TEST(HasherTest, TopLevelFunctionsArePluggable) {
-  // Any algorithm struct can replace the default...
-  EXPECT_EQ(GetHash64<xxh64::Algorithm>("plug", kSeed), xxh64::GetHash64("plug", kSeed));
-  EXPECT_EQ(GetHash128<Fake64Only>("plug", kSeed), (Hasher<Fake64Only>::GetHash128("plug", kSeed)));
-  // ...including in the mangled form, with the seed as a template constant
-  // (parens guard the macro comma).
-  EXPECT_EQ((GetHash<xxh64::Algorithm, 999>("plug")), HashMangle(xxh64::GetHash64("plug", 999)));
-  EXPECT_NE(GetHash("plug"), (GetHash<xxh64::Algorithm, 999>("plug")));
-  // A different algorithm yields a different mangled value.
-  EXPECT_NE(GetHash("plug"), GetHash<Fake64Only>("plug"));
+TEST_F(HasherTest, TopLevelFunctionsArePluggable) {
+  // Any algorithm struct can replace the default (the build-mangled `GetHash`
+  // variant is covered in hash_mangle_test.cc).
+  EXPECT_THAT(GetHash64<xxh64::Algorithm>("plug", kSeed), Eq(xxh64::GetHash64("plug", kSeed)));
+  EXPECT_THAT(GetHash128<Fake64Only>("plug", kSeed), Eq((Hasher<Fake64Only>::GetHash128("plug", kSeed))));
 }
 
 // ---------------------------------------------------------------------------
 // Hasher as a transparent container functor, and CombineHashes.
 // ---------------------------------------------------------------------------
-TEST(HasherTest, WorksAsTransparentContainerFunctor) {
+TEST_F(HasherTest, WorksAsTransparentContainerFunctor) {
   absl::flat_hash_map<std::string, int, DefaultHasher, std::equal_to<>> map;
   map["alpha"] = 1;
   map["beta"] = 2;
   const std::string_view lookup = "alpha";  // heterogeneous: no temporary std::string
   const auto it = map.find(lookup);
-  ASSERT_NE(it, map.end());
-  EXPECT_EQ(it->second, 1);
+  ASSERT_THAT(it, Ne(map.end()));
+  EXPECT_THAT(it->second, Eq(1));
   std::unordered_map<std::string, int, Hasher<xxh3::Algorithm>, std::equal_to<>> std_map;
   std_map["gamma"] = 3;
-  EXPECT_EQ(std_map.find(std::string_view("gamma"))->second, 3);
+  EXPECT_THAT(std_map.find(std::string_view("gamma"))->second, Eq(3));
 }
 
-TEST(Hash64To32Test, FoldsBothHalves) {
+TEST_F(Hash64To32Test, FoldsBothHalves) {
   constexpr uint32_t kFolded = Hash64To32(0x123456780000FFFFULL);  // constexpr-safe
-  EXPECT_EQ(kFolded, 0x1234A987U);
+  EXPECT_THAT(kFolded, Eq(0x1234A987U));
   // Values differing only in the high half still shrink to different values.
-  EXPECT_NE(Hash64To32(0xAAAA000012345678ULL), Hash64To32(0xBBBB000012345678ULL));
-  EXPECT_EQ(Hash64To32(0), 0U);
+  EXPECT_THAT(Hash64To32(0xAAAA000012345678ULL), Ne(Hash64To32(0xBBBB000012345678ULL)));
+  EXPECT_THAT(Hash64To32(0), Eq(0U));
 }
 
-TEST(CombineHashesTest, MixesAndIsOrderDependent) {
+TEST_F(CombineHashesTest, MixesAndIsOrderDependent) {
   constexpr uint64_t kHash1 = GetHash64("first");
   constexpr uint64_t kHash2 = GetHash64("second");
   constexpr uint64_t kCombined = CombineHashes(kHash1, kHash2);  // constexpr-safe
-  EXPECT_NE(kCombined, kHash1);
-  EXPECT_NE(kCombined, kHash2);
-  EXPECT_NE(kCombined, CombineHashes(kHash2, kHash1));  // order matters
-  EXPECT_EQ(kCombined, CombineHashes(kHash1, kHash2));  // deterministic
+  EXPECT_THAT(kCombined, Ne(kHash1));
+  EXPECT_THAT(kCombined, Ne(kHash2));
+  EXPECT_THAT(kCombined, Ne(CombineHashes(kHash2, kHash1)));  // order matters
+  EXPECT_THAT(kCombined, Eq(CombineHashes(kHash1, kHash2)));  // deterministic
 }
 
 // NOLINTEND(*-magic-numbers)

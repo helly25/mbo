@@ -208,6 +208,9 @@ jobs:
           echo "BAZEL_ARGS: ${BAZEL_ARGS}"
           bazel ${BAZEL_INIT} test ${BAZEL_ARGS} //... \
             //mbo/hash:hash_differential_test
+          bazel ${BAZEL_INIT} test ${BAZEL_ARGS} \
+            --//mbo/hash:mangle_seed_buckets=0 \
+            //mbo/hash:hash_mangle_test
 
       - uses: actions/cache/save@v5
         if: ${{!startsWith(github.ref, 'refs/tags/')}}

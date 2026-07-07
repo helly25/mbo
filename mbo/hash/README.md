@@ -5,6 +5,29 @@ implementations. Algorithm reference and API listing: see the
 [repository README](../../README.md). Quality (SMHasher3) and performance
 measurements for all algorithms: below.
 
+## Offerings
+
+Three entry points, split by contract:
+
+- **`hash.h` / `:hash_cc` - deterministic hashing.** `GetHash64` /
+  `GetHash128` / `GetHash32<Algo>`, the `Hasher<Algo>` container functor, and
+  `Streamer<Algo>` incremental hashing - all constexpr-safe and fully
+  reproducible for a given library version. Use for hash tables (heterogeneous
+  string lookup), tokenization/interning, compile-time hashing
+  (`static_assert`, switch-on-hash), and cross-process consistency within one
+  build. Values are not a persistence or wire format.
+- **`hash_mangle.h` / `:hash_mangle_cc` - deliberately unstable hashing.**
+  `GetHash` / `MangledHasher<Algo>`: `GetHash64` XORed with one build-selected
+  constant, so values do not compare across independently configured builds.
+  Use when hash values must not quietly become load-bearing (persisted tables,
+  golden values, cross-build protocols) - the instability is the feature.
+  Still constexpr; semantics and design rationale in the build-seed mangle
+  section, the flags in the Configuration section below.
+- **`hash_extra.h` / `:hash_extra_cc` - NOTICE-bearing algorithms.** Canonical
+  rapidhash, xxh3, and xxh64 transcriptions, for interop with externally
+  defined values and for comparison. Shipping a binary that links this target
+  requires shipping the repository-root [NOTICE](../../NOTICE).
+
 ## Principles
 
 - **Canonical or honest**: third-party algorithms (rapidhash, XXH64/XXH3,
@@ -30,7 +53,7 @@ measurements for all algorithms: below.
 
 | Algorithm   | Widths | Available via                     | NOTICE                  | Seeded | Streaming | SMHasher3      |
 | ----------- | ------ | --------------------------------- | ----------------------- | ------ | --------- | -------------- |
-| `mumbo`     | 64     | `hash.h` (default 64/32/mangle)   | none (in-house)         | yes    | yes       | PASS           |
+| `mumbo`     | 64     | `hash.h` (default 64/32)          | none (in-house)         | yes    | yes       | PASS           |
 | `jumbo`     | 128    | `hash.h` (default 128)            | none (in-house)         | yes    | yes (64)  | PASS           |
 | `murmur3`   | 64/128 | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (123)     |
 | `siphash`   | 64     | `hash.h`                          | none (CC0)              | keyed  | yes       | PASS (186)     |
@@ -46,6 +69,140 @@ the DoS-resistant choice when the seed is a secret. `simple` is the legacy
 pre-0.13 hash, kept for comparison only. Linking `:hash_extra_cc` requires
 shipping the repository-root [NOTICE](../../NOTICE) (see "Third-party
 components" in the [repository README](../../README.md)).
+
+## Build-seed mangle (`hash_mangle.h` / `:hash_mangle_cc`)
+
+`mbo::hash::GetHash` and `MangledHasher<Algo>` equal `GetHash64` XORed with
+ONE build-selected constant, so values deliberately do not compare across
+independently configured builds - precomputed tables or persisted values
+cannot silently become load-bearing. Everything stays constexpr: the constant
+is generated into a header by folding the module's own version (from
+`MODULE.bazel` via `native.module_version()` - no duplicated version
+declaration anywhere) with two custom Bazel flags (see the
+Configuration section below). Folding the version in means every release
+rotates the constant by construction - at zero marginal cost, since a release
+recompiles all dependents anyway - so "values are not stable across library
+versions" holds by construction even under default flags.
+
+Neither the version nor the raw seed string ever reaches a C++ action key:
+both fold to a bucket inside the header-generation rule, so build/remote
+caches see at most `N + 1` header variants and converge no matter how often
+the seed rotates (per user, per release, or never - a `.bazelrc` one-liner
+either way). Only targets depending on `:hash_mangle_cc` rebuild on rotation;
+`hash.h` / `:hash_cc` users are never touched. One constant applies per
+program: linking objects compiled under different flag values is an ODR
+violation (within a single Bazel build consistency is structural).
+
+### Design: constexpr rules out ASLR, buckets bound the churn
+
+The mangle wants ASLR-style entropy - values that shift outside anyone's
+control, so nothing can quietly start depending on them. Three constraints
+shape the implementation:
+
+1. **constexpr is non-negotiable, which rules out runtime entropy.** Every
+   entry point participates in constant evaluation, including `GetHash`. True
+   ASLR (absl-style: mixing in the address of a global) or any startup-time
+   random seed cannot appear in a constant expression - adopting one would
+   split the API into a constexpr unmangled half and a runtime mangled half.
+   The entropy must be a compile-time constant, so it can only be injected at
+   build time.
+
+2. **Build-time entropy must not defeat caching.** A naive build-time seed
+   (hashing `__DATE__`/`__TIME__`, as an earlier iteration did) takes a new
+   value on every compile: every rotation is a cold miss for build and remote
+   caches, and per-TU evaluation can even hand two translation units of one
+   binary different constants (an ODR violation). Both problems stem from
+   unbounded seed values entering the compiler's inputs.
+
+3. **Churn must be bounded and adjustable.** Hence the two-flag design: the
+   library version and the seed string are folded to one of `N` buckets
+   inside the header-generation rule, and only the resulting constant reaches
+   C++ action keys - a raw value (version, user name, date) never does.
+   Caches therefore hold at most `N + 1`
+   variants of the mangle-dependent build graph (objects, links, cached test
+   results), no matter what rotates through the seed flag.
+   `--//mbo/hash:mangle_seed_buckets` is the dial between entropy and cache
+   footprint: `0` is reproducible (no entropy, no churn), `1` is one pinned
+   constant (distinct from `GetHash64`, zero churn), larger `N` buys more
+   variation at proportional cache cost. The `:hash_cc` / `:hash_mangle_cc`
+   target split completes the containment: plain hash users sit entirely
+   outside the churn.
+
+## Configuration
+
+All configuration lives on the mangle - the deterministic `hash.h` and
+`hash_extra.h` entry points have no knobs. Set the flags on the command line
+or in `.bazelrc`; prefix them with `@helly25_mbo` when the library is
+consumed as a dependency (e.g. `--@helly25_mbo//mbo/hash:mangle_seed=...`).
+
+- `--//mbo/hash:mangle_seed` (string, default `""`): any printable-ASCII
+  string - user name, release tag, date - folded together with the library
+  version to select the mangle constant.
+- `--//mbo/hash:mangle_seed_buckets` (int, default `8`): the entropy/cache
+  dial. `0` disables the mangle (`GetHash == GetHash64`, fully reproducible
+  builds); `1` pins one stable constant across releases and seeds (`GetHash`
+  stays distinct from `GetHash64`, zero churn); `N >= 2` bounds the variation
+  to `N` constants at proportional cache footprint.
+
+Example `.bazelrc` policies:
+
+```sh
+# Reproducible builds / golden tests: disable the mangle entirely.
+build --//mbo/hash:mangle_seed_buckets=0
+
+# Per-user variation on top of the per-release rotation.
+build --//mbo/hash:mangle_seed=alice
+```
+
+Under default flags the constant still rotates once per release (the library
+version is folded in). Non-Bazel builds fall back to the checked-in
+`internal/hash_mangle_seed.h.in`, which carries the default-flag constant for
+the current version; `//mbo/hash:hash_mangle_seed_default_test` keeps it
+byte-identical to the generated header, and a version bump regenerates it
+(command in the file's header comment).
+
+## Abseil interop
+
+The two frameworks compose rather than compete - pick by contract:
+`absl::Hash` is per-process randomized and tuned for tiny in-process keys;
+`mbo::hash` is canonical, cross-platform, constexpr, and streamable.
+
+- **Containers**: `DefaultHasher` (any `Hasher<Algo>` / `MangledHasher<Algo>`)
+  drops into `absl`/`std` hash containers as the `Hash` parameter for string
+  keys, with heterogeneous `string_view` lookup - this replaces absl's native
+  hashing for byte keys outright.
+- **Injecting mbo values into absl combining**: compute the mbo hash - via
+  `Streamer` for chunked content - and combine the resulting integer like any
+  other field. In-repo precedent: `Hash128` and `mbo::types::tstring` do
+  exactly this.
+
+  ```cpp
+  template<typename H>
+  friend H AbslHashValue(H state, const Document& doc) {
+    mbo::hash::Streamer<mbo::hash::DefaultHashAlgorithm> stream;
+    for (std::string_view chunk : doc.chunks) {
+      stream.Update(chunk);
+    }
+    return H::combine(std::move(state), stream.Finalize(), doc.id);
+  }
+  ```
+
+  The mbo value itself stays deterministic; the surrounding absl hash remains
+  per-process seeded (which is what a container wants). Use the mangled
+  `GetHash` instead of `GetHash64` where the injected value itself must not be
+  comparable across builds.
+
+- **The other direction needs care**: folding `absl::HashOf(x)` into mbo
+  values (e.g. via `CombineHashes`) imports absl's per-process randomization -
+  the result is no longer stable across runs, let alone builds. Only do this
+  for values that never leave the process.
+- **Replacing `absl::Hash` for arbitrary types**: possible by design but a
+  deliberate project, not a flag. `AbslHashValue` is framework-agnostic: any
+  hash state implementing `combine` / `combine_contiguous` (plus unordered
+  support) can execute every existing `AbslHashValue` overload, so a
+  mumbo-backed state could swap the algorithm underneath all absl-hashable
+  types. Worth it only when structured types need canonical or constexpr
+  hashing; for byte keys the container functor above already does the job.
 
 ## Performance
 
@@ -142,17 +299,17 @@ numbers are directly comparable.
 
 ### Results
 
-| Algorithm   | Bits | Role in mbo/hash                 | SMHasher3 result | Failures                                                                                                                                                                      |
-| ----------- | ---: | -------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `fnv1a`     |   64 | `hash.h`                         | FAIL - 7 / 186   | nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster                                        |
-| `mumbo`     |   64 | default (64/32/mangle/streaming) | PASS - 188 / 188 | none                                                                                                                                                                          |
-| `rapidhash` |   64 | extra (`hash_extra_cc`)          | PASS - 188 / 188 | none                                                                                                                                                                          |
-| `siphash`   |   64 | `hash.h` (keyed PRF)             | PASS - 186 / 186 | none                                                                                                                                                                          |
-| `xxh3`      |   64 | extra (`hash_extra_cc`)          | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]                                                                       |
-| `xxh64`     |   64 | extra (`hash_extra_cc`)          | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                            |
-| `jumbo`     |  128 | default (128)                    | PASS - 188 / 188 | none                                                                                                                                                                          |
-| `murmur3`   |  128 | `hash.h`                         | FAIL - 123 / 188 | BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)                                                                                                        |
-| `xxh3`      |  128 | extra (`hash_extra_cc`)          | FAIL - 162 / 188 | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8] |
+| Algorithm   | Bits | Role in mbo/hash          | SMHasher3 result | Failures                                                                                                                                                                      |
+| ----------- | ---: | ------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fnv1a`     |   64 | `hash.h`                  | FAIL - 7 / 186   | nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster                                        |
+| `mumbo`     |   64 | default (64/32/streaming) | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `rapidhash` |   64 | extra (`hash_extra_cc`)   | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `siphash`   |   64 | `hash.h` (keyed PRF)      | PASS - 186 / 186 | none                                                                                                                                                                          |
+| `xxh3`      |   64 | extra (`hash_extra_cc`)   | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]                                                                       |
+| `xxh64`     |   64 | extra (`hash_extra_cc`)   | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                            |
+| `jumbo`     |  128 | default (128)             | PASS - 188 / 188 | none                                                                                                                                                                          |
+| `murmur3`   |  128 | `hash.h`                  | FAIL - 123 / 188 | BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)                                                                                                        |
+| `xxh3`      |  128 | extra (`hash_extra_cc`)   | FAIL - 162 / 188 | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8] |
 
 Reading the results:
 
@@ -177,6 +334,17 @@ Reading the results:
   NOTICE).
 
 ### mumbo: the measured design iterations
+
+Lineage first: the library's original hash was `simple` (the legacy pre-0.13
+`GetHash`, still shipped as `mbo::hash::simple` for comparison only). Its
+intended replacement `mh` (never released) accumulated hardening rounds -
+sparse-key collision fixes, seed hardening - but its SMHasher3 failure list
+never fully cleared, and rapidhash held the default in the interim. The
+lessons from that failure analysis fed a clean-sheet widening-multiply (MUM)
+redesign under the working name `mh2`, which is where the measured iterations
+below begin (v1-v3). On reaching 188/188 in both widths it was renamed
+`mumbo` (MUM + mbo), `mh` was dropped entirely, and mumbo/jumbo took the
+defaults; v4 landed with that rename.
 
 `mumbo` reached the clean pass in four measured iterations (each step:
 benchmark plus both SMHasher3 batteries):
