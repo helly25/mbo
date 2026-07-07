@@ -119,10 +119,40 @@ python3 mbo/hash/measurements/hash_benchmark_report.py run \
 python3 mbo/hash/measurements/hash_benchmark_report.py tables \
     --results mbo/hash/measurements/hash_benchmark_results.json
 
-# Plot ns-vs-length curves (plotting deps live in this module, not the library):
+# Plot ns-vs-length curves (dependency-free SVG):
 python3 mbo/hash/measurements/hash_benchmark_report.py plot \
     --results mbo/hash/measurements/hash_benchmark_results.json --out /tmp/hash.svg
+
+# SMHasher3 quality over all algorithms (needs a built SMHasher3, see above):
+python3 mbo/hash/measurements/hash_benchmark_report.py smhasher \
+    --smhasher3 /path/to/SMHasher3 --algos all --out mbo/hash/measurements/smhasher_results.json
 ```
+
+Output filenames are timestamp-prefixed (see below), so `--raw` / `--out` land
+as `data/YYYYMMDD_HHMMSS_...`.
+
+## SMHasher3 quality (`smhasher`)
+
+`hash_benchmark_report.py smhasher --algos all --smhasher3 <path>` runs the
+SMHasher3 battery over a set of algorithms (default `all`, which **includes the
+legacy `simple`**) and stores a pass/fail + failing-family summary as JSON with
+the same provenance, plus each run's full log under `data/`.
+
+It drives a **built SMHasher3 executable** (`--smhasher3`). The third-party
+algorithms are SMHasher3 built-ins; the in-house `mumbo`/`jumbo`/`simple` need a
+patched SMHasher3 that registers them (`mumbo-64`, `jumbo-128`, `simple-64` -
+matching the transcription used for the README quality table). Building that
+harness (SMHasher3 in a linux/arm64 gcc container + the in-house registrations)
+is the outstanding piece; the registration names live in `_SMHASHER_NAMES` and
+are confirmed against `SMHasher3 --list` (override with a different mapping if a
+version renames them).
+
+## Output filenames
+
+Every file the tool writes is prefixed `YYYYMMDD_HHMMSS_` (local wall clock, one
+stamp per invocation), so runs never overwrite each other and the filename
+records when it was produced. The committed canonical results file is therefore
+a specific timestamped file; `tables`/`plot` take an explicit `--results` path.
 
 ## CI
 
@@ -134,6 +164,10 @@ for architecture/compiler shape comparison, not a gate.
 
 ## Open items
 
+- **SMHasher3 harness**: the `smhasher` mode drives a built SMHasher3, but the
+  build itself (container + in-house `mumbo`/`jumbo`/`simple` registrations) is
+  not yet scripted here - it is the outstanding verification gate for any
+  value-changing hash work.
 - Plotter: self-contained SVG is implemented (`plot`); decide whether to commit
   a generated curve or render it on demand.
 - Optional guard: a check that the README tables match the committed canonical

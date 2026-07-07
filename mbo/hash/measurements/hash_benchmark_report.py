@@ -40,8 +40,10 @@ Pipeline (tables/store/plot are pure JSON -> no bazel needed):
 """
 
 import argparse
+import datetime
 import gzip
 import json
+import os
 import re
 import statistics
 import subprocess
@@ -59,6 +61,38 @@ _LABEL_128 = {"mumbo": "jumbo"}  # BmHash128<mumbo> is the jumbo (128-bit) face
 
 _NAME_RE = re.compile(r"^BmHash(64|128)(Latency)?<([A-Za-z0-9]+)>/(\d+)$")
 _BENCHMARK_TARGET = "//mbo/hash:hash_benchmark"
+
+# mbo algorithm -> SMHasher3 registration name(s). The in-house mumbo/jumbo/
+# simple require a patched SMHasher3 that registers them (see the SMHasher3
+# harness in README.md); the third-party names are SMHasher3's built-ins. Names
+# are confirmed against `SMHasher3 --list`; override per run with --names.
+_SMHASHER_NAMES = {
+    "mumbo": ["mumbo-64"],
+    "jumbo": ["jumbo-128"],
+    "simple": ["simple-64"],
+    "fnv1a": ["FNV-1a"],
+    "xxh64": ["XXH-64"],
+    "xxh3": ["XXH3-64", "XXH3-128"],
+    "rapidhash": ["rapidhash"],
+    "siphash": ["SipHash-2-4"],
+    "murmur3": ["MurmurHash3"],
+}
+# Default set - ALL algorithms, explicitly including the legacy `simple`.
+_SMHASHER_ALL = ["mumbo", "jumbo", "simple", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
+
+
+def _timestamp():
+    """Local wall-clock stamp `YYYYMMDD_HHMMSS` for output filenames."""
+    now = datetime.datetime.now()
+    return (
+        f"{now.year:04}{now.month:02}{now.day:02}_{now.hour:02}{now.minute:02}{now.second:02}"
+    )
+
+
+def _timestamped(path, stamp):
+    """Prefix a path's filename with `stamp_`, so every written artifact is uniquely named."""
+    directory, name = os.path.split(path)
+    return os.path.join(directory, f"{stamp}_{name}")
 
 
 def _sh(cmd):
@@ -89,8 +123,6 @@ def _machine_augment():
 
 def _run_benchmark(mode, reps, min_time, warmup):
     """Runs the bazel benchmark with the measurement precautions; returns parsed JSON."""
-    import os
-
     env = dict(os.environ)
     if mode == "full":
         env["MBO_HASH_BENCHMARK_FULL"] = "1"
@@ -172,6 +204,67 @@ def distill(raw, mode):
     return result
 
 
+def _provenance_context():
+    """Shared context block (machine + source) for any stored dataset."""
+    ctx = _machine_augment()
+    ctx["source"] = _source_provenance()
+    return ctx
+
+
+# SMHasher3's per-test failures and final verdict. Tolerant: SMHasher3 output
+# varies by version, so we capture the raw log and parse best-effort.
+_SMH_FAIL_RE = re.compile(r"^\s*(?:FAIL|\!\!\!\!\!|.*\bfail(?:ed|ure)?\b).*$", re.IGNORECASE)
+_SMH_VERDICT_RE = re.compile(r"\bOverall result[:\s.]*\b(PASS|FAIL)\b", re.IGNORECASE)
+
+
+def run_smhasher(smhasher3, names, raw_dir, stamp):
+    """Runs SMHasher3 for each registration name; returns a results dict.
+
+    Args:
+        smhasher3: path to a built SMHasher3 executable (the harness builds it;
+            for the in-house algorithms it must register mumbo-64/jumbo-128/
+            simple-64 - see README.md).
+        names: list of SMHasher3 registration names to run.
+        raw_dir: directory to save each run's full log (may be None).
+        stamp: timestamp prefix for the saved logs.
+
+    Returns:
+        {name: {"verdict": "PASS"/"FAIL"/"UNKNOWN", "failures": [...], "log": path}}.
+    """
+    out = {}
+    for name in names:
+        print(f"$ {smhasher3} {name}", file=sys.stderr)
+        proc = subprocess.run([smhasher3, name], capture_output=True, text=True, check=False)
+        text = proc.stdout + proc.stderr
+        verdict_match = _SMH_VERDICT_RE.search(text)
+        verdict = verdict_match.group(1).upper() if verdict_match else ("PASS" if proc.returncode == 0 else "FAIL")
+        # Failing test lines, minus the overall-verdict line (captured separately).
+        failures = [
+            ln.strip() for ln in text.splitlines() if _SMH_FAIL_RE.match(ln) and not _SMH_VERDICT_RE.search(ln)
+        ]
+        entry = {"verdict": verdict, "failures": failures, "returncode": proc.returncode}
+        if raw_dir:
+            os.makedirs(raw_dir, exist_ok=True)
+            log_path = os.path.join(raw_dir, f"{stamp}_smhasher_{name}.log")
+            with open(log_path, "w") as handle:
+                handle.write(text)
+            entry["log"] = log_path
+            print(f"wrote {log_path}", file=sys.stderr)
+        out[name] = entry
+    return out
+
+
+def _resolve_smhasher_names(algos):
+    """Expand an --algos selection ("all" or a list) to SMHasher3 names."""
+    selected = _SMHASHER_ALL if algos == ["all"] else algos
+    names = []
+    for algo in selected:
+        if algo not in _SMHASHER_NAMES:
+            raise SystemExit(f"unknown algorithm {algo!r}; known: {', '.join(_SMHASHER_NAMES)}")
+        names.extend(_SMHASHER_NAMES[algo])
+    return names
+
+
 def _warn_context(results):
     ctx = results.get("context", {})
     if ctx.get("cpu_scaling_enabled"):
@@ -211,21 +304,36 @@ def _size_label(length):
     return f"{length}B" if length < 1024 else f"{length // 1024}Ki"
 
 
+def _md_table(headers, rows):
+    """Render a vertically aligned GitHub markdown table (first column right-
+    aligned, the rest left) so the output needs no reformatting."""
+    cols = len(headers)
+    width = [len(headers[c]) for c in range(cols)]
+    for row in rows:
+        for c in range(cols):
+            width[c] = max(width[c], len(row[c]), 3)
+
+    def line(cells):
+        out = [cells[0].rjust(width[0])]
+        out += [cells[c].ljust(width[c]) for c in range(1, cols)]
+        return "| " + " | ".join(out) + " |"
+
+    sep = ["-" * (width[0] - 1) + ":"] + ["-" * width[c] for c in range(1, cols)]
+    return "\n".join([line(headers), "| " + " | ".join(sep) + " |"] + [line(r) for r in rows])
+
+
 def _throughput_table(data, preferred, relabel, sizes):
     # Length-per-row, algorithm-per-column: with ~18 README sizes this reads far
     # better than 18 columns, and each row's bold marks the fastest algorithm at
     # that length.
     algos = _order(list(data), preferred)
     sizes = [s for s in sizes if any(str(s) in data[a] for a in algos)]
-    header = [relabel.get(a, a) for a in algos]
-    lines = [
-        "| Length | " + " | ".join(header) + " |",
-        "| ---: | " + " | ".join(["---"] * len(algos)) + " |",
-    ]
+    headers = ["Length"] + [relabel.get(a, a) for a in algos]
+    rows = []
     for size in sizes:
         row = {a: _val(data[a][str(size)]) for a in algos if str(size) in data[a]}
         best = min(row.values()) if row else None
-        cells = []
+        cells = [_size_label(size)]
         for algo in algos:
             if algo not in row:
                 cells.append("-")
@@ -234,28 +342,26 @@ def _throughput_table(data, preferred, relabel, sizes):
             if best is not None and abs(row[algo] - best) < 1e-9:
                 text = f"**{text}**"
             cells.append(text)
-        lines.append(f"| {_size_label(size)} | " + " | ".join(cells) + " |")
-    return "\n".join(lines)
+        rows.append(cells)
+    return _md_table(headers, rows)
 
 
 def _latency_table(data):
     algos = _order(list(data), _ORDER_64)
     sizes = sorted({int(s) for a in data.values() for s in a})
     mins = {s: min(_val(data[a][str(s)]) for a in algos if str(s) in data[a]) for s in sizes}
-    lines = [
-        "| max len | " + " | ".join(algos) + " |",
-        "| ---: | " + " | ".join(["---"] * len(algos)) + " |",
-    ]
+    headers = ["max len"] + algos
+    rows = []
     for size in sizes:
-        cells = []
+        cells = [str(size)]
         for algo in algos:
             cell = data[algo].get(str(size))
             text = "-" if cell is None else _fmt(_val(cell))
             if cell is not None and abs(_val(cell) - mins[size]) < 1e-9:
                 text = f"**{text}**"
             cells.append(text)
-        lines.append(f"| {size} | " + " | ".join(cells) + " |")
-    return "\n".join(lines)
+        rows.append(cells)
+    return _md_table(headers, rows)
 
 
 def render_tables(results):
@@ -359,18 +465,36 @@ def main(argv):
     p_plot.add_argument("--results", required=True)
     p_plot.add_argument("--out", required=True)
 
+    p_smh = sub.add_parser("smhasher", help="run the SMHasher3 quality battery over a set of algorithms")
+    p_smh.add_argument("--smhasher3", required=True, help="path to a built SMHasher3 executable")
+    p_smh.add_argument(
+        "--algos",
+        default="all",
+        help="comma-separated algorithms (default 'all', which includes the legacy simple)",
+    )
+    p_smh.add_argument("--out", help="write the results JSON here")
+    p_smh.add_argument("--raw-dir", default="mbo/hash/measurements/data", help="directory for per-run SMHasher3 logs")
+
     args = parser.parse_args(argv)
+    # One stamp per invocation, so all files a run writes share it. Every
+    # written artifact is prefixed `YYYYMMDD_HHMMSS_` so nothing is overwritten
+    # and the filename records when it was produced.
+    stamp = _timestamp()
 
     if args.command == "run":
         raw = _run_benchmark(args.mode, args.reps, args.min_time, args.warmup)
         if args.raw:
-            opener = gzip.open if args.raw.endswith(".gz") else open
-            with opener(args.raw, "wt") as handle:
+            raw_path = _timestamped(args.raw, stamp)
+            opener = gzip.open if raw_path.endswith(".gz") else open
+            with opener(raw_path, "wt") as handle:
                 json.dump(raw, handle)
+            print(f"wrote {raw_path}", file=sys.stderr)
         results = distill(raw, args.mode)
         _warn_context(results)
         if args.out:
-            _dump_canonical(results, args.out)
+            out_path = _timestamped(args.out, stamp)
+            _dump_canonical(results, out_path)
+            print(f"wrote {out_path}", file=sys.stderr)
         if args.tables or not args.out:
             print(render_tables(results))
         return 0
@@ -378,7 +502,9 @@ def main(argv):
     if args.command == "store":
         results = distill(_load_json(args.raw), args.mode)
         _warn_context(results)
-        _dump_canonical(results, args.out)
+        out_path = _timestamped(args.out, stamp)
+        _dump_canonical(results, out_path)
+        print(f"wrote {out_path}", file=sys.stderr)
         return 0
 
     if args.command == "tables":
@@ -386,8 +512,25 @@ def main(argv):
         return 0
 
     if args.command == "plot":
-        _svg_plot(_load_json(args.results), args.out)
+        out_path = _timestamped(args.out, stamp)
+        _svg_plot(_load_json(args.results), out_path)
         return 0
+
+    if args.command == "smhasher":
+        algos = [a.strip() for a in args.algos.split(",") if a.strip()]
+        names = _resolve_smhasher_names(algos)
+        results = {
+            "context": {**_provenance_context(), "smhasher": {"names": names, "smhasher3": args.smhasher3}},
+            "smhasher": run_smhasher(args.smhasher3, names, args.raw_dir, stamp),
+        }
+        _warn_context(results)
+        failed = [n for n, r in results["smhasher"].items() if r["verdict"] != "PASS"]
+        print(f"SMHasher3: {len(names) - len(failed)}/{len(names)} PASS" + (f"; FAIL: {', '.join(failed)}" if failed else ""))
+        if args.out:
+            out_path = _timestamped(args.out, stamp)
+            _dump_canonical(results, out_path)
+            print(f"wrote {out_path}", file=sys.stderr)
+        return 1 if failed else 0
 
     return 1
 
