@@ -213,8 +213,13 @@ def _provenance_context():
 
 # SMHasher3's per-test failures and final verdict. Tolerant: SMHasher3 output
 # varies by version, so we capture the raw log and parse best-effort.
-_SMH_FAIL_RE = re.compile(r"^\s*(?:FAIL|\!\!\!\!\!|.*\bfail(?:ed|ure)?\b).*$", re.IGNORECASE)
-_SMH_VERDICT_RE = re.compile(r"\bOverall result[:\s.]*\b(PASS|FAIL)\b", re.IGNORECASE)
+# Verdict + optional score, e.g. "Overall result: FAIL  ( 181 / 188 )".
+_SMH_VERDICT_RE = re.compile(
+    r"Overall result[:\s.]*\b(PASS|FAIL)\b(?:[^(]*\(\s*(\d+)\s*/\s*(\d+)\s*\))?", re.IGNORECASE
+)
+# A failing test line. SMHasher3 flags failures with a `!!!!!` / `********`
+# marker or a trailing "FAIL"; capture a leading test/family name where present.
+_SMH_FAIL_RE = re.compile(r"^\s*(?:[!*]{3,}\s*)?(?P<name>[\w :.\[\]/,-]+?)\s*[.\s]*\bFAIL(?:ED)?\b", re.IGNORECASE)
 
 
 def run_smhasher(smhasher3, names, raw_dir, stamp):
@@ -238,11 +243,25 @@ def run_smhasher(smhasher3, names, raw_dir, stamp):
         text = proc.stdout + proc.stderr
         verdict_match = _SMH_VERDICT_RE.search(text)
         verdict = verdict_match.group(1).upper() if verdict_match else ("PASS" if proc.returncode == 0 else "FAIL")
-        # Failing test lines, minus the overall-verdict line (captured separately).
-        failures = [
-            ln.strip() for ln in text.splitlines() if _SMH_FAIL_RE.match(ln) and not _SMH_VERDICT_RE.search(ln)
-        ]
-        entry = {"verdict": verdict, "failures": failures, "returncode": proc.returncode}
+        passed = int(verdict_match.group(2)) if verdict_match and verdict_match.group(2) else None
+        total = int(verdict_match.group(3)) if verdict_match and verdict_match.group(3) else None
+        # Failing test/family names (minus the overall-verdict line), so the JSON
+        # says WHICH tests failed; the full log has the complete "why".
+        failures = []
+        for line in text.splitlines():
+            if _SMH_VERDICT_RE.search(line):
+                continue
+            match = _SMH_FAIL_RE.match(line)
+            if match:
+                failures.append(match.group("name").strip())
+        entry = {
+            "verdict": verdict,
+            "score": (f"{passed} / {total}" if passed is not None and total is not None else None),
+            "passed": passed,
+            "total": total,
+            "failures": failures,
+            "returncode": proc.returncode,
+        }
         if raw_dir:
             os.makedirs(raw_dir, exist_ok=True)
             log_path = os.path.join(raw_dir, f"{stamp}_smhasher_{name}.log")
@@ -524,6 +543,10 @@ def main(argv):
             "smhasher": run_smhasher(args.smhasher3, names, args.raw_dir, stamp),
         }
         _warn_context(results)
+        for name, entry in results["smhasher"].items():
+            score = f" ({entry['score']})" if entry.get("score") else ""
+            why = f" - failed: {', '.join(entry['failures'])}" if entry["failures"] else ""
+            print(f"  {name}: {entry['verdict']}{score}{why}")
         failed = [n for n, r in results["smhasher"].items() if r["verdict"] != "PASS"]
         print(f"SMHasher3: {len(names) - len(failed)}/{len(names)} PASS" + (f"; FAIL: {', '.join(failed)}" if failed else ""))
         if args.out:
