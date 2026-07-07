@@ -206,61 +206,82 @@ The two frameworks compose rather than compete - pick by contract:
 
 ## Performance
 
-Measured with `bazel run -c opt //mbo/hash:hash_benchmark` (Apple Silicon
-arm64, Apple clang; one shared machine, so absolute numbers carry run-to-run
-noise - the _relative_ picture and the per-size cliffs are the point). Bold =
-fastest per size. Key lengths straddle the dispatch-tier and
-small-string-optimization boundaries: 7/8 bracket the fully-unrolled `<= 8`
-path, 15/16 the `<= 16` path (15 is also the libstdc++ SSO cap), 22 the libc++
-SSO cap, 32 the proposed small-key cap, 63/64 the short-chain tier edge.
+Measured and rendered by `mbo/hash/measurements/hash_benchmark_report.py`
+(Apple Silicon arm64, Apple clang, `-c opt`; see
+[mbo/hash/measurements/](measurements/README.md)). Numbers are the **mean of the
+3 fastest of 9 repetitions** with random interleaving and warmup: on a shared
+machine the fast tail approximates the uncontended cost (contention only ever
+adds time), and averaging the best few rejects a single-sample fluke while
+staying far more reproducible than the median at sub-nanosecond scale. Bold =
+fastest per length. Lengths straddle the dispatch-tier and SSO boundaries (7/8
+the fully-unrolled `<= 8` path, 15/16 the `<= 16` path and libstdc++ SSO cap, 22
+the libc++ SSO cap, 47/48 and 63/64 the short-chain steps). The tool's full mode
+sweeps a denser exponential curve.
 
-### 64-bit one-shot throughput (ns/op, median; lower is better)
+### 64-bit one-shot throughput (ns/op, mean of the 3 fastest of 9 reps; lower is better)
 
-| Algorithm | 1B       | 7B       | 8B       | 15B      | 16B      | 22B      | 32B      | 63B      | 64B      | 256B     | 1Ki       | 4Ki       |
-| --------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | --------- | --------- |
-| mumbo     | 2.42     | 2.36     | 2.11     | 2.45     | 2.42     | 2.49     | 2.49     | 3.78     | 3.62     | 8.67     | 23.89     | **82.99** |
-| rapidhash | 2.09     | 1.76     | 1.75     | 1.76     | 1.76     | **2.10** | **2.09** | **2.89** | **2.95** | **7.85** | **23.29** | 86.48     |
-| xxh3      | 1.77     | 1.61     | 1.59     | **1.75** | **1.75** | 2.41     | 2.41     | 3.94     | 3.83     | 27.56    | 60.75     | 180.0     |
-| xxh64     | 1.91     | 2.85     | 2.28     | 3.66     | 2.71     | 3.91     | 5.12     | 10.41    | 6.71     | 16.21    | 55.58     | 228.9     |
-| murmur3   | 2.73     | 2.95     | 2.95     | 3.74     | 4.20     | 4.68     | 5.62     | 8.24     | 8.84     | 33.67    | 166.1     | 709.1     |
-| siphash24 | 6.90     | 6.79     | 9.27     | 9.58     | 12.31    | 12.37    | 18.78    | 28.88    | 32.31    | 122.2    | 482.5     | 1926      |
-| fnv1a     | **0.49** | 2.84     | 3.24     | 6.21     | 6.58     | 9.18     | 15.47    | 40.57    | 41.37    | 289.9    | 1357      | 5654      |
-| simple    | 0.82     | **1.19** | **1.40** | 1.94     | 2.22     | 2.88     | 4.26     | 9.37     | 9.79     | 68.49    | 390.8     | 1737      |
+| Length | mumbo     | rapidhash | xxh3     | xxh64 | murmur3 | siphash24 | fnv1a    | simple   |
+| -----: | --------- | --------- | -------- | ----- | ------- | --------- | -------- | -------- |
+|     1B | 2.01      | 1.95      | 1.86     | 1.94  | 2.80    | 6.60      | **0.51** | 0.82     |
+|     3B | 2.34      | 2.01      | 1.89     | 2.58  | 3.01    | 6.75      | 1.05     | **0.94** |
+|     7B | 2.26      | 1.78      | 1.71     | 2.84  | 3.10    | 6.84      | 2.74     | **1.12** |
+|     8B | 2.13      | 1.73      | 1.64     | 2.28  | 3.11    | 9.22      | 3.29     | **1.40** |
+|    11B | 2.05      | 1.75      | 1.64     | 3.24  | 3.64    | 9.34      | 4.56     | **1.51** |
+|    15B | 1.99      | 1.73      | **1.62** | 3.73  | 3.67    | 9.35      | 6.22     | 1.95     |
+|    16B | 1.97      | 1.74      | **1.71** | 2.97  | 4.01    | 12.15     | 6.54     | 2.25     |
+|    19B | 2.82      | **1.98**  | 2.41     | 3.96  | 4.57    | 12.35     | 7.65     | 2.49     |
+|    22B | 2.79      | **1.98**  | 2.41     | 3.90  | 4.51    | 12.32     | 9.35     | 2.92     |
+|    27B | 2.83      | **2.02**  | 2.40     | 4.75  | 5.27    | 15.54     | 11.79    | 3.50     |
+|    32B | 2.85      | **2.00**  | 2.47     | 5.12  | 5.62    | 18.58     | 15.35    | 4.28     |
+|    47B | 2.94      | **2.43**  | 3.86     | 8.63  | 6.59    | 22.04     | 27.69    | 6.49     |
+|    48B | 2.90      | **2.47**  | 3.84     | 6.83  | 7.13    | 25.48     | 28.49    | 6.72     |
+|    63B | 3.34      | **2.94**  | 3.90     | 10.42 | 8.30    | 28.99     | 40.53    | 9.38     |
+|    64B | 3.45      | **2.91**  | 3.86     | 6.88  | 8.93    | 32.29     | 41.32    | 9.83     |
+|   256B | 8.85      | **7.43**  | 27.86    | 16.27 | 33.95   | 122.1     | 290.2    | 68.68    |
+|    1Ki | 23.83     | **22.74** | 59.35    | 55.78 | 165.9   | 481.9     | 1344     | 388.8    |
+|    4Ki | **83.70** | 84.99     | 179.3    | 230.8 | 707.9   | 1929      | 5576     | 1733     |
 
-### 128-bit one-shot throughput (ns/op, median; native-128 algorithms only)
+### 128-bit one-shot throughput (ns/op, mean of the 3 fastest of 9 reps; native-128 algorithms only)
 
-| Algorithm | 1B       | 7B       | 8B       | 15B      | 16B      | 22B      | 32B      | 63B      | 64B      | 256B      | 1Ki       | 4Ki       |
-| --------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | --------- | --------- | --------- |
-| jumbo     | 3.27     | 3.20     | 3.21     | 3.27     | 3.31     | 3.85     | 3.87     | **5.37** | 6.29     | **10.60** | **32.13** | **125.8** |
-| xxh3      | **2.28** | **2.33** | **2.28** | **2.73** | **2.72** | **3.81** | **3.77** | 5.38     | **5.44** | 29.82     | 61.72     | 182.8     |
-| murmur3   | 2.93     | 3.10     | 3.05     | 3.61     | 3.96     | 4.56     | 5.71     | 8.23     | 8.75     | 33.74     | 166.0     | 710.4     |
+| Length | jumbo     | xxh3     | murmur3 |
+| -----: | --------- | -------- | ------- |
+|     1B | 3.12      | **2.34** | 2.78    |
+|     8B | 3.01      | **2.23** | 3.04    |
+|    16B | 3.04      | **2.74** | 4.03    |
+|    22B | 3.94      | **3.62** | 4.58    |
+|    32B | 3.96      | **3.61** | 5.64    |
+|    47B | **4.60**  | 5.36     | 6.63    |
+|    64B | 6.26      | **5.11** | 8.96    |
+|   256B | **10.61** | 29.73    | 33.92   |
+|    1Ki | **32.74** | 60.90    | 166.7   |
+|    4Ki | **124.5** | 180.3    | 710.6   |
 
-### Mixed-length latency (ns/hash, lower is better)
+### Mixed-length latency (ns/hash, mean of the 3 fastest of 9 reps; lower is better)
 
 Each hash result selects the next key, serializing the dependency chain and
 defeating the size-dispatch branch predictor - the cost profile a hash table
 actually pays (as opposed to the hot, size-predictable throughput loop above).
 
-| max len | mumbo | rapidhash | xxh3 | xxh64    | murmur3 | siphash | fnv1a | simple   |
-| ------: | ----- | --------- | ---- | -------- | ------- | ------- | ----- | -------- |
-|      16 | 9.58  | 10.3      | 11.1 | 13.8     | 15.3    | 18.8    | 13.1  | **9.46** |
-|      64 | 11.5  | 11.7      | 12.5 | **10.3** | 19.9    | 28.6    | 11.8  | 23.4     |
-|    1024 | 27.4  | **26.9**  | 39.7 | 68.5     | 70.2    | 235     | 613   | 302      |
+| max len | mumbo | rapidhash | xxh3  | xxh64     | murmur3 | siphash24 | fnv1a | simple   |
+| ------: | ----- | --------- | ----- | --------- | ------- | --------- | ----- | -------- |
+|      16 | 9.75  | 10.15     | 11.07 | 13.78     | 15.26   | 18.80     | 13.06 | **9.40** |
+|      64 | 11.87 | 11.67     | 12.50 | **10.03** | 19.46   | 27.85     | 11.59 | 23.54    |
+|    1024 | 27.39 | **27.06** | 38.95 | 67.08     | 68.53   | 233.5     | 610.3 | 302.0    |
 
-Reading the results: on the 64-bit throughput board `rapidhash` is the
-small-key leader - it holds ~1.75 ns flat through 16 bytes while `mumbo` runs
-~2.4 ns, so mumbo pays roughly 0.3-0.7 ns on keys that fit a `std::string`
-inline (2.45 ns at the 15-byte libstdc++ SSO cap, 2.49 ns at the 22-byte
-libc++ cap). That gap is mumbo's deliberate price: the two-multiply finalizer
-that earns the clean 188/188 in BOTH widths. It narrows through the mid-sizes
-(rapidhash leads 22 B-1 KiB by a hair) and mumbo retakes the 4 KiB bulk. In
-the latency chain - what a hash table feels - mumbo is the fastest strong
-algorithm at 16 bytes (9.58 ns) and level with rapidhash at 1 KiB, so the
-throughput deficit does not carry into the dependency-bound case. For 128-bit,
-`xxh3` leads to 64 bytes but `jumbo` pulls decisively ahead from 256 bytes up
-(1.5-2.9x beyond) and is the only SMHasher3-clean native 128 on the rig.
-`fnv1a` and `simple` win the 1-8 byte corner (minimal setup) but collapse past
-small keys, and `siphash` pays its PRF security throughout.
+Reading the results: `rapidhash` leads small keys, but after the if-ladder load
+path (see the design iterations) `mumbo` sits ~1.97-2.0 ns through 16 bytes -
+within ~0.2-0.3 ns of rapidhash across the inline-`std::string` range (1.97 ns
+at 16 B, 1.99 ns at the 15 B libstdc++ SSO cap). The remaining gap is the
+17-64 B short-chain tier (mumbo ~2.8-3.4 ns vs rapidhash ~1.98-2.9), the
+sequential 16-byte MUM chain; mumbo retakes the 4 KiB bulk (83.7 ns) and is the
+fastest strong algorithm in the latency chain at 16 B and the leader at 1 KiB,
+so the throughput deficit does not carry into the dependency-bound case. That
+small-key gap is mumbo's deliberate price: the two-multiply finalizer that earns
+the clean 188/188 in BOTH widths. For 128-bit, `xxh3` leads to 32 bytes but
+`jumbo` pulls decisively ahead from 47 bytes up (1.5-2.9x beyond 256 B) and is
+the only SMHasher3-clean native 128 on the rig. `fnv1a` and `simple` win the
+1-8 byte corner (minimal setup) but collapse past small keys, and `siphash`
+pays its PRF security throughout.
 
 ### Performance across platforms
 

@@ -1,0 +1,5 @@
+# Raw datasets are large; commit policy is an open item (see ../README.md).
+# Keep the directory, ignore its contents for now.
+*
+!.gitkeep
+!.gitignore
