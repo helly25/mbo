@@ -188,7 +188,7 @@ TYPED_TEST(HashTest, Avalanche) {
       EXPECT_THAT(ratio, Gt(0.45)) << "len=" << length << " weak avalanche: " << ratio;
       EXPECT_THAT(ratio, Lt(0.55)) << "len=" << length << " biased avalanche: " << ratio;
     } else {
-      // Weak algorithms only need to react at all; e.g. `simple` sits at ~0.07
+      // Weak algorithms only need to react at all; e.g. `dumbo` sits at ~0.07
       // for 4-byte inputs (a documented weakness of its short-input handling).
       EXPECT_THAT(ratio, Gt(0.05)) << "len=" << length << " barely reacts: " << ratio;
     }
@@ -303,7 +303,7 @@ static_assert(HasStreaming<mumbo::Algorithm>);
 static_assert(HasStreaming<xxh64::Algorithm>);
 static_assert(HasStreaming<siphash::Algorithm>);
 static_assert(!HasStreaming<rapidhash::Algorithm>);
-static_assert(!HasStreaming<fnv1a::Algorithm> && !HasStreaming<simple::Algorithm>);
+static_assert(!HasStreaming<fnv1a::Algorithm> && !HasStreaming<dumbo::Algorithm>);
 static_assert(!HasStreaming<xxh3::Algorithm> && !HasStreaming<murmur3::Algorithm>);
 
 TEST_F(StreamerTest, NonDestructiveFinalizeAndConstexpr) {
@@ -686,7 +686,7 @@ struct FakeWith32 {
 
 // Concept detection over the public algorithm structs and the fakes.
 static_assert(HasGetHash64<mumbo::Algorithm> && HasGetHash128<mumbo::Algorithm>);
-static_assert(HasGetHash64<simple::Algorithm> && !HasGetHash128<simple::Algorithm>);
+static_assert(HasGetHash64<dumbo::Algorithm> && !HasGetHash128<dumbo::Algorithm>);
 static_assert(HasGetHash64<fnv1a::Algorithm> && !HasGetHash128<fnv1a::Algorithm>);
 static_assert(HasGetHash64<xxh64::Algorithm> && !HasGetHash128<xxh64::Algorithm>);
 static_assert(HasGetHash64<murmur3::Algorithm> && HasGetHash128<murmur3::Algorithm>);
@@ -721,12 +721,12 @@ TEST_F(HasherTest, GetHash128FallsBackToTwoDecorrelatedPasses) {
 }
 
 TEST_F(HasherTest, GetHash128FallbackDecorrelatesSeedIgnoringAlgorithms) {
-  // `simple` ignores the seed entirely; a naive two-seed fallback would yield
+  // `dumbo` ignores the seed entirely; a naive two-seed fallback would yield
   // h1 == h2. The lanes hash different data, so they still differ.
-  const Hash128 hash = Hasher<simple::Algorithm>::GetHash128("longer than eight bytes", kSeed);
+  const Hash128 hash = Hasher<dumbo::Algorithm>::GetHash128("longer than eight bytes", kSeed);
   EXPECT_THAT(hash.h1, Ne(hash.h2));
   // And inputs differing only past the first 8 bytes change both lanes.
-  const Hash128 other = Hasher<simple::Algorithm>::GetHash128("longer than eight BYTES", kSeed);
+  const Hash128 other = Hasher<dumbo::Algorithm>::GetHash128("longer than eight BYTES", kSeed);
   EXPECT_THAT(hash.h1, Ne(other.h1));
   EXPECT_THAT(hash.h2, Ne(other.h2));
 }

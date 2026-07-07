@@ -58,14 +58,14 @@ Three entry points, split by contract:
 | `murmur3`   | 64/128 | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (123)     |
 | `siphash`   | 64     | `hash.h`                          | none (CC0)              | keyed  | yes       | PASS (186)     |
 | `fnv1a`     | 64     | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (7!)      |
-| `simple`    | 64     | `hash.h`                          | none (in-house)         | no     | no        | n/a (legacy)   |
+| `dumbo`     | 64     | `hash.h`                          | none (in-house)         | no     | no        | n/a (legacy)   |
 | `rapidhash` | 64     | `hash_extra.h` + `:hash_extra_cc` | **MIT - ship NOTICE**   | yes    | no        | PASS           |
 | `xxh64`     | 64     | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | yes       | FAIL (181)     |
 | `xxh3`      | 64/128 | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | no        | FAIL (166/162) |
 
 Notes: `fnv1a` is the algorithm family many `std::hash` implementations use
 (e.g. MSVC) - included as the familiar baseline. `siphash` is a keyed PRF:
-the DoS-resistant choice when the seed is a secret. `simple` is the legacy
+the DoS-resistant choice when the seed is a secret. `dumbo` is the legacy
 pre-0.13 hash, kept for comparison only. Linking `:hash_extra_cc` requires
 shipping the repository-root [NOTICE](../../NOTICE) (see "Third-party
 components" in the [repository README](../../README.md)).
@@ -220,7 +220,7 @@ sweeps a denser exponential curve.
 
 ### 64-bit one-shot throughput (ns/op, mean of the 3 fastest of 9 reps; lower is better)
 
-| Length | mumbo     | rapidhash | xxh3     | xxh64 | murmur3 | siphash24 | fnv1a    | simple   |
+| Length | mumbo     | rapidhash | xxh3     | xxh64 | murmur3 | siphash24 | fnv1a    | dumbo    |
 | -----: | --------- | --------- | -------- | ----- | ------- | --------- | -------- | -------- |
 |     1B | 2.01      | 1.95      | 1.86     | 1.94  | 2.80    | 6.60      | **0.51** | 0.82     |
 |     3B | 2.34      | 2.01      | 1.89     | 2.58  | 3.01    | 6.75      | 1.05     | **0.94** |
@@ -262,7 +262,7 @@ Each hash result selects the next key, serializing the dependency chain and
 defeating the size-dispatch branch predictor - the cost profile a hash table
 actually pays (as opposed to the hot, size-predictable throughput loop above).
 
-| max len | mumbo | rapidhash | xxh3  | xxh64     | murmur3 | siphash24 | fnv1a | simple   |
+| max len | mumbo | rapidhash | xxh3  | xxh64     | murmur3 | siphash24 | fnv1a | dumbo    |
 | ------: | ----- | --------- | ----- | --------- | ------- | --------- | ----- | -------- |
 |      16 | 9.75  | 10.15     | 11.07 | 13.78     | 15.26   | 18.80     | 13.06 | **9.40** |
 |      64 | 11.87 | 11.67     | 12.50 | **10.03** | 19.46   | 27.85     | 11.59 | 23.54    |
@@ -279,7 +279,7 @@ so the throughput deficit does not carry into the dependency-bound case. That
 small-key gap is mumbo's deliberate price: the two-multiply finalizer that earns
 the clean 188/188 in BOTH widths. For 128-bit, `xxh3` leads to 32 bytes but
 `jumbo` pulls decisively ahead from 47 bytes up (1.5-2.9x beyond 256 B) and is
-the only SMHasher3-clean native 128 on the rig. `fnv1a` and `simple` win the
+the only SMHasher3-clean native 128 on the rig. `fnv1a` and `dumbo` win the
 1-8 byte corner (minimal setup) but collapse past small keys, and `siphash`
 pays its PRF security throughout.
 
@@ -293,7 +293,7 @@ marked `*` are gcc constant-folding artifacts on fixed-size lanes.
 
 Mixed-length latency:
 
-| max len | mumbo       | rapidhash       | xxh3         | xxh64       | murmur3     | siphash   | fnv1a       | simple      |
+| max len | mumbo       | rapidhash       | xxh3         | xxh64       | murmur3     | siphash   | fnv1a       | dumbo       |
 | ------: | ----------- | --------------- | ------------ | ----------- | ----------- | --------- | ----------- | ----------- |
 |      16 | 7.5 / 9.8   | 8.1 / 10.9      | 7.7 / 12.0   | 12.6 / 14.1 | 12.4 / 16.1 | 15 / 22   | 12.5 / 13.2 | 20.4 / 9.8  |
 |      64 | 9.3 / 11.2  | 10.1 / 11.4     | 3.6* / 12.6  | 25.4 / 21.4 | 15.7 / 20.1 | 22 / 35   | 0.9* / 38.1 | 69.9 / 26.7 |
@@ -318,7 +318,7 @@ Mixed-length latency:
 Cross-platform reading: the mumbo/rapidhash near-tie holds on both
 architectures (rapidhash leads x86_64-gcc bulk; they tie on arm64), `jumbo`
 is the fastest 128-bit hash from 256 bytes up on both platforms, and the
-xxh3 mid-size dip plus the fnv1a/siphash/simple profiles reproduce
+xxh3 mid-size dip plus the fnv1a/siphash/dumbo profiles reproduce
 everywhere.
 
 ## Quality: SMHasher3
@@ -367,8 +367,9 @@ Reading the results:
 
 ### mumbo: the measured design iterations
 
-Lineage first: the library's original hash was `simple` (the legacy pre-0.13
-`GetHash`, still shipped as `mbo::hash::simple` for comparison only). Its
+Lineage first: the library's original hash was `dumbo` (originally named
+`simple`; the legacy pre-0.13 `GetHash`, still shipped as `mbo::hash::dumbo`
+for comparison only). Its
 intended replacement `mh` (never released) accumulated hardening rounds -
 sparse-key collision fixes, seed hardening - but its SMHasher3 failure list
 never fully cleared, and rapidhash held the default in the interim. The

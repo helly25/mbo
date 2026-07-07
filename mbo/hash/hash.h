@@ -21,11 +21,11 @@
 #include <cstdint>
 #include <string_view>
 
+#include "mbo/hash/hash_dumbo.h"          // IWYU pragma: export
 #include "mbo/hash/hash_fnv1a.h"          // IWYU pragma: export
 #include "mbo/hash/hash_internal_util.h"  // IWYU pragma: export
 #include "mbo/hash/hash_mumbo.h"          // IWYU pragma: export
 #include "mbo/hash/hash_murmur3.h"        // IWYU pragma: export
-#include "mbo/hash/hash_simple.h"         // IWYU pragma: export
 #include "mbo/hash/hash_siphash.h"        // IWYU pragma: export
 #include "mbo/hash/hash_types.h"          // IWYU pragma: export
 

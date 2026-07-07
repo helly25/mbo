@@ -89,13 +89,13 @@ The C++ library is organized in functional groups each residing in their own dir
     - function `GetHash32<Algo>(std::string_view, seed)`: 32-bit companion; uses an algorithm's native 32-bit variant where provided, else the XOR-fold of the 64-bit hash.
     - concept `HasGetHash32` / `HasGetHash64` / `HasGetHash128`: Detect which static member functions an algorithm struct provides; `IsHashAlgorithm` requires a 64- or 128-bit one.
     - struct `Hasher<Algo>`: Completes any `IsHashAlgorithm` struct into the full `GetHash64`/`GetHash128`/`GetHash32` interface, synthesizing what is missing (fold for 64; two decorrelated passes for 128 -- the second skips the first up-to-8 bytes and injects them via the seed). Also a transparent functor over `GetHash64`, so it drops into `absl`/`std` hash containers with heterogeneous `string_view` lookup.
-    - algorithm structs `mumbo::Algorithm`, `jumbo::Algorithm`, `murmur3::Algorithm`, `siphash::Algorithm`, `fnv1a::Algorithm`, `simple::Algorithm` (plus `rapidhash::Algorithm`, `xxh3::Algorithm`, `xxh64::Algorithm` via `hash_extra.h`): the per-algorithm plug-ins for `GetHash*<Algo>` / `Hasher<Algo>`.
+    - algorithm structs `mumbo::Algorithm`, `jumbo::Algorithm`, `murmur3::Algorithm`, `siphash::Algorithm`, `fnv1a::Algorithm`, `dumbo::Algorithm` (plus `rapidhash::Algorithm`, `xxh3::Algorithm`, `xxh64::Algorithm` via `hash_extra.h`): the per-algorithm plug-ins for `GetHash*<Algo>` / `Hasher<Algo>`.
     - struct `Hash128`: The 128-bit result type (`h1`, `h2`); ordered (`<=>`) and Abseil hash/stringify compatible.
     - function `Hash128To64(Hash128)`: Folds a 128-bit hash into a well-mixed 64-bit one, e.g. `Hash128To64(murmur3::GetHash128(data))`.
     - function `CombineHashes(uint64_t, uint64_t)`: Combines two hashes (order-dependent, well mixed).
     - function `Hash64To32(uint64_t)`: Shrinks a hash to 32 bits by XOR-folding the halves (the correct default for all algorithms, incl. weak-low-bit ones like FNV-1a).
     - concept `HasStreaming` / class `Streamer<Algo>`: incremental hashing (`Update(...).Update(...).Finalize()`), guaranteed equal to the one-shot value; provided by `mumbo`, `xxh64`, and `siphash` (rapidhash has no canonical streaming form).
-    - function `simple::GetHash64(std::string_view)`: the previous hash implementation (`simple::GetHash` is deprecated).
+    - function `dumbo::GetHash64(std::string_view)`: the legacy in-house hash (64-bit, unseeded, weak; kept for comparison only - use `GetHash64` / mumbo instead). Formerly `mbo::hash::simple`.
     - function `fnv1a::GetHash64(std::string_view, seed)`: canonical FNV-1a 64 (constexpr-safe).
     - function `xxh64::GetHash64(std::string_view, seed)`: canonical XXH64 / xxHash 64-bit (constexpr-safe; in `hash_extra.h`, see below).
     - function `xxh3::GetHash64/GetHash128(std::string_view, seed)`: canonical XXH3 64- and 128-bit (modern xxHash generation, the fast file-checksum format; scalar; constexpr-safe; in `hash_extra.h`).
@@ -335,7 +335,7 @@ The [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) i
 
 Presented at [C++ On Sea 2024](https://cpponsea.uk/2024/session/practical-production-proven-constexpr-api-elements), this presentation covers the theory behind:
 
-- `mbo::hash::simple::GetHash64` (formerly `mbo::hash::simple::GetHash`),
+- `mbo::hash::dumbo::GetHash64` (presented as `mbo::hash::simple::GetHash`),
 - `mbo::container::LimitedVector`,
 - `mbo::container::LimitedMap`, and
 - `mbo::container::LimitedSet`.

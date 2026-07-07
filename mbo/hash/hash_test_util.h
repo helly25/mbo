@@ -44,12 +44,12 @@ struct MumboHash : ::mbo::hash::mumbo::Algorithm {
   static constexpr std::string_view Name() { return "mumbo"; }
 };
 
-// The previous "simple" implementation (64-bit only; ignores the seed).
-struct SimpleHash : ::mbo::hash::simple::Algorithm {
+// The legacy in-house "dumbo" implementation (64-bit only; ignores the seed).
+struct DumboHash : ::mbo::hash::dumbo::Algorithm {
   static constexpr bool kStrongAvalanche = false;
   static constexpr bool kSeeded = false;
 
-  static constexpr std::string_view Name() { return "simple"; }
+  static constexpr std::string_view Name() { return "dumbo"; }
 };
 
 // FNV-1a 64 (canonical values; byte-at-a-time, weak final diffusion).
@@ -104,7 +104,7 @@ struct Murmur3Hash : ::mbo::hash::murmur3::Algorithm {
 // derive their coverage from this single list, so adding a descriptor here is
 // sufficient to test AND benchmark a new algorithm.
 using AllAlgorithms =
-    std::tuple<SimpleHash, MumboHash, Fnv1aHash, Xxh64Hash, Xxh3Hash, RapidHash, SipHash24Hash, Murmur3Hash>;
+    std::tuple<DumboHash, MumboHash, Fnv1aHash, Xxh64Hash, Xxh3Hash, RapidHash, SipHash24Hash, Murmur3Hash>;
 
 // The bit width the algorithm is based on: 128 if it exposes a 128-bit variant.
 template<typename Algo>

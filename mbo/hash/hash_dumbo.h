@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_HASH_HASH_SIMPLE_H_
-#define MBO_HASH_HASH_SIMPLE_H_
+#ifndef MBO_HASH_HASH_DUMBO_H_
+#define MBO_HASH_HASH_DUMBO_H_
 
 // IWYU pragma: private, include "mbo/hash/hash.h"
 
@@ -23,14 +23,23 @@
 #include <string_view>
 #include <type_traits>
 
-namespace mbo::hash::simple {
+namespace mbo::hash::dumbo {
 
 // NOLINTBEGIN(*-identifier-naming,*-magic-numbers,*-constant-array-index,*-pointer-arithmetic,*-signed-bitwise)
 
-// Namespace `mbo::hash::simple` offers a `GetHash` a constexpr safe simple hash function.
+// `dumbo` is the library's legacy in-house 64-bit hash (the -umbo family's weak
+// member: no seed support, does not pass SMHasher3). Kept for comparison only;
+// use `mbo::hash::GetHash64` (mumbo) instead.
+//
+// TODO(helly25): dumbo is worth a little improvement work rather than pure
+// museum-keeping - it is competitive for tiny strings (its 1-8 byte throughput
+// is among the fastest, see mbo/hash/measurements), where mumbo pays for its
+// stronger finalizer. A better tail/finalizer that lifts its avalanche without
+// losing the tiny-key edge could make it a genuine "fast, weak-but-ok for tiny
+// keys" option instead of a deprecated relic. Any change is SMHasher3-gated.
 namespace hash_internal {
 
-inline constexpr uint64_t GetSimpleHash(std::string_view data) {
+inline constexpr uint64_t GetDumboHash(std::string_view data) {
   constexpr uint64_t kArbitrary = 5'008'709'998'333'326'415ULL;
   constexpr uint64_t kPrimeNum10k = 104'729ULL;
   if (data.empty()) {
@@ -98,24 +107,19 @@ inline constexpr uint64_t GetSimpleHash(std::string_view data) {
 }  // namespace hash_internal
 
 inline constexpr uint64_t GetHash64(std::string_view data) {
-  return hash_internal::GetSimpleHash(data);
-}
-
-// Deprecated in version 0.13.0
-[[deprecated("Use ::mbo::hash::GetHash64() instead.")]] inline constexpr uint64_t GetHash(std::string_view data) {
-  return hash_internal::GetSimpleHash(data);
+  return hash_internal::GetDumboHash(data);
 }
 
 // The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). This
 // algorithm has no seed support; the seed parameter is ignored.
 struct Algorithm {
   static constexpr uint64_t GetHash64(std::string_view data, uint64_t /*seed*/ = 0) noexcept {
-    return hash_internal::GetSimpleHash(data);
+    return hash_internal::GetDumboHash(data);
   }
 };
 
 // NOLINTEND(*-identifier-naming,*-magic-numbers,*-constant-array-index,*-pointer-arithmetic,*-signed-bitwise)
 
-}  // namespace mbo::hash::simple
+}  // namespace mbo::hash::dumbo
 
-#endif  // MBO_HASH_HASH_SIMPLE_H_
+#endif  // MBO_HASH_HASH_DUMBO_H_

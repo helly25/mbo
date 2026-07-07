@@ -55,7 +55,7 @@ _README_SIZES = [1, 3, 7, 8, 11, 15, 16, 19, 22, 27, 32, 47, 48, 63, 64, 256, 10
 
 # Ordering uses the benchmark's algorithm keys (data keys); _LABEL_128 only
 # renames "mumbo" to "jumbo" for display in the 128-bit table.
-_ORDER_64 = ["mumbo", "rapidhash", "xxh3", "xxh64", "murmur3", "siphash24", "fnv1a", "simple"]
+_ORDER_64 = ["mumbo", "rapidhash", "xxh3", "xxh64", "murmur3", "siphash24", "fnv1a", "dumbo"]
 _ORDER_128 = ["mumbo", "xxh3", "murmur3"]
 _LABEL_128 = {"mumbo": "jumbo"}  # BmHash128<mumbo> is the jumbo (128-bit) face
 
@@ -63,13 +63,13 @@ _NAME_RE = re.compile(r"^BmHash(64|128)(Latency)?<([A-Za-z0-9]+)>/(\d+)$")
 _BENCHMARK_TARGET = "//mbo/hash:hash_benchmark"
 
 # mbo algorithm -> SMHasher3 registration name(s). The in-house mumbo/jumbo/
-# simple require a patched SMHasher3 that registers them (see the SMHasher3
+# dumbo require a patched SMHasher3 that registers them (see the SMHasher3
 # harness in README.md); the third-party names are SMHasher3's built-ins. Names
 # are confirmed against `SMHasher3 --list`; override per run with --names.
 _SMHASHER_NAMES = {
     "mumbo": ["mumbo-64"],
     "jumbo": ["jumbo-128"],
-    "simple": ["simple-64"],
+    "dumbo": ["dumbo-64"],
     "fnv1a": ["FNV-1a"],
     "xxh64": ["XXH-64"],
     "xxh3": ["XXH3-64", "XXH3-128"],
@@ -77,8 +77,8 @@ _SMHASHER_NAMES = {
     "siphash": ["SipHash-2-4"],
     "murmur3": ["MurmurHash3"],
 }
-# Default set - ALL algorithms, explicitly including the legacy `simple`.
-_SMHASHER_ALL = ["mumbo", "jumbo", "simple", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
+# Default set - ALL algorithms, explicitly including the legacy `dumbo`.
+_SMHASHER_ALL = ["mumbo", "jumbo", "dumbo", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
 
 
 def _timestamp():
@@ -228,7 +228,7 @@ def run_smhasher(smhasher3, names, raw_dir, stamp):
     Args:
         smhasher3: path to a built SMHasher3 executable (the harness builds it;
             for the in-house algorithms it must register mumbo-64/jumbo-128/
-            simple-64 - see README.md).
+            dumbo-64 - see README.md).
         names: list of SMHasher3 registration names to run.
         raw_dir: directory to save each run's full log (may be None).
         stamp: timestamp prefix for the saved logs.
@@ -489,7 +489,7 @@ def main(argv):
     p_smh.add_argument(
         "--algos",
         default="all",
-        help="comma-separated algorithms (default 'all', which includes the legacy simple)",
+        help="comma-separated algorithms (default 'all', which includes the legacy dumbo)",
     )
     p_smh.add_argument("--out", help="write the results JSON here")
     p_smh.add_argument("--raw-dir", default="mbo/hash/measurements/data", help="directory for per-run SMHasher3 logs")
