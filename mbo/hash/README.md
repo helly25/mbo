@@ -225,24 +225,24 @@ sweeps a denser exponential curve.
 
 | Length | mumbo     | rapidhash | xxh3     | xxh64 | murmur3 | siphash24 | fnv1a    | dumbo    |
 | -----: | --------- | --------- | -------- | ----- | ------- | --------- | -------- | -------- |
-|     1B | 2.01      | 1.95      | 1.86     | 1.94  | 2.80    | 6.60      | **0.51** | 0.82     |
-|     3B | 2.34      | 2.01      | 1.89     | 2.58  | 3.01    | 6.75      | 1.05     | **0.94** |
-|     7B | 2.26      | 1.78      | 1.71     | 2.84  | 3.10    | 6.84      | 2.74     | **1.12** |
+|     1B | 2.01      | 1.95      | 1.86     | 1.94  | 2.80    | 6.60      | **0.51** | 1.43     |
+|     3B | 2.34      | 2.01      | 1.89     | 2.58  | 3.01    | 6.75      | **1.05** | 2.79     |
+|     7B | 2.26      | 1.78      | 1.71     | 2.84  | 3.10    | 6.84      | 2.74     | **1.40** |
 |     8B | 2.13      | 1.73      | 1.64     | 2.28  | 3.11    | 9.22      | 3.29     | **1.40** |
-|    11B | 2.05      | 1.75      | 1.64     | 3.24  | 3.64    | 9.34      | 4.56     | **1.51** |
-|    15B | 1.99      | 1.73      | **1.62** | 3.73  | 3.67    | 9.35      | 6.22     | 1.95     |
-|    16B | 1.97      | 1.74      | **1.71** | 2.97  | 4.01    | 12.15     | 6.54     | 2.25     |
-|    19B | 2.82      | **1.98**  | 2.41     | 3.96  | 4.57    | 12.35     | 7.65     | 2.49     |
-|    22B | 2.79      | **1.98**  | 2.41     | 3.90  | 4.51    | 12.32     | 9.35     | 2.92     |
-|    27B | 2.83      | **2.02**  | 2.40     | 4.75  | 5.27    | 15.54     | 11.79    | 3.50     |
-|    32B | 2.85      | **2.00**  | 2.47     | 5.12  | 5.62    | 18.58     | 15.35    | 4.28     |
-|    47B | 2.94      | **2.43**  | 3.86     | 8.63  | 6.59    | 22.04     | 27.69    | 6.49     |
-|    48B | 2.90      | **2.47**  | 3.84     | 6.83  | 7.13    | 25.48     | 28.49    | 6.72     |
-|    63B | 3.34      | **2.94**  | 3.90     | 10.42 | 8.30    | 28.99     | 40.53    | 9.38     |
-|    64B | 3.45      | **2.91**  | 3.86     | 6.88  | 8.93    | 32.29     | 41.32    | 9.83     |
-|   256B | 8.85      | **7.43**  | 27.86    | 16.27 | 33.95   | 122.1     | 290.2    | 68.68    |
-|    1Ki | 23.83     | **22.74** | 59.35    | 55.78 | 165.9   | 481.9     | 1344     | 388.8    |
-|    4Ki | **83.70** | 84.99     | 179.3    | 230.8 | 707.9   | 1929      | 5576     | 1733     |
+|    11B | 2.05      | 1.75      | **1.64** | 3.24  | 3.64    | 9.34      | 4.56     | 2.90     |
+|    15B | 1.99      | 1.73      | **1.62** | 3.73  | 3.67    | 9.35      | 6.22     | 1.82     |
+|    16B | 1.97      | 1.74      | **1.71** | 2.97  | 4.01    | 12.15     | 6.54     | 1.82     |
+|    19B | 2.82      | **1.98**  | 2.41     | 3.96  | 4.57    | 12.35     | 7.65     | 3.34     |
+|    22B | 2.79      | **1.98**  | 2.41     | 3.90  | 4.51    | 12.32     | 9.35     | 2.40     |
+|    27B | 2.83      | **2.02**  | 2.40     | 4.75  | 5.27    | 15.54     | 11.79    | 3.72     |
+|    32B | 2.85      | **2.00**  | 2.47     | 5.12  | 5.62    | 18.58     | 15.35    | 2.83     |
+|    47B | 2.94      | **2.43**  | 3.86     | 8.63  | 6.59    | 22.04     | 27.69    | 4.23     |
+|    48B | 2.90      | **2.47**  | 3.84     | 6.83  | 7.13    | 25.48     | 28.49    | 4.20     |
+|    63B | 3.34      | **2.94**  | 3.90     | 10.42 | 8.30    | 28.99     | 40.53    | 5.36     |
+|    64B | 3.45      | **2.91**  | 3.86     | 6.88  | 8.93    | 32.29     | 41.32    | 5.68     |
+|   256B | 8.85      | **7.43**  | 27.86    | 16.27 | 33.95   | 122.1     | 290.2    | 30.59    |
+|    1Ki | 23.83     | **22.74** | 59.35    | 55.78 | 165.9   | 481.9     | 1344     | 193.8    |
+|    4Ki | **83.70** | 84.99     | 179.3    | 230.8 | 707.9   | 1929      | 5576     | 879.7    |
 
 ### 128-bit one-shot throughput (ns/op, mean of the 3 fastest of 9 reps; native-128 algorithms only)
 
@@ -265,11 +265,11 @@ Each hash result selects the next key, serializing the dependency chain and
 defeating the size-dispatch branch predictor - the cost profile a hash table
 actually pays (as opposed to the hot, size-predictable throughput loop above).
 
-| max len | mumbo | rapidhash | xxh3  | xxh64     | murmur3 | siphash24 | fnv1a | dumbo    |
-| ------: | ----- | --------- | ----- | --------- | ------- | --------- | ----- | -------- |
-|      16 | 9.75  | 10.15     | 11.07 | 13.78     | 15.26   | 18.80     | 13.06 | **9.40** |
-|      64 | 11.87 | 11.67     | 12.50 | **10.03** | 19.46   | 27.85     | 11.59 | 23.54    |
-|    1024 | 27.39 | **27.06** | 38.95 | 67.08     | 68.53   | 233.5     | 610.3 | 302.0    |
+| max len | mumbo    | rapidhash | xxh3  | xxh64     | murmur3 | siphash24 | fnv1a | dumbo |
+| ------: | -------- | --------- | ----- | --------- | ------- | --------- | ----- | ----- |
+|      16 | **9.75** | 10.15     | 11.07 | 13.78     | 15.26   | 18.80     | 13.06 | 13.46 |
+|      64 | 11.87    | 11.67     | 12.50 | **10.03** | 19.46   | 27.85     | 11.59 | 18.16 |
+|    1024 | 27.39    | **27.06** | 38.95 | 67.08     | 68.53   | 233.5     | 610.3 | 124.4 |
 
 Reading the results: `rapidhash` leads small keys, but after the if-ladder load
 path (see the design iterations) `mumbo` sits ~1.97-2.0 ns through 16 bytes -
@@ -282,9 +282,14 @@ so the throughput deficit does not carry into the dependency-bound case. That
 small-key gap is mumbo's deliberate price: the two-multiply finalizer that earns
 the clean 188/188 in BOTH widths. For 128-bit, `xxh3` leads to 32 bytes but
 `jumbo` pulls decisively ahead from 47 bytes up (1.5-2.9x beyond 256 B) and is
-the only SMHasher3-clean native 128 on the rig. `fnv1a` and `dumbo` win the
-1-8 byte corner (minimal setup) but collapse past small keys, and `siphash`
-pays its PRF security throughout.
+the only SMHasher3-clean native 128 on the rig. `fnv1a` wins the 1-3 B corner
+(no finalizer at all), and the redesigned `dumbo` takes 7-8 B and matches
+rapidhash at 15-16 B (~1.82 ns) before falling off on larger keys (its single
+serial MUM accumulator, though far less steeply than the legacy hash: 30.6 ns
+vs 68.7 at 256 B). In the dependency-bound latency chain, dumbo's `fmix64`
+finalizer costs it the tiny-key lead the finalizer-free legacy version used to
+hold (13.5 ns at 16 B vs mumbo's 9.8) - the same finalizer that lifts it from
+40/188 to 186/188. `siphash` pays its PRF security throughout.
 
 ### Performance across platforms
 
@@ -321,8 +326,10 @@ Mixed-length latency:
 Cross-platform reading: the mumbo/rapidhash near-tie holds on both
 architectures (rapidhash leads x86_64-gcc bulk; they tie on arm64), `jumbo`
 is the fastest 128-bit hash from 256 bytes up on both platforms, and the
-xxh3 mid-size dip plus the fnv1a/siphash/dumbo profiles reproduce
-everywhere.
+xxh3 mid-size dip plus the fnv1a/siphash profiles reproduce everywhere. (The
+`dumbo` row above is the PR #235 CI run of the legacy hash and predates the
+redesign; it refreshes on the next `main` CI benchmark - the single-rig
+64-bit table above already reflects the redesigned dumbo.)
 
 ## Quality: SMHasher3
 
