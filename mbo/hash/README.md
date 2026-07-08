@@ -58,15 +58,18 @@ Three entry points, split by contract:
 | `murmur3`   | 64/128 | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (123)     |
 | `siphash`   | 64     | `hash.h`                          | none (CC0)              | keyed  | yes       | PASS (186)     |
 | `fnv1a`     | 64     | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (7!)      |
-| `dumbo`     | 64     | `hash.h`                          | none (in-house)         | weak   | no        | FAIL (40)      |
+| `dumbo`     | 64     | `hash.h`                          | none (in-house)         | weak   | no        | FAIL (186)     |
 | `rapidhash` | 64     | `hash_extra.h` + `:hash_extra_cc` | **MIT - ship NOTICE**   | yes    | no        | PASS           |
 | `xxh64`     | 64     | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | yes       | FAIL (181)     |
 | `xxh3`      | 64/128 | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | no        | FAIL (166/162) |
 
 Notes: `fnv1a` is the algorithm family many `std::hash` implementations use
 (e.g. MSVC) - included as the familiar baseline. `siphash` is a keyed PRF:
-the DoS-resistant choice when the seed is a secret. `dumbo` is the legacy
-pre-0.13 hash, kept for comparison only. Linking `:hash_extra_cc` requires
+the DoS-resistant choice when the seed is a secret. `dumbo` is the compact
+single-lane member of the MUM family: the fastest hash here for tiny keys and
+near-clean on SMHasher3 (see the design iterations), but weakly seeded and
+serial (so it collapses on large keys) - a deliberately minimal companion to
+`mumbo`, not a replacement for it. Linking `:hash_extra_cc` requires
 shipping the repository-root [NOTICE](../../NOTICE) (see "Third-party
 components" in the [repository README](../../README.md)).
 
@@ -331,18 +334,18 @@ numbers are directly comparable.
 
 ### Results
 
-| Algorithm   | Bits | Role in mbo/hash          | SMHasher3 result | Failures                                                                                                                                                                      |
-| ----------- | ---: | ------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dumbo`     |   64 | `hash.h` (legacy)         | FAIL - 40 / 188  | nearly every family (weak legacy hash): Avalanche, BIC, the keyset tests (Sparse/Permutation/Cyclic/TwoBytes/Text/Zeroes), and the complete Seed* cluster                     |
-| `fnv1a`     |   64 | `hash.h`                  | FAIL - 7 / 186   | nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster                                        |
-| `mumbo`     |   64 | default (64/32/streaming) | PASS - 188 / 188 | none                                                                                                                                                                          |
-| `rapidhash` |   64 | extra (`hash_extra_cc`)   | PASS - 188 / 188 | none                                                                                                                                                                          |
-| `siphash`   |   64 | `hash.h` (keyed PRF)      | PASS - 186 / 186 | none                                                                                                                                                                          |
-| `xxh3`      |   64 | extra (`hash_extra_cc`)   | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]                                                                       |
-| `xxh64`     |   64 | extra (`hash_extra_cc`)   | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                            |
-| `jumbo`     |  128 | default (128)             | PASS - 188 / 188 | none                                                                                                                                                                          |
-| `murmur3`   |  128 | `hash.h`                  | FAIL - 123 / 188 | BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)                                                                                                        |
-| `xxh3`      |  128 | extra (`hash_extra_cc`)   | FAIL - 162 / 188 | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8] |
+| Algorithm   | Bits | Role in mbo/hash          | SMHasher3 result | Failures                                                                                                                                                                                                                                                                                                                               |
+| ----------- | ---: | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dumbo`     |   64 | `hash.h` (compact MUM)    | FAIL - 186 / 188 | `SeedZeroes` only: marginal low-bit collisions [37-bit 1.7x, 42-bit 2.1x]. Its single residual weakness is the weak seeding - for zero-data keys the seed enters one product operand linearly - so it surfaces exactly in the seed-with-zero-keys family; every other family (Avalanche, BIC, all keysets, the rest of Seed*) is clean |
+| `fnv1a`     |   64 | `hash.h`                  | FAIL - 7 / 186   | nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster                                                                                                                                                                                                 |
+| `mumbo`     |   64 | default (64/32/streaming) | PASS - 188 / 188 | none                                                                                                                                                                                                                                                                                                                                   |
+| `rapidhash` |   64 | extra (`hash_extra_cc`)   | PASS - 188 / 188 | none                                                                                                                                                                                                                                                                                                                                   |
+| `siphash`   |   64 | `hash.h` (keyed PRF)      | PASS - 186 / 186 | none                                                                                                                                                                                                                                                                                                                                   |
+| `xxh3`      |   64 | extra (`hash_extra_cc`)   | FAIL - 166 / 188 | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]                                                                                                                                                                                                                                |
+| `xxh64`     |   64 | extra (`hash_extra_cc`)   | FAIL - 181 / 188 | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                                                                                                                                                                                     |
+| `jumbo`     |  128 | default (128)             | PASS - 188 / 188 | none                                                                                                                                                                                                                                                                                                                                   |
+| `murmur3`   |  128 | `hash.h`                  | FAIL - 123 / 188 | BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)                                                                                                                                                                                                                                                                 |
+| `xxh3`      |  128 | extra (`hash_extra_cc`)   | FAIL - 162 / 188 | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8]                                                                                                                                                          |
 
 Reading the results:
 
@@ -370,7 +373,8 @@ Reading the results:
 
 Lineage first: the library's original hash was `dumbo` (originally named
 `simple`; the legacy pre-0.13 `GetHash`, still shipped as `mbo::hash::dumbo`
-for comparison only). Its
+and since redesigned into a compact MUM hash - its own iterations are below).
+Its
 intended replacement `mh` (never released) accumulated hardening rounds -
 sparse-key collision fixes, seed hardening - but its SMHasher3 failure list
 never fully cleared, and rapidhash held the default in the interim. The
@@ -401,6 +405,39 @@ benchmark plus both SMHasher3 batteries):
    equals the 64-bit hash. The table above reflects the latest completed
    batteries.
 
+### dumbo: the measured design iterations
+
+`dumbo` was rebuilt from the legacy hash the same measured way (each step:
+both benchmarks plus the SMHasher3 battery). It stays deliberately minimal
+next to `mumbo` - ONE 64-bit accumulator, ONE 8-byte word folded per step, no
+small-key switch, no parallel lanes, no streaming, no 128-bit form, and the
+stock MurmurHash3 `fmix64` finalizer - so it reads as the compact MUM hash
+rather than a second tuned one:
+
+1. legacy (40/188): the original `simple` hash. Silly constants (multiply by
+   `6571`, add `17`/`193`, a `104729` tail) and a multi-op per-4-byte step
+   (two small multiplies, two shifts, an add, two XORs). Barely diffused - it
+   failed nearly every family - and slow (the op soup, four bytes at a time).
+2. v1 (132/188, ~2-3x faster than legacy): nothing-up-my-sleeve constants
+   (golden ratio, sqrt-prime fractions) and a clean single step over 8-byte
+   words - `hash = (hash ^ word) * kConst; hash ^= hash >> 29` - then `fmix64`.
+   The gross failures cleared, but it caps here: a **constant** multiplier is
+   linear, so the collision and distribution families stay red no matter how
+   good the constant is. (It also exposed a length-fold bug: folding length at
+   init let a single low input bit cancel a length delta -
+   `(kInit+16)^4 == kInit+12` - colliding 1-bit keys with all-zero keys; the
+   length now folds in at the end, after every bit is diffused.)
+3. v2 (186/188, shipped): the step becomes the MUM primitive
+   `Mul128Fold64(word ^ kWord, state ^ kState)` - the widening multiply with
+   **both operands state/data dependent**, so the product is quadratic (mumbo's
+   mixing, single-lane). That clears every avalanche, distribution, keyset and
+   full-width collision family. The two residual failures are both in
+   `SeedZeroes`: dumbo is weakly seeded, so for zero-data keys the seed enters
+   one product operand linearly and shows marginal low-bit collisions. Closing
+   those (a two-multiply finalizer or stronger seed mixing, as `mumbo` uses)
+   is the tracked next step - deliberately deferred to keep dumbo minimal and
+   its finalizer distinct from mumbo's.
+
 ### Methodology (reproduction)
 
 - SMHasher3 @ gitlab.com/fwojcik/smhasher3, commit `6ab4343` (2026-03-26),
@@ -422,5 +459,5 @@ benchmark plus both SMHasher3 batteries):
   plugin needs C++20). Reproduce all of it with that one script.
 - Full default battery per hash: `./SMHasher3 <name>` (~12 minutes each).
   Full logs are not committed; regenerate as above. Last run (2026-07):
-  `mumbo-64` and `jumbo-128` PASS 188 / 188; `dumbo-64` FAIL 40 / 188 (the weak
-  legacy hash).
+  `mumbo-64` and `jumbo-128` PASS 188 / 188; `dumbo-64` FAIL 186 / 188 (two
+  marginal `SeedZeroes` low-bit windows - see the dumbo iterations).

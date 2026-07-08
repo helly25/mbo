@@ -155,7 +155,9 @@ that recognizes `mumbo-64` / `jumbo-128` / `dumbo-64`. Registration names live
 in `_SMHASHER_NAMES` and match `SMHasher3 --list`.
 
 Last verified run (2026-07): **mumbo-64 PASS 188/188**, **jumbo-128 PASS
-188/188**, **dumbo-64 FAIL 40/188** (the weak legacy hash).
+188/188**, **dumbo-64 FAIL 186/188** (redesigned compact MUM hash; the two
+residual failures are marginal `SeedZeroes` low-bit windows from its weak
+seeding).
 
 ## Output filenames
 

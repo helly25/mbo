@@ -18,111 +18,88 @@
 
 // IWYU pragma: private, include "mbo/hash/hash.h"
 
+#include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <string_view>
-#include <type_traits>
+
+#include "mbo/hash/hash_internal_util.h"
 
 namespace mbo::hash::dumbo {
 
-// NOLINTBEGIN(*-identifier-naming,*-magic-numbers,*-constant-array-index,*-pointer-arithmetic,*-signed-bitwise)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic)
 
-// `dumbo` is the library's legacy in-house 64-bit hash (the -umbo family's weak
-// member: only weakly seeded, does not pass SMHasher3). Kept for comparison
-// only; use `mbo::hash::GetHash64` (mumbo) instead.
+// `dumbo` is the small/simple member of the -umbo family: a single-accumulator
+// 64-bit MUM hash. It shares mumbo's mixing primitive -- the widening
+// 64x64->128 multiply folded to 64 bits (`hash_internal::Mul128Fold64`, "MUM")
+// -- but stays deliberately minimal: ONE 64-bit state, ONE 8-byte word folded
+// per step, no small-key switch, no parallel lanes, no streaming, no 128-bit
+// form, and the stock MurmurHash3 `fmix64` finalizer rather than mumbo's
+// two-multiply one. That makes it the readable, compact MUM hash next to the
+// throughput-tuned mumbo. constexpr; weakly seeded (the seed folds into the
+// initial state). Values are NOT stable across library versions and are not
+// cryptographic.
 //
-// TODO(helly25): dumbo is worth a little improvement work rather than pure
-// museum-keeping - it is competitive for tiny strings (its 1-8 byte throughput
-// is among the fastest, see mbo/hash/measurements), where mumbo pays for its
-// stronger finalizer. A better tail/finalizer that lifts its avalanche without
-// losing the tiny-key edge could make it a genuine "fast, weak-but-ok for tiny
-// keys" option instead of a deprecated relic. Any change is SMHasher3-gated.
-namespace hash_internal {
+// Each step multiplies the input word against the running state (both operands
+// XORed with a secret first), so the product is quadratic in the data: a
+// constant multiplier is linear and collides badly (SMHasher3 collision and
+// distribution failures) -- the state-dependent multiply is what earns the
+// quality. The constants are nothing-up-my-sleeve numbers so there is no room
+// for a hidden weakness: `kInit` is the golden-ratio reciprocal (2^64 / phi,
+// the canonical multiplicative-hash constant, also used by
+// hash_internal::Hash128To64); `kWord` and `kState` are the 64-bit fractional
+// parts of the square roots of 3 and 5 (SHA-512 initial hash values, FIPS
+// 180-4, the same source as mumbo's secret bank).
+namespace dumbo_internal {
 
-inline constexpr uint64_t GetDumboHash(std::string_view data, uint64_t seed) {
-  constexpr uint64_t kArbitrary = 5'008'709'998'333'326'415ULL;
-  constexpr uint64_t kPrimeNum10k = 104'729ULL;
-  // The seed is folded into the initial state and then carried through the
-  // multiply chain, so it perturbs every output bit at negligible cost (one
-  // XOR). Cheap, but weak - dumbo does not aim for cryptographic seed mixing.
-  if (data.empty()) {
-    return (0x892df5cfULL ^ kArbitrary) ^ seed;  // Arbitrary number (neither 0 nor -1).
-  }
-  // Below we use an optimized form that directly reads from memory (using`memcpy`). However, that
-  // is not allowed in a constant evaluated expression (assign result to constexpr var). In order to
-  // work around that limitation, we check `std::is_constant_evaluated()` and provide a slower, yet
-  // compile-time evaluated variant. Now we could think that the function needs to be checked in
-  // `if constexpr ()`, but that leads to nice errors as it would seemingly always be true.
-  // Clang: error: 'std::is_constant_evaluated' will always evaluate to 'true' in a manifestly
-  //               constant-evaluated expression [-Werror,-Wconstant-evaluated]
-  // GCC:   error: 'std::is_constant_evaluated' always evaluates to true in 'if constexpr'
-  //               [-Werror=tautological-compare]
-  if (std::is_constant_evaluated()) {
-    std::size_t len = data.length();
-    std::size_t pos = 0;
-    uint64_t result = (kArbitrary + len) ^ seed;
-    while (len >= 4) {
-      uint64_t add = 0;
-      add += data[pos++];
-      add += data[pos++] << 8U;
-      add += data[pos++] << 16U;
-      add += data[pos++] << 24U;
-      result = (result * 6'571) ^ ((17 * add + (add >> 16U)) ^ (result >> 32U));
-      len -= 4;
-    }
-    uint64_t add = 0;
-    switch (len) {
-      case 3: add += data[pos + 2] << 16U;
-      case 2: add += data[pos + 1] << 8U;
-      case 1: add += data[pos]; return (result * 193) + (kPrimeNum10k * add);
-      default: break;
-    }
-    return result;
-  } else {
-    const char* str = data.data();
-    const char* end = data.end() - 3;
-    uint64_t result = (kArbitrary + data.length()) ^ seed;
-    uint64_t add = 0;
-    while (str < end) {
-      std::memcpy(&add, str, 4);
-      result = (result * 6'571) ^ ((17 * add + (add >> 16U)) ^ (result >> 32U));
-      str += 4;
-    }
-    switch (data.length() % 4) {  // NOLINT(*-default-case)
-      case 3:
-        add = 0;
-        std::memcpy(&add, str, 3);
-        return (result * 193) + (kPrimeNum10k * add);
-      case 2:
-        add = 0;
-        std::memcpy(&add, str, 2);
-        return (result * 193) + (kPrimeNum10k * add);
-      case 1:
-        add = 0;
-        std::memcpy(&add, str, 1);
-        return (result * 193) + (kPrimeNum10k * add);
-      case 0: return result;
-    }
-    return result;
-  }
+inline constexpr uint64_t kInit = 0x9E3779B97F4A7C15ULL;
+inline constexpr uint64_t kWord = 0xBB67AE8584CAA73BULL;
+inline constexpr uint64_t kState = 0x3C6EF372FE94F82BULL;
+
+// Folds one 8-byte word into the state with a single widening MUM: both
+// operands are state/data dependent, so the mixing is nonlinear.
+constexpr uint64_t MumStep(uint64_t state, uint64_t word) noexcept {
+  return hash_internal::Mul128Fold64(word ^ kWord, state ^ kState);
 }
 
-}  // namespace hash_internal
+}  // namespace dumbo_internal
 
-inline constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) {
-  return hash_internal::GetDumboHash(data, seed);
+inline constexpr uint64_t GetDumboHash(std::string_view data, uint64_t seed) noexcept {
+  const char* ptr = data.data();
+  const char* const end = ptr + data.size();
+  // The seed folds into the initial state and then rides the whole MUM chain --
+  // weak seeding, but free. The length is folded in at the *end* (below), after
+  // every input bit is diffused, rather than at init where it would share raw
+  // low bits with the first word.
+  uint64_t hash = seed ^ dumbo_internal::kInit;
+  // 8 bytes per step. The loop bound is the end pointer rather than a
+  // decremented counter. Marked likely: keys longer than a single 8-byte word
+  // are the common case; shorter keys skip straight to the overlapping tail
+  // read below.
+  while (end - ptr > 8) [[likely]] {
+    hash = dumbo_internal::MumStep(hash, hash_internal::Load64(ptr));
+    ptr += 8;
+  }
+  // The final 1..8 bytes (also the whole key when it is <= 8) read as one
+  // overlapping load -- no tail loop, no out-of-bounds access.
+  hash = dumbo_internal::MumStep(hash, hash_internal::LoadTail(ptr, static_cast<std::size_t>(end - ptr)));
+  // Fold the length now that every input bit is diffused, then avalanche.
+  hash ^= data.size();
+  return hash_internal::Fmix64(hash);
 }
 
-// The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). Seeded, but
-// only weakly (the seed is folded into the initial state); dumbo is the legacy
-// comparison hash, not a strong mixer.
+inline constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) noexcept {
+  return GetDumboHash(data, seed);
+}
+
+// The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). Weakly
+// seeded: the seed folds into the initial state and rides the MUM chain.
 struct Algorithm {
   static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) noexcept {
-    return hash_internal::GetDumboHash(data, seed);
+    return GetDumboHash(data, seed);
   }
 };
 
-// NOLINTEND(*-identifier-naming,*-magic-numbers,*-constant-array-index,*-pointer-arithmetic,*-signed-bitwise)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic)
 
 }  // namespace mbo::hash::dumbo
 
