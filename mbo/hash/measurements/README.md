@@ -33,7 +33,8 @@ mbo/hash/measurements/
   README.md                    # this design doc
   MODULE.bazel                 # separate dev module (isolates plotting deps)
   hash_benchmark_report.py     # run / store / tables / plot / smhasher (stdlib only)
-  build_smhasher3.sh           # reproducible SMHasher3 build (clone + fixes + container gcc)
+  build_smhasher3.sh           # reproducible SMHasher3 build (clone + fixes + install plugin + container gcc)
+  smhasher3/mbohash.cpp        # in-house mumbo/jumbo/dumbo SMHasher3 registration (includes the real headers)
   hash_benchmark_results.json  # canonical distilled results (committed provenance for the README tables)
   data/                        # complete raw datasets + SMHasher3 logs (see "Data storage")
 ```
@@ -146,12 +147,15 @@ two documented fixes (missing `<cstdlib>` in `lib/AEStest.cpp`; replace
 methodology in `../README.md`. The third-party algorithms are SMHasher3
 built-ins and work immediately.
 
-The in-house `mumbo`/`jumbo`/`dumbo` still need a **registration source** dropped
-into SMHasher3's `hashes/` tree before the build (a transcription registering
-`mumbo-64` / `jumbo-128` / `dumbo-64`, matching `hash_mumbo.h` / `hash_dumbo.h`)
+The in-house `mumbo`/`jumbo`/`dumbo` are registered by `smhasher3/mbohash.cpp`,
+which `#include`s the ACTUAL `mbo/hash` headers (so the real implementation is
+verified, not a transcription). `build_smhasher3.sh` copies the headers + plugin
+into the tree and registers the source, so one script run yields a SMHasher3
+that recognizes `mumbo-64` / `jumbo-128` / `dumbo-64`. Registration names live
+in `_SMHASHER_NAMES` and match `SMHasher3 --list`.
 
-- that plugin is the outstanding piece. Registration names live in
-  `_SMHASHER_NAMES` and are confirmed against `SMHasher3 --list`.
+Last verified run (2026-07): **mumbo-64 PASS 188/188**, **jumbo-128 PASS
+188/188**, **dumbo-64 FAIL 40/188** (the weak legacy hash).
 
 ## Output filenames
 
@@ -170,10 +174,9 @@ for architecture/compiler shape comparison, not a gate.
 
 ## Open items
 
-- **SMHasher3 in-house plugin**: `build_smhasher3.sh` builds stock SMHasher3
-  (third-party algorithms verify today), but the `mumbo`/`jumbo`/`dumbo`
-  registration source is not written yet - it is the verification gate for any
-  value-changing hash work. Run on merged `main` for an authoritative result.
+- **Authoritative results JSON**: the README scores come from a verified run,
+  but a committed `smhasher_results.json` (via the `smhasher` mode) is not stored
+  yet - run it on merged `main` if a machine-readable record is wanted.
 - Plotter: self-contained SVG is implemented (`plot`); decide whether to commit
   a generated curve or render it on demand.
 - Optional guard: a check that the README tables match the committed canonical
