@@ -28,7 +28,7 @@ even invert the true ordering. So we:
 
 ## Layout
 
-```
+```text
 mbo/hash/measurements/
   README.md                    # this design doc
   MODULE.bazel                 # separate dev module (isolates plotting deps)
