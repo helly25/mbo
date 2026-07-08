@@ -68,13 +68,34 @@ else
 fi
 sed -i.bak "s/-march=native/-march=${march}/g" "${SRC_DIR}/CMakeLists.txt"
 
+# Install the in-house plugin: it #includes the ACTUAL mbo/hash headers (so the
+# real implementation is verified, not a transcription). Copy the four headers
+# preserving the mbo/hash/ path, drop in the registration source, register it,
+# and switch to C++20 (mumbo/dumbo need it).
+REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
+mkdir -p "${SRC_DIR}/mbo_include/mbo/hash"
+cp "${REPO}"/mbo/hash/hash_types.h "${REPO}"/mbo/hash/hash_internal_util.h \
+  "${REPO}"/mbo/hash/hash_mumbo.h "${REPO}"/mbo/hash/hash_dumbo.h \
+  "${SRC_DIR}/mbo_include/mbo/hash/"
+cp "${REPO}/mbo/hash/measurements/smhasher3/mbohash.cpp" "${SRC_DIR}/hashes/mbohash.cpp"
+grep -q 'hashes/mbohash.cpp' "${SRC_DIR}/hashes/Hashsrc.cmake" \
+  || sed -i.bak 's#\(set(HASH_SRC_FILES\)#\1\n  hashes/mbohash.cpp#' "${SRC_DIR}/hashes/Hashsrc.cmake"
+sed -i.bak 's/set(CMAKE_CXX_STANDARD 11)/set(CMAKE_CXX_STANDARD 20)/' "${SRC_DIR}/CMakeLists.txt"
+# The ${CMAKE_*} tokens are meant to land literally in CMakeLists.txt, not expand here.
+# shellcheck disable=SC2016
+grep -q 'mbo_include' "${SRC_DIR}/CMakeLists.txt" \
+  || sed -i.bak 's#\(include_directories(${CMAKE_BINARY_DIR}/include)\)#\1\ninclude_directories(${CMAKE_SOURCE_DIR}/mbo_include)#' \
+    "${SRC_DIR}/CMakeLists.txt"
+
 # Build with gcc in a container (native on arm64 hosts; matches the README rig).
+# NOTE: the work dir must be under a path Docker Desktop shares with the VM
+# (e.g. under $HOME on macOS); /private/tmp is not shared by default.
 docker run --rm -v "${SRC_DIR}:/src" -w /src "${BUILD_IMAGE}" bash -c '
   set -euo pipefail
-  apt-get update -qq && apt-get install -y -qq cmake >/dev/null
+  command -v cmake >/dev/null || { apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq cmake >/dev/null; }
   cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
   cmake --build build -j"$(nproc)"
 '
 
 echo "SMHasher3 built: ${SRC_DIR}/build/SMHasher3"
-echo "Confirm registrations:  ${SRC_DIR}/build/SMHasher3 --list | grep -Ei 'mumbo|jumbo|dumbo|rapid|xxh|murmur|sip|fnv'"
+echo "In-house hashes: ${SRC_DIR}/build/SMHasher3 --list | grep -Ei 'mumbo|jumbo|dumbo'"

@@ -58,7 +58,7 @@ Three entry points, split by contract:
 | `murmur3`   | 64/128 | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (123)     |
 | `siphash`   | 64     | `hash.h`                          | none (CC0)              | keyed  | yes       | PASS (186)     |
 | `fnv1a`     | 64     | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (7!)      |
-| `dumbo`     | 64     | `hash.h`                          | none (in-house)         | weak   | no        | n/a (legacy)   |
+| `dumbo`     | 64     | `hash.h`                          | none (in-house)         | weak   | no        | FAIL (40)      |
 | `rapidhash` | 64     | `hash_extra.h` + `:hash_extra_cc` | **MIT - ship NOTICE**   | yes    | no        | PASS           |
 | `xxh64`     | 64     | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | yes       | FAIL (181)     |
 | `xxh3`      | 64/128 | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | no        | FAIL (166/162) |
@@ -333,6 +333,7 @@ numbers are directly comparable.
 
 | Algorithm   | Bits | Role in mbo/hash          | SMHasher3 result | Failures                                                                                                                                                                      |
 | ----------- | ---: | ------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dumbo`     |   64 | `hash.h` (legacy)         | FAIL - 40 / 188  | nearly every family (weak legacy hash): Avalanche, BIC, the keyset tests (Sparse/Permutation/Cyclic/TwoBytes/Text/Zeroes), and the complete Seed* cluster                     |
 | `fnv1a`     |   64 | `hash.h`                  | FAIL - 7 / 186   | nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster                                        |
 | `mumbo`     |   64 | default (64/32/streaming) | PASS - 188 / 188 | none                                                                                                                                                                          |
 | `rapidhash` |   64 | extra (`hash_extra_cc`)   | PASS - 188 / 188 | none                                                                                                                                                                          |
@@ -413,8 +414,13 @@ benchmark plus both SMHasher3 batteries):
   (transcriptions are vector- and differential-verified equal, so the results
   transfer; the built-in `XXH3-128` ran its NEON implementation on this rig,
   which produces the identical canonical values).
-- `mumbo` was transcribed standalone into a plugin source (registered as
-  `mumbo-64` and `jumbo-128`, seeded), matching `hash_mumbo.h` at the current
-  commit.
+- The in-house `mumbo-64`, `jumbo-128`, and `dumbo-64` are registered by
+  `mbo/hash/measurements/smhasher3/mbohash.cpp`, which `#include`s the ACTUAL
+  `mbo/hash` headers (so the real implementation is verified, not a
+  transcription). `mbo/hash/measurements/build_smhasher3.sh` clones SMHasher3,
+  applies the fixes above, installs the plugin + headers, and builds it (the
+  plugin needs C++20). Reproduce all of it with that one script.
 - Full default battery per hash: `./SMHasher3 <name>` (~12 minutes each).
-  Full logs are not committed; regenerate as above.
+  Full logs are not committed; regenerate as above. Last run (2026-07):
+  `mumbo-64` and `jumbo-128` PASS 188 / 188; `dumbo-64` FAIL 40 / 188 (the weak
+  legacy hash).
