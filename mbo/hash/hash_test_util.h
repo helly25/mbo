@@ -44,9 +44,9 @@ struct MumboHash : ::mbo::hash::mumbo::Algorithm {
   static constexpr std::string_view Name() { return "mumbo"; }
 };
 
-// The legacy in-house "dumbo" implementation (64-bit; weakly seeded).
+// The compact single-lane MUM "dumbo" implementation (64-bit).
 struct DumboHash : ::mbo::hash::dumbo::Algorithm {
-  static constexpr bool kStrongAvalanche = false;
+  static constexpr bool kStrongAvalanche = true;
   static constexpr bool kSeeded = true;
 
   static constexpr std::string_view Name() { return "dumbo"; }

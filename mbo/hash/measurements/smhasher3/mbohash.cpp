@@ -69,7 +69,7 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x6AAFAE26,
-    $.verification_BE = 0xC00A2BDE,
+    $.verification_LE = 0x6F1EB379,
+    $.verification_BE = 0x36783BC3,
     $.hashfn_native = DumboHash64<false>,
     $.hashfn_bswap = DumboHash64<true>);

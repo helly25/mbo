@@ -32,19 +32,24 @@ namespace mbo::hash::dumbo {
 // 64-bit MUM hash. It shares mumbo's mixing primitive -- the widening
 // 64x64->128 multiply folded to 64 bits (`hash_internal::Mul128Fold64`, "MUM")
 // -- but stays deliberately minimal: ONE 64-bit state, ONE 8-byte word folded
-// per step, no small-key switch, no parallel lanes, no streaming, no 128-bit
-// form, and the stock MurmurHash3 `fmix64` finalizer rather than mumbo's
-// two-multiply one. That makes it the readable, compact MUM hash next to the
-// throughput-tuned mumbo. constexpr; weakly seeded (the seed folds into the
-// initial state). Values are NOT stable across library versions and are not
-// cryptographic.
+// per step, no small-key switch, no parallel lanes, no streaming, and no
+// 128-bit form. That makes it the readable, compact MUM hash next to the
+// throughput-tuned mumbo: SMHasher3 PASS 188/188 (see README.md), the fastest
+// hash in the library for tiny keys, but single-lane, so it slows on large
+// keys. constexpr and seeded. Values are NOT stable across library versions and
+// are not cryptographic.
 //
 // Each step multiplies the input word against the running state (both operands
 // XORed with a secret first), so the product is quadratic in the data: a
 // constant multiplier is linear and collides badly (SMHasher3 collision and
 // distribution failures) -- the state-dependent multiply is what earns the
-// quality. The constants are nothing-up-my-sleeve numbers so there is no room
-// for a hidden weakness: `kInit` is the golden-ratio reciprocal (2^64 / phi,
+// quality. The finalizer is a two-multiply widening avalanche that keeps BOTH
+// halves of the first product and mixes them, folding in the length and the
+// seed; the seed enters a product operand there directly (not only at init),
+// because single-lane a seed that only rode the chain is too weakly mixed for
+// zero-data keys (SMHasher3's SeedZeroes family). The constants are
+// nothing-up-my-sleeve numbers so there is no room for a hidden weakness:
+// `kInit` is the golden-ratio reciprocal (2^64 / phi,
 // the canonical multiplicative-hash constant, also used by
 // hash_internal::Hash128To64); `kWord` and `kState` are the 64-bit fractional
 // parts of the square roots of 3 and 5 (SHA-512 initial hash values, FIPS
@@ -59,6 +64,18 @@ inline constexpr uint64_t kState = 0x3C6EF372FE94F82BULL;
 // operands are state/data dependent, so the mixing is nonlinear.
 constexpr uint64_t MumStep(uint64_t state, uint64_t word) noexcept {
   return hash_internal::Mul128Fold64(word ^ kWord, state ^ kState);
+}
+
+// Two-multiply widening finalizer, folding in the length and the seed: keeps
+// BOTH halves of the first product and multiplies them against each other, so
+// the output is quadratic in the operands. The seed enters a product operand
+// here directly (not only at init): dumbo is single-lane, so for zero-data keys
+// a seed that only rode the chain is weakly mixed - injecting it at finalize is
+// what clears SMHasher3's SeedZeroes family (mumbo does the same via its
+// seeded bulk lanes plus this "keep both halves" finalizer).
+constexpr uint64_t Finalize(uint64_t state, uint64_t seed, uint64_t len) noexcept {
+  const auto product = hash_internal::Mult128(state ^ kWord ^ len, seed ^ kState);
+  return hash_internal::Mul128Fold64(product.h1 ^ kState ^ len, product.h2 ^ kWord ^ seed);
 }
 
 }  // namespace dumbo_internal
@@ -82,9 +99,13 @@ inline constexpr uint64_t GetDumboHash(std::string_view data, uint64_t seed) noe
   // The final 1..8 bytes (also the whole key when it is <= 8) read as one
   // overlapping load -- no tail loop, no out-of-bounds access.
   hash = dumbo_internal::MumStep(hash, hash_internal::LoadTail(ptr, static_cast<std::size_t>(end - ptr)));
-  // Fold the length now that every input bit is diffused, then avalanche.
-  hash ^= data.size();
-  return hash_internal::Fmix64(hash);
+  // Finalize with the length: a two-multiply widening avalanche that keeps BOTH
+  // halves of the first product and mixes them, so the result is quadratic in
+  // the state. A single fold plus fmix64 leaves the state - hence the seed, for
+  // zero-data keys - only linearly mixed, which SMHasher3's SeedZeroes catches
+  // as low-bit collisions; the second multiply of two state-derived halves is
+  // what removes that (the same reason mumbo's finalizer keeps both halves).
+  return dumbo_internal::Finalize(hash, seed, static_cast<uint64_t>(data.size()));
 }
 
 inline constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) noexcept {
