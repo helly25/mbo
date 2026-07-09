@@ -58,15 +58,18 @@ Three entry points, split by contract:
 | `murmur3`   | 64/128 | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (123)     |
 | `siphash`   | 64     | `hash.h`                          | none (CC0)              | keyed  | yes       | PASS (186)     |
 | `fnv1a`     | 64     | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (7!)      |
-| `dumbo`     | 64     | `hash.h`                          | none (in-house)         | weak   | no        | FAIL (40)      |
+| `dumbo`     | 64     | `hash.h`                          | none (in-house)         | yes    | no        | PASS           |
 | `rapidhash` | 64     | `hash_extra.h` + `:hash_extra_cc` | **MIT - ship NOTICE**   | yes    | no        | PASS           |
 | `xxh64`     | 64     | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | yes       | FAIL (181)     |
 | `xxh3`      | 64/128 | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | no        | FAIL (166/162) |
 
 Notes: `fnv1a` is the algorithm family many `std::hash` implementations use
 (e.g. MSVC) - included as the familiar baseline. `siphash` is a keyed PRF:
-the DoS-resistant choice when the seed is a secret. `dumbo` is the legacy
-pre-0.13 hash, kept for comparison only. Linking `:hash_extra_cc` requires
+the DoS-resistant choice when the seed is a secret. `dumbo` is the compact
+single-lane member of the MUM family: the fastest hash here for tiny keys and
+SMHasher3-clean (188/188, see the design iterations), but single-lane (so it
+slows on large keys) - a deliberately minimal companion to `mumbo`, not a
+replacement for it. Linking `:hash_extra_cc` requires
 shipping the repository-root [NOTICE](../../NOTICE) (see "Third-party
 components" in the [repository README](../../README.md)).
 
@@ -222,24 +225,24 @@ sweeps a denser exponential curve.
 
 | Length | mumbo     | rapidhash | xxh3     | xxh64 | murmur3 | siphash24 | fnv1a    | dumbo    |
 | -----: | --------- | --------- | -------- | ----- | ------- | --------- | -------- | -------- |
-|     1B | 2.01      | 1.95      | 1.86     | 1.94  | 2.80    | 6.60      | **0.51** | 0.82     |
-|     3B | 2.34      | 2.01      | 1.89     | 2.58  | 3.01    | 6.75      | 1.05     | **0.94** |
-|     7B | 2.26      | 1.78      | 1.71     | 2.84  | 3.10    | 6.84      | 2.74     | **1.12** |
-|     8B | 2.13      | 1.73      | 1.64     | 2.28  | 3.11    | 9.22      | 3.29     | **1.40** |
-|    11B | 2.05      | 1.75      | 1.64     | 3.24  | 3.64    | 9.34      | 4.56     | **1.51** |
-|    15B | 1.99      | 1.73      | **1.62** | 3.73  | 3.67    | 9.35      | 6.22     | 1.95     |
-|    16B | 1.97      | 1.74      | **1.71** | 2.97  | 4.01    | 12.15     | 6.54     | 2.25     |
-|    19B | 2.82      | **1.98**  | 2.41     | 3.96  | 4.57    | 12.35     | 7.65     | 2.49     |
-|    22B | 2.79      | **1.98**  | 2.41     | 3.90  | 4.51    | 12.32     | 9.35     | 2.92     |
-|    27B | 2.83      | **2.02**  | 2.40     | 4.75  | 5.27    | 15.54     | 11.79    | 3.50     |
-|    32B | 2.85      | **2.00**  | 2.47     | 5.12  | 5.62    | 18.58     | 15.35    | 4.28     |
-|    47B | 2.94      | **2.43**  | 3.86     | 8.63  | 6.59    | 22.04     | 27.69    | 6.49     |
-|    48B | 2.90      | **2.47**  | 3.84     | 6.83  | 7.13    | 25.48     | 28.49    | 6.72     |
-|    63B | 3.34      | **2.94**  | 3.90     | 10.42 | 8.30    | 28.99     | 40.53    | 9.38     |
-|    64B | 3.45      | **2.91**  | 3.86     | 6.88  | 8.93    | 32.29     | 41.32    | 9.83     |
-|   256B | 8.85      | **7.43**  | 27.86    | 16.27 | 33.95   | 122.1     | 290.2    | 68.68    |
-|    1Ki | 23.83     | **22.74** | 59.35    | 55.78 | 165.9   | 481.9     | 1344     | 388.8    |
-|    4Ki | **83.70** | 84.99     | 179.3    | 230.8 | 707.9   | 1929      | 5576     | 1733     |
+|     1B | 2.01      | 1.95      | 1.86     | 1.94  | 2.80    | 6.60      | **0.51** | 1.59     |
+|     3B | 2.34      | 2.01      | 1.89     | 2.58  | 3.01    | 6.75      | **1.05** | 2.84     |
+|     7B | 2.26      | 1.78      | 1.71     | 2.84  | 3.10    | 6.84      | 2.74     | **1.61** |
+|     8B | 2.13      | 1.73      | 1.64     | 2.28  | 3.11    | 9.22      | 3.29     | **1.59** |
+|    11B | 2.05      | 1.75      | **1.64** | 3.24  | 3.64    | 9.34      | 4.56     | 3.06     |
+|    15B | 1.99      | 1.73      | **1.62** | 3.73  | 3.67    | 9.35      | 6.22     | 1.91     |
+|    16B | 1.97      | 1.74      | **1.71** | 2.97  | 4.01    | 12.15     | 6.54     | 1.92     |
+|    19B | 2.82      | **1.98**  | 2.41     | 3.96  | 4.57    | 12.35     | 7.65     | 3.47     |
+|    22B | 2.79      | **1.98**  | 2.41     | 3.90  | 4.51    | 12.32     | 9.35     | 2.42     |
+|    27B | 2.83      | **2.02**  | 2.40     | 4.75  | 5.27    | 15.54     | 11.79    | 3.95     |
+|    32B | 2.85      | **2.00**  | 2.47     | 5.12  | 5.62    | 18.58     | 15.35    | 3.18     |
+|    47B | 2.94      | **2.43**  | 3.86     | 8.63  | 6.59    | 22.04     | 27.69    | 4.45     |
+|    48B | 2.90      | **2.47**  | 3.84     | 6.83  | 7.13    | 25.48     | 28.49    | 4.41     |
+|    63B | 3.34      | **2.94**  | 3.90     | 10.42 | 8.30    | 28.99     | 40.53    | 5.90     |
+|    64B | 3.45      | **2.91**  | 3.86     | 6.88  | 8.93    | 32.29     | 41.32    | 5.92     |
+|   256B | 8.85      | **7.43**  | 27.86    | 16.27 | 33.95   | 122.1     | 290.2    | 31.75    |
+|    1Ki | 23.83     | **22.74** | 59.35    | 55.78 | 165.9   | 481.9     | 1344     | 195.6    |
+|    4Ki | **83.70** | 84.99     | 179.3    | 230.8 | 707.9   | 1929      | 5576     | 884.2    |
 
 ### 128-bit one-shot throughput (ns/op, mean of the 3 fastest of 9 reps; native-128 algorithms only)
 
@@ -262,11 +265,11 @@ Each hash result selects the next key, serializing the dependency chain and
 defeating the size-dispatch branch predictor - the cost profile a hash table
 actually pays (as opposed to the hot, size-predictable throughput loop above).
 
-| max len | mumbo | rapidhash | xxh3  | xxh64     | murmur3 | siphash24 | fnv1a | dumbo    |
-| ------: | ----- | --------- | ----- | --------- | ------- | --------- | ----- | -------- |
-|      16 | 9.75  | 10.15     | 11.07 | 13.78     | 15.26   | 18.80     | 13.06 | **9.40** |
-|      64 | 11.87 | 11.67     | 12.50 | **10.03** | 19.46   | 27.85     | 11.59 | 23.54    |
-|    1024 | 27.39 | **27.06** | 38.95 | 67.08     | 68.53   | 233.5     | 610.3 | 302.0    |
+| max len | mumbo    | rapidhash | xxh3  | xxh64     | murmur3 | siphash24 | fnv1a | dumbo |
+| ------: | -------- | --------- | ----- | --------- | ------- | --------- | ----- | ----- |
+|      16 | **9.75** | 10.15     | 11.07 | 13.78     | 15.26   | 18.80     | 13.06 | 11.55 |
+|      64 | 11.87    | 11.67     | 12.50 | **10.03** | 19.46   | 27.85     | 11.59 | 17.22 |
+|    1024 | 27.39    | **27.06** | 38.95 | 67.08     | 68.53   | 233.5     | 610.3 | 97.67 |
 
 Reading the results: `rapidhash` leads small keys, but after the if-ladder load
 path (see the design iterations) `mumbo` sits ~1.97-2.0 ns through 16 bytes -
@@ -279,9 +282,15 @@ so the throughput deficit does not carry into the dependency-bound case. That
 small-key gap is mumbo's deliberate price: the two-multiply finalizer that earns
 the clean 188/188 in BOTH widths. For 128-bit, `xxh3` leads to 32 bytes but
 `jumbo` pulls decisively ahead from 47 bytes up (1.5-2.9x beyond 256 B) and is
-the only SMHasher3-clean native 128 on the rig. `fnv1a` and `dumbo` win the
-1-8 byte corner (minimal setup) but collapse past small keys, and `siphash`
-pays its PRF security throughout.
+the only SMHasher3-clean native 128 on the rig. `fnv1a` wins the 1-3 B corner
+(no finalizer at all), and the redesigned `dumbo` takes 7-8 B and stays within
+~0.2 ns of rapidhash at 15-16 B (~1.9 ns) before falling off on larger keys
+(its single serial MUM accumulator, though far less steeply than the legacy
+hash: 31.8 ns vs 68.7 at 256 B). In the dependency-bound latency chain, dumbo's
+two-multiply finalizer costs it the tiny-key lead the finalizer-free legacy
+version used to hold (11.6 ns at 16 B vs mumbo's 9.8) - the same finalizer that
+lifts it from 40/188 to a clean 188/188. `siphash` pays its PRF security
+throughout.
 
 ### Performance across platforms
 
@@ -318,8 +327,10 @@ Mixed-length latency:
 Cross-platform reading: the mumbo/rapidhash near-tie holds on both
 architectures (rapidhash leads x86_64-gcc bulk; they tie on arm64), `jumbo`
 is the fastest 128-bit hash from 256 bytes up on both platforms, and the
-xxh3 mid-size dip plus the fnv1a/siphash/dumbo profiles reproduce
-everywhere.
+xxh3 mid-size dip plus the fnv1a/siphash profiles reproduce everywhere. (The
+`dumbo` row above is the PR #235 CI run of the legacy hash and predates the
+redesign; it refreshes on the next `main` CI benchmark - the single-rig
+64-bit table above already reflects the redesigned dumbo.)
 
 ## Quality: SMHasher3
 
@@ -333,7 +344,7 @@ numbers are directly comparable.
 
 | Algorithm   | Bits | Role in mbo/hash          | SMHasher3 result | Failures                                                                                                                                                                      |
 | ----------- | ---: | ------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dumbo`     |   64 | `hash.h` (legacy)         | FAIL - 40 / 188  | nearly every family (weak legacy hash): Avalanche, BIC, the keyset tests (Sparse/Permutation/Cyclic/TwoBytes/Text/Zeroes), and the complete Seed* cluster                     |
+| `dumbo`     |   64 | `hash.h` (compact MUM)    | PASS - 188 / 188 | none                                                                                                                                                                          |
 | `fnv1a`     |   64 | `hash.h`                  | FAIL - 7 / 186   | nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster                                        |
 | `mumbo`     |   64 | default (64/32/streaming) | PASS - 188 / 188 | none                                                                                                                                                                          |
 | `rapidhash` |   64 | extra (`hash_extra_cc`)   | PASS - 188 / 188 | none                                                                                                                                                                          |
@@ -350,12 +361,12 @@ Reading the results:
   `xxh3` pass the original battery, and most of their failures above are in
   the newer `Seed*` families (weak seed handling), which the original battery
   does not probe.
-- `mumbo` and `rapidhash` are the only clean passes; `jumbo` (the
-  mumbo family's native 128, "mumbo jumbo") is the only clean 128-bit result
-  we have measured on this rig - every other tested
-  128-bit variant fails more of the battery than its 64-bit sibling, because
-  the wider output gives the statistics more surface to catch bias and lane
-  correlation on.
+- `mumbo`, `rapidhash`, and `dumbo` are the clean 64-bit passes (two of the
+  three in-house); `jumbo` (the mumbo family's native 128, "mumbo jumbo") is
+  the only clean 128-bit result we have measured on this rig - every other
+  tested 128-bit variant fails more of the battery than its 64-bit sibling,
+  because the wider output gives the statistics more surface to catch bias and
+  lane correlation on.
 - Of the classics: `siphash` (a keyed PRF) is clean, as security designs must
   be; `murmur3` (2011) fails the modern battery broadly; and `fnv1a` - the
   algorithm family behind many `std::hash` implementations - passes 7 of 186
@@ -370,7 +381,8 @@ Reading the results:
 
 Lineage first: the library's original hash was `dumbo` (originally named
 `simple`; the legacy pre-0.13 `GetHash`, still shipped as `mbo::hash::dumbo`
-for comparison only). Its
+and since redesigned into a compact MUM hash - its own iterations are below).
+Its
 intended replacement `mh` (never released) accumulated hardening rounds -
 sparse-key collision fixes, seed hardening - but its SMHasher3 failure list
 never fully cleared, and rapidhash held the default in the interim. The
@@ -401,6 +413,46 @@ benchmark plus both SMHasher3 batteries):
    equals the 64-bit hash. The table above reflects the latest completed
    batteries.
 
+### dumbo: the measured design iterations
+
+`dumbo` was rebuilt from the legacy hash the same measured way (each step:
+both benchmarks plus the SMHasher3 battery). It stays deliberately minimal
+next to `mumbo` - ONE 64-bit accumulator, ONE 8-byte word folded per step, no
+small-key switch, no parallel lanes, no streaming, and no 128-bit form - so it
+reads as the compact MUM hash rather than a second tuned one:
+
+1. legacy (40/188): the original `simple` hash. Silly constants (multiply by
+   `6571`, add `17`/`193`, a `104729` tail) and a multi-op per-4-byte step
+   (two small multiplies, two shifts, an add, two XORs). Barely diffused - it
+   failed nearly every family - and slow (the op soup, four bytes at a time).
+2. v1 (132/188, ~2-3x faster than legacy): nothing-up-my-sleeve constants
+   (golden ratio, sqrt-prime fractions) and a clean single step over 8-byte
+   words - `hash = (hash ^ word) * kConst; hash ^= hash >> 29` - then `fmix64`.
+   The gross failures cleared, but it caps here: a **constant** multiplier is
+   linear, so the collision and distribution families stay red no matter how
+   good the constant is. (It also exposed a length-fold bug: folding length at
+   init let a single low input bit cancel a length delta -
+   `(kInit+16)^4 == kInit+12` - colliding 1-bit keys with all-zero keys; the
+   length now folds in at the end, after every bit is diffused.)
+3. v2 (186/188): the step becomes the MUM primitive
+   `Mul128Fold64(word ^ kWord, state ^ kState)` - the widening multiply with
+   **both operands state/data dependent**, so the product is quadratic (mumbo's
+   mixing, single-lane). That clears every avalanche, distribution, keyset and
+   full-width collision family. The two residual failures are both in
+   `SeedZeroes`: dumbo is single-lane, so for zero-data keys the seed (folded
+   only at init) enters the finalizer weakly mixed and shows marginal low-bit
+   collisions.
+4. v3 (188/188, shipped): the finalizer becomes a two-multiply widening
+   avalanche (keep BOTH halves of the first product, multiply them together)
+   with the **seed injected directly into a product operand**, not only at
+   init. That makes the output quadratic in the seed even for zero-data keys,
+   clearing the last two `SeedZeroes` windows. A single fold measured against a
+   seeded 8-lane merge is what lets mumbo pass with its finalizer; dumbo, being
+   single-lane, needs the seed at finalize instead. Clean 188/188, and dumbo
+   now has strong (not merely reactive) avalanche. Cost: the two widening
+   multiplies are ~0.15-0.35 ns slower on tiny keys than v2's `fmix64`, still
+   the fastest hash here at 7-8 B.
+
 ### Methodology (reproduction)
 
 - SMHasher3 @ gitlab.com/fwojcik/smhasher3, commit `6ab4343` (2026-03-26),
@@ -421,6 +473,6 @@ benchmark plus both SMHasher3 batteries):
   applies the fixes above, installs the plugin + headers, and builds it (the
   plugin needs C++20). Reproduce all of it with that one script.
 - Full default battery per hash: `./SMHasher3 <name>` (~12 minutes each).
-  Full logs are not committed; regenerate as above. Last run (2026-07):
-  `mumbo-64` and `jumbo-128` PASS 188 / 188; `dumbo-64` FAIL 40 / 188 (the weak
-  legacy hash).
+  Full logs are not committed; regenerate as above. Last run (2026-07): all
+  three in-house hashes clean - `mumbo-64`, `jumbo-128`, and `dumbo-64` PASS
+  188 / 188.

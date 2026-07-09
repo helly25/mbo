@@ -65,11 +65,11 @@ REGISTER_HASH(
 
 REGISTER_HASH(
     dumbo_64,
-    $.desc = "dumbo, mbo/hash legacy in-house 64-bit (weak, weakly seeded)",
+    $.desc = "dumbo, mbo/hash in-house 64-bit (compact single-lane MUM, weakly seeded)",
     $.hash_flags = 0,
-    $.impl_flags = FLAG_IMPL_CANONICAL_LE,
+    $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x8569BC38,
-    $.verification_BE = 0x3EAC66FF,
+    $.verification_LE = 0x6F1EB379,
+    $.verification_BE = 0x36783BC3,
     $.hashfn_native = DumboHash64<false>,
     $.hashfn_bswap = DumboHash64<true>);
