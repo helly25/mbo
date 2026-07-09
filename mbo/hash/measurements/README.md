@@ -195,12 +195,19 @@ for architecture/compiler shape comparison, not a gate.
 
 ## Open items
 
-- **Authoritative results JSON**: the README scores come from a verified run,
-  but a committed `smhasher_results.json` (via the `smhasher` mode) is not stored
-  yet - run it on merged `main` if a machine-readable record is wanted.
-- Plotter: self-contained SVG is implemented (`plot`); decide whether to commit
-  a generated curve or render it on demand.
+- **SMHasher3 build pin is broken**: `build_smhasher3.sh` pins commit
+  `6ab4343`, but `smhasher3/mbohash.cpp` was written against a newer SMHasher3
+  API (`FLAG_IMPL_*`, `HashInfo::verification_LE`/`bits`); the pinned commit uses
+  `FLAG_ENUM_IMPL_*` and the plugin does not compile there. Re-pin to a commit
+  whose API matches the plugin (or port the plugin) so the `smhasher` mode can
+  produce a committed `smhasher.json`. The README SMHasher scores stand (from
+  the earlier verified runs on a matching tree); only the machine-readable
+  record is blocked.
 - Optional guard: a check that the README tables match the committed canonical
-  JSON, so they cannot silently drift.
-- First authoritative dataset + committed gzipped raw: land post-merge on a
-  clean `main` checkout (see the workflow note).
+  JSON so they cannot silently drift (they match as of the latest authoritative
+  run below).
+
+Done: the authoritative perf dataset + gzipped raw are committed
+(`hash_benchmark_results.json`, `data/*_raw.json.gz`), and the log-log
+throughput curves (`hash_throughput_64.svg` / `_128.svg`) are committed and
+embedded in the hash README.
