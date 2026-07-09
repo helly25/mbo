@@ -269,7 +269,7 @@ def run_smhasher(smhasher3, names, raw_dir, stamp, jobs=1):
             it works both as a native binary path and as a wrapper such as
             `docker run --rm -v <tree>:/src -w /src <image> ./build/SMHasher3`
             (the container-built binary does not run natively on macOS). For the
-            in-house algorithms the binary must register mumbo-64/jumbo-128/
+            in-house algorithms the binary must register mumbo-64/jumbo-128 and
             dumbo-64 - see README.md.
         names: list of SMHasher3 registration names to run.
         raw_dir: directory to save each run's full log (may be None).
@@ -428,38 +428,68 @@ def render_tables(results):
     return "\n".join(out)
 
 
-def _svg_plot(results, path):
-    """Dependency-free SVG: min ns vs length (log x), one line per 64-bit algo."""
-    data = results["throughput64"]
-    algos = _order(list(data), _ORDER_64)
-    sizes = sorted({int(s) for a in data.values() for s in a})
+def _svg_plot(data, algos, title, path, label_map=None):
+    """Dependency-free log-log SVG: best-k-mean ns vs length, one line per
+    algorithm. Both axes are log-scaled - the ns range spans ~4 decades
+    (sub-ns small keys to microseconds of the byte-at-a-time hashes on bulk), so
+    a linear y-axis would crush every fast algorithm onto the baseline."""
     import math
 
-    width, height, pad = 900, 520, 60
-    xs = [math.log10(s) for s in sizes]
-    x0, x1 = min(xs), max(xs)
-    y1 = max(_val(data[a][str(s)]) for a in algos for s in sizes if str(s) in data[a])
+    label_map = label_map or {}
+    sizes = sorted({int(s) for a in data.values() for s in a})
+    if not sizes or not algos:
+        return
+    width, height, pad_l, pad_r, pad_t, pad_b = 900, 520, 66, 132, 46, 52
+    plot_w, plot_h = width - pad_l - pad_r, height - pad_t - pad_b
+    x0, x1 = math.log10(sizes[0]), math.log10(sizes[-1])
+    vals = [_val(data[a][str(s)]) for a in algos for s in sizes if str(s) in data[a] and _val(data[a][str(s)]) > 0]
+    ly0, ly1 = math.log10(min(vals)), math.log10(max(vals))
+    span_x, span_y = (x1 - x0) or 1.0, (ly1 - ly0) or 1.0
     colors = ["#2563eb", "#dc2626", "#059669", "#d97706", "#7c3aed", "#0891b2", "#be185d", "#4b5563"]
 
     def px(size):
-        return pad + (math.log10(size) - x0) / (x1 - x0) * (width - 2 * pad)
+        return pad_l + (math.log10(size) - x0) / span_x * plot_w
 
     def py(ns):
-        return height - pad - (ns / y1) * (height - 2 * pad)
+        return pad_t + (ly1 - math.log10(ns)) / span_y * plot_h
 
-    svg = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" font-family="sans-serif">']
-    svg.append(f'<rect width="{width}" height="{height}" fill="white"/>')
-    for size in sizes:  # x gridlines + labels
-        x = px(size)
-        svg.append(f'<line x1="{x:.1f}" y1="{pad}" x2="{x:.1f}" y2="{height-pad}" stroke="#eee"/>')
-        svg.append(f'<text x="{x:.1f}" y="{height-pad+16}" font-size="10" text-anchor="middle">{size}</text>')
-    svg.append(f'<text x="{width/2:.0f}" y="{height-12}" font-size="12" text-anchor="middle">key length (bytes, log)</text>')
-    svg.append(f'<text x="16" y="{height/2:.0f}" font-size="12" transform="rotate(-90 16 {height/2:.0f})" text-anchor="middle">ns/op (min)</text>')
-    for i, algo in enumerate(algos):
+    svg = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" font-family="sans-serif">',
+        f'<rect width="{width}" height="{height}" fill="white"/>',
+        f'<text x="{width / 2:.0f}" y="26" font-size="15" font-weight="bold" text-anchor="middle">{title}</text>',
+    ]
+    exp = math.floor(ly0)  # y gridlines + labels at each power of ten in range
+    while exp <= math.ceil(ly1):
+        ns = 10.0**exp
+        if ly0 - 1e-9 <= math.log10(ns) <= ly1 + 1e-9:
+            y = py(ns)
+            svg.append(f'<line x1="{pad_l}" y1="{y:.1f}" x2="{pad_l + plot_w:.1f}" y2="{y:.1f}" stroke="#eee"/>')
+            svg.append(f'<text x="{pad_l - 6}" y="{y + 3:.1f}" font-size="10" text-anchor="end">{ns:g}</text>')
+        exp += 1
+    size = 1  # x gridlines at powers of two, labels at powers of four
+    while size <= sizes[-1]:
+        if x0 - 1e-9 <= math.log10(size) <= x1 + 1e-9:
+            x = px(size)
+            svg.append(f'<line x1="{x:.1f}" y1="{pad_t}" x2="{x:.1f}" y2="{pad_t + plot_h:.1f}" stroke="#f3f4f6"/>')
+            if int(round(math.log2(size))) % 2 == 0:
+                svg.append(f'<text x="{x:.1f}" y="{pad_t + plot_h + 16:.1f}" font-size="10" text-anchor="middle">{_size_label(size)}</text>')
+        size *= 2
+    svg.append(f'<text x="{pad_l + plot_w / 2:.0f}" y="{height - 12}" font-size="12" text-anchor="middle">key length (log scale)</text>')
+    svg.append(
+        f'<text x="18" y="{pad_t + plot_h / 2:.0f}" font-size="12" '
+        f'transform="rotate(-90 18 {pad_t + plot_h / 2:.0f})" text-anchor="middle">ns / op (log scale)</text>'
+    )
+    for i, algo in enumerate(algos):  # one polyline + legend row per algorithm
         color = colors[i % len(colors)]
-        pts = " ".join(f"{px(s):.1f},{py(_val(data[algo][str(s)])):.1f}" for s in sizes if str(s) in data[algo])
+        pts = " ".join(
+            f"{px(s):.1f},{py(_val(data[algo][str(s)])):.1f}"
+            for s in sizes
+            if str(s) in data[algo] and _val(data[algo][str(s)]) > 0
+        )
         svg.append(f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="2"/>')
-        svg.append(f'<text x="{width-pad+4}" y="{18+i*16}" font-size="11" fill="{color}">{_LABEL_128.get(algo, algo)}</text>')
+        ly = pad_t + 8 + i * 17
+        svg.append(f'<line x1="{pad_l + plot_w + 14:.1f}" y1="{ly:.1f}" x2="{pad_l + plot_w + 30:.1f}" y2="{ly:.1f}" stroke="{color}" stroke-width="2"/>')
+        svg.append(f'<text x="{pad_l + plot_w + 34:.1f}" y="{ly + 4:.1f}" font-size="11" fill="{color}">{label_map.get(algo, algo)}</text>')
     svg.append("</svg>")
     with open(path, "w") as handle:
         handle.write("\n".join(svg))
@@ -563,8 +593,22 @@ def main(argv):
         return 0
 
     if args.command == "plot":
-        out_path = _timestamped(args.out, stamp)
-        _svg_plot(_load_json(args.results), out_path)
+        results = _load_json(args.results)
+        base, ext = os.path.splitext(_timestamped(args.out, stamp))
+        _svg_plot(
+            results["throughput64"],
+            _order(list(results["throughput64"]), _ORDER_64),
+            "mbo/hash - 64-bit one-shot throughput",
+            f"{base}_64{ext}",
+        )
+        if results.get("throughput128"):
+            _svg_plot(
+                results["throughput128"],
+                _order(list(results["throughput128"]), _ORDER_128),
+                "mbo/hash - 128-bit one-shot throughput",
+                f"{base}_128{ext}",
+                _LABEL_128,
+            )
         return 0
 
     if args.command == "smhasher":

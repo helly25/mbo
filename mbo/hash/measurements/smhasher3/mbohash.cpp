@@ -1,5 +1,5 @@
 /*
- * mbo/hash in-house family: mumbo (64), jumbo (128), dumbo (legacy 64)
+ * mbo/hash in-house family: mumbo/jumbo (64/128) and dumbo (compact 64)
  * Copyright (C) The helly25 authors (helly25.com)
  *
  * Apache-2.0. This plugin includes the ACTUAL mbo/hash headers (copied into

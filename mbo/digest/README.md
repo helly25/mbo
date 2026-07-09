@@ -3,6 +3,12 @@
 Spec-based, fast, constexpr-compatible, Apache-licensed, no-nonsense message
 digest implementations - the digest counterpart of [mbo/hash](../hash/README.md).
 
+Scope: this library is cryptographic **message digests and MACs** (below). Fast
+hash-table hashing (the `GetHash64` / `Hasher` API) lives in
+[mbo/hash](../hash/README.md) - and so does **SipHash**, the keyed,
+hash-flooding-resistant PRF: a keyed hash-table hash is not a message digest,
+even though `Hmac` here is keyed too.
+
 ## What this library is
 
 - **Spec-frozen algorithms, transcribed from their specifications** and pinned

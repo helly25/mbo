@@ -102,13 +102,17 @@ def main(argv):
                 stdout=tables, check=True,
             )
         shutil.copy(newest(os.path.join(data, "*_results.json")), os.path.join(meas, "hash_benchmark_results.json"))
-        print(">>> [perf] rendering ns-vs-length chart", file=sys.stderr)
+        print(">>> [perf] rendering ns-vs-length charts (64-bit + 128-bit, log-log)", file=sys.stderr)
         subprocess.run(
             [*report, "plot", "--results", os.path.join(meas, "hash_benchmark_results.json"),
              "--out", os.path.join(data, "hash_throughput.svg")],
             check=True,
         )
-        shutil.copy(newest(os.path.join(data, "*_hash_throughput.svg")), os.path.join(meas, "hash_throughput.svg"))
+        for width in ("64", "128"):
+            shutil.copy(
+                newest(os.path.join(data, f"*_hash_throughput_{width}.svg")),
+                os.path.join(meas, f"hash_throughput_{width}.svg"),
+            )
 
     if not args.skip_smhasher:
         print(f">>> [smhasher] building SMHasher3 (workdir {args.workdir})", file=sys.stderr)
@@ -133,17 +137,19 @@ def main(argv):
                 "=== done ===",
                 "Committed-size artifacts (raw ~316 KB gzip, canonical ~100 KB, SVG ~16 KB, each SMHasher log ~20 KB gzip):",
                 f"  {meas}/hash_benchmark_results.json   canonical per-case perf stats (text, diffable)",
-                f"  {meas}/hash_throughput.svg           ns-vs-length chart (embed in README.md)",
+                f"  {meas}/hash_throughput_64.svg        64-bit throughput chart (log-log, embed in README.md)",
+                f"  {meas}/hash_throughput_128.svg       128-bit throughput chart (log-log, embed in README.md)",
                 f"  {data}/*_raw.json.gz                 full raw benchmark JSON (compare.py U-tests)",
                 f"  {data}/*_smhasher.json               SMHasher3 pass/fail + failing families",
                 f"  {data}/*_smhasher_*.log.gz           per-algorithm SMHasher3 logs",
                 f"  {data}/README_tables.md              rendered perf tables to paste into README.md",
                 "",
                 "data/ is .gitignored; an authoritative commit is:",
-                f"  git add {meas}/hash_benchmark_results.json {meas}/hash_throughput.svg",
+                f"  git add {meas}/hash_benchmark_results.json {meas}/hash_throughput_64.svg {meas}/hash_throughput_128.svg",
                 f"  git add -f {data}/*_raw.json.gz {data}/*_smhasher.json {data}/*_smhasher_*.log.gz",
-                "Embed the chart in README.md with:",
-                "  ![mbo/hash throughput](measurements/hash_throughput.svg)",
+                "Embed the charts in README.md with:",
+                "  ![mbo/hash 64-bit throughput](measurements/hash_throughput_64.svg)",
+                "  ![mbo/hash 128-bit throughput](measurements/hash_throughput_128.svg)",
             ]
         )
     )
