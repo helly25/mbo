@@ -23,9 +23,9 @@
 #   hash_benchmark_report.py smhasher --smhasher3 <path> --algos all
 #
 # The third-party algorithms (rapidhash, xxh3, xxh64, murmur3, siphash, fnv1a)
-# are SMHasher3 built-ins and work immediately. The in-house mumbo/jumbo/dumbo
+# are SMHasher3 built-ins and work immediately. The in-house mumbo/jumbo and dumbo
 # need a registration source dropped into SMHasher3's hashes/ tree BEFORE the
-# build (a transcription registering "mumbo-64" / "jumbo-128" / "dumbo-64",
+# build (a transcription registering "mumbo-64" / "jumbo-128" and "dumbo-64",
 # matching mbo/hash/hash_mumbo.h and hash_dumbo.h) - that plugin is the
 # outstanding piece; see mbo/hash/measurements/README.md.
 #

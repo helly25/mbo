@@ -44,10 +44,14 @@ Three entry points, split by contract:
   dependencies - digests and hashes are spec-frozen pure functions that we
   verify against official vectors instead of trusting an unverifiable supply
   chain (see [mbo/digest/README.md](../digest/README.md) for the full argument).
-- **Not cryptographic**: values are neither stable across versions nor safe
-  against adversaries (SipHash with a secret seed is the DoS-resistant
-  option). For message digests (SHA-2, MD5 interop, ...) see
-  [mbo/digest](../digest/README.md).
+- **Non-cryptographic hash-table hashes, with one keyed exception**: the
+  defaults and comparison algorithms are fast hashes for hash tables and
+  interning - their values are neither stable across versions nor safe against
+  adversaries. `siphash` is the deliberate exception, a keyed PRF included as
+  the hash-flooding-resistant choice when the seed is a secret; it is still a
+  hash-table hash (`GetHash64` / `Hasher`), not a message digest. Cryptographic
+  **message digests** and MACs (SHA-2/3, MD5 interop, BLAKE2/3, HMAC) are a
+  different contract and live in [mbo/digest](../digest/README.md).
 
 ## Algorithm overview
 
@@ -220,6 +224,13 @@ fastest per length. Lengths straddle the dispatch-tier and SSO boundaries (7/8
 the fully-unrolled `<= 8` path, 15/16 the `<= 16` path and libstdc++ SSO cap, 22
 the libc++ SSO cap, 47/48 and 63/64 the short-chain steps). The tool's full mode
 sweeps a denser exponential curve.
+
+Full-sweep curves (log-log axes, `run_measurements.py`; the tables below are the
+dense README subset):
+
+![mbo/hash 64-bit one-shot throughput vs key length, log-log](measurements/hash_throughput_64.svg)
+
+![mbo/hash 128-bit one-shot throughput vs key length, log-log](measurements/hash_throughput_128.svg)
 
 ### 64-bit one-shot throughput (ns/op, mean of the 3 fastest of 9 reps; lower is better)
 
@@ -466,7 +477,7 @@ reads as the compact MUM hash rather than a second tuned one:
   (transcriptions are vector- and differential-verified equal, so the results
   transfer; the built-in `XXH3-128` ran its NEON implementation on this rig,
   which produces the identical canonical values).
-- The in-house `mumbo-64`, `jumbo-128`, and `dumbo-64` are registered by
+- The in-house `mumbo-64`/`jumbo-128` and `dumbo-64` are registered by
   `mbo/hash/measurements/smhasher3/mbohash.cpp`, which `#include`s the ACTUAL
   `mbo/hash` headers (so the real implementation is verified, not a
   transcription). `mbo/hash/measurements/build_smhasher3.sh` clones SMHasher3,
@@ -474,5 +485,5 @@ reads as the compact MUM hash rather than a second tuned one:
   plugin needs C++20). Reproduce all of it with that one script.
 - Full default battery per hash: `./SMHasher3 <name>` (~12 minutes each).
   Full logs are not committed; regenerate as above. Last run (2026-07): all
-  three in-house hashes clean - `mumbo-64`, `jumbo-128`, and `dumbo-64` PASS
+  three in-house hashes clean - `mumbo-64`/`jumbo-128` and `dumbo-64` PASS
   188 / 188.
