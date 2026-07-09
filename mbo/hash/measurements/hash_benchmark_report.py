@@ -41,11 +41,13 @@ Pipeline (tables/store/plot are pure JSON -> no bazel needed):
 """
 
 import argparse
+import concurrent.futures
 import datetime
 import gzip
 import json
 import os
 import re
+import shlex
 import statistics
 import subprocess
 import sys
@@ -223,55 +225,73 @@ _SMH_VERDICT_RE = re.compile(
 _SMH_FAIL_RE = re.compile(r"^\s*(?:[!*]{3,}\s*)?(?P<name>[\w :.\[\]/,-]+?)\s*[.\s]*\bFAIL(?:ED)?\b", re.IGNORECASE)
 
 
-def run_smhasher(smhasher3, names, raw_dir, stamp):
+def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
+    """Run one SMHasher3 battery and parse its verdict + failing families."""
+    print(f"$ {' '.join(cmd_prefix)} {name}", file=sys.stderr)
+    proc = subprocess.run([*cmd_prefix, name], capture_output=True, text=True, check=False)
+    text = proc.stdout + proc.stderr
+    verdict_match = _SMH_VERDICT_RE.search(text)
+    verdict = verdict_match.group(1).upper() if verdict_match else ("PASS" if proc.returncode == 0 else "FAIL")
+    passed = int(verdict_match.group(2)) if verdict_match and verdict_match.group(2) else None
+    total = int(verdict_match.group(3)) if verdict_match and verdict_match.group(3) else None
+    # Failing test/family names (minus the overall-verdict line), so the JSON
+    # says WHICH tests failed; the full log has the complete "why".
+    failures = []
+    for line in text.splitlines():
+        if _SMH_VERDICT_RE.search(line):
+            continue
+        match = _SMH_FAIL_RE.match(line)
+        if match:
+            failures.append(match.group("name").strip())
+    entry = {
+        "verdict": verdict,
+        "score": (f"{passed} / {total}" if passed is not None and total is not None else None),
+        "passed": passed,
+        "total": total,
+        "failures": failures,
+        "returncode": proc.returncode,
+    }
+    if raw_dir:
+        os.makedirs(raw_dir, exist_ok=True)
+        log_path = os.path.join(raw_dir, f"{stamp}_smhasher_{name}.log")
+        with open(log_path, "w") as handle:
+            handle.write(text)
+        entry["log"] = log_path
+        print(f"wrote {log_path}", file=sys.stderr)
+    return name, entry
+
+
+def run_smhasher(smhasher3, names, raw_dir, stamp, jobs=1):
     """Runs SMHasher3 for each registration name; returns a results dict.
 
     Args:
-        smhasher3: path to a built SMHasher3 executable (the harness builds it;
-            for the in-house algorithms it must register mumbo-64/jumbo-128/
-            dumbo-64 - see README.md).
+        smhasher3: SMHasher3 invocation as a command *prefix* (shell-split), so
+            it works both as a native binary path and as a wrapper such as
+            `docker run --rm -v <tree>:/src -w /src <image> ./build/SMHasher3`
+            (the container-built binary does not run natively on macOS). For the
+            in-house algorithms the binary must register mumbo-64/jumbo-128/
+            dumbo-64 - see README.md.
         names: list of SMHasher3 registration names to run.
         raw_dir: directory to save each run's full log (may be None).
         stamp: timestamp prefix for the saved logs.
+        jobs: number of batteries to run concurrently. They are independent, and
+            their pass/fail verdicts do not depend on CPU load (only SMHasher3's
+            own Speed sub-test would, and that number is not used - performance
+            comes from our own benchmark), so parallelism only trades cores for
+            wall-clock.
 
     Returns:
         {name: {"verdict": "PASS"/"FAIL"/"UNKNOWN", "failures": [...], "log": path}}.
     """
-    out = {}
-    for name in names:
-        print(f"$ {smhasher3} {name}", file=sys.stderr)
-        proc = subprocess.run([smhasher3, name], capture_output=True, text=True, check=False)
-        text = proc.stdout + proc.stderr
-        verdict_match = _SMH_VERDICT_RE.search(text)
-        verdict = verdict_match.group(1).upper() if verdict_match else ("PASS" if proc.returncode == 0 else "FAIL")
-        passed = int(verdict_match.group(2)) if verdict_match and verdict_match.group(2) else None
-        total = int(verdict_match.group(3)) if verdict_match and verdict_match.group(3) else None
-        # Failing test/family names (minus the overall-verdict line), so the JSON
-        # says WHICH tests failed; the full log has the complete "why".
-        failures = []
-        for line in text.splitlines():
-            if _SMH_VERDICT_RE.search(line):
-                continue
-            match = _SMH_FAIL_RE.match(line)
-            if match:
-                failures.append(match.group("name").strip())
-        entry = {
-            "verdict": verdict,
-            "score": (f"{passed} / {total}" if passed is not None and total is not None else None),
-            "passed": passed,
-            "total": total,
-            "failures": failures,
-            "returncode": proc.returncode,
-        }
-        if raw_dir:
-            os.makedirs(raw_dir, exist_ok=True)
-            log_path = os.path.join(raw_dir, f"{stamp}_smhasher_{name}.log")
-            with open(log_path, "w") as handle:
-                handle.write(text)
-            entry["log"] = log_path
-            print(f"wrote {log_path}", file=sys.stderr)
-        out[name] = entry
-    return out
+    cmd_prefix = shlex.split(smhasher3)
+    done = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
+        for future in concurrent.futures.as_completed(
+            pool.submit(_smhasher_one, cmd_prefix, name, raw_dir, stamp) for name in names
+        ):
+            name, entry = future.result()
+            done[name] = entry
+    return {name: done[name] for name in names}  # restore the requested order
 
 
 def _resolve_smhasher_names(algos):
@@ -486,7 +506,12 @@ def main(argv):
     p_plot.add_argument("--out", required=True)
 
     p_smh = sub.add_parser("smhasher", help="run the SMHasher3 quality battery over a set of algorithms")
-    p_smh.add_argument("--smhasher3", required=True, help="path to a built SMHasher3 executable")
+    p_smh.add_argument(
+        "--smhasher3",
+        required=True,
+        help="SMHasher3 invocation: a native binary path, or a wrapper command "
+        "like 'docker run --rm -v <tree>:/src -w /src <image> ./build/SMHasher3'",
+    )
     p_smh.add_argument(
         "--algos",
         default="all",
@@ -494,6 +519,12 @@ def main(argv):
     )
     p_smh.add_argument("--out", help="write the results JSON here")
     p_smh.add_argument("--raw-dir", default="mbo/hash/measurements/data", help="directory for per-run SMHasher3 logs")
+    p_smh.add_argument(
+        "--jobs",
+        type=int,
+        default=1,
+        help="batteries to run concurrently (independent; pass/fail is load-independent, so this only trades cores for wall-clock)",
+    )
 
     args = parser.parse_args(argv)
     # One stamp per invocation, so all files a run writes share it. Every
@@ -541,7 +572,7 @@ def main(argv):
         names = _resolve_smhasher_names(algos)
         results = {
             "context": {**_provenance_context(), "smhasher": {"names": names, "smhasher3": args.smhasher3}},
-            "smhasher": run_smhasher(args.smhasher3, names, args.raw_dir, stamp),
+            "smhasher": run_smhasher(args.smhasher3, names, args.raw_dir, stamp, args.jobs),
         }
         _warn_context(results)
         for name, entry in results["smhasher"].items():

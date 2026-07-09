@@ -32,6 +32,7 @@ even invert the true ordering. So we:
 mbo/hash/measurements/
   README.md                    # this design doc
   MODULE.bazel                 # separate dev module (isolates plotting deps)
+  run_measurements.py          # one-shot authoritative runner (perf + chart + parallel smhasher)
   hash_benchmark_report.py     # run / store / tables / plot / smhasher (stdlib only)
   build_smhasher3.sh           # reproducible SMHasher3 build (clone + fixes + install plugin + container gcc)
   smhasher3/mbohash.cpp        # in-house mumbo/jumbo/dumbo SMHasher3 registration (includes the real headers)
@@ -109,6 +110,26 @@ too noisy (per-iteration timings) to text-dump; gzip takes it to **123 KB** /
   Dev-branch raws stay git-ignored (`data/` ignores everything but `.gitkeep`).
 
 ## Regenerate
+
+The one-shot runner does all three steps (perf sweep, chart, SMHasher3 battery)
+and prints exactly what to commit. Run it from a clean `main` checkout so the
+provenance is authoritative:
+
+```sh
+# Everything, SMHasher3 batteries 4-at-a-time (perf runs first and alone):
+mbo/hash/measurements/run_measurements.py --jobs 4
+# In-house family only, or perf/chart only:
+mbo/hash/measurements/run_measurements.py --algos mumbo,jumbo,dumbo --jobs 1
+mbo/hash/measurements/run_measurements.py --skip-smhasher
+```
+
+The performance sweep runs first and alone (SMHasher3 would contend for CPU and
+skew the sub-ns numbers); the batteries are independent and their pass/fail is
+load-independent, so `--jobs` runs several concurrently - trading cores for
+wall-clock, not accuracy. SMHasher3 is built and run inside a container
+(`build_smhasher3.sh`), so the runner invokes its Linux binary via `docker run`.
+
+Or drive the steps individually:
 
 ```sh
 # From the repository root (the script shells out to `bazel run` there):
