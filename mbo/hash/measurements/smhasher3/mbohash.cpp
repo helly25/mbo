@@ -6,8 +6,15 @@
  * mbo_include/) so SMHasher3 verifies the real implementation, not a
  * transcription. See mbo/hash/measurements/README.md.
  */
-#include "Hashlib.h"
+// Platform.h first: it defines seed_t, the FLAG_IMPL_* / FLAG_HASH_* enums, and
+// the HashInfo/REGISTER_HASH prerequisites that Hashlib.h then uses (this is the
+// order SMHasher3's own hashes use; reversing it breaks every $.field and flag).
+// The clang-format guard is load-bearing: SortIncludes alphabetizes "Hashlib.h"
+// before "Platform.h" and silently reverts the fix.
+// clang-format off
 #include "Platform.h"
+#include "Hashlib.h"
+// clang-format on
 #include "mbo/hash/hash_dumbo.h"
 #include "mbo/hash/hash_mumbo.h"
 

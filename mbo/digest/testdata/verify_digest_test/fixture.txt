@@ -1,0 +1,1 @@
+mbo/digest verify_digest_test fixture - stable content, do not edit.

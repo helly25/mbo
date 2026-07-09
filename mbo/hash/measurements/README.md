@@ -168,7 +168,7 @@ two documented fixes (missing `<cstdlib>` in `lib/AEStest.cpp`; replace
 methodology in `../README.md`. The third-party algorithms are SMHasher3
 built-ins and work immediately.
 
-The in-house `mumbo`/`jumbo`/`dumbo` are registered by `smhasher3/mbohash.cpp`,
+The in-house `mumbo`/`jumbo` and `dumbo` are registered by `smhasher3/mbohash.cpp`,
 which `#include`s the ACTUAL `mbo/hash` headers (so the real implementation is
 verified, not a transcription). `build_smhasher3.sh` copies the headers + plugin
 into the tree and registers the source, so one script run yields a SMHasher3
@@ -195,14 +195,13 @@ for architecture/compiler shape comparison, not a gate.
 
 ## Open items
 
-- **SMHasher3 build pin is broken**: `build_smhasher3.sh` pins commit
-  `6ab4343`, but `smhasher3/mbohash.cpp` was written against a newer SMHasher3
-  API (`FLAG_IMPL_*`, `HashInfo::verification_LE`/`bits`); the pinned commit uses
-  `FLAG_ENUM_IMPL_*` and the plugin does not compile there. Re-pin to a commit
-  whose API matches the plugin (or port the plugin) so the `smhasher` mode can
-  produce a committed `smhasher.json`. The README SMHasher scores stand (from
-  the earlier verified runs on a matching tree); only the machine-readable
-  record is blocked.
+- **Authoritative `smhasher.json` not yet committed**: the in-house plugin now
+  builds cleanly at the pinned commit `6ab4343` (an include-order bug in
+  `smhasher3/mbohash.cpp` - `Hashlib.h` ahead of `Platform.h`, which defines
+  `seed_t` and the `FLAG_IMPL_*` enums - is fixed and pinned against clang-format;
+  the pin is correct, no re-pin needed). Run `run_measurements.py` on a clean
+  `main` checkout to land the machine-readable record; the README SMHasher scores
+  already stand from verified runs.
 - Optional guard: a check that the README tables match the committed canonical
   JSON so they cannot silently drift (they match as of the latest authoritative
   run below).

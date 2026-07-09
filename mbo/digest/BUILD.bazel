@@ -13,10 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@helly25_bashtest//bashtest:bashtest.bzl", "bashtest")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load(":digest.bzl", "verify_digest_test")
 
 package(default_visibility = ["//visibility:private"])
+
+bzl_library(
+    name = "digest_bzl",
+    srcs = ["digest.bzl"],
+    visibility = ["//visibility:public"],
+)
 
 cc_library(
     name = "digest_cc",
@@ -65,4 +73,17 @@ bashtest(
     name = "digest_cli_sh_test",
     srcs = ["digest_cli_sh_test.sh"],
     data = [":digest"] + glob(["testdata/digest_cli_sh_test/**"]),
+)
+
+# Self-test for the verify_digest_test rule: the same stable fixture pinned both
+# via a committed sidecar (`digests`) and via an inline hex (`checksums`), so
+# both code paths are exercised.
+verify_digest_test(
+    name = "verify_digest_selftest",
+    checksums = {
+        "testdata/verify_digest_test/fixture.txt": "372970a9b33c2b28dbf0342123cc923e5a70af2d67dcab29be03d5d0a2c9abda",
+    },
+    digests = {
+        "testdata/verify_digest_test/fixture.txt": "testdata/verify_digest_test/fixture.txt.sha256",
+    },
 )
