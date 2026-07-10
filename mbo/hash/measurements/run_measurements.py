@@ -93,6 +93,9 @@ def main(argv):
             file=sys.stderr,
         )
 
+    canonical = None  # the run's distilled results.json (drives the charts and the bundle)
+    extras = []  # extra files packed alongside the canonical in the per-machine bundle
+
     if not args.skip_perf:
         print(">>> [perf] full performance sweep (runs solo for clean numbers)", file=sys.stderr)
         with open(os.path.join(data, "README_tables.md"), "w") as tables:
@@ -101,13 +104,10 @@ def main(argv):
                  "--raw", os.path.join(data, "raw.json.gz"), "--out", os.path.join(data, "results.json"), "--tables"],
                 stdout=tables, check=True,
             )
-        shutil.copy(newest(os.path.join(data, "*_results.json")), os.path.join(meas, "hash_benchmark_results.json"))
+        canonical = newest(os.path.join(data, "*_results.json"))
+        extras.append(newest(os.path.join(data, "*_raw.json.gz")))
         print(">>> [perf] rendering ns-vs-length charts (64-bit + 128-bit, log-log)", file=sys.stderr)
-        subprocess.run(
-            [*report, "plot", "--results", os.path.join(meas, "hash_benchmark_results.json"),
-             "--out", os.path.join(data, "hash_throughput.svg")],
-            check=True,
-        )
+        subprocess.run([*report, "plot", "--results", canonical, "--out", os.path.join(data, "hash_throughput.svg")], check=True)
         for width in ("64", "128"):
             shutil.copy(
                 newest(os.path.join(data, f"*_hash_throughput_{width}.svg")),
@@ -129,27 +129,38 @@ def main(argv):
         )
         for log in glob.glob(os.path.join(data, "*_smhasher_*.log")):
             subprocess.run(["gzip", "-f", log], check=False)
+        smh = glob.glob(os.path.join(data, "*_smhasher.json"))
+        if smh:
+            extras.append(max(smh, key=os.path.getmtime))
+        extras.extend(sorted(glob.glob(os.path.join(data, "*_smhasher_*.log.gz"))))
+
+    bundle = None
+    if canonical:
+        print(">>> [bundle] packing the per-machine .tgz (canonical + raw + SMHasher)", file=sys.stderr)
+        bundle = subprocess.run(
+            [*report, "bundle", "--results", canonical, "--include", *extras, "--data-dir", data],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        print(">>> [verify] published charts vs the bundle data", file=sys.stderr)
+        subprocess.run([*report, "verify", "--bundle", bundle, "--charts-dir", meas], check=False)
+    elif not args.skip_smhasher:
+        print("NOTE: smhasher-only run has no perf canonical to key a bundle on; re-run with perf to bundle.", file=sys.stderr)
 
     print(
         "\n".join(
             [
                 "",
                 "=== done ===",
-                "Committed-size artifacts (raw ~316 KB gzip, canonical ~100 KB, SVG ~16 KB, each SMHasher log ~20 KB gzip):",
-                f"  {meas}/hash_benchmark_results.json   canonical per-case perf stats (text, diffable)",
-                f"  {meas}/hash_throughput_64.svg        64-bit throughput chart (log-log, embed in README.md)",
-                f"  {meas}/hash_throughput_128.svg       128-bit throughput chart (log-log, embed in README.md)",
-                f"  {data}/*_raw.json.gz                 full raw benchmark JSON (compare.py U-tests)",
-                f"  {data}/*_smhasher.json               SMHasher3 pass/fail + failing families",
-                f"  {data}/*_smhasher_*.log.gz           per-algorithm SMHasher3 logs",
-                f"  {data}/README_tables.md              rendered perf tables to paste into README.md",
-                "",
-                "data/ is .gitignored; an authoritative commit is:",
-                f"  git add {meas}/hash_benchmark_results.json {meas}/hash_throughput_64.svg {meas}/hash_throughput_128.svg",
-                f"  git add -f {data}/*_raw.json.gz {data}/*_smhasher.json {data}/*_smhasher_*.log.gz",
-                "Embed the charts in README.md with:",
+                "Commit the published charts (plain git) and the per-machine data bundle (Git LFS):",
+                f"  git add {meas}/hash_throughput_64.svg {meas}/hash_throughput_128.svg",
+            ]
+            + ([f"  git add {bundle}"] if bundle else [])
+            + [
+                f"Refresh the README perf tables by pasting {data}/README_tables.md, and re-embed the charts:",
                 "  ![mbo/hash 64-bit throughput](measurements/hash_throughput_64.svg)",
                 "  ![mbo/hash 128-bit throughput](measurements/hash_throughput_128.svg)",
+                "Anyone can re-verify the published charts against the committed data:",
+                f"  {os.path.join(meas, 'hash_benchmark_report.py')} verify --bundle {bundle or '<data/<slug>/<bundle>.tgz>'}",
             ]
         )
     )

@@ -45,20 +45,43 @@ constexpr uint64_t kSeed = 5'381;
 // FAST set (default, CI, and the README tables): a dense set straddling every
 // dispatch-tier boundary and SSO cutoff so the small-key cliffs are visible -
 // 7/8 the fully-unrolled <=8 path, 15/16 the <=16 path (15 = libstdc++ SSO
-// cap), 22 the libc++ SSO cap, 47/48 and 63/64 the short-chain steps, with
-// 3/11/19/27 filling the small range and 256/1024/4096 the bulk.
-constexpr std::array<int, 18> kReadmeSizes = {1,  3,  7,  8,  11, 15, 16,  19,    22,
-                                              27, 32, 47, 48, 63, 64, 256, 1'024, 4'096};
+// cap), 22 the libc++ SSO cap, 38/47/48 and 63/64 the short-chain steps, 127/128
+// bracketing the chain->bulk 128-byte-window edge, with 3/5/11/19/27 filling the
+// small range and 256/1024/4096 the bulk.
+constexpr std::array<int, 22> kReadmeSizes = {
+    1, 3, 5, 7, 8, 11, 15, 16, 19, 22, 27, 32, 38, 47, 48, 63, 64, 127, 128, 256, 1'024, 4'096,
+};
 
 // FULL set (MBO_HASH_BENCHMARK_FULL=1): ~3x denser, a slow exponential (ratio
 // ~1.2) from 1..4096 unioned with the boundary set above, so the ns-vs-length
 // curve is smooth and the tier edges stay sampled. For the complete dataset /
 // graph, not for the README tables.
-constexpr std::array<int, 51> kFullSizes = {
-    1,   2,   3,   4,   5,   6,   7,   8,     9,     11,    13,    15,    16,    18,    19,    22,    27,
-    32,  38,  46,  47,  48,  55,  63,  64,    66,    79,    95,    114,   137,   165,   198,   237,   256,
+constexpr std::array<int, 53> kFullSizes = {
+    1,   2,   3,   4,   5,   6,   7,   8,     9,     11,    13,    15,    16,    18,    19,    22,    27,    32,
+    38,  46,  47,  48,  55,  63,  64,  66,    79,    95,    114,   127,   128,   137,   165,   198,   237,   256,
     285, 342, 410, 492, 591, 709, 851, 1'021, 1'024, 1'225, 1'470, 1'764, 2'116, 2'540, 3'048, 3'657, 4'096,
 };
+
+// Table/chart consistency rule: kReadmeSizes (README tables) must be a subset of
+// kFullSizes (the throughput chart), so every table row has a matching point on
+// the curve. Add a README size to the full set too. Enforced at compile time.
+constexpr bool ReadmeSizesAreSubsetOfFull() {
+  for (const int want : kReadmeSizes) {
+    bool found = false;
+    for (const int have : kFullSizes) {
+      if (have == want) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static_assert(ReadmeSizesAreSubsetOfFull(), "every kReadmeSizes entry must also appear in kFullSizes");
 
 // The active throughput size set, selected once by the environment.
 std::span<const int> ThroughputSizes() {
