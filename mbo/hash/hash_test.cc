@@ -45,6 +45,9 @@
 # define MBO_HASH_TEST_SANITIZER
 #endif
 
+// Generated known-answer vectors for the in-house hashes (-> mbo::hash::kat).
+#include "mbo/hash/hash_test_vectors.inc"  // NOLINT(bugprone-suspicious-include): generated data table
+
 namespace mbo::hash {
 namespace {
 
@@ -630,6 +633,59 @@ TEST_F(KnownAnswerTest, Murmur3) {
   static_assert(murmur3::GetHash128("").h1 == 0);  // constexpr-safe & canonical
   for (const auto& [seed, data, expected] : kVectors) {
     EXPECT_THAT(murmur3::GetHash128(data, seed), Eq(expected)) << "input: \"" << data << "\", seed: " << seed;
+  }
+}
+
+// Known-answer tests for the in-house mumbo/jumbo and dumbo, driven by the
+// generated `hash_test_vectors.inc` (see that file). Unlike the canonical
+// third-party KATs above, these pin the CURRENT in-house output, not a
+// published reference: the -umbo family values are NOT stable across library
+// versions (still evolving pre-1.0), so a deliberate algorithm change
+// regenerates the .inc (and its .sha256). `InHouseVectors` re-derives every
+// vector from the LIVE algorithm - so a data-or-algorithm change that is not a
+// matched regeneration fails here - while the committed
+// `hash_test_vectors.inc.sha256` independently proves the file is byte-for-byte
+// unchanged (a `digest --check` sh_test verifies it; see BUILD.bazel).
+
+// The vectors must (a) cover every in-house algorithm and (b) with enough cases
+// each (all dispatch tiers, seeded and unseeded). A new in-house algorithm must
+// be added here and to hash_test_vectors_gen.cc. An exact total would be
+// meaningless; a per-algorithm floor is what actually matters.
+constexpr std::size_t CountKatAlgo(kat::Algo algo) {
+  std::size_t count = 0;
+  for (const auto& vec : kat::kVectors) {
+    if (vec.algo == algo) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+static_assert(CountKatAlgo(kat::Algo::kMumbo) >= 20);
+static_assert(CountKatAlgo(kat::Algo::kJumbo) >= 20);
+static_assert(CountKatAlgo(kat::Algo::kDumbo) >= 20);
+// Constexpr smoke (kVectors[0] is mumbo, seed 0, empty input).
+static_assert(mumbo::GetHash64("", 0) == kat::kVectors[0].low);
+
+// Every vector is re-derived from the LIVE algorithm and compared to the value
+// pinned in the generated .inc. This fails if either the data or the algorithm
+// changed without a matched regeneration (the diff_test in BUILD.bazel catches
+// a stale .inc; the .sha256 sidecar proves the file is byte-for-byte unchanged).
+TEST_F(KnownAnswerTest, InHouseVectors) {
+  for (const auto& [algo, seed, len, low, high] : kat::kVectors) {
+    const std::string data = PatternBuffer(len);
+    switch (algo) {
+      case kat::Algo::kMumbo:
+        EXPECT_THAT(mumbo::GetHash64(data, seed), Eq(low)) << "mumbo len: " << len << ", seed: " << seed;
+        break;
+      case kat::Algo::kJumbo:
+        EXPECT_THAT(jumbo::GetHash128(data, seed), Eq(Hash128{.h1 = low, .h2 = high}))
+            << "jumbo len: " << len << ", seed: " << seed;
+        break;
+      case kat::Algo::kDumbo:
+        EXPECT_THAT(dumbo::GetHash64(data, seed), Eq(low)) << "dumbo len: " << len << ", seed: " << seed;
+        break;
+    }
   }
 }
 
