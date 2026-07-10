@@ -5,8 +5,8 @@
 // family is still evolving pre-1.0); regenerate INTENTIONALLY on an algorithm
 // change (and refresh hash_test_vectors.inc.sha256), then review the diff:
 //   bazel run //mbo/hash:hash_test_vectors_gen > mbo/hash/hash_test_vectors.inc
-//   bazel run //mbo/digest:digest -- -a sha256 mbo/hash/hash_test_vectors.inc \
-//       > mbo/hash/hash_test_vectors.inc.sha256
+//   bazel run //mbo/digest:digest -- -a sha256 mbo/hash/hash_test_vectors.inc >
+//   mbo/hash/hash_test_vectors.inc.sha256
 // hash_test.cc verifies each vector against the live algorithm; the committed
 // .sha256 is the independently verifiable integrity check. Inputs are the
 // deterministic PatternBuffer(len) (byte i = (i*131+7) % 256); seeds 0 and
