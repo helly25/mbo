@@ -36,8 +36,9 @@ mbo/hash/measurements/
   hash_benchmark_report.py     # run / store / tables / plot / smhasher (stdlib only)
   build_smhasher3.sh           # reproducible SMHasher3 build (clone + fixes + install plugin + container gcc)
   smhasher3/mbohash.cpp        # in-house mumbo/jumbo and dumbo SMHasher3 registration (includes the real headers)
-  hash_benchmark_results.json  # canonical distilled results (committed provenance for the README tables)
-  data/                        # complete raw datasets + SMHasher3 logs (see "Data storage")
+  hash_throughput_64.svg       # published 64-bit throughput chart (committed; verifiable from data/)
+  hash_throughput_128.svg      # published 128-bit throughput chart (committed; verifiable from data/)
+  data/<os-arch-cpu>/*.tgz     # per-machine measurement bundles, Git LFS (see "Data storage")
 ```
 
 The C++ benchmark itself (`mbo/hash/hash_benchmark.cc`,
@@ -90,30 +91,41 @@ plus `min`, `median`, `mean` (full-set, for context) and the repetition count.
 The README tables use `best`; `best_cv` flags a case whose fast tail is itself
 noisy and worth re-measuring.
 
-## Data storage, compression, commit policy
+## Data storage, commit policy, contributions
 
-Measured sizes (fast/18-size set; the full/51-size set is ~2.8x): raw
-google/benchmark JSON is **1.1 MB** (fast) / **~3 MB** (full) - too large and
-too noisy (per-iteration timings) to text-dump; gzip takes it to **123 KB** /
-**~340 KB**. The distilled canonical JSON is **38 KB** (fast) / **~100 KB**
-(full), and with sorted keys it diffs cleanly. So:
+Authoritative numbers cannot come from CI (shared, virtualized runners with CPU
+scaling on - see "CI"), so measurements are contributed from real machines
+(Apple M5 Pro, AMD Zen5, Intel, ...). Each run produces a fair amount of data:
+the raw google/benchmark JSON gzips to ~123 KB (fast) / ~340 KB (full), the
+distilled canonical JSON is ~38 KB / ~100 KB, plus the per-algorithm SMHasher3
+logs. Across several machines that accumulates, so:
 
-- **Canonical results** (`hash_benchmark_results.json`): distilled per-case
-  stats + context. Small and human-diffable - **committed as text**; it is the
-  provenance for the README tables and the input to the plotter. This is the
-  answer to "just text-dump them": the _canonical_ JSON, yes; the _raw_, no.
-- **Complete raw datasets** (`data/`): google/benchmark's full JSON (every
-  repetition), `data/<date>-<host>-<gitsha>.json.gz`, **gzip-compressed**. Only
-  needed for a `compare.py` U-test. Policy: commit the gzipped raw only for an
-  **authoritative** dataset (a clean `main` checkout - see the workflow note),
-  so history stays reproducible without accumulating a raw dump per dev push.
-  Dev-branch raws stay git-ignored (`data/` ignores everything but `.gitkeep`).
+- **Per-machine bundle, Git LFS**
+  (`data/<os>-<arch>-<cpu-brand>/<slug>_<cores>c_<gitsha8>_<stamp>.tgz`): one
+  gzipped tarball per run holds the _whole_ dataset - the canonical
+  `results.json`, the raw `*_raw.json.gz` (for `compare.py` U-tests), and the
+  `smhasher.json` + per-algorithm logs. It is Git-LFS-tracked (`.gitattributes`),
+  so the blobs stay out of the main pack; unpack to inspect or A/B. Keep the
+  current bundle per machine (replace on re-measure); LFS history retains olds.
+- **Published charts, plain git** (`hash_throughput_64.svg` / `_128.svg`): the
+  human-facing output embedded in the hash README. Small, and - the point -
+  _verifiable_: `hash_benchmark_report.py verify --bundle <tgz>` regenerates them
+  from the bundled canonical data and fails on any mismatch, so every published
+  figure is provably derived from a committed dataset and cannot be hand-edited
+  (`_svg_plot` is deterministic: geometry keyed only off the data, no wall-clock).
+  The README perf tables are likewise rendered from the canonical data (unpack a
+  bundle and run `tables`).
+- The loose run outputs in `data/` are staging only and git-ignored; `bundle`
+  packs them into the `.tgz`. This directory is dev-only and `.bazelignore`'d, so
+  it never enters the module or BCR (the release archive carries LFS pointer
+  files here, which is harmless).
 
-## Regenerate
+## Regenerate / contribute a machine
 
-The one-shot runner does all three steps (perf sweep, chart, SMHasher3 battery)
-and prints exactly what to commit. Run it from a clean `main` checkout so the
-provenance is authoritative:
+Run the one-shot runner on the machine you want to add, from the repo root and a
+clean `main` checkout (so the provenance is authoritative). It runs the perf
+sweep, renders + verifies the charts, runs the SMHasher3 battery, packs the
+per-machine LFS bundle, and prints exactly what to commit:
 
 ```sh
 # Everything, SMHasher3 batteries 4-at-a-time (perf runs first and alone):
@@ -129,30 +141,31 @@ load-independent, so `--jobs` runs several concurrently - trading cores for
 wall-clock, not accuracy. SMHasher3 is built and run inside a container
 (`build_smhasher3.sh`), so the runner invokes its Linux binary via `docker run`.
 
-Or drive the steps individually:
+Or drive the steps individually (`bundle` packs a run; `verify` audits the
+published charts against a bundle; unpack a bundle for its canonical JSON):
 
 ```sh
-# From the repository root (the script shells out to `bazel run` there):
+# Perf sweep -> staged canonical results.json + raw.json.gz (from the repo root):
 python3 mbo/hash/measurements/hash_benchmark_report.py run \
     --reps 20 --warmup 0.05 \
-    --raw mbo/hash/measurements/data/$(date +%Y%m%d)-raw.json \
-    --out mbo/hash/measurements/hash_benchmark_results.json --tables
+    --raw mbo/hash/measurements/data/raw.json.gz \
+    --out mbo/hash/measurements/data/results.json --tables
 
-# Re-render the README tables from the committed canonical JSON (no bazel):
-python3 mbo/hash/measurements/hash_benchmark_report.py tables \
-    --results mbo/hash/measurements/hash_benchmark_results.json
+# Pack a run's staged outputs into the per-machine Git-LFS bundle:
+python3 mbo/hash/measurements/hash_benchmark_report.py bundle \
+    --results mbo/hash/measurements/data/<stamp>_results.json \
+    --include mbo/hash/measurements/data/<stamp>_raw.json.gz \
+             mbo/hash/measurements/data/<stamp>_smhasher.json
 
-# Plot ns-vs-length curves (dependency-free SVG):
-python3 mbo/hash/measurements/hash_benchmark_report.py plot \
-    --results mbo/hash/measurements/hash_benchmark_results.json --out /tmp/hash.svg
+# Verify the committed charts match a bundle's data (unpacks, re-renders, diffs):
+python3 mbo/hash/measurements/hash_benchmark_report.py verify \
+    --bundle mbo/hash/measurements/data/<slug>/<bundle>.tgz
 
-# SMHasher3 quality over all algorithms (needs a built SMHasher3, see above):
-python3 mbo/hash/measurements/hash_benchmark_report.py smhasher \
-    --smhasher3 /path/to/SMHasher3 --algos all --out mbo/hash/measurements/smhasher_results.json
+# Re-render the README tables / charts from a bundle's canonical JSON:
+tar xzOf <bundle>.tgz results.json > /tmp/results.json
+python3 mbo/hash/measurements/hash_benchmark_report.py tables --results /tmp/results.json
+python3 mbo/hash/measurements/hash_benchmark_report.py plot --results /tmp/results.json --out /tmp/hash.svg
 ```
-
-Output filenames are timestamp-prefixed (see below), so `--raw` / `--out` land
-as `data/YYYYMMDD_HHMMSS_...`.
 
 ## SMHasher3 quality (`smhasher`)
 
@@ -180,10 +193,12 @@ Last verified run (2026-07): **mumbo-64/jumbo-128** and **dumbo-64** all PASS
 
 ## Output filenames
 
-Every file the tool writes is prefixed `YYYYMMDD_HHMMSS_` (local wall clock, one
-stamp per invocation), so runs never overwrite each other and the filename
-records when it was produced. The committed canonical results file is therefore
-a specific timestamped file; `tables`/`plot` take an explicit `--results` path.
+Loose staging files the tool writes are prefixed `YYYYMMDD_HHMMSS_` (local wall
+clock, one stamp per invocation) so runs never overwrite each other. The
+committed artifact is the per-machine bundle
+`data/<os>-<arch>-<cpu-brand>/<slug>_<cores>c_<gitsha8>_<stamp>.tgz` - the slug
+derived from the dataset's own `uname` + CPU brand, the SHA from its provenance -
+so a bundle is self-identifying and collision-free across machines.
 
 ## CI
 
@@ -195,18 +210,18 @@ for architecture/compiler shape comparison, not a gate.
 
 ## Open items
 
-- **Authoritative `smhasher.json` not yet committed**: the in-house plugin now
-  builds cleanly at the pinned commit `6ab4343` (an include-order bug in
-  `smhasher3/mbohash.cpp` - `Hashlib.h` ahead of `Platform.h`, which defines
-  `seed_t` and the `FLAG_IMPL_*` enums - is fixed and pinned against clang-format;
-  the pin is correct, no re-pin needed). Run `run_measurements.py` on a clean
-  `main` checkout to land the machine-readable record; the README SMHasher scores
-  already stand from verified runs.
-- Optional guard: a check that the README tables match the committed canonical
-  JSON so they cannot silently drift (they match as of the latest authoritative
-  run below).
+- **Only the reference machine (Apple M5 Pro) has a committed bundle so far, and
+  it is perf-only.** Contribute other machines (AMD Zen5, Intel, ...) by running
+  `run_measurements.py` there; and re-run with the SMHasher3 battery to add
+  `smhasher.json` + logs to the M5 Pro bundle (the include-order fix makes that
+  build reproducible now; the README SMHasher scores already stand from verified
+  runs).
+- `verify` audits the published _charts_ against a bundle; the README perf
+  _tables_ are not yet auto-checked (they render from a bundle's `results.json`
+  via `tables`). A marker-delimited tables region + a `verify` extension would
+  close that.
 
-Done: the authoritative perf dataset + gzipped raw are committed
-(`hash_benchmark_results.json`, `data/*_raw.json.gz`), and the log-log
-throughput curves (`hash_throughput_64.svg` / `_128.svg`) are committed and
-embedded in the hash README.
+Done: per-machine Git-LFS bundles (canonical + raw + SMHasher in one `.tgz`) with
+a `verify` audit that regenerates the published charts from the bundled data;
+this replaced committing loose canonical/raw files. The SMHasher3 build is
+reproducible again (include-order fix).

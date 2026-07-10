@@ -43,6 +43,7 @@ Pipeline (tables/store/plot are pure JSON -> no bazel needed):
 import argparse
 import concurrent.futures
 import datetime
+import filecmp
 import gzip
 import json
 import os
@@ -51,6 +52,8 @@ import shlex
 import statistics
 import subprocess
 import sys
+import tarfile
+import tempfile
 
 # README tables show this (dense) set; the stored FULL dataset holds ~3x more
 # (a slow exponential) for the curve. Mirror kReadmeSizes in hash_benchmark.cc.
@@ -116,12 +119,20 @@ def _source_provenance():
 
 
 def _machine_augment():
-    """CPU brand / OS not always in google/benchmark's context; fill from the OS."""
+    """CPU brand / OS / model not always in google/benchmark's context; fill from the
+    OS. Best-effort and cross-platform: any field that cannot be read is omitted."""
     brand = _sh(["sysctl", "-n", "machdep.cpu.brand_string"])  # macOS
-    if not brand:
-        cpuinfo = _sh(["sh", "-c", "grep -m1 'model name' /proc/cpuinfo | cut -d: -f2"])  # linux
-        brand = cpuinfo.strip() if cpuinfo else None
-    return {"cpu_brand": brand, "uname": _sh(["uname", "-srm"])}
+    model = _sh(["sysctl", "-n", "hw.model"])  # macOS, e.g. "Mac17,9"
+    if not brand:  # Linux
+        brand = _sh(["sh", "-c", "grep -m1 'model name' /proc/cpuinfo | cut -d: -f2-"])
+    if not model:  # Linux board/product name, best-effort
+        model = _sh(["sh", "-c", "cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null"])
+    compiler = _sh(["sh", "-c", "${CC:-cc} --version 2>/dev/null | head -1"])
+    augment = {"cpu_brand": (brand or "").strip() or None, "uname": _sh(["uname", "-srm"])}
+    for key, value in (("cpu_model", model), ("compiler", compiler)):
+        if value and value.strip():
+            augment[key] = value.strip()
+    return augment
 
 
 def _run_benchmark(mode, reps, min_time, warmup):
@@ -212,6 +223,21 @@ def _provenance_context():
     ctx = _machine_augment()
     ctx["source"] = _source_provenance()
     return ctx
+
+
+def _slug(text):
+    """Lowercase; collapse each run of non-alphanumerics to one '-'; trim."""
+    return re.sub(r"[^a-z0-9]+", "-", (text or "").lower()).strip("-")
+
+
+def _platform_slug(ctx):
+    """Filesystem-safe machine identity `<os>-<arch>-<cpu-brand>` from a dataset's
+    context, e.g. `macos-arm64-apple-m5-pro`. Drives the per-machine data/ layout."""
+    parts = (ctx.get("uname") or "").split()  # `uname -srm`: <sysname> <release> <machine>
+    sysname = parts[0] if parts else ""
+    machine = parts[-1] if len(parts) >= 3 else ""
+    os_name = {"Darwin": "macos", "Linux": "linux"}.get(sysname, _slug(sysname) or "os")
+    return f"{os_name}-{_slug(machine) or 'arch'}-{_slug(ctx.get('cpu_brand') or '') or 'cpu'}"
 
 
 # SMHasher3's per-test failures and final verdict. Tolerant: SMHasher3 output
@@ -492,7 +518,7 @@ def _svg_plot(data, algos, title, path, label_map=None):
         svg.append(f'<text x="{pad_l + plot_w + 34:.1f}" y="{ly + 4:.1f}" font-size="11" fill="{color}">{label_map.get(algo, algo)}</text>')
     svg.append("</svg>")
     with open(path, "w") as handle:
-        handle.write("\n".join(svg))
+        handle.write("\n".join(svg) + "\n")  # trailing newline: matches the end-of-file-fixer'd committed form (verify)
     print(f"wrote {path}", file=sys.stderr)
 
 
@@ -555,6 +581,15 @@ def main(argv):
         default=1,
         help="batteries to run concurrently (independent; pass/fail is load-independent, so this only trades cores for wall-clock)",
     )
+
+    p_bundle = sub.add_parser("bundle", help="pack a run's artifacts into a per-machine .tgz under data/ (LFS-tracked)")
+    p_bundle.add_argument("--results", required=True, help="canonical results JSON; its context names the machine")
+    p_bundle.add_argument("--include", nargs="*", default=[], help="extra files to pack (raw.json.gz, smhasher.json, logs)")
+    p_bundle.add_argument("--data-dir", default="mbo/hash/measurements/data")
+
+    p_verify = sub.add_parser("verify", help="regenerate the SVG charts from a bundle and diff against the committed charts")
+    p_verify.add_argument("--bundle", required=True, help="the .tgz to verify")
+    p_verify.add_argument("--charts-dir", default="mbo/hash/measurements", help="dir holding the committed hash_throughput_*.svg")
 
     args = parser.parse_args(argv)
     # One stamp per invocation, so all files a run writes share it. Every
@@ -630,6 +665,50 @@ def main(argv):
             _dump_canonical(results, out_path)
             print(f"wrote {out_path}", file=sys.stderr)
         return 1 if failed else 0
+
+    if args.command == "bundle":
+        results = _load_json(args.results)
+        ctx = results.get("context", {})
+        slug = _platform_slug(ctx)
+        cores = ctx.get("num_cpus", "?")
+        sha = ((ctx.get("source") or {}).get("git_sha") or "nogit")[:8]
+        dest_dir = os.path.join(args.data_dir, slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        dest = os.path.join(dest_dir, f"{slug}_{cores}c_{sha}_{stamp}.tgz")
+        with tarfile.open(dest, "w:gz") as tar:
+            tar.add(args.results, arcname="results.json")  # stable name so `verify` finds it
+            for path in args.include:
+                if path and os.path.exists(path):
+                    tar.add(path, arcname=os.path.basename(path))
+        print(dest)  # stdout: bundle path (for scripting)
+        print(f"wrote {dest}", file=sys.stderr)
+        return 0
+
+    if args.command == "verify":
+        with tempfile.TemporaryDirectory() as tmp:
+            with tarfile.open(args.bundle, "r:gz") as tar:
+                try:
+                    tar.extractall(tmp, filter="data")  # py>=3.12 hardened extraction
+                except TypeError:
+                    tar.extractall(tmp)  # noqa: S202 - our own bundle, older Python
+            results = _load_json(os.path.join(tmp, "results.json"))
+            charts = [("throughput64", _ORDER_64, "mbo/hash - 64-bit one-shot throughput", "hash_throughput_64.svg", None)]
+            if results.get("throughput128"):
+                charts.append(
+                    ("throughput128", _ORDER_128, "mbo/hash - 128-bit one-shot throughput", "hash_throughput_128.svg", _LABEL_128)
+                )
+            mismatches = []
+            for key, order, title, svg_name, labels in charts:
+                regen = os.path.join(tmp, svg_name)
+                _svg_plot(results[key], _order(list(results[key]), order), title, regen, labels)
+                committed = os.path.join(args.charts_dir, svg_name)
+                if not os.path.exists(committed) or not filecmp.cmp(regen, committed, shallow=False):
+                    mismatches.append(svg_name)
+            if mismatches:
+                print(f"VERIFY FAILED: committed charts do not match the bundle data: {', '.join(mismatches)}", file=sys.stderr)
+                return 1
+            print(f"VERIFY OK: committed charts match {os.path.basename(args.bundle)}", file=sys.stderr)
+            return 0
 
     return 1
 
