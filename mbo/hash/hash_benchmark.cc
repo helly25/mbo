@@ -188,6 +188,14 @@ int main(int argc, char** argv) {
   benchmark::AddCustomContext("compiler", "gcc-" + std::to_string(__GNUC__));
   benchmark::AddCustomContext("compiler_version", __VERSION__);
 #endif
+  // Emit the curated README size subset (kReadmeSizes) so the report tool extracts
+  // the small table straight from a FULL dataset - no separate fast run, and no
+  // second size list to drift (this C++ list is the single source of truth).
+  std::string readme_sizes;
+  for (const int size : mbo::hash::kReadmeSizes) {
+    readme_sizes += (readme_sizes.empty() ? "" : ",") + std::to_string(size);
+  }
+  benchmark::AddCustomContext("readme_sizes", readme_sizes);
   benchmark::RunSpecifiedBenchmarks();
   benchmark::Shutdown();
   return 0;
