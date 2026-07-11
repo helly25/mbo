@@ -375,7 +375,8 @@ that gets it a clean SMHasher3 pass - but wins the mixed-length latency test,
 which is closer to how a hash table actually uses a hash. For 128-bit output,
 `jumbo` is fastest from the mid sizes up. `fnv1a` is quickest on 1-3 byte keys,
 `dumbo` does well on tiny keys but falls off on large ones, and `siphash` is
-slower throughout - the price of being a keyed PRF.
+slower throughout - the price of being a keyed PRF (Pseudo-Random Function, see
+[SipHash: a fast short-input PRF](https://cr.yp.to/siphash/siphash-20120918.pdf)).
 
 ## Quality: SMHasher3
 
