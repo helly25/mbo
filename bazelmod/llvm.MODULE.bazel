@@ -20,7 +20,7 @@ bazel_dep(name = "toolchains_llvm", version = "1.8.0")
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 llvm.toolchain(
     name = "llvm_toolchain_llvm",
-    llvm_version = "20.1.8",
+    llvm_version = "22.1.8",
     extra_llvm_distributions = {
         # 22.1.8 — newest released; a forward-looking rung in the CI clang matrix
         "LLVM-22.1.8-Linux-ARM64.tar.xz": "805efad2bb91cb4967fa569e0881d10c0f69c04461cf671cccbae19f547acc34",
