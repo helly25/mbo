@@ -98,17 +98,26 @@ def main(argv):
     extras = []  # extra files packed alongside the canonical in the per-machine bundle
 
     if not args.skip_perf:
-        print(">>> [perf] full performance sweep (runs solo for clean numbers)", file=sys.stderr)
-        with open(os.path.join(data, "README_tables.md"), "w") as tables:
-            subprocess.run(
-                [*report, "run", "--mode", "full", "--reps", str(args.reps),
-                 "--raw", os.path.join(data, "raw.json.gz"), "--out", os.path.join(data, "results.json"), "--tables"]
-                + (["--config", args.config] if args.config else []),
-                stdout=tables, check=True,
-            )
+        cfg = ["--config", args.config] if args.config else []
+        print(">>> [perf] full sweep (curve) + fast sweep (README tables), solo for clean numbers", file=sys.stderr)
+        # FULL sweep: the dense ns-vs-length curve + the authoritative raw (compare.py).
+        subprocess.run(
+            [*report, "run", "--mode", "full", "--reps", str(args.reps),
+             "--raw", os.path.join(data, "raw.json.gz"), "--out", os.path.join(data, "results.json")] + cfg,
+            check=True,
+        )
         canonical = newest(os.path.join(data, "*_results.json"))
         extras.append(newest(os.path.join(data, "*_raw.json.gz")))
-        print(">>> [perf] rendering ns-vs-length charts (64-bit + 128-bit, log-log)", file=sys.stderr)
+        # FAST sweep: the README tables. Its buckets ARE kReadmeSizes, and the tool
+        # reads the sizes from THIS data (no hardcoded list to drift from the C++).
+        with open(os.path.join(data, "README_tables.md"), "w") as tables:
+            subprocess.run(
+                [*report, "run", "--mode", "fast", "--reps", str(args.reps),
+                 "--out", os.path.join(data, "results_readme.json"), "--tables"] + cfg,
+                stdout=tables, check=True,
+            )
+        extras.append(newest(os.path.join(data, "*_results_readme.json")))
+        print(">>> [perf] rendering ns-vs-length charts from the full sweep (64/128, log-log)", file=sys.stderr)
         subprocess.run([*report, "plot", "--results", canonical, "--out", os.path.join(data, "hash_throughput.svg")], check=True)
         for width in ("64", "128"):
             shutil.copy(
