@@ -5,9 +5,14 @@ Fast, constexpr-safe, non-cryptographic hashing, built around the in-house
 (widening multiply). `mumbo` (64-bit) and its native 128-bit sibling `jumbo`
 both pass SMHasher3 clean (188/188 - `jumbo` is the only clean native 128 we
 measured) and post the best mixed-length latency in our benchmarks; `dumbo` is
-the compact companion. The third-party algorithms (rapidhash, xxh3/xxh64,
-murmur3, siphash, fnv1a) are exact transcriptions, kept for interop and
-comparison. Algorithm reference and API listing: see the
+the compact companion. It also ships a **build-seed mangle**
+(`hash_mangle.h`): restricted, constexpr-safe compile-time hash mangling with
+release-time rotation enforced - the `MODULE.bazel` version is folded into a
+bucketed build constant, so every release necessarily changes the hash and
+values can never silently become a persistence or wire format. That is hash
+randomization for the constexpr world, which compile-time hashing otherwise
+rules out. The third-party algorithms (rapidhash, xxh3/xxh64, murmur3, siphash,
+fnv1a) are exact transcriptions, kept for interop and comparison. Algorithm reference and API listing: see the
 [repository README](../../README.md). Quality (SMHasher3) and performance
 measurements for all algorithms: below.
 
