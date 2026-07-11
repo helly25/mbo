@@ -77,12 +77,12 @@ _SMHASHER_NAMES = {
     "mumbo": ["mumbo-64"],
     "jumbo": ["jumbo-128"],
     "dumbo": ["dumbo-64"],
-    "fnv1a": ["FNV-1a"],
+    "fnv1a": ["FNV-1a-64"],
     "xxh64": ["XXH-64"],
     "xxh3": ["XXH3-64", "XXH3-128"],
     "rapidhash": ["rapidhash"],
     "siphash": ["SipHash-2-4"],
-    "murmur3": ["MurmurHash3"],
+    "murmur3": ["MurmurHash3-128"],
 }
 # Default set - ALL algorithms, explicitly including the legacy `dumbo`.
 _SMHASHER_ALL = ["mumbo", "jumbo", "dumbo", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
@@ -279,7 +279,11 @@ def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
     proc = subprocess.run([*cmd_prefix, name], capture_output=True, text=True, check=False)
     text = proc.stdout + proc.stderr
     verdict_match = _SMH_VERDICT_RE.search(text)
-    verdict = verdict_match.group(1).upper() if verdict_match else ("PASS" if proc.returncode == 0 else "FAIL")
+    # A real run always prints "Overall result: ...". Its absence means the
+    # battery never completed - an unknown hash name ("Invalid hash '...'
+    # specified", which still exits 0), a crash, or a truncated log - so it must
+    # read as FAIL, never a returncode-0 default PASS that hides the problem.
+    verdict = verdict_match.group(1).upper() if verdict_match else "FAIL"
     passed = int(verdict_match.group(2)) if verdict_match and verdict_match.group(2) else None
     total = int(verdict_match.group(3)) if verdict_match and verdict_match.group(3) else None
     # Failing test/family names (minus the overall-verdict line), so the JSON
