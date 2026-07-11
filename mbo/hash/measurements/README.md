@@ -130,6 +130,10 @@ per-machine LFS bundle, and prints exactly what to commit:
 ```sh
 # Everything, SMHasher3 batteries 4-at-a-time (perf runs first and alone):
 mbo/hash/measurements/run_measurements.py --jobs 4
+# Pick the toolchain (and thus the recorded compiler): --config clang uses the
+# hermetic LLVM clang; omit --config for the native toolchain (gcc on Linux).
+# Run once per compiler to compare them - the bundle filenames won't collide:
+mbo/hash/measurements/run_measurements.py --config clang --jobs 4
 # In-house family only, or perf/chart only:
 mbo/hash/measurements/run_measurements.py --algos mumbo,jumbo,dumbo --jobs 1
 mbo/hash/measurements/run_measurements.py --skip-smhasher

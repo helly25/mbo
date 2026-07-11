@@ -136,8 +136,12 @@ def _machine_augment():
     return augment
 
 
-def _run_benchmark(mode, reps, min_time, warmup):
-    """Runs the bazel benchmark with the measurement precautions; returns parsed JSON."""
+def _run_benchmark(mode, reps, min_time, warmup, config=None):
+    """Runs the bazel benchmark with the measurement precautions; returns parsed JSON.
+
+    `config` selects a bazel `--config` (e.g. 'clang' / 'gcc'), so the toolchain -
+    and therefore the compiler the benchmark records into the dataset - is the one
+    you want to measure."""
     env = dict(os.environ)
     if mode == "full":
         env["MBO_HASH_BENCHMARK_FULL"] = "1"
@@ -146,6 +150,7 @@ def _run_benchmark(mode, reps, min_time, warmup):
         "run",
         "-c",
         "opt",
+        *([f"--config={config}"] if config else []),
         _BENCHMARK_TARGET,
         "--",
         "--benchmark_format=json",
@@ -549,6 +554,7 @@ def main(argv):
     p_run.add_argument("--raw", help="write google/benchmark raw JSON here (.gz compresses)")
     p_run.add_argument("--out", help="write the distilled canonical results JSON here")
     p_run.add_argument("--tables", action="store_true")
+    p_run.add_argument("--config", help="bazel --config for the benchmark build (e.g. clang, gcc); picks the toolchain and the recorded compiler")
 
     p_store = sub.add_parser("store", help="distill raw benchmark JSON to canonical results JSON")
     p_store.add_argument("--raw", required=True)
@@ -599,7 +605,7 @@ def main(argv):
     stamp = _timestamp()
 
     if args.command == "run":
-        raw = _run_benchmark(args.mode, args.reps, args.min_time, args.warmup)
+        raw = _run_benchmark(args.mode, args.reps, args.min_time, args.warmup, args.config)
         if args.raw:
             raw_path = _timestamped(args.raw, stamp)
             opener = gzip.open if raw_path.endswith(".gz") else open
