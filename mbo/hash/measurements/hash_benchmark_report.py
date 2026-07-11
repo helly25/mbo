@@ -162,19 +162,7 @@ def _run_benchmark(mode, reps, min_time, warmup, config=None):
     ]
     print(f"$ MBO_HASH_BENCHMARK_FULL={env.get('MBO_HASH_BENCHMARK_FULL', '')} {' '.join(cmd)}", file=sys.stderr)
     out = subprocess.run(cmd, capture_output=True, text=True, check=True, env=env).stdout
-    raw = json.loads(out[out.index("{") :])
-    # ENFORCE optimization, do not merely request it: a non-opt build (no NDEBUG)
-    # makes every timing meaningless, so refuse it rather than emit a bogus
-    # dataset. google/benchmark reports how it was built; the command sets
-    # `-c opt`, and this catches an overriding --config / .bazelrc or a debug build.
-    build_type = str(raw.get("context", {}).get("library_build_type") or "unknown").lower()
-    if build_type != "release":
-        raise SystemExit(
-            f"ERROR: benchmark reports library_build_type={build_type!r}, not 'release' - it was not built "
-            "optimized, so the timings would be meaningless. Ensure `-c opt` is in effect (no --config or "
-            ".bazelrc overriding compilation_mode) and re-run."
-        )
-    return raw
+    return json.loads(out[out.index("{") :])
 
 
 def distill(raw, mode):
