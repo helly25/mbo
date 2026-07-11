@@ -101,7 +101,7 @@ distilled canonical JSON is ~38 KB / ~100 KB, plus the per-algorithm SMHasher3
 logs. Across several machines that accumulates, so:
 
 - **Per-machine bundle, Git LFS**
-  (`data/<os>-<arch>-<cpu-brand>/<slug>_<cores>c_<gitsha8>_<stamp>.tgz`): one
+  (`data/<os>-<arch>-<cpu-brand>/<slug>_<cores>c_<compiler>_<gitsha8>_<stamp>.tgz`): one
   gzipped tarball per run holds the _whole_ dataset - the canonical
   `results.json`, the raw `*_raw.json.gz` (for `compare.py` U-tests), and the
   `smhasher.json` + per-algorithm logs. It is Git-LFS-tracked (`.gitattributes`),
@@ -196,9 +196,11 @@ Last verified run (2026-07): **mumbo-64/jumbo-128** and **dumbo-64** all PASS
 Loose staging files the tool writes are prefixed `YYYYMMDD_HHMMSS_` (local wall
 clock, one stamp per invocation) so runs never overwrite each other. The
 committed artifact is the per-machine bundle
-`data/<os>-<arch>-<cpu-brand>/<slug>_<cores>c_<gitsha8>_<stamp>.tgz` - the slug
-derived from the dataset's own `uname` + CPU brand, the SHA from its provenance -
-so a bundle is self-identifying and collision-free across machines.
+`data/<os>-<arch>-<cpu-brand>/<slug>_<cores>c_<compiler>_<gitsha8>_<stamp>.tgz` - the slug
+derived from the dataset's own `uname` + CPU brand, the `compiler` reported by the
+benchmark binary (`clang-NN` / `gcc-NN`, so GCC and Clang builds on one machine
+stay distinct), the SHA from its provenance - so a bundle is self-identifying and
+collision-free across machines and toolchains.
 
 ## CI
 
