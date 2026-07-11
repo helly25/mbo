@@ -63,6 +63,7 @@ def main(argv):
     parser.add_argument("--algos", default="all", help="SMHasher3 algorithms (default 'all'; e.g. mumbo,jumbo,dumbo)")
     parser.add_argument("--jobs", type=int, default=4, help="SMHasher3 batteries to run concurrently (default 4)")
     parser.add_argument("--reps", type=int, default=9, help="benchmark repetitions (default 9)")
+    parser.add_argument("--config", help="bazel --config for the perf benchmark (e.g. clang, gcc); picks the toolchain + recorded compiler")
     parser.add_argument(
         "--workdir",
         default=os.path.expanduser("~/.cache/mbo-hash-smh"),
@@ -101,7 +102,8 @@ def main(argv):
         with open(os.path.join(data, "README_tables.md"), "w") as tables:
             subprocess.run(
                 [*report, "run", "--mode", "full", "--reps", str(args.reps),
-                 "--raw", os.path.join(data, "raw.json.gz"), "--out", os.path.join(data, "results.json"), "--tables"],
+                 "--raw", os.path.join(data, "raw.json.gz"), "--out", os.path.join(data, "results.json"), "--tables"]
+                + (["--config", args.config] if args.config else []),
                 stdout=tables, check=True,
             )
         canonical = newest(os.path.join(data, "*_results.json"))
