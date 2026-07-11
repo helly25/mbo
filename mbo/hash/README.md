@@ -1,7 +1,13 @@
 # mbo/hash - fast, constexpr-safe, non-cryptographic hashing
 
-Spec-based, fast, constexpr-compatible, Apache-licensed, no-nonsense hash
-implementations. Algorithm reference and API listing: see the
+Fast, constexpr-safe, non-cryptographic hashing, built around the in-house
+**mumbo/jumbo and dumbo** family: notice-free, pure Apache-2.0, and MUM-based
+(widening multiply). `mumbo` (64-bit) and its native 128-bit sibling `jumbo`
+both pass SMHasher3 clean (188/188 - `jumbo` is the only clean native 128 we
+measured) and post the best mixed-length latency in our benchmarks; `dumbo` is
+the compact companion. The third-party algorithms (rapidhash, xxh3/xxh64,
+murmur3, siphash, fnv1a) are exact transcriptions, kept for interop and
+comparison. Algorithm reference and API listing: see the
 [repository README](../../README.md). Quality (SMHasher3) and performance
 measurements for all algorithms: below.
 
