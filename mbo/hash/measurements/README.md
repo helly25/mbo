@@ -37,7 +37,7 @@ mbo/hash/measurements/
   build_smhasher3.sh           # reproducible SMHasher3 build (clone + fixes + install plugin + container gcc)
   smhasher3/mbohash.cpp        # in-house mumbo/jumbo and dumbo SMHasher3 registration (includes the real headers)
   charts/<slug>_<cc>_*.svg     # published per-machine charts (committed; rendered by `publish`, verifiable)
-  data/<os-arch-cpu>/*.tgz     # per-machine measurement bundles, Git LFS (see "Data storage")
+  data/<slug>_<cc>_*.tgz       # per-machine measurement bundles, Git LFS, flat (see "Data storage")
 ```
 
 The C++ benchmark itself (`mbo/hash/hash_benchmark.cc`,
@@ -100,7 +100,7 @@ distilled canonical JSON is ~38 KB / ~100 KB, plus the per-algorithm SMHasher3
 logs. Across several machines that accumulates, so:
 
 - **Per-machine bundle, Git LFS**
-  (`data/<os>-<arch>-<cpu-brand>/<slug>_<cores>c_<compiler>_<gitsha8>_<stamp>.tgz`): one
+  (`data/<slug>_<cores>c_<compiler>_<gitsha8>_<stamp>.tgz`): one
   gzipped tarball per run holds the _whole_ dataset - the canonical
   `results.json`, the raw `*_raw.json.gz` (for `compare.py` U-tests), and the
   `smhasher.json` + per-algorithm logs. It is Git-LFS-tracked (`.gitattributes`),
@@ -144,7 +144,7 @@ and run in a container (`build_smhasher3.sh`, via `docker run`). The run packs a
 per-machine Git-LFS bundle and prints its path - commit it:
 
 ```sh
-git add mbo/hash/measurements/data/<slug>/<bundle>.tgz
+git add mbo/hash/measurements/data/<bundle>.tgz
 git lfs push origin HEAD && git push
 ```
 
@@ -152,7 +152,7 @@ git lfs push origin HEAD && git push
 
 ```sh
 mbo/hash/measurements/hash_benchmark_report.py publish \
-    --bundles data/<m1>/*.tgz data/<m2>/*.tgz data/<m3>/*.tgz
+    --bundles data/<m1>.tgz data/<m2>.tgz data/<m3>.tgz
 git add mbo/hash/README.md mbo/hash/measurements/charts
 ```
 
@@ -195,7 +195,7 @@ Last verified run (2026-07): **mumbo-64/jumbo-128** and **dumbo-64** all PASS
 Loose staging files the tool writes are prefixed `YYYYMMDD_HHMMSS_` (local wall
 clock, one stamp per invocation) so runs never overwrite each other. The
 committed artifact is the per-machine bundle
-`data/<os>-<arch>-<cpu-brand>/<slug>_<cores>c_<compiler>_<gitsha8>_<stamp>.tgz` - the slug
+`data/<slug>_<cores>c_<compiler>_<gitsha8>_<stamp>.tgz` - the slug
 derived from the dataset's own `uname` + CPU brand, the `compiler` reported by the
 benchmark binary (`clang-NN` / `gcc-NN`, so GCC and Clang builds on one machine
 stay distinct), the SHA from its provenance - so a bundle is self-identifying and

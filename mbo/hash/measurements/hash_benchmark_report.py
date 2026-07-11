@@ -748,9 +748,9 @@ def main(argv):
         cores = ctx.get("num_cpus", "?")
         compiler = _slug(ctx.get("compiler") or "cc")
         sha = ((ctx.get("source") or {}).get("git_sha") or "nogit")[:8]
-        dest_dir = os.path.join(args.data_dir, slug)
-        os.makedirs(dest_dir, exist_ok=True)
-        dest = os.path.join(dest_dir, f"{slug}_{cores}c_{compiler}_{sha}_{stamp}.tgz")
+        # Flat: the filename already carries the full machine identity, so no subdir.
+        os.makedirs(args.data_dir, exist_ok=True)
+        dest = os.path.join(args.data_dir, f"{slug}_{cores}c_{compiler}_{sha}_{stamp}.tgz")
         with tarfile.open(dest, "w:gz") as tar:
             tar.add(args.results, arcname="results.json")  # canonical: chart + tables + verify
             for path in args.include:

@@ -1,9 +1,8 @@
 # Loose run outputs (results.json, raw.json.gz, smhasher.json, logs) are staging
-# only - they get packed into a per-machine LFS bundle `<slug>/<...>.tgz` by
+# only - they get packed into a per-machine LFS bundle `<slug>_..._<stamp>.tgz` by
 # `hash_benchmark_report.py bundle`. Commit the bundles (LFS-tracked, see
 # ../../../.gitattributes), not the loose files. See ../README.md.
 *
 !.gitkeep
 !.gitignore
-!*/
-!*/*.tgz
+!*.tgz

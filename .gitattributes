@@ -4,4 +4,4 @@
 # helly25_mbo module or any BCR offering; the generated BCR source archive
 # carries LFS pointer files here, which is harmless (nothing builds them).
 # See mbo/hash/measurements/README.md.
-mbo/hash/measurements/data/**/*.tgz filter=lfs diff=lfs merge=lfs -text
+mbo/hash/measurements/data/*.tgz filter=lfs diff=lfs merge=lfs -text
