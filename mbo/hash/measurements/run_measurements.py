@@ -46,7 +46,6 @@ Examples:
 import argparse
 import glob
 import os
-import shutil
 import subprocess
 import sys
 
@@ -99,8 +98,9 @@ def main(argv):
 
     if not args.skip_perf:
         cfg = ["--config", args.config] if args.config else []
-        print(">>> [perf] full sweep (curve) + fast sweep (README tables), solo for clean numbers", file=sys.stderr)
-        # FULL sweep: the dense ns-vs-length curve + the authoritative raw (compare.py).
+        print(">>> [perf] full performance sweep (runs solo for clean numbers)", file=sys.stderr)
+        # A single FULL run: the dense curve AND (via readme_sizes in its context) the
+        # curated README table are both extracted from it downstream by `publish`.
         subprocess.run(
             [*report, "run", "--mode", "full", "--reps", str(args.reps),
              "--raw", os.path.join(data, "raw.json.gz"), "--out", os.path.join(data, "results.json")] + cfg,
@@ -108,22 +108,6 @@ def main(argv):
         )
         canonical = newest(os.path.join(data, "*_results.json"))
         extras.append(newest(os.path.join(data, "*_raw.json.gz")))
-        # FAST sweep: the README tables. Its buckets ARE kReadmeSizes, and the tool
-        # reads the sizes from THIS data (no hardcoded list to drift from the C++).
-        with open(os.path.join(data, "README_tables.md"), "w") as tables:
-            subprocess.run(
-                [*report, "run", "--mode", "fast", "--reps", str(args.reps),
-                 "--out", os.path.join(data, "results_readme.json"), "--tables"] + cfg,
-                stdout=tables, check=True,
-            )
-        extras.append(newest(os.path.join(data, "*_results_readme.json")))
-        print(">>> [perf] rendering ns-vs-length charts from the full sweep (64/128, log-log)", file=sys.stderr)
-        subprocess.run([*report, "plot", "--results", canonical, "--out", os.path.join(data, "hash_throughput.svg")], check=True)
-        for width in ("64", "128"):
-            shutil.copy(
-                newest(os.path.join(data, f"*_hash_throughput_{width}.svg")),
-                os.path.join(meas, f"hash_throughput_{width}.svg"),
-            )
 
     if not args.skip_smhasher:
         print(f">>> [smhasher] building SMHasher3 (workdir {args.workdir})", file=sys.stderr)
@@ -152,26 +136,26 @@ def main(argv):
             [*report, "bundle", "--results", canonical, "--include", *extras, "--data-dir", data],
             capture_output=True, text=True, check=True,
         ).stdout.strip()
-        print(">>> [verify] published charts vs the bundle data", file=sys.stderr)
-        subprocess.run([*report, "verify", "--bundle", bundle, "--charts-dir", meas], check=False)
     elif not args.skip_smhasher:
         print("NOTE: smhasher-only run has no perf canonical to key a bundle on; re-run with perf to bundle.", file=sys.stderr)
 
+    report_py = os.path.join(meas, "hash_benchmark_report.py")
     print(
         "\n".join(
             [
                 "",
                 "=== done ===",
-                "Commit the published charts (plain git) and the per-machine data bundle (Git LFS):",
-                f"  git add {meas}/hash_throughput_64.svg {meas}/hash_throughput_128.svg",
+                "This run wrote NOTHING to the tree except the bundle below, so it stays",
+                "authoritative and you can run other compilers/machines back-to-back.",
+                "Commit the per-machine data bundle (Git LFS):",
             ]
             + ([f"  git add {bundle}"] if bundle else [])
             + [
-                f"Refresh the README perf tables by pasting {data}/README_tables.md, and re-embed the charts:",
-                "  ![mbo/hash 64-bit throughput](measurements/hash_throughput_64.svg)",
-                "  ![mbo/hash 128-bit throughput](measurements/hash_throughput_128.svg)",
-                "Anyone can re-verify the published charts against the committed data:",
-                f"  {os.path.join(meas, 'hash_benchmark_report.py')} verify --bundle {bundle or '<data/<slug>/<bundle>.tgz>'}",
+                "Then render the README charts + tables from the machines you want to feature:",
+                f"  {report_py} publish --bundles <b1.tgz> <b2.tgz> ...",
+                "  git add mbo/hash/README.md mbo/hash/measurements/charts",
+                "and re-verify the committed charts against their data any time:",
+                f"  {report_py} verify",
             ]
         )
     )

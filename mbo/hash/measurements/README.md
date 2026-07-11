@@ -32,12 +32,11 @@ even invert the true ordering. So we:
 mbo/hash/measurements/
   README.md                    # this design doc
   MODULE.bazel                 # separate dev module (isolates plotting deps)
-  run_measurements.py          # one-shot authoritative runner (perf + chart + parallel smhasher)
-  hash_benchmark_report.py     # run / store / tables / plot / smhasher (stdlib only)
+  run_measurements.py          # per-machine runner: one full sweep + smhasher -> a data bundle (nothing else)
+  hash_benchmark_report.py     # run / store / tables / plot / bundle / publish / verify (stdlib only)
   build_smhasher3.sh           # reproducible SMHasher3 build (clone + fixes + install plugin + container gcc)
   smhasher3/mbohash.cpp        # in-house mumbo/jumbo and dumbo SMHasher3 registration (includes the real headers)
-  hash_throughput_64.svg       # published 64-bit throughput chart (committed; verifiable from data/)
-  hash_throughput_128.svg      # published 128-bit throughput chart (committed; verifiable from data/)
+  charts/<slug>_<cc>_*.svg     # published per-machine charts (committed; rendered by `publish`, verifiable)
   data/<os-arch-cpu>/*.tgz     # per-machine measurement bundles, Git LFS (see "Data storage")
 ```
 
@@ -107,14 +106,17 @@ logs. Across several machines that accumulates, so:
   `smhasher.json` + per-algorithm logs. It is Git-LFS-tracked (`.gitattributes`),
   so the blobs stay out of the main pack; unpack to inspect or A/B. Keep the
   current bundle per machine (replace on re-measure); LFS history retains olds.
-- **Published charts, plain git** (`hash_throughput_64.svg` / `_128.svg`): the
-  human-facing output embedded in the hash README. Small, and - the point -
-  _verifiable_: `hash_benchmark_report.py verify --bundle <tgz>` regenerates them
-  from the bundled canonical data and fails on any mismatch, so every published
-  figure is provably derived from a committed dataset and cannot be hand-edited
-  (`_svg_plot` is deterministic: geometry keyed only off the data, no wall-clock).
-  The README perf tables are likewise rendered from the canonical data (unpack a
-  bundle and run `tables`).
+- **Published charts + tables, plain git** (`charts/<slug>_<compiler>_{64,128}.svg`
+  - the hash README perf section): rendered by `hash_benchmark_report.py publish`
+    from a SELECTED set of committed bundles - one labeled block per machine. Charts
+    carry the machine identifier (subtitle); the tables are the curated `kReadmeSizes`
+    subset extracted from the FULL dataset via the `readme_sizes` the benchmark emits
+    into its own context (no separate fast run, no second size list to drift). And -
+    the point - _verifiable_: `verify` re-renders from the same bundles (a manifest
+    publish leaves in the README) and diffs, so every figure is provably from
+    committed data and cannot be hand-edited (`_svg_plot` is deterministic). This is
+    the ONLY thing that writes to the tree; the measurement run writes nothing but
+    the bundle, so it stays authoritative and several runs can go back-to-back.
 - The loose run outputs in `data/` are staging only and git-ignored; `bundle`
   packs them into the `.tgz`. This directory is dev-only and `.bazelignore`'d, so
   it never enters the module or BCR (the release archive carries LFS pointer
@@ -122,54 +124,47 @@ logs. Across several machines that accumulates, so:
 
 ## Regenerate / contribute a machine
 
-Run the one-shot runner on the machine you want to add, from the repo root and a
-clean `main` checkout (so the provenance is authoritative). It runs the perf
-sweep, renders + verifies the charts, runs the SMHasher3 battery, packs the
-per-machine LFS bundle, and prints exactly what to commit:
+Two decoupled steps: each machine produces a data bundle (that is ALL the run
+writes to the tree, so it stays authoritative and runs can go back-to-back), then
+a single `publish` renders the README from the machines you choose.
+
+**1. Measure, per machine** (repo root, clean `main` for authoritative provenance):
 
 ```sh
-# Everything, SMHasher3 batteries 4-at-a-time (perf runs first and alone):
-mbo/hash/measurements/run_measurements.py --jobs 4
-# Pick the toolchain (and thus the recorded compiler): --config clang uses the
-# hermetic LLVM clang; omit --config for the native toolchain (gcc on Linux).
-# Run once per compiler to compare them - the bundle filenames won't collide:
-mbo/hash/measurements/run_measurements.py --config clang --jobs 4
-# In-house family only, or perf/chart only:
+mbo/hash/measurements/run_measurements.py --config clang --jobs 4  # clang; omit --config for native gcc
+# faster: in-house family only, or perf only
 mbo/hash/measurements/run_measurements.py --algos mumbo,jumbo,dumbo --jobs 1
 mbo/hash/measurements/run_measurements.py --skip-smhasher
 ```
 
-The performance sweep runs first and alone (SMHasher3 would contend for CPU and
-skew the sub-ns numbers); the batteries are independent and their pass/fail is
-load-independent, so `--jobs` runs several concurrently - trading cores for
-wall-clock, not accuracy. SMHasher3 is built and run inside a container
-(`build_smhasher3.sh`), so the runner invokes its Linux binary via `docker run`.
-
-Or drive the steps individually (`bundle` packs a run; `verify` audits the
-published charts against a bundle; unpack a bundle for its canonical JSON):
+ONE full perf sweep runs first and alone (SMHasher3 would contend for CPU and
+skew the sub-ns numbers), then the battery (`--jobs` at once; pass/fail is
+load-independent, so that only trades cores for wall-clock). SMHasher3 is built
+and run in a container (`build_smhasher3.sh`, via `docker run`). The run packs a
+per-machine Git-LFS bundle and prints its path - commit it:
 
 ```sh
-# Perf sweep -> staged canonical results.json + raw.json.gz (from the repo root):
-python3 mbo/hash/measurements/hash_benchmark_report.py run \
-    --reps 20 --warmup 0.05 \
-    --raw mbo/hash/measurements/data/raw.json.gz \
-    --out mbo/hash/measurements/data/results.json --tables
-
-# Pack a run's staged outputs into the per-machine Git-LFS bundle:
-python3 mbo/hash/measurements/hash_benchmark_report.py bundle \
-    --results mbo/hash/measurements/data/<stamp>_results.json \
-    --include mbo/hash/measurements/data/<stamp>_raw.json.gz \
-             mbo/hash/measurements/data/<stamp>_smhasher.json
-
-# Verify the committed charts match a bundle's data (unpacks, re-renders, diffs):
-python3 mbo/hash/measurements/hash_benchmark_report.py verify \
-    --bundle mbo/hash/measurements/data/<slug>/<bundle>.tgz
-
-# Re-render the README tables / charts from a bundle's canonical JSON:
-tar xzOf <bundle>.tgz results.json > /tmp/results.json
-python3 mbo/hash/measurements/hash_benchmark_report.py tables --results /tmp/results.json
-python3 mbo/hash/measurements/hash_benchmark_report.py plot --results /tmp/results.json --out /tmp/hash.svg
+git add mbo/hash/measurements/data/<slug>/<bundle>.tgz
+git lfs push origin HEAD && git push
 ```
+
+**2. Publish, once** - render the README from the bundles you want to feature:
+
+```sh
+mbo/hash/measurements/hash_benchmark_report.py publish \
+    --bundles data/<m1>/*.tgz data/<m2>/*.tgz data/<m3>/*.tgz
+git add mbo/hash/README.md mbo/hash/measurements/charts
+```
+
+`publish` cuts the marker region in the hash README and re-appends one labeled
+block per bundle (charts + curated tables), in the listed order; `--bundles` is
+the selection. `verify` (no args, from the repo root) re-checks every featured
+bundle against the committed charts, reading the machine list back from the
+README's manifest.
+
+The pipeline steps are also usable individually: `run` (perf -> canonical JSON),
+`bundle` (pack a run), `tables` / `plot` (render from any canonical JSON -
+`tar xzOf <bundle>.tgz results.json` pulls one out), `publish`, `verify`.
 
 ## SMHasher3 quality (`smhasher`)
 
