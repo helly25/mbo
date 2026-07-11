@@ -4,9 +4,8 @@ Fast, constexpr-safe, non-cryptographic hashing, built around the in-house
 **mumbo/jumbo and dumbo** family: notice-free, pure Apache-2.0, and MUM-based
 (widening multiply). `mumbo` (64-bit) and its native 128-bit sibling `jumbo`
 both pass [SMHasher3](https://gitlab.com/fwojcik/smhasher3) clean (188/188 -
-`jumbo` is the only clean native 128 we
-measured) and post the best mixed-length latency in our benchmarks; `dumbo` is
-the compact companion.
+`jumbo` is the only clean native 128 we measured) and post the best mixed-length
+latency in our benchmarks; `dumbo` is the compact companion.
 
 It also ships a **build-seed mangle** (`hash_mangle.h`): restricted/limited,
 constexpr-safe compile-time hash mangling with release-time rotation enforcement.
@@ -393,7 +392,7 @@ slower throughout - the price of being a keyed PRF (Pseudo-Random Function, see
 
 ## Quality: SMHasher3
 
-SMHasher3 is the research-grade hash
+[SMHasher3](https://gitlab.com/fwojcik/smhasher3) is the research-grade hash
 test battery; passing it is the community bar for a production-quality
 general-purpose hash. All results below are **our own measurements on one
 rig** (same build, container, flags, and machine - see Methodology), so the
