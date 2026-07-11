@@ -178,6 +178,16 @@ void RegisterAll(std::tuple<Algos...> /*algorithms*/) {
 int main(int argc, char** argv) {
   mbo::hash::RegisterAll(mbo::hash::algo::AllAlgorithms{});
   benchmark::Initialize(&argc, argv);
+  // The build compiler is a first-class axis of a measurement (GCC vs Clang perf
+  // differs), so record what THIS binary was built with in the dataset context;
+  // the stored bundle's filename is tagged with `compiler` too.
+#if defined(__clang__)
+  benchmark::AddCustomContext("compiler", "clang-" + std::to_string(__clang_major__));
+  benchmark::AddCustomContext("compiler_version", __clang_version__);
+#elif defined(__GNUC__)
+  benchmark::AddCustomContext("compiler", "gcc-" + std::to_string(__GNUC__));
+  benchmark::AddCustomContext("compiler_version", __VERSION__);
+#endif
   benchmark::RunSpecifiedBenchmarks();
   benchmark::Shutdown();
   return 0;

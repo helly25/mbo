@@ -120,18 +120,19 @@ def _source_provenance():
 
 def _machine_augment():
     """CPU brand / OS / model not always in google/benchmark's context; fill from the
-    OS. Best-effort and cross-platform: any field that cannot be read is omitted."""
+    OS. Best-effort and cross-platform: any field that cannot be read is omitted.
+    The build compiler is reported by the benchmark binary itself (`compiler` /
+    `compiler_version` custom context) - system `cc` need not be what bazel built
+    with - so it is not captured here."""
     brand = _sh(["sysctl", "-n", "machdep.cpu.brand_string"])  # macOS
     model = _sh(["sysctl", "-n", "hw.model"])  # macOS, e.g. "Mac17,9"
     if not brand:  # Linux
         brand = _sh(["sh", "-c", "grep -m1 'model name' /proc/cpuinfo | cut -d: -f2-"])
     if not model:  # Linux board/product name, best-effort
         model = _sh(["sh", "-c", "cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null"])
-    compiler = _sh(["sh", "-c", "${CC:-cc} --version 2>/dev/null | head -1"])
     augment = {"cpu_brand": (brand or "").strip() or None, "uname": _sh(["uname", "-srm"])}
-    for key, value in (("cpu_model", model), ("compiler", compiler)):
-        if value and value.strip():
-            augment[key] = value.strip()
+    if model and model.strip():
+        augment["cpu_model"] = model.strip()
     return augment
 
 
@@ -671,10 +672,11 @@ def main(argv):
         ctx = results.get("context", {})
         slug = _platform_slug(ctx)
         cores = ctx.get("num_cpus", "?")
+        compiler = _slug(ctx.get("compiler") or "cc")
         sha = ((ctx.get("source") or {}).get("git_sha") or "nogit")[:8]
         dest_dir = os.path.join(args.data_dir, slug)
         os.makedirs(dest_dir, exist_ok=True)
-        dest = os.path.join(dest_dir, f"{slug}_{cores}c_{sha}_{stamp}.tgz")
+        dest = os.path.join(dest_dir, f"{slug}_{cores}c_{compiler}_{sha}_{stamp}.tgz")
         with tarfile.open(dest, "w:gz") as tar:
             tar.add(args.results, arcname="results.json")  # stable name so `verify` finds it
             for path in args.include:
