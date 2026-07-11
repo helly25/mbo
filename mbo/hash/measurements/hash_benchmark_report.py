@@ -55,9 +55,10 @@ import sys
 import tarfile
 import tempfile
 
-# README tables show this (dense) set; the stored FULL dataset holds ~3x more
-# (a slow exponential) for the curve. Mirror kReadmeSizes in hash_benchmark.cc.
-_README_SIZES = [1, 3, 7, 8, 11, 15, 16, 19, 22, 27, 32, 47, 48, 63, 64, 256, 1024, 4096]
+# README tables read their sizes from the data itself (see _throughput_table),
+# so there is no size list here to drift. The curated README set = kReadmeSizes
+# in hash_benchmark.cc (the FAST mode); the tables are rendered from a fast-mode
+# dataset, the ns-vs-length chart from the dense FULL dataset.
 
 # Ordering uses the benchmark's algorithm keys (data keys); _LABEL_128 only
 # renames "mumbo" to "jumbo" for display in the 128-bit table.
@@ -394,12 +395,13 @@ def _md_table(headers, rows):
     return "\n".join([line(headers), "| " + " | ".join(sep) + " |"] + [line(r) for r in rows])
 
 
-def _throughput_table(data, preferred, relabel, sizes):
-    # Length-per-row, algorithm-per-column: with ~18 README sizes this reads far
-    # better than 18 columns, and each row's bold marks the fastest algorithm at
-    # that length.
+def _throughput_table(data, preferred, relabel):
+    # Length-per-row, algorithm-per-column; each row's bold marks the fastest
+    # algorithm at that length. The sizes are read from the data's own buckets
+    # (the single source of truth), so there is no second size list to drift from
+    # the C++ kReadmeSizes - feed this the README (fast-mode) dataset.
     algos = _order(list(data), preferred)
-    sizes = [s for s in sizes if any(str(s) in data[a] for a in algos)]
+    sizes = sorted({int(s) for a in data.values() for s in a})
     headers = ["Length"] + [relabel.get(a, a) for a in algos]
     rows = []
     for size in sizes:
@@ -447,11 +449,11 @@ def render_tables(results):
         "",
         f"### 64-bit one-shot throughput (ns/op, {agg}; lower is better)",
         "",
-        _throughput_table(results["throughput64"], _ORDER_64, {}, _README_SIZES),
+        _throughput_table(results["throughput64"], _ORDER_64, {}),
         "",
         f"### 128-bit one-shot throughput (ns/op, {agg}; native-128 algorithms only)",
         "",
-        _throughput_table(results["throughput128"], _ORDER_128, _LABEL_128, _README_SIZES),
+        _throughput_table(results["throughput128"], _ORDER_128, _LABEL_128),
         "",
         f"### Mixed-length latency (ns/hash, {agg}; lower is better)",
         "",
