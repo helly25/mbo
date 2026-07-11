@@ -1,3 +1,5 @@
+# 0.13.1
+
 # 0.13.0
 
 - Added `DiffOptions::ignore_missing_final_newline` (the `mbo::diff` `--ignore_missing_final_newline` flag and the `diff_test` `ignore_missing_final_newline` attribute): a file with and one without a trailing newline compare equal (the `\ No newline at end of file` marker is suppressed). It only ignores the terminator, so an empty file stays distinct from a single empty line. Honored identically by all three algorithms (shared `Data` preprocessing).
