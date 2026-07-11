@@ -77,12 +77,12 @@ _SMHASHER_NAMES = {
     "mumbo": ["mumbo-64"],
     "jumbo": ["jumbo-128"],
     "dumbo": ["dumbo-64"],
-    "fnv1a": ["FNV-1a"],
+    "fnv1a": ["FNV-1a-64"],
     "xxh64": ["XXH-64"],
     "xxh3": ["XXH3-64", "XXH3-128"],
     "rapidhash": ["rapidhash"],
     "siphash": ["SipHash-2-4"],
-    "murmur3": ["MurmurHash3"],
+    "murmur3": ["MurmurHash3-128"],
 }
 # Default set - ALL algorithms, explicitly including the legacy `dumbo`.
 _SMHASHER_ALL = ["mumbo", "jumbo", "dumbo", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
