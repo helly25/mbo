@@ -11,3 +11,8 @@ whitespace: false
 # CHANGELOG.md uses one top-level heading per version (matching the regex in
 # .pre-commit/check_version.sh and tools/trigger_release.sh).
 single-h1: false
+# The generated per-machine benchmark blocks repeat the same table subheadings
+# (64-bit / 128-bit / latency) under different machine headings, which is fine -
+# only flag duplicate headings that are actual siblings.
+MD024:
+  siblings_only: true
