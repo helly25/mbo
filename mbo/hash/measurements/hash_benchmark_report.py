@@ -56,8 +56,9 @@ import tarfile
 import tempfile
 
 # README tables show this (dense) set; the stored FULL dataset holds ~3x more
-# (a slow exponential) for the curve. Mirror kReadmeSizes in hash_benchmark.cc.
-_README_SIZES = [1, 3, 7, 8, 11, 15, 16, 19, 22, 27, 32, 47, 48, 63, 64, 256, 1024, 4096]
+# (a slow exponential) for the curve. MUST mirror kReadmeSizes in
+# hash_benchmark.cc exactly (that C++ list is the source of truth; keep in sync).
+_README_SIZES = [1, 3, 5, 7, 8, 11, 15, 16, 19, 22, 27, 32, 38, 47, 48, 63, 64, 127, 128, 256, 1024, 4096]
 
 # Ordering uses the benchmark's algorithm keys (data keys); _LABEL_128 only
 # renames "mumbo" to "jumbo" for display in the 128-bit table.
