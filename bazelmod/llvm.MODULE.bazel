@@ -22,20 +22,18 @@ llvm.toolchain(
     name = "llvm_toolchain_llvm",
     llvm_version = "22.1.8",
     extra_llvm_distributions = {
-        # 22.1.8 — newest released; a forward-looking rung in the CI clang matrix
+        # 22.1.8 - the default pin (newest released).
         "LLVM-22.1.8-Linux-ARM64.tar.xz": "805efad2bb91cb4967fa569e0881d10c0f69c04461cf671cccbae19f547acc34",
         "LLVM-22.1.8-Linux-X64.tar.xz": "df0e1ecf16caf3489a272a5eea4eec9b0d82878f6477fa309504f918a0006384",
         "LLVM-22.1.8-macOS-ARM64.tar.xz": "f260f4f7c0d430828a81ae8a3826a1d63fc0963ec2459489308cc23b1f7eab4f",
         "clang+llvm-22.1.8-aarch64-pc-windows-msvc.tar.xz": "de718c58ebbc5f61d58c17b90457fcf42983bc2c4a4aba3e010d108713bfd7f1",
-        # 21.1.8 — best native match for macOS (Apple clang 21).
+        # 21.1.8 - matches macOS 26's native Apple clang 21 (tracks Xcode; shifts with the runner image).
         "LLVM-21.1.8-Linux-ARM64.tar.xz": "65ce0b329514e5643407db2d02a5bd34bf33d159055dafa82825c8385bd01993",
         "LLVM-21.1.8-Linux-X64.tar.xz": "b3b7f2801d15d50736acea3c73982994d025b01c2f035b91ae3b49d1b575732b",
         "LLVM-21.1.8-macOS-ARM64.tar.xz": "b95bdd32a33a81ee4d40363aaeb26728a26783fcef26a4d80f65457433ea4669",
         "clang+llvm-21.1.8-aarch64-pc-windows-msvc.tar.xz": "f214b1226d8de005b5f691dd29d9dfea2b49e22d0de445429916173dbb626f7f",
         "clang+llvm-21.1.8-armv7a-linux-gnueabihf.tar.gz": "4c25b04275d7b34f47f6a7f8f05ef5518ab391c31c084e8f19e6a89a24f8fa57",
-        # 20.1.8 - minimum supported LLVM and the default pin: we develop against
-        # this baseline so we don't lean on newer-LLVM behaviour (CI also exercises
-        # 21.1.8 and 22.1.8). Bumping it would drop support for older LLVM.
+        # 20.1.8 - minimum supported LLVM.
         "LLVM-20.1.8-Linux-ARM64.tar.xz": "b855cc17d935fdd83da82206b7a7cfc680095efd1e9e8182c4a05e761958bef8",
         "LLVM-20.1.8-Linux-X64.tar.xz": "1ead36b3dfcb774b57be530df42bec70ab2d239fbce9889447c7a29a4ddc1ae6",
         "LLVM-20.1.8-macOS-ARM64.tar.xz": "a9a22f450d35f1f73cd61ab6a17c6f27d8f6051d56197395c1eb397f0c9bbec4",
