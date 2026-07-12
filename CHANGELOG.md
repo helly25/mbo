@@ -1,7 +1,7 @@
 # 0.13.2
 
 - Added the `quality` command to `hash_benchmark_report.py`: it generates the SMHasher3 "Results" table in `mbo/hash/README.md` from a curated source (verify with `--check`, source measured verdict/score from a fresh run with `--smhasher <bundle>`).
-- Fixed SMHasher3 result parsing so an invalid hash name or crash reads as `ERROR` instead of a false `PASS`, and the pass/fail score and failing families now parse from the run Summary.
+- Fixed SMHasher3 result parsing so an invalid hash name or crash reads as `ERROR` instead of a false `PASS`, and the pass/fail score and failing families now parse from the run Summary; legacy/short SMHasher3 names are aliased to their registered form when a measured dataset is loaded.
 
 # 0.13.1
 

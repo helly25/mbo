@@ -87,6 +87,16 @@ _SMHASHER_NAMES = {
 # Default set - ALL algorithms, explicitly including the legacy `dumbo`.
 _SMHASHER_ALL = ["mumbo", "jumbo", "dumbo", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
 
+# Legacy / short SMHasher3 names -> the current registered name, applied when a
+# measured map is loaded so an older dataset (recorded before a name was pinned)
+# still joins onto _SMH_RESULTS_ROWS. The false-PASS bug came from the bare short
+# name `FNV-1a`, which the binary does not register (the real name is `FNV-1a-64`;
+# likewise `MurmurHash3` -> `MurmurHash3-128`). Confirm names with `SMHasher3 --list`.
+_SMH_NAME_ALIASES = {
+    "FNV-1a": "FNV-1a-64",
+    "MurmurHash3": "MurmurHash3-128",
+}
+
 # Curated source of truth for the "## Quality: SMHasher3" -> "### Results" table,
 # rendered into the README between the _SMH_BEGIN/_SMH_END markers by the
 # `quality` command (verify with `quality --check`). Each row is
@@ -703,7 +713,9 @@ def _extract_bundle(path, dest):
 
 def _load_smhasher(path):
     """Load a measured SMHasher3 map {name: {verdict, passed, total, ...}} from
-    either a `smhasher` run's JSON or a data bundle .tgz that packs one."""
+    either a `smhasher` run's JSON or a data bundle .tgz that packs one. Legacy /
+    short names are normalized to their registered form (see _SMH_NAME_ALIASES) so
+    an older dataset still joins onto the Results rows."""
     if path.endswith((".tgz", ".tar.gz")):
         with tempfile.TemporaryDirectory() as tmp:
             _extract_bundle(path, tmp)
@@ -713,7 +725,11 @@ def _load_smhasher(path):
             data = _load_json(os.path.join(tmp, sorted(members)[-1]))
     else:
         data = _load_json(path)
-    return data.get("smhasher", data)
+    smh = dict(data.get("smhasher", data))
+    for alias, canonical in _SMH_NAME_ALIASES.items():
+        if alias in smh and canonical not in smh:  # do not clobber a real entry
+            smh[canonical] = smh.pop(alias)
+    return smh
 
 
 def _render_charts(full, stem, charts_dir, subtitle):
