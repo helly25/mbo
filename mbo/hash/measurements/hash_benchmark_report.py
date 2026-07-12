@@ -87,6 +87,35 @@ _SMHASHER_NAMES = {
 # Default set - ALL algorithms, explicitly including the legacy `dumbo`.
 _SMHASHER_ALL = ["mumbo", "jumbo", "dumbo", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
 
+# Curated source of truth for the "## Quality: SMHasher3" -> "### Results" table,
+# rendered into the README between the _SMH_BEGIN/_SMH_END markers by the
+# `quality` command (verify with `quality --check`). Each row is
+# (algo, bits, role, smhasher, verdict, score, failures):
+#   - smhasher is the SMHasher3 registration name; `quality --smhasher <bundle>`
+#     joins a fresh measurement onto the row by this name, so the verdict/score
+#     below act as the checked-in fallback (used when no bundle is passed, e.g.
+#     `--check` in CI) and measured data overrides them when supplied.
+#   - verdict/score are our measurements on the pinned SMHasher3 build; score is
+#     (passed, total) for a FAIL and None for a PASS. Totals differ per hash
+#     (e.g. siphash 186, fnv1a 186, most 188), so they are NOT derived here.
+#   - role and failures are HUMAN-authored. The Failures text is editorial: a few
+#     failing families are listed as "Family [indices]" (as SMHasher3's Summary
+#     "Failures:" block reports them); a hash that fails most of the battery is
+#     summarized in prose. Re-derive verdict/score/families from a fresh `smhasher`
+#     run (its JSON carries the parsed Summary), then edit the wording here.
+_SMH_RESULTS_ROWS = [
+    ("dumbo", 64, "`hash.h` (compact MUM)", "dumbo-64", "PASS", None, "none"),
+    ("fnv1a", 64, "`hash.h`", "FNV-1a-64", "FAIL", (7, 186), "nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster"),
+    ("mumbo", 64, "default (64/32/streaming)", "mumbo-64", "PASS", None, "none"),
+    ("rapidhash", 64, "extra (`hash_extra_cc`)", "rapidhash", "PASS", None, "none"),
+    ("siphash", 64, "`hash.h` (keyed PRF)", "SipHash-2-4", "PASS", None, "none"),
+    ("xxh3", 64, "extra (`hash_extra_cc`)", "XXH3-64", "FAIL", (166, 188), "BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]"),
+    ("xxh64", 64, "extra (`hash_extra_cc`)", "XXH-64", "FAIL", (181, 188), "SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]"),
+    ("jumbo", 128, "default (128)", "jumbo-128", "PASS", None, "none"),
+    ("murmur3", 128, "`hash.h`", "MurmurHash3-128", "FAIL", (123, 188), "BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)"),
+    ("xxh3", 128, "extra (`hash_extra_cc`)", "XXH3-128", "FAIL", (162, 188), "BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8]"),
+]
+
 
 def _timestamp():
     """Local wall-clock stamp `YYYYMMDD_HHMMSS` for output filenames."""
@@ -262,15 +291,17 @@ def _machine_label(ctx):
     return " · ".join(bits)
 
 
-# SMHasher3's per-test failures and final verdict. Tolerant: SMHasher3 output
-# varies by version, so we capture the raw log and parse best-effort.
-# Verdict + optional score, e.g. "Overall result: FAIL  ( 181 / 188 )".
+# SMHasher3's per-battery Summary. Tolerant: the exact spacing varies, so we
+# capture the raw log and parse best-effort. The real line (pinned build) is
+# "Overall result: FAIL            ( 166 / 188 passed)" - note the trailing
+# word "passed" INSIDE the parens, so the score group ends at [^)]* not \s*\).
 _SMH_VERDICT_RE = re.compile(
-    r"Overall result[:\s.]*\b(PASS|FAIL)\b(?:[^(]*\(\s*(\d+)\s*/\s*(\d+)\s*\))?", re.IGNORECASE
+    r"Overall result[:\s.]*\b(PASS|FAIL)\b(?:[^(]*\(\s*(\d+)\s*/\s*(\d+)[^)]*\))?", re.IGNORECASE
 )
-# A failing test line. SMHasher3 flags failures with a `!!!!!` / `********`
-# marker or a trailing "FAIL"; capture a leading test/family name where present.
-_SMH_FAIL_RE = re.compile(r"^\s*(?:[!*]{3,}\s*)?(?P<name>[\w :.\[\]/,-]+?)\s*[.\s]*\bFAIL(?:ED)?\b", re.IGNORECASE)
+# One line of the Summary's "Failures:" block, the CLEAN machine-readable failure
+# list, e.g. "    BIC                 : [3, 8, 11]" (the scattered per-test
+# "!!!!!" lines above it are noise, not the family list).
+_SMH_FAILBLOCK_RE = re.compile(r"^\s+(?P<family>[A-Za-z][\w-]*)\s*:\s*\[(?P<idx>[^\]]*)\]\s*$")
 
 
 def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
@@ -279,22 +310,48 @@ def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
     proc = subprocess.run([*cmd_prefix, name], capture_output=True, text=True, check=False)
     text = proc.stdout + proc.stderr
     verdict_match = _SMH_VERDICT_RE.search(text)
-    # A real run always prints "Overall result: ...". Its absence means the
-    # battery never completed - an unknown hash name ("Invalid hash '...'
-    # specified", which still exits 0), a crash, or a truncated log - so it must
-    # read as FAIL, never a returncode-0 default PASS that hides the problem.
-    verdict = verdict_match.group(1).upper() if verdict_match else "FAIL"
-    passed = int(verdict_match.group(2)) if verdict_match and verdict_match.group(2) else None
-    total = int(verdict_match.group(3)) if verdict_match and verdict_match.group(3) else None
-    # Failing test/family names (minus the overall-verdict line), so the JSON
-    # says WHICH tests failed; the full log has the complete "why".
+    invalid = re.search(r"Invalid hash '([^']*)' specified", text)
+    # A completed battery ALWAYS ends with "Overall result: PASS|FAIL (p / n)".
+    # Its absence means the battery never ran to completion: an unknown hash name
+    # ("Invalid hash '...' specified", which still exits 0), a crash, or a
+    # truncated log. That is a broken MEASUREMENT, not a hash that failed its
+    # tests, so it reads as ERROR - never a returncode-0 default PASS that hides
+    # the problem, and never a plain FAIL that would masquerade as a real result
+    # with a missing score. FNV-1a once slipped through as PASS exactly this way
+    # (invoked as `FNV-1a`, which the binary does not register; the name is now
+    # `FNV-1a-64`), so the distinction is load-bearing.
+    if verdict_match:
+        verdict = verdict_match.group(1).upper()
+        passed = int(verdict_match.group(2)) if verdict_match.group(2) else None
+        total = int(verdict_match.group(3)) if verdict_match.group(3) else None
+        error = None
+    else:
+        verdict, passed, total = "ERROR", None, None
+        if invalid:
+            error = f"invalid SMHasher3 name {invalid.group(1)!r} - check `SMHasher3 --list`"
+        elif proc.returncode != 0:
+            error = f"SMHasher3 exited {proc.returncode} with no 'Overall result' line"
+        else:
+            error = "no 'Overall result' line - crashed or truncated output"
+    # Failing families as "Family [indices]" (e.g. "BIC [3, 8, 11]"), read from
+    # the Summary's indented "Failures:" block so the JSON says WHICH families
+    # failed; the full log has the complete "why". Only a FAIL has this block; an
+    # ERROR (bad name/crash) never reached the Summary, and its partial log holds
+    # only noise (per-subtest lines), so it gets no families.
     failures = []
-    for line in text.splitlines():
-        if _SMH_VERDICT_RE.search(line):
-            continue
-        match = _SMH_FAIL_RE.match(line)
-        if match:
-            failures.append(match.group("name").strip())
+    if verdict == "FAIL":
+        in_block = False
+        for line in text.splitlines():
+            if re.match(r"\s*Failures:\s*$", line):
+                in_block = True
+                continue
+            if not in_block:
+                continue
+            block_match = _SMH_FAILBLOCK_RE.match(line)
+            if block_match:
+                failures.append(f"{block_match.group('family')} [{block_match.group('idx').strip()}]")
+            elif line.strip():
+                break  # a non-blank, non-matching line ends the block (e.g. the "---" rule)
     entry = {
         "verdict": verdict,
         "score": (f"{passed} / {total}" if passed is not None and total is not None else None),
@@ -302,6 +359,7 @@ def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
         "total": total,
         "failures": failures,
         "returncode": proc.returncode,
+        "error": error,
     }
     if raw_dir:
         os.makedirs(raw_dir, exist_ok=True)
@@ -333,7 +391,9 @@ def run_smhasher(smhasher3, names, raw_dir, stamp, jobs=1):
             wall-clock.
 
     Returns:
-        {name: {"verdict": "PASS"/"FAIL"/"UNKNOWN", "failures": [...], "log": path}}.
+        {name: {"verdict": "PASS"/"FAIL"/"ERROR", "failures": [...], "log": path}}.
+        ERROR means the battery did not run to completion (bad name/crash), which
+        is a broken measurement, distinct from a hash that FAILed its tests.
     """
     cmd_prefix = shlex.split(smhasher3)
     done = {}
@@ -396,22 +456,28 @@ def _size_label(length):
     return f"{length}B" if length < 1024 else f"{length // 1024}Ki"
 
 
-def _md_table(headers, rows):
-    """Render a vertically aligned GitHub markdown table (first column right-
-    aligned, the rest left) so the output needs no reformatting."""
+def _md_table(headers, rows, aligns=None):
+    """Render a vertically aligned GitHub markdown table so the output needs no
+    reformatting. `aligns` is a per-column 'l'/'r' list; its default right-aligns
+    column 0 and left-aligns the rest (the perf-table convention)."""
     cols = len(headers)
+    if aligns is None:
+        aligns = ["r"] + ["l"] * (cols - 1)
     width = [len(headers[c]) for c in range(cols)]
     for row in rows:
         for c in range(cols):
             width[c] = max(width[c], len(row[c]), 3)
 
-    def line(cells):
-        out = [cells[0].rjust(width[0])]
-        out += [cells[c].ljust(width[c]) for c in range(1, cols)]
-        return "| " + " | ".join(out) + " |"
+    def cell(text, c):
+        return text.rjust(width[c]) if aligns[c] == "r" else text.ljust(width[c])
 
-    sep = ["-" * (width[0] - 1) + ":"] + ["-" * width[c] for c in range(1, cols)]
-    return "\n".join([line(headers), "| " + " | ".join(sep) + " |"] + [line(r) for r in rows])
+    def line(cells):
+        return "| " + " | ".join(cell(cells[c], c) for c in range(cols)) + " |"
+
+    def sep(c):
+        return "-" * (width[c] - 1) + ":" if aligns[c] == "r" else "-" * width[c]
+
+    return "\n".join([line(headers), "| " + " | ".join(sep(c) for c in range(cols)) + " |"] + [line(r) for r in rows])
 
 
 def _throughput_table(data, preferred, relabel, sizes=None):
@@ -574,6 +640,57 @@ def _dump_canonical(results, path):
 _PERF_BEGIN = "<!-- BEGIN mbo/hash benchmark results (generated by `hash_benchmark_report.py publish`; DO NOT EDIT) -->"
 _PERF_END = "<!-- END mbo/hash benchmark results -->"
 
+# --- quality: the SMHasher3 "Results" table, rendered from _SMH_RESULTS_ROWS ---
+
+_SMH_BEGIN = "<!-- BEGIN SMHasher3 results (generated by `hash_benchmark_report.py quality`; DO NOT EDIT) -->"
+_SMH_END = "<!-- END SMHasher3 results -->"
+
+
+def render_results_table(measured=None):
+    """Render the SMHasher3 "### Results" table from the curated _SMH_RESULTS_ROWS.
+
+    When `measured` (a {smhasher-name: entry} map from a fresh `smhasher` run) is
+    given, each row's verdict/score is taken from it by name; the checked-in
+    fallback is used only for names the measurement does not cover (so a partial
+    run - e.g. just the mbo hashes - still renders a complete table). A measured
+    verdict that disagrees with the curated Failures wording is warned about, and
+    a battery that did not complete (ERROR) aborts loudly rather than shipping a
+    misleading row. Role/Bits/Failures are always the human-authored columns."""
+    headers = ["Algorithm", "Bits", "Role in mbo/hash", "SMHasher3 result", "Failures"]
+    aligns = ["l", "r", "l", "l", "l"]
+    rows = []
+    for algo, bits, role, name, verdict, score, failures in _SMH_RESULTS_ROWS:
+        meas = (measured or {}).get(name)
+        if meas:
+            verdict = meas.get("verdict", verdict)
+            if meas.get("passed") is not None and meas.get("total") is not None:
+                score = (meas["passed"], meas["total"])
+            if verdict == "PASS" and failures != "none":
+                print(f"WARNING: {name}: measured PASS but curated Failures is {failures!r}", file=sys.stderr)
+            elif verdict == "FAIL" and failures == "none":
+                print(f"WARNING: {name}: measured FAIL but curated Failures says 'none'", file=sys.stderr)
+        if verdict == "PASS":
+            # A PASS renders as "PASS" (no number); a measured PASS legitimately
+            # carries passed==total, so only the editorial Failures must be "none".
+            if failures != "none":
+                raise SystemExit(f"{name}: a PASS row must have Failures 'none' (got {failures!r})")
+            if score and score[0] < score[1]:
+                print(f"WARNING: {name}: verdict PASS but score {score[0]}/{score[1]} shows failures", file=sys.stderr)
+            result = "PASS"
+        elif verdict == "FAIL":
+            if not score or score[0] >= score[1]:
+                raise SystemExit(f"{name}: a FAIL row needs a passed<total score")
+            if failures == "none":
+                raise SystemExit(f"{name}: a FAIL row needs a non-empty Failures list")
+            result = f"{score[0]}/{score[1]}"
+        else:
+            raise SystemExit(
+                f"{name}: measured verdict {verdict!r} is not PASS/FAIL - the battery did not "
+                "complete (bad name/crash); fix the measurement before regenerating the table"
+            )
+        rows.append([f"`{algo}`", str(bits), role, result, failures])
+    return _md_table(headers, rows, aligns)
+
 
 def _extract_bundle(path, dest):
     """Extract a bundle .tgz into dest (hardened on py>=3.12; our own data)."""
@@ -582,6 +699,21 @@ def _extract_bundle(path, dest):
             tar.extractall(dest, filter="data")
         except TypeError:
             tar.extractall(dest)  # noqa: S202 - our own bundle, older Python
+
+
+def _load_smhasher(path):
+    """Load a measured SMHasher3 map {name: {verdict, passed, total, ...}} from
+    either a `smhasher` run's JSON or a data bundle .tgz that packs one."""
+    if path.endswith((".tgz", ".tar.gz")):
+        with tempfile.TemporaryDirectory() as tmp:
+            _extract_bundle(path, tmp)
+            members = [f for f in os.listdir(tmp) if "smhasher" in f and f.endswith(".json")]
+            if not members:
+                raise SystemExit(f"no *smhasher*.json inside {path}")
+            data = _load_json(os.path.join(tmp, sorted(members)[-1]))
+    else:
+        data = _load_json(path)
+    return data.get("smhasher", data)
 
 
 def _render_charts(full, stem, charts_dir, subtitle):
@@ -670,6 +802,11 @@ def main(argv):
     p_verify.add_argument("--readme", default="mbo/hash/README.md")
     p_verify.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
 
+    p_quality = sub.add_parser("quality", help="render the SMHasher3 Results table into the README from the curated rows (+ optional measured bundle)")
+    p_quality.add_argument("--readme", default="mbo/hash/README.md")
+    p_quality.add_argument("--smhasher", help="measured smhasher JSON or data bundle .tgz to source verdict/score from (default: the checked-in curated values)")
+    p_quality.add_argument("--check", action="store_true", help="verify the README table matches instead of writing (exit 1 on drift)")
+
     args = parser.parse_args(argv)
     # One stamp per invocation, so all files a run writes share it. Every
     # written artifact is prefixed `YYYYMMDD_HHMMSS_` so nothing is overwritten
@@ -735,15 +872,23 @@ def main(argv):
         _warn_context(results)
         for name, entry in results["smhasher"].items():
             score = f" ({entry['score']})" if entry.get("score") else ""
-            why = f" - failed: {', '.join(entry['failures'])}" if entry["failures"] else ""
+            if entry["verdict"] == "ERROR":
+                why = f" - {entry.get('error') or 'measurement error'}"
+            else:
+                why = f" - failed: {', '.join(entry['failures'])}" if entry["failures"] else ""
             print(f"  {name}: {entry['verdict']}{score}{why}")
-        failed = [n for n, r in results["smhasher"].items() if r["verdict"] != "PASS"]
-        print(f"SMHasher3: {len(names) - len(failed)}/{len(names)} PASS" + (f"; FAIL: {', '.join(failed)}" if failed else ""))
+        errored = [n for n, r in results["smhasher"].items() if r["verdict"] == "ERROR"]
+        failed = [n for n, r in results["smhasher"].items() if r["verdict"] == "FAIL"]
+        passed = len(names) - len(failed) - len(errored)
+        tail = "".join(
+            f"; {label}: {', '.join(bad)}" for label, bad in (("ERROR", errored), ("FAIL", failed)) if bad
+        )
+        print(f"SMHasher3: {passed}/{len(names)} PASS" + tail)
         if args.out:
             out_path = _timestamped(args.out, stamp)
             _dump_canonical(results, out_path)
             print(f"wrote {out_path}", file=sys.stderr)
-        return 1 if failed else 0
+        return 1 if (failed or errored) else 0
 
     if args.command == "bundle":
         results = _load_json(args.results)
@@ -811,6 +956,27 @@ def main(argv):
             print(f"VERIFY FAILED: committed charts differ from the bundle data: {', '.join(sorted(set(mismatches)))}", file=sys.stderr)
             return 1
         print(f"VERIFY OK: committed charts match all {len(bundles)} bundle(s)", file=sys.stderr)
+        return 0
+
+    if args.command == "quality":
+        measured = _load_smhasher(args.smhasher) if args.smhasher else None
+        region = "\n".join([_SMH_BEGIN, "", render_results_table(measured), "", _SMH_END])
+        text = open(args.readme).read()
+        if _SMH_BEGIN not in text or _SMH_END not in text:
+            raise SystemExit(f"markers not found in {args.readme}; add a {_SMH_BEGIN} ... {_SMH_END} region")
+        new = text[: text.index(_SMH_BEGIN)] + region + text[text.index(_SMH_END) + len(_SMH_END) :]
+        if args.check:
+            if new != text:
+                print(f"VERIFY FAILED: the SMHasher3 Results table in {args.readme} is stale; run `quality`", file=sys.stderr)
+                return 1
+            print("VERIFY OK: the SMHasher3 Results table matches the curated data", file=sys.stderr)
+            return 0
+        if new != text:
+            with open(args.readme, "w") as handle:
+                handle.write(new)
+            print(f"wrote the SMHasher3 Results table into {args.readme}", file=sys.stderr)
+        else:
+            print(f"the SMHasher3 Results table is already current in {args.readme}", file=sys.stderr)
         return 0
 
     return 1

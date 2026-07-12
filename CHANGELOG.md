@@ -1,5 +1,8 @@
 # 0.13.2
 
+- Added the `quality` command to `hash_benchmark_report.py`: it generates the SMHasher3 "Results" table in `mbo/hash/README.md` from a curated source (verify with `--check`, source measured verdict/score from a fresh run with `--smhasher <bundle>`).
+- Fixed SMHasher3 result parsing so an invalid hash name or crash reads as `ERROR` instead of a false `PASS`, and the pass/fail score and failing families now parse from the run Summary.
+
 # 0.13.1
 
 - Switched the build-seed mangle constant header to per-build generation (no longer committed): removed `internal/hash_mangle_seed.h.in` and `hash_mangle_seed_default_test`, so a version bump no longer needs a committed regeneration. `hash_mangle.h` includes the generated header directly (missing is an `#error`; clangd falls back under `-DIS_CLANGD`).
