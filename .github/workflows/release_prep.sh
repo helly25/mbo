@@ -66,9 +66,13 @@ done
 # Exclude some dev stuff from the archive.
 EXCLUDES=(
   ".bcr"
+  ".gitattributes"
   ".github"
+  ".gitignore"
   ".pre-commit"
   ".pre-commit-config.yaml"
+  ".trunk"
+  "mbo/hash/measurements"
   "tools"
 )
 {

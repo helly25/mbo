@@ -4,6 +4,7 @@
 - Added Starlark ports of the `dumbo` and `fnv1a` hashes in `//mbo/hash:hash.bzl` (the public `hash` struct), byte-identical to C++ and verified against it.
 - Switched the mangle version/seed fold from FNV-1a to the in-house `dumbo` hash.
 - Added `//mbo/hash:hash_tool`, a minimal `<algo> [<data>]` hash CLI (plain `GetHash64`, no mangle).
+- Excluded dev-only files from the release archive (`mbo/hash/measurements`, `.trunk`, and git metadata).
 
 # 0.13.0
 
