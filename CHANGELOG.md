@@ -2,6 +2,8 @@
 
 - Added the `quality` command to `hash_benchmark_report.py`: it generates the SMHasher3 "Results" table in `mbo/hash/README.md` from a curated source (verify with `--check`, source measured verdict/score from a fresh run with `--smhasher <bundle>`).
 - Fixed SMHasher3 result parsing so an invalid hash name or crash reads as `ERROR` instead of a false `PASS`, and the pass/fail score and failing families now parse from the run Summary; legacy/short SMHasher3 names are aliased to their registered form when a measured dataset is loaded.
+- Integrated `mbo/hash/measurements` as a normal dev package (dropped its nested module and `.bazelignore` entry; still stripped from release archives) and added a `quality_sh_test` bazel test gating the generated Results table.
+- Added a `no-deps-on-measurements` pre-commit guard so nothing outside the release-stripped `mbo/hash/measurements` may depend on it (which would dangle in releases).
 
 # 0.13.1
 

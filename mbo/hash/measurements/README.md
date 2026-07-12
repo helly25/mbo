@@ -2,11 +2,13 @@
 
 Dev-only tooling to run `//mbo/hash:hash_benchmark`, store the results with full
 provenance, render the README performance tables, and plot ns-vs-length curves.
-This is a **pure development dependency**: it is its own Bazel module
-(`MODULE.bazel` here) and is listed in the repository-root `.bazelignore`, so it
-is never part of the `helly25_mbo` module, its `//...` target universe, or any
-published/BCR offering. Consumers of the library never pull any of this in
-(including heavier plotting dependencies).
+This is a **pure development dependency**: the whole `mbo/hash/measurements`
+directory is stripped from release archives (`release_prep.sh` EXCLUDES), so it is
+never part of any published/BCR offering and consumers of the library never pull
+any of it in (including any heavier plotting dependencies). It is an ordinary dev
+package of the `helly25_mbo` module - built and tested in dev/CI - and a
+pre-commit guard forbids anything outside it from depending on it, so the release
+strip can never leave a dangling reference.
 
 This is a living design doc - update it when the layout or policy changes.
 
@@ -31,9 +33,10 @@ even invert the true ordering. So we:
 ```text
 mbo/hash/measurements/
   README.md                    # this design doc
-  MODULE.bazel                 # separate dev module (isolates plotting deps)
+  BUILD.bazel                  # dev-only targets: the quality-table verify test (stripped from releases)
   run_measurements.py          # per-machine runner: one full sweep + smhasher -> a data bundle (nothing else)
-  hash_benchmark_report.py     # run / store / tables / plot / bundle / publish / verify (stdlib only)
+  hash_benchmark_report.py     # run / store / tables / plot / smhasher / bundle / publish / verify / quality (stdlib only)
+  quality_sh_test.sh           # bazel test: the README SMHasher3 Results table matches the curated data
   build_smhasher3.sh           # reproducible SMHasher3 build (clone + fixes + install plugin + container gcc)
   smhasher3/mbohash.cpp        # in-house mumbo/jumbo and dumbo SMHasher3 registration (includes the real headers)
   charts/<slug>_<cc>_*.svg     # published per-machine charts (committed; rendered by `publish`, verifiable)
@@ -118,9 +121,9 @@ logs. Across several machines that accumulates, so:
     the ONLY thing that writes to the tree; the measurement run writes nothing but
     the bundle, so it stays authoritative and several runs can go back-to-back.
 - The loose run outputs in `data/` are staging only and git-ignored; `bundle`
-  packs them into the `.tgz`. This directory is dev-only and `.bazelignore`'d, so
-  it never enters the module or BCR (the release archive carries LFS pointer
-  files here, which is harmless).
+  packs them into the `.tgz`. This directory is dev-only and stripped from release
+  archives, so it never enters a published/BCR offering (the release archive
+  carries LFS pointer files here, which is harmless).
 
 ## Regenerate / contribute a machine
 

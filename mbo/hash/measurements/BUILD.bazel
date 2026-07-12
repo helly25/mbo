@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Dev-only measurement tooling for mbo/hash (benchmark + SMHasher3 quality). The
+# whole directory is stripped from release archives (release_prep.sh EXCLUDES), so
+# nothing shipped depends on it; these targets exist only for the dev build/CI.
+
+load("@helly25_bashtest//bashtest:bashtest.bzl", "bashtest")
+
+package(default_visibility = ["//visibility:private"])
+
+# Guards that the generated SMHasher3 "Results" table in //mbo/hash/README.md
+# stays in sync with the curated source of truth in hash_benchmark_report.py
+# (`quality --check`). Uses the system python3 - the tool has no third-party deps.
+bashtest(
+    name = "quality_sh_test",
+    size = "small",
+    srcs = ["quality_sh_test.sh"],
+    data = [
+        "hash_benchmark_report.py",
+        "//mbo/hash:README.md",
+    ],
+)

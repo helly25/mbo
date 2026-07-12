@@ -568,3 +568,10 @@ reads as the compact MUM hash rather than a second tuned one:
   Full logs are not committed; regenerate as above. Last run (2026-07): all
   three in-house hashes clean - `mumbo-64`/`jumbo-128` and `dumbo-64` PASS
   188 / 188.
+- To produce measurements on another machine (or refresh a machine's numbers),
+  run the tooling from the repo root: `mbo/hash/measurements/run_measurements.py`
+  writes one Git-LFS bundle per machine (perf sweep + SMHasher3), then
+  `hash_benchmark_report.py publish --bundles <...>` re-renders the performance
+  tables and charts above, and `hash_benchmark_report.py quality --smhasher
+<bundle>` refreshes the Results table. Full per-machine and publish steps are
+  in `mbo/hash/measurements/README.md`.
