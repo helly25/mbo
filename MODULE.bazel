@@ -17,7 +17,7 @@
 
 module(
     name = "helly25_mbo",
-    version = "0.13.0",
+    version = "0.13.1",
 )
 
 # For local development we include LLVM and Hedron-Compile-Commands.

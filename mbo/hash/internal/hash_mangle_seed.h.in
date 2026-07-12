@@ -43,7 +43,7 @@ namespace mbo::hash {
 // generated header. On a version bump regenerate it with:
 //   bazel build //mbo/hash:hash_mangle_seed_gen
 //   cp bazel-bin/mbo/hash/hash_mangle_seed_gen.h mbo/hash/internal/hash_mangle_seed.h.in
-inline constexpr uint64_t kMangleConstant = 0x1606D726B29390DCULL;
+inline constexpr uint64_t kMangleConstant = 0xF0CE596C32241C31ULL;
 
 }  // namespace mbo::hash
 
