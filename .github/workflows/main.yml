@@ -88,7 +88,8 @@ jobs:
         os: [ubuntu-latest, macos-26]
         compiler: [gcc, native, clang]
         gcc_version: [13]
-        llvm_version: [20.1.8]
+        # The pinned default toolchain (see bazelmod/llvm.MODULE.bazel).
+        llvm_version: [22.1.8]
         bazel_config: [opt]
         # Bazel-version compatibility rungs: one per supported major (we test
         # the last three, 7/8/9), crossed with the os/compiler combos below.
@@ -129,7 +130,7 @@ jobs:
         os: [ubuntu-latest, macos-26]
         compiler: [clang]
         # Hermetic toolchains_llvm clang (independent of the runner's Apple clang).
-        # Ladder: oldest supported (20.1.8, the default pin) and newest (22.1.8).
+        # Ladder: oldest supported (20.1.8) and the pinned default, also newest (22.1.8).
         # TODO(llvm-23): add 23.x here once released and listed in toolchains_llvm.
         llvm_version: [20.1.8, 22.1.8]
         bazel_config: [asan, cpp23, opt]
