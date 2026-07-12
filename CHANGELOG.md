@@ -1,3 +1,5 @@
+# 0.13.2
+
 # 0.13.1
 
 - Switched the build-seed mangle constant header to per-build generation (no longer committed): removed `internal/hash_mangle_seed.h.in` and `hash_mangle_seed_default_test`, so a version bump no longer needs a committed regeneration. `hash_mangle.h` includes the generated header directly (missing is an `#error`; clangd falls back under `-DIS_CLANGD`).
