@@ -1,0 +1,136 @@
+{
+  "_comment": [
+    "Manual/editorial source of truth for the mbo/hash README tables, rendered by",
+    "`hash_benchmark_report.py quality`. This holds ONLY human-authored per-instance",
+    "data; the measured columns (SMHasher3 verdict/score/failing families) are NOT",
+    "here - they come from a data bundle (`quality --bundle`), joined by `smhasher` name.",
+    "One entry per (algorithm, width) instance, so both README tables separate 64/128",
+    "consistently (murmur3 is 128-only: its GetHash64 is the folded 128; xxh3 is native",
+    "at both). `starlark` marks a hash also ported in //mbo/hash:hash.bzl. Edit here;",
+    "run `quality` to re-render."
+  ],
+  "algorithms": [
+    {
+      "algo": "dumbo",
+      "bits": 64,
+      "smhasher": "dumbo-64",
+      "available_via": "`hash.h`",
+      "role": "`hash.h` (compact MUM)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "yes"
+    },
+    {
+      "algo": "fnv1a",
+      "bits": 64,
+      "smhasher": "FNV-1a-64",
+      "available_via": "`hash.h`",
+      "role": "`hash.h`",
+      "notice": "none (public domain)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "yes"
+    },
+    {
+      "algo": "mumbo",
+      "bits": 64,
+      "smhasher": "mumbo-64",
+      "available_via": "`hash.h` (default 64/32)",
+      "role": "default (64/32/streaming)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "yes",
+      "starlark": "no"
+    },
+    {
+      "algo": "rapidhash",
+      "bits": 64,
+      "smhasher": "rapidhash",
+      "available_via": "`hash_extra.h` + `:hash_extra_cc`",
+      "role": "extra (`hash_extra_cc`)",
+      "notice": "**MIT - ship NOTICE**",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "siphash",
+      "bits": 64,
+      "smhasher": "SipHash-2-4",
+      "available_via": "`hash.h`",
+      "role": "`hash.h` (keyed PRF)",
+      "notice": "none (CC0)",
+      "seeded": "keyed",
+      "streaming": "yes",
+      "starlark": "no"
+    },
+    {
+      "algo": "xxh3",
+      "bits": 64,
+      "smhasher": "XXH3-64",
+      "available_via": "`hash_extra.h` + `:hash_extra_cc`",
+      "role": "extra (`hash_extra_cc`)",
+      "notice": "**BSD-2 - ship NOTICE**",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "xxh64",
+      "bits": 64,
+      "smhasher": "XXH-64",
+      "available_via": "`hash_extra.h` + `:hash_extra_cc`",
+      "role": "extra (`hash_extra_cc`)",
+      "notice": "**BSD-2 - ship NOTICE**",
+      "seeded": "yes",
+      "streaming": "yes",
+      "starlark": "no"
+    },
+    {
+      "algo": "jumbo",
+      "bits": 128,
+      "smhasher": "jumbo-128",
+      "available_via": "`hash.h` (default 128)",
+      "role": "default (128)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "yes (64)",
+      "starlark": "no"
+    },
+    {
+      "algo": "murmur3",
+      "bits": 128,
+      "smhasher": "MurmurHash3-128",
+      "available_via": "`hash.h`",
+      "role": "`hash.h`",
+      "notice": "none (public domain)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "xxh3",
+      "bits": 128,
+      "smhasher": "XXH3-128",
+      "available_via": "`hash_extra.h` + `:hash_extra_cc`",
+      "role": "extra (`hash_extra_cc`)",
+      "notice": "**BSD-2 - ship NOTICE**",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    }
+  ],
+  "overview_order": [
+    "mumbo-64",
+    "jumbo-128",
+    "MurmurHash3-128",
+    "SipHash-2-4",
+    "FNV-1a-64",
+    "dumbo-64",
+    "rapidhash",
+    "XXH-64",
+    "XXH3-64",
+    "XXH3-128"
+  ]
+}

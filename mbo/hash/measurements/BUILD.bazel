@@ -21,15 +21,18 @@ load("@helly25_bashtest//bashtest:bashtest.bzl", "bashtest")
 
 package(default_visibility = ["//visibility:private"])
 
-# Guards that the generated SMHasher3 "Results" table in //mbo/hash/README.md
-# stays in sync with the curated source of truth in hash_benchmark_report.py
-# (`quality --check`). Uses the system python3 - the tool has no third-party deps.
+# Guards the generated SMHasher3 quality tables in //mbo/hash/README.md (overview
+# + Results): `quality --check` (they match hash_algorithms.json x a measured
+# bundle) and `consistency` (all bundles agree). Uses the system python3 (the tool
+# has no third-party deps) and the Git-LFS bundles (materialized by test.yml / a
+# local `git lfs pull`).
 bashtest(
     name = "quality_sh_test",
     size = "small",
     srcs = ["quality_sh_test.sh"],
     data = [
+        "hash_algorithms.json",
         "hash_benchmark_report.py",
         "//mbo/hash:README.md",
-    ],
+    ] + glob(["data/*.tgz"]),
 )

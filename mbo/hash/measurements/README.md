@@ -35,8 +35,9 @@ mbo/hash/measurements/
   README.md                    # this design doc
   BUILD.bazel                  # dev-only targets: the quality-table verify test (stripped from releases)
   run_measurements.py          # per-machine runner: one full sweep + smhasher -> a data bundle (nothing else)
-  hash_benchmark_report.py     # run / store / tables / plot / smhasher / bundle / publish / verify / quality (stdlib only)
-  quality_sh_test.sh           # bazel test: the README SMHasher3 Results table matches the curated data
+  hash_benchmark_report.py     # run / store / tables / plot / smhasher / bundle / publish / verify / quality / consistency (stdlib only)
+  hash_algorithms.json         # manual/editorial SOT for the quality tables (role, notice, seeded, starlark, ...; NOT measured data)
+  quality_sh_test.sh           # bazel test: the README quality tables match hash_algorithms.json x a bundle, and bundles agree
   build_smhasher3.sh           # reproducible SMHasher3 build (clone + fixes + install plugin + container gcc)
   smhasher3/mbohash.cpp        # in-house mumbo/jumbo and dumbo SMHasher3 registration (includes the real headers)
   charts/<slug>_<cc>_*.svg     # published per-machine charts (committed; rendered by `publish`, verifiable)
@@ -192,6 +193,25 @@ in `_SMHASHER_NAMES` and match `SMHasher3 --list`.
 
 Last verified run (2026-07): **mumbo-64/jumbo-128** and **dumbo-64** all PASS
 188/188 (dumbo redesigned into a compact single-lane MUM hash).
+
+### Generated quality tables (`quality`, `consistency`)
+
+The two SMHasher3 tables in `../README.md` (the "Algorithm overview" and the
+"Results" table) are GENERATED, not hand-edited. `hash_benchmark_report.py quality
+--bundle <bundle>` renders both between their `<!-- BEGIN/END ... -->` markers,
+merging `hash_algorithms.json` (the manual/editorial columns) with the measured
+verdict/score/failures re-parsed from the bundle's logs (the stored `smhasher.json`
+predates parser fixes, so the LOGS are the truth). `quality --check` verifies the
+committed tables without writing - the `quality_sh_test` bazel test / CI gate.
+
+Two names the committed bundles have no real data for (`FNV-1a-64` /
+`MurmurHash3-128`, run under invalid short names) are supplied by a hardcoded
+`_MISSING_MEASURED` stopgap, warned about on every render; delete each once a
+bundle carries the real measurement.
+
+`hash_benchmark_report.py consistency` cross-checks that all bundles from the same
+source git SHA report identical measurements (a SMHasher3 verdict is a property of
+the algorithm, not the machine), so a divergent or broken run is caught.
 
 ## Output filenames
 
