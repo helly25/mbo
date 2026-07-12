@@ -569,9 +569,19 @@ reads as the compact MUM hash rather than a second tuned one:
   three in-house hashes clean - `mumbo-64`/`jumbo-128` and `dumbo-64` PASS
   188 / 188.
 - To produce measurements on another machine (or refresh a machine's numbers),
-  run the tooling from the repo root: `mbo/hash/measurements/run_measurements.py`
-  writes one Git-LFS bundle per machine (perf sweep + SMHasher3), then
-  `hash_benchmark_report.py publish --bundles <...>` re-renders the performance
-  tables and charts above, and `hash_benchmark_report.py quality --smhasher
-<bundle>` refreshes the Results table. Full per-machine and publish steps are
-  in `mbo/hash/measurements/README.md`.
+  run the tooling from the repo root (full per-machine and publish steps in
+  [`measurements/README.md`](measurements/README.md)):
+
+  ```sh
+  # On the new machine: one perf sweep + the SMHasher3 battery, packed into a
+  # per-machine Git-LFS bundle whose path the script prints.
+  mbo/hash/measurements/run_measurements.py --config clang --jobs 4
+  git add mbo/hash/measurements/data/<bundle>.tgz
+  git lfs push origin HEAD && git push
+
+  # Re-render this README from the chosen bundles, then refresh the SMHasher3
+  # Results table from the same bundle's measured data.
+  mbo/hash/measurements/hash_benchmark_report.py publish --bundles data/<bundle>.tgz
+  mbo/hash/measurements/hash_benchmark_report.py quality --smhasher data/<bundle>.tgz
+  git add mbo/hash/README.md mbo/hash/measurements/charts
+  ```
