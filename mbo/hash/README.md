@@ -67,27 +67,33 @@ Three entry points, split by contract:
 
 ## Algorithm overview
 
-| Algorithm   | Widths | Available via                     | NOTICE                  | Seeded | Streaming | SMHasher3      |
-| ----------- | ------ | --------------------------------- | ----------------------- | ------ | --------- | -------------- |
-| `mumbo`     | 64     | `hash.h` (default 64/32)          | none (in-house)         | yes    | yes       | PASS           |
-| `jumbo`     | 128    | `hash.h` (default 128)            | none (in-house)         | yes    | yes (64)  | PASS           |
-| `murmur3`   | 64/128 | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (123)     |
-| `siphash`   | 64     | `hash.h`                          | none (CC0)              | keyed  | yes       | PASS (186)     |
-| `fnv1a`     | 64     | `hash.h`                          | none (public domain)    | yes    | no        | FAIL (7!)      |
-| `dumbo`     | 64     | `hash.h`                          | none (in-house)         | yes    | no        | PASS           |
-| `rapidhash` | 64     | `hash_extra.h` + `:hash_extra_cc` | **MIT - ship NOTICE**   | yes    | no        | PASS           |
-| `xxh64`     | 64     | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | yes       | FAIL (181)     |
-| `xxh3`      | 64/128 | `hash_extra.h` + `:hash_extra_cc` | **BSD-2 - ship NOTICE** | yes    | no        | FAIL (166/162) |
+This is the at-a-glance map; the `SMHasher3` column is a PASS/FAIL summary only.
+For the exact score and the failing families see [Quality: SMHasher3](#quality-smhasher3).
 
-Notes: `fnv1a` is the algorithm family many `std::hash` implementations use
-(e.g. MSVC) - included as the familiar baseline. `siphash` is a keyed PRF:
-the DoS-resistant choice when the seed is a secret. `dumbo` is the compact
-single-lane member of the MUM family: the fastest hash here for tiny keys and
-SMHasher3-clean (188/188, see the design iterations), but single-lane (so it
+| Algorithm   | Widths | Available via                     | Starlark | NOTICE                  | Seeded | Streaming | SMHasher3 |
+| ----------- | ------ | --------------------------------- | -------- | ----------------------- | ------ | --------- | --------- |
+| `mumbo`     | 64     | `hash.h` (default 64/32)          | no       | none (in-house)         | yes    | yes       | PASS      |
+| `jumbo`     | 128    | `hash.h` (default 128)            | no       | none (in-house)         | yes    | yes (64)  | PASS      |
+| `murmur3`   | 64/128 | `hash.h`                          | no       | none (public domain)    | yes    | no        | FAIL      |
+| `siphash`   | 64     | `hash.h`                          | no       | none (CC0)              | keyed  | yes       | PASS      |
+| `fnv1a`     | 64     | `hash.h`                          | yes      | none (public domain)    | yes    | no        | FAIL      |
+| `dumbo`     | 64     | `hash.h`                          | yes      | none (in-house)         | yes    | no        | PASS      |
+| `rapidhash` | 64     | `hash_extra.h` + `:hash_extra_cc` | no       | **MIT - ship NOTICE**   | yes    | no        | PASS      |
+| `xxh64`     | 64     | `hash_extra.h` + `:hash_extra_cc` | no       | **BSD-2 - ship NOTICE** | yes    | yes       | FAIL      |
+| `xxh3`      | 64/128 | `hash_extra.h` + `:hash_extra_cc` | no       | **BSD-2 - ship NOTICE** | yes    | no        | FAIL      |
+
+Notes: the **Starlark** column marks the hashes also implemented at build time
+in [`hash.bzl`](hash.bzl) (`hash.dumbo` and `hash.fnv1a`), kept byte-for-byte
+identical to the C++ prime and verified against it (`hash_tool`); mumbo and
+jumbo stay C++-only. `fnv1a` is the algorithm family many `std::hash`
+implementations use (e.g. MSVC) - included as the familiar baseline. `siphash`
+is a keyed PRF: the DoS-resistant choice when the seed is a secret. `dumbo` is
+the compact single-lane member of the MUM family: the fastest hash here for tiny
+keys and SMHasher3-clean (see the design iterations), but single-lane (so it
 slows on large keys) - a deliberately minimal companion to `mumbo`, not a
-replacement for it. Linking `:hash_extra_cc` requires
-shipping the repository-root [NOTICE](../../NOTICE) (see "Third-party
-components" in the [repository README](../../README.md)).
+replacement for it. Linking `:hash_extra_cc` requires shipping the
+repository-root [NOTICE](../../NOTICE) (see "Third-party components" in the
+[repository README](../../README.md)).
 
 ## Build-seed mangle (`hash_mangle.h` / `:hash_mangle_cc`)
 
@@ -147,6 +153,28 @@ shape the implementation:
    target split completes the containment: plain hash users sit entirely
    outside the churn.
 
+### The fold is the in-house `dumbo` hash, ported to Starlark
+
+The version-and-seed fold uses the in-house `dumbo` hash (SMHasher3-proven -
+`fnv1a` is not), implemented in Starlark in `hash.bzl` so the build-time fold
+and the shipped library agree on the algorithm. C++ is the prime
+implementation; the Starlark port is kept byte-for-byte identical to it,
+verified by `//mbo/hash:hash_bzl_vs_cpp_dumbo_test` (the bzl output diffed
+against the `hash_tool` C++ binary). `dumbo` is the only in-house hash available
+in Starlark - mumbo and jumbo stay C++-only - and the standard `fnv1a` is
+offered there as well, likewise verified against C++.
+
+Call the ports from your own rules via `@helly25_mbo//mbo/hash:hash.bzl` (at load
+time; input is a printable-ASCII string or a list of byte values `0..255`, plus
+an optional seed; returns the 64-bit hash as an `int`):
+
+```starlark
+load("@helly25_mbo//mbo/hash:hash.bzl", "hash")
+
+_key = hash.dumbo("my build-time key")  # dumbo, seed 0
+_fnv = hash.fnv1a([0x61, 0x62, 0x63])   # fnv1a, seed = FNV offset basis
+```
+
 ## Configuration
 
 All configuration lives on the mangle - the deterministic `hash.h` and
@@ -174,11 +202,11 @@ build --//mbo/hash:mangle_seed=alice
 ```
 
 Under default flags the constant still rotates once per release (the library
-version is folded in). Non-Bazel builds fall back to the checked-in
-`internal/hash_mangle_seed.h.in`, which carries the default-flag constant for
-the current version; `//mbo/hash:hash_mangle_seed_default_test` keeps it
-byte-identical to the generated header, and a version bump regenerates it
-(command in the file's header comment).
+version is folded in). The header is generated per build and never committed,
+so nothing can drift out of sync and a version bump needs no manual step. A
+build that lacks the generated header is a hard error, not a silent fallback;
+for clangd (which has no generated header) `hash_mangle.h` uses a stable
+fallback constant under `-DIS_CLANGD` purely so the editor can parse it.
 
 ## Abseil interop
 

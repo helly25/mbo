@@ -18,6 +18,7 @@ load("@bazel_skylib//rules:common_settings.bzl", "int_flag", "string_flag")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("//mbo/diff:diff.bzl", "diff_test")
 load("//mbo/digest:digest.bzl", "verify_digest_test")
+load(":internal/hash_bzl_verify.bzl", "hash_bzl_verify")
 load(":internal/hash_mangle_seed.bzl", "mangle_seed_gen")
 
 package(default_visibility = ["//visibility:private"])
@@ -41,26 +42,39 @@ int_flag(
     visibility = ["//visibility:private"],
 )
 
+# Build-time (Starlark) ports of a subset of the hash algorithms, kept identical
+# to the C++ prime implementation (see hash.bzl; verified by the diff tests below).
+bzl_library(
+    name = "hash_bzl",
+    srcs = ["hash.bzl"],
+    visibility = ["//visibility:public"],
+)
+
 bzl_library(
     name = "hash_mangle_seed_bzl",
     srcs = ["internal/hash_mangle_seed.bzl"],
     visibility = ["//visibility:private"],
-    deps = ["@bazel_skylib//rules:common_settings"],
+    deps = [
+        ":hash_bzl",
+        "@bazel_skylib//rules:common_settings",
+    ],
+)
+
+bzl_library(
+    name = "hash_bzl_verify_bzl",
+    srcs = ["internal/hash_bzl_verify.bzl"],
+    visibility = ["//visibility:private"],
+    deps = [
+        ":hash_bzl",
+        "//mbo/diff:diff_bzl",
+        "@bazel_skylib//rules:write_file",
+    ],
 )
 
 mangle_seed_gen(
     name = "hash_mangle_seed_gen",
     output = "hash_mangle_seed_gen.h",
     visibility = ["//visibility:private"],
-)
-
-# Pins the non-Bazel fallback: under default flags the generated header must
-# be byte-identical to the checked-in template. Fails when defaults or the
-# fold change without updating `internal/hash_mangle_seed.h.in`.
-diff_test(
-    name = "hash_mangle_seed_default_test",
-    file_new = "hash_mangle_seed_gen.h",
-    file_old = "internal/hash_mangle_seed.h.in",
 )
 
 cc_library(
@@ -230,3 +244,20 @@ verify_digest_test(
     name = "hash_test_vectors_digest_test",
     digests = {"hash_test_vectors.inc": "hash_test_vectors.inc.sha256"},
 )
+
+# Minimal hash CLI (`<algo> [<data>]`, plain GetHash64, no mangle). Doubles as
+# the C++ prime reference that the Starlark ports in hash.bzl are diffed against.
+cc_binary(
+    name = "hash_tool",
+    srcs = ["hash_tool.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":hash_cc",
+        "//mbo/container:limited_map_cc",
+        "@abseil-cpp//absl/strings:str_format",
+    ],
+)
+
+# Verifies the bzl hash ports against the C++ prime (hash_tool), one diff_test
+# per offered algorithm: hash_bzl_vs_cpp_dumbo_test, hash_bzl_vs_cpp_fnv1a_test.
+hash_bzl_verify(name = "hash_bzl_vs_cpp")

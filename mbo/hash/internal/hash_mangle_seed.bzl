@@ -16,6 +16,7 @@
 """Generator for `//mbo/hash:hash_mangle_seed_gen.h` (see `hash_mangle.h`)."""
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
+load("//mbo/hash:hash.bzl", "hash")
 
 # The bucket-0 mangle constant and the full-width odd multiplier that spreads
 # a bucket index across all 64 bits. The expansion is deliberately independent
@@ -24,20 +25,6 @@ load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 _BASE = 0x45828334C99AF44F
 _SPREAD = 0x9E3779B97F4A7C15
 _MASK64 = (1 << 64) - 1
-
-# Starlark has no `ord`; map printable ASCII via a table (0x20 .. 0x7E).
-_PRINTABLE = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-_ASCII = {char: index + 32 for index, char in enumerate(_PRINTABLE.elems())}
-
-def _fnv1a_64(text):
-    """FNV-1a 64 over the ASCII bytes of `text` (any uniform fold works here)."""
-    hash_value = 0xCBF29CE484222325
-    for char in text.elems():
-        if char not in _ASCII:
-            fail("The mangle fold input (module version + --//mbo/hash:mangle_seed) must be printable ASCII, got %r." %
-                 char)
-        hash_value = ((hash_value ^ _ASCII[char]) * 0x100000001B3) & _MASK64
-    return hash_value
 
 def mangle_constant(version, seed, buckets):
     """Returns the mangle constant selected by (`version`, `seed`, `buckets`).
@@ -65,7 +52,11 @@ def mangle_constant(version, seed, buckets):
         fail("--//mbo/hash:mangle_seed_buckets must be >= 0, got %d." % buckets)
     if buckets == 0:
         return 0
-    bucket = _fnv1a_64(version + "|" + seed) % buckets
+
+    # Fold through the in-house dumbo hash (SMHasher3-proven; see `hash.bzl` and
+    # `hash_dumbo.h`). The bzl port is kept identical to the C++ one, so the
+    # build-time fold and the shipped library agree on the algorithm.
+    bucket = hash.dumbo(version + "|" + seed) % buckets
     constant = _BASE ^ ((bucket * _SPREAD) & _MASK64)
     if constant == 0:
         # Invariant: enabled (buckets >= 1) implies an observable, nonzero
@@ -76,10 +67,9 @@ def mangle_constant(version, seed, buckets):
     return constant
 
 # The generated header. `@MANGLE_CONSTANT@` is the only substitution (plain
-# string replace: the C++ braces rule out Starlark `format`). The rendering
-# under default flags is checked in as `internal/hash_mangle_seed.h.in` (the
-# non-Bazel fallback), kept byte-identical by
-# `//mbo/hash:hash_mangle_seed_default_test`.
+# string replace: the C++ braces rule out Starlark `format`). It is generated
+# per build into `hash_mangle_seed_gen.h` and never committed; `hash_mangle.h`
+# errors if it is absent (no committed fallback to drift out of sync).
 _HEADER = """\
 // SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
 // SPDX-License-Identifier: Apache-2.0
@@ -120,12 +110,9 @@ namespace mbo::hash {
 // flags become `--@helly25_mbo//mbo/hash:mangle_seed` and
 // `--@helly25_mbo//mbo/hash:mangle_seed_buckets`.
 //
-// This file doubles as the non-Bazel fallback, so the value below is the
-// default-flag result for the current library version;
-// `//mbo/hash:hash_mangle_seed_default_test` keeps it byte-identical to the
-// generated header. On a version bump regenerate it with:
-//   bazel build //mbo/hash:hash_mangle_seed_gen
-//   cp bazel-bin/mbo/hash/hash_mangle_seed_gen.h mbo/hash/internal/hash_mangle_seed.h.in
+// This header is generated per build and is not committed, so it always matches
+// the version and flags it was built with; `hash_mangle.h` requires it (a
+// missing header is a build error, never a silent fallback).
 inline constexpr uint64_t kMangleConstant = @MANGLE_CONSTANT@;
 
 }  // namespace mbo::hash
