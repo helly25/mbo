@@ -22,10 +22,11 @@ identical to its C++ counterpart, verified by `//mbo/hash:hash_bzl_vs_cpp_*_test
 algorithm-count agnostic: offering more (or fewer) bzl hashes only widens or
 narrows that comparison.
 
-Of the in-house mumbo/jumbo and dumbo family only `dumbo` is ported (single
-accumulator, no lanes/streaming/128-bit form - see `hash_dumbo.h`); mumbo and
-jumbo stay C++-only. The standard `fnv1a` is also provided (it is what the mangle
-seed generation historically folded).
+Of the in-house mumbo/jumbo and dumbo family, `mumbo` (the default 64-bit hash)
+and `dumbo` (the compact companion) are ported; only their one-shot 64-bit
+`GetHash64` is offered here - the native 128-bit `jumbo` form and streaming stay
+C++-only. The standard `fnv1a` is also provided (it is what the mangle seed
+generation historically folded).
 
 Inputs are either a printable-ASCII string or a list of byte values (0..255);
 strings are converted with the printable-ASCII table below (Starlark has no
@@ -103,6 +104,108 @@ def _dumbo(data, seed = 0):
     hash_value = _dumbo_mum_step(hash_value, _load_le(data, ptr, length - ptr))
     return _dumbo_finalize(hash_value, seed, length)
 
+# mumbo (see `hash_mumbo.h`): the library's default 64-bit hash. Its secret bank
+# is the 64-bit fractional parts of the square roots of the first sixteen primes
+# (the SHA-512 / SHA-384 initial hash values, FIPS 180-4). Unlike dumbo (default
+# seed 0) and fnv1a (offset basis), mumbo's canonical default seed is the
+# library-wide `kDefaultSeed`. Only the one-shot 64-bit `GetHash64` is ported;
+# the native 128-bit `jumbo` form and streaming stay C++-only.
+_KDEFAULT_SEED = 5381  # `mbo::hash::kDefaultSeed` (hash_types.h).
+_MUMBO_SECRET = [
+    0x6A09E667F3BCC908,
+    0xBB67AE8584CAA73B,
+    0x3C6EF372FE94F82B,
+    0xA54FF53A5F1D36F1,
+    0x510E527FADE682D1,
+    0x9B05688C2B3E6C1F,
+    0x1F83D9ABFB41BD6B,
+    0x5BE0CD19137E2179,
+    0xCBBB9D5DC1059ED8,
+    0x629A292A367CD507,
+    0x9159015A3070DD17,
+    0x152FECD8F70E5939,
+    0x67332667FFC00B31,
+    0x8EB44A8768581511,
+    0xDB0C2E0D64F98FA7,
+    0x47B5481DBEFA4FA4,
+]
+_MUMBO_BULK_WINDOW = 128
+
+def _mumbo_load_small(data, ptr, length):
+    """Loads a 0..16 byte key into two words `(a, b)` (see `mumbo_internal::LoadSmall`)."""
+    if length >= 4:
+        if length >= 9:  # 9..16: two 64-bit loads overlapping the end.
+            return _load_le(data, ptr, 8), _load_le(data, ptr + length - 8, 8)
+        if length == 8:
+            value = _load_le(data, ptr, 8)
+            return value, value
+        return _load_le(data, ptr, 4), _load_le(data, ptr + length - 4, 4)  # 4..7 (len 4 -> equal)
+    if length == 3:
+        value = ((data[ptr] << 45) | (data[ptr + 1] << 8) | data[ptr + 2]) & _MASK64
+        return value, value
+    if length == 2:
+        value = ((data[ptr] << 45) | (data[ptr + 1] << 8) | data[ptr]) & _MASK64
+        return value, value
+    if length == 1:
+        value = ((data[ptr] << 45) | data[ptr]) & _MASK64
+        return value, value
+    return 0, 0
+
+def _mumbo_finish(val_a, val_b, seed, length):
+    """The shared two-multiply finalizer (see `mumbo_internal::Finish`)."""
+    low, high = _mult128((val_a ^ _MUMBO_SECRET[2] ^ length) & _MASK64, (val_b ^ seed) & _MASK64)
+    return _mul128_fold64((low ^ _MUMBO_SECRET[3] ^ length) & _MASK64, (high ^ _MUMBO_SECRET[1]) & _MASK64)
+
+def _mumbo(data, seed = _KDEFAULT_SEED):
+    """mumbo 64-bit hash of `data`; identical to C++ `mbo::hash::mumbo::GetHash64`."""
+    data = _to_bytes(data)
+    length = len(data)
+
+    # Absorb + finalize the seed (structured seeds must not correlate with input).
+    seed = _mul128_fold64((seed ^ _MUMBO_SECRET[0]) & _MASK64, _MUMBO_SECRET[1])
+
+    if length <= 16:
+        val_a, val_b = _mumbo_load_small(data, 0, length)
+        return _mumbo_finish(val_a, val_b, seed, length)
+
+    ptr = 0
+    remaining = length
+
+    # >= 128 bytes: eight independent MUM chains over a 128-byte fetch window.
+    if length >= _MUMBO_BULK_WINDOW:
+        chain = [(seed ^ _MUMBO_SECRET[8 + i]) & _MASK64 for i in range(8)]
+        for _ in range(length // _MUMBO_BULK_WINDOW):
+            if remaining < _MUMBO_BULK_WINDOW:
+                break
+            for i in range(8):
+                chain[i] = _mul128_fold64(
+                    (_load_le(data, ptr + 16 * i, 8) ^ _MUMBO_SECRET[4 + i]) & _MASK64,
+                    (_load_le(data, ptr + 16 * i + 8, 8) ^ chain[i]) & _MASK64,
+                )
+            ptr += _MUMBO_BULK_WINDOW
+            remaining -= _MUMBO_BULK_WINDOW
+        merged = 0
+        for value in chain:
+            merged ^= value
+        seed = merged & _MASK64
+
+    # 17..127 bytes (and any bulk remainder): one MUM chain, 16 bytes per step.
+    # C++ loops `while remaining > 16`; Starlark has no `while`, so bound + break.
+    for _ in range(length // 16 + 1):
+        if remaining <= 16:
+            break
+        seed = _mul128_fold64(
+            (_load_le(data, ptr, 8) ^ _MUMBO_SECRET[1]) & _MASK64,
+            (_load_le(data, ptr + 8, 8) ^ seed) & _MASK64,
+        )
+        ptr += 16
+        remaining -= 16
+
+    # Final 1..16 bytes as two loads overlapping the end (len > 16, so in-bounds).
+    val_a = _load_le(data, ptr + remaining - 16, 8)
+    val_b = _load_le(data, ptr + remaining - 8, 8)
+    return _mumbo_finish(val_a, val_b, seed, length)
+
 # fnv1a constants (see `hash_fnv1a.h`): the offset basis is the canonical default
 # seed, so `hash.fnv1a(data)` matches published FNV-1a 64 reference values.
 _FNV_OFFSET_BASIS = 0xCBF29CE484222325
@@ -121,4 +224,5 @@ def _fnv1a(data, seed = _FNV_OFFSET_BASIS):
 hash = struct(
     dumbo = _dumbo,
     fnv1a = _fnv1a,
+    mumbo = _mumbo,
 )
