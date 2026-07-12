@@ -143,6 +143,11 @@ jobs:
           # consolidating asan there also drops the redundant clang-20 asan.
           - llvm_version: 20.1.8
             bazel_config: asan
+          # C++23 is used on recent compilers, so exercise cpp23 on the newest
+          # clang only; the oldest rung just proves the minimum supported LLVM
+          # still builds (opt).
+          - llvm_version: 20.1.8
+            bazel_config: cpp23
 
     uses: ./.github/workflows/test.yml
     with:
