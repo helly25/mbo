@@ -76,7 +76,7 @@ For the exact score and the failing families see [Quality: SMHasher3](#quality-s
 
 | Algorithm   | Bits | Available via                     | Starlark | NOTICE                  | Seeded | Streaming | SMHasher3 |
 | ----------- | ---: | --------------------------------- | -------- | ----------------------- | ------ | --------- | --------- |
-| `mumbo`     |   64 | `hash.h` (default 64/32)          | no       | none (in-house)         | yes    | yes       | PASS      |
+| `mumbo`     |   64 | `hash.h` (default 64/32)          | yes      | none (in-house)         | yes    | yes       | PASS      |
 | `jumbo`     |  128 | `hash.h` (default 128)            | no       | none (in-house)         | yes    | yes (64)  | PASS      |
 | `murmur3`   |  128 | `hash.h`                          | no       | none (public domain)    | yes    | no        | FAIL      |
 | `siphash`   |   64 | `hash.h`                          | no       | none (CC0)              | keyed  | yes       | PASS      |
@@ -90,9 +90,10 @@ For the exact score and the failing families see [Quality: SMHasher3](#quality-s
 <!-- END algorithm overview -->
 
 Notes: the **Starlark** column marks the hashes also implemented at build time
-in [`hash.bzl`](hash.bzl) (`hash.dumbo` and `hash.fnv1a`), kept byte-for-byte
-identical to the C++ prime and verified against it (`hash_tool`); mumbo and
-jumbo stay C++-only. `fnv1a` is the algorithm family many `std::hash`
+in [`hash.bzl`](hash.bzl) (`hash.mumbo`, `hash.dumbo`, `hash.fnv1a`), kept
+byte-for-byte identical to the C++ prime and verified against it (`hash_tool`);
+only the one-shot 64-bit form is ported, so the native 128-bit `jumbo` and
+streaming stay C++-only. `fnv1a` is the algorithm family many `std::hash`
 implementations use (e.g. MSVC) - included as the familiar baseline. `siphash`
 is a keyed PRF: the DoS-resistant choice when the seed is a secret. `dumbo` is
 the compact single-lane member of the MUM family: the fastest hash here for tiny
@@ -167,19 +168,28 @@ The version-and-seed fold uses the in-house `dumbo` hash (SMHasher3-proven -
 and the shipped library agree on the algorithm. C++ is the prime
 implementation; the Starlark port is kept byte-for-byte identical to it,
 verified by `//mbo/hash:hash_bzl_vs_cpp_dumbo_test` (the bzl output diffed
-against the `hash_tool` C++ binary). `dumbo` is the only in-house hash available
-in Starlark - mumbo and jumbo stay C++-only - and the standard `fnv1a` is
-offered there as well, likewise verified against C++.
+against the `hash_tool` C++ binary). `mumbo` (the default 64-bit hash) and
+`dumbo` are both offered in Starlark alongside the standard `fnv1a`, each
+likewise verified against C++; only the one-shot 64-bit form is ported (the
+native 128-bit `jumbo` and streaming stay C++-only).
 
 Call the ports from your own rules via `@helly25_mbo//mbo/hash:hash.bzl` (at load
-time; input is a printable-ASCII string or a list of byte values `0..255`, plus
-an optional seed; returns the 64-bit hash as an `int`):
+time; input is a printable-ASCII string or a list of byte values `0..255`). The
+seed is an **optional** second argument: omit it and each hash uses its own
+canonical default - the same one the matching C++ `GetHash64` uses, so the
+values agree by default. `mumbo` defaults to the library-wide `kDefaultSeed`
+(`5381`), `dumbo` to `0`, and `fnv1a` to the FNV-1a **offset basis**
+(`0xCBF29CE484222325`, the standard FNV-1a starting constant). Pass a seed
+explicitly to match a specific seeded C++ call. Each returns the 64-bit hash as
+an `int`:
 
 ```starlark
 load("@helly25_mbo//mbo/hash:hash.bzl", "hash")
 
-_key = hash.dumbo("my build-time key")  # dumbo, seed 0
-_fnv = hash.fnv1a([0x61, 0x62, 0x63])   # fnv1a, seed = FNV offset basis
+_a = hash.mumbo("my build-time key")        # default 64-bit hash; default seed kDefaultSeed (5381)
+_b = hash.dumbo("my build-time key")        # dumbo; default seed 0
+_c = hash.fnv1a([0x61, 0x62, 0x63])         # fnv1a over bytes; default seed = FNV offset basis
+_d = hash.mumbo("my build-time key", 1234)  # explicit seed == mbo::hash::mumbo::GetHash64(key, 1234)
 ```
 
 ## Configuration

@@ -41,7 +41,7 @@
       "notice": "none (in-house)",
       "seeded": "yes",
       "streaming": "yes",
-      "starlark": "no"
+      "starlark": "yes"
     },
     {
       "algo": "rapidhash",

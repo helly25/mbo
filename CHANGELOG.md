@@ -4,6 +4,7 @@
 - Fixed SMHasher3 result parsing so an invalid hash name or crash reads as `ERROR` instead of a false `PASS`, and the pass/fail score and failing families now parse from the run Summary; legacy/short SMHasher3 names are aliased to their registered form when a measured dataset is loaded.
 - Integrated `mbo/hash/measurements` as a normal dev package (dropped its nested module and `.bazelignore` entry; still stripped from release archives) and added a `quality_sh_test` bazel test gating the generated tables; the test CI job now fetches the measurement bundles (Git LFS) so it reads real data.
 - Added a `no-deps-on-measurements` pre-commit guard so nothing outside the release-stripped `mbo/hash/measurements` may depend on it (which would dangle in releases).
+- Ported the default `mumbo` 64-bit hash to Starlark (`//mbo/hash:hash.bzl` `hash.mumbo`), byte-identical to C++ and verified against it; `hash.bzl` now offers `mumbo`, `dumbo`, and `fnv1a`.
 
 # 0.13.1
 

@@ -36,7 +36,7 @@ _LENGTHS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 15, 16, 17, 23, 24, 25, 31, 32, 33, 63
 # A handful of concrete strings, including mangle fold inputs.
 _EXTRA = ["0.13.0|", "0.13.1|", "hello world, this is dumbo!", "|"]
 
-_FNS = {"dumbo": hash.dumbo, "fnv1a": hash.fnv1a}
+_FNS = {"dumbo": hash.dumbo, "fnv1a": hash.fnv1a, "mumbo": hash.mumbo}
 
 def _pattern(length):
     return "".join([_PRINTABLE[i % len(_PRINTABLE)] for i in range(length)])
@@ -46,7 +46,7 @@ def _hex16(value):
     digits = "%X" % value
     return ("0" * (16 - len(digits))) + digits
 
-def hash_bzl_verify(name, algos = ["dumbo", "fnv1a"], tool = "//mbo/hash:hash_tool"):
+def hash_bzl_verify(name, algos = ["dumbo", "fnv1a", "mumbo"], tool = "//mbo/hash:hash_tool"):
     """Wires up the bzl-vs-C++ diff tests for each `algo` in `algos`.
 
     Args:
