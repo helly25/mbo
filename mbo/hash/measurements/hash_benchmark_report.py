@@ -985,7 +985,7 @@ def main(argv):
     p_tables = sub.add_parser("tables", help="render README markdown tables from a dataset (results JSON or .tgz bundle)")
     _add_dataset_arg(p_tables)
 
-    p_compare = sub.add_parser("compare", help="compare two datasets (results JSON or .tgz bundles): per-case Δ% + geomean")
+    p_compare = sub.add_parser("compare", help="compare two datasets (results JSON or .tgz bundles): per-case Δ%% + geomean")
     p_compare.add_argument("a", metavar="A", help="baseline dataset: results.json[.gz] or a bundle .tgz")
     p_compare.add_argument("b", metavar="B", help="new dataset: results.json[.gz] or a bundle .tgz")
 
