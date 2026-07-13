@@ -55,6 +55,17 @@ repos:
         language: pygrep
         entry: \s*#\s*include
         files: MODULE.bazel
+      - id: no-deps-on-measurements
+        name: no deps on mbo/hash/measurements
+        description: |
+          mbo/hash/measurements is dev-only tooling, stripped from release archives
+          (release_prep.sh EXCLUDES). Nothing outside it may load from or depend on
+          it (label `//mbo/hash/measurements`), or a release build would carry a
+          dangling reference. Dependency edges stay one-way: measurements -> library.
+        language: pygrep
+        entry: //mbo/hash/measurements
+        files: \.(bazel|bzl)$
+        exclude: ^mbo/hash/measurements/
       - id: github-bazelmod-patch-applies
         name: github-bazelmod-patch-applies
         description: |

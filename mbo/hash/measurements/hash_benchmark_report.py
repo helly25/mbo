@@ -88,43 +88,44 @@ _SMHASHER_NAMES = {
 _SMHASHER_ALL = ["mumbo", "jumbo", "dumbo", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
 
 # Legacy / short SMHasher3 names -> the current registered name, applied when a
-# measured map is loaded so an older dataset (recorded before a name was pinned)
-# still joins onto _SMH_RESULTS_ROWS. The false-PASS bug came from the bare short
-# name `FNV-1a`, which the binary does not register (the real name is `FNV-1a-64`;
-# likewise `MurmurHash3` -> `MurmurHash3-128`). Confirm names with `SMHasher3 --list`.
+# bundle's logs are re-parsed so an older dataset (recorded before a name was
+# pinned) still joins onto the algorithm instances by `smhasher` name. The
+# false-PASS bug came from the bare short name `FNV-1a`, which the binary does not
+# register (the real name is `FNV-1a-64`; likewise `MurmurHash3` ->
+# `MurmurHash3-128`). Confirm names with `SMHasher3 --list`.
 _SMH_NAME_ALIASES = {
     "FNV-1a": "FNV-1a-64",
     "MurmurHash3": "MurmurHash3-128",
 }
 
-# Curated source of truth for the "## Quality: SMHasher3" -> "### Results" table,
-# rendered into the README between the _SMH_BEGIN/_SMH_END markers by the
-# `quality` command (verify with `quality --check`). Each row is
-# (algo, bits, role, smhasher, verdict, score, failures):
-#   - smhasher is the SMHasher3 registration name; `quality --smhasher <bundle>`
-#     joins a fresh measurement onto the row by this name, so the verdict/score
-#     below act as the checked-in fallback (used when no bundle is passed, e.g.
-#     `--check` in CI) and measured data overrides them when supplied.
-#   - verdict/score are our measurements on the pinned SMHasher3 build; score is
-#     (passed, total) for a FAIL and None for a PASS. Totals differ per hash
-#     (e.g. siphash 186, fnv1a 186, most 188), so they are NOT derived here.
-#   - role and failures are HUMAN-authored. The Failures text is editorial: a few
-#     failing families are listed as "Family [indices]" (as SMHasher3's Summary
-#     "Failures:" block reports them); a hash that fails most of the battery is
-#     summarized in prose. Re-derive verdict/score/families from a fresh `smhasher`
-#     run (its JSON carries the parsed Summary), then edit the wording here.
-_SMH_RESULTS_ROWS = [
-    ("dumbo", 64, "`hash.h` (compact MUM)", "dumbo-64", "PASS", None, "none"),
-    ("fnv1a", 64, "`hash.h`", "FNV-1a-64", "FAIL", (7, 186), "nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster"),
-    ("mumbo", 64, "default (64/32/streaming)", "mumbo-64", "PASS", None, "none"),
-    ("rapidhash", 64, "extra (`hash_extra_cc`)", "rapidhash", "PASS", None, "none"),
-    ("siphash", 64, "`hash.h` (keyed PRF)", "SipHash-2-4", "PASS", None, "none"),
-    ("xxh3", 64, "extra (`hash_extra_cc`)", "XXH3-64", "FAIL", (166, 188), "BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3]"),
-    ("xxh64", 64, "extra (`hash_extra_cc`)", "XXH-64", "FAIL", (181, 188), "SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]"),
-    ("jumbo", 128, "default (128)", "jumbo-128", "PASS", None, "none"),
-    ("murmur3", 128, "`hash.h`", "MurmurHash3-128", "FAIL", (123, 188), "BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)"),
-    ("xxh3", 128, "extra (`hash_extra_cc`)", "XXH3-128", "FAIL", (162, 188), "BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12-16], SeedBlockOffset [0-5], SeedBIC [3, 8]"),
-]
+# The manual/editorial SOT for the README quality tables lives in this JSON (per
+# instance: role, notice, seeded, streaming, starlark, ... - NOT measured data).
+# The measured columns (verdict/score/failures) come from a data bundle.
+_ALGORITHMS_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hash_algorithms.json")
+
+# TEMPORARY stopgap: the committed bundles were recorded under the invalid short
+# names `FNV-1a`/`MurmurHash3` (rejected by the pinned SMHasher3 build), so their
+# logs are the "Invalid hash" stub and carry no real data for these two. Hardcode
+# the known values until a bundle carries a real `FNV-1a-64`/`MurmurHash3-128`
+# measurement, then DELETE the matching entry. `failures` is the editorial summary
+# (both fail most of the battery, so listing every family would be noise).
+_MISSING_MEASURED = {
+    "FNV-1a-64": {
+        "verdict": "FAIL",
+        "passed": 7,
+        "total": 186,
+        "failures": [
+            "nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, "
+            "Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster"
+        ],
+    },
+    "MurmurHash3-128": {
+        "verdict": "FAIL",
+        "passed": 123,
+        "total": 188,
+        "failures": ["BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)"],
+    },
+}
 
 
 def _timestamp():
@@ -314,11 +315,11 @@ _SMH_VERDICT_RE = re.compile(
 _SMH_FAILBLOCK_RE = re.compile(r"^\s+(?P<family>[A-Za-z][\w-]*)\s*:\s*\[(?P<idx>[^\]]*)\]\s*$")
 
 
-def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
-    """Run one SMHasher3 battery and parse its verdict + failing families."""
-    print(f"$ {' '.join(cmd_prefix)} {name}", file=sys.stderr)
-    proc = subprocess.run([*cmd_prefix, name], capture_output=True, text=True, check=False)
-    text = proc.stdout + proc.stderr
+def _parse_smhasher(text, returncode=0):
+    """Parse one SMHasher3 battery's captured output into a result entry (pure, no
+    I/O). Used both for a live run and for re-parsing a bundle's saved log with the
+    CURRENT parser - the committed bundles' stored `smhasher.json` predates parser
+    fixes (score-less), so the LOGS, re-parsed here, are the measured truth."""
     verdict_match = _SMH_VERDICT_RE.search(text)
     invalid = re.search(r"Invalid hash '([^']*)' specified", text)
     # A completed battery ALWAYS ends with "Overall result: PASS|FAIL (p / n)".
@@ -339,8 +340,8 @@ def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
         verdict, passed, total = "ERROR", None, None
         if invalid:
             error = f"invalid SMHasher3 name {invalid.group(1)!r} - check `SMHasher3 --list`"
-        elif proc.returncode != 0:
-            error = f"SMHasher3 exited {proc.returncode} with no 'Overall result' line"
+        elif returncode != 0:
+            error = f"SMHasher3 exited {returncode} with no 'Overall result' line"
         else:
             error = "no 'Overall result' line - crashed or truncated output"
     # Failing families as "Family [indices]" (e.g. "BIC [3, 8, 11]"), read from
@@ -362,15 +363,23 @@ def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
                 failures.append(f"{block_match.group('family')} [{block_match.group('idx').strip()}]")
             elif line.strip():
                 break  # a non-blank, non-matching line ends the block (e.g. the "---" rule)
-    entry = {
+    return {
         "verdict": verdict,
         "score": (f"{passed} / {total}" if passed is not None and total is not None else None),
         "passed": passed,
         "total": total,
         "failures": failures,
-        "returncode": proc.returncode,
+        "returncode": returncode,
         "error": error,
     }
+
+
+def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
+    """Run one SMHasher3 battery, parse it, and save the raw log."""
+    print(f"$ {' '.join(cmd_prefix)} {name}", file=sys.stderr)
+    proc = subprocess.run([*cmd_prefix, name], capture_output=True, text=True, check=False)
+    text = proc.stdout + proc.stderr
+    entry = _parse_smhasher(text, proc.returncode)
     if raw_dir:
         os.makedirs(raw_dir, exist_ok=True)
         log_path = os.path.join(raw_dir, f"{stamp}_smhasher_{name}.log")
@@ -650,55 +659,73 @@ def _dump_canonical(results, path):
 _PERF_BEGIN = "<!-- BEGIN mbo/hash benchmark results (generated by `hash_benchmark_report.py publish`; DO NOT EDIT) -->"
 _PERF_END = "<!-- END mbo/hash benchmark results -->"
 
-# --- quality: the SMHasher3 "Results" table, rendered from _SMH_RESULTS_ROWS ---
+# --- quality: the README tables, from hash_algorithms.json (manual) x a bundle
+# (measured). Two generated regions: the "Algorithm overview" and the SMHasher3
+# "Results" table. Manual columns come from the JSON; verdict/score/failures from
+# the measurement (see render_overview_table / render_results_table).
 
+_OVERVIEW_BEGIN = "<!-- BEGIN algorithm overview (generated by `hash_benchmark_report.py quality`; DO NOT EDIT) -->"
+_OVERVIEW_END = "<!-- END algorithm overview -->"
 _SMH_BEGIN = "<!-- BEGIN SMHasher3 results (generated by `hash_benchmark_report.py quality`; DO NOT EDIT) -->"
 _SMH_END = "<!-- END SMHasher3 results -->"
 
 
-def render_results_table(measured=None):
-    """Render the SMHasher3 "### Results" table from the curated _SMH_RESULTS_ROWS.
+def _load_algorithms():
+    """Load the manual/editorial per-instance data + the overview row order."""
+    data = _load_json(_ALGORITHMS_JSON)
+    return data["algorithms"], data["overview_order"]
 
-    When `measured` (a {smhasher-name: entry} map from a fresh `smhasher` run) is
-    given, each row's verdict/score is taken from it by name; the checked-in
-    fallback is used only for names the measurement does not cover (so a partial
-    run - e.g. just the mbo hashes - still renders a complete table). A measured
-    verdict that disagrees with the curated Failures wording is warned about, and
-    a battery that did not complete (ERROR) aborts loudly rather than shipping a
-    misleading row. Role/Bits/Failures are always the human-authored columns."""
+
+def _measured_entry(name, measured):
+    """The measured entry for `name`, aborting loudly if it is missing or did not
+    complete (ERROR) - a broken/absent measurement must never render a plausible
+    row. Callers cover the known gaps via `_fill_missing_measured` first."""
+    entry = measured.get(name)
+    if entry is None:
+        raise SystemExit(f"{name}: no measured data - pass a bundle that measured it (or add a stopgap)")
+    if entry["verdict"] not in ("PASS", "FAIL"):
+        raise SystemExit(
+            f"{name}: measured verdict {entry['verdict']!r} is not PASS/FAIL - the battery did not "
+            f"complete ({entry.get('error') or 'bad name/crash'}); fix the measurement before regenerating"
+        )
+    return entry
+
+
+def render_results_table(algorithms, measured):
+    """Render the SMHasher3 "### Results" table: manual role/bits from the JSON,
+    verdict/score/failures from the measurement (joined by smhasher name)."""
     headers = ["Algorithm", "Bits", "Role in mbo/hash", "SMHasher3 result", "Failures"]
     aligns = ["l", "r", "l", "l", "l"]
     rows = []
-    for algo, bits, role, name, verdict, score, failures in _SMH_RESULTS_ROWS:
-        meas = (measured or {}).get(name)
-        if meas:
-            verdict = meas.get("verdict", verdict)
-            if meas.get("passed") is not None and meas.get("total") is not None:
-                score = (meas["passed"], meas["total"])
-            if verdict == "PASS" and failures != "none":
-                print(f"WARNING: {name}: measured PASS but curated Failures is {failures!r}", file=sys.stderr)
-            elif verdict == "FAIL" and failures == "none":
-                print(f"WARNING: {name}: measured FAIL but curated Failures says 'none'", file=sys.stderr)
-        if verdict == "PASS":
-            # A PASS renders as "PASS" (no number); a measured PASS legitimately
-            # carries passed==total, so only the editorial Failures must be "none".
-            if failures != "none":
-                raise SystemExit(f"{name}: a PASS row must have Failures 'none' (got {failures!r})")
-            if score and score[0] < score[1]:
-                print(f"WARNING: {name}: verdict PASS but score {score[0]}/{score[1]} shows failures", file=sys.stderr)
-            result = "PASS"
-        elif verdict == "FAIL":
-            if not score or score[0] >= score[1]:
-                raise SystemExit(f"{name}: a FAIL row needs a passed<total score")
-            if failures == "none":
-                raise SystemExit(f"{name}: a FAIL row needs a non-empty Failures list")
-            result = f"{score[0]}/{score[1]}"
+    for algo in algorithms:
+        entry = _measured_entry(algo["smhasher"], measured)
+        if entry["verdict"] == "PASS":
+            result, failures = "PASS", "none"
         else:
-            raise SystemExit(
-                f"{name}: measured verdict {verdict!r} is not PASS/FAIL - the battery did not "
-                "complete (bad name/crash); fix the measurement before regenerating the table"
-            )
-        rows.append([f"`{algo}`", str(bits), role, result, failures])
+            passed, total = entry.get("passed"), entry.get("total")
+            if passed is None or total is None or passed >= total:
+                raise SystemExit(f"{algo['smhasher']}: FAIL without a valid passed/total score")
+            result = f"{passed}/{total}"
+            failures = ", ".join(entry.get("failures") or []) or "none"
+        rows.append([f"`{algo['algo']}`", str(algo["bits"]), algo["role"], result, failures])
+    return _md_table(headers, rows, aligns)
+
+
+def render_overview_table(algorithms, measured, overview_order):
+    """Render the "## Algorithm overview" table: manual columns from the JSON, the
+    `SMHasher3` PASS/FAIL derived from the measured verdict (so it cannot disagree
+    with the Results table). Rows follow the overview's own curated order."""
+    headers = ["Algorithm", "Bits", "Available via", "Starlark", "NOTICE", "Seeded", "Streaming", "SMHasher3"]
+    aligns = ["l", "r", "l", "l", "l", "l", "l", "l"]
+    by_name = {algo["smhasher"]: algo for algo in algorithms}
+    rows = []
+    for name in overview_order:
+        algo = by_name[name]
+        entry = _measured_entry(name, measured)
+        rows.append([
+            f"`{algo['algo']}`", str(algo["bits"]), algo["available_via"], algo["starlark"],
+            algo["notice"], algo["seeded"], algo["streaming"], entry["verdict"],
+        ])
     return _md_table(headers, rows, aligns)
 
 
@@ -711,25 +738,49 @@ def _extract_bundle(path, dest):
             tar.extractall(dest)  # noqa: S202 - our own bundle, older Python
 
 
-def _load_smhasher(path):
-    """Load a measured SMHasher3 map {name: {verdict, passed, total, ...}} from
-    either a `smhasher` run's JSON or a data bundle .tgz that packs one. Legacy /
-    short names are normalized to their registered form (see _SMH_NAME_ALIASES) so
-    an older dataset still joins onto the Results rows."""
-    if path.endswith((".tgz", ".tar.gz")):
-        with tempfile.TemporaryDirectory() as tmp:
-            _extract_bundle(path, tmp)
-            members = [f for f in os.listdir(tmp) if "smhasher" in f and f.endswith(".json")]
-            if not members:
-                raise SystemExit(f"no *smhasher*.json inside {path}")
-            data = _load_json(os.path.join(tmp, sorted(members)[-1]))
-    else:
-        data = _load_json(path)
-    smh = dict(data.get("smhasher", data))
-    for alias, canonical in _SMH_NAME_ALIASES.items():
-        if alias in smh and canonical not in smh:  # do not clobber a real entry
-            smh[canonical] = smh.pop(alias)
-    return smh
+_SMH_LOG_RE = re.compile(r"^(\d{8}_\d{6})_smhasher_(.+)\.log(\.gz)?$")
+
+
+def _measured_from_bundle(path):
+    """Re-parse a bundle's per-algorithm SMHasher3 logs into a measured map
+    {registered-name: entry} with the CURRENT parser. The bundle's stored
+    smhasher.json is ignored (it predates parser fixes, so it is score-less); the
+    LOGS are the measured truth. The newest log per name wins, and legacy / short
+    log names are normalized to their registered form (see _SMH_NAME_ALIASES)."""
+    latest = {}  # name -> (stamp, text)
+    with tempfile.TemporaryDirectory() as tmp:
+        _extract_bundle(path, tmp)
+        for fname in sorted(os.listdir(tmp)):
+            match = _SMH_LOG_RE.match(fname)
+            if not match:
+                continue
+            stamp, name, gz = match.group(1), match.group(2), match.group(3)
+            opener = gzip.open if gz else open
+            with opener(os.path.join(tmp, fname), "rt") as handle:
+                text = handle.read()
+            if name not in latest or stamp >= latest[name][0]:
+                latest[name] = (stamp, text)
+    measured = {}
+    for name, (_stamp, text) in latest.items():
+        measured[_SMH_NAME_ALIASES.get(name, name)] = _parse_smhasher(text)
+    return measured
+
+
+def _fill_missing_measured(measured):
+    """Overlay the hardcoded stopgap (`_MISSING_MEASURED`) for any name the bundle
+    lacks valid data for (absent, or an ERROR from a bad-name/crashed run). Warns
+    on every substitution so the stopgap is never silent. Returns a new map."""
+    out = dict(measured)
+    for name, stub in _MISSING_MEASURED.items():
+        current = out.get(name)
+        if current is None or current.get("verdict") == "ERROR":
+            print(
+                f"WARNING: {name}: no valid measurement in the bundle; using the hardcoded stopgap "
+                f"(delete _MISSING_MEASURED[{name!r}] once a bundle carries real data).",
+                file=sys.stderr,
+            )
+            out[name] = {**stub, "score": f"{stub['passed']} / {stub['total']}", "returncode": 0, "error": None}
+    return out
 
 
 def _render_charts(full, stem, charts_dir, subtitle):
@@ -818,10 +869,14 @@ def main(argv):
     p_verify.add_argument("--readme", default="mbo/hash/README.md")
     p_verify.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
 
-    p_quality = sub.add_parser("quality", help="render the SMHasher3 Results table into the README from the curated rows (+ optional measured bundle)")
+    p_quality = sub.add_parser("quality", help="render the Algorithm-overview + SMHasher3 Results tables into the README from hash_algorithms.json (manual) and a measured bundle")
     p_quality.add_argument("--readme", default="mbo/hash/README.md")
-    p_quality.add_argument("--smhasher", help="measured smhasher JSON or data bundle .tgz to source verdict/score from (default: the checked-in curated values)")
-    p_quality.add_argument("--check", action="store_true", help="verify the README table matches instead of writing (exit 1 on drift)")
+    p_quality.add_argument("--bundle", required=True, help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
+    p_quality.add_argument("--check", action="store_true", help="verify the README tables match instead of writing (exit 1 on drift)")
+
+    p_consistency = sub.add_parser("consistency", help="verify all data bundles from the same source SHA report identical SMHasher3 measurements (quality is machine-independent)")
+    p_consistency.add_argument("--bundles", nargs="+", help="bundles to compare (default: all data/*.tgz)")
+    p_consistency.add_argument("--data-dir", default="mbo/hash/measurements/data")
 
     args = parser.parse_args(argv)
     # One stamp per invocation, so all files a run writes share it. Every
@@ -975,24 +1030,76 @@ def main(argv):
         return 0
 
     if args.command == "quality":
-        measured = _load_smhasher(args.smhasher) if args.smhasher else None
-        region = "\n".join([_SMH_BEGIN, "", render_results_table(measured), "", _SMH_END])
+        algorithms, overview_order = _load_algorithms()
+        measured = _fill_missing_measured(_measured_from_bundle(args.bundle))
         text = open(args.readme).read()
-        if _SMH_BEGIN not in text or _SMH_END not in text:
-            raise SystemExit(f"markers not found in {args.readme}; add a {_SMH_BEGIN} ... {_SMH_END} region")
-        new = text[: text.index(_SMH_BEGIN)] + region + text[text.index(_SMH_END) + len(_SMH_END) :]
+        regions = [
+            (_OVERVIEW_BEGIN, _OVERVIEW_END, render_overview_table(algorithms, measured, overview_order)),
+            (_SMH_BEGIN, _SMH_END, render_results_table(algorithms, measured)),
+        ]
+        new = text
+        for begin, end, body in regions:
+            if begin not in new or end not in new:
+                raise SystemExit(f"markers not found in {args.readme}; add a {begin} ... {end} region")
+            block = "\n".join([begin, "", body, "", end])
+            new = new[: new.index(begin)] + block + new[new.index(end) + len(end) :]
         if args.check:
             if new != text:
-                print(f"VERIFY FAILED: the SMHasher3 Results table in {args.readme} is stale; run `quality`", file=sys.stderr)
+                print(f"VERIFY FAILED: the generated tables in {args.readme} are stale; run `quality`", file=sys.stderr)
                 return 1
-            print("VERIFY OK: the SMHasher3 Results table matches the curated data", file=sys.stderr)
+            print("VERIFY OK: the generated overview + Results tables match hash_algorithms.json + the bundle", file=sys.stderr)
             return 0
         if new != text:
             with open(args.readme, "w") as handle:
                 handle.write(new)
-            print(f"wrote the SMHasher3 Results table into {args.readme}", file=sys.stderr)
+            print(f"wrote the overview + Results tables into {args.readme}", file=sys.stderr)
         else:
-            print(f"the SMHasher3 Results table is already current in {args.readme}", file=sys.stderr)
+            print(f"the generated tables are already current in {args.readme}", file=sys.stderr)
+        return 0
+
+    if args.command == "consistency":
+        bundles = args.bundles or sorted(
+            os.path.join(args.data_dir, f) for f in os.listdir(args.data_dir) if f.endswith(".tgz")
+        )
+        if not bundles:
+            raise SystemExit(f"no bundles found (looked in {args.data_dir})")
+        # Group by the source git SHA embedded in the bundle filename
+        # (<slug>_<cores>c_<compiler>_<sha8>_<stamp>.tgz). SMHasher3 verdicts are a
+        # property of the algorithm, not the machine, so bundles at the same SHA
+        # must report identical measurements - a difference means a broken run.
+        by_sha = {}
+        for bundle in bundles:
+            match = re.search(r"_([0-9a-fA-F]{8})_\d{8}_\d{6}\.tgz$", os.path.basename(bundle))
+            sha = match.group(1) if match else os.path.basename(bundle)
+            by_sha.setdefault(sha, []).append((bundle, _measured_from_bundle(bundle)))
+
+        def _key(entry):
+            if entry is None:
+                return None
+            return (entry["verdict"], entry.get("passed"), entry.get("total"), tuple(entry.get("failures") or []))
+
+        problems = []
+        for sha, group in sorted(by_sha.items()):
+            if len(group) < 2:
+                print(f"consistency: SHA {sha}: only 1 bundle, nothing to cross-check", file=sys.stderr)
+                continue
+            ref_bundle, ref = group[0]
+            names = sorted(set().union(*(set(meas) for _bundle, meas in group)))
+            for bundle, meas in group[1:]:
+                for name in names:
+                    if _key(ref.get(name)) != _key(meas.get(name)):
+                        problems.append(
+                            f"SHA {sha}: {name} differs between {os.path.basename(ref_bundle)} "
+                            f"and {os.path.basename(bundle)}: {_key(ref.get(name))} vs {_key(meas.get(name))}"
+                        )
+        for problem in problems:
+            print(f"VERIFY FAILED: {problem}", file=sys.stderr)
+        if problems:
+            return 1
+        print(
+            f"VERIFY OK: {len(bundles)} bundle(s) in {len(by_sha)} source-SHA group(s) agree on all SMHasher3 measurements",
+            file=sys.stderr,
+        )
         return 0
 
     return 1

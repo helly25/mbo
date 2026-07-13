@@ -58,6 +58,11 @@ jobs:
     continue-on-error: ${{inputs.continue-on-error}}
     steps:
       - uses: actions/checkout@v6
+      - name: Fetch measurement bundles (Git LFS)
+        # The `//mbo/hash/measurements:quality_sh_test` bazel test reads the
+        # committed data bundles for the SMHasher3 quality tables; actions/checkout
+        # leaves them as LFS pointers, so materialize just those (each is small).
+        run: git lfs pull --include="mbo/hash/measurements/data/*.tgz"
       - uses: bazelbuild/setup-bazelisk@v3
       - name: Install GCC
         if: ${{inputs.compiler == 'gcc' && inputs.gcc_version != ''}}
