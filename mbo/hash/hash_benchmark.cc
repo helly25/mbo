@@ -56,10 +56,70 @@ constexpr std::array<int, 22> kReadmeSizes = {
 // ~1.2) from 1..4096 unioned with the boundary set above, so the ns-vs-length
 // curve is smooth and the tier edges stay sampled. For the complete dataset /
 // graph, not for the README tables.
-constexpr std::array<int, 53> kFullSizes = {
-    1,   2,   3,   4,   5,   6,   7,   8,     9,     11,    13,    15,    16,    18,    19,    22,    27,    32,
-    38,  46,  47,  48,  55,  63,  64,  66,    79,    95,    114,   127,   128,   137,   165,   198,   237,   256,
-    285, 342, 410, 492, 591, 709, 851, 1'021, 1'024, 1'225, 1'470, 1'764, 2'116, 2'540, 3'048, 3'657, 4'096,
+// Tiny             9
+// GCC/MSVC SSO     7
+// Clang SSO        6
+// Extended/AVX2    9
+// Cache            4
+// Bins             5
+// Medium          14
+// Large           10
+// TOTAL           64
+constexpr std::array<int, 64> kFullSizes = {
+    // --- Tiny Keys & Word Alignments ---
+    1, 2, 3,
+    4,  // 32-bit register (optimized fast-paths for integers)
+    5, 6, 7,
+    8,  // 64-bit word (standard 64-bit register boundary)
+    9,
+
+    // --- Register Alignments & GCC/MSVC SSO limits ---
+    11,
+    12,  // 3x 4-byte words / 3D float vectors
+    13,
+    15,  // GCC (libstdc++) & MSVC SSO capacity limit (15 chars + null)
+    16,  // 128-bit vector register boundary (SSE/AVX)
+    18, 19,
+
+    // --- Clang SSO limit & Object sizes ---
+    22,  // Clang (libc++) SSO capacity limit (22 chars + null)
+    23,  // Clang heap spill boundary (first byte to trigger dynamic allocation); Folly fbstring SSO capacity
+    24,  // LLVM's libc++: sizeof(std::string) 3x 8-byte; Folly fbstring SSO capacity
+    25, 27, 29,
+
+    // --- Extended SSO & 256-bit Vector Limits ---
+    31,  // jemalloc 32-byte class boundary
+    32,  // AVX2: 256-bit vector register boundary; MSVC: sizeof(std::string) 4x 8-byte
+    38,
+    40,          // Common loop unrolling (5x 8-byte words)
+    46, 47, 48,  // Alignments around 48 bytes (tcmalloc size class / MSVC heap spill)
+    49,          // Just over 48 bytes (forces allocator to bump to 64-byte class)
+    55,
+
+    // --- CPU Cache Line Boundaries (64 Bytes) ---
+    63,  // Just under cache line (fits entirely within one line)
+    64,  // Exactly one L1 cache line (64 bytes)
+    66,  // Just over cache line (spills into second cache line)
+    72,
+
+    // --- Allocator Bin / Bucket Transitions (jemalloc & tcmalloc) ---
+    79,  // Just under 80-byte allocator bucket
+    80,  // 80-byte allocation class boundary
+    95,  // Just under 96-byte allocator bucket
+    107, 114,
+
+    // --- Dual Cache Line & Medium Keys (Scaling exponentially at ~1.2x) ---
+    127,                 // Just under 2 cache lines
+    128,                 // Exactly 2 cache lines (AVX-512 register size)
+    137, 165, 198, 237,  // Geometric steps mapping allocator classes (144, 176, 208)
+    256,                 // 4 cache lines / 256-byte allocator boundary
+    285, 342, 410, 492, 591, 709, 851,
+
+    // --- Large Keys & Page Boundaries ---
+    1'021,  // Max payload size fitting inside a 1KB allocator block with a null-terminator
+    1'024,  // Exactly 1KB (half a page block step for typical modern slab allocators)
+    1'225, 1'470, 1'764, 2'116, 2'540, 3'048, 3'657,
+    4'096  // Exactly one x86/ARM64 virtual page (often triggering direct mmap)
 };
 
 // Table/chart consistency rule: kReadmeSizes (README tables) must be a subset of
@@ -159,7 +219,10 @@ void RegisterAlgo() {
       hash128->Arg(size);
     }
   }
-  benchmark::RegisterBenchmark("BmHash64Latency<" + name + ">", BmHash64Latency<Algo>)->Arg(16)->Arg(64)->Arg(1'024);
+  auto* const latency = benchmark::RegisterBenchmark("BmHash64Latency<" + name + ">", BmHash64Latency<Algo>);
+  for (const int size : sizes) {
+    latency->Arg(size);
+  }
 }
 
 // Registers benchmarks for every descriptor in the central algo::AllAlgorithms

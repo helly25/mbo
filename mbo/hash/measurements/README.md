@@ -167,8 +167,14 @@ bundle against the committed charts, reading the machine list back from the
 README's manifest.
 
 The pipeline steps are also usable individually: `run` (perf -> canonical JSON),
-`bundle` (pack a run), `tables` / `plot` (render from any canonical JSON -
-`tar xzOf <bundle>.tgz results.json` pulls one out), `publish`, `verify`.
+`bundle` (pack a run), `tables` / `plot` (render from any canonical JSON _or_ a
+bundle `.tgz` directly - given positionally or via `--results`/`--bundle`),
+`publish`, `verify`. `plot --kind` selects the curves: `throughput` (the 64- and
+128-bit one-shot charts, default), `latency` (the mixed-length latency curve, now
+that it sweeps the full size set), or `all`. `plot --scale` selects the axes:
+`log-log` (default - ns spans ~4 decades, so a linear y crushes the fast
+algorithms) or `linear-log` (linear y, log x, to read absolute ns gaps in a
+narrow range); x is always log since lengths are sampled geometrically.
 
 ## SMHasher3 quality (`smhasher`)
 

@@ -36,8 +36,12 @@ main tree.
 Pipeline (tables/store/plot are pure JSON -> no bazel needed):
     hash_benchmark_report.py run   --mode full --reps 20 --raw data/RAW.json --out results.json --tables
     hash_benchmark_report.py store --raw data/RAW.json --out results.json
-    hash_benchmark_report.py tables --results results.json      # README (fast) subset
-    hash_benchmark_report.py plot  --results results.json --out curve.svg
+    hash_benchmark_report.py tables results.json               # README (fast) subset
+    hash_benchmark_report.py plot   results.json --out curve.svg               # throughput 64+128
+    hash_benchmark_report.py plot   results.json --out curve.svg --kind latency --scale linear-log
+tables/plot/compare/quality take a canonical JSON or a data bundle .tgz, either
+positionally or via --results/--bundle. `plot --kind` picks the curves and
+`--scale` the axes (log-log default, or linear-log = linear y / log x).
 """
 
 import argparse
@@ -289,9 +293,11 @@ def _platform_slug(ctx):
 
 def _machine_label(ctx):
     """Readable machine identifier for headings + chart subtitles, e.g.
-    'Apple M5 Pro · arm64 · 18-core · clang-22 · a1b2c3d4'."""
+    'Apple M5 Pro · macOS · arm64 · 18-core · clang-22 · a1b2c3d4'."""
     parts = (ctx.get("uname") or "").split()  # `uname -srm`: <sysname> <release> <machine>
-    bits = [str(ctx.get("cpu_brand") or "?"), parts[-1] if len(parts) >= 3 else "?"]
+    sysname = parts[0] if parts else ""
+    os_name = {"Darwin": "MacOS", "Linux": "Linux"}.get(sysname, sysname or "?")
+    bits = [str(ctx.get("cpu_brand") or "?"), os_name, parts[-1] if len(parts) >= 3 else "?"]
     if ctx.get("num_cpus"):
         bits.append(f"{ctx['num_cpus']}-core")
     if ctx.get("compiler"):
@@ -472,7 +478,9 @@ def _order(algos, preferred):
 
 
 def _size_label(length):
-    return f"{length}B" if length < 1024 else f"{length // 1024}Ki"
+    # Byte-unit labels used everywhere a length is shown (throughput + latency
+    # tables, chart x-axis): "512B", "1KiB", "4KiB" - consistent "B"/"KiB" suffix.
+    return f"{length} B" if length < 1024 else f"{length // 1024} KiB"
 
 
 def _md_table(headers, rows, aligns=None):
@@ -510,6 +518,7 @@ def _throughput_table(data, preferred, relabel, sizes=None):
         sizes = sorted({int(s) for a in data.values() for s in a})
     sizes = [s for s in sizes if any(str(s) in data[a] for a in algos)]
     headers = ["Length"] + [relabel.get(a, a) for a in algos]
+    aligns = ["r"] + ["r"] * (len(algos))
     rows = []
     for size in sizes:
         row = {a: _val(data[a][str(size)]) for a in algos if str(size) in data[a]}
@@ -524,17 +533,24 @@ def _throughput_table(data, preferred, relabel, sizes=None):
                 text = f"**{text}**"
             cells.append(text)
         rows.append(cells)
-    return _md_table(headers, rows)
+    return _md_table(headers, rows, aligns)
 
 
-def _latency_table(data):
+def _latency_table(data, sizes=None):
+    # Like _throughput_table, the README latency table shows the curated
+    # `readme_sizes` subset (the latency benchmark now sweeps the full size set,
+    # so without this it would dump every length). Falls back to all measured
+    # lengths when no curated subset is available.
     algos = _order(list(data), _ORDER_64)
-    sizes = sorted({int(s) for a in data.values() for s in a})
+    if sizes is None:
+        sizes = sorted({int(s) for a in data.values() for s in a})
+    sizes = [s for s in sizes if any(str(s) in data[a] for a in algos)]
     mins = {s: min(_val(data[a][str(s)]) for a in algos if str(s) in data[a]) for s in sizes}
     headers = ["max len"] + algos
+    aligns = ["r"] + ["r"] * (len(algos))
     rows = []
     for size in sizes:
-        cells = [str(size)]
+        cells = [_size_label(size)]
         for algo in algos:
             cell = data[algo].get(str(size))
             text = "-" if cell is None else _fmt(_val(cell))
@@ -542,7 +558,7 @@ def _latency_table(data):
                 text = f"**{text}**"
             cells.append(text)
         rows.append(cells)
-    return _md_table(headers, rows)
+    return _md_table(headers, rows, aligns)
 
 
 def render_tables(results):
@@ -564,17 +580,113 @@ def render_tables(results):
         "",
         f"#### Mixed-length latency (ns/hash, {agg}; lower is better)",
         "",
-        _latency_table(results["latency"]),
+        _latency_table(results["latency"], sizes),
     ]
     return "\n".join(out)
 
 
-def _svg_plot(data, algos, title, path, label_map=None, subtitle=None):
-    """Dependency-free log-log SVG: best-k-mean ns vs length, one line per
-    algorithm. Both axes are log-scaled - the ns range spans ~4 decades
+# ---- compare: A (baseline) vs B (new) --------------------------------------
+
+
+def _delta_pct(base, new):
+    """Percent change of the headline number, lower-is-better: (B - A) / A * 100,
+    so a negative delta means B is faster than A."""
+    return (new - base) / base * 100.0 if base else 0.0
+
+
+def _fmt_delta(pct):
+    return f"{pct:+.1f}%"
+
+
+def _geomean(ratios):
+    """Geometric mean of per-case B/A ratios - the right average for ratios; a
+    +10%/-10% pair nets ~0, not the misleading 0 an arithmetic mean of the deltas
+    would also give but for the wrong reason. Returns None for an empty list."""
+    import math
+
+    return math.exp(sum(math.log(r) for r in ratios) / len(ratios)) if ratios else None
+
+
+def _compare_bucket(base_data, new_data, preferred, relabel):
+    """One bucket's Δ% table: length-per-row, algorithm-per-column, each cell the
+    per-case Δ% of B vs A. A trailing `geomean` row summarizes each algorithm over
+    all shared lengths. Only algorithms and lengths present in BOTH datasets are
+    compared (others render `-`). Returns None if there is no shared case."""
+    algos = _order([a for a in base_data if a in new_data], preferred)
+    sizes = sorted({int(s) for a in algos for s in base_data[a] if s in new_data.get(a, {})})
+    if not algos or not sizes:
+        return None
+    headers = ["Length"] + [relabel.get(a, a) for a in algos]
+    ratios = {a: [] for a in algos}
+    rows = []
+    for size in sizes:
+        cells = [_size_label(size)]
+        for algo in algos:
+            base_cell, new_cell = base_data[algo].get(str(size)), new_data[algo].get(str(size))
+            if base_cell is None or new_cell is None:
+                cells.append("-")
+                continue
+            base_val, new_val = _val(base_cell), _val(new_cell)
+            cells.append(_fmt_delta(_delta_pct(base_val, new_val)))
+            if base_val > 0:
+                ratios[algo].append(new_val / base_val)
+        rows.append(cells)
+    geo = ["geomean"]
+    for algo in algos:
+        mean = _geomean(ratios[algo])
+        geo.append(_fmt_delta((mean - 1.0) * 100.0) if mean is not None else "-")
+    rows.append(geo)
+    return _md_table(headers, rows)
+
+
+def render_compare(base, new):
+    """Markdown Δ% report between two canonical datasets. Shows both machine
+    labels (comparing across machines is legitimate - it is the reader's call),
+    then a per-length Δ% table with a geomean row for each bucket."""
+    out = [
+        "Δ% = (B - A) / A per case; negative = B faster (lower ns is better).",
+        f"- A: {_machine_label(base.get('context', {}))}",
+        f"- B: {_machine_label(new.get('context', {}))}",
+    ]
+    for key, order, relabel, title in (
+        ("throughput64", _ORDER_64, {}, "64-bit one-shot throughput"),
+        ("throughput128", _ORDER_128, _LABEL_128, "128-bit one-shot throughput"),
+        ("latency", _ORDER_64, {}, "Mixed-length latency"),
+    ):
+        table = _compare_bucket(base.get(key) or {}, new.get(key) or {}, order, relabel)
+        if table:
+            out += ["", f"#### {title} (Δ%)", "", table]
+    return "\n".join(out)
+
+
+def _linear_ticks(vmax, target=6):
+    """~`target` 'nice' gridline values 0..>=vmax with a 1/2/2.5/5 * 10^k step,
+    for the linear y-axis (`--scale linear-log`)."""
+    import math
+
+    if vmax <= 0:
+        return [0.0]
+    raw = vmax / target
+    mag = 10.0 ** math.floor(math.log10(raw))
+    step = next(m * mag for m in (1, 2, 2.5, 5, 10) if m * mag >= raw)
+    ticks, tick = [], 0.0
+    while tick <= vmax + step * 1e-9:
+        ticks.append(tick)
+        tick += step
+    return ticks
+
+
+def _svg_plot(data, algos, title, path, label_map=None, subtitle=None, linear_y=False):
+    """Dependency-free ns-vs-length SVG, one line per algorithm (best-k mean).
+
+    The x-axis (key length) is ALWAYS log-scaled: lengths are sampled
+    geometrically (1..4096), so a linear x would bunch every small key at the
+    origin. The y-axis (ns) is log by default - the range spans ~4 decades
     (sub-ns small keys to microseconds of the byte-at-a-time hashes on bulk), so
-    a linear y-axis would crush every fast algorithm onto the baseline. `subtitle`
-    (the machine identifier) is drawn under the title so a chart is self-labeling."""
+    a linear y crushes every fast algorithm onto the baseline. `linear_y` switches
+    the y-axis to a 0-based linear scale (the `--scale linear-log` mode) to read
+    absolute ns gaps within a narrow range. `subtitle` (the machine identifier) is
+    drawn under the title so a chart is self-labeling."""
     import math
 
     label_map = label_map or {}
@@ -585,15 +697,24 @@ def _svg_plot(data, algos, title, path, label_map=None, subtitle=None):
     plot_w, plot_h = width - pad_l - pad_r, height - pad_t - pad_b
     x0, x1 = math.log10(sizes[0]), math.log10(sizes[-1])
     vals = [_val(data[a][str(s)]) for a in algos for s in sizes if str(s) in data[a] and _val(data[a][str(s)]) > 0]
-    ly0, ly1 = math.log10(min(vals)), math.log10(max(vals))
-    span_x, span_y = (x1 - x0) or 1.0, (ly1 - ly0) or 1.0
+    span_x = (x1 - x0) or 1.0
     colors = ["#2563eb", "#dc2626", "#059669", "#d97706", "#7c3aed", "#0891b2", "#be185d", "#4b5563"]
 
     def px(size):
         return pad_l + (math.log10(size) - x0) / span_x * plot_w
 
-    def py(ns):
-        return pad_t + (ly1 - math.log10(ns)) / span_y * plot_h
+    if linear_y:  # 0-based linear y (span = y_top), gridlines at the nice ticks
+        y_ticks = _linear_ticks(max(vals))
+        y_top = y_ticks[-1] or 1.0
+
+        def py(ns):
+            return pad_t + (y_top - ns) / y_top * plot_h
+    else:  # log y (default): decade span, gridlines at each power of ten
+        ly0, ly1 = math.log10(min(vals)), math.log10(max(vals))
+        span_y = (ly1 - ly0) or 1.0
+
+        def py(ns):
+            return pad_t + (ly1 - math.log10(ns)) / span_y * plot_h
 
     svg = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" font-family="sans-serif">',
@@ -604,14 +725,20 @@ def _svg_plot(data, algos, title, path, label_map=None, subtitle=None):
         svg.append(
             f'<text x="{width / 2:.0f}" y="44" font-size="12" fill="#6b7280" text-anchor="middle">{subtitle}</text>'
         )
-    exp = math.floor(ly0)  # y gridlines + labels at each power of ten in range
-    while exp <= math.ceil(ly1):
-        ns = 10.0**exp
-        if ly0 - 1e-9 <= math.log10(ns) <= ly1 + 1e-9:
-            y = py(ns)
+    if linear_y:  # y gridlines + labels at each nice linear tick
+        for tick in y_ticks:
+            y = py(tick)
             svg.append(f'<line x1="{pad_l}" y1="{y:.1f}" x2="{pad_l + plot_w:.1f}" y2="{y:.1f}" stroke="#eee"/>')
-            svg.append(f'<text x="{pad_l - 6}" y="{y + 3:.1f}" font-size="10" text-anchor="end">{ns:g}</text>')
-        exp += 1
+            svg.append(f'<text x="{pad_l - 6}" y="{y + 3:.1f}" font-size="10" text-anchor="end">{tick:g}</text>')
+    else:  # y gridlines + labels at each power of ten in range
+        exp = math.floor(ly0)
+        while exp <= math.ceil(ly1):
+            ns = 10.0**exp
+            if ly0 - 1e-9 <= math.log10(ns) <= ly1 + 1e-9:
+                y = py(ns)
+                svg.append(f'<line x1="{pad_l}" y1="{y:.1f}" x2="{pad_l + plot_w:.1f}" y2="{y:.1f}" stroke="#eee"/>')
+                svg.append(f'<text x="{pad_l - 6}" y="{y + 3:.1f}" font-size="10" text-anchor="end">{ns:g}</text>')
+            exp += 1
     size = 1  # x gridlines at powers of two, labels at powers of four
     while size <= sizes[-1]:
         if x0 - 1e-9 <= math.log10(size) <= x1 + 1e-9:
@@ -623,7 +750,8 @@ def _svg_plot(data, algos, title, path, label_map=None, subtitle=None):
     svg.append(f'<text x="{pad_l + plot_w / 2:.0f}" y="{height - 12}" font-size="12" text-anchor="middle">key length (log scale)</text>')
     svg.append(
         f'<text x="18" y="{pad_t + plot_h / 2:.0f}" font-size="12" '
-        f'transform="rotate(-90 18 {pad_t + plot_h / 2:.0f})" text-anchor="middle">ns / op (log scale)</text>'
+        f'transform="rotate(-90 18 {pad_t + plot_h / 2:.0f})" text-anchor="middle">'
+        f'ns / op ({"linear" if linear_y else "log"} scale)</text>'
     )
     for i, algo in enumerate(algos):  # one polyline + legend row per algorithm
         color = colors[i % len(colors)]
@@ -738,6 +866,36 @@ def _extract_bundle(path, dest):
             tar.extractall(dest)  # noqa: S202 - our own bundle, older Python
 
 
+def _results_from_bundle(path):
+    """Load the canonical results.json out of a data bundle .tgz (the same
+    payload `bundle` packs), so table/plot commands accept a bundle directly."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _extract_bundle(path, tmp)
+        return _load_json(os.path.join(tmp, "results.json"))
+
+
+def _load_dataset(path):
+    """Canonical results from either form: a data bundle (.tgz -> its packed
+    results.json) or a results JSON directly (.json[.gz]). Lets every command
+    take a bundle or a bare dataset interchangeably."""
+    return _results_from_bundle(path) if path.endswith(".tgz") else _load_json(path)
+
+
+def _one_path(candidates, what):
+    """Exactly one non-empty path from `candidates`, else a clear CLI error. Lets
+    a command accept its input positionally OR via a flag, interchangeably."""
+    chosen = [path for path in candidates if path]
+    if len(chosen) != 1:
+        raise SystemExit(f"provide exactly one {what}: a positional path or its flag")
+    return chosen[0]
+
+
+def _resolve_dataset(args):
+    """The single canonical dataset for a command, given positionally or via
+    --results/--bundle (all interchangeable, auto-detected by extension)."""
+    return _load_dataset(_one_path([args.dataset, args.results, args.bundle], "dataset"))
+
+
 _SMH_LOG_RE = re.compile(r"^(\d{8}_\d{6})_smhasher_(.+)\.log(\.gz)?$")
 
 
@@ -761,7 +919,7 @@ def _measured_from_bundle(path):
             if name not in latest or stamp >= latest[name][0]:
                 latest[name] = (stamp, text)
     measured = {}
-    for name, (_stamp, text) in latest.items():
+    for name, (_, text) in latest.items():
         measured[_SMH_NAME_ALIASES.get(name, name)] = _parse_smhasher(text)
     return measured
 
@@ -806,9 +964,20 @@ def _bundle_stem(ctx):
     return f"{_platform_slug(ctx)}_{_slug(ctx.get('compiler') or 'cc')}"
 
 
+def _add_dataset_arg(parser):
+    """Give a command one canonical-dataset input, accepted three interchangeable
+    ways: a positional path, or --results / --bundle (all auto-detect bundle vs
+    JSON by extension). Keeping the flags means existing invocations still work."""
+    parser.add_argument("dataset", nargs="?", help="dataset path: a bundle .tgz or a results.json[.gz] (auto-detected)")
+    parser.add_argument("--results", help="canonical results JSON (.gz ok); same as passing it positionally")
+    parser.add_argument("--bundle", help="data bundle .tgz; same as passing it positionally")
+
+
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
+
+    sub.add_parser("help", help="show help")
 
     p_run = sub.add_parser("run", help="run the benchmark, then store and/or render")
     p_run.add_argument("--mode", choices=["fast", "full"], default="full")
@@ -827,12 +996,28 @@ def main(argv):
     p_store.add_argument("--out", required=True)
     p_store.add_argument("--mode", choices=["fast", "full"], default="full")
 
-    p_tables = sub.add_parser("tables", help="render README markdown tables from canonical JSON")
-    p_tables.add_argument("--results", required=True)
+    p_tables = sub.add_parser("tables", help="render README markdown tables from a dataset (results JSON or .tgz bundle)")
+    _add_dataset_arg(p_tables)
 
-    p_plot = sub.add_parser("plot", help="render an SVG ns-vs-length curve from canonical JSON")
-    p_plot.add_argument("--results", required=True)
+    p_compare = sub.add_parser("compare", help="compare two datasets (results JSON or .tgz bundles): per-case Δ%% + geomean")
+    p_compare.add_argument("a", metavar="A", help="baseline dataset: results.json[.gz] or a bundle .tgz")
+    p_compare.add_argument("b", metavar="B", help="new dataset: results.json[.gz] or a bundle .tgz")
+
+    p_plot = sub.add_parser("plot", help="render SVG ns-vs-length curves from a dataset (results JSON or .tgz bundle)")
+    _add_dataset_arg(p_plot)
     p_plot.add_argument("--out", required=True)
+    p_plot.add_argument(
+        "--kind",
+        choices=["throughput", "latency", "all"],
+        default="throughput",
+        help="which curves to render: 'throughput' (64+128, default), 'latency' (now dense enough for log-log), or 'all'",
+    )
+    p_plot.add_argument(
+        "--scale",
+        choices=["log-log", "linear-log"],
+        default="log-log",
+        help="axis scaling: 'log-log' (default) or 'linear-log' (linear y / log x, to read absolute ns gaps). x is always log",
+    )
 
     p_smh = sub.add_parser("smhasher", help="run the SMHasher3 quality battery over a set of algorithms")
     p_smh.add_argument(
@@ -871,7 +1056,8 @@ def main(argv):
 
     p_quality = sub.add_parser("quality", help="render the Algorithm-overview + SMHasher3 Results tables into the README from hash_algorithms.json (manual) and a measured bundle")
     p_quality.add_argument("--readme", default="mbo/hash/README.md")
-    p_quality.add_argument("--bundle", required=True, help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
+    p_quality.add_argument("bundle_pos", nargs="?", metavar="BUNDLE", help="data bundle .tgz (same as --bundle)")
+    p_quality.add_argument("--bundle", help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
     p_quality.add_argument("--check", action="store_true", help="verify the README tables match instead of writing (exit 1 on drift)")
 
     p_consistency = sub.add_parser("consistency", help="verify all data bundles from the same source SHA report identical SMHasher3 measurements (quality is machine-independent)")
@@ -883,6 +1069,10 @@ def main(argv):
     # written artifact is prefixed `YYYYMMDD_HHMMSS_` so nothing is overwritten
     # and the filename records when it was produced.
     stamp = _timestamp()
+
+    if args.command == "help":
+        parser.print_help()
+        return 0
 
     if args.command == "run":
         raw = _run_benchmark(args.mode, args.reps, args.min_time, args.warmup, args.config)
@@ -911,26 +1101,31 @@ def main(argv):
         return 0
 
     if args.command == "tables":
-        print(render_tables(_load_json(args.results)))
+        print(render_tables(_resolve_dataset(args)))
+        return 0
+
+    if args.command == "compare":
+        print(render_compare(_load_dataset(args.a), _load_dataset(args.b)))
         return 0
 
     if args.command == "plot":
-        results = _load_json(args.results)
+        results = _resolve_dataset(args)
         base, ext = os.path.splitext(_timestamped(args.out, stamp))
-        _svg_plot(
-            results["throughput64"],
-            _order(list(results["throughput64"]), _ORDER_64),
-            "mbo/hash - 64-bit one-shot throughput",
-            f"{base}_64{ext}",
-        )
-        if results.get("throughput128"):
-            _svg_plot(
-                results["throughput128"],
-                _order(list(results["throughput128"]), _ORDER_128),
-                "mbo/hash - 128-bit one-shot throughput",
-                f"{base}_128{ext}",
-                _LABEL_128,
-            )
+        # (bucket key, algorithm order, title, filename suffix, display relabel).
+        # Latency now sweeps the full size set (kFullSizes), so it renders as a
+        # log-log curve like throughput. `--kind` picks which curves to write.
+        throughput = [
+            ("throughput64", _ORDER_64, "64-bit one-shot throughput", "_64", None),
+            ("throughput128", _ORDER_128, "128-bit one-shot throughput", "_128", _LABEL_128),
+        ]
+        latency = [("latency", _ORDER_64, "mixed-length latency", "_latency", None)]
+        selected = {"throughput": throughput, "latency": latency, "all": throughput + latency}[args.kind]
+        linear_y = args.scale == "linear-log"
+        for key, order, title, suffix, labels in selected:
+            data = results.get(key)
+            if data:  # _svg_plot also no-ops on empty, but skip cleanly (e.g. no 128-bit data)
+                path = f"{base}{suffix}{ext}"
+                _svg_plot(data, _order(list(data), order), f"mbo/hash - {title}", path, labels, linear_y=linear_y)
         return 0
 
     if args.command == "smhasher":
@@ -983,7 +1178,7 @@ def main(argv):
     if args.command == "publish":
         os.makedirs(args.charts_dir, exist_ok=True)
         rel = os.path.relpath(args.charts_dir, os.path.dirname(os.path.abspath(args.readme)))
-        sections = []
+        blocks = []  # (label, bundle_path, section) - sorted by label below, not by input order
         for bundle_path in args.bundles:
             with tempfile.TemporaryDirectory() as tmp:
                 _extract_bundle(bundle_path, tmp)
@@ -996,10 +1191,13 @@ def main(argv):
                 ]
                 # `### {label}` heads the whole block (machine · compiler · sha), covering
                 # both the charts (which also carry it as a subtitle) and the tables.
-                sections.append("\n".join([f"### {label}", "", *embeds, "", render_tables(full)]))
+                blocks.append((label, bundle_path, "\n".join([f"### {label}", "", *embeds, "", render_tables(full)])))
                 print(f"published {label}", file=sys.stderr)
-        manifest = "<!-- bundles: " + " ".join(os.path.relpath(b) for b in args.bundles) + " -->"
-        region = "\n".join([_PERF_BEGIN, manifest, "", "\n\n".join(sections), _PERF_END])
+        # Order sections (and the manifest) by the generated header, so the README
+        # is stable regardless of the order bundles were passed on the command line.
+        blocks.sort(key=lambda block: block[0])
+        manifest = "<!-- bundles: " + " ".join(os.path.relpath(b) for _, b, _ in blocks) + " -->"
+        region = "\n".join([_PERF_BEGIN, manifest, "", "\n\n".join(s for _, _, s in blocks), _PERF_END])
         text = open(args.readme).read()
         if _PERF_BEGIN not in text or _PERF_END not in text:
             raise SystemExit(f"markers not found in {args.readme}; add a {_PERF_BEGIN} ... {_PERF_END} region")
@@ -1019,7 +1217,7 @@ def main(argv):
             with tempfile.TemporaryDirectory() as tmp:
                 _extract_bundle(bundle_path, tmp)
                 full = _load_json(os.path.join(tmp, "results.json"))
-                for _tag, name in _render_charts(full, _bundle_stem(full.get("context", {})), tmp, _machine_label(full.get("context", {}))):
+                for _, name in _render_charts(full, _bundle_stem(full.get("context", {})), tmp, _machine_label(full.get("context", {}))):
                     committed = os.path.join(args.charts_dir, name)
                     if not os.path.exists(committed) or not filecmp.cmp(os.path.join(tmp, name), committed, shallow=False):
                         mismatches.append(name)
@@ -1031,7 +1229,7 @@ def main(argv):
 
     if args.command == "quality":
         algorithms, overview_order = _load_algorithms()
-        measured = _fill_missing_measured(_measured_from_bundle(args.bundle))
+        measured = _fill_missing_measured(_measured_from_bundle(_one_path([args.bundle_pos, args.bundle], "bundle")))
         text = open(args.readme).read()
         regions = [
             (_OVERVIEW_BEGIN, _OVERVIEW_END, render_overview_table(algorithms, measured, overview_order)),
@@ -1084,7 +1282,7 @@ def main(argv):
                 print(f"consistency: SHA {sha}: only 1 bundle, nothing to cross-check", file=sys.stderr)
                 continue
             ref_bundle, ref = group[0]
-            names = sorted(set().union(*(set(meas) for _bundle, meas in group)))
+            names = sorted(set().union(*(set(meas) for _, meas in group)))
             for bundle, meas in group[1:]:
                 for name in names:
                     if _key(ref.get(name)) != _key(meas.get(name)):

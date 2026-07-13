@@ -1,10 +1,15 @@
 # 0.13.2
 
-- Added the `quality` command to `hash_benchmark_report.py`: it generates both the "Algorithm overview" and SMHasher3 "Results" tables in `mbo/hash/README.md` from `hash_algorithms.json` (manual/editorial columns) merged with the measured verdict/score/failures re-parsed from a data bundle (`--bundle`); `--check` gates them, and a `consistency` command verifies all bundles from the same source SHA agree (SMHasher3 verdicts are machine-independent).
-- Fixed SMHasher3 result parsing so an invalid hash name or crash reads as `ERROR` instead of a false `PASS`, and the pass/fail score and failing families now parse from the run Summary; legacy/short SMHasher3 names are aliased to their registered form when a measured dataset is loaded.
-- Integrated `mbo/hash/measurements` as a normal dev package (dropped its nested module and `.bazelignore` entry; still stripped from release archives) and added a `quality_sh_test` bazel test gating the generated tables; the test CI job now fetches the measurement bundles (Git LFS) so it reads real data.
-- Added a `no-deps-on-measurements` pre-commit guard so nothing outside the release-stripped `mbo/hash/measurements` may depend on it (which would dangle in releases).
-- Ported the default `mumbo` 64-bit hash to Starlark (`//mbo/hash:hash.bzl` `hash.mumbo`), byte-identical to C++ and verified against it; `hash.bzl` now offers `mumbo`, `dumbo`, and `fnv1a`.
+- Added a `compare` command reporting per-case Δ% and a geomean between two datasets.
+- Made `tables`/`plot`/`compare`/`quality` accept a bundle `.tgz` or a results JSON, positionally or via `--results`/`--bundle`.
+- Added `plot --kind` (throughput/latency/all) and `--scale` (log-log/linear-log).
+- Expanded the benchmark `kFullSizes` and swept latency over the full set (dense ns-vs-length latency curve).
+- Added a `quality` command generating the overview + SMHasher3 Results tables from `hash_algorithms.json` and a measured bundle; `--check` gates them.
+- Added a `consistency` command verifying same-source-SHA bundles agree on SMHasher3 verdicts.
+- Fixed SMHasher3 parsing: a bad name or crash reads as `ERROR` not a false `PASS`; score and failing families parse from the Summary; legacy names aliased.
+- Integrated `mbo/hash/measurements` as a normal dev package (still release-stripped) with a `quality_sh_test` gating the tables; test CI fetches the LFS bundles.
+- Added a `no-deps-on-measurements` pre-commit guard.
+- Ported `mumbo` (64-bit) to Starlark (`hash.mumbo`), byte-identical to C++; `hash.bzl` now offers `mumbo`, `dumbo`, and `fnv1a`.
 
 # 0.13.1
 
