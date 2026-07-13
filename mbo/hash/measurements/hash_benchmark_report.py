@@ -293,9 +293,11 @@ def _platform_slug(ctx):
 
 def _machine_label(ctx):
     """Readable machine identifier for headings + chart subtitles, e.g.
-    'Apple M5 Pro · arm64 · 18-core · clang-22 · a1b2c3d4'."""
+    'Apple M5 Pro · macOS · arm64 · 18-core · clang-22 · a1b2c3d4'."""
     parts = (ctx.get("uname") or "").split()  # `uname -srm`: <sysname> <release> <machine>
-    bits = [str(ctx.get("cpu_brand") or "?"), parts[-1] if len(parts) >= 3 else "?"]
+    sysname = parts[0] if parts else ""
+    os_name = {"Darwin": "MacOS", "Linux": "Linux"}.get(sysname, sysname or "?")
+    bits = [str(ctx.get("cpu_brand") or "?"), os_name, parts[-1] if len(parts) >= 3 else "?"]
     if ctx.get("num_cpus"):
         bits.append(f"{ctx['num_cpus']}-core")
     if ctx.get("compiler"):
@@ -476,7 +478,9 @@ def _order(algos, preferred):
 
 
 def _size_label(length):
-    return f"{length}B" if length < 1024 else f"{length // 1024}Ki"
+    # Byte-unit labels used everywhere a length is shown (throughput + latency
+    # tables, chart x-axis): "512B", "1KiB", "4KiB" - consistent "B"/"KiB" suffix.
+    return f"{length} B" if length < 1024 else f"{length // 1024} KiB"
 
 
 def _md_table(headers, rows, aligns=None):
@@ -514,6 +518,7 @@ def _throughput_table(data, preferred, relabel, sizes=None):
         sizes = sorted({int(s) for a in data.values() for s in a})
     sizes = [s for s in sizes if any(str(s) in data[a] for a in algos)]
     headers = ["Length"] + [relabel.get(a, a) for a in algos]
+    aligns = ["r"] + ["r"] * (len(algos))
     rows = []
     for size in sizes:
         row = {a: _val(data[a][str(size)]) for a in algos if str(size) in data[a]}
@@ -528,17 +533,24 @@ def _throughput_table(data, preferred, relabel, sizes=None):
                 text = f"**{text}**"
             cells.append(text)
         rows.append(cells)
-    return _md_table(headers, rows)
+    return _md_table(headers, rows, aligns)
 
 
-def _latency_table(data):
+def _latency_table(data, sizes=None):
+    # Like _throughput_table, the README latency table shows the curated
+    # `readme_sizes` subset (the latency benchmark now sweeps the full size set,
+    # so without this it would dump every length). Falls back to all measured
+    # lengths when no curated subset is available.
     algos = _order(list(data), _ORDER_64)
-    sizes = sorted({int(s) for a in data.values() for s in a})
+    if sizes is None:
+        sizes = sorted({int(s) for a in data.values() for s in a})
+    sizes = [s for s in sizes if any(str(s) in data[a] for a in algos)]
     mins = {s: min(_val(data[a][str(s)]) for a in algos if str(s) in data[a]) for s in sizes}
     headers = ["max len"] + algos
+    aligns = ["r"] + ["r"] * (len(algos))
     rows = []
     for size in sizes:
-        cells = [str(size)]
+        cells = [_size_label(size)]
         for algo in algos:
             cell = data[algo].get(str(size))
             text = "-" if cell is None else _fmt(_val(cell))
@@ -546,7 +558,7 @@ def _latency_table(data):
                 text = f"**{text}**"
             cells.append(text)
         rows.append(cells)
-    return _md_table(headers, rows)
+    return _md_table(headers, rows, aligns)
 
 
 def render_tables(results):
@@ -568,7 +580,7 @@ def render_tables(results):
         "",
         f"#### Mixed-length latency (ns/hash, {agg}; lower is better)",
         "",
-        _latency_table(results["latency"]),
+        _latency_table(results["latency"], sizes),
     ]
     return "\n".join(out)
 
@@ -965,6 +977,8 @@ def main(argv):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
 
+    sub.add_parser("help", help="show help")
+
     p_run = sub.add_parser("run", help="run the benchmark, then store and/or render")
     p_run.add_argument("--mode", choices=["fast", "full"], default="full")
     # 9 reps is google/benchmark's recommended minimum for its compare.py U-test,
@@ -1055,6 +1069,10 @@ def main(argv):
     # written artifact is prefixed `YYYYMMDD_HHMMSS_` so nothing is overwritten
     # and the filename records when it was produced.
     stamp = _timestamp()
+
+    if args.command == "help":
+        parser.print_help()
+        return 0
 
     if args.command == "run":
         raw = _run_benchmark(args.mode, args.reps, args.min_time, args.warmup, args.config)
@@ -1160,7 +1178,7 @@ def main(argv):
     if args.command == "publish":
         os.makedirs(args.charts_dir, exist_ok=True)
         rel = os.path.relpath(args.charts_dir, os.path.dirname(os.path.abspath(args.readme)))
-        sections = []
+        blocks = []  # (label, bundle_path, section) - sorted by label below, not by input order
         for bundle_path in args.bundles:
             with tempfile.TemporaryDirectory() as tmp:
                 _extract_bundle(bundle_path, tmp)
@@ -1173,10 +1191,13 @@ def main(argv):
                 ]
                 # `### {label}` heads the whole block (machine · compiler · sha), covering
                 # both the charts (which also carry it as a subtitle) and the tables.
-                sections.append("\n".join([f"### {label}", "", *embeds, "", render_tables(full)]))
+                blocks.append((label, bundle_path, "\n".join([f"### {label}", "", *embeds, "", render_tables(full)])))
                 print(f"published {label}", file=sys.stderr)
-        manifest = "<!-- bundles: " + " ".join(os.path.relpath(b) for b in args.bundles) + " -->"
-        region = "\n".join([_PERF_BEGIN, manifest, "", "\n\n".join(sections), _PERF_END])
+        # Order sections (and the manifest) by the generated header, so the README
+        # is stable regardless of the order bundles were passed on the command line.
+        blocks.sort(key=lambda block: block[0])
+        manifest = "<!-- bundles: " + " ".join(os.path.relpath(b) for _, b, _ in blocks) + " -->"
+        region = "\n".join([_PERF_BEGIN, manifest, "", "\n\n".join(s for _, _, s in blocks), _PERF_END])
         text = open(args.readme).read()
         if _PERF_BEGIN not in text or _PERF_END not in text:
             raise SystemExit(f"markers not found in {args.readme}; add a {_PERF_BEGIN} ... {_PERF_END} region")
