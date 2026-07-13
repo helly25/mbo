@@ -2,11 +2,13 @@
 
 Dev-only tooling to run `//mbo/hash:hash_benchmark`, store the results with full
 provenance, render the README performance tables, and plot ns-vs-length curves.
-This is a **pure development dependency**: it is its own Bazel module
-(`MODULE.bazel` here) and is listed in the repository-root `.bazelignore`, so it
-is never part of the `helly25_mbo` module, its `//...` target universe, or any
-published/BCR offering. Consumers of the library never pull any of this in
-(including heavier plotting dependencies).
+This is a **pure development dependency**: the whole `mbo/hash/measurements`
+directory is stripped from release archives (`release_prep.sh` EXCLUDES), so it is
+never part of any published/BCR offering and consumers of the library never pull
+any of it in (including any heavier plotting dependencies). It is an ordinary dev
+package of the `helly25_mbo` module - built and tested in dev/CI - and a
+pre-commit guard forbids anything outside it from depending on it, so the release
+strip can never leave a dangling reference.
 
 This is a living design doc - update it when the layout or policy changes.
 
@@ -31,9 +33,11 @@ even invert the true ordering. So we:
 ```text
 mbo/hash/measurements/
   README.md                    # this design doc
-  MODULE.bazel                 # separate dev module (isolates plotting deps)
+  BUILD.bazel                  # dev-only targets: the quality-table verify test (stripped from releases)
   run_measurements.py          # per-machine runner: one full sweep + smhasher -> a data bundle (nothing else)
-  hash_benchmark_report.py     # run / store / tables / plot / bundle / publish / verify (stdlib only)
+  hash_benchmark_report.py     # run / store / tables / plot / smhasher / bundle / publish / verify / quality / consistency (stdlib only)
+  hash_algorithms.json         # manual/editorial SOT for the quality tables (role, notice, seeded, starlark, ...; NOT measured data)
+  quality_sh_test.sh           # bazel test: the README quality tables match hash_algorithms.json x a bundle, and bundles agree
   build_smhasher3.sh           # reproducible SMHasher3 build (clone + fixes + install plugin + container gcc)
   smhasher3/mbohash.cpp        # in-house mumbo/jumbo and dumbo SMHasher3 registration (includes the real headers)
   charts/<slug>_<cc>_*.svg     # published per-machine charts (committed; rendered by `publish`, verifiable)
@@ -118,9 +122,9 @@ logs. Across several machines that accumulates, so:
     the ONLY thing that writes to the tree; the measurement run writes nothing but
     the bundle, so it stays authoritative and several runs can go back-to-back.
 - The loose run outputs in `data/` are staging only and git-ignored; `bundle`
-  packs them into the `.tgz`. This directory is dev-only and `.bazelignore`'d, so
-  it never enters the module or BCR (the release archive carries LFS pointer
-  files here, which is harmless).
+  packs them into the `.tgz`. This directory is dev-only and stripped from release
+  archives, so it never enters a published/BCR offering (the release archive
+  carries LFS pointer files here, which is harmless).
 
 ## Regenerate / contribute a machine
 
@@ -189,6 +193,25 @@ in `_SMHASHER_NAMES` and match `SMHasher3 --list`.
 
 Last verified run (2026-07): **mumbo-64/jumbo-128** and **dumbo-64** all PASS
 188/188 (dumbo redesigned into a compact single-lane MUM hash).
+
+### Generated quality tables (`quality`, `consistency`)
+
+The two SMHasher3 tables in `../README.md` (the "Algorithm overview" and the
+"Results" table) are GENERATED, not hand-edited. `hash_benchmark_report.py quality
+--bundle <bundle>` renders both between their `<!-- BEGIN/END ... -->` markers,
+merging `hash_algorithms.json` (the manual/editorial columns) with the measured
+verdict/score/failures re-parsed from the bundle's logs (the stored `smhasher.json`
+predates parser fixes, so the LOGS are the truth). `quality --check` verifies the
+committed tables without writing - the `quality_sh_test` bazel test / CI gate.
+
+Two names the committed bundles have no real data for (`FNV-1a-64` /
+`MurmurHash3-128`, run under invalid short names) are supplied by a hardcoded
+`_MISSING_MEASURED` stopgap, warned about on every render; delete each once a
+bundle carries the real measurement.
+
+`hash_benchmark_report.py consistency` cross-checks that all bundles from the same
+source git SHA report identical measurements (a SMHasher3 verdict is a property of
+the algorithm, not the machine), so a divergent or broken run is caught.
 
 ## Output filenames
 

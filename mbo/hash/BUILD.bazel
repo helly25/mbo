@@ -23,6 +23,14 @@ load(":internal/hash_mangle_seed.bzl", "mangle_seed_gen")
 
 package(default_visibility = ["//visibility:private"])
 
+# Exported so the dev-only measurements quality test (under mbo/hash/measurements,
+# stripped from release archives) can verify this README's generated SMHasher3
+# table. Public visibility, so this line references no release-stripped package.
+exports_files(
+    ["README.md"],
+    visibility = ["//visibility:public"],
+)
+
 # Create custom bazel flag `--//mbo/hash:mangle_seed`: any printable-ASCII
 # string (user name, release tag, date, ...) selecting the mangle constant.
 # Folded to a bucket inside `mangle_seed_gen`, so caches converge (see
