@@ -561,28 +561,46 @@ def _latency_table(data, sizes=None):
     return _md_table(headers, rows, aligns)
 
 
+# Ordered per-machine layout - the single source of truth for chart order, table
+# order, and the standalone `tables` output: 64-bit throughput, then latency, then
+# 128-bit throughput. Each entry: (results key, chart tag / file suffix, algo
+# order, display relabel, chart title, table-heading template with {agg}).
+_BUCKETS = [
+    ("throughput64", "64", _ORDER_64, {},
+     "64-bit one-shot throughput", "64-bit one-shot throughput (ns/op, {agg}; lower is better)"),
+    ("latency", "latency", _ORDER_64, {},
+     "mixed-length latency", "Mixed-length latency (ns/hash, {agg}; lower is better)"),
+    ("throughput128", "128", _ORDER_128, _LABEL_128,
+     "128-bit one-shot throughput", "128-bit one-shot throughput (ns/op, {agg}; native-128 algorithms only)"),
+]
+
+
+def _agg_label(ctx):
+    """Human aggregate description, e.g. 'mean of the 3 fastest of 9 reps'."""
+    meas = ctx.get("measurement", {})
+    return f"mean of the {meas.get('best_k', '?')} fastest of {meas.get('reps', '?')} reps"
+
+
+def _readme_sizes(ctx):
+    """The curated size subset the benchmark emits (kReadmeSizes), or None."""
+    raw = ctx.get("readme_sizes")
+    return [int(x) for x in str(raw).split(",") if x.strip().isdigit()] if raw else None
+
+
+def _bucket_table_md(results, bucket, agg, sizes):
+    """`#### heading` + markdown table for one layout bucket."""
+    key, _, order, relabel, _, heading = bucket
+    data = results.get(key) or {}
+    table = _latency_table(data, sizes) if key == "latency" else _throughput_table(data, order, relabel, sizes)
+    return f"#### {heading.format(agg=agg)}\n\n{table}"
+
+
 def render_tables(results):
     ctx = results.get("context", {})
-    meas = ctx.get("measurement", {})
-    agg = f"mean of the {meas.get('best_k', '?')} fastest of {meas.get('reps', '?')} reps"
-    raw = ctx.get("readme_sizes")  # curated subset emitted by the benchmark (kReadmeSizes)
-    sizes = [int(x) for x in str(raw).split(",") if x.strip().isdigit()] if raw else None
-    out = [
-        f"<!-- {_machine_label(ctx)}; {agg} -->",
-        "",
-        f"#### 64-bit one-shot throughput (ns/op, {agg}; lower is better)",
-        "",
-        _throughput_table(results["throughput64"], _ORDER_64, {}, sizes),
-        "",
-        f"#### 128-bit one-shot throughput (ns/op, {agg}; native-128 algorithms only)",
-        "",
-        _throughput_table(results["throughput128"], _ORDER_128, _LABEL_128, sizes),
-        "",
-        f"#### Mixed-length latency (ns/hash, {agg}; lower is better)",
-        "",
-        _latency_table(results["latency"], sizes),
-    ]
-    return "\n".join(out)
+    agg, sizes = _agg_label(ctx), _readme_sizes(ctx)
+    parts = [f"<!-- {_machine_label(ctx)}; {agg} -->"]
+    parts += [_bucket_table_md(results, b, agg, sizes) for b in _BUCKETS if results.get(b[0])]
+    return "\n\n".join(parts)
 
 
 # ---- compare: A (baseline) vs B (new) --------------------------------------
@@ -942,18 +960,16 @@ def _fill_missing_measured(measured):
 
 
 def _render_charts(full, stem, charts_dir, subtitle):
-    """Write the 64/128 labeled SVGs for one machine; return [(tag, filename), ...]."""
+    """Write the labeled SVGs for one machine in layout order (64-bit throughput,
+    latency, 128-bit throughput); return [(tag, filename), ...]."""
     written = []
-    for key, order, tag, labels in (
-        ("throughput64", _ORDER_64, "64", None),
-        ("throughput128", _ORDER_128, "128", _LABEL_128),
-    ):
+    for key, tag, order, relabel, ctitle, _ in _BUCKETS:
         if not full.get(key):
             continue
         name = f"{stem}_{tag}.svg"
         _svg_plot(
-            full[key], _order(list(full[key]), order), f"mbo/hash - {tag}-bit one-shot throughput",
-            os.path.join(charts_dir, name), labels, subtitle=subtitle,
+            full[key], _order(list(full[key]), order), f"mbo/hash - {ctitle}",
+            os.path.join(charts_dir, name), relabel, subtitle=subtitle,
         )
         written.append((tag, name))
     return written
@@ -1178,6 +1194,7 @@ def main(argv):
     if args.command == "publish":
         os.makedirs(args.charts_dir, exist_ok=True)
         rel = os.path.relpath(args.charts_dir, os.path.dirname(os.path.abspath(args.readme)))
+        by_tag = {bucket[1]: bucket for bucket in _BUCKETS}
         blocks = []  # (label, bundle_path, section) - sorted by label below, not by input order
         for bundle_path in args.bundles:
             with tempfile.TemporaryDirectory() as tmp:
@@ -1185,13 +1202,15 @@ def main(argv):
                 full = _load_json(os.path.join(tmp, "results.json"))
                 ctx = full.get("context", {})
                 label = _machine_label(ctx)
-                embeds = [
-                    f"![mbo/hash {tag}-bit throughput vs key length, log-log]({rel}/{name})"
-                    for tag, name in _render_charts(full, _bundle_stem(ctx), args.charts_dir, label)
-                ]
-                # `### {label}` heads the whole block (machine · compiler · sha), covering
-                # both the charts (which also carry it as a subtitle) and the tables.
-                blocks.append((label, bundle_path, "\n".join([f"### {label}", "", *embeds, "", render_tables(full)])))
+                agg, sizes = _agg_label(ctx), _readme_sizes(ctx)
+                # Interleave chart + table per bucket in layout order (64-bit
+                # throughput, latency, 128-bit throughput). `### {label}` heads the
+                # block; each chart also carries the label as its subtitle.
+                parts = [f"### {label}"]
+                for tag, name in _render_charts(full, _bundle_stem(ctx), args.charts_dir, label):
+                    ctitle = by_tag[tag][4]
+                    parts += ["", f"![mbo/hash {ctitle}, log-log]({rel}/{name})", "", _bucket_table_md(full, by_tag[tag], agg, sizes)]
+                blocks.append((label, bundle_path, "\n".join(parts)))
                 print(f"published {label}", file=sys.stderr)
         # Order sections (and the manifest) by the generated header, so the README
         # is stable regardless of the order bundles were passed on the command line.

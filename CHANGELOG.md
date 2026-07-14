@@ -1,5 +1,6 @@
 # 0.13.2
 
+- Rendered a per-machine latency chart and interleaved each README perf section as chart+table per metric, ordered 64-bit throughput, latency, 128-bit throughput; re-measured the published machines on full data (macOS on native Apple Clang).
 - Added a `compare` command reporting per-case Δ% and a geomean between two datasets.
 - Made `tables`/`plot`/`compare`/`quality` accept a bundle `.tgz` or a results JSON, positionally or via `--results`/`--bundle`.
 - Added `plot --kind` (throughput/latency/all) and `--scale` (log-log/linear-log).
