@@ -360,12 +360,17 @@ int main(int argc, char** argv) {
   // the small table straight from a FULL dataset - no separate fast run, and no
   // second size list to drift (this C++ list is the single source of truth).
   benchmark::AddCustomContext("readme_sizes", absl::StrJoin(mbo::hash::kReadmeSizes, ","));
-  // Legend for the latency benchmark's Arg index -> distribution name, in order,
-  // so the report can label BmHash64Latency<algo>/0, /1 with the scenario names.
+  // Export the throughput length distributions in use as "name=pct:len,...;..."
+  // (the full inverse-CDF, not just the bound labels), so a dataset records
+  // exactly which mix produced its BmHash64Throughput<algo>/<name>:<bound> numbers.
   benchmark::AddCustomContext(
-      "latency_dists",
-      absl::StrJoin(mbo::hash::kLatencyDists, ",", [](std::string* out, const mbo::hash::LatencyDist& dist) {
-        absl::StrAppend(out, dist.name);
+      "throughput_dists",
+      absl::StrJoin(mbo::hash::kLatencyDists, ";", [](std::string* out, const mbo::hash::LatencyDist& dist) {
+        absl::StrAppend(
+            out, dist.name, "=",
+            absl::StrJoin(dist.cdf, ",", [](std::string* cdf_out, const std::pair<double, int>& point) {
+              absl::StrAppend(cdf_out, point.first, ":", point.second);
+            }));
       }));
   benchmark::RunSpecifiedBenchmarks();
   benchmark::Shutdown();
