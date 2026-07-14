@@ -285,8 +285,9 @@ branch-predicted. Keys are drawn from two fixed, reproducible length
 distributions - **Short-Identifier** (log-normal: identifiers, DB keys, UUIDs)
 and **Web-URL** (heavy-tailed: paths and URLs) - sampled once with a fixed seed
 and shared byte-for-byte across all algorithms (only the lengths matter; the
-bytes are filler). Each distribution is an inverse-CDF table capped by a 100%
-limit anchor `Lmax`: **128 B** for Short-Identifier (two L1 cache lines - the
+bytes are filler). Each distribution is an inverse-CDF (Cumulative Distribution
+Function, see [Wikipedia](https://en.wikipedia.org/wiki/Cumulative_distribution_function))
+table capped by a 100% limit anchor `Lmax`: **128 B** for Short-Identifier (two L1 cache lines - the
 AVX-512 / medium-key-to-bulk transition and a jemalloc/tcmalloc size-class
 ceiling) and **4096 B** for Web-URL (one x86/ARM64 virtual page, where a larger
 allocation can page-fault). Because the percentile draw is half-open `[0, 1)` it
