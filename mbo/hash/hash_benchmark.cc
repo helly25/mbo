@@ -278,8 +278,8 @@ const std::vector<std::string>& LatencyKeys(std::size_t dist_index) {
 }
 
 template<typename Algo>
-void BmHash64Latency(benchmark::State& state, std::size_t dist_index) {
-  const std::vector<std::string>& keys = LatencyKeys(dist_index);
+void BmHash64Latency(benchmark::State& state) {
+  const std::vector<std::string>& keys = LatencyKeys(static_cast<std::size_t>(state.range(0)));
 
   // Optional: Track cumulative distribution weight
   int64_t total_bytes_per_shuffle = 0;
@@ -315,12 +315,14 @@ void RegisterAlgo() {
       hash128->Arg(size);
     }
   }
-  // One benchmark per scenario, named "BmHash64Latency<algo>/<dist>" (not an Arg),
-  // so each realistic distribution is its own reported result.
+  // One benchmark family with the scenarios as Args, so it reports as a grouped
+  // table (BmHash64Latency<algo>/0, /1 - one row per scenario), parallel to the
+  // throughput families. The Arg index -> distribution name legend is emitted as
+  // the `latency_dists` custom context (see main).
+  auto* const latency =
+      benchmark::RegisterBenchmark(absl::StrCat("BmHash64Latency<", name, ">"), BmHash64Latency<Algo>);
   for (std::size_t dist = 0; dist < kLatencyDists.size(); ++dist) {
-    benchmark::RegisterBenchmark(
-        absl::StrCat("BmHash64Latency<", name, ">/", kLatencyDists[dist].name),
-        [dist](benchmark::State& state) { BmHash64Latency<Algo>(state, dist); });
+    latency->Arg(static_cast<int>(dist));
   }
 }
 
@@ -354,6 +356,13 @@ int main(int argc, char** argv) {
   // the small table straight from a FULL dataset - no separate fast run, and no
   // second size list to drift (this C++ list is the single source of truth).
   benchmark::AddCustomContext("readme_sizes", absl::StrJoin(mbo::hash::kReadmeSizes, ","));
+  // Legend for the latency benchmark's Arg index -> distribution name, in order,
+  // so the report can label BmHash64Latency<algo>/0, /1 with the scenario names.
+  benchmark::AddCustomContext(
+      "latency_dists",
+      absl::StrJoin(mbo::hash::kLatencyDists, ",", [](std::string* out, const mbo::hash::LatencyDist& dist) {
+        absl::StrAppend(out, dist.name);
+      }));
   benchmark::RunSpecifiedBenchmarks();
   benchmark::Shutdown();
   return 0;
