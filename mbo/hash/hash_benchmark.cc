@@ -23,6 +23,7 @@
 // the ns-vs-length graph.
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <random>
@@ -30,15 +31,18 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
 #include "benchmark/benchmark.h"
 #include "mbo/hash/hash_test_util.h"
 
 namespace mbo::hash {
 namespace {
 
-// NOLINTBEGIN(*-magic-numbers)
+// NOLINTBEGIN(*-array-index,*-magic-numbers)
 
 constexpr uint64_t kSeed = 5'381;
 
@@ -155,8 +159,8 @@ std::span<const int> ThroughputSizes() {
 template<typename Algo>
 void BmHash64(benchmark::State& state) {
   const auto length = static_cast<std::size_t>(state.range(0));
-  std::mt19937_64 rng(
-      0x1234);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
+  // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
+  std::mt19937_64 rng(0x1234);
   const std::string data = algo::RandomString(rng, length);
   for (auto _ : state) {
     benchmark::DoNotOptimize(Algo::GetHash64(data, kSeed));
@@ -169,8 +173,8 @@ template<typename Algo>
 requires HasGetHash128<Algo>
 void BmHash128(benchmark::State& state) {
   const auto length = static_cast<std::size_t>(state.range(0));
-  std::mt19937_64 rng(
-      0x1234);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
+  // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
+  std::mt19937_64 rng(0x1234);
   const std::string data = algo::RandomString(rng, length);
   for (auto _ : state) {
     benchmark::DoNotOptimize(Algo::GetHash128(data, kSeed));
@@ -179,27 +183,121 @@ void BmHash128(benchmark::State& state) {
   state.SetLabel(std::string(Algo::Name()));
 }
 
-// Latency benchmark: keys of unpredictable random length in [0, max_len], and
-// each hash result selects the next key, serializing the chain. This defeats
-// the branch predictor on the size dispatch and measures latency rather than
-// hot-loop throughput -- the cost profile hash-table workloads actually pay.
-template<typename Algo>
-void BmHash64Latency(benchmark::State& state) {
-  const auto max_len = static_cast<std::size_t>(state.range(0));
-  std::mt19937_64 rng(
-      0x1a7e9c1);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed key set per run
-  constexpr std::size_t kNumKeys = 1'024;  // power of two for cheap masking
-  std::vector<std::string> keys;
-  keys.reserve(kNumKeys);
-  for (std::size_t i = 0; i < kNumKeys; ++i) {
-    keys.push_back(algo::RandomString(rng, rng() % (max_len + 1)));
+// --- Throughput over upper-bounded length ranges ----------------------------
+//
+// BmHash64 / BmHash128 above hash ONE key of an exact length in a hot loop: the
+// exact-length -> time curve (the "latency" view). This is the complementary
+// throughput view - how a realistic, upper-BOUNDED range of key lengths
+// translates to a single bytes/s number.
+//
+// Two documented length distributions as inverse-CDF control points (cumulative
+// percentile -> length in bytes), piecewise-linear between points:
+//   - Short: identifiers / DB keys / UUIDs (log-normal), ceiling 128 B.
+//   - Web:   paths, URLs, larger text keys (heavy-tailed), ceiling 4096 B.
+// Each control-point length doubles as an upper BOUND: we run the mix truncated
+// to each bound, with the kept buckets' weights renormalized to 100% (which
+// falls straight out of scaling the percentile draw into [0, cdf[bound].pct)).
+// A run therefore yields (X = upper-bound length, Y = bytes/s), and sweeping the
+// bounds gives the upper-length -> throughput curve. Keys are built once per
+// (distribution, bound) with a fixed seed and shared across every algorithm, so
+// the set is reproducible and identical for all algorithms (only the LENGTHS
+// matter; the bytes are filler). The unpredictable length order defeats the
+// size-dispatch branch predictor - the cost a real mixed workload pays.
+constexpr std::size_t kLatencyKeys = 1'024;  // power of two for cheap masking
+constexpr std::size_t kCdfPoints = 9;        // inverse-CDF control points per distribution
+
+struct LatencyDist {
+  std::string_view name;
+  std::array<std::pair<double, int>, kCdfPoints> cdf;  // ascending (cumulative pct, length); last = {1.0, Lmax}
+};
+
+constexpr std::array<LatencyDist, 2> kLatencyDists = {{
+    {.name = "Short",
+     .cdf = {{
+         {0.10, 8},
+         {0.25, 12},
+         {0.50, 16},
+         {0.75, 23},
+         {0.90, 31},
+         {0.95, 38},
+         {0.99, 53},
+         {0.999, 80},
+         {1.0, 128},  // 100% ceiling: two L1 cache lines / the SSO & AVX-512 transition
+     }}},
+    {.name = "Web",
+     .cdf = {{
+         {0.10, 15},
+         {0.25, 28},
+         {0.50, 45},
+         {0.75, 75},
+         {0.90, 120},
+         {0.95, 220},
+         {0.99, 512},
+         {0.999, 2'048},
+         {1.0, 4'096},  // 100% ceiling: one x86/ARM64 virtual page
+     }}},
+}};
+
+// Inverse CDF: percentile p in [0,1) -> length. Piecewise-linear between control
+// points; below the first point interpolate from (0, 1 byte). Scaling p into
+// [0, cdf[bound].pct) restricts the draw to buckets <= that bound and
+// renormalizes their weights to 100% - the truncation the sweep needs.
+std::size_t SampleLength(const LatencyDist& dist, double percentile) {
+  double prev_p = 0.0;
+  double prev_len = 1.0;
+  for (const auto& [pct, len] : dist.cdf) {
+    if (percentile < pct) {
+      const double frac = (percentile - prev_p) / (pct - prev_p);
+      return static_cast<std::size_t>(std::lround(prev_len + (frac * (len - prev_len))));
+    }
+    prev_p = pct;
+    prev_len = len;
   }
-  uint64_t hash = 0;
+  return static_cast<std::size_t>(dist.cdf.back().second);
+}
+
+// Key sets built once, one per (distribution, bound), shared by every algorithm.
+// Bound `b` truncates distribution `d` to lengths <= cdf[b].length: 1023 keys
+// drawn from the renormalized truncated distribution, plus one anchor key pinned
+// to the bound length so the boundary is always represented.
+const std::vector<std::string>& ThroughputKeys(std::size_t dist_index, std::size_t bound_index) {
+  static const std::array<std::array<std::vector<std::string>, kCdfPoints>, kLatencyDists.size()> kKeySets = [] {
+    std::array<std::array<std::vector<std::string>, kCdfPoints>, kLatencyDists.size()> sets;
+    for (std::size_t d = 0; d < kLatencyDists.size(); ++d) {
+      const LatencyDist& dist = kLatencyDists[d];
+      for (std::size_t b = 0; b < kCdfPoints; ++b) {
+        // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed, reproducible set
+        std::mt19937_64 rng(0x1a7e9c1);
+        const double bound_pct = dist.cdf[b].first;
+        const auto bound_len = static_cast<std::size_t>(dist.cdf[b].second);
+        std::vector<std::string>& keys = sets[d][b];
+        keys.reserve(kLatencyKeys);
+        for (std::size_t i = 0; i + 1 < kLatencyKeys; ++i) {
+          const double draw = static_cast<double>(rng()) / (static_cast<double>(UINT64_MAX) + 1.0);
+          keys.push_back(algo::RandomString(rng, SampleLength(dist, draw * bound_pct)));
+        }
+        keys.push_back(algo::RandomString(rng, bound_len));  // anchor at the upper bound
+      }
+    }
+    return sets;
+  }();
+  return kKeySets[dist_index][bound_index];
+}
+
+template<typename Algo>
+void BmHash64Throughput(benchmark::State& state, std::size_t dist_index, std::size_t bound_index) {
+  const std::vector<std::string>& keys = ThroughputKeys(dist_index, bound_index);
+  int64_t total_bytes = 0;
+  for (const std::string& key : keys) {
+    total_bytes += static_cast<int64_t>(key.size());
+  }
+  std::size_t counter = 0;
   for (auto _ : state) {
-    hash = Algo::GetHash64(keys[hash & (kNumKeys - 1)], kSeed);
-    benchmark::DoNotOptimize(hash);
+    benchmark::DoNotOptimize(Algo::GetHash64(keys[counter++ & (kLatencyKeys - 1)], kSeed));
   }
   state.SetItemsProcessed(state.iterations());
+  // Throughput headline: average key length x iterations = bytes hashed -> bytes/s.
+  state.SetBytesProcessed(state.iterations() * (total_bytes / static_cast<int64_t>(kLatencyKeys)));
   state.SetLabel(std::string(Algo::Name()));
 }
 
@@ -209,19 +307,26 @@ template<typename Algo>
 void RegisterAlgo() {
   const std::string name(Algo::Name());
   const std::span<const int> sizes = ThroughputSizes();
-  auto* const hash64 = benchmark::RegisterBenchmark("BmHash64<" + name + ">", BmHash64<Algo>);
+  auto* const hash64 = benchmark::RegisterBenchmark(absl::StrCat("BmHash64<", name, ">"), BmHash64<Algo>);
   for (const int size : sizes) {
     hash64->Arg(size);
   }
   if constexpr (HasGetHash128<Algo>) {
-    auto* const hash128 = benchmark::RegisterBenchmark("BmHash128<" + name + ">", BmHash128<Algo>);
+    auto* const hash128 = benchmark::RegisterBenchmark(absl::StrCat("BmHash128<", name, ">"), BmHash128<Algo>);
     for (const int size : sizes) {
       hash128->Arg(size);
     }
   }
-  auto* const latency = benchmark::RegisterBenchmark("BmHash64Latency<" + name + ">", BmHash64Latency<Algo>);
-  for (const int size : sizes) {
-    latency->Arg(size);
+  // Throughput over upper-bounded length ranges: one benchmark per (distribution,
+  // bound), named "BmHash64Throughput<algo>/<Short|Web>:<bound>", each reporting
+  // bytes/s. Sweeping the bounds gives the upper-length -> throughput curve.
+  for (std::size_t dist = 0; dist < kLatencyDists.size(); ++dist) {
+    for (std::size_t bound = 0; bound < kCdfPoints; ++bound) {
+      benchmark::RegisterBenchmark(
+          absl::StrCat(
+              "BmHash64Throughput<", name, ">/", kLatencyDists[dist].name, ":", kLatencyDists[dist].cdf[bound].second),
+          [dist, bound](benchmark::State& state) { BmHash64Throughput<Algo>(state, dist, bound); });
+    }
   }
 }
 
@@ -233,7 +338,7 @@ void RegisterAll(std::tuple<Algos...> /*algorithms*/) {
   (RegisterAlgo<Algos>(), ...);
 }
 
-// NOLINTEND(*-magic-numbers)
+// NOLINTEND(*-array-index,*-magic-numbers)
 
 }  // namespace
 }  // namespace mbo::hash
@@ -245,20 +350,28 @@ int main(int argc, char** argv) {
   // differs), so record what THIS binary was built with in the dataset context;
   // the stored bundle's filename is tagged with `compiler` too.
 #if defined(__clang__)
-  benchmark::AddCustomContext("compiler", "clang-" + std::to_string(__clang_major__));
+  benchmark::AddCustomContext("compiler", absl::StrCat("clang-", __clang_major__));
   benchmark::AddCustomContext("compiler_version", __clang_version__);
 #elif defined(__GNUC__)
-  benchmark::AddCustomContext("compiler", "gcc-" + std::to_string(__GNUC__));
+  benchmark::AddCustomContext("compiler", absl::StrCat("gcc-", __GNUC__));
   benchmark::AddCustomContext("compiler_version", __VERSION__);
 #endif
   // Emit the curated README size subset (kReadmeSizes) so the report tool extracts
   // the small table straight from a FULL dataset - no separate fast run, and no
   // second size list to drift (this C++ list is the single source of truth).
-  std::string readme_sizes;
-  for (const int size : mbo::hash::kReadmeSizes) {
-    readme_sizes += (readme_sizes.empty() ? "" : ",") + std::to_string(size);
-  }
-  benchmark::AddCustomContext("readme_sizes", readme_sizes);
+  benchmark::AddCustomContext("readme_sizes", absl::StrJoin(mbo::hash::kReadmeSizes, ","));
+  // Export the throughput length distributions in use as "name=pct:len,...;..."
+  // (the full inverse-CDF, not just the bound labels), so a dataset records
+  // exactly which mix produced its BmHash64Throughput<algo>/<name>:<bound> numbers.
+  benchmark::AddCustomContext(
+      "throughput_dists",
+      absl::StrJoin(mbo::hash::kLatencyDists, ";", [](std::string* out, const mbo::hash::LatencyDist& dist) {
+        absl::StrAppend(
+            out, dist.name, "=",
+            absl::StrJoin(dist.cdf, ",", [](std::string* cdf_out, const std::pair<double, int>& point) {
+              absl::StrAppend(cdf_out, point.first, ":", point.second);
+            }));
+      }));
   benchmark::RunSpecifiedBenchmarks();
   benchmark::Shutdown();
   return 0;

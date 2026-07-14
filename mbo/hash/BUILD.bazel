@@ -207,6 +207,7 @@ cc_binary(
     tags = ["manual"],
     deps = [
         ":hash_test_util",
+        "@abseil-cpp//absl/strings",
         "@com_github_google_benchmark//:benchmark",
     ],
 )

@@ -279,6 +279,24 @@ sub-nanosecond sizes. Bold marks the fastest per row; the tables use a curated
 set of lengths (straddling the dispatch-tier and SSO boundaries), the log-log
 charts a denser one.
 
+The **latency** benchmark models how a hash table actually calls a hash: a
+stream of differently-sized keys whose per-length size dispatch cannot be
+branch-predicted. Keys are drawn from two fixed, reproducible length
+distributions - **Short-Identifier** (log-normal: identifiers, DB keys, UUIDs)
+and **Web-URL** (heavy-tailed: paths and URLs) - sampled once with a fixed seed
+and shared byte-for-byte across all algorithms (only the lengths matter; the
+bytes are filler). Each distribution is an inverse-CDF (Cumulative Distribution
+Function, see [Wikipedia](https://en.wikipedia.org/wiki/Cumulative_distribution_function))
+table capped by a 100% limit anchor `Lmax`: **128 B** for Short-Identifier (two L1 cache lines - the
+AVX-512 / medium-key-to-bulk transition and a jemalloc/tcmalloc size-class
+ceiling) and **4096 B** for Web-URL (one x86/ARM64 virtual page, where a larger
+allocation can page-fault). Because the percentile draw is half-open `[0, 1)` it
+never samples the `1.0` entry by chance (a 1024-key set misses the top region
+~36% of the time), so exactly one key per set is pinned to `Lmax` - a guaranteed
+worst-case anchor that keeps the curve bounded and exercises the SSO-spill and
+bulk-tier code paths, while the other 1023 keys preserve the branch-prediction
+noise.
+
 Everything between the markers is generated per machine by `publish` from the
 committed bundles - regenerate it, don't hand-edit:
 
