@@ -1,6 +1,6 @@
 # 0.13.2
 
-- Reworked the hash latency benchmark to two fixed, reproducible key-length distributions (Short-Identifier, Web-URL) sampled once and shared across algorithms, replacing the hash-indexed key walk that collapsed into a degenerate cycle (near-zero anomalies).
+- Reworked the hash mixed-length benchmark: dropped the hash-indexed key walk that collapsed into a rho-cycle (near-zero anomalies) and added `BmHash64Throughput` reporting bytes/s over two documented length distributions (Short ≤128 B, Web ≤4096 B) truncated to each upper bound; the per-exact-length `BmHash64`/`BmHash128` remain the latency view. Distributions are exported as the `throughput_dists` context.
 - Added a `compare` command reporting per-case Δ% and a geomean between two datasets.
 - Made `tables`/`plot`/`compare`/`quality` accept a bundle `.tgz` or a results JSON, positionally or via `--results`/`--bundle`.
 - Added `plot --kind` (throughput/latency/all) and `--scale` (log-log/linear-log).
