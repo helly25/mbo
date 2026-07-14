@@ -23,6 +23,7 @@
 // the ns-vs-length graph.
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <random>
@@ -30,8 +31,11 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
 #include "benchmark/benchmark.h"
 #include "mbo/hash/hash_test_util.h"
 
@@ -179,25 +183,75 @@ void BmHash128(benchmark::State& state) {
   state.SetLabel(std::string(Algo::Name()));
 }
 
-// Latency benchmark: keys of unpredictable random length in [0, max_len], and
-// each hash result selects the next key, serializing the chain. This defeats
-// the branch predictor on the size dispatch and measures latency rather than
-// hot-loop throughput -- the cost profile hash-table workloads actually pay.
-template<typename Algo>
-void BmHash64Latency(benchmark::State& state) {
-  const auto max_len = static_cast<std::size_t>(state.range(0));
-  std::mt19937_64 rng(
-      0x1a7e9c1);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed key set per run
-  constexpr std::size_t kNumKeys = 1'024;  // power of two for cheap masking
-  std::vector<std::string> keys;
-  keys.reserve(kNumKeys);
-  for (std::size_t i = 0; i < kNumKeys; ++i) {
-    keys.push_back(algo::RandomString(rng, rng() % (max_len + 1)));
+// --- Latency benchmark: hashing a realistic MIX of key lengths --------------
+//
+// A hash table does not hash one length in a hot loop (that is BmHash64); it
+// hashes a stream of differently-sized keys, so the per-length size dispatch
+// cannot be branch-predicted. We model that with two fixed, documented length
+// distributions given as inverse-CDF control points (cumulative percentile ->
+// length in bytes), piecewise-linear between points:
+//   - Short-Identifier: programming identifiers / DB keys / UUIDs (log-normal).
+//   - Web/URL: paths, URLs, and larger text keys (heavy-tailed).
+// The keys are sampled ONCE from these with a fixed-seed PRNG and SHARED across
+// every algorithm in a run, so all algorithms hash the byte-identical key set
+// (fair comparison) and the set is reproducible across runs (only the string
+// LENGTHS matter; the bytes are irrelevant filler).
+constexpr std::size_t kLatencyKeys = 1'024;  // power of two for cheap masking
+
+struct LatencyDist {
+  std::string_view name;
+  std::array<std::pair<double, int>, 8> cdf;  // ascending (percentile, length)
+};
+
+constexpr std::array<LatencyDist, 2> kLatencyDists = {{
+    {"Short-Identifier",
+     {{{0.10, 8}, {0.25, 12}, {0.50, 16}, {0.75, 23}, {0.90, 31}, {0.95, 38}, {0.99, 53}, {0.999, 80}}}},
+    {"Web-URL",
+     {{{0.10, 15}, {0.25, 28}, {0.50, 45}, {0.75, 75}, {0.90, 120}, {0.95, 220}, {0.99, 512}, {0.999, 2'048}}}},
+}};
+
+// Inverse CDF: percentile p in [0,1) -> length. Piecewise-linear between control
+// points; below the first point interpolate from (0, 1 byte), at/above the last
+// clamp to its length (do not extrapolate the tail into huge outliers).
+std::size_t SampleLength(const LatencyDist& dist, double percentile) {
+  double prev_p = 0.0;
+  double prev_len = 1.0;
+  for (const auto& [pct, len] : dist.cdf) {
+    if (percentile < pct) {
+      const double frac = (percentile - prev_p) / (pct - prev_p);
+      return static_cast<std::size_t>(std::lround(prev_len + frac * (len - prev_len)));
+    }
+    prev_p = pct;
+    prev_len = len;
   }
-  uint64_t hash = 0;
+  return static_cast<std::size_t>(dist.cdf.back().second);
+}
+
+// The two key sets, built once (fixed seed) and shared by every latency
+// benchmark in the run. `state.range(0)` selects the distribution by index.
+const std::vector<std::string>& LatencyKeys(std::size_t dist_index) {
+  static const std::array<std::vector<std::string>, kLatencyDists.size()> kKeySets = [] {
+    std::array<std::vector<std::string>, kLatencyDists.size()> sets;
+    for (std::size_t d = 0; d < kLatencyDists.size(); ++d) {
+      std::mt19937_64 rng(
+          0x1a7e9c1);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed, reproducible set
+      sets[d].reserve(kLatencyKeys);
+      for (std::size_t i = 0; i < kLatencyKeys; ++i) {
+        const double percentile = static_cast<double>(rng()) / (static_cast<double>(UINT64_MAX) + 1.0);
+        sets[d].push_back(algo::RandomString(rng, SampleLength(kLatencyDists[d], percentile)));
+      }
+    }
+    return sets;
+  }();
+  return kKeySets[dist_index];
+}
+
+template<typename Algo>
+void BmHash64Latency(benchmark::State& state, std::size_t dist_index) {
+  const std::vector<std::string>& keys = LatencyKeys(dist_index);
+  std::size_t counter = 0;
   for (auto _ : state) {
-    hash = Algo::GetHash64(keys[hash & (kNumKeys - 1)], kSeed);
-    benchmark::DoNotOptimize(hash);
+    benchmark::DoNotOptimize(Algo::GetHash64(keys[counter++ & (kLatencyKeys - 1)], kSeed));
   }
   state.SetItemsProcessed(state.iterations());
   state.SetLabel(std::string(Algo::Name()));
@@ -209,19 +263,22 @@ template<typename Algo>
 void RegisterAlgo() {
   const std::string name(Algo::Name());
   const std::span<const int> sizes = ThroughputSizes();
-  auto* const hash64 = benchmark::RegisterBenchmark("BmHash64<" + name + ">", BmHash64<Algo>);
+  auto* const hash64 = benchmark::RegisterBenchmark(absl::StrCat("BmHash64<", name, ">"), BmHash64<Algo>);
   for (const int size : sizes) {
     hash64->Arg(size);
   }
   if constexpr (HasGetHash128<Algo>) {
-    auto* const hash128 = benchmark::RegisterBenchmark("BmHash128<" + name + ">", BmHash128<Algo>);
+    auto* const hash128 = benchmark::RegisterBenchmark(absl::StrCat("BmHash128<", name, ">"), BmHash128<Algo>);
     for (const int size : sizes) {
       hash128->Arg(size);
     }
   }
-  auto* const latency = benchmark::RegisterBenchmark("BmHash64Latency<" + name + ">", BmHash64Latency<Algo>);
-  for (const int size : sizes) {
-    latency->Arg(size);
+  // One benchmark per scenario, named "BmHash64Latency<algo>/<dist>" (not an Arg),
+  // so each realistic distribution is its own reported result.
+  for (std::size_t dist = 0; dist < kLatencyDists.size(); ++dist) {
+    benchmark::RegisterBenchmark(
+        absl::StrCat("BmHash64Latency<", name, ">/", kLatencyDists[dist].name),
+        [dist](benchmark::State& state) { BmHash64Latency<Algo>(state, dist); });
   }
 }
 
@@ -245,20 +302,16 @@ int main(int argc, char** argv) {
   // differs), so record what THIS binary was built with in the dataset context;
   // the stored bundle's filename is tagged with `compiler` too.
 #if defined(__clang__)
-  benchmark::AddCustomContext("compiler", "clang-" + std::to_string(__clang_major__));
+  benchmark::AddCustomContext("compiler", absl::StrCat("clang-", __clang_major__));
   benchmark::AddCustomContext("compiler_version", __clang_version__);
 #elif defined(__GNUC__)
-  benchmark::AddCustomContext("compiler", "gcc-" + std::to_string(__GNUC__));
+  benchmark::AddCustomContext("compiler", absl::StrCat("gcc-", __GNUC__));
   benchmark::AddCustomContext("compiler_version", __VERSION__);
 #endif
   // Emit the curated README size subset (kReadmeSizes) so the report tool extracts
   // the small table straight from a FULL dataset - no separate fast run, and no
   // second size list to drift (this C++ list is the single source of truth).
-  std::string readme_sizes;
-  for (const int size : mbo::hash::kReadmeSizes) {
-    readme_sizes += (readme_sizes.empty() ? "" : ",") + std::to_string(size);
-  }
-  benchmark::AddCustomContext("readme_sizes", readme_sizes);
+  benchmark::AddCustomContext("readme_sizes", absl::StrJoin(mbo::hash::kReadmeSizes, ","));
   benchmark::RunSpecifiedBenchmarks();
   benchmark::Shutdown();
   return 0;

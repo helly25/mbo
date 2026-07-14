@@ -1,5 +1,6 @@
 # 0.13.2
 
+- Reworked the hash latency benchmark to two fixed, reproducible key-length distributions (Short-Identifier, Web-URL) sampled once and shared across algorithms, replacing the hash-indexed key walk that collapsed into a degenerate cycle (near-zero anomalies).
 - Added a `compare` command reporting per-case Δ% and a geomean between two datasets.
 - Made `tables`/`plot`/`compare`/`quality` accept a bundle `.tgz` or a results JSON, positionally or via `--results`/`--bundle`.
 - Added `plot --kind` (throughput/latency/all) and `--scale` (log-log/linear-log).
