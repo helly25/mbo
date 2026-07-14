@@ -200,14 +200,34 @@ constexpr std::size_t kLatencyKeys = 1'024;  // power of two for cheap masking
 
 struct LatencyDist {
   std::string_view name;
-  std::array<std::pair<double, int>, 8> cdf;  // ascending (percentile, length)
+  std::array<std::pair<double, int>, 9> cdf;  // ascending (percentile, length)
 };
 
 constexpr std::array<LatencyDist, 2> kLatencyDists = {{
     {.name = "Short-Identifier",
-     .cdf = {{{0.10, 8}, {0.25, 12}, {0.50, 16}, {0.75, 23}, {0.90, 31}, {0.95, 38}, {0.99, 53}, {0.999, 80}}}},
+     .cdf = {{
+         {0.10, 8},
+         {0.25, 12},
+         {0.50, 16},
+         {0.75, 23},
+         {0.90, 31},
+         {0.95, 38},
+         {0.99, 53},
+         {0.999, 80},
+         {1.0, 128},  // Clean 100% ceiling representing the SSO/AVX-512 transition
+     }}},
     {.name = "Web-URL",
-     .cdf = {{{0.10, 15}, {0.25, 28}, {0.50, 45}, {0.75, 75}, {0.90, 120}, {0.95, 220}, {0.99, 512}, {0.999, 2'048}}}},
+     .cdf = {{
+         {0.10, 15},
+         {0.25, 28},
+         {0.50, 45},
+         {0.75, 75},
+         {0.90, 120},
+         {0.95, 220},
+         {0.99, 512},
+         {0.999, 2'048},
+         {1.0, 4'096},  // Clean 100% ceiling representing a full virtual page
+     }}},
 }};
 
 // Inverse CDF: percentile p in [0,1) -> length. Piecewise-linear between control
@@ -236,10 +256,21 @@ const std::vector<std::string>& LatencyKeys(std::size_t dist_index) {
       // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed, reproducible set
       std::mt19937_64 rng(0x1a7e9c1);
       sets[idx].reserve(kLatencyKeys);
-      for (std::size_t i = 0; i < kLatencyKeys; ++i) {
+
+      // Generate exactly 1023 keys using the distribution
+      for (std::size_t i = 0; i < kLatencyKeys - 1; ++i) {
         const double percentile = static_cast<double>(rng()) / (static_cast<double>(UINT64_MAX) + 1.0);
         sets[idx].push_back(algo::RandomString(rng, SampleLength(kLatencyDists[idx], percentile)));
       }
+
+      // Enforce that the 1024th key is guaranteed to be the 100% bounds anchor.
+      const std::size_t absolute_max_len = kLatencyDists[idx].cdf.back().second;
+      // Passing the RNG to RandomString is safe here because the RNG is only
+      // used for generating the string content, not for determining its length.
+      // Since this is the final step of a isolated vector generation block, it
+      // does not affect the reproducibility of the earlier keys, but it does
+      // guarantee that the random string data itself remains completely unique.
+      sets[idx].push_back(algo::RandomString(rng, absolute_max_len));
     }
     return sets;
   }();
@@ -249,11 +280,22 @@ const std::vector<std::string>& LatencyKeys(std::size_t dist_index) {
 template<typename Algo>
 void BmHash64Latency(benchmark::State& state, std::size_t dist_index) {
   const std::vector<std::string>& keys = LatencyKeys(dist_index);
+
+  // Optional: Track cumulative distribution weight
+  int64_t total_bytes_per_shuffle = 0;
+  for (const auto& key : keys) {
+    total_bytes_per_shuffle += static_cast<int64_t>(key.size());
+  }
+
   std::size_t counter = 0;
   for (auto _ : state) {
     benchmark::DoNotOptimize(Algo::GetHash64(keys[counter++ & (kLatencyKeys - 1)], kSeed));
   }
+
   state.SetItemsProcessed(state.iterations());
+  // Allow plotting the total processed gigabytes per second even during
+  // unpredictable random branching profiles:
+  state.SetBytesProcessed(state.iterations() * (total_bytes_per_shuffle / static_cast<int64_t>(kLatencyKeys)));
   state.SetLabel(std::string(Algo::Name()));
 }
 
