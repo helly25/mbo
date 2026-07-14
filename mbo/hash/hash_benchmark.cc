@@ -42,7 +42,7 @@
 namespace mbo::hash {
 namespace {
 
-// NOLINTBEGIN(*-magic-numbers)
+// NOLINTBEGIN(*-array-index,*-magic-numbers)
 
 constexpr uint64_t kSeed = 5'381;
 
@@ -159,8 +159,8 @@ std::span<const int> ThroughputSizes() {
 template<typename Algo>
 void BmHash64(benchmark::State& state) {
   const auto length = static_cast<std::size_t>(state.range(0));
-  std::mt19937_64 rng(
-      0x1234);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
+  // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
+  std::mt19937_64 rng(0x1234);
   const std::string data = algo::RandomString(rng, length);
   for (auto _ : state) {
     benchmark::DoNotOptimize(Algo::GetHash64(data, kSeed));
@@ -173,8 +173,8 @@ template<typename Algo>
 requires HasGetHash128<Algo>
 void BmHash128(benchmark::State& state) {
   const auto length = static_cast<std::size_t>(state.range(0));
-  std::mt19937_64 rng(
-      0x1234);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
+  // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
+  std::mt19937_64 rng(0x1234);
   const std::string data = algo::RandomString(rng, length);
   for (auto _ : state) {
     benchmark::DoNotOptimize(Algo::GetHash128(data, kSeed));
@@ -204,10 +204,10 @@ struct LatencyDist {
 };
 
 constexpr std::array<LatencyDist, 2> kLatencyDists = {{
-    {"Short-Identifier",
-     {{{0.10, 8}, {0.25, 12}, {0.50, 16}, {0.75, 23}, {0.90, 31}, {0.95, 38}, {0.99, 53}, {0.999, 80}}}},
-    {"Web-URL",
-     {{{0.10, 15}, {0.25, 28}, {0.50, 45}, {0.75, 75}, {0.90, 120}, {0.95, 220}, {0.99, 512}, {0.999, 2'048}}}},
+    {.name = "Short-Identifier",
+     .cdf = {{{0.10, 8}, {0.25, 12}, {0.50, 16}, {0.75, 23}, {0.90, 31}, {0.95, 38}, {0.99, 53}, {0.999, 80}}}},
+    {.name = "Web-URL",
+     .cdf = {{{0.10, 15}, {0.25, 28}, {0.50, 45}, {0.75, 75}, {0.90, 120}, {0.95, 220}, {0.99, 512}, {0.999, 2'048}}}},
 }};
 
 // Inverse CDF: percentile p in [0,1) -> length. Piecewise-linear between control
@@ -219,7 +219,7 @@ std::size_t SampleLength(const LatencyDist& dist, double percentile) {
   for (const auto& [pct, len] : dist.cdf) {
     if (percentile < pct) {
       const double frac = (percentile - prev_p) / (pct - prev_p);
-      return static_cast<std::size_t>(std::lround(prev_len + frac * (len - prev_len)));
+      return static_cast<std::size_t>(std::lround(prev_len + (frac * (len - prev_len))));
     }
     prev_p = pct;
     prev_len = len;
@@ -232,13 +232,13 @@ std::size_t SampleLength(const LatencyDist& dist, double percentile) {
 const std::vector<std::string>& LatencyKeys(std::size_t dist_index) {
   static const std::array<std::vector<std::string>, kLatencyDists.size()> kKeySets = [] {
     std::array<std::vector<std::string>, kLatencyDists.size()> sets;
-    for (std::size_t d = 0; d < kLatencyDists.size(); ++d) {
-      std::mt19937_64 rng(
-          0x1a7e9c1);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed, reproducible set
-      sets[d].reserve(kLatencyKeys);
+    for (std::size_t idx = 0; idx < kLatencyDists.size(); ++idx) {
+      // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed, reproducible set
+      std::mt19937_64 rng(0x1a7e9c1);
+      sets[idx].reserve(kLatencyKeys);
       for (std::size_t i = 0; i < kLatencyKeys; ++i) {
         const double percentile = static_cast<double>(rng()) / (static_cast<double>(UINT64_MAX) + 1.0);
-        sets[d].push_back(algo::RandomString(rng, SampleLength(kLatencyDists[d], percentile)));
+        sets[idx].push_back(algo::RandomString(rng, SampleLength(kLatencyDists[idx], percentile)));
       }
     }
     return sets;
@@ -290,7 +290,7 @@ void RegisterAll(std::tuple<Algos...> /*algorithms*/) {
   (RegisterAlgo<Algos>(), ...);
 }
 
-// NOLINTEND(*-magic-numbers)
+// NOLINTEND(*-array-index,*-magic-numbers)
 
 }  // namespace
 }  // namespace mbo::hash
