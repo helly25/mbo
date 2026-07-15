@@ -1,5 +1,7 @@
 # 0.13.2
 
+- Added `BmHash128Throughput` (128-bit bounded-range throughput) and guarded the 64-/128-bit benchmark paths by `HasGetHash64`/`HasGetHash128`.
+- Reworked the measurement report around the latency (ns at exact length) / throughput (GiB/s over the Short/Web bounded distributions) split: each renders as chart + table per hash width, absent sections dropped; the report re-distills a bundle from its raw on read, so old bundles still yield latency tables and bundles need no re-packing when the tool changes.
 - Reworked the hash mixed-length benchmark: dropped the hash-indexed key walk that collapsed into a rho-cycle (near-zero anomalies) and added `BmHash64Throughput` reporting bytes/s over two documented length distributions (Short ≤128 B, Web ≤4096 B) truncated to each upper bound; the per-exact-length `BmHash64`/`BmHash128` remain the latency view. Distributions are exported as the `throughput_dists` context.
 - Added a `compare` command reporting per-case Δ% and a geomean between two datasets.
 - Made `tables`/`plot`/`compare`/`quality` accept a bundle `.tgz` or a results JSON, positionally or via `--results`/`--bundle`.

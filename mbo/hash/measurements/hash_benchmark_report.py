@@ -70,7 +70,12 @@ _ORDER_64 = ["mumbo", "rapidhash", "xxh3", "xxh64", "murmur3", "siphash24", "fnv
 _ORDER_128 = ["mumbo", "xxh3", "murmur3"]
 _LABEL_128 = {"mumbo": "jumbo"}  # BmHash128<mumbo> is the jumbo (128-bit) face
 
-_NAME_RE = re.compile(r"^BmHash(64|128)(Latency)?<([A-Za-z0-9]+)>/(\d+)$")
+# Exact-length LATENCY: BmHash64/BmHash128<algo>/<len> - cost of hashing one exact
+# length in a hot loop, reported as ns.
+_LATENCY_RE = re.compile(r"^BmHash(64|128)<([A-Za-z0-9]+)>/(\d+)$")
+# Bounded-range THROUGHPUT: BmHash{64,128}Throughput<algo>/<Dist>:<bound> - bytes/s
+# over a length distribution truncated to each upper bound (Dist in {Short, Web}).
+_THROUGHPUT_RE = re.compile(r"^BmHash(64|128)Throughput<([A-Za-z0-9]+)>/([A-Za-z][A-Za-z0-9-]*):(\d+)$")
 _BENCHMARK_TARGET = "//mbo/hash:hash_benchmark"
 
 # mbo algorithm -> SMHasher3 registration name(s). The in-house mumbo/jumbo/
@@ -209,64 +214,79 @@ def _run_benchmark(mode, reps, min_time, warmup, config=None):
     return json.loads(out[out.index("{") :])
 
 
-def distill(raw, mode):
-    """Raw google/benchmark JSON -> canonical per-case stats + full context.
-
-    Per (width, algo, length) keeps min/median/mean/stddev/cv/reps computed from
-    the per-iteration rows (the tool's own aggregate rows are ignored so we
-    control the statistic). `min` is the headline; the rest support error bars
-    and flag noisy cases.
+def _distill_buckets(raw):
+    """Parse raw google/benchmark JSON into the canonical buckets; return
+    (buckets, reps_seen, best_k_seen). Pure - no machine/source context - so a
+    live distill and an offline re-distill (keeping a bundle's original context)
+    share it. LATENCY (exact length) keeps ns (real_time); THROUGHPUT (bounded
+    range) keeps bytes/s (higher is better), keyed by the "<Dist>:<bound>" label.
     """
-    ctx = dict(raw.get("context", {}))
-    ctx.update(_machine_augment())
-    ctx["source"] = _source_provenance()
-    ctx["measurement"] = {"mode": mode, "aggregate": "best-k mean", "reps": None, "best_k": None}
-
-    # Collect per-iteration times per case.
-    samples = {"throughput64": {}, "throughput128": {}, "latency": {}}
-    section = {"64": "throughput64", "128": "throughput128"}
+    lat = {"latency64": {}, "latency128": {}}
+    lat_section = {"64": "latency64", "128": "latency128"}
+    tput = {"throughput64": {}, "throughput128": {}}
+    tput_section = {"64": "throughput64", "128": "throughput128"}
     for bench in raw.get("benchmarks", []):
         if bench.get("run_type") != "iteration":
             continue
-        match = _NAME_RE.match(bench["name"])
-        if not match:
+        match = _LATENCY_RE.match(bench["name"])
+        if match:
+            width, algo, length = match.groups()
+            lat[lat_section[width]].setdefault(algo, {}).setdefault(length, []).append(float(bench["real_time"]))
             continue
-        width, latency, algo, length = match.groups()
-        bucket = "latency" if latency else section[width]
-        samples[bucket].setdefault(algo, {}).setdefault(length, []).append(float(bench["real_time"]))
+        match = _THROUGHPUT_RE.match(bench["name"])
+        if match:
+            width, algo, dist, bound = match.groups()
+            tput[tput_section[width]].setdefault(algo, {}).setdefault(f"{dist}:{bound}", []).append(
+                float(bench["bytes_per_second"])
+            )
 
-    result = {"context": ctx}
+    buckets = {}
     reps_seen = 0
     best_k_seen = 0
-    for bucket, algos in samples.items():
-        out = result.setdefault(bucket, {})
+
+    def best_k_stats(values, lower_is_better):
+        # mean of the k best reps (k ~= reps/3): for latency the low tail is the
+        # uncontended cost, for throughput the high tail is. `best` is the
+        # headline; `best_cv` the spread over the selected k.
+        nonlocal reps_seen, best_k_seen
+        reps_seen = max(reps_seen, len(values))
+        best_k = max(1, len(values) // 3)
+        best_k_seen = max(best_k_seen, best_k)
+        ordered = sorted(values, reverse=not lower_is_better)  # best first
+        best_vals = ordered[:best_k]
+        best = statistics.fmean(best_vals)
+        best_sd = statistics.stdev(best_vals) if len(best_vals) > 1 else 0.0
+        return {
+            "best": round(best, 4),
+            "best_cv": round(best_sd / best, 4) if best else 0.0,
+            "min": round(min(values), 4),
+            "max": round(max(values), 4),
+            "median": round(statistics.median(values), 4),
+            "mean": round(statistics.fmean(values), 4),
+            "reps": len(values),
+        }
+
+    for bucket, algos in lat.items():
+        out = buckets.setdefault(bucket, {})
         for algo, lengths in algos.items():
             for length, times in lengths.items():
-                reps_seen = max(reps_seen, len(times))
-                # Headline aggregate: mean of the k fastest reps (k ~= reps/3).
-                # Contention only ever slows a run, so the low tail is the
-                # uncontended cost; averaging the best k rejects the single-
-                # sample noise that a pure minimum would keep.
-                best_k = max(1, len(times) // 3)
-                best_k_seen = max(best_k_seen, best_k)
-                ordered = sorted(times)
-                best_times = ordered[:best_k]
-                best = statistics.fmean(best_times)
-                # CV over the SELECTED fastest k (not all reps): how stable the
-                # reported estimate is. A full-set CV would just report the
-                # contention we already excluded.
-                best_sd = statistics.stdev(best_times) if len(best_times) > 1 else 0.0
-                out.setdefault(algo, {})[length] = {
-                    "best": round(best, 4),
-                    "best_cv": round(best_sd / best, 4) if best else 0.0,
-                    "min": round(ordered[0], 4),
-                    "median": round(statistics.median(times), 4),
-                    "mean": round(statistics.fmean(times), 4),
-                    "reps": len(times),
-                }
-    result["context"]["measurement"]["reps"] = reps_seen
-    result["context"]["measurement"]["best_k"] = best_k_seen
-    return result
+                out.setdefault(algo, {})[length] = best_k_stats(times, lower_is_better=True)
+    for bucket, algos in tput.items():
+        out = buckets.setdefault(bucket, {})
+        for algo, cases in algos.items():
+            for case, bps in cases.items():
+                out.setdefault(algo, {})[case] = best_k_stats(bps, lower_is_better=False)
+    return buckets, reps_seen, best_k_seen
+
+
+def distill(raw, mode):
+    """Raw google/benchmark JSON -> canonical per-case stats + full context."""
+    ctx = dict(raw.get("context", {}))
+    ctx.update(_machine_augment())
+    ctx["source"] = _source_provenance()
+    buckets, reps_seen, best_k_seen = _distill_buckets(raw)
+    ctx["measurement"] = {"mode": mode, "aggregate": "best-k mean", "reps": reps_seen, "best_k": best_k_seen}
+    return {"context": ctx, **buckets}
 
 
 def _provenance_context():
@@ -507,10 +527,10 @@ def _md_table(headers, rows, aligns=None):
     return "\n".join([line(headers), "| " + " | ".join(sep(c) for c in range(cols)) + " |"] + [line(r) for r in rows])
 
 
-def _throughput_table(data, preferred, relabel, sizes=None):
-    # Length-per-row, algorithm-per-column; each row's bold marks the fastest
-    # algorithm at that length. `sizes` is the curated README subset, taken from
-    # the dataset's own `readme_sizes` context (emitted by the benchmark = the C++
+def _length_table(data, preferred, relabel, sizes=None):
+    # LATENCY table: length-per-row, algorithm-per-column, ns; each row's bold
+    # marks the fastest (lowest) algorithm at that length. `sizes` is the curated
+    # README subset from the dataset's own `readme_sizes` context (the C++
     # kReadmeSizes), so the small table is extracted from the FULL run with no
     # second size list to drift. Without it, every measured length is shown.
     algos = _order(list(data), preferred)
@@ -518,7 +538,7 @@ def _throughput_table(data, preferred, relabel, sizes=None):
         sizes = sorted({int(s) for a in data.values() for s in a})
     sizes = [s for s in sizes if any(str(s) in data[a] for a in algos)]
     headers = ["Length"] + [relabel.get(a, a) for a in algos]
-    aligns = ["r"] + ["r"] * (len(algos))
+    aligns = ["r"] + ["r"] * len(algos)
     rows = []
     for size in sizes:
         row = {a: _val(data[a][str(size)]) for a in algos if str(size) in data[a]}
@@ -536,53 +556,120 @@ def _throughput_table(data, preferred, relabel, sizes=None):
     return _md_table(headers, rows, aligns)
 
 
-def _latency_table(data, sizes=None):
-    # Like _throughput_table, the README latency table shows the curated
-    # `readme_sizes` subset (the latency benchmark now sweeps the full size set,
-    # so without this it would dump every length). Falls back to all measured
-    # lengths when no curated subset is available.
-    algos = _order(list(data), _ORDER_64)
-    if sizes is None:
-        sizes = sorted({int(s) for a in data.values() for s in a})
-    sizes = [s for s in sizes if any(str(s) in data[a] for a in algos)]
-    mins = {s: min(_val(data[a][str(s)]) for a in algos if str(s) in data[a]) for s in sizes}
-    headers = ["max len"] + algos
-    aligns = ["r"] + ["r"] * (len(algos))
+def _fmt_gibs(bytes_per_second):
+    """bytes/s -> GiB/s string (2/1/0 decimals by magnitude)."""
+    gibs = bytes_per_second / (1024.0**3)
+    if gibs < 10:
+        return f"{gibs:.2f}"
+    if gibs < 100:
+        return f"{gibs:.1f}"
+    return f"{gibs:.0f}"
+
+
+def _dists(data):
+    """Distribution names present in a throughput bucket, in Short-then-Web order."""
+    seen = []
+    for algo in data.values():
+        for key in algo:
+            name = key.split(":", 1)[0]
+            if name not in seen:
+                seen.append(name)
+    return _order(seen, ["Short", "Web"])
+
+
+def _throughput_table(data, dist, preferred, relabel):
+    # THROUGHPUT table for one distribution: upper-bound-per-row, algorithm-per-
+    # column, GiB/s; bold marks the fastest (highest) at each bound. Keys are
+    # "<Dist>:<bound>"; rows are that distribution's bounds ascending.
+    algos = _order(list(data), preferred)
+    prefix = f"{dist}:"
+    bounds = sorted({int(k[len(prefix):]) for a in algos for k in data.get(a, {}) if k.startswith(prefix)})
+    headers = ["max len"] + [relabel.get(a, a) for a in algos]
+    aligns = ["r"] + ["r"] * len(algos)
     rows = []
-    for size in sizes:
-        cells = [_size_label(size)]
+    for bound in bounds:
+        key = f"{dist}:{bound}"
+        row = {a: _val(data[a][key]) for a in algos if key in data.get(a, {})}
+        best = max(row.values()) if row else None
+        cells = [_size_label(bound)]
         for algo in algos:
-            cell = data[algo].get(str(size))
-            text = "-" if cell is None else _fmt(_val(cell))
-            if cell is not None and abs(_val(cell) - mins[size]) < 1e-9:
+            if algo not in row:
+                cells.append("-")
+                continue
+            text = _fmt_gibs(row[algo])
+            if best is not None and abs(row[algo] - best) < 1e-9:
                 text = f"**{text}**"
             cells.append(text)
         rows.append(cells)
     return _md_table(headers, rows, aligns)
 
 
+def _agg_label(ctx):
+    meas = ctx.get("measurement", {})
+    return f"mean of the {meas.get('best_k', '?')} best of {meas.get('reps', '?')} reps"
+
+
+def _readme_sizes(ctx):
+    raw = ctx.get("readme_sizes")  # curated subset emitted by the benchmark (kReadmeSizes)
+    return [int(x) for x in str(raw).split(",") if x.strip().isdigit()] if raw else None
+
+
+def _dist_chart_data(data, dist):
+    """One distribution's throughput as chart data: {algo: {bound: {"best": GiB/s}}}."""
+    prefix = f"{dist}:"
+    out = {}
+    for algo, cases in data.items():
+        for key, cell in cases.items():
+            if key.startswith(prefix):
+                out.setdefault(algo, {})[key[len(prefix):]] = {"best": _val(cell) / (1024.0**3)}
+    return out
+
+
+def _sections(results):
+    """Per-machine sections in layout order - 64-bit latency, 64-bit throughput
+    (Short, Web), 128-bit latency, 128-bit throughput (Short, Web) - each present
+    only when the dataset has that data. Each section is a dict with `tag`,
+    `title`, `heading`, `table`, `chart` (data or None), `order`, `relabel`,
+    `kind`; charts and tables are generated from the same list so they stay in
+    lockstep."""
+    ctx = results.get("context", {})
+    agg = _agg_label(ctx)
+    sizes = _readme_sizes(ctx)
+    out = []
+
+    def latency(tag, width, order, relabel, extra=""):
+        return {
+            "tag": tag, "title": f"{width}-bit latency", "kind": "latency",
+            "heading": f"{width}-bit latency (ns/hash at exact length, {agg}; {extra}lower is better)",
+            "table": _length_table(results[tag], order, relabel, sizes),
+            "chart": results[tag], "order": order, "relabel": relabel,
+        }
+
+    def throughput(bucket, dist, width, order, relabel):
+        return {
+            "tag": f"{bucket}_{dist}", "title": f"{width}-bit throughput ({dist})", "kind": "throughput",
+            "heading": f"{width}-bit throughput, {dist} lengths (GiB/s over lengths <= max, {agg}; higher is better)",
+            "table": _throughput_table(results[bucket], dist, order, relabel),
+            "chart": _dist_chart_data(results[bucket], dist), "order": order, "relabel": relabel,
+        }
+
+    if results.get("latency64"):
+        out.append(latency("latency64", 64, _ORDER_64, {}))
+    for dist in _dists(results.get("throughput64", {})):
+        out.append(throughput("throughput64", dist, 64, _ORDER_64, {}))
+    if results.get("latency128"):
+        out.append(latency("latency128", 128, _ORDER_128, _LABEL_128, extra="native-128 only; "))
+    for dist in _dists(results.get("throughput128", {})):
+        out.append(throughput("throughput128", dist, 128, _ORDER_128, _LABEL_128))
+    return out
+
+
 def render_tables(results):
     ctx = results.get("context", {})
-    meas = ctx.get("measurement", {})
-    agg = f"mean of the {meas.get('best_k', '?')} fastest of {meas.get('reps', '?')} reps"
-    raw = ctx.get("readme_sizes")  # curated subset emitted by the benchmark (kReadmeSizes)
-    sizes = [int(x) for x in str(raw).split(",") if x.strip().isdigit()] if raw else None
-    out = [
-        f"<!-- {_machine_label(ctx)}; {agg} -->",
-        "",
-        f"#### 64-bit one-shot throughput (ns/op, {agg}; lower is better)",
-        "",
-        _throughput_table(results["throughput64"], _ORDER_64, {}, sizes),
-        "",
-        f"#### 128-bit one-shot throughput (ns/op, {agg}; native-128 algorithms only)",
-        "",
-        _throughput_table(results["throughput128"], _ORDER_128, _LABEL_128, sizes),
-        "",
-        f"#### Mixed-length latency (ns/hash, {agg}; lower is better)",
-        "",
-        _latency_table(results["latency"], sizes),
-    ]
-    return "\n".join(out)
+    parts = [f"<!-- {_machine_label(ctx)}; {_agg_label(ctx)} -->"]
+    for section in _sections(results):
+        parts += ["", f"#### {section['heading']}", "", section["table"]]
+    return "\n".join(parts)
 
 
 # ---- compare: A (baseline) vs B (new) --------------------------------------
@@ -642,20 +729,30 @@ def _compare_bucket(base_data, new_data, preferred, relabel):
 def render_compare(base, new):
     """Markdown Δ% report between two canonical datasets. Shows both machine
     labels (comparing across machines is legitimate - it is the reader's call),
-    then a per-length Δ% table with a geomean row for each bucket."""
+    then a per-case Δ% table with a geomean row for each section."""
     out = [
-        "Δ% = (B - A) / A per case; negative = B faster (lower ns is better).",
+        "Δ% = (B - A) / A per case. Latency: negative = B faster (lower ns). "
+        "Throughput: positive = B faster (higher bytes/s).",
         f"- A: {_machine_label(base.get('context', {}))}",
         f"- B: {_machine_label(new.get('context', {}))}",
     ]
     for key, order, relabel, title in (
-        ("throughput64", _ORDER_64, {}, "64-bit one-shot throughput"),
-        ("throughput128", _ORDER_128, _LABEL_128, "128-bit one-shot throughput"),
-        ("latency", _ORDER_64, {}, "Mixed-length latency"),
+        ("latency64", _ORDER_64, {}, "64-bit latency"),
+        ("latency128", _ORDER_128, _LABEL_128, "128-bit latency"),
     ):
         table = _compare_bucket(base.get(key) or {}, new.get(key) or {}, order, relabel)
         if table:
             out += ["", f"#### {title} (Δ%)", "", table]
+    for key, order, relabel, width in (
+        ("throughput64", _ORDER_64, {}, "64-bit"),
+        ("throughput128", _ORDER_128, _LABEL_128, "128-bit"),
+    ):
+        for dist in _dists(base.get(key) or {}):
+            table = _compare_bucket(
+                _dist_chart_data(base.get(key) or {}, dist), _dist_chart_data(new.get(key) or {}, dist), order, relabel
+            )
+            if table:
+                out += ["", f"#### {width} throughput, {dist} (Δ%)", "", table]
     return "\n".join(out)
 
 
@@ -676,8 +773,8 @@ def _linear_ticks(vmax, target=6):
     return ticks
 
 
-def _svg_plot(data, algos, title, path, label_map=None, subtitle=None, linear_y=False):
-    """Dependency-free ns-vs-length SVG, one line per algorithm (best-k mean).
+def _svg_plot(data, algos, title, path, label_map=None, subtitle=None, linear_y=False, y_label="ns / op", x_label="key length"):
+    """Dependency-free value-vs-length SVG, one line per algorithm (best-k mean).
 
     The x-axis (key length) is ALWAYS log-scaled: lengths are sampled
     geometrically (1..4096), so a linear x would bunch every small key at the
@@ -747,11 +844,11 @@ def _svg_plot(data, algos, title, path, label_map=None, subtitle=None, linear_y=
             if int(round(math.log2(size))) % 2 == 0:
                 svg.append(f'<text x="{x:.1f}" y="{pad_t + plot_h + 16:.1f}" font-size="10" text-anchor="middle">{_size_label(size)}</text>')
         size *= 2
-    svg.append(f'<text x="{pad_l + plot_w / 2:.0f}" y="{height - 12}" font-size="12" text-anchor="middle">key length (log scale)</text>')
+    svg.append(f'<text x="{pad_l + plot_w / 2:.0f}" y="{height - 12}" font-size="12" text-anchor="middle">{x_label} (log scale)</text>')
     svg.append(
         f'<text x="18" y="{pad_t + plot_h / 2:.0f}" font-size="12" '
         f'transform="rotate(-90 18 {pad_t + plot_h / 2:.0f})" text-anchor="middle">'
-        f'ns / op ({"linear" if linear_y else "log"} scale)</text>'
+        f'{y_label} ({"linear" if linear_y else "log"} scale)</text>'
     )
     for i, algo in enumerate(algos):  # one polyline + legend row per algorithm
         color = colors[i % len(colors)]
@@ -867,11 +964,24 @@ def _extract_bundle(path, dest):
 
 
 def _results_from_bundle(path):
-    """Load the canonical results.json out of a data bundle .tgz (the same
-    payload `bundle` packs), so table/plot commands accept a bundle directly."""
+    """Canonical results from a data bundle .tgz. The raw google/benchmark JSON is
+    the source of truth, so we RE-DISTILL it with the current tool - a bundle
+    measured before the latency/throughput split still yields today's schema (e.g.
+    latency tables from old data) with no re-packing. The bundle's own
+    machine/source context is kept (from its stored results.json); we fall back to
+    the stored results.json only if the bundle carries no raw."""
     with tempfile.TemporaryDirectory() as tmp:
         _extract_bundle(path, tmp)
-        return _load_json(os.path.join(tmp, "results.json"))
+        stored_path = os.path.join(tmp, "results.json")
+        stored = _load_json(stored_path) if os.path.exists(stored_path) else {}
+        raws = sorted(f for f in os.listdir(tmp) if "raw" in f and ".json" in f)
+        if not raws:
+            return stored
+        buckets, reps, best_k = _distill_buckets(_load_json(os.path.join(tmp, raws[-1])))
+        ctx = dict(stored.get("context") or {})
+        ctx.setdefault("measurement", {})
+        ctx["measurement"] = {**ctx["measurement"], "reps": reps, "best_k": best_k}
+        return {"context": ctx, **buckets}
 
 
 def _load_dataset(path):
@@ -942,20 +1052,20 @@ def _fill_missing_measured(measured):
 
 
 def _render_charts(full, stem, charts_dir, subtitle):
-    """Write the 64/128 labeled SVGs for one machine; return [(tag, filename), ...]."""
+    """Write one labeled SVG per section that has chart data (latency = ns-vs-length,
+    throughput = GiB/s-vs-upper-bound); return [(tag, filename), ...] in layout order."""
     written = []
-    for key, order, tag, labels in (
-        ("throughput64", _ORDER_64, "64", None),
-        ("throughput128", _ORDER_128, "128", _LABEL_128),
-    ):
-        if not full.get(key):
+    for section in _sections(full):
+        data = section["chart"]
+        if not data:
             continue
-        name = f"{stem}_{tag}.svg"
+        name = f"{stem}_{section['tag']}.svg"
+        y_label, x_label = ("GiB / s", "max length") if section["kind"] == "throughput" else ("ns / op", "key length")
         _svg_plot(
-            full[key], _order(list(full[key]), order), f"mbo/hash - {tag}-bit one-shot throughput",
-            os.path.join(charts_dir, name), labels, subtitle=subtitle,
+            data, _order(list(data), section["order"]), f"mbo/hash - {section['title']}",
+            os.path.join(charts_dir, name), section["relabel"], subtitle=subtitle, y_label=y_label, x_label=x_label,
         )
-        written.append((tag, name))
+        written.append((section["tag"], name))
     return written
 
 
@@ -1111,21 +1221,18 @@ def main(argv):
     if args.command == "plot":
         results = _resolve_dataset(args)
         base, ext = os.path.splitext(_timestamped(args.out, stamp))
-        # (bucket key, algorithm order, title, filename suffix, display relabel).
-        # Latency now sweeps the full size set (kFullSizes), so it renders as a
-        # log-log curve like throughput. `--kind` picks which curves to write.
-        throughput = [
-            ("throughput64", _ORDER_64, "64-bit one-shot throughput", "_64", None),
-            ("throughput128", _ORDER_128, "128-bit one-shot throughput", "_128", _LABEL_128),
-        ]
-        latency = [("latency", _ORDER_64, "mixed-length latency", "_latency", None)]
-        selected = {"throughput": throughput, "latency": latency, "all": throughput + latency}[args.kind]
         linear_y = args.scale == "linear-log"
-        for key, order, title, suffix, labels in selected:
-            data = results.get(key)
-            if data:  # _svg_plot also no-ops on empty, but skip cleanly (e.g. no 128-bit data)
-                path = f"{base}{suffix}{ext}"
-                _svg_plot(data, _order(list(data), order), f"mbo/hash - {title}", path, labels, linear_y=linear_y)
+        # `--kind` picks latency (ns-vs-length) and/or throughput (GiB/s-vs-bound)
+        # sections; one SVG per section, suffixed by its tag.
+        for section in _sections(results):
+            data = section["chart"]
+            if not data or (args.kind != "all" and section["kind"] != args.kind):
+                continue
+            y_label, x_label = ("GiB / s", "max length") if section["kind"] == "throughput" else ("ns / op", "key length")
+            _svg_plot(
+                data, _order(list(data), section["order"]), f"mbo/hash - {section['title']}",
+                f"{base}_{section['tag']}{ext}", section["relabel"], linear_y=linear_y, y_label=y_label, x_label=x_label,
+            )
         return 0
 
     if args.command == "smhasher":
@@ -1180,19 +1287,19 @@ def main(argv):
         rel = os.path.relpath(args.charts_dir, os.path.dirname(os.path.abspath(args.readme)))
         blocks = []  # (label, bundle_path, section) - sorted by label below, not by input order
         for bundle_path in args.bundles:
-            with tempfile.TemporaryDirectory() as tmp:
-                _extract_bundle(bundle_path, tmp)
-                full = _load_json(os.path.join(tmp, "results.json"))
-                ctx = full.get("context", {})
-                label = _machine_label(ctx)
-                embeds = [
-                    f"![mbo/hash {tag}-bit throughput vs key length, log-log]({rel}/{name})"
-                    for tag, name in _render_charts(full, _bundle_stem(ctx), args.charts_dir, label)
-                ]
-                # `### {label}` heads the whole block (machine · compiler · sha), covering
-                # both the charts (which also carry it as a subtitle) and the tables.
-                blocks.append((label, bundle_path, "\n".join([f"### {label}", "", *embeds, "", render_tables(full)])))
-                print(f"published {label}", file=sys.stderr)
+            full = _results_from_bundle(bundle_path)  # re-distilled from the bundle's raw (see B)
+            ctx = full.get("context", {})
+            label = _machine_label(ctx)
+            charts = dict(_render_charts(full, _bundle_stem(ctx), args.charts_dir, label))  # tag -> filename
+            # `### {label}` heads the block; each section is its chart (if any)
+            # immediately followed by its table, in layout order.
+            parts = [f"### {label}", "", f"<!-- {label}; {_agg_label(ctx)} -->"]
+            for section in _sections(full):
+                if section["tag"] in charts:
+                    parts += ["", f"![mbo/hash {section['title']}, {label}]({rel}/{charts[section['tag']]})"]
+                parts += ["", f"#### {section['heading']}", "", section["table"]]
+            blocks.append((label, bundle_path, "\n".join(parts)))
+            print(f"published {label}", file=sys.stderr)
         # Order sections (and the manifest) by the generated header, so the README
         # is stable regardless of the order bundles were passed on the command line.
         blocks.sort(key=lambda block: block[0])
@@ -1214,10 +1321,10 @@ def main(argv):
         bundles = match.group(1).split()
         mismatches = []
         for bundle_path in bundles:
+            full = _results_from_bundle(bundle_path)  # re-distilled from the bundle's raw (see B)
+            ctx = full.get("context", {})
             with tempfile.TemporaryDirectory() as tmp:
-                _extract_bundle(bundle_path, tmp)
-                full = _load_json(os.path.join(tmp, "results.json"))
-                for _, name in _render_charts(full, _bundle_stem(full.get("context", {})), tmp, _machine_label(full.get("context", {}))):
+                for _, name in _render_charts(full, _bundle_stem(ctx), tmp, _machine_label(ctx)):
                     committed = os.path.join(args.charts_dir, name)
                     if not os.path.exists(committed) or not filecmp.cmp(os.path.join(tmp, name), committed, shallow=False):
                         mismatches.append(name)
