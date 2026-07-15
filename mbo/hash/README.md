@@ -3,11 +3,13 @@
 Fast, constexpr-safe, non-cryptographic hashing, built around the in-house
 **mumbo/jumbo and dumbo** family: notice-free, pure Apache-2.0, and MUM-based
 (widening multiply). All three pass [SMHasher3](https://gitlab.com/fwojcik/smhasher3)
-clean (188/188): `mumbo` (64-bit) and its native 128-bit sibling `jumbo` (the
-only clean native 128 we measured) post the best mixed-length latency in our
-benchmarks, and `dumbo` is a compact single-lane companion with a very different
-profile - fastest here on tiny keys, slower on bulk - that trades reach for size,
-not quality.
+clean (188/188). `mumbo` (64-bit) is the all-round default: among the fastest
+hashes here on every machine we measured, SMHasher3-clean, notice-free Apache-2.0,
+and with both streaming and a Starlark port - few alternatives combine all of
+these. Its native 128-bit sibling `jumbo` is the only clean native 128 we
+measured and an excellent 128-bit choice. `dumbo` is a compact single-lane
+companion with a very different profile - fastest here on tiny keys, slower on
+bulk - that trades reach for size, not quality.
 
 It also ships a **build-seed mangle** (`hash_mangle.h`): restricted/limited,
 constexpr-safe compile-time hash mangling with release-time rotation enforcement.
@@ -272,186 +274,245 @@ The two frameworks compose rather than compete - pick by contract:
 
 Measured with the tooling in [`mbo/hash/measurements/`](measurements/README.md)
 (`-c opt`). Each block below is one machine and compiler, generated from a
-committed data bundle. Numbers are the mean of the 3 fastest of 9 runs (with
-interleaving and warmup): on a shared machine the fastest runs are the least
-contended, and averaging a few is steadier than the median at these
-sub-nanosecond sizes. Bold marks the fastest per row; the tables use a curated
-set of lengths (straddling the dispatch-tier and SSO boundaries), the log-log
-charts a denser one.
+committed data bundle. Numbers are the mean of the 3 best of 9 runs (with
+interleaving and warmup): on a shared machine the least-contended runs are the
+truest, and averaging a few is steadier than a single extreme. Bold marks the
+winner per row. Tables use a curated set of lengths (straddling the dispatch-tier
+and SSO boundaries); the log-log charts a denser one.
 
-The **latency** benchmark models how a hash table actually calls a hash: a
-stream of differently-sized keys whose per-length size dispatch cannot be
-branch-predicted. Keys are drawn from two fixed, reproducible length
-distributions - **Short-Identifier** (log-normal: identifiers, DB keys, UUIDs)
-and **Web-URL** (heavy-tailed: paths and URLs) - sampled once with a fixed seed
-and shared byte-for-byte across all algorithms (only the lengths matter; the
-bytes are filler). Each distribution is an inverse-CDF (Cumulative Distribution
-Function, see [Wikipedia](https://en.wikipedia.org/wiki/Cumulative_distribution_function))
-table capped by a 100% limit anchor `Lmax`: **128 B** for Short-Identifier (two L1 cache lines - the
-AVX-512 / medium-key-to-bulk transition and a jemalloc/tcmalloc size-class
-ceiling) and **4096 B** for Web-URL (one x86/ARM64 virtual page, where a larger
-allocation can page-fault). Because the percentile draw is half-open `[0, 1)` it
-never samples the `1.0` entry by chance (a 1024-key set misses the top region
-~36% of the time), so exactly one key per set is pinned to `Lmax` - a guaranteed
-worst-case anchor that keeps the curve bounded and exercises the SSO-spill and
-bulk-tier code paths, while the other 1023 keys preserve the branch-prediction
-noise.
+Two views per hash width:
+
+- **Latency** (ns/hash, lower is better): the cost of hashing one key of an
+  _exact_ length in a hot loop - the per-length curve, for spotting the
+  size-dispatch and SSO cliffs at specific lengths.
+- **Throughput** (GiB/s, higher is better): how fast a realistic, upper-**bounded**
+  mix of key lengths is processed. Keys are drawn from two fixed, reproducible
+  length distributions - **Short** (log-normal: identifiers, DB keys, UUIDs) and
+  **Web** (heavy-tailed: paths and URLs) - given as inverse-CDF (Cumulative
+  Distribution Function, see
+  [Wikipedia](https://en.wikipedia.org/wiki/Cumulative_distribution_function))
+  tables, sampled once with a fixed seed and shared byte-for-byte across all
+  algorithms (only the lengths matter; the bytes are filler). Each distribution's
+  control-point lengths double as upper **bounds**: the mix is run truncated to
+  each bound (the kept buckets renormalized to 100%), giving a
+  `(max length -> GiB/s)` curve. The ceilings are `Lmax` = **128 B** for Short
+  (two L1 cache lines - the AVX-512 / medium-key-to-bulk transition and a
+  jemalloc/tcmalloc size-class ceiling) and **4096 B** for Web (one x86/ARM64
+  virtual page). One key per bound is pinned to the bound length so the boundary
+  is always represented; the unpredictable length order defeats the size-dispatch
+  branch predictor, so the cost is measured, not modelled.
 
 Everything between the markers is generated per machine by `publish` from the
 committed bundles - regenerate it, don't hand-edit:
 
 <!-- BEGIN mbo/hash benchmark results (generated by `hash_benchmark_report.py publish`; DO NOT EDIT) -->
-<!-- bundles: mbo/hash/measurements/data/macos-arm64-apple-m5-pro_18c_clang-22_1417af5e_20260711_211526.tgz mbo/hash/measurements/data/linux-x86-64-amd-ryzen-9-9950x-16-core-processor_10c_gcc-15_1417af5e_20260711_203603.tgz -->
+<!-- bundles: mbo/hash/measurements/data/linux-x86-64-amd-ryzen-9-9950x-16-core-processor_10c_gcc-15_80a4c8a8_20260714_225122.tgz mbo/hash/measurements/data/macos-arm64-apple-m5-pro_18c_clang-21_80a4c8a8_20260714_233133.tgz -->
 
-### Apple M5 Pro · arm64 · 18-core · clang-22 · 1417af5e
+### AMD Ryzen 9 9950X 16-Core Processor · Linux · x86_64 · 10-core · gcc-15 · 80a4c8a8
 
-![mbo/hash 64-bit throughput vs key length, log-log](measurements/charts/macos-arm64-apple-m5-pro_clang-22_64.svg)
-![mbo/hash 128-bit throughput vs key length, log-log](measurements/charts/macos-arm64-apple-m5-pro_clang-22_128.svg)
+<!-- AMD Ryzen 9 9950X 16-Core Processor · Linux · x86_64 · 10-core · gcc-15 · 80a4c8a8; mean of the 3 best of 9 reps -->
 
-<!-- Apple M5 Pro · arm64 · 18-core · clang-22 · 1417af5e; mean of the 3 fastest of 9 reps -->
+![mbo/hash 64-bit latency, AMD Ryzen 9 9950X 16-Core Processor · Linux · x86_64 · 10-core · gcc-15 · 80a4c8a8](measurements/charts/linux-x86-64-amd-ryzen-9-9950x-16-core-processor_gcc-15_latency64.svg)
 
-#### 64-bit one-shot throughput (ns/op, mean of the 3 fastest of 9 reps; lower is better)
+#### 64-bit latency (ns/hash at exact length, mean of the 3 best of 9 reps; lower is better)
 
-| Length | mumbo     | rapidhash | xxh3  | xxh64 | murmur3 | siphash24 | fnv1a    | dumbo    |
-| -----: | --------- | --------- | ----- | ----- | ------- | --------- | -------- | -------- |
-|     1B | 2.17      | 1.97      | 2.43  | 2.34  | 2.80    | 6.43      | **0.49** | 1.57     |
-|     3B | 2.30      | 1.96      | 2.42  | 3.28  | 3.00    | 6.60      | **1.03** | 2.09     |
-|     5B | 2.34      | 1.74      | 2.46  | 2.41  | 3.02    | 6.82      | 1.80     | **1.48** |
-|     7B | 2.32      | 1.74      | 2.50  | 3.56  | 3.03    | 6.90      | 2.54     | **1.48** |
-|     8B | 2.09      | 1.68      | 2.42  | 2.69  | 3.04    | 9.13      | 2.99     | **1.47** |
-|    11B | 2.03      | **1.69**  | 2.39  | 3.46  | 3.54    | 9.27      | 4.07     | 2.44     |
-|    15B | 2.00      | **1.70**  | 2.36  | 3.85  | 3.62    | 9.26      | 6.14     | 1.89     |
-|    16B | 2.01      | **1.71**  | 2.31  | 3.17  | 3.87    | 12.08     | 6.46     | 1.90     |
-|    19B | 2.44      | **1.98**  | 2.89  | 4.24  | 4.46    | 12.26     | 7.59     | 3.00     |
-|    22B | 2.44      | **1.94**  | 2.89  | 3.95  | 4.61    | 12.26     | 8.99     | 2.48     |
-|    27B | 2.44      | **1.95**  | 2.89  | 5.09  | 5.10    | 15.27     | 11.69    | 3.54     |
-|    32B | 2.44      | **1.99**  | 2.89  | 5.07  | 5.18    | 18.43     | 15.39    | 3.00     |
-|    38B | 2.88      | **2.34**  | 4.23  | 6.82  | 5.84    | 18.41     | 19.35    | 3.62     |
-|    47B | 2.87      | **2.35**  | 4.22  | 8.52  | 6.60    | 21.79     | 27.44    | 4.26     |
-|    48B | 2.88      | **2.34**  | 4.23  | 6.72  | 6.72    | 25.24     | 28.93    | 4.22     |
-|    63B | 3.37      | **2.84**  | 4.22  | 10.31 | 8.14    | 28.67     | 40.26    | 5.49     |
-|    64B | 3.37      | **2.89**  | 4.23  | 6.68  | 8.40    | 31.95     | 41.07    | 5.49     |
-|   127B | 6.04      | **4.85**  | 6.92  | 13.70 | 15.14   | 57.83     | 117.3    | 12.41    |
-|   128B | 6.55      | **4.84**  | 6.91  | 9.66  | 15.55   | 61.64     | 118.4    | 12.38    |
-|   256B | 8.69      | **7.44**  | 26.46 | 16.12 | 32.96   | 119.5     | 287.7    | 31.00    |
-|    1Ki | 23.73     | **22.50** | 58.92 | 55.30 | 161.1   | 479.9     | 1271     | 193.5    |
-|    4Ki | **82.37** | 83.87     | 176.3 | 222.9 | 692.6   | 1915      | 5503     | 871.8    |
+| Length | mumbo | rapidhash |     xxh3 | xxh64 | murmur3 | siphash24 |    fnv1a | dumbo |
+| -----: | ----: | --------: | -------: | ----: | ------: | --------: | -------: | ----: |
+|    1 B |  1.38 |      1.70 |     1.08 |  1.49 |    2.37 |      5.33 | **0.36** |  1.12 |
+|    3 B |  1.47 |      1.65 |     1.08 |  2.10 |    2.83 |      5.99 | **0.72** |  1.56 |
+|    5 B |  1.29 |      1.65 | **0.98** |  1.93 |    2.57 |      5.20 |     1.26 |  1.25 |
+|    7 B |  1.29 |      1.70 | **0.99** |  2.59 |    2.57 |      5.15 |     1.55 |  1.25 |
+|    8 B |  1.31 |      1.46 | **0.98** |  1.93 |    2.57 |      6.48 |     1.78 |  1.25 |
+|   11 B |  1.30 |      1.46 | **0.79** |  2.99 |    3.38 |      7.67 |     2.55 |  1.90 |
+|   15 B |  1.29 |      1.46 | **0.79** |  3.53 |    2.98 |      7.15 |     3.72 |  1.40 |
+|   16 B |  1.29 |      1.47 | **0.79** |  2.36 |    2.76 |      8.00 |     4.04 |  1.40 |
+|   19 B |  1.83 |      1.83 | **1.62** |  3.47 |    3.85 |      8.59 |     4.99 |  2.26 |
+|   22 B |  1.86 |      1.83 | **1.62** |  3.63 |    3.54 |      8.19 |     6.09 |  1.78 |
+|   27 B |  1.83 |      1.83 | **1.62** |  4.04 |    4.49 |     10.05 |     8.10 |  2.66 |
+|   32 B |  1.84 |      1.83 | **1.62** |  4.20 |    3.66 |     11.22 |    10.21 |  2.24 |
+|   38 B |  2.02 |  **2.01** |     2.51 |  5.81 |    4.47 |     11.27 |    12.71 |  2.68 |
+|   47 B |  2.02 |  **2.01** |     2.54 |  7.07 |    4.91 |     12.88 |    18.22 |  3.27 |
+|   48 B |  2.02 |  **2.01** |     2.51 |  5.63 |    4.65 |     14.46 |    18.86 |  3.24 |
+|   63 B |  2.29 |  **2.19** |     2.51 |  8.59 |    5.76 |     16.16 |    26.38 |  4.23 |
+|   64 B |  2.29 |  **2.18** |     2.51 |  5.24 |    5.58 |     17.69 |    26.84 |  4.24 |
+|  127 B |  4.19 |  **3.86** |     4.34 | 11.13 |    9.50 |     29.09 |    67.19 |  9.19 |
+|  128 B |  9.98 |  **3.85** |     4.31 |  7.14 |    9.48 |     30.60 |    67.82 |  9.17 |
+|  256 B | 11.85 |  **5.85** |    55.39 | 11.11 |   18.18 |     56.41 |    163.2 | 21.87 |
+|  1 KiB | 34.91 | **19.25** |    98.66 | 34.75 |   72.44 |     213.9 |    708.3 | 116.9 |
+|  4 KiB | 133.5 | **72.43** |    320.9 | 130.3 |   293.2 |     834.5 |     2886 | 527.5 |
 
-#### 128-bit one-shot throughput (ns/op, mean of the 3 fastest of 9 reps; native-128 algorithms only)
+![mbo/hash 64-bit throughput (Short), AMD Ryzen 9 9950X 16-Core Processor · Linux · x86_64 · 10-core · gcc-15 · 80a4c8a8](measurements/charts/linux-x86-64-amd-ryzen-9-9950x-16-core-processor_gcc-15_throughput64_Short.svg)
 
-| Length | jumbo     | xxh3     | murmur3  |
-| -----: | --------- | -------- | -------- |
-|     1B | 3.12      | 2.88     | **2.81** |
-|     3B | 3.23      | **2.92** | 2.99     |
-|     5B | 3.08      | **2.47** | 3.02     |
-|     7B | 3.07      | **2.48** | 3.04     |
-|     8B | 2.96      | **2.50** | 3.01     |
-|    11B | 2.96      | **2.96** | 3.54     |
-|    15B | **2.96**  | 2.96     | 3.64     |
-|    16B | **2.96**  | 2.96     | 3.86     |
-|    19B | **3.86**  | 4.05     | 4.47     |
-|    22B | **3.86**  | 3.96     | 4.57     |
-|    27B | **3.86**  | 3.94     | 5.11     |
-|    32B | **3.86**  | 3.98     | 5.23     |
-|    38B | **4.45**  | 5.30     | 5.86     |
-|    47B | **4.44**  | 5.31     | 6.68     |
-|    48B | **4.43**  | 5.31     | 6.81     |
-|    63B | **5.29**  | 5.31     | 8.17     |
-|    64B | 6.21      | **5.31** | 8.55     |
-|   127B | 8.77      | **8.33** | 15.27    |
-|   128B | **7.48**  | 8.32     | 15.61    |
-|   256B | **10.55** | 28.10    | 32.83    |
-|    1Ki | **31.69** | 60.54    | 162.2    |
-|    4Ki | **120.4** | 177.7    | 700.6    |
+#### 64-bit throughput, Short lengths (GiB/s over lengths <= max, mean of the 3 best of 9 reps; higher is better)
 
-#### Mixed-length latency (ns/hash, mean of the 3 fastest of 9 reps; lower is better)
+| max len | mumbo | rapidhash |     xxh3 | xxh64 | murmur3 | siphash24 | fnv1a | dumbo |
+| ------: | ----: | --------: | -------: | ----: | ------: | --------: | ----: | ----: |
+|     8 B |  2.41 |      2.04 | **3.12** |  1.65 |    1.29 |      0.63 |  2.92 |  2.60 |
+|    12 B |  4.27 |      3.73 | **5.75** |  2.51 |    2.05 |      0.98 |  3.02 |  3.80 |
+|    16 B |  6.09 |      5.17 | **8.38** |  3.19 |    2.88 |      1.33 |  3.12 |  5.39 |
+|    23 B |  7.27 |      6.37 | **9.13** |  3.84 |    3.51 |      1.61 |  2.98 |  6.31 |
+|    31 B |  8.61 |      7.75 | **10.6** |  4.46 |    4.11 |      1.87 |  2.96 |  7.20 |
+|    38 B |  8.26 |      7.69 | **10.1** |  4.37 |    4.08 |      1.84 |  2.82 |  7.04 |
+|    53 B |  9.11 |      8.59 | **10.9** |  4.66 |    4.46 |      2.00 |  2.77 |  7.52 |
+|    80 B |  9.14 |      8.58 | **10.9** |  4.70 |    4.47 |      2.00 |  2.74 |  7.47 |
+|   128 B |  9.15 |      8.57 | **10.9** |  4.73 |    4.47 |      2.00 |  2.74 |  7.47 |
 
-| max len | mumbo     | rapidhash | xxh3  | xxh64 | murmur3 | siphash24 | fnv1a | dumbo |
-| ------: | --------- | --------- | ----- | ----- | ------- | --------- | ----- | ----- |
-|      16 | **9.88**  | 10.68     | 11.52 | 13.98 | 15.48   | 18.99     | 14.70 | 12.67 |
-|      64 | **12.37** | 12.64     | 12.74 | 20.78 | 20.82   | 29.22     | 35.14 | 18.82 |
-|    1024 | 27.81     | **27.55** | 37.07 | 66.34 | 69.60   | 231.0     | 604.0 | 99.15 |
+![mbo/hash 64-bit throughput (Web), AMD Ryzen 9 9950X 16-Core Processor · Linux · x86_64 · 10-core · gcc-15 · 80a4c8a8](measurements/charts/linux-x86-64-amd-ryzen-9-9950x-16-core-processor_gcc-15_throughput64_Web.svg)
 
-### AMD Ryzen 9 9950X 16-Core Processor · x86_64 · 10-core · gcc-15 · 1417af5e
+#### 64-bit throughput, Web lengths (GiB/s over lengths <= max, mean of the 3 best of 9 reps; higher is better)
 
-![mbo/hash 64-bit throughput vs key length, log-log](measurements/charts/linux-x86-64-amd-ryzen-9-9950x-16-core-processor_gcc-15_64.svg)
-![mbo/hash 128-bit throughput vs key length, log-log](measurements/charts/linux-x86-64-amd-ryzen-9-9950x-16-core-processor_gcc-15_128.svg)
+| max len | mumbo | rapidhash |     xxh3 | xxh64 | murmur3 | siphash24 | fnv1a | dumbo |
+| ------: | ----: | --------: | -------: | ----: | ------: | --------: | ----: | ----: |
+|    15 B |  4.82 |      4.21 | **6.54** |  2.80 |    2.39 |      1.14 |  3.26 |  4.53 |
+|    28 B |  7.85 |      7.15 | **9.26** |  4.27 |    3.81 |      1.74 |  2.81 |  6.62 |
+|    45 B |  11.9 |      11.8 | **12.0** |  5.42 |    5.65 |      2.43 |  2.53 |  8.83 |
+|    75 B |  15.8 |  **15.9** |     14.6 |  6.46 |    7.00 |      2.86 |  2.14 |  9.88 |
+|   120 B |  17.7 |  **18.5** |     16.6 |  7.53 |    7.93 |      3.12 |  1.92 |  9.98 |
+|   220 B |  17.3 |  **19.9** |     17.4 |  8.18 |    8.47 |      3.27 |  1.85 |  10.1 |
+|   512 B |  17.7 |  **21.4** |     11.3 |  8.98 |    8.82 |      3.36 |  1.74 |  9.47 |
+|   2 KiB |  19.0 |  **24.3** |     10.9 |  10.5 |    9.53 |      3.55 |  1.63 |  8.93 |
+|   4 KiB |  18.7 |  **23.8** |     10.4 |  10.4 |    9.40 |      3.51 |  1.63 |  8.94 |
 
-<!-- AMD Ryzen 9 9950X 16-Core Processor · x86_64 · 10-core · gcc-15 · 1417af5e; mean of the 3 fastest of 9 reps -->
+![mbo/hash 128-bit latency, AMD Ryzen 9 9950X 16-Core Processor · Linux · x86_64 · 10-core · gcc-15 · 80a4c8a8](measurements/charts/linux-x86-64-amd-ryzen-9-9950x-16-core-processor_gcc-15_latency128.svg)
 
-#### 64-bit one-shot throughput (ns/op, mean of the 3 fastest of 9 reps; lower is better)
+#### 128-bit latency (ns/hash at exact length, mean of the 3 best of 9 reps; native-128 only; lower is better)
 
-| Length | mumbo    | rapidhash | xxh3     | xxh64 | murmur3 | siphash24 | fnv1a    | dumbo |
-| -----: | -------- | --------- | -------- | ----- | ------- | --------- | -------- | ----- |
-|     1B | 1.39     | 1.71      | 1.09     | 1.50  | 2.39    | 5.29      | **0.36** | 1.12  |
-|     3B | 1.48     | 1.65      | 1.09     | 2.10  | 2.85    | 6.05      | **0.73** | 1.57  |
-|     5B | 1.30     | 1.65      | **0.99** | 1.93  | 2.58    | 5.13      | 1.17     | 1.26  |
-|     7B | 1.30     | 1.65      | **0.99** | 2.60  | 2.58    | 5.13      | 1.56     | 1.26  |
-|     8B | 1.30     | 1.47      | **0.99** | 1.94  | 2.58    | 6.51      | 1.78     | 1.26  |
-|    11B | 1.30     | 1.47      | **0.79** | 3.01  | 3.40    | 7.70      | 2.56     | 1.90  |
-|    15B | 1.30     | 1.47      | **0.79** | 3.55  | 3.00    | 7.17      | 3.73     | 1.40  |
-|    16B | 1.30     | 1.47      | **0.79** | 2.36  | 2.77    | 8.04      | 4.04     | 1.40  |
-|    19B | 1.84     | 1.84      | **1.62** | 3.49  | 3.87    | 8.64      | 4.99     | 2.27  |
-|    22B | 1.84     | 1.84      | **1.62** | 3.65  | 3.55    | 8.23      | 6.07     | 1.78  |
-|    27B | 1.83     | 1.84      | **1.62** | 4.07  | 4.51    | 10.10     | 8.12     | 2.66  |
-|    32B | 1.84     | 1.84      | **1.62** | 4.22  | 3.68    | 11.26     | 10.21    | 2.25  |
-|    38B | 2.02     | **2.02**  | 2.52     | 5.82  | 4.50    | 11.31     | 12.75    | 2.68  |
-|    47B | **2.02** | 2.02      | 2.52     | 7.09  | 4.94    | 12.93     | 18.11    | 3.28  |
-|    48B | 2.02     | **2.02**  | 2.52     | 5.65  | 4.67    | 14.49     | 18.80    | 3.25  |
-|    63B | 2.30     | **2.19**  | 2.52     | 8.55  | 5.79    | 16.20     | 26.28    | 4.28  |
-|    64B | 2.29     | **2.19**  | 2.52     | 5.26  | 5.60    | 17.71     | 26.85    | 4.26  |
-|   127B | 4.21     | **3.87**  | 4.37     | 11.15 | 9.54    | 29.13     | 67.24    | 9.18  |
-|   128B | 10.26    | **3.86**  | 4.33     | 7.17  | 9.51    | 30.64     | 67.94    | 9.18  |
-|   256B | 11.97    | **5.87**  | 54.80    | 11.15 | 18.20   | 56.54     | 163.5    | 21.82 |
-|    1Ki | 34.99    | **19.31** | 98.09    | 34.90 | 72.59   | 214.2     | 709.8    | 117.0 |
-|    4Ki | 133.6    | **72.78** | 319.8    | 130.8 | 294.2   | 835.5     | 2891     | 528.6 |
+| Length |     jumbo |     xxh3 | murmur3 |
+| -----: | --------: | -------: | ------: |
+|    1 B |      2.37 | **1.45** |    2.58 |
+|    3 B |      2.38 | **1.45** |    3.05 |
+|    5 B |      2.22 | **1.25** |    2.82 |
+|    7 B |      2.22 | **1.25** |    2.82 |
+|    8 B |      2.21 | **1.25** |    2.82 |
+|   11 B |      2.20 | **1.64** |    3.59 |
+|   15 B |      2.20 | **1.64** |    3.16 |
+|   16 B |      2.20 | **1.64** |    3.02 |
+|   19 B |      2.77 | **2.23** |    4.04 |
+|   22 B |      2.77 | **2.23** |    3.78 |
+|   27 B |      2.77 | **2.23** |    4.64 |
+|   32 B |      2.77 | **2.23** |    3.89 |
+|   38 B |      3.45 | **3.16** |    4.67 |
+|   47 B |      3.44 | **3.13** |    5.07 |
+|   48 B |      3.45 | **3.13** |    4.85 |
+|   63 B |      3.98 | **3.12** |    6.03 |
+|   64 B |      4.66 | **3.13** |    5.83 |
+|  127 B |      6.71 | **5.04** |    9.76 |
+|  128 B |      5.74 | **5.00** |    9.78 |
+|  256 B |  **7.97** |    58.27 |   18.47 |
+|  1 KiB | **22.36** |    101.2 |   72.76 |
+|  4 KiB | **80.79** |    322.4 |   293.4 |
 
-#### 128-bit one-shot throughput (ns/op, mean of the 3 fastest of 9 reps; native-128 algorithms only)
+### Apple M5 Pro · MacOS · arm64 · 18-core · clang-21 · 80a4c8a8
 
-| Length | jumbo     | xxh3     | murmur3 |
-| -----: | --------- | -------- | ------- |
-|     1B | 2.38      | **1.46** | 2.60    |
-|     3B | 2.38      | **1.46** | 3.07    |
-|     5B | 2.23      | **1.25** | 2.84    |
-|     7B | 2.23      | **1.26** | 2.84    |
-|     8B | 2.21      | **1.25** | 2.84    |
-|    11B | 2.20      | **1.64** | 3.61    |
-|    15B | 2.21      | **1.65** | 3.19    |
-|    16B | 2.21      | **1.65** | 3.04    |
-|    19B | 2.78      | **2.24** | 4.06    |
-|    22B | 2.78      | **2.24** | 3.80    |
-|    27B | 2.78      | **2.24** | 4.66    |
-|    32B | 2.78      | **2.24** | 3.91    |
-|    38B | 3.46      | **3.15** | 4.70    |
-|    47B | 3.46      | **3.15** | 5.10    |
-|    48B | 3.46      | **3.15** | 4.87    |
-|    63B | 4.00      | **3.14** | 6.06    |
-|    64B | 4.68      | **3.14** | 5.86    |
-|   127B | 6.74      | **5.06** | 9.80    |
-|   128B | 5.76      | **5.02** | 9.81    |
-|   256B | **8.01**  | 57.73    | 18.48   |
-|    1Ki | **22.50** | 100.8    | 72.88   |
-|    4Ki | **81.15** | 322.9    | 294.0   |
+<!-- Apple M5 Pro · MacOS · arm64 · 18-core · clang-21 · 80a4c8a8; mean of the 3 best of 9 reps -->
 
-#### Mixed-length latency (ns/hash, mean of the 3 fastest of 9 reps; lower is better)
+![mbo/hash 64-bit latency, Apple M5 Pro · MacOS · arm64 · 18-core · clang-21 · 80a4c8a8](measurements/charts/macos-arm64-apple-m5-pro_clang-21_latency64.svg)
 
-| max len | mumbo | rapidhash | xxh3  | xxh64 | murmur3 | siphash24 | fnv1a    | dumbo |
-| ------: | ----- | --------- | ----- | ----- | ------- | --------- | -------- | ----- |
-|      16 | 4.29  | **4.12**  | 4.29  | 7.18  | 6.68    | 8.48      | 6.88     | 5.78  |
-|      64 | 5.21  | 5.49      | 1.57  | 13.48 | 8.23    | 11.86     | **0.27** | 8.22  |
-|    1024 | 22.29 | **9.93**  | 49.64 | 39.52 | 44.07   | 112.2     | 331.3    | 59.00 |
+#### 64-bit latency (ns/hash at exact length, mean of the 3 best of 9 reps; lower is better)
+
+| Length |     mumbo | rapidhash |  xxh3 | xxh64 | murmur3 | siphash24 |    fnv1a |    dumbo |
+| -----: | --------: | --------: | ----: | ----: | ------: | --------: | -------: | -------: |
+|    1 B |      2.20 |      2.00 |  1.83 |  2.06 |    2.74 |      6.49 | **0.49** |     1.58 |
+|    3 B |      2.33 |      1.99 |  1.94 |  2.73 |    2.99 |      6.58 | **1.04** |     2.84 |
+|    5 B |      2.58 |      1.74 |  1.63 |  2.12 |    2.99 |      6.74 |     1.81 | **1.49** |
+|    7 B |      2.59 |      1.74 |  1.64 |  2.82 |    2.96 |      6.90 |     2.66 | **1.47** |
+|    8 B |      2.08 |      1.74 |  1.61 |  2.26 |    3.11 |      9.16 |     2.85 | **1.52** |
+|   11 B |      2.03 |  **1.73** |  1.73 |  3.23 |    3.51 |      9.36 |     4.41 |     2.71 |
+|   15 B |      1.96 |  **1.74** |  1.74 |  3.64 |    3.57 |      9.35 |     6.15 |     1.93 |
+|   16 B |      2.03 |  **1.74** |  1.74 |  2.73 |    3.97 |     12.16 |     6.52 |     1.88 |
+|   19 B |      2.44 |  **2.03** |  2.39 |  3.84 |    4.45 |     12.31 |     7.60 |     3.13 |
+|   22 B |      2.44 |  **1.97** |  2.39 |  4.00 |    4.38 |     12.31 |     8.99 |     2.47 |
+|   27 B |      2.44 |  **2.02** |  2.39 |  4.74 |    5.15 |     15.38 |    11.63 |     3.68 |
+|   32 B |      2.44 |  **2.00** |  2.39 |  5.09 |    5.43 |     18.44 |    15.37 |     3.12 |
+|   38 B |      2.84 |  **2.43** |  3.79 |  6.88 |    5.92 |     18.66 |    19.29 |     3.67 |
+|   47 B |      2.84 |  **2.44** |  3.79 |  8.52 |    6.32 |     21.84 |    27.47 |     4.26 |
+|   48 B |      2.83 |  **2.43** |  3.78 |  6.70 |    6.84 |     25.14 |    28.41 |     4.25 |
+|   63 B |      3.36 |  **2.96** |  3.79 | 10.31 |    7.99 |     28.70 |    40.24 |     5.78 |
+|   64 B |      3.29 |  **2.93** |  3.78 |  6.65 |    8.58 |     32.04 |    41.04 |     5.66 |
+|  127 B |      6.04 |  **4.86** |  6.50 | 13.78 |   15.04 |     57.91 |    117.3 |    12.74 |
+|  128 B |      6.55 |  **4.87** |  6.51 |  9.64 |   15.95 |     61.38 |    118.4 |    12.57 |
+|  256 B |      8.69 |  **7.44** | 26.58 | 16.21 |   33.49 |     121.0 |    287.1 |    31.04 |
+|  1 KiB |     23.74 | **22.48** | 58.64 | 55.42 |   165.2 |     476.6 |     1354 |    194.6 |
+|  4 KiB | **82.36** |     83.87 | 175.4 | 225.4 |   694.5 |      1915 |     5610 |    882.1 |
+
+![mbo/hash 64-bit throughput (Short), Apple M5 Pro · MacOS · arm64 · 18-core · clang-21 · 80a4c8a8](measurements/charts/macos-arm64-apple-m5-pro_clang-21_throughput64_Short.svg)
+
+#### 64-bit throughput, Short lengths (GiB/s over lengths <= max, mean of the 3 best of 9 reps; higher is better)
+
+| max len | mumbo | rapidhash |     xxh3 | xxh64 | murmur3 | siphash24 | fnv1a |    dumbo |
+| ------: | ----: | --------: | -------: | ----: | ------: | --------: | ----: | -------: |
+|     8 B |  0.90 |      0.72 |     1.34 |  0.91 |    0.62 |      0.51 |  1.45 | **1.51** |
+|    12 B |  1.85 |      1.44 | **2.26** |  1.45 |    1.06 |      0.75 |  1.61 |     2.15 |
+|    16 B |  2.63 |      2.45 |     3.57 |  2.01 |    2.19 |      1.01 |  1.55 | **3.64** |
+|    23 B |  3.34 |      3.44 | **3.89** |  2.27 |    2.46 |      1.17 |  1.40 |     3.70 |
+|    31 B |  3.89 |      4.48 | **4.58** |  2.70 |    2.84 |      1.32 |  1.41 |     4.44 |
+|    38 B |  3.78 |      4.40 | **4.56** |  2.64 |    2.75 |      1.30 |  1.33 |     4.29 |
+|    53 B |  4.08 |      4.65 | **4.85** |  2.91 |    2.95 |      1.38 |  1.34 |     4.53 |
+|    80 B |  4.08 |      4.71 | **4.93** |  2.91 |    2.94 |      1.38 |  1.37 |     4.73 |
+|   128 B |  4.04 |      4.44 | **4.84** |  2.90 |    2.92 |      1.38 |  1.34 |     4.49 |
+
+![mbo/hash 64-bit throughput (Web), Apple M5 Pro · MacOS · arm64 · 18-core · clang-21 · 80a4c8a8](measurements/charts/macos-arm64-apple-m5-pro_clang-21_throughput64_Web.svg)
+
+#### 64-bit throughput, Web lengths (GiB/s over lengths <= max, mean of the 3 best of 9 reps; higher is better)
+
+| max len |    mumbo | rapidhash |     xxh3 | xxh64 | murmur3 | siphash24 | fnv1a | dumbo |
+| ------: | -------: | --------: | -------: | ----: | ------: | --------: | ----: | ----: |
+|    15 B |     2.04 |      1.56 | **2.58** |  1.55 |    1.55 |      0.88 |  1.82 |  2.47 |
+|    28 B |     3.32 |      3.94 | **3.99** |  2.53 |    2.50 |      1.22 |  1.34 |  3.86 |
+|    45 B |     5.52 |  **6.19** |     5.95 |  3.65 |    3.98 |      1.57 |  1.27 |  5.83 |
+|    75 B |     7.41 |      6.66 | **8.09** |  4.70 |    5.05 |      1.75 |  1.27 |  7.29 |
+|   120 B |     8.85 |      9.09 | **9.61** |  5.59 |    5.54 |      1.81 |  1.16 |  7.64 |
+|   220 B |     9.90 |  **10.3** |     9.92 |  6.21 |    5.80 |      1.85 |  1.11 |  7.65 |
+|   512 B | **11.0** |      10.9 |     9.48 |  6.63 |    5.68 |      1.85 |  1.02 |  7.01 |
+|   2 KiB |     13.0 |  **13.5** |     10.5 |  7.64 |    5.71 |      1.88 |  0.92 |  6.28 |
+|   4 KiB |     12.5 |  **13.4** |     10.2 |  7.53 |    5.71 |      1.87 |  0.93 |  6.34 |
+
+![mbo/hash 128-bit latency, Apple M5 Pro · MacOS · arm64 · 18-core · clang-21 · 80a4c8a8](measurements/charts/macos-arm64-apple-m5-pro_clang-21_latency128.svg)
+
+#### 128-bit latency (ns/hash at exact length, mean of the 3 best of 9 reps; native-128 only; lower is better)
+
+| Length |     jumbo |     xxh3 | murmur3 |
+| -----: | --------: | -------: | ------: |
+|    1 B |      3.12 | **2.32** |    2.75 |
+|    3 B |      3.32 | **2.37** |    2.99 |
+|    5 B |      3.12 | **2.22** |    3.01 |
+|    7 B |      3.04 | **2.24** |    3.01 |
+|    8 B |      2.93 | **2.23** |    3.10 |
+|   11 B |      2.94 | **2.67** |    3.52 |
+|   15 B |      2.93 | **2.67** |    3.53 |
+|   16 B |      2.94 | **2.67** |    3.96 |
+|   19 B |      3.83 | **3.47** |    4.46 |
+|   22 B |      3.82 | **3.46** |    4.40 |
+|   27 B |      3.82 | **3.46** |    5.09 |
+|   32 B |      3.82 | **3.48** |    5.56 |
+|   38 B |  **4.44** |     4.97 |    5.86 |
+|   47 B |  **4.43** |     4.98 |    6.50 |
+|   48 B |  **4.45** |     4.99 |    6.92 |
+|   63 B |      5.30 | **4.98** |    8.01 |
+|   64 B |      6.18 | **4.98** |    8.59 |
+|  127 B |      8.73 | **8.02** |   14.92 |
+|  128 B |  **7.45** |     8.02 |   16.09 |
+|  256 B | **10.57** |    28.01 |   33.26 |
+|  1 KiB | **31.59** |    60.37 |   164.7 |
+|  4 KiB | **123.3** |    177.5 |   699.2 |
 
 <!-- END mbo/hash benchmark results -->
 
-Reading the tables (exact numbers are per machine above; the pattern holds across
-arm64/clang and x86_64/gcc): `mumbo` and `rapidhash` are close on small keys.
-`mumbo` gives up a little on 17-64 byte keys - the cost of the extra finalizer
-that gets it a clean SMHasher3 pass - but wins the mixed-length latency test,
-which is closer to how a hash table actually uses a hash. For 128-bit output,
-`jumbo` is fastest from the mid sizes up. `fnv1a` is quickest on 1-3 byte keys,
-`dumbo` does well on tiny keys but falls off on large ones, and `siphash` is
-slower throughout - the price of being a keyed PRF (Pseudo-Random Function, see
+### Reading the results
+
+Exact numbers are per machine above; the pattern holds across arm64/clang and
+x86_64/gcc. In **latency** (exact length, ns), `fnv1a` is quickest on 1-3 byte
+keys and `xxh3` across the small-to-mid range, with `mumbo` and `rapidhash` close
+behind; `mumbo` gives up a little on the 17-64 byte keys - the cost of the extra
+finalizer that earns its clean SMHasher3 pass - and `siphash` trails throughout,
+the price of being a keyed PRF (Pseudo-Random Function, see
 [SipHash: a fast short-input PRF](https://cr.yp.to/siphash/siphash-20120918.pdf)).
+In **throughput** (a realistic bounded mix, GiB/s), `rapidhash` leads as the
+upper bound grows into bulk with `mumbo` close behind, `dumbo` is strong on the
+short (identifier) mix but falls off on the long (web) one, and `fnv1a` and
+`siphash` trail on the larger mixes. For 128-bit output, `xxh3` edges `jumbo` on
+latency, but `jumbo` is the only native 128-bit hash here that passes SMHasher3
+clean.
 
 ## Quality: SMHasher3
 
@@ -465,18 +526,18 @@ numbers are directly comparable.
 
 <!-- BEGIN SMHasher3 results (generated by `hash_benchmark_report.py quality`; DO NOT EDIT) -->
 
-| Algorithm   | Bits | Role in mbo/hash          | SMHasher3 result | Failures                                                                                                                                                                                                |
-| ----------- | ---: | ------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dumbo`     |   64 | `hash.h` (compact MUM)    | PASS             | none                                                                                                                                                                                                    |
-| `fnv1a`     |   64 | `hash.h`                  | 7/186            | nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster                                                                  |
-| `mumbo`     |   64 | default (64/32/streaming) | PASS             | none                                                                                                                                                                                                    |
-| `rapidhash` |   64 | extra (`hash_extra_cc`)   | PASS             | none                                                                                                                                                                                                    |
-| `siphash`   |   64 | `hash.h` (keyed PRF)      | PASS             | none                                                                                                                                                                                                    |
-| `xxh3`      |   64 | extra (`hash_extra_cc`)   | 166/188          | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 13, 14, 15, 16], SeedBlockOffset [0, 1, 2, 3, 4], SeedBIC [3, 8]              |
-| `xxh64`     |   64 | extra (`hash_extra_cc`)   | 181/188          | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                                                      |
-| `jumbo`     |  128 | default (128)             | PASS             | none                                                                                                                                                                                                    |
-| `murmur3`   |  128 | `hash.h`                  | 123/188          | BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)                                                                                                                                  |
-| `xxh3`      |  128 | extra (`hash_extra_cc`)   | 162/188          | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12, 13, 14, 15, 16], SeedBlockOffset [0, 1, 2, 3, 4, 5], SeedBIC [3, 8] |
+| Algorithm   | Bits | Role in mbo/hash          | SMHasher3 result | Failures                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------- | ---: | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dumbo`     |   64 | `hash.h` (compact MUM)    | PASS             | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `fnv1a`     |   64 | `hash.h`                  | 7/186            | Avalanche [3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 20, 64, 128], BIC [3, 8, 11, 15], Zeroes [], Cyclic [4 cycles of 3 bytes, 4 cycles of 4 bytes, 4 cycles of 5 bytes, 4 cycles of 8 bytes, 8 cycles of 3 bytes, 8 cycles of 4 bytes, 8 cycles of 5 bytes, 8 cycles of 8 bytes, 12 cycles of 3 bytes, 12 cycles of 4 bytes, 12 cycles of 5 bytes, 12 cycles of 8 bytes, 16 cycles of 3 bytes, 16 cycles of 4 bytes, 16 cycles of 5 bytes, 16 cycles of 8 bytes], Sparse [6/2, 4/3, 4/4, 4/5, 3/6, 3/7, 3/8, 3/9, 3/10, 3/12, 3/14, 10/2, 20/3, 9/4, 5/9, 4/14, 4/16, 3/32, 3/48, 3/64, 3/96, 2/128, 2/256, 2/512, 2/1024, 2/1280] |
+| `mumbo`     |   64 | default (64/32/streaming) | PASS             | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `rapidhash` |   64 | extra (`hash_extra_cc`)   | PASS             | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `siphash`   |   64 | `hash.h` (keyed PRF)      | PASS             | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `xxh3`      |   64 | extra (`hash_extra_cc`)   | 166/188          | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 13, 14, 15, 16], SeedBlockOffset [0, 1, 2, 3, 4], SeedBIC [3, 8]                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `xxh64`     |   64 | extra (`hash_extra_cc`)   | 181/188          | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `jumbo`     |  128 | default (128)             | PASS             | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `murmur3`   |  128 | `hash.h`                  | 123/188          | BIC [3], Zeroes []                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `xxh3`      |  128 | extra (`hash_extra_cc`)   | 162/188          | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12, 13, 14, 15, 16], SeedBlockOffset [0, 1, 2, 3, 4, 5], SeedBIC [3, 8]                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 <!-- END SMHasher3 results -->
 

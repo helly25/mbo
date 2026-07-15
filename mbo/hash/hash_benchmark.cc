@@ -157,6 +157,7 @@ std::span<const int> ThroughputSizes() {
 }
 
 template<typename Algo>
+requires HasGetHash64<Algo>
 void BmHash64(benchmark::State& state) {
   const auto length = static_cast<std::size_t>(state.range(0));
   // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed data per length
@@ -285,6 +286,7 @@ const std::vector<std::string>& ThroughputKeys(std::size_t dist_index, std::size
 }
 
 template<typename Algo>
+requires HasGetHash64<Algo>
 void BmHash64Throughput(benchmark::State& state, std::size_t dist_index, std::size_t bound_index) {
   const std::vector<std::string>& keys = ThroughputKeys(dist_index, bound_index);
   int64_t total_bytes = 0;
@@ -301,31 +303,62 @@ void BmHash64Throughput(benchmark::State& state, std::size_t dist_index, std::si
   state.SetLabel(std::string(Algo::Name()));
 }
 
-// Registers the 64-bit benchmark for one algorithm, plus the 128-bit one where
-// the descriptor provides it (detected via the public HasGetHash128 concept).
+template<typename Algo>
+requires HasGetHash128<Algo>
+void BmHash128Throughput(benchmark::State& state, std::size_t dist_index, std::size_t bound_index) {
+  const std::vector<std::string>& keys = ThroughputKeys(dist_index, bound_index);
+  int64_t total_bytes = 0;
+  for (const std::string& key : keys) {
+    total_bytes += static_cast<int64_t>(key.size());
+  }
+  std::size_t counter = 0;
+  for (auto _ : state) {
+    benchmark::DoNotOptimize(Algo::GetHash128(keys[counter++ & (kLatencyKeys - 1)], kSeed));
+  }
+  state.SetItemsProcessed(state.iterations());
+  state.SetBytesProcessed(state.iterations() * (total_bytes / static_cast<int64_t>(kLatencyKeys)));
+  state.SetLabel(std::string(Algo::Name()));
+}
+
+// Registers the 64-bit benchmarks (latency + throughput) for an algorithm that
+// exposes GetHash64, and the 128-bit ones for an algorithm that exposes
+// GetHash128 - so a 64-only or a 128-only algorithm is handled correctly.
 template<typename Algo>
 void RegisterAlgo() {
   const std::string name(Algo::Name());
   const std::span<const int> sizes = ThroughputSizes();
-  auto* const hash64 = benchmark::RegisterBenchmark(absl::StrCat("BmHash64<", name, ">"), BmHash64<Algo>);
-  for (const int size : sizes) {
-    hash64->Arg(size);
+  // Throughput over upper-bounded length ranges: one benchmark per (distribution,
+  // bound), named "BmHash{64,128}Throughput<algo>/<Short|Web>:<bound>", each
+  // reporting bytes/s. Sweeping the bounds gives the upper-length -> throughput
+  // curve; the exact-length BmHash{64,128} give the latency curve.
+  if constexpr (HasGetHash64<Algo>) {
+    auto* const hash64 = benchmark::RegisterBenchmark(absl::StrCat("BmHash64<", name, ">"), BmHash64<Algo>);
+    for (const int size : sizes) {
+      hash64->Arg(size);
+    }
+    for (std::size_t dist = 0; dist < kLatencyDists.size(); ++dist) {
+      for (std::size_t bound = 0; bound < kCdfPoints; ++bound) {
+        benchmark::RegisterBenchmark(
+            absl::StrCat(
+                "BmHash64Throughput<", name, ">/", kLatencyDists[dist].name, ":",
+                kLatencyDists[dist].cdf[bound].second),
+            [dist, bound](benchmark::State& state) { BmHash64Throughput<Algo>(state, dist, bound); });
+      }
+    }
   }
   if constexpr (HasGetHash128<Algo>) {
     auto* const hash128 = benchmark::RegisterBenchmark(absl::StrCat("BmHash128<", name, ">"), BmHash128<Algo>);
     for (const int size : sizes) {
       hash128->Arg(size);
     }
-  }
-  // Throughput over upper-bounded length ranges: one benchmark per (distribution,
-  // bound), named "BmHash64Throughput<algo>/<Short|Web>:<bound>", each reporting
-  // bytes/s. Sweeping the bounds gives the upper-length -> throughput curve.
-  for (std::size_t dist = 0; dist < kLatencyDists.size(); ++dist) {
-    for (std::size_t bound = 0; bound < kCdfPoints; ++bound) {
-      benchmark::RegisterBenchmark(
-          absl::StrCat(
-              "BmHash64Throughput<", name, ">/", kLatencyDists[dist].name, ":", kLatencyDists[dist].cdf[bound].second),
-          [dist, bound](benchmark::State& state) { BmHash64Throughput<Algo>(state, dist, bound); });
+    for (std::size_t dist = 0; dist < kLatencyDists.size(); ++dist) {
+      for (std::size_t bound = 0; bound < kCdfPoints; ++bound) {
+        benchmark::RegisterBenchmark(
+            absl::StrCat(
+                "BmHash128Throughput<", name, ">/", kLatencyDists[dist].name, ":",
+                kLatencyDists[dist].cdf[bound].second),
+            [dist, bound](benchmark::State& state) { BmHash128Throughput<Algo>(state, dist, bound); });
+      }
     }
   }
 }
