@@ -20,7 +20,9 @@ The behavior of the diff engine and formatting output is fully controlled via th
 | `ignore_blank_lines`     | `bool`         | `false`               | If `true`, runs of empty or whitespace-only lines that are added or removed are ignored.             |
 | `normalize_line_endings` | `bool`         | `true`                | Standardizes `\r\n` (Windows) and `\n` (Unix) line endings to `\n` before computing the diff.        |
 
-#### Whitespace Configuration (`IgnoreSpaces` Enum)
+#### Whitespace Configuration
+
+A.k.a. (`IgnoreSpaces` Enum)
 
 - **`IgnoreSpaces::kNone`**: Strict match. Every whitespace character is treated as significant.
 - **`IgnoreSpaces::kTrailing`**: Ignores trailing whitespace at the end of each line.

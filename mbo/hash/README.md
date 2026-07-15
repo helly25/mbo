@@ -1,25 +1,27 @@
 # mbo/hash - fast, constexpr-safe, non-cryptographic hashing
 
-Fast, constexpr-safe, non-cryptographic hashing, built around the in-house
+Fast, `constexpr`-safe, non-cryptographic hashing, built around the in-house
 **mumbo/jumbo and dumbo** family: notice-free, pure Apache-2.0, and MUM-based
-(widening multiply). All three pass [SMHasher3](https://gitlab.com/fwojcik/smhasher3)
-clean (188/188). `mumbo` (64-bit) is the all-round default: among the fastest
-hashes here on every machine we measured, SMHasher3-clean, notice-free Apache-2.0,
-and with both streaming and a Starlark port - few alternatives combine all of
-these. Its native 128-bit sibling `jumbo` is the only clean native 128 we
-measured and an excellent 128-bit choice. `dumbo` is a compact single-lane
-companion with a very different profile - fastest here on tiny keys, slower on
-bulk - that trades reach for size, not quality.
+(widening multiply). All three algorithm cleanly pass the quality assesment of
+[SMHasher3](https://gitlab.com/fwojcik/smhasher3) with a rating of 188/188.
 
-It also ships a **build-seed mangle** (`hash_mangle.h`): restricted/limited,
-constexpr-safe compile-time hash mangling with release-time rotation enforcement.
-That is hash randomization for the constexpr world, which compile-time hashing
-otherwise rules out.
+The `mumbo` algorithm (64-bit) is the all-round default of this library. It is
+among the fastest hashes offered in the lirbrary on every machine we measured.
+Is is SMHasher3-clean, notice-free Apache-2.0 licensed, and offers both a
+streaming API and a [Starlark](https://github.com/bazelbuild/starlark) port so
+you can natively use the algorithm in [Bazel](https://bazel.build/) projects.
+Its native 128-bit sibling `jumbo` is the only clean native 128 we measured.
+Last but not least `dumbo` is a compact single-lane companion with a very a
+different profile - fastest (here) on tiny keys, slower on bulk, but still
+passing SMHasher2 and thus offering fully prooven hash algorithm quality.
+
+This sub-library also ships a **build-seed mangle** (`hash_mangle.h`) wrapper
+which offers restricted/limited, `constexpr`-safe compile-time hash mangling
+with release-time rotation enforcement. That is hash randomization for the
+`constexpr` world, which compile-time hashing otherwise rules out.
 
 The third-party algorithms (rapidhash, xxh3/xxh64, murmur3, siphash, fnv1a) are
-exact transcriptions, kept for interop and comparison. Algorithm reference and
-API listing: see the [repository README](../../README.md). Last but not least we
-provide quality (SMHasher3) and performance measurements for all algorithms below.
+exact transcriptions. They are provided for interoperability and comparison.
 
 ## Offerings
 
@@ -27,51 +29,53 @@ Three entry points, split by contract:
 
 - **`hash.h` / `:hash_cc` - deterministic hashing.** `GetHash64` /
   `GetHash128` / `GetHash32<Algo>`, the `Hasher<Algo>` container functor, and
-  `Streamer<Algo>` incremental hashing - all constexpr-safe and fully
-  reproducible for a given library version. Use for hash tables (heterogeneous
-  string lookup), tokenization/interning, compile-time hashing
+  `Streamer<Algo>` incremental hashing - all `constexpr`-safe and fully
+  reproducible for a given library version. Designer for use in hash tables
+  (heterogeneous string lookup), tokenization/interning, compile-time hashing
   (`static_assert`, switch-on-hash), and cross-process consistency within one
-  build. Values are not a persistence or wire format.
+  build. Values are not appropriate as a persistence mechanism or wire format.
 - **`hash_mangle.h` / `:hash_mangle_cc` - deliberately unstable hashing.**
   `GetHash` / `MangledHasher<Algo>`: `GetHash64` XORed with one build-selected
   constant, so values do not compare across independently configured builds.
-  Use when hash values must not quietly become load-bearing (persisted tables,
-  golden values, cross-build protocols) - the instability is the feature.
-  Still constexpr; semantics and design rationale in the build-seed mangle
-  section, the flags in the Configuration section below.
-- **`hash_extra.h` / `:hash_extra_cc` - NOTICE-bearing algorithms.** Canonical
-  rapidhash, xxh3, and xxh64 transcriptions, for interop with externally
-  defined values and for comparison. Shipping a binary that links this target
-  requires shipping the repository-root [NOTICE](../../NOTICE).
+  Use when hash values must not become a dependency (persisted tables, golden
+  values, cross-build protocols) - the instability is the feature. While this is
+  all still `constexpr` read up on semantics and design rationale in the below
+  section on the build-seed mangling.
+- **`hash_extra.h` / `:hash_extra_cc` - NOTICE-brequiring algorithms.** These
+  canonical algorithms (rapidhash, xxh3, and xxh64) are completely verified and
+  ested transcriptions, for interoperability with externally defined values and
+  for comparison. Shipping a binary that links this target requires shipping the
+  repository-root [NOTICE](../../NOTICE).
 
 ## Principles
 
 - **Canonical or honest**: third-party algorithms (rapidhash, XXH64/XXH3,
   MurmurHash3, SipHash, FNV-1a) are transcriptions producing the exact
   published reference values on every platform, pinned by reference vectors
-  and differential tests against the reference libraries. The in-house `mumbo`
-  algorithm is documented with its measured quality and performance data
-  (below) and its design iterations.
+  and differential tests against the reference libraries. The in-house `mumbo` /
+  `jumbo` and `dumbo` family of algorithms is documented with its measured
+  quality and performance data (below) and its design iterations.
 - **constexpr-safe single path**: compile-time and run-time evaluation always
   agree; streaming (where provided) equals the one-shot value by contract.
 - **Apache-2.0 with clean attribution**: transcription notices live in the
   repository-root [NOTICE](../../NOTICE); [LICENSE](../../LICENSE) stays pure
-  Apache-2.0. No crypto-library
-  dependencies - digests and hashes are spec-frozen pure functions that we
+  Apache-2.0 and are free of crypto-library dependencies. All hash algorithms
+  (and similarily all digest algorithms) are spec-frozen pure functions that we
   verify against official vectors instead of trusting an unverifiable supply
-  chain (see [mbo/digest/README.md](../digest/README.md) for the full argument).
+  chain (also see [mbo/digest/README.md](../digest/README.md)).
 - **Non-cryptographic hash-table hashes, with one keyed exception**: the
   defaults and comparison algorithms are fast hashes for hash tables and
-  interning - their values are neither stable across versions nor safe against
-  adversaries. `siphash` is the deliberate exception, a keyed PRF included as
-  the hash-flooding-resistant choice when the seed is a secret; it is still a
-  hash-table hash (`GetHash64` / `Hasher`), not a message digest. Cryptographic
-  **message digests** and MACs (SHA-2/3, MD5 interop, BLAKE2/3, HMAC) are a
-  different contract and live in [mbo/digest](../digest/README.md).
+  interning. Their values are neither stable across versions nor safe against
+  adversaries. The one deliberate exceptions is `siphash`, a keyed PRF
+  ([Pseudo Random Function](https://en.wikipedia.org/wiki/Pseudorandom_function_family))
+  included as the hash-flooding-resistant choice when the seed is a secret. It
+  is still a hash-table hash (`GetHash64` / `Hasher`), not a message digest.
+- **message digests**: Cryptographic and MACs (SHA-2/3, MD5 interop, BLAKE2/3,
+  HMAC) are a different contract and live in [mbo/digest](../digest/README.md).
 
 ## Algorithm overview
 
-This is the at-a-glance map; the `SMHasher3` column is a PASS/FAIL summary only.
+This is the at-a-glance overview- map. The `SMHasher3` column is a PASS/FAIL summary only.
 For the exact score and the failing families see [Quality: SMHasher3](#quality-smhasher3).
 
 <!-- BEGIN algorithm overview (generated by `hash_benchmark_report.py quality`; DO NOT EDIT) -->
@@ -91,26 +95,32 @@ For the exact score and the failing families see [Quality: SMHasher3](#quality-s
 
 <!-- END algorithm overview -->
 
-Notes: the **Starlark** column marks the hashes also implemented at build time
-in [`hash.bzl`](hash.bzl) (`hash.mumbo`, `hash.dumbo`, `hash.fnv1a`), kept
-byte-for-byte identical to the C++ prime and verified against it (`hash_tool`);
-only the one-shot 64-bit form is ported, so the native 128-bit `jumbo` and
-streaming stay C++-only. `fnv1a` is the algorithm family many `std::hash`
-implementations use (e.g. MSVC) - included as the familiar baseline. `siphash`
-is a keyed PRF: the DoS-resistant choice when the seed is a secret. `dumbo` is
-the compact single-lane member of the MUM family: the fastest hash here for tiny
-keys and SMHasher3-clean (see the design iterations), but single-lane (so it
-slows on large keys) - a deliberately minimal companion to `mumbo`, not a
-replacement for it. Linking `:hash_extra_cc` requires shipping the
-repository-root [NOTICE](../../NOTICE) (see "Third-party components" in the
-[repository README](../../README.md)).
+Notes: the **Starlark** column marks the hashes that are also implemented in
+Starlark for direct buil-graph construction time[`hash.bzl`](hash.bzl). Thos are
+(`hash.mumbo`, `hash.dumbo`, `hash.fnv1a`) and they are byte-for-byte identical
+to the C++ prime and verified against it (`hash_tool`). Only the one-shot 64-bit
+form is ported, so the native 128-bit `jumbo` and streaming stay C++-only.
+
+Note the following algorithm specifics:
+
+- `fnv1a` represents the algorithm family many `std::hash` implementations use
+  (e.g. MSVC) and is thus included as the familiar baseline.
+- `siphash` is a keyed PRF. It is the DoS-resistant choice when the seed is a
+  secret.
+- `dumbo` is the compact single-lane member of the mbo MUM family. It is the
+  fastest hash here for tiny keys and still SMHasher3-clean, but it is also a
+  single-lane implementation and so it slows on large keys. It is a deliberate
+  minimal companion to `mumbo` (not a replacement for it).
+
+Linking `:hash_extra_cc` requires shipping the repository-root [NOTICE](../../NOTICE)
+(see "Third-party components" in the [repository README](../../README.md)).
 
 ## Build-seed mangle (`hash_mangle.h` / `:hash_mangle_cc`)
 
 `mbo::hash::GetHash` and `MangledHasher<Algo>` equal `GetHash64` XORed with
 ONE build-selected constant, so values deliberately do not compare across
 independently configured builds - precomputed tables or persisted values
-cannot silently become load-bearing. Everything stays constexpr: the constant
+cannot silently become load-bearing. Everything stays `constexpr`: the constant
 is generated into a header by folding the module's own version (from
 `MODULE.bazel` via `native.module_version()` - no duplicated version
 declaration anywhere) with two custom Bazel flags (see the
@@ -138,7 +148,7 @@ shape the implementation:
    entry point participates in constant evaluation, including `GetHash`. True
    ASLR (absl-style: mixing in the address of a global) or any startup-time
    random seed cannot appear in a constant expression - adopting one would
-   split the API into a constexpr unmangled half and a runtime mangled half.
+   split the API into a `constexpr` unmangled half and a runtime mangled half.
    The entropy must be a compile-time constant, so it can only be injected at
    build time.
 
@@ -231,7 +241,7 @@ fallback constant under `-DIS_CLANGD` purely so the editor can parse it.
 
 The two frameworks compose rather than compete - pick by contract:
 `absl::Hash` is per-process randomized and tuned for tiny in-process keys;
-`mbo::hash` is canonical, cross-platform, constexpr, and streamable.
+`mbo::hash` is canonical, cross-platform, `constexpr`, and streamable.
 
 - **Containers**: `DefaultHasher` (any `Hasher<Algo>` / `MangledHasher<Algo>`)
   drops into `absl`/`std` hash containers as the `Hash` parameter for string
@@ -267,7 +277,7 @@ The two frameworks compose rather than compete - pick by contract:
   hash state implementing `combine` / `combine_contiguous` (plus unordered
   support) can execute every existing `AbslHashValue` overload, so a
   mumbo-backed state could swap the algorithm underneath all absl-hashable
-  types. Worth it only when structured types need canonical or constexpr
+  types. Worth it only when structured types need canonical or `constexpr`
   hashing; for byte keys the container functor above already does the job.
 
 ## Performance
