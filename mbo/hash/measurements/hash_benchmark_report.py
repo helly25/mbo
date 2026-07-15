@@ -827,14 +827,16 @@ def _svg_plot(data, algos, title, path, label_map=None, subtitle=None, linear_y=
             y = py(tick)
             svg.append(f'<line x1="{pad_l}" y1="{y:.1f}" x2="{pad_l + plot_w:.1f}" y2="{y:.1f}" stroke="#eee"/>')
             svg.append(f'<text x="{pad_l - 6}" y="{y + 3:.1f}" font-size="10" text-anchor="end">{tick:g}</text>')
-    else:  # y gridlines + labels at each power of ten in range
+    else:  # y gridlines + labels at 1-2-5 x 10^exp within range (readable on both
+        # the ~4-decade latency axis and the narrow ~1-decade throughput axis)
         exp = math.floor(ly0)
         while exp <= math.ceil(ly1):
-            ns = 10.0**exp
-            if ly0 - 1e-9 <= math.log10(ns) <= ly1 + 1e-9:
-                y = py(ns)
-                svg.append(f'<line x1="{pad_l}" y1="{y:.1f}" x2="{pad_l + plot_w:.1f}" y2="{y:.1f}" stroke="#eee"/>')
-                svg.append(f'<text x="{pad_l - 6}" y="{y + 3:.1f}" font-size="10" text-anchor="end">{ns:g}</text>')
+            for mantissa in (1, 2, 5):
+                val = mantissa * 10.0**exp
+                if ly0 - 1e-9 <= math.log10(val) <= ly1 + 1e-9:
+                    y = py(val)
+                    svg.append(f'<line x1="{pad_l}" y1="{y:.1f}" x2="{pad_l + plot_w:.1f}" y2="{y:.1f}" stroke="#eee"/>')
+                    svg.append(f'<text x="{pad_l - 6}" y="{y + 3:.1f}" font-size="10" text-anchor="end">{val:g}</text>')
             exp += 1
     size = 1  # x gridlines at powers of two, labels at powers of four
     while size <= sizes[-1]:

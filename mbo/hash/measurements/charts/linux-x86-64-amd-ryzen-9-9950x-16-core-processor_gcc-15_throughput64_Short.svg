@@ -4,6 +4,10 @@
 <text x="450" y="44" font-size="12" fill="#6b7280" text-anchor="middle">AMD Ryzen 9 9950X 16-Core Processor · Linux · x86_64 · 10-core · gcc-15 · 80a4c8a8</text>
 <line x1="66" y1="416.1" x2="768.0" y2="416.1" stroke="#eee"/>
 <text x="60" y="419.1" font-size="10" text-anchor="end">1</text>
+<line x1="66" y1="313.5" x2="768.0" y2="313.5" stroke="#eee"/>
+<text x="60" y="316.5" font-size="10" text-anchor="end">2</text>
+<line x1="66" y1="177.9" x2="768.0" y2="177.9" stroke="#eee"/>
+<text x="60" y="180.9" font-size="10" text-anchor="end">5</text>
 <line x1="66" y1="75.3" x2="768.0" y2="75.3" stroke="#eee"/>
 <text x="60" y="78.3" font-size="10" text-anchor="end">10</text>
 <line x1="66.0" y1="62" x2="66.0" y2="484.0" stroke="#f3f4f6"/>
