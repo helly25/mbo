@@ -256,7 +256,7 @@ INI groups are used as sections. They can build ahierarchy:
 
 Example:
 
-```
+```text
 [person]
 id=0
 [person.contact]

@@ -18,7 +18,7 @@ jobs:
         # But for simplicity and safety we only work on the reported branch.
         # On the main branch this `cache_cleanup` workflow may not delete the last version as that
         # that would mean that the `test` workflow triggered for the same state will not find any
-        # caches. That is because the the `cache_cleanup` workflow is much faster and will most
+        # caches. That is because the `cache_cleanup` workflow is much faster and will most
         # likely finish during the initial `pre-commit` job of the `test` workflow.
         # Not that last version for the head ref means last cache version per cache key prefix.
         run: |

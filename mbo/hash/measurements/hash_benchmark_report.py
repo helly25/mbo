@@ -1229,10 +1229,20 @@ def dispatch_publish(args, stamp):
         full = _results_from_bundle(bundle_path)  # re-distilled from the bundle's raw (see B)
         ctx = full.get("context", {})
         label = _machine_label(ctx)
+        # We did the measurement before the extras were saved.
+        # if label == "AMD Ryzen 9 9950X 16-Core Processor · Linux · x86_64 · 10-core · clang-22 · 29b54ccd":
+        #    ctx["config"] = ["clang"]
+        #    ctx["copt"] = ["-march=znver5"]
         charts = dict(_render_charts(full, _bundle_stem(ctx), args.charts_dir, label))  # tag -> filename
         # `### {label}` heads the block; each section is its chart (if any)
         # immediately followed by its table, in layout order.
         parts = [f"### {label}", "", f"<!-- {label}; {_agg_label(ctx)} -->"]
+        extras = []
+        for extra_key in ["config", "copt", "host_copt"]:
+            if ctx.get(extra_key):
+                extras += [f"- **{extra_key}**: " + ", ".join([f"`{x}`" for x in ctx[extra_key]])]
+        if extras:
+            parts += ["", "#### Extra build configuration", ""] + extras
         for section in _sections(full):
             if section["tag"] in charts:
                 parts += ["", f"![mbo/hash {section['title']}, {label}]({rel}/{charts[section['tag']]})"]
