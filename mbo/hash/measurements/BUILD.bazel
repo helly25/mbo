@@ -35,4 +35,5 @@ bashtest(
         "hash_benchmark_report.py",
         "//mbo/hash:README.md",
     ] + glob(["data/*.tgz"]),
+    tags = ["lfs"],
 )
