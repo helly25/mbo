@@ -13,6 +13,8 @@ jobs:
     uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     with:
       release_files: mbo-*.tar.gz
       prerelease: true
