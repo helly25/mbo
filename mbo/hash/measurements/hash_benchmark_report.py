@@ -1229,7 +1229,7 @@ def dispatch_publish(args, stamp):
         full = _results_from_bundle(bundle_path)  # re-distilled from the bundle's raw (see B)
         ctx = full.get("context", {})
         label = _machine_label(ctx)
-        # We did the measurement before the the extras were saved.
+        # We did the measurement before the extras were saved.
         # if label == "AMD Ryzen 9 9950X 16-Core Processor · Linux · x86_64 · 10-core · clang-22 · 29b54ccd":
         #    ctx["config"] = ["clang"]
         #    ctx["copt"] = ["-march=znver5"]
