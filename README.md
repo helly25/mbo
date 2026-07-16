@@ -36,7 +36,7 @@ The C++ library is organized in functional groups each residing in their own dir
   - mbo/container:limited_vector_cc, mbo/container/limited_vector.h
     - class `LimitedVector`: A space limited, constexpr compliant `vector`.
 - Diff
-  - `namespace mbo::diff`
+  - `namespace mbo::diff` - library docs: [mbo/diff/README.md](mbo/diff/README.md)
   - mbo/diff:diff_cc, mbo/diff/diff.h
     - class `Diff`: A class that implements line based diffing in unified, context, normal or side-by-side output format (`DiffOptions::output_format`), using the Myers minimal diff algorithm by default (`DiffOptions::algorithm` also offers `naive` and `direct`).
   - mbo/diff

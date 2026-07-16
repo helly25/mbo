@@ -62,7 +62,9 @@ def main(argv):
     parser.add_argument("--algos", default="all", help="SMHasher3 algorithms (default 'all'; e.g. mumbo,jumbo,dumbo)")
     parser.add_argument("--jobs", type=int, default=4, help="SMHasher3 batteries to run concurrently (default 4)")
     parser.add_argument("--reps", type=int, default=9, help="benchmark repetitions (default 9)")
-    parser.add_argument("--config", help="bazel --config for the perf benchmark (e.g. clang, gcc); picks the toolchain + recorded compiler")
+    parser.add_argument("--config", action="append", default=[], help="bazel --config for the benchmark build (e.g. `--config=clang`); works well with .user.bazelrc to pick the toolchain and the recorded compiler")
+    parser.add_argument("--copt", action="append", default=[], help="bazel --copt for the benchmark build (e.g. `--copt=-O3`); allows manual fine tuning of the compiler flags")
+    parser.add_argument("--host_copt", action="append", default=[], help="bazel --host_copt for the benchmark build (e.g. `--host_copt=-O3`); allows manual fine tuning of the host compiler flags")
     parser.add_argument(
         "--workdir",
         default=os.path.expanduser("~/.cache/mbo-hash-smh"),
@@ -97,7 +99,13 @@ def main(argv):
     extras = []  # extra files packed alongside the canonical in the per-machine bundle
 
     if not args.skip_perf:
-        cfg = ["--config", args.config] if args.config else []
+        cfg = []
+        if args.config:
+            cfg.extend([f"--config={arg}" for arg in args.config])
+        if args.copt:
+            cfg.extend([f"--copt={arg}" for arg in args.copt])
+        if args.host_copt:
+            cfg.extend([f"--host_copt={arg}" for arg in args.host_copt])
         print(">>> [perf] full performance sweep (runs solo for clean numbers)", file=sys.stderr)
         # A single FULL run: the dense curve AND (via readme_sizes in its context) the
         # curated README table are both extracted from it downstream by `publish`.

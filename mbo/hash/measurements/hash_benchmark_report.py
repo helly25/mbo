@@ -939,7 +939,7 @@ def render_results_table(algorithms, measured):
     for algo in algorithms:
         entry = _measured_entry(algo["smhasher"], measured)
         if entry["verdict"] == "PASS":
-            result, failures = "PASS", "none"
+            result, failures = "**PASS**", "none"
         else:
             passed, total = entry.get("passed"), entry.get("total")
             if passed is None or total is None or passed >= total:
@@ -950,20 +950,31 @@ def render_results_table(algorithms, measured):
     return _md_table(headers, rows, aligns)
 
 
+def _bold_if(text, condition):
+    return f"**{text}**" if condition else text
+
+
+def _bold_if_yes(text):
+    return f"**{text}**" if text.lower() == "yes" else text
+
+
 def render_overview_table(algorithms, measured, overview_order):
     """Render the "## Algorithm overview" table: manual columns from the JSON, the
     `SMHasher3` PASS/FAIL derived from the measured verdict (so it cannot disagree
     with the Results table). Rows follow the overview's own curated order."""
-    headers = ["Algorithm", "Bits", "Available via", "Starlark", "NOTICE", "Seeded", "Streaming", "SMHasher3"]
+    headers = ["Algorithm", "Bits", "SMHasher3", "Seeded", "Streaming", "Starlark", "NOTICE", "Available via"]
     aligns = ["l", "r", "l", "l", "l", "l", "l", "l"]
     by_name = {algo["smhasher"]: algo for algo in algorithms}
     rows = []
     for name in overview_order:
         algo = by_name[name]
         entry = _measured_entry(name, measured)
+        verdict = _bold_if(entry["verdict"], entry["verdict"] == "PASS")
+        starlark = _bold_if_yes(algo["starlark"])
+        streaming = _bold_if_yes(algo["streaming"])
         rows.append([
-            f"`{algo['algo']}`", str(algo["bits"]), algo["available_via"], algo["starlark"],
-            algo["notice"], algo["seeded"], algo["streaming"], entry["verdict"],
+            f"`{algo['algo']}`", str(algo["bits"]), verdict,
+            algo["seeded"], streaming, starlark, algo["notice"], algo["available_via"],
         ])
     return _md_table(headers, rows, aligns)
 
@@ -1097,6 +1108,247 @@ def _add_dataset_arg(parser):
     parser.add_argument("--bundle", help="data bundle .tgz; same as passing it positionally")
 
 
+def dispatch_help(_, parser):
+    parser.print_help()
+    return 0
+
+
+def dispatch_run(args, stamp):
+    raw = _run_benchmark(args.mode, args.reps, args.min_time, args.warmup, args.config, args.copt, args.host_copt)
+    if args.raw:
+        raw_path = _timestamped(args.raw, stamp)
+        opener = gzip.open if raw_path.endswith(".gz") else open
+        with opener(raw_path, "wt") as handle:
+            json.dump(raw, handle)
+        print(f"wrote {raw_path}", file=sys.stderr)
+    results = distill(raw, args.mode)
+    context = results.setdefault("context", {})
+    context["config"] = args.config
+    context["copt"] = args.copt
+    context["host_copt"] = args.host_copt
+    _warn_context(results)
+    if args.out:
+        out_path = _timestamped(args.out, stamp)
+        _dump_canonical(results, out_path)
+        print(f"wrote {out_path}", file=sys.stderr)
+    if args.tables or not args.out:
+        print(render_tables(results))
+    return 0
+
+
+def dispatch_store(args, stamp):
+    results = distill(_load_json(args.raw), args.mode)
+    _warn_context(results)
+    out_path = _timestamped(args.out, stamp)
+    _dump_canonical(results, out_path)
+    print(f"wrote {out_path}", file=sys.stderr)
+    return 0
+
+
+def dispatch_tables(args, stamp):
+    print(render_tables(_resolve_dataset(args)))
+    return 0
+
+
+def dispatch_compare(args, stamp):
+    print(render_compare(_load_dataset(args.a), _load_dataset(args.b)))
+    return 0
+
+
+def dispatch_plot(args, stamp):
+    results = _resolve_dataset(args)
+    base, ext = os.path.splitext(_timestamped(args.out, stamp))
+    linear_y = args.scale == "linear-log"
+    # `--kind` picks latency (ns-vs-length) and/or throughput (GiB/s-vs-bound)
+    # sections; one SVG per section, suffixed by its tag.
+    for section in _sections(results):
+        data = section["chart"]
+        if not data or (args.kind != "all" and section["kind"] != args.kind):
+            continue
+        y_label, x_label = ("GiB / s", "max length") if section["kind"] == "throughput" else ("ns / op", "key length")
+        _svg_plot(
+            data, _order(list(data), section["order"]), f"mbo/hash - {section['title']}",
+            f"{base}_{section['tag']}{ext}", section["relabel"], linear_y=linear_y, y_label=y_label, x_label=x_label,
+        )
+    return 0
+
+
+def dispatch_smhasher(args, stamp):
+    algos = [a.strip() for a in args.algos.split(",") if a.strip()]
+    names = _resolve_smhasher_names(algos)
+    results = {
+        "context": {**_provenance_context(), "smhasher": {"names": names, "smhasher3": args.smhasher3}},
+        "smhasher": run_smhasher(args.smhasher3, names, args.raw_dir, stamp, args.jobs),
+    }
+    _warn_context(results)
+    for name, entry in results["smhasher"].items():
+        score = f" ({entry['score']})" if entry.get("score") else ""
+        if entry["verdict"] == "ERROR":
+            why = f" - {entry.get('error') or 'measurement error'}"
+        else:
+            why = f" - failed: {', '.join(entry['failures'])}" if entry["failures"] else ""
+        print(f"  {name}: {entry['verdict']}{score}{why}")
+    errored = [n for n, r in results["smhasher"].items() if r["verdict"] == "ERROR"]
+    failed = [n for n, r in results["smhasher"].items() if r["verdict"] == "FAIL"]
+    passed = len(names) - len(failed) - len(errored)
+    tail = "".join(
+        f"; {label}: {', '.join(bad)}" for label, bad in (("ERROR", errored), ("FAIL", failed)) if bad
+    )
+    print(f"SMHasher3: {passed}/{len(names)} PASS" + tail)
+    if args.out:
+        out_path = _timestamped(args.out, stamp)
+        _dump_canonical(results, out_path)
+        print(f"wrote {out_path}", file=sys.stderr)
+    return 1 if (failed or errored) else 0
+
+def dispatch_bundle(args, stamp):
+    results = _load_json(args.results)
+    ctx = results.get("context", {})
+    slug = _platform_slug(ctx)
+    cores = ctx.get("num_cpus", "?")
+    compiler = _slug(ctx.get("compiler") or "cc")
+    sha = ((ctx.get("source") or {}).get("git_sha") or "nogit")[:8]
+    # Flat: the filename already carries the full machine identity, so no subdir.
+    os.makedirs(args.data_dir, exist_ok=True)
+    dest = os.path.join(args.data_dir, f"{slug}_{cores}c_{compiler}_{sha}_{stamp}.tgz")
+    with tarfile.open(dest, "w:gz") as tar:
+        tar.add(args.results, arcname="results.json")  # canonical: chart + tables + verify
+        for path in args.include:
+            if path and os.path.exists(path):
+                tar.add(path, arcname=os.path.basename(path))
+    print(dest)  # stdout: bundle path (for scripting)
+    print(f"wrote {dest}", file=sys.stderr)
+    return 0
+
+
+def dispatch_publish(args, stamp):
+    os.makedirs(args.charts_dir, exist_ok=True)
+    rel = os.path.relpath(args.charts_dir, os.path.dirname(os.path.abspath(args.readme)))
+    blocks = []  # (label, bundle_path, section) - sorted by label below, not by input order
+    for bundle_path in args.bundles:
+        full = _results_from_bundle(bundle_path)  # re-distilled from the bundle's raw (see B)
+        ctx = full.get("context", {})
+        label = _machine_label(ctx)
+        charts = dict(_render_charts(full, _bundle_stem(ctx), args.charts_dir, label))  # tag -> filename
+        # `### {label}` heads the block; each section is its chart (if any)
+        # immediately followed by its table, in layout order.
+        parts = [f"### {label}", "", f"<!-- {label}; {_agg_label(ctx)} -->"]
+        for section in _sections(full):
+            if section["tag"] in charts:
+                parts += ["", f"![mbo/hash {section['title']}, {label}]({rel}/{charts[section['tag']]})"]
+            parts += ["", f"#### {section['heading']}", "", section["table"]]
+        blocks.append((label, bundle_path, "\n".join(parts)))
+        print(f"published {label}", file=sys.stderr)
+    # Order sections (and the manifest) by the generated header, so the README
+    # is stable regardless of the order bundles were passed on the command line.
+    blocks.sort(key=lambda block: block[0])
+    manifest = "<!-- bundles: " + " ".join(os.path.relpath(b) for _, b, _ in blocks) + " -->"
+    region = "\n".join([_PERF_BEGIN, manifest, "", "\n\n".join(s for _, _, s in blocks), _PERF_END])
+    text = open(args.readme).read()
+    if _PERF_BEGIN not in text or _PERF_END not in text:
+        raise SystemExit(f"markers not found in {args.readme}; add a {_PERF_BEGIN} ... {_PERF_END} region")
+    text = text[: text.index(_PERF_BEGIN)] + region + text[text.index(_PERF_END) + len(_PERF_END) :]
+    with open(args.readme, "w") as handle:
+        handle.write(text)
+    print(f"wrote perf section into {args.readme} ({len(args.bundles)} machine(s))", file=sys.stderr)
+    return 0
+
+
+def dispatch_verify(args, stamp):
+    match = re.search(r"<!-- bundles: (.*?) -->", open(args.readme).read())
+    if not match:
+        raise SystemExit(f"no bundle manifest in {args.readme}; run `publish` first")
+    bundles = match.group(1).split()
+    mismatches = []
+    for bundle_path in bundles:
+        full = _results_from_bundle(bundle_path)  # re-distilled from the bundle's raw (see B)
+        ctx = full.get("context", {})
+        with tempfile.TemporaryDirectory() as tmp:
+            for _, name in _render_charts(full, _bundle_stem(ctx), tmp, _machine_label(ctx)):
+                committed = os.path.join(args.charts_dir, name)
+                if not os.path.exists(committed) or not filecmp.cmp(os.path.join(tmp, name), committed, shallow=False):
+                    mismatches.append(name)
+    if mismatches:
+        print(f"VERIFY FAILED: committed charts differ from the bundle data: {', '.join(sorted(set(mismatches)))}", file=sys.stderr)
+        return 1
+    print(f"VERIFY OK: committed charts match all {len(bundles)} bundle(s)", file=sys.stderr)
+    return 0
+
+def dispatch_quality(args, stamp):
+    algorithms, overview_order = _load_algorithms()
+    measured = _fill_missing_measured(_measured_from_bundle(_one_path([args.bundle_pos, args.bundle], "bundle")))
+    text = open(args.readme).read()
+    regions = [
+        (_OVERVIEW_BEGIN, _OVERVIEW_END, render_overview_table(algorithms, measured, overview_order)),
+        (_SMH_BEGIN, _SMH_END, render_results_table(algorithms, measured)),
+    ]
+    new = text
+    for begin, end, body in regions:
+        if begin not in new or end not in new:
+            raise SystemExit(f"markers not found in {args.readme}; add a {begin} ... {end} region")
+        block = "\n".join([begin, "", body, "", end])
+        new = new[: new.index(begin)] + block + new[new.index(end) + len(end) :]
+    if args.check:
+        if new != text:
+            print(f"VERIFY FAILED: the generated tables in {args.readme} are stale; run `quality`", file=sys.stderr)
+            return 1
+        print("VERIFY OK: the generated overview + Results tables match hash_algorithms.json + the bundle", file=sys.stderr)
+        return 0
+    if new != text:
+        with open(args.readme, "w") as handle:
+            handle.write(new)
+        print(f"wrote the overview + Results tables into {args.readme}", file=sys.stderr)
+    else:
+        print(f"the generated tables are already current in {args.readme}", file=sys.stderr)
+    return 0
+
+
+def dispatch_consistency(args, stamp):
+    bundles = args.bundles or sorted(
+        os.path.join(args.data_dir, f) for f in os.listdir(args.data_dir) if f.endswith(".tgz")
+    )
+    if not bundles:
+        raise SystemExit(f"no bundles found (looked in {args.data_dir})")
+    # Group by the source git SHA embedded in the bundle filename
+    # (<slug>_<cores>c_<compiler>_<sha8>_<stamp>.tgz). SMHasher3 verdicts are a
+    # property of the algorithm, not the machine, so bundles at the same SHA
+    # must report identical measurements - a difference means a broken run.
+    by_sha = {}
+    for bundle in bundles:
+        match = re.search(r"_([0-9a-fA-F]{8})_\d{8}_\d{6}\.tgz$", os.path.basename(bundle))
+        sha = match.group(1) if match else os.path.basename(bundle)
+        by_sha.setdefault(sha, []).append((bundle, _measured_from_bundle(bundle)))
+
+    def _key(entry):
+        if entry is None:
+            return None
+        return (entry["verdict"], entry.get("passed"), entry.get("total"), tuple(entry.get("failures") or []))
+
+    problems = []
+    for sha, group in sorted(by_sha.items()):
+        if len(group) < 2:
+            print(f"consistency: SHA {sha}: only 1 bundle, nothing to cross-check", file=sys.stderr)
+            continue
+        ref_bundle, ref = group[0]
+        names = sorted(set().union(*(set(meas) for _, meas in group)))
+        for bundle, meas in group[1:]:
+            for name in names:
+                if _key(ref.get(name)) != _key(meas.get(name)):
+                    problems.append(
+                        f"SHA {sha}: {name} differs between {os.path.basename(ref_bundle)} "
+                        f"and {os.path.basename(bundle)}: {_key(ref.get(name))} vs {_key(meas.get(name))}"
+                    )
+    for problem in problems:
+        print(f"VERIFY FAILED: {problem}", file=sys.stderr)
+    if problems:
+        return 1
+    print(
+        f"VERIFY OK: {len(bundles)} bundle(s) in {len(by_sha)} source-SHA group(s) agree on all SMHasher3 measurements",
+        file=sys.stderr,
+    )
+    return 0
+
+
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1191,239 +1443,25 @@ def main(argv):
     p_consistency.add_argument("--data-dir", default="mbo/hash/measurements/data")
 
     args = parser.parse_args(argv)
+
     # One stamp per invocation, so all files a run writes share it. Every
     # written artifact is prefixed `YYYYMMDD_HHMMSS_` so nothing is overwritten
     # and the filename records when it was produced.
     stamp = _timestamp()
-
-    if args.command == "help":
-        parser.print_help()
-        return 0
-
-    if args.command == "run":
-        raw = _run_benchmark(args.mode, args.reps, args.min_time, args.warmup, args.config, args.copt, args.host_copt)
-        if args.raw:
-            raw_path = _timestamped(args.raw, stamp)
-            opener = gzip.open if raw_path.endswith(".gz") else open
-            with opener(raw_path, "wt") as handle:
-                json.dump(raw, handle)
-            print(f"wrote {raw_path}", file=sys.stderr)
-        results = distill(raw, args.mode)
-        _warn_context(results)
-        if args.out:
-            out_path = _timestamped(args.out, stamp)
-            _dump_canonical(results, out_path)
-            print(f"wrote {out_path}", file=sys.stderr)
-        if args.tables or not args.out:
-            print(render_tables(results))
-        return 0
-
-    if args.command == "store":
-        results = distill(_load_json(args.raw), args.mode)
-        _warn_context(results)
-        out_path = _timestamped(args.out, stamp)
-        _dump_canonical(results, out_path)
-        print(f"wrote {out_path}", file=sys.stderr)
-        return 0
-
-    if args.command == "tables":
-        print(render_tables(_resolve_dataset(args)))
-        return 0
-
-    if args.command == "compare":
-        print(render_compare(_load_dataset(args.a), _load_dataset(args.b)))
-        return 0
-
-    if args.command == "plot":
-        results = _resolve_dataset(args)
-        base, ext = os.path.splitext(_timestamped(args.out, stamp))
-        linear_y = args.scale == "linear-log"
-        # `--kind` picks latency (ns-vs-length) and/or throughput (GiB/s-vs-bound)
-        # sections; one SVG per section, suffixed by its tag.
-        for section in _sections(results):
-            data = section["chart"]
-            if not data or (args.kind != "all" and section["kind"] != args.kind):
-                continue
-            y_label, x_label = ("GiB / s", "max length") if section["kind"] == "throughput" else ("ns / op", "key length")
-            _svg_plot(
-                data, _order(list(data), section["order"]), f"mbo/hash - {section['title']}",
-                f"{base}_{section['tag']}{ext}", section["relabel"], linear_y=linear_y, y_label=y_label, x_label=x_label,
-            )
-        return 0
-
-    if args.command == "smhasher":
-        algos = [a.strip() for a in args.algos.split(",") if a.strip()]
-        names = _resolve_smhasher_names(algos)
-        results = {
-            "context": {**_provenance_context(), "smhasher": {"names": names, "smhasher3": args.smhasher3}},
-            "smhasher": run_smhasher(args.smhasher3, names, args.raw_dir, stamp, args.jobs),
-        }
-        _warn_context(results)
-        for name, entry in results["smhasher"].items():
-            score = f" ({entry['score']})" if entry.get("score") else ""
-            if entry["verdict"] == "ERROR":
-                why = f" - {entry.get('error') or 'measurement error'}"
-            else:
-                why = f" - failed: {', '.join(entry['failures'])}" if entry["failures"] else ""
-            print(f"  {name}: {entry['verdict']}{score}{why}")
-        errored = [n for n, r in results["smhasher"].items() if r["verdict"] == "ERROR"]
-        failed = [n for n, r in results["smhasher"].items() if r["verdict"] == "FAIL"]
-        passed = len(names) - len(failed) - len(errored)
-        tail = "".join(
-            f"; {label}: {', '.join(bad)}" for label, bad in (("ERROR", errored), ("FAIL", failed)) if bad
-        )
-        print(f"SMHasher3: {passed}/{len(names)} PASS" + tail)
-        if args.out:
-            out_path = _timestamped(args.out, stamp)
-            _dump_canonical(results, out_path)
-            print(f"wrote {out_path}", file=sys.stderr)
-        return 1 if (failed or errored) else 0
-
-    if args.command == "bundle":
-        results = _load_json(args.results)
-        ctx = results.get("context", {})
-        slug = _platform_slug(ctx)
-        cores = ctx.get("num_cpus", "?")
-        compiler = _slug(ctx.get("compiler") or "cc")
-        sha = ((ctx.get("source") or {}).get("git_sha") or "nogit")[:8]
-        # Flat: the filename already carries the full machine identity, so no subdir.
-        os.makedirs(args.data_dir, exist_ok=True)
-        dest = os.path.join(args.data_dir, f"{slug}_{cores}c_{compiler}_{sha}_{stamp}.tgz")
-        with tarfile.open(dest, "w:gz") as tar:
-            tar.add(args.results, arcname="results.json")  # canonical: chart + tables + verify
-            for path in args.include:
-                if path and os.path.exists(path):
-                    tar.add(path, arcname=os.path.basename(path))
-        print(dest)  # stdout: bundle path (for scripting)
-        print(f"wrote {dest}", file=sys.stderr)
-        return 0
-
-    if args.command == "publish":
-        os.makedirs(args.charts_dir, exist_ok=True)
-        rel = os.path.relpath(args.charts_dir, os.path.dirname(os.path.abspath(args.readme)))
-        blocks = []  # (label, bundle_path, section) - sorted by label below, not by input order
-        for bundle_path in args.bundles:
-            full = _results_from_bundle(bundle_path)  # re-distilled from the bundle's raw (see B)
-            ctx = full.get("context", {})
-            label = _machine_label(ctx)
-            charts = dict(_render_charts(full, _bundle_stem(ctx), args.charts_dir, label))  # tag -> filename
-            # `### {label}` heads the block; each section is its chart (if any)
-            # immediately followed by its table, in layout order.
-            parts = [f"### {label}", "", f"<!-- {label}; {_agg_label(ctx)} -->"]
-            for section in _sections(full):
-                if section["tag"] in charts:
-                    parts += ["", f"![mbo/hash {section['title']}, {label}]({rel}/{charts[section['tag']]})"]
-                parts += ["", f"#### {section['heading']}", "", section["table"]]
-            blocks.append((label, bundle_path, "\n".join(parts)))
-            print(f"published {label}", file=sys.stderr)
-        # Order sections (and the manifest) by the generated header, so the README
-        # is stable regardless of the order bundles were passed on the command line.
-        blocks.sort(key=lambda block: block[0])
-        manifest = "<!-- bundles: " + " ".join(os.path.relpath(b) for _, b, _ in blocks) + " -->"
-        region = "\n".join([_PERF_BEGIN, manifest, "", "\n\n".join(s for _, _, s in blocks), _PERF_END])
-        text = open(args.readme).read()
-        if _PERF_BEGIN not in text or _PERF_END not in text:
-            raise SystemExit(f"markers not found in {args.readme}; add a {_PERF_BEGIN} ... {_PERF_END} region")
-        text = text[: text.index(_PERF_BEGIN)] + region + text[text.index(_PERF_END) + len(_PERF_END) :]
-        with open(args.readme, "w") as handle:
-            handle.write(text)
-        print(f"wrote perf section into {args.readme} ({len(args.bundles)} machine(s))", file=sys.stderr)
-        return 0
-
-    if args.command == "verify":
-        match = re.search(r"<!-- bundles: (.*?) -->", open(args.readme).read())
-        if not match:
-            raise SystemExit(f"no bundle manifest in {args.readme}; run `publish` first")
-        bundles = match.group(1).split()
-        mismatches = []
-        for bundle_path in bundles:
-            full = _results_from_bundle(bundle_path)  # re-distilled from the bundle's raw (see B)
-            ctx = full.get("context", {})
-            with tempfile.TemporaryDirectory() as tmp:
-                for _, name in _render_charts(full, _bundle_stem(ctx), tmp, _machine_label(ctx)):
-                    committed = os.path.join(args.charts_dir, name)
-                    if not os.path.exists(committed) or not filecmp.cmp(os.path.join(tmp, name), committed, shallow=False):
-                        mismatches.append(name)
-        if mismatches:
-            print(f"VERIFY FAILED: committed charts differ from the bundle data: {', '.join(sorted(set(mismatches)))}", file=sys.stderr)
-            return 1
-        print(f"VERIFY OK: committed charts match all {len(bundles)} bundle(s)", file=sys.stderr)
-        return 0
-
-    if args.command == "quality":
-        algorithms, overview_order = _load_algorithms()
-        measured = _fill_missing_measured(_measured_from_bundle(_one_path([args.bundle_pos, args.bundle], "bundle")))
-        text = open(args.readme).read()
-        regions = [
-            (_OVERVIEW_BEGIN, _OVERVIEW_END, render_overview_table(algorithms, measured, overview_order)),
-            (_SMH_BEGIN, _SMH_END, render_results_table(algorithms, measured)),
-        ]
-        new = text
-        for begin, end, body in regions:
-            if begin not in new or end not in new:
-                raise SystemExit(f"markers not found in {args.readme}; add a {begin} ... {end} region")
-            block = "\n".join([begin, "", body, "", end])
-            new = new[: new.index(begin)] + block + new[new.index(end) + len(end) :]
-        if args.check:
-            if new != text:
-                print(f"VERIFY FAILED: the generated tables in {args.readme} are stale; run `quality`", file=sys.stderr)
-                return 1
-            print("VERIFY OK: the generated overview + Results tables match hash_algorithms.json + the bundle", file=sys.stderr)
-            return 0
-        if new != text:
-            with open(args.readme, "w") as handle:
-                handle.write(new)
-            print(f"wrote the overview + Results tables into {args.readme}", file=sys.stderr)
-        else:
-            print(f"the generated tables are already current in {args.readme}", file=sys.stderr)
-        return 0
-
-    if args.command == "consistency":
-        bundles = args.bundles or sorted(
-            os.path.join(args.data_dir, f) for f in os.listdir(args.data_dir) if f.endswith(".tgz")
-        )
-        if not bundles:
-            raise SystemExit(f"no bundles found (looked in {args.data_dir})")
-        # Group by the source git SHA embedded in the bundle filename
-        # (<slug>_<cores>c_<compiler>_<sha8>_<stamp>.tgz). SMHasher3 verdicts are a
-        # property of the algorithm, not the machine, so bundles at the same SHA
-        # must report identical measurements - a difference means a broken run.
-        by_sha = {}
-        for bundle in bundles:
-            match = re.search(r"_([0-9a-fA-F]{8})_\d{8}_\d{6}\.tgz$", os.path.basename(bundle))
-            sha = match.group(1) if match else os.path.basename(bundle)
-            by_sha.setdefault(sha, []).append((bundle, _measured_from_bundle(bundle)))
-
-        def _key(entry):
-            if entry is None:
-                return None
-            return (entry["verdict"], entry.get("passed"), entry.get("total"), tuple(entry.get("failures") or []))
-
-        problems = []
-        for sha, group in sorted(by_sha.items()):
-            if len(group) < 2:
-                print(f"consistency: SHA {sha}: only 1 bundle, nothing to cross-check", file=sys.stderr)
-                continue
-            ref_bundle, ref = group[0]
-            names = sorted(set().union(*(set(meas) for _, meas in group)))
-            for bundle, meas in group[1:]:
-                for name in names:
-                    if _key(ref.get(name)) != _key(meas.get(name)):
-                        problems.append(
-                            f"SHA {sha}: {name} differs between {os.path.basename(ref_bundle)} "
-                            f"and {os.path.basename(bundle)}: {_key(ref.get(name))} vs {_key(meas.get(name))}"
-                        )
-        for problem in problems:
-            print(f"VERIFY FAILED: {problem}", file=sys.stderr)
-        if problems:
-            return 1
-        print(
-            f"VERIFY OK: {len(bundles)} bundle(s) in {len(by_sha)} source-SHA group(s) agree on all SMHasher3 measurements",
-            file=sys.stderr,
-        )
-        return 0
-
-    return 1
+    return {
+        "help": dispatch_help,
+        "run": dispatch_run,
+        "store": dispatch_store,
+        "tables": dispatch_tables,
+        "compare": dispatch_compare,
+        "plot": dispatch_plot,
+        "smhasher": dispatch_smhasher,
+        "bundle": dispatch_bundle,
+        "publish": dispatch_publish,
+        "verify": dispatch_verify,
+        "quality": dispatch_quality,
+        "consistency": dispatch_consistency,
+    }.get(args.command, dispatch_help)(args, stamp)
 
 
 if __name__ == "__main__":
