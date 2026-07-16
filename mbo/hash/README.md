@@ -1,25 +1,27 @@
 # mbo/hash - fast, constexpr-safe, non-cryptographic hashing
 
-Fast, constexpr-safe, non-cryptographic hashing, built around the in-house
+Fast, `constexpr`-safe, non-cryptographic hashing, built around the in-house
 **mumbo/jumbo and dumbo** family: notice-free, pure Apache-2.0, and MUM-based
-(widening multiply). All three pass [SMHasher3](https://gitlab.com/fwojcik/smhasher3)
-clean (188/188). `mumbo` (64-bit) is the all-round default: among the fastest
-hashes here on every machine we measured, SMHasher3-clean, notice-free Apache-2.0,
-and with both streaming and a Starlark port - few alternatives combine all of
-these. Its native 128-bit sibling `jumbo` is the only clean native 128 we
-measured and an excellent 128-bit choice. `dumbo` is a compact single-lane
-companion with a very different profile - fastest here on tiny keys, slower on
-bulk - that trades reach for size, not quality.
+(widening multiply). All three algorithm cleanly pass the quality assesment of
+[SMHasher3](https://gitlab.com/fwojcik/smhasher3) with a rating of 188/188.
 
-It also ships a **build-seed mangle** (`hash_mangle.h`): restricted/limited,
-constexpr-safe compile-time hash mangling with release-time rotation enforcement.
-That is hash randomization for the constexpr world, which compile-time hashing
-otherwise rules out.
+The `mumbo` algorithm (64-bit) is the all-round default of this library. It is
+among the fastest hashes offered in the lirbrary on every machine we measured.
+Is is SMHasher3-clean, notice-free Apache-2.0 licensed, and offers both a
+streaming API and a [Starlark](https://github.com/bazelbuild/starlark) port so
+you can natively use the algorithm in [Bazel](https://bazel.build/) projects.
+Its native 128-bit sibling `jumbo` is the only clean native 128 we measured.
+Last but not least `dumbo` is a compact single-lane companion with a very a
+different profile - fastest (here) on tiny keys, slower on bulk, but still
+passing SMHasher2 and thus offering fully prooven hash algorithm quality.
+
+This sub-library also ships a **build-seed mangle** (`hash_mangle.h`) wrapper
+which offers restricted/limited, `constexpr`-safe compile-time hash mangling
+with release-time rotation enforcement. That is hash randomization for the
+`constexpr` world, which compile-time hashing otherwise rules out.
 
 The third-party algorithms (rapidhash, xxh3/xxh64, murmur3, siphash, fnv1a) are
-exact transcriptions, kept for interop and comparison. Algorithm reference and
-API listing: see the [repository README](../../README.md). Last but not least we
-provide quality (SMHasher3) and performance measurements for all algorithms below.
+exact transcriptions. They are provided for interoperability and comparison.
 
 ## Offerings
 
@@ -27,90 +29,99 @@ Three entry points, split by contract:
 
 - **`hash.h` / `:hash_cc` - deterministic hashing.** `GetHash64` /
   `GetHash128` / `GetHash32<Algo>`, the `Hasher<Algo>` container functor, and
-  `Streamer<Algo>` incremental hashing - all constexpr-safe and fully
-  reproducible for a given library version. Use for hash tables (heterogeneous
-  string lookup), tokenization/interning, compile-time hashing
+  `Streamer<Algo>` incremental hashing - all `constexpr`-safe and fully
+  reproducible for a given library version. Designer for use in hash tables
+  (heterogeneous string lookup), tokenization/interning, compile-time hashing
   (`static_assert`, switch-on-hash), and cross-process consistency within one
-  build. Values are not a persistence or wire format.
+  build. Values are not appropriate as a persistence mechanism or wire format.
 - **`hash_mangle.h` / `:hash_mangle_cc` - deliberately unstable hashing.**
   `GetHash` / `MangledHasher<Algo>`: `GetHash64` XORed with one build-selected
   constant, so values do not compare across independently configured builds.
-  Use when hash values must not quietly become load-bearing (persisted tables,
-  golden values, cross-build protocols) - the instability is the feature.
-  Still constexpr; semantics and design rationale in the build-seed mangle
-  section, the flags in the Configuration section below.
-- **`hash_extra.h` / `:hash_extra_cc` - NOTICE-bearing algorithms.** Canonical
-  rapidhash, xxh3, and xxh64 transcriptions, for interop with externally
-  defined values and for comparison. Shipping a binary that links this target
-  requires shipping the repository-root [NOTICE](../../NOTICE).
+  Use when hash values must not become a dependency (persisted tables, golden
+  values, cross-build protocols) - the instability is the feature. While this is
+  all still `constexpr` read up on semantics and design rationale in the below
+  section on the build-seed mangling.
+- **`hash_extra.h` / `:hash_extra_cc` - NOTICE-brequiring algorithms.** These
+  canonical algorithms (rapidhash, xxh3, and xxh64) are completely verified and
+  ested transcriptions, for interoperability with externally defined values and
+  for comparison. Shipping a binary that links this target requires shipping the
+  repository-root [NOTICE](../../NOTICE).
 
 ## Principles
 
 - **Canonical or honest**: third-party algorithms (rapidhash, XXH64/XXH3,
   MurmurHash3, SipHash, FNV-1a) are transcriptions producing the exact
   published reference values on every platform, pinned by reference vectors
-  and differential tests against the reference libraries. The in-house `mumbo`
-  algorithm is documented with its measured quality and performance data
-  (below) and its design iterations.
+  and differential tests against the reference libraries. The in-house `mumbo` /
+  `jumbo` and `dumbo` family of algorithms is documented with its measured
+  quality and performance data (below) and its design iterations.
 - **constexpr-safe single path**: compile-time and run-time evaluation always
   agree; streaming (where provided) equals the one-shot value by contract.
 - **Apache-2.0 with clean attribution**: transcription notices live in the
   repository-root [NOTICE](../../NOTICE); [LICENSE](../../LICENSE) stays pure
-  Apache-2.0. No crypto-library
-  dependencies - digests and hashes are spec-frozen pure functions that we
+  Apache-2.0 and are free of crypto-library dependencies. All hash algorithms
+  (and similarily all digest algorithms) are spec-frozen pure functions that we
   verify against official vectors instead of trusting an unverifiable supply
-  chain (see [mbo/digest/README.md](../digest/README.md) for the full argument).
+  chain (also see [mbo/digest/README.md](../digest/README.md)).
 - **Non-cryptographic hash-table hashes, with one keyed exception**: the
   defaults and comparison algorithms are fast hashes for hash tables and
-  interning - their values are neither stable across versions nor safe against
-  adversaries. `siphash` is the deliberate exception, a keyed PRF included as
-  the hash-flooding-resistant choice when the seed is a secret; it is still a
-  hash-table hash (`GetHash64` / `Hasher`), not a message digest. Cryptographic
-  **message digests** and MACs (SHA-2/3, MD5 interop, BLAKE2/3, HMAC) are a
-  different contract and live in [mbo/digest](../digest/README.md).
+  interning. Their values are neither stable across versions nor safe against
+  adversaries. The one deliberate exceptions is `siphash`, a keyed PRF
+  ([Pseudo Random Function](https://en.wikipedia.org/wiki/Pseudorandom_function_family))
+  included as the hash-flooding-resistant choice when the seed is a secret. It
+  is still a hash-table hash (`GetHash64` / `Hasher`), not a message digest.
+- **message digests**: Non-cryptographic Digest and MACs (SHA-2/3, MD5 interop,
+  BLAKE2/3, HMAC) are a different contract and live in [mbo/digest](../digest/README.md).
 
 ## Algorithm overview
 
-This is the at-a-glance map; the `SMHasher3` column is a PASS/FAIL summary only.
+This is the at-a-glance overview- map. The `SMHasher3` column is a PASS/FAIL summary only.
 For the exact score and the failing families see [Quality: SMHasher3](#quality-smhasher3).
 
 <!-- BEGIN algorithm overview (generated by `hash_benchmark_report.py quality`; DO NOT EDIT) -->
 
-| Algorithm   | Bits | Available via                     | Starlark | NOTICE                  | Seeded | Streaming | SMHasher3 |
-| ----------- | ---: | --------------------------------- | -------- | ----------------------- | ------ | --------- | --------- |
-| `mumbo`     |   64 | `hash.h` (default 64/32)          | yes      | none (in-house)         | yes    | yes       | PASS      |
-| `jumbo`     |  128 | `hash.h` (default 128)            | no       | none (in-house)         | yes    | yes (64)  | PASS      |
-| `murmur3`   |  128 | `hash.h`                          | no       | none (public domain)    | yes    | no        | FAIL      |
-| `siphash`   |   64 | `hash.h`                          | no       | none (CC0)              | keyed  | yes       | PASS      |
-| `fnv1a`     |   64 | `hash.h`                          | yes      | none (public domain)    | yes    | no        | FAIL      |
-| `dumbo`     |   64 | `hash.h`                          | yes      | none (in-house)         | yes    | no        | PASS      |
-| `rapidhash` |   64 | `hash_extra.h` + `:hash_extra_cc` | no       | **MIT - ship NOTICE**   | yes    | no        | PASS      |
-| `xxh64`     |   64 | `hash_extra.h` + `:hash_extra_cc` | no       | **BSD-2 - ship NOTICE** | yes    | yes       | FAIL      |
-| `xxh3`      |   64 | `hash_extra.h` + `:hash_extra_cc` | no       | **BSD-2 - ship NOTICE** | yes    | no        | FAIL      |
-| `xxh3`      |  128 | `hash_extra.h` + `:hash_extra_cc` | no       | **BSD-2 - ship NOTICE** | yes    | no        | FAIL      |
+| Algorithm   | Bits | SMHasher3 | Seeded | Streaming | Starlark | NOTICE                  | Available via                     |
+| ----------- | ---: | --------- | ------ | --------- | -------- | ----------------------- | --------------------------------- |
+| `mumbo`     |   64 | **PASS**  | yes    | **yes**   | **yes**  | none (in-house)         | `hash.h` (default 64/32)          |
+| `jumbo`     |  128 | **PASS**  | yes    | yes (64)  | no       | none (in-house)         | `hash.h` (default 128)            |
+| `murmur3`   |  128 | FAIL      | yes    | no        | no       | none (public domain)    | `hash.h`                          |
+| `siphash`   |   64 | **PASS**  | keyed  | **yes**   | no       | none (CC0)              | `hash.h`                          |
+| `fnv1a`     |   64 | FAIL      | yes    | no        | **yes**  | none (public domain)    | `hash.h`                          |
+| `dumbo`     |   64 | **PASS**  | yes    | no        | **yes**  | none (in-house)         | `hash.h`                          |
+| `rapidhash` |   64 | **PASS**  | yes    | no        | no       | **MIT - ship NOTICE**   | `hash_extra.h` + `:hash_extra_cc` |
+| `xxh64`     |   64 | FAIL      | yes    | **yes**   | no       | **BSD-2 - ship NOTICE** | `hash_extra.h` + `:hash_extra_cc` |
+| `xxh3`      |   64 | FAIL      | yes    | no        | no       | **BSD-2 - ship NOTICE** | `hash_extra.h` + `:hash_extra_cc` |
+| `xxh3`      |  128 | FAIL      | yes    | no        | no       | **BSD-2 - ship NOTICE** | `hash_extra.h` + `:hash_extra_cc` |
 
 <!-- END algorithm overview -->
 
-Notes: the **Starlark** column marks the hashes also implemented at build time
-in [`hash.bzl`](hash.bzl) (`hash.mumbo`, `hash.dumbo`, `hash.fnv1a`), kept
-byte-for-byte identical to the C++ prime and verified against it (`hash_tool`);
-only the one-shot 64-bit form is ported, so the native 128-bit `jumbo` and
-streaming stay C++-only. `fnv1a` is the algorithm family many `std::hash`
-implementations use (e.g. MSVC) - included as the familiar baseline. `siphash`
-is a keyed PRF: the DoS-resistant choice when the seed is a secret. `dumbo` is
-the compact single-lane member of the MUM family: the fastest hash here for tiny
-keys and SMHasher3-clean (see the design iterations), but single-lane (so it
-slows on large keys) - a deliberately minimal companion to `mumbo`, not a
-replacement for it. Linking `:hash_extra_cc` requires shipping the
-repository-root [NOTICE](../../NOTICE) (see "Third-party components" in the
-[repository README](../../README.md)).
+Notes: the **Starlark** column marks the hashes that are also implemented in
+Starlark for direct buil-graph construction-time[`hash.bzl`](hash.bzl) usage.
+Thos are algorithms are (`hash.mumbo`, `hash.dumbo`, `hash.fnv1a`). They are
+byte-for-byte identical to the C++ prime and verified against it (`hash_tool`).
+Only the one-shot 64-bit form is ported, so the native 128-bit `jumbo` and
+streaming stay C++-only.
+
+Note the following algorithm specifics:
+
+- `fnv1a` represents the algorithm family many `std::hash` implementations use
+  (e.g. MSVC) and is thus included as the familiar baseline.
+- `siphash` is a keyed PRF. It is the DoS-resistant choice when the seed is a
+  secret.
+- `dumbo` is the compact single-lane member of the mbo MUM family. It is the
+  fastest hash here for tiny keys and still SMHasher3-clean, but it is also a
+  single-lane implementation and so it slows on large keys. It is a deliberate
+  minimal companion to `mumbo` (not a replacement for it).
+
+Linking `:hash_extra_cc` requires shipping the repository-root [NOTICE](../../NOTICE)
+(see "Third-party components" in the [repository README](../../README.md)).
 
 ## Build-seed mangle (`hash_mangle.h` / `:hash_mangle_cc`)
 
 `mbo::hash::GetHash` and `MangledHasher<Algo>` equal `GetHash64` XORed with
 ONE build-selected constant, so values deliberately do not compare across
 independently configured builds - precomputed tables or persisted values
-cannot silently become load-bearing. Everything stays constexpr: the constant
+cannot silently become load-bearing. Everything stays `constexpr`: the constant
 is generated into a header by folding the module's own version (from
 `MODULE.bazel` via `native.module_version()` - no duplicated version
 declaration anywhere) with two custom Bazel flags (see the
@@ -138,7 +149,7 @@ shape the implementation:
    entry point participates in constant evaluation, including `GetHash`. True
    ASLR (absl-style: mixing in the address of a global) or any startup-time
    random seed cannot appear in a constant expression - adopting one would
-   split the API into a constexpr unmangled half and a runtime mangled half.
+   split the API into a `constexpr` unmangled half and a runtime mangled half.
    The entropy must be a compile-time constant, so it can only be injected at
    build time.
 
@@ -231,7 +242,7 @@ fallback constant under `-DIS_CLANGD` purely so the editor can parse it.
 
 The two frameworks compose rather than compete - pick by contract:
 `absl::Hash` is per-process randomized and tuned for tiny in-process keys;
-`mbo::hash` is canonical, cross-platform, constexpr, and streamable.
+`mbo::hash` is canonical, cross-platform, `constexpr`, and streamable.
 
 - **Containers**: `DefaultHasher` (any `Hasher<Algo>` / `MangledHasher<Algo>`)
   drops into `absl`/`std` hash containers as the `Hash` parameter for string
@@ -267,7 +278,7 @@ The two frameworks compose rather than compete - pick by contract:
   hash state implementing `combine` / `combine_contiguous` (plus unordered
   support) can execute every existing `AbslHashValue` overload, so a
   mumbo-backed state could swap the algorithm underneath all absl-hashable
-  types. Worth it only when structured types need canonical or constexpr
+  types. Worth it only when structured types need canonical or `constexpr`
   hashing; for byte keys the container functor above already does the job.
 
 ## Performance
@@ -718,14 +729,14 @@ numbers are directly comparable.
 
 | Algorithm   | Bits | Role in mbo/hash          | SMHasher3 result | Failures                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ----------- | ---: | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dumbo`     |   64 | `hash.h` (compact MUM)    | PASS             | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `dumbo`     |   64 | `hash.h` (compact MUM)    | **PASS**         | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `fnv1a`     |   64 | `hash.h`                  | 7/186            | Avalanche [3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 20, 64, 128], BIC [3, 8, 11, 15], Zeroes [], Cyclic [4 cycles of 3 bytes, 4 cycles of 4 bytes, 4 cycles of 5 bytes, 4 cycles of 8 bytes, 8 cycles of 3 bytes, 8 cycles of 4 bytes, 8 cycles of 5 bytes, 8 cycles of 8 bytes, 12 cycles of 3 bytes, 12 cycles of 4 bytes, 12 cycles of 5 bytes, 12 cycles of 8 bytes, 16 cycles of 3 bytes, 16 cycles of 4 bytes, 16 cycles of 5 bytes, 16 cycles of 8 bytes], Sparse [6/2, 4/3, 4/4, 4/5, 3/6, 3/7, 3/8, 3/9, 3/10, 3/12, 3/14, 10/2, 20/3, 9/4, 5/9, 4/14, 4/16, 3/32, 3/48, 3/64, 3/96, 2/128, 2/256, 2/512, 2/1024, 2/1280] |
-| `mumbo`     |   64 | default (64/32/streaming) | PASS             | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `rapidhash` |   64 | extra (`hash_extra_cc`)   | PASS             | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `siphash`   |   64 | `hash.h` (keyed PRF)      | PASS             | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `mumbo`     |   64 | default (64/32/streaming) | **PASS**         | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `rapidhash` |   64 | extra (`hash_extra_cc`)   | **PASS**         | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `siphash`   |   64 | `hash.h` (keyed PRF)      | **PASS**         | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `xxh3`      |   64 | extra (`hash_extra_cc`)   | 166/188          | BIC [3, 8, 11], Sparse [20/3], PerlinNoise [2], Bitflip [8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 13, 14, 15, 16], SeedBlockOffset [0, 1, 2, 3, 4], SeedBIC [3, 8]                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `xxh64`     |   64 | extra (`hash_extra_cc`)   | 181/188          | SeedBlockLen [15, 19, 21, 26, 29, 30], SeedBIC [8]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `jumbo`     |  128 | default (128)             | PASS             | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `jumbo`     |  128 | default (128)             | **PASS**         | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `murmur3`   |  128 | `hash.h`                  | 123/188          | BIC [3], Zeroes []                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `xxh3`      |  128 | extra (`hash_extra_cc`)   | 162/188          | BIC [3, 8, 15], Sparse [20/3], PerlinNoise [2], Bitflip [3, 4, 8], SeedZeroes [1280, 8448], SeedSparse [2, 3], SeedBlockLen [8, 12, 13, 14, 15, 16], SeedBlockOffset [0, 1, 2, 3, 4, 5], SeedBIC [3, 8]                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
@@ -870,7 +881,7 @@ reads as the compact MUM hash rather than a second tuned one:
 
   # Re-render this README from the chosen bundles, then refresh the SMHasher3
   # Results table from the same bundle's measured data.
-  mbo/hash/measurements/hash_benchmark_report.py publish --bundles data/<bundle>.tgz
-  mbo/hash/measurements/hash_benchmark_report.py quality --smhasher data/<bundle>.tgz
+  mbo/hash/measurements/hash_benchmark_report.py publish --bundles data/<bundle>.tgz ...
+  mbo/hash/measurements/hash_benchmark_report.py quality data/<bundle>.tgz
   git add mbo/hash/README.md mbo/hash/measurements/charts
   ```
