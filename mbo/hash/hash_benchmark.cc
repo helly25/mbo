@@ -22,6 +22,11 @@
 // every dispatch-tier boundary and SSO cutoff, for the complete dataset and
 // the ns-vs-length graph.
 
+#ifdef __linux__
+# include <pthread.h>
+# include <sched.h>
+#endif  // __linux__
+
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -377,6 +382,15 @@ void RegisterAll(std::tuple<Algos...> /*algorithms*/) {
 }  // namespace mbo::hash
 
 int main(int argc, char** argv) {
+  benchmark::MaybeReenterWithoutASLR(argc, argv);  // NO ASLR
+
+#ifdef __linux__
+  cpu_set_t set;
+  CPU_ZERO(&set);
+  CPU_SET(0, &set);  // Pin to the first available core
+  pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &set);
+#endif  // __linux__
+
   mbo::hash::RegisterAll(mbo::hash::algo::AllAlgorithms{});
   benchmark::Initialize(&argc, argv);
   // The build compiler is a first-class axis of a measurement (GCC vs Clang perf
