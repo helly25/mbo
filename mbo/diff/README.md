@@ -64,7 +64,6 @@ int main() {
 
   return 0;
 }
-
 ```
 
 ## 2. Command-Line Tool Reference: `unified_diff`
@@ -89,7 +88,6 @@ Build the tool with Bazel:
 
 ```bash
 bazel build //mbo/diff:unified_diff
-
 ```
 
 Perform a custom, whitespace-insensitive diff with 5 context lines:
@@ -100,7 +98,6 @@ Perform a custom, whitespace-insensitive diff with 5 context lines:
     --ignore-space-change \
     --ignore-blank-lines \
     path/to/original.txt path/to/modified.txt
-
 ```
 
 ## 3. Bazel Integration: `diff_test` Macro
@@ -148,12 +145,10 @@ diff_test(
     ignore_blank_lines = True,
     unified = 5,
 )
-
 ```
 
 Run the validation test with:
 
 ```bash
 bazel test //path/to/package:verify_config_generation
-
 ```
