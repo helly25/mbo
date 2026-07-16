@@ -186,7 +186,11 @@ def _machine_augment():
     return augment
 
 
-def _run_benchmark(mode, reps, min_time, warmup, config=None):
+def _expand_list_arg(prefix, args):
+    return [f"{prefix}={arg}" for arg in args] if args else []
+
+
+def _run_benchmark(mode, reps, min_time, warmup, config=None, copt=None, host_copt=None):
     """Runs the bazel benchmark with the measurement precautions; returns parsed JSON.
 
     `config` selects a bazel `--config` (e.g. 'clang' / 'gcc'), so the toolchain -
@@ -198,20 +202,28 @@ def _run_benchmark(mode, reps, min_time, warmup, config=None):
     cmd = [
         "bazel",
         "run",
+        "--color=yes",
         "-c",
         "opt",
-        *([f"--config={config}"] if config else []),
+        *_expand_list_arg("--config", config),
+        *_expand_list_arg("--copt", copt),
+        *_expand_list_arg("--host_copt", host_copt),
         _BENCHMARK_TARGET,
         "--",
-        "--benchmark_format=json",
+        "--benchmark_out_format=json",
+        "--benchmark_out=/tmp/results.json",
+        "--benchmark_format=console",
         f"--benchmark_repetitions={reps}",
         f"--benchmark_min_time={min_time}s",
         f"--benchmark_min_warmup_time={warmup}s",
         "--benchmark_enable_random_interleaving=true",
+        "--benchmark_display_aggregates_only=true",
     ]
     print(f"$ MBO_HASH_BENCHMARK_FULL={env.get('MBO_HASH_BENCHMARK_FULL', '')} {' '.join(cmd)}", file=sys.stderr)
-    out = subprocess.run(cmd, capture_output=True, text=True, check=True, env=env).stdout
-    return json.loads(out[out.index("{") :])
+    subprocess.run(cmd, text=True, check=True, env=env)
+    with open("/tmp/results.json", "rb") as f:
+            out = f.read()
+    return json.loads(out)
 
 
 def _distill_buckets(raw):
@@ -1102,7 +1114,7 @@ def dispatch_help(_, parser):
 
 
 def dispatch_run(args, stamp):
-    raw = _run_benchmark(args.mode, args.reps, args.min_time, args.warmup, args.config)
+    raw = _run_benchmark(args.mode, args.reps, args.min_time, args.warmup, args.config, args.copt, args.host_copt)
     if args.raw:
         raw_path = _timestamped(args.raw, stamp)
         opener = gzip.open if raw_path.endswith(".gz") else open
@@ -1110,6 +1122,10 @@ def dispatch_run(args, stamp):
             json.dump(raw, handle)
         print(f"wrote {raw_path}", file=sys.stderr)
     results = distill(raw, args.mode)
+    context = results.setdefault("context", {})
+    context["config"] = args.config
+    context["copt"] = args.copt
+    context["host_copt"] = args.host_copt
     _warn_context(results)
     if args.out:
         out_path = _timestamped(args.out, stamp)
@@ -1349,7 +1365,9 @@ def main(argv):
     p_run.add_argument("--raw", help="write google/benchmark raw JSON here (.gz compresses)")
     p_run.add_argument("--out", help="write the distilled canonical results JSON here")
     p_run.add_argument("--tables", action="store_true")
-    p_run.add_argument("--config", help="bazel --config for the benchmark build (e.g. clang, gcc); picks the toolchain and the recorded compiler")
+    p_run.add_argument("--config", action="append", default=[], help="bazel --config for the benchmark build (e.g. `--config=clang`); works well with .user.bazelrc to pick the toolchain and the recorded compiler")
+    p_run.add_argument("--copt", action="append", default=[], help="bazel --copt for the benchmark build (e.g. `--copt=-O3`); allows manual fine tuning of the compiler flags")
+    p_run.add_argument("--host_copt", action="append", default=[], help="bazel --host_copt for the benchmark build (e.g. `--host_copt=-O3`); allows manual fine tuning of the host compiler flags")
 
     p_store = sub.add_parser("store", help="distill raw benchmark JSON to canonical results JSON")
     p_store.add_argument("--raw", required=True)
