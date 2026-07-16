@@ -1,8 +1,6 @@
 # mbo/diff: Unified-Diffing Utilities
 
-Part of the **MBO** C++20 library ecosystem, `mbo/diff` provides lightweight utilities for generating unified diffs, a standalone command-line diffing tool, and Bazel macros designed for integration testing against golden files.
-
----
+Part of the **MBO** library ecosystem, `mbo/diff` provides lightweight utilities for generating unified diffs, a standalone command-line diffing tool, and Bazel macros designed for integration testing against golden files.
 
 ## 1. C++ API Reference: `mbo::diff::Diff`
 
@@ -22,14 +20,12 @@ The behavior of the diff engine and formatting output is fully controlled via th
 
 #### Whitespace Configuration
 
-A.k.a. (`IgnoreSpaces` Enum)
+The `IgnoreSpaces`:
 
 - **`IgnoreSpaces::kNone`**: Strict match. Every whitespace character is treated as significant.
 - **`IgnoreSpaces::kTrailing`**: Ignores trailing whitespace at the end of each line.
 - **`IgnoreSpaces::kChange`**: Ignores changes in the _amount_ of whitespace (e.g., multiple spaces or tabs are treated as a single space), but requires at least some whitespace if it acts as a delimiter.
 - **`IgnoreSpaces::kAll`**: Completely ignores all whitespace characters during the comparison.
-
----
 
 ### Basic C++ Usage
 
@@ -71,8 +67,6 @@ int main() {
 
 ```
 
----
-
 ## 2. Command-Line Tool Reference: `unified_diff`
 
 The `unified_diff` binary exposes the underlying C++ diffing configurations via standard command-line flags.
@@ -108,8 +102,6 @@ Perform a custom, whitespace-insensitive diff with 5 context lines:
     path/to/original.txt path/to/modified.txt
 
 ```
-
----
 
 ## 3. Bazel Integration: `diff_test` Macro
 
