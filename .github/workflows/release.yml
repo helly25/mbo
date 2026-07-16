@@ -16,7 +16,7 @@ jobs:
     with:
       release_files: mbo-*.tar.gz
       prerelease: true
-      bazel_test_command: "bazel test //... --test_filter=-lfs"
+      bazel_test_command: "bazel test //... --test_tag_filters=-lfs"
 
   # Mirror the release to the Bazel Central Registry (replaces the retired
   # publish-to-bcr GitHub App). See .github/workflows/publish.yaml.
