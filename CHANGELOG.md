@@ -1,3 +1,7 @@
+# 0.13.3
+
+- Added `diff-charts` sub-command for the `hash_benchmark_report.py` tool.
+
 # 0.13.2
 
 - Added `BmHash128Throughput` (128-bit bounded-range throughput) and guarded the 64-/128-bit benchmark paths by `HasGetHash64`/`HasGetHash128`.

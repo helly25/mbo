@@ -1077,8 +1077,7 @@ def _fill_missing_measured(measured):
 
 
 def _render_charts(full, stem, charts_dir, subtitle):
-    """Write one labeled SVG per section that has chart data (latency = ns-vs-length,
-    throughput = GiB/s-vs-upper-bound); return [(tag, filename), ...] in layout order."""
+    """Write one labeled SVG per section that has chart data..."""
     written = []
     for section in _sections(full):
         data = section["chart"]
@@ -1086,9 +1085,14 @@ def _render_charts(full, stem, charts_dir, subtitle):
             continue
         name = f"{stem}_{section['tag']}.svg"
         y_label, x_label = ("GiB / s", "max length") if section["kind"] == "throughput" else ("ns / op", "key length")
+
+        # Append directionality to the machine label subtitle
+        better = "lower is better" if section["kind"] == "latency" else "higher is better"
+        full_subtitle = f"{subtitle} · {better}" if subtitle else better
+
         _svg_plot(
             data, _order(list(data), section["order"]), f"mbo/hash - {section['title']}",
-            os.path.join(charts_dir, name), section["relabel"], subtitle=subtitle, y_label=y_label, x_label=x_label,
+            os.path.join(charts_dir, name), section["relabel"], subtitle=full_subtitle, y_label=y_label, x_label=x_label,
         )
         written.append((section["tag"], name))
     return written
@@ -1106,11 +1110,6 @@ def _add_dataset_arg(parser):
     parser.add_argument("dataset", nargs="?", help="dataset path: a bundle .tgz or a results.json[.gz] (auto-detected)")
     parser.add_argument("--results", help="canonical results JSON (.gz ok); same as passing it positionally")
     parser.add_argument("--bundle", help="data bundle .tgz; same as passing it positionally")
-
-
-def dispatch_help(_, parser):
-    parser.print_help()
-    return 0
 
 
 def dispatch_run(args, stamp):
@@ -1159,16 +1158,18 @@ def dispatch_plot(args, stamp):
     results = _resolve_dataset(args)
     base, ext = os.path.splitext(_timestamped(args.out, stamp))
     linear_y = args.scale == "linear-log"
-    # `--kind` picks latency (ns-vs-length) and/or throughput (GiB/s-vs-bound)
-    # sections; one SVG per section, suffixed by its tag.
     for section in _sections(results):
         data = section["chart"]
         if not data or (args.kind != "all" and section["kind"] != args.kind):
             continue
         y_label, x_label = ("GiB / s", "max length") if section["kind"] == "throughput" else ("ns / op", "key length")
+
+        # Determine direction suffix
+        better = "lower is better" if section["kind"] == "latency" else "higher is better"
+
         _svg_plot(
             data, _order(list(data), section["order"]), f"mbo/hash - {section['title']}",
-            f"{base}_{section['tag']}{ext}", section["relabel"], linear_y=linear_y, y_label=y_label, x_label=x_label,
+            f"{base}_{section['tag']}{ext}", section["relabel"], subtitle=better, linear_y=linear_y, y_label=y_label, x_label=x_label,
         )
     return 0
 
@@ -1359,12 +1360,188 @@ def dispatch_consistency(args, stamp):
     return 0
 
 
-def main(argv):
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    sub = parser.add_subparsers(dest="command", required=True)
+def dispatch_bundle_results(args, stamp):
+    results = _load_dataset(_one_path([args.dataset, args.results, args.bundle], "dataset"))
+    out_path = _timestamped(args.out, stamp)
+    _dump_canonical(results, out_path)
+    print(f"wrote {out_path}", file=sys.stderr)
+    return 0
 
-    sub.add_parser("help", help="show help")
 
+def _extract_diff_chart_data(datasets, bundles_ordered, config, algos):
+    bucket_key, _, label_map, kind, dist_filter = config
+    chart_data = {}
+    target_algos = []
+
+    for idx, bundle in enumerate(bundles_ordered):
+        bundle_id = f"B{idx}"
+        bundle_bucket = datasets[bundle].get(bucket_key, {})
+        if not bundle_bucket:
+            continue
+
+        for algo in algos:
+            mapped_algo = label_map.get(algo, algo)
+
+            # Match directly or drop if unrequested
+            if mapped_algo not in bundle_bucket:
+                if algo in bundle_bucket:
+                    mapped_algo = algo
+                else:
+                    continue
+
+            algo_data = bundle_bucket[mapped_algo]
+            series_name = f"{algo} [{bundle_id}]"
+
+            if kind == "throughput":
+                prefix = f"{dist_filter}:"
+                dist_data = {k[len(prefix):]: v for k, v in algo_data.items() if k.startswith(prefix)}
+                if dist_data:
+                    chart_data[series_name] = {k: {"best": _val(v) / (1024.0**3)} for k, v in dist_data.items()}
+                    if series_name not in target_algos:
+                        target_algos.append(series_name)
+            else:
+                chart_data[series_name] = algo_data
+                if series_name not in target_algos:
+                    target_algos.append(series_name)
+
+    return chart_data, target_algos
+
+
+def _append_svg_config_index(out_path, bundles_ordered):
+    import html
+    import re
+
+    try:
+        with open(out_path, "r") as handle:
+            svg_content = handle.read().strip()
+
+        if svg_content.endswith("</svg>"):
+            svg_content = svg_content[:-6]
+
+        # Parse current container size metrics
+        match = re.search(r'<svg[^>]*\bwidth="(\d+)"[^>]*\bheight="(\d+)"', svg_content)
+        if not match:
+            w_match = re.search(r'\bwidth="(\d+)"', svg_content)
+            h_match = re.search(r'\bheight="(\d+)"', svg_content)
+            if not (w_match and h_match):
+                return
+            svg_width, original_height = int(w_match.group(1)), int(h_match.group(2))
+        else:
+            svg_width, original_height = int(match.group(1)), int(match.group(2))
+
+        line_height = 20
+        meta_start_y = original_height + 30
+        total_svg_height = original_height + (len(bundles_ordered) * line_height + 50)
+
+        # Re-scale height attributes inside top structural tags
+        svg_content = re.sub(r'(<svg[^>]*\bheight=)"\d+"', f'\\1"{total_svg_height}"', svg_content, count=1)
+        svg_content = re.sub(r'<rect[^>]*width="[^"]+"[^>]*height="[^"]+"[^>]*fill="white"[^>]*/>', '', svg_content, count=1)
+        svg_content = re.sub(r'<rect[^>]*fill="white"[^>]*width="[^"]+"[^>]*height="[^"]+"[^>]*/>', '', svg_content, count=1)
+
+        # Draw explicit complete backdrop mask covering the newly added area
+        svg_content = re.sub(
+            r'(<svg[^>]*>)',
+            f'\\1\n  <rect width="{svg_width}" height="{total_svg_height}" fill="white"/>',
+            svg_content,
+            count=1
+        )
+
+        footer_lines = [
+            f'\n  <line x1="40" y1="{original_height + 10}" x2="{svg_width - 40}" y2="{original_height + 10}" stroke="#e5e7eb" stroke-width="1"/>',
+            f'  <text x="40" y="{meta_start_y}" font-family="sans-serif" font-size="12" font-weight="bold" fill="#1f2937">Target Configuration Index:</text>'
+        ]
+
+        for idx, bundle in enumerate(bundles_ordered):
+            y_pos = meta_start_y + 24 + (idx * line_height)
+            safe_text = html.escape(str(bundle))
+            footer_lines.append(
+                f'  <text x="40" y="{y_pos}" font-family="monospace" font-size="11" font-weight="bold" fill="#2563eb">[B{idx}]: '
+                f'<tspan font-weight="normal" fill="#374151">{safe_text}</tspan></text>'
+            )
+
+        footer_lines.append("</svg>\n")
+
+        with open(out_path, "w") as handle:
+            handle.write(svg_content + "\n" + "\n".join(footer_lines))
+
+    except Exception as e:
+        print(f"Warning: Failed to inject metadata footer layout: {e}", file=sys.stderr)
+
+
+
+def dispatch_diff_charts(args, stamp):
+    datasets = {}
+    bundles_ordered = []
+    for path in args.bundles:
+        bundle_label = os.path.basename(path).split('.')[0]
+        datasets[bundle_label] = _load_dataset(path)
+        bundles_ordered.append(bundle_label)
+
+    if len(bundles_ordered) < 2:
+        print("Error: Provide at least 2 bundles to compute a differential chart.", file=sys.stderr)
+        return 1
+
+    section_configs = [
+        ("latency64", 64, {}, "latency", None),
+        ("latency128", 128, _LABEL_128, "latency", None),
+        ("throughput64", 64, {}, "throughput", "Short"),
+        ("throughput64", 64, {}, "throughput", "Web"),
+        ("throughput128", 128, _LABEL_128, "throughput", "Short"),
+        ("throughput128", 128, _LABEL_128, "throughput", "Web"),
+    ]
+
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    for config in section_configs:
+        bucket_key, width, _, kind, dist_filter = config
+        file_suffix = f"{bucket_key.replace('_', '-')}-{dist_filter.lower()}" if kind == "throughput" else bucket_key.replace('_', '-')
+
+        # 1. Evaluate Multi-Token Target Match Filters
+        if args.charts:
+            match_pool = {str(width), kind, file_suffix, file_suffix.replace('-', '')}
+            if dist_filter:
+                match_pool.add(dist_filter.lower())
+            normalized_filters = [f.lower().replace('-', '') for f in args.charts]
+            if not any(f in [m.replace('-', '') for m in match_pool] for f in normalized_filters):
+                continue
+
+        # 2. Extract Data Points
+        chart_data, target_algos = _extract_diff_chart_data(datasets, bundles_ordered, config, args.algos)
+        if not chart_data:
+            continue
+
+        out_path = os.path.join(args.output_dir, f"diff_{file_suffix}.svg")
+        title_kind = f"{dist_filter} Throughput" if kind == "throughput" else "Latency"
+        y_label, x_label = ("GiB / s", "max length") if kind == "throughput" else ("ns / op", "key length")
+
+        # Determine direction suffix
+        better = "lower is better" if kind == "latency" else "higher is better"
+
+        # 3. Base Plot Call
+        _svg_plot(
+            data=chart_data,
+            algos=target_algos,
+            title=f"mbo/hash - Comparative {width}-bit {title_kind}",
+            path=out_path,
+            label_map={a: a for a in target_algos},
+            subtitle=f"Log-Log Scale ({better}) | Environment index detailed below",
+            linear_y=False,
+            y_label=y_label,
+            x_label=x_label
+        )
+
+        # 4. Inject Environment Metadata Table
+        _append_svg_config_index(out_path, bundles_ordered)
+
+    return 0
+
+
+def add_command_help(sub):
+    p_help = sub.add_parser("help", help="show help")
+    p_help.set_defaults(func=None)  # handled specially in main()
+
+
+def add_command_run(sub):
     p_run = sub.add_parser("run", help="run the benchmark, then store and/or render")
     p_run.add_argument("--mode", choices=["fast", "full"], default="full")
     # 9 reps is google/benchmark's recommended minimum for its compare.py U-test,
@@ -1378,19 +1555,31 @@ def main(argv):
     p_run.add_argument("--config", action="append", default=[], help="bazel --config for the benchmark build (e.g. `--config=clang`); works well with .user.bazelrc to pick the toolchain and the recorded compiler")
     p_run.add_argument("--copt", action="append", default=[], help="bazel --copt for the benchmark build (e.g. `--copt=-O3`); allows manual fine tuning of the compiler flags")
     p_run.add_argument("--host_copt", action="append", default=[], help="bazel --host_copt for the benchmark build (e.g. `--host_copt=-O3`); allows manual fine tuning of the host compiler flags")
+    p_run.set_defaults(func=dispatch_run)
 
+
+def add_command_store(sub):
     p_store = sub.add_parser("store", help="distill raw benchmark JSON to canonical results JSON")
     p_store.add_argument("--raw", required=True)
     p_store.add_argument("--out", required=True)
     p_store.add_argument("--mode", choices=["fast", "full"], default="full")
+    p_store.set_defaults(func=dispatch_store)
 
+
+def add_command_tables(sub):
     p_tables = sub.add_parser("tables", help="render README markdown tables from a dataset (results JSON or .tgz bundle)")
     _add_dataset_arg(p_tables)
+    p_tables.set_defaults(func=dispatch_tables)
 
+
+def add_command_compare(sub):
     p_compare = sub.add_parser("compare", help="compare two datasets (results JSON or .tgz bundles): per-case Δ%% + geomean")
     p_compare.add_argument("a", metavar="A", help="baseline dataset: results.json[.gz] or a bundle .tgz")
     p_compare.add_argument("b", metavar="B", help="new dataset: results.json[.gz] or a bundle .tgz")
+    p_compare.set_defaults(func=dispatch_compare)
 
+
+def add_command_plot(sub):
     p_plot = sub.add_parser("plot", help="render SVG ns-vs-length curves from a dataset (results JSON or .tgz bundle)")
     _add_dataset_arg(p_plot)
     p_plot.add_argument("--out", required=True)
@@ -1406,7 +1595,10 @@ def main(argv):
         default="log-log",
         help="axis scaling: 'log-log' (default) or 'linear-log' (linear y / log x, to read absolute ns gaps). x is always log",
     )
+    p_plot.set_defaults(func=dispatch_plot)
 
+
+def add_command_smhasher(sub):
     p_smh = sub.add_parser("smhasher", help="run the SMHasher3 quality battery over a set of algorithms")
     p_smh.add_argument(
         "--smhasher3",
@@ -1427,30 +1619,108 @@ def main(argv):
         default=1,
         help="batteries to run concurrently (independent; pass/fail is load-independent, so this only trades cores for wall-clock)",
     )
+    p_smh.set_defaults(func=dispatch_smhasher)
 
+
+def add_command_bundle(sub):
     p_bundle = sub.add_parser("bundle", help="pack a run's artifacts into a per-machine .tgz under data/ (LFS-tracked)")
     p_bundle.add_argument("--results", required=True, help="canonical results JSON (drives chart + tables); its context names the machine")
     p_bundle.add_argument("--include", nargs="*", default=[], help="extra files to pack (raw.json.gz, smhasher.json, logs)")
     p_bundle.add_argument("--data-dir", default="mbo/hash/measurements/data")
+    p_bundle.set_defaults(func=dispatch_bundle)
 
+
+def add_command_bundle_results(sub):
+    p_bundle_results = sub.add_parser("bundle-results", help="extract the canonical results.json from a bundle .tgz")
+    _add_dataset_arg(p_bundle_results)
+    p_bundle_results.add_argument("--out", required=True, help="write the distilled canonical results JSON here")
+    p_bundle_results.set_defaults(func=dispatch_bundle_results)
+
+
+def add_command_publish(sub):
     p_publish = sub.add_parser("publish", help="render the labeled per-machine perf section (charts + tables) into the README from selected bundles")
     p_publish.add_argument("--bundles", nargs="+", required=True, help="the .tgz bundles to feature, in display order")
     p_publish.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
     p_publish.add_argument("--readme", default="mbo/hash/README.md")
+    p_publish.set_defaults(func=dispatch_publish)
 
+
+def add_command_verify(sub):
     p_verify = sub.add_parser("verify", help="re-render charts from the README's bundle manifest and diff the committed charts")
     p_verify.add_argument("--readme", default="mbo/hash/README.md")
     p_verify.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
+    p_verify.set_defaults(func=dispatch_verify)
 
+
+def add_command_quality(sub):
     p_quality = sub.add_parser("quality", help="render the Algorithm-overview + SMHasher3 Results tables into the README from hash_algorithms.json (manual) and a measured bundle")
     p_quality.add_argument("--readme", default="mbo/hash/README.md")
     p_quality.add_argument("bundle_pos", nargs="?", metavar="BUNDLE", help="data bundle .tgz (same as --bundle)")
     p_quality.add_argument("--bundle", help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
     p_quality.add_argument("--check", action="store_true", help="verify the README tables match instead of writing (exit 1 on drift)")
+    p_quality.set_defaults(func=dispatch_quality)
 
+
+def add_command_consistency(sub):
     p_consistency = sub.add_parser("consistency", help="verify all data bundles from the same source SHA report identical SMHasher3 measurements (quality is machine-independent)")
     p_consistency.add_argument("--bundles", nargs="+", help="bundles to compare (default: all data/*.tgz)")
     p_consistency.add_argument("--data-dir", default="mbo/hash/measurements/data")
+    p_consistency.set_defaults(func=dispatch_consistency)
+
+
+def add_command_diff_charts(sub):
+    p_diff_charts = sub.add_parser(
+        "diff-charts",
+        help="Render diff charts for latency, throughput-short, and throughput-web across bundles."
+    )
+    p_diff_charts.add_argument(
+        "--bundles",
+        nargs="+",
+        required=True,
+        help="List of paths to the bundle data files to compare."
+    )
+    p_diff_charts.add_argument(
+        "--algos",
+        nargs="+",
+        required=True,
+        help="The specific algorithms to filter and show in the charts."
+    )
+    p_diff_charts.add_argument(
+        "--output-dir",
+        default=".",
+        help="Where to save the rendered chart images."
+    )
+    p_diff_charts.add_argument(
+        "--charts",
+        nargs="+",
+        default=[],
+        help="Filter charts to render by token match (e.g., '64', 'latency', 'short', 'throughput-64-web'). Leave empty to render all."
+    )
+    p_diff_charts.set_defaults(func=dispatch_diff_charts)
+
+
+def main(argv):
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    commands = [
+        add_command_bundle,
+        add_command_bundle_results,
+        add_command_compare,
+        add_command_consistency,
+        add_command_diff_charts,
+        add_command_help,
+        add_command_plot,
+        add_command_publish,
+        add_command_quality,
+        add_command_run,
+        add_command_smhasher,
+        add_command_store,
+        add_command_tables,
+        add_command_verify,
+    ]
+    for add in commands:
+        add(sub)
 
     args = parser.parse_args(argv)
 
@@ -1458,20 +1728,12 @@ def main(argv):
     # written artifact is prefixed `YYYYMMDD_HHMMSS_` so nothing is overwritten
     # and the filename records when it was produced.
     stamp = _timestamp()
-    return {
-        "help": dispatch_help,
-        "run": dispatch_run,
-        "store": dispatch_store,
-        "tables": dispatch_tables,
-        "compare": dispatch_compare,
-        "plot": dispatch_plot,
-        "smhasher": dispatch_smhasher,
-        "bundle": dispatch_bundle,
-        "publish": dispatch_publish,
-        "verify": dispatch_verify,
-        "quality": dispatch_quality,
-        "consistency": dispatch_consistency,
-    }.get(args.command, dispatch_help)(args, stamp)
+
+    act_func = getattr(args, "func", None)
+    if act_func is None:
+        return parser.print_help()
+    else:
+        return act_func(args, stamp)
 
 
 if __name__ == "__main__":
