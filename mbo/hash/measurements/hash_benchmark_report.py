@@ -1731,9 +1731,9 @@ def main(argv):
 
     act_func = getattr(args, "func", None)
     if act_func is None:
-        parser.print_help()
+        return parser.print_help()
     else:
-        act_func(args, stamp)
+        return act_func(args, stamp)
 
 
 if __name__ == "__main__":
