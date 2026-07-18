@@ -230,28 +230,11 @@ benchmark binary (`clang-NN` / `gcc-NN`, so GCC and Clang builds on one machine
 stay distinct), the SHA from its provenance - so a bundle is self-identifying and
 collision-free across machines and toolchains.
 
-## CI
+## Comparison charts
 
-The benchmark job in `.github/workflows/main.yml` runs **only on `main`** and
-**only when something under `mbo/hash` changed** (dorny/paths-filter), with the
-same precautions (9 reps, interleaving, warmup). It is `continue-on-error`, so a
-noisy or failed benchmark never turns `main` red; results are an artifact per OS
-for architecture/compiler shape comparison, not a gate.
+Multiple measurement bundles can be compared graphically using the `diff-charts`
+sub command of the `hash_benchmark_report.py` tool. Example:
 
-## Open items
-
-- **Only the reference machine (Apple M5 Pro) has a committed bundle so far, and
-  it is perf-only.** Contribute other machines (AMD Zen5, Intel, ...) by running
-  `run_measurements.py` there; and re-run with the SMHasher3 battery to add
-  `smhasher.json` + logs to the M5 Pro bundle (the include-order fix makes that
-  build reproducible now; the README SMHasher scores already stand from verified
-  runs).
-- `verify` audits the published _charts_ against a bundle; the README perf
-  _tables_ are not yet auto-checked (they render from a bundle's `results.json`
-  via `tables`). A marker-delimited tables region + a `verify` extension would
-  close that.
-
-Done: per-machine Git-LFS bundles (canonical + raw + SMHasher in one `.tgz`) with
-a `verify` audit that regenerates the published charts from the bundled data;
-this replaced committing loose canonical/raw files. The SMHasher3 build is
-reproducible again (include-order fix).
+```sh
+./mbo/hash/measurements/hash_benchmark_report.py diff-charts --bundles mbo/hash/measurements/data/linux*.tgz --algos mumbo dumbo rapidhash
+```
