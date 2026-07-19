@@ -119,6 +119,7 @@ def main(argv):
 
     if not args.skip_smhasher:
         print(f">>> [smhasher] building SMHasher3 (workdir {args.workdir})", file=sys.stderr)
+        print(f">>> [smhasher] {os.path.join(meas, 'build_smhasher3.sh')} {args.workdir}", file=sys.stderr)
         subprocess.run([os.path.join(meas, "build_smhasher3.sh"), args.workdir], check=True)
         # The binary is a container build; invoke it via `docker run` (its tree
         # mounted at /src), which run_smhasher treats as a command prefix.

@@ -424,7 +424,7 @@ def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
         with open(log_path, "w") as handle:
             handle.write(text)
         entry["log"] = log_path
-        print(f"wrote {log_path}", file=sys.stderr)
+        print(f"wrote {log_path}\n{entry}", file=sys.stderr)
     return name, entry
 
 
@@ -803,6 +803,7 @@ def _svg_plot(data, algos, title, path, label_map=None, subtitle=None, linear_y=
     if not sizes or not algos:
         return
     width, height, pad_l, pad_r, pad_t, pad_b = 900, 536, 66, 132, 62, 52
+    height += min(max(0, len(algos) - 5), 10) * 30  # extra legend rows
     plot_w, plot_h = width - pad_l - pad_r, height - pad_t - pad_b
     x0, x1 = math.log10(sizes[0]), math.log10(sizes[-1])
     vals = [_val(data[a][str(s)]) for a in algos for s in sizes if str(s) in data[a] and _val(data[a][str(s)]) > 0]
@@ -887,8 +888,10 @@ def _load_json(path):
         return json.load(handle)
 
 
-def _dump_canonical(results, path):
+def _dump_canonical(results, path, *, context_only=False):
     with open(path, "w") as handle:
+        if context_only:
+            results = {"context": results.get("context", {})}
         json.dump(results, handle, indent=2, sort_keys=True)
         handle.write("\n")
 
@@ -1222,7 +1225,7 @@ def dispatch_bundle(args, stamp):
     return 0
 
 
-def dispatch_publish(args, stamp):
+def dispatch_publish_charts(args, stamp):
     os.makedirs(args.charts_dir, exist_ok=True)
     rel = os.path.relpath(args.charts_dir, os.path.dirname(os.path.abspath(args.readme)))
     blocks = []  # (label, bundle_path, section) - sorted by label below, not by input order
@@ -1239,10 +1242,13 @@ def dispatch_publish(args, stamp):
         # immediately followed by its table, in layout order.
         parts = [f"### {label}", "", f"<!-- {label}; {_agg_label(ctx)} -->"]
         extras = []
+        extras_out = []
         for extra_key in ["config", "copt", "host_copt"]:
             if ctx.get(extra_key):
                 extras += [f"- **{extra_key}**: " + ", ".join([f"`{x}`" for x in ctx[extra_key]])]
+                extras_out += [f"{extra_key}={','.join(ctx[extra_key])}"]
         if extras:
+            print(f"bundle {bundle_path} has extras: {'; '.join(extras_out)}", file=sys.stderr)
             parts += ["", "#### Extra build configuration", ""] + extras
         for section in _sections(full):
             if section["tag"] in charts:
@@ -1265,6 +1271,53 @@ def dispatch_publish(args, stamp):
     return 0
 
 
+def impl_publish_quality(args_bundle, args_bundle_pos, args_readme, args_check):
+    algorithms, overview_order = _load_algorithms()
+    measured = _fill_missing_measured(_measured_from_bundle(_one_path([args_bundle_pos, args_bundle], "bundle")))
+    text = open(args_readme).read()
+    regions = [
+        (_OVERVIEW_BEGIN, _OVERVIEW_END, render_overview_table(algorithms, measured, overview_order)),
+        (_SMH_BEGIN, _SMH_END, render_results_table(algorithms, measured)),
+    ]
+    new = text
+    for begin, end, body in regions:
+        if begin not in new or end not in new:
+            raise SystemExit(f"markers not found in {args_readme}; add a {begin} ... {end} region")
+        block = "\n".join([begin, "", body, "", end])
+        new = new[: new.index(begin)] + block + new[new.index(end) + len(end) :]
+    if args_check:
+        if new != text:
+            print(f"VERIFY FAILED: the generated tables in {args_readme} are stale; run `quality`", file=sys.stderr)
+            return 1
+        print("VERIFY OK: the generated overview + Results tables match hash_algorithms.json + the bundle", file=sys.stderr)
+        return 0
+    if new != text:
+        with open(args_readme, "w") as handle:
+            handle.write(new)
+        print(f"wrote the overview + Results tables into {args_readme}", file=sys.stderr)
+    else:
+        print(f"the generated tables are already current in {args_readme}", file=sys.stderr)
+    return 0
+
+
+def dispatch_publish_quality(args, stamp):
+    # Command may be invoked as `publish --bundles` or with as `publish-quality --bundle`; both are valid.
+    args_bundle = getattr(args, 'bundle', None)
+    args_bundles = getattr(args, 'bundles', None)
+    if not args_bundle and args_bundles:
+        args_bundle = args_bundles[0]
+    args_bundle_pos = getattr(args, 'bundle_pos', None)
+    args_check = getattr(args, 'check', False)
+    args_readme = getattr(args, 'readme', None)
+    return impl_publish_quality(args_bundle, args_bundle_pos, args_readme, args_check)
+
+
+def dispatch_publish(args, stamp):
+    dispatch_publish_charts(args, stamp)
+    dispatch_publish_quality(args, stamp)
+    pass
+
+
 def dispatch_verify(args, stamp):
     match = re.search(r"<!-- bundles: (.*?) -->", open(args.readme).read())
     if not match:
@@ -1283,34 +1336,6 @@ def dispatch_verify(args, stamp):
         print(f"VERIFY FAILED: committed charts differ from the bundle data: {', '.join(sorted(set(mismatches)))}", file=sys.stderr)
         return 1
     print(f"VERIFY OK: committed charts match all {len(bundles)} bundle(s)", file=sys.stderr)
-    return 0
-
-def dispatch_quality(args, stamp):
-    algorithms, overview_order = _load_algorithms()
-    measured = _fill_missing_measured(_measured_from_bundle(_one_path([args.bundle_pos, args.bundle], "bundle")))
-    text = open(args.readme).read()
-    regions = [
-        (_OVERVIEW_BEGIN, _OVERVIEW_END, render_overview_table(algorithms, measured, overview_order)),
-        (_SMH_BEGIN, _SMH_END, render_results_table(algorithms, measured)),
-    ]
-    new = text
-    for begin, end, body in regions:
-        if begin not in new or end not in new:
-            raise SystemExit(f"markers not found in {args.readme}; add a {begin} ... {end} region")
-        block = "\n".join([begin, "", body, "", end])
-        new = new[: new.index(begin)] + block + new[new.index(end) + len(end) :]
-    if args.check:
-        if new != text:
-            print(f"VERIFY FAILED: the generated tables in {args.readme} are stale; run `quality`", file=sys.stderr)
-            return 1
-        print("VERIFY OK: the generated overview + Results tables match hash_algorithms.json + the bundle", file=sys.stderr)
-        return 0
-    if new != text:
-        with open(args.readme, "w") as handle:
-            handle.write(new)
-        print(f"wrote the overview + Results tables into {args.readme}", file=sys.stderr)
-    else:
-        print(f"the generated tables are already current in {args.readme}", file=sys.stderr)
     return 0
 
 
@@ -1360,12 +1385,23 @@ def dispatch_consistency(args, stamp):
     return 0
 
 
-def dispatch_bundle_results(args, stamp):
+def impl_bundle_results(args, stamp, context_only=False):
     results = _load_dataset(_one_path([args.dataset, args.results, args.bundle], "dataset"))
-    out_path = _timestamped(args.out, stamp)
-    _dump_canonical(results, out_path)
-    print(f"wrote {out_path}", file=sys.stderr)
+    if args.out in ["/dev/stdout", "/dev/stderr", None]:
+        _dump_canonical(results, args.out or "/dev/stdout", context_only=context_only)
+    else:
+        out_path = _timestamped(args.out, stamp)
+        _dump_canonical(results, out_path)
+        print(f"wrote {out_path}", file=sys.stderr)
     return 0
+
+
+def dispatch_bundle_context(args, stamp):
+    return impl_bundle_results(args, stamp, context_only=True)
+
+
+def dispatch_bundle_results(args, stamp):
+    return impl_bundle_results(args, stamp)
 
 
 def _extract_diff_chart_data(datasets, bundles_ordered, config, algos):
@@ -1630,19 +1666,43 @@ def add_command_bundle(sub):
     p_bundle.set_defaults(func=dispatch_bundle)
 
 
+def add_command_bundle_context(sub):
+    p_bundle_context = sub.add_parser("bundle-context", help="extract the canonical results.json from a bundle .tgz and shows only the context")
+    _add_dataset_arg(p_bundle_context)
+    p_bundle_context.add_argument("--out", default="/dev/stdout", help="write the distilled canonical results JSON here")
+    p_bundle_context.set_defaults(func=dispatch_bundle_context)
+
+
 def add_command_bundle_results(sub):
     p_bundle_results = sub.add_parser("bundle-results", help="extract the canonical results.json from a bundle .tgz")
     _add_dataset_arg(p_bundle_results)
-    p_bundle_results.add_argument("--out", required=True, help="write the distilled canonical results JSON here")
+    p_bundle_results.add_argument("--out", default="/dev/stdout", help="write the distilled canonical results JSON here")
     p_bundle_results.set_defaults(func=dispatch_bundle_results)
 
 
 def add_command_publish(sub):
-    p_publish = sub.add_parser("publish", help="render the labeled per-machine perf section (charts + tables) into the README from selected bundles")
+    p_publish = sub.add_parser("publish", help="Perform all publish tasks, update performance (charts + tables) and quality sections in the README from selected bundles")
     p_publish.add_argument("--bundles", nargs="+", required=True, help="the .tgz bundles to feature, in display order")
     p_publish.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
     p_publish.add_argument("--readme", default="mbo/hash/README.md")
     p_publish.set_defaults(func=dispatch_publish)
+
+
+def add_command_publish_charts(sub):
+    p_publish_charts = sub.add_parser("publish-charts", help="render the labeled per-machine perf section (charts + tables) into the README from selected bundles")
+    p_publish_charts.add_argument("--bundles", nargs="+", required=True, help="the .tgz bundles to feature, in display order")
+    p_publish_charts.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
+    p_publish_charts.add_argument("--readme", default="mbo/hash/README.md")
+    p_publish_charts.set_defaults(func=dispatch_publish_charts)
+
+
+def add_command_publish_quality(sub):
+    p_publish_quality = sub.add_parser("quality", help="render the Algorithm-overview + SMHasher3 Results tables into the README from hash_algorithms.json (manual) and a measured bundle")
+    p_publish_quality.add_argument("--readme", default="mbo/hash/README.md")
+    p_publish_quality.add_argument("bundle_pos", nargs="?", metavar="BUNDLE", help="data bundle .tgz (same as --bundle)")
+    p_publish_quality.add_argument("--bundle", help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
+    p_publish_quality.add_argument("--check", action="store_true", help="For quality verification, check that the README tables match instead of writing (exit 1 on drift)")
+    p_publish_quality.set_defaults(func=dispatch_publish_quality)
 
 
 def add_command_verify(sub):
@@ -1650,15 +1710,6 @@ def add_command_verify(sub):
     p_verify.add_argument("--readme", default="mbo/hash/README.md")
     p_verify.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
     p_verify.set_defaults(func=dispatch_verify)
-
-
-def add_command_quality(sub):
-    p_quality = sub.add_parser("quality", help="render the Algorithm-overview + SMHasher3 Results tables into the README from hash_algorithms.json (manual) and a measured bundle")
-    p_quality.add_argument("--readme", default="mbo/hash/README.md")
-    p_quality.add_argument("bundle_pos", nargs="?", metavar="BUNDLE", help="data bundle .tgz (same as --bundle)")
-    p_quality.add_argument("--bundle", help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
-    p_quality.add_argument("--check", action="store_true", help="verify the README tables match instead of writing (exit 1 on drift)")
-    p_quality.set_defaults(func=dispatch_quality)
 
 
 def add_command_consistency(sub):
@@ -1705,6 +1756,7 @@ def main(argv):
 
     commands = [
         add_command_bundle,
+        add_command_bundle_context,
         add_command_bundle_results,
         add_command_compare,
         add_command_consistency,
@@ -1712,7 +1764,8 @@ def main(argv):
         add_command_help,
         add_command_plot,
         add_command_publish,
-        add_command_quality,
+        add_command_publish_charts,
+        add_command_publish_quality,
         add_command_run,
         add_command_smhasher,
         add_command_store,
