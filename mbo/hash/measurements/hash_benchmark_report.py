@@ -888,8 +888,10 @@ def _load_json(path):
         return json.load(handle)
 
 
-def _dump_canonical(results, path):
+def _dump_canonical(results, path, *, context_only=False):
     with open(path, "w") as handle:
+        if context_only:
+            results = {"context": results.get("context", {})}
         json.dump(results, handle, indent=2, sort_keys=True)
         handle.write("\n")
 
@@ -1383,15 +1385,23 @@ def dispatch_consistency(args, stamp):
     return 0
 
 
-def dispatch_bundle_results(args, stamp):
+def impl_bundle_results(args, stamp, context_only=False):
     results = _load_dataset(_one_path([args.dataset, args.results, args.bundle], "dataset"))
     if args.out in ["/dev/stdout", "/dev/stderr", None]:
-        _dump_canonical(results, args.out or "/dev/stdout")
+        _dump_canonical(results, args.out or "/dev/stdout", context_only=context_only)
     else:
         out_path = _timestamped(args.out, stamp)
         _dump_canonical(results, out_path)
         print(f"wrote {out_path}", file=sys.stderr)
     return 0
+
+
+def dispatch_bundle_context(args, stamp):
+    return impl_bundle_results(args, stamp, context_only=True)
+
+
+def dispatch_bundle_results(args, stamp):
+    return impl_bundle_results(args, stamp)
 
 
 def _extract_diff_chart_data(datasets, bundles_ordered, config, algos):
@@ -1656,6 +1666,13 @@ def add_command_bundle(sub):
     p_bundle.set_defaults(func=dispatch_bundle)
 
 
+def add_command_bundle_context(sub):
+    p_bundle_context = sub.add_parser("bundle-context", help="extract the canonical results.json from a bundle .tgz and shows only the context")
+    _add_dataset_arg(p_bundle_context)
+    p_bundle_context.add_argument("--out", default="/dev/stdout", help="write the distilled canonical results JSON here")
+    p_bundle_context.set_defaults(func=dispatch_bundle_context)
+
+
 def add_command_bundle_results(sub):
     p_bundle_results = sub.add_parser("bundle-results", help="extract the canonical results.json from a bundle .tgz")
     _add_dataset_arg(p_bundle_results)
@@ -1739,6 +1756,7 @@ def main(argv):
 
     commands = [
         add_command_bundle,
+        add_command_bundle_context,
         add_command_bundle_results,
         add_command_compare,
         add_command_consistency,

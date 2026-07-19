@@ -1,6 +1,7 @@
 # 0.13.3
 
 - Added `diff-charts` sub-command for the `hash_benchmark_report.py` tool.
+- Added `bundle-context` sub-command for the `hash_benchmark_report.py` tool.
 - Updated `mumbo` to V5 which aims at improved Instruction-level parallelism (ILP).
 - Improved publish for `hash_benchmark_report.py` which updates README.md with the latest benchmark results, charts and quality tables.
 
