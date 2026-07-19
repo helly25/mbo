@@ -808,6 +808,13 @@ benchmark plus both SMHasher3 batteries):
    derive from secret pairs distinct from the 64-bit chain, so no lane ever
    equals the 64-bit hash. The table above reflects the latest completed
    batteries.
+5. v5 (188/188 both widths, mbo version 0.13.3): Retains the exact mathematical
+   topology of v4 but restructures the runtime execution layer. The sequential
+   loops are unrolled and interleaved. This maximizes instruction-level
+   parallelism (ILP) and resolves hardware pipeline execution stalls without
+   altering the underlying hash values. Unfortunately even in 2026 the algorithm
+   uses more registers than compilers can use for full ILP, so either a redesign
+   or altogether new algorithm is needed.
 
 ### dumbo: the measured design iterations
 

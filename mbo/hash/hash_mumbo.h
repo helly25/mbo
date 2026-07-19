@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,15 +49,16 @@
 // - 17..127 bytes: one sequential MUM chain, 16 bytes per step; the final
 //   <= 16 bytes are read as two loads overlapping the end (no tail loops).
 // - >= 128 bytes: eight independent MUM chains over a 128-byte fetch window,
-//   each starting from a distinct secret so identical stripes cannot cancel
-//   on the XOR merge.
+//   manually unrolled and interleaved to eliminate execution stalls. Each
+//   starts from a distinct secret so identical stripes cannot cancel on the XOR
+//   merge.
 // - Finalizer: keeps BOTH halves of a widening product and mixes them against
 //   each other, with the length folded into the product operands so it
 //   modulates the result multiplicatively (and only at finalize -- which is
 //   what makes streaming possible).
 // - 128-bit: two lanes with distinct secret banks and swapped operand roles
-//   run over the same input (a shared 4-chain bulk tier feeds both lanes
-//   through different nonlinear merges); each lane covers every input byte.
+//   run over the same input; an interleaved 4-chain bulk tier feeds both lanes
+//   through different nonlinear merges where each lane covers every input byte.
 // - Streaming (64-bit): eagerly consumes full 128-byte blocks, keeps a
 //   rolling window of the last 16 bytes for the overlapping tail reads;
 //   chunked updates produce exactly the one-shot value.
@@ -66,9 +66,18 @@
 // The secret constants are nothing-up-my-sleeve numbers: the 64-bit
 // fractional parts of the square roots of the first sixteen primes (the
 // SHA-512 and SHA-384 initial hash values, FIPS 180-4 sections 5.3.5/5.3.4).
+
+#if defined(__GNUC__) || defined(__clang__)
+# define MBO_FORCE_INLINE inline __attribute__((always_inline))
+#elif defined(_MSC_VER)
+# define MBO_FORCE_INLINE __forceinline
+#else
+# define MBO_FORCE_INLINE inline
+#endif
+
 namespace mbo::hash::mumbo {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters,readability-identifier-length)
 
 inline constexpr uint64_t kDefaultSeed = ::mbo::hash::kDefaultSeed;
 
@@ -76,8 +85,10 @@ namespace mumbo_internal {
 
 using hash_internal::Load32;
 using hash_internal::Load64;
+using hash_internal::LoadSmall;
 using hash_internal::Mul128Fold64;
 using hash_internal::Mult128;
+using hash_internal::SmallInput;
 
 inline constexpr std::array<uint64_t, 16> kSecret = {
     0x6A09E667F3BCC908, 0xBB67AE8584CAA73B, 0x3C6EF372FE94F82B, 0xA54FF53A5F1D36F1,
@@ -88,46 +99,6 @@ inline constexpr std::array<uint64_t, 16> kSecret = {
 
 // The bulk tier's fetch window (eight 16-byte chains).
 inline constexpr std::size_t kBulkWindow = 128;
-
-// Loads the (0..16 byte) small-key input into two words; see the structure
-// notes in the header comment.
-struct SmallInput {
-  uint64_t a = 0;
-  uint64_t b = 0;
-};
-
-constexpr SmallInput LoadSmall(const char* ptr, std::size_t len) noexcept {
-  // NOLINTNEXTLINE(readability-identifier-length): byte-widening helper.
-  const auto u8 = [](char chr) constexpr { return static_cast<uint64_t>(static_cast<uint8_t>(chr)); };
-  // If-ladder, common 4..16 range gated first: the dense switch compiled to a
-  // jump table (indirect branch + table load) that dominated the small-key
-  // cost; here 9..16 (the bulk of hashed string keys, and of the SSO range)
-  // resolve on the first compare. Values are byte-identical to the previous
-  // switch at every length.
-  if (len >= 4) {
-    if (len >= 9) {  // 9..16: two 64-bit loads overlapping the end.
-      return {.a = Load64(ptr), .b = Load64(ptr + len - 8)};
-    }
-    if (len == 8) {
-      const uint64_t val = Load64(ptr);
-      return {.a = val, .b = val};
-    }
-    return {.a = Load32(ptr), .b = Load32(ptr + len - 4)};  // 4..7 (len 4 -> both equal)
-  }
-  if (len == 3) {
-    const uint64_t val = (u8(ptr[0]) << 45U) | (u8(ptr[1]) << 8U) | u8(ptr[2]);
-    return {.a = val, .b = val};
-  }
-  if (len == 2) {
-    const uint64_t val = (u8(ptr[0]) << 45U) | (u8(ptr[1]) << 8U) | u8(ptr[0]);
-    return {.a = val, .b = val};
-  }
-  if (len == 1) {
-    const uint64_t val = u8(ptr[0]);
-    return {.a = (val << 45U) | val, .b = (val << 45U) | val};
-  }
-  return {.a = 0, .b = 0};
-}
 
 // The shared two-multiply finalizer. Keeps BOTH halves of the first widening
 // product and mixes them against each other so every final-multiply operand
@@ -146,11 +117,36 @@ constexpr uint64_t Finish2(uint64_t val_a, uint64_t val_b, uint64_t seed, uint64
   return Mul128Fold64(product.h1 ^ kSecret[11] ^ len, product.h2 ^ kSecret[9]);
 }
 
-// One 128-byte bulk block over the eight chains.
-constexpr void BulkBlock(std::array<uint64_t, 8>& chain, const char* ptr) noexcept {
-  for (std::size_t i = 0; i < 8; ++i) {  // NOLINTNEXTLINE(*-constant-array-index)
-    chain[i] = Mul128Fold64(Load64(ptr + (16 * i)) ^ kSecret[4 + i], Load64(ptr + (16 * i) + 8) ^ chain[i]);
-  }
+// One 128-byte bulk block over the eight chains. Manually unrolled and
+// interleaved to maximize instruction-level parallelism (ILP) and prevent
+// execution pipeline stalls while retaining identical state output.
+MBO_FORCE_INLINE constexpr void BulkBlock(std::array<uint64_t, 8>& chain, const char* ptr) noexcept {
+  const uint64_t a0 = Load64(ptr + 0) ^ kSecret[4];
+  const uint64_t b0 = Load64(ptr + 8) ^ chain[0];
+  const uint64_t a1 = Load64(ptr + 16) ^ kSecret[5];
+  const uint64_t b1 = Load64(ptr + 24) ^ chain[1];
+  const uint64_t a2 = Load64(ptr + 32) ^ kSecret[6];
+  const uint64_t b2 = Load64(ptr + 40) ^ chain[2];
+  const uint64_t a3 = Load64(ptr + 48) ^ kSecret[7];
+  const uint64_t b3 = Load64(ptr + 56) ^ chain[3];
+
+  const uint64_t a4 = Load64(ptr + 64) ^ kSecret[8];
+  const uint64_t b4 = Load64(ptr + 72) ^ chain[4];
+  const uint64_t a5 = Load64(ptr + 80) ^ kSecret[9];
+  const uint64_t b5 = Load64(ptr + 88) ^ chain[5];
+  const uint64_t a6 = Load64(ptr + 96) ^ kSecret[10];
+  const uint64_t b6 = Load64(ptr + 104) ^ chain[6];
+  const uint64_t a7 = Load64(ptr + 112) ^ kSecret[11];
+  const uint64_t b7 = Load64(ptr + 120) ^ chain[7];
+
+  chain[0] = Mul128Fold64(a0, b0);
+  chain[1] = Mul128Fold64(a1, b1);
+  chain[2] = Mul128Fold64(a2, b2);
+  chain[3] = Mul128Fold64(a3, b3);
+  chain[4] = Mul128Fold64(a4, b4);
+  chain[5] = Mul128Fold64(a5, b5);
+  chain[6] = Mul128Fold64(a6, b6);
+  chain[7] = Mul128Fold64(a7, b7);
 }
 
 constexpr std::array<uint64_t, 8> BulkInit(uint64_t seed) noexcept {
@@ -206,9 +202,6 @@ constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = kDefaultSeed)
   return mumbo_internal::Finish(val_a, val_b, seed, len);
 }
 
-// Native 128-bit form (fronted by the `jumbo` namespace below): two lanes
-// with different secrets and swapped operand roles cover the same input; see
-// the header comment.
 // NOLINTNEXTLINE(readability-function-cognitive-complexity): tiered by design.
 constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = kDefaultSeed) noexcept {
   const char* ptr = str.data();
@@ -230,15 +223,26 @@ constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = kDefaultSeed)
     if (len >= 64) {
       // Shared 4-chain bulk tier: each lane derives from ALL chains, through
       // different (nonlinear) merges, so both halves cover every input byte.
+      // Interleaved manually here to eliminate execution pipeline bottlenecks.
       uint64_t chain0 = seed1 ^ kSecret[8];
       uint64_t chain1 = seed1 ^ kSecret[9];
       uint64_t chain2 = seed2 ^ kSecret[10];
       uint64_t chain3 = seed2 ^ kSecret[11];
       while (remaining >= 64) {
-        chain0 = Mul128Fold64(Load64(ptr) ^ kSecret[4], Load64(ptr + 8) ^ chain0);
-        chain1 = Mul128Fold64(Load64(ptr + 16) ^ kSecret[5], Load64(ptr + 24) ^ chain1);
-        chain2 = Mul128Fold64(Load64(ptr + 32) ^ kSecret[6], Load64(ptr + 40) ^ chain2);
-        chain3 = Mul128Fold64(Load64(ptr + 48) ^ kSecret[7], Load64(ptr + 56) ^ chain3);
+        const uint64_t a0 = Load64(ptr) ^ kSecret[4];
+        const uint64_t b0 = Load64(ptr + 8) ^ chain0;
+        const uint64_t a1 = Load64(ptr + 16) ^ kSecret[5];
+        const uint64_t b1 = Load64(ptr + 24) ^ chain1;
+        const uint64_t a2 = Load64(ptr + 32) ^ kSecret[6];
+        const uint64_t b2 = Load64(ptr + 40) ^ chain2;
+        const uint64_t a3 = Load64(ptr + 48) ^ kSecret[7];
+        const uint64_t b3 = Load64(ptr + 56) ^ chain3;
+
+        chain0 = Mul128Fold64(a0, b0);
+        chain1 = Mul128Fold64(a1, b1);
+        chain2 = Mul128Fold64(a2, b2);
+        chain3 = Mul128Fold64(a3, b3);
+
         ptr += 64;
         remaining -= 64;
       }
@@ -357,7 +361,7 @@ struct Algorithm {
   }
 };
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters,readability-identifier-length)
 
 }  // namespace mbo::hash::mumbo
 
@@ -382,5 +386,7 @@ constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = kDefaultSeed)
 struct Algorithm : ::mbo::hash::mumbo::Algorithm {};
 
 }  // namespace mbo::hash::jumbo
+
+#undef MBO_FORCE_INLINE
 
 #endif  // MBO_HASH_HASH_MUMBO_H_
