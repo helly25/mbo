@@ -80,6 +80,11 @@ ABSL_FLAG(  //
     false,
     "Short alias for --check.");
 ABSL_FLAG(  //
+    std::string,
+    cwd,
+    "",
+    "Change working directory if not empty.");
+ABSL_FLAG(  //
     bool,
     quiet,
     false,
@@ -346,6 +351,15 @@ int main(int argc, char* argv[]) {
     std::cerr << "At least one file (or '-' for stdin) is required. Use: "
               << std::filesystem::path(args[0]).filename().string() << " --help\n";
     return 1;
+  }
+  if (!absl::GetFlag(FLAGS_cwd).empty()) {
+    std::error_code error;
+    std::filesystem::current_path(absl::GetFlag(FLAGS_cwd), error);
+    if (error) {
+      std::cerr << "Cannot change working directory to '" << absl::GetFlag(FLAGS_cwd) << "': " << error.message()
+                << "\n";
+      return 1;
+    }
   }
   const std::vector<std::string_view> files(args.begin() + 1, args.end());
   if (absl::GetFlag(FLAGS_check) || absl::GetFlag(FLAGS_c)) {
