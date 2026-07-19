@@ -73,11 +73,14 @@ sed -i.bak "s/-march=native/-march=${march}/g" "${SRC_DIR}/CMakeLists.txt"
 # preserving the mbo/hash/ path, drop in the registration source, register it,
 # and switch to C++20 (mumbo/dumbo need it).
 REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
-mkdir -p "${SRC_DIR}/mbo_include/mbo/hash"
-cp "${REPO}"/mbo/hash/hash_types.h "${REPO}"/mbo/hash/hash_internal_util.h \
-  "${REPO}"/mbo/hash/hash_mumbo.h "${REPO}"/mbo/hash/hash_dumbo.h \
-  "${SRC_DIR}/mbo_include/mbo/hash/"
-cp "${REPO}/mbo/hash/measurements/smhasher3/mbohash.cpp" "${SRC_DIR}/hashes/mbohash.cpp"
+HASH_SRC="${REPO}/mbo/hash"
+HASH_DST="${SRC_DIR}/mbo_include/mbo/hash"
+mkdir -p "${HASH_DST}"
+cp "${HASH_SRC}/hash_dumbo.h" "${HASH_DST}/"
+cp "${HASH_SRC}/hash_internal_util.h" "${HASH_DST}/"
+cp "${HASH_SRC}/hash_mumbo.h" "${HASH_DST}/"
+cp "${HASH_SRC}/hash_types.h" "${HASH_DST}/"
+cp "${HASH_SRC}/measurements/smhasher3/mbohash.cpp" "${SRC_DIR}/hashes/mbohash.cpp"
 grep -q 'hashes/mbohash.cpp' "${SRC_DIR}/hashes/Hashsrc.cmake" \
   || sed -i.bak 's#\(set(HASH_SRC_FILES\)#\1\n  hashes/mbohash.cpp#' "${SRC_DIR}/hashes/Hashsrc.cmake"
 sed -i.bak 's/set(CMAKE_CXX_STANDARD 11)/set(CMAKE_CXX_STANDARD 20)/' "${SRC_DIR}/CMakeLists.txt"

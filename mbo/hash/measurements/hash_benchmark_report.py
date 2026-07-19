@@ -424,7 +424,7 @@ def _smhasher_one(cmd_prefix, name, raw_dir, stamp):
         with open(log_path, "w") as handle:
             handle.write(text)
         entry["log"] = log_path
-        print(f"wrote {log_path}", file=sys.stderr)
+        print(f"wrote {log_path}\n{entry}", file=sys.stderr)
     return name, entry
 
 
@@ -1222,7 +1222,7 @@ def dispatch_bundle(args, stamp):
     return 0
 
 
-def dispatch_publish(args, stamp):
+def dispatch_publish_charts(args, stamp):
     os.makedirs(args.charts_dir, exist_ok=True)
     rel = os.path.relpath(args.charts_dir, os.path.dirname(os.path.abspath(args.readme)))
     blocks = []  # (label, bundle_path, section) - sorted by label below, not by input order
@@ -1265,6 +1265,53 @@ def dispatch_publish(args, stamp):
     return 0
 
 
+def impl_publish_quality(args_bundle, args_bundle_pos, args_readme, args_check):
+    algorithms, overview_order = _load_algorithms()
+    measured = _fill_missing_measured(_measured_from_bundle(_one_path([args_bundle_pos, args_bundle], "bundle")))
+    text = open(args_readme).read()
+    regions = [
+        (_OVERVIEW_BEGIN, _OVERVIEW_END, render_overview_table(algorithms, measured, overview_order)),
+        (_SMH_BEGIN, _SMH_END, render_results_table(algorithms, measured)),
+    ]
+    new = text
+    for begin, end, body in regions:
+        if begin not in new or end not in new:
+            raise SystemExit(f"markers not found in {args_readme}; add a {begin} ... {end} region")
+        block = "\n".join([begin, "", body, "", end])
+        new = new[: new.index(begin)] + block + new[new.index(end) + len(end) :]
+    if args_check:
+        if new != text:
+            print(f"VERIFY FAILED: the generated tables in {args_readme} are stale; run `quality`", file=sys.stderr)
+            return 1
+        print("VERIFY OK: the generated overview + Results tables match hash_algorithms.json + the bundle", file=sys.stderr)
+        return 0
+    if new != text:
+        with open(args_readme, "w") as handle:
+            handle.write(new)
+        print(f"wrote the overview + Results tables into {args_readme}", file=sys.stderr)
+    else:
+        print(f"the generated tables are already current in {args_readme}", file=sys.stderr)
+    return 0
+
+
+def dispatch_publish_quality(args, stamp):
+    # Command may be invoked as `publish --bundles` or with as `publish-quality --bundle`; both are valid.
+    args_bundle = getattr(args, 'bundle', None)
+    args_bundles = getattr(args, 'bundles', None)
+    if not args_bundle and args_bundles:
+        args_bundle = args_bundles[0]
+    args_bundle_pos = getattr(args, 'bundle_pos', None)
+    args_check = getattr(args, 'check', False)
+    args_readme = getattr(args, 'readme', None)
+    return impl_publish_quality(args_bundle, args_bundle_pos, args_readme, args_check)
+
+
+def dispatch_publish(args, stamp):
+    dispatch_publish_charts(args, stamp)
+    dispatch_publish_quality(args, stamp)
+    pass
+
+
 def dispatch_verify(args, stamp):
     match = re.search(r"<!-- bundles: (.*?) -->", open(args.readme).read())
     if not match:
@@ -1283,34 +1330,6 @@ def dispatch_verify(args, stamp):
         print(f"VERIFY FAILED: committed charts differ from the bundle data: {', '.join(sorted(set(mismatches)))}", file=sys.stderr)
         return 1
     print(f"VERIFY OK: committed charts match all {len(bundles)} bundle(s)", file=sys.stderr)
-    return 0
-
-def dispatch_quality(args, stamp):
-    algorithms, overview_order = _load_algorithms()
-    measured = _fill_missing_measured(_measured_from_bundle(_one_path([args.bundle_pos, args.bundle], "bundle")))
-    text = open(args.readme).read()
-    regions = [
-        (_OVERVIEW_BEGIN, _OVERVIEW_END, render_overview_table(algorithms, measured, overview_order)),
-        (_SMH_BEGIN, _SMH_END, render_results_table(algorithms, measured)),
-    ]
-    new = text
-    for begin, end, body in regions:
-        if begin not in new or end not in new:
-            raise SystemExit(f"markers not found in {args.readme}; add a {begin} ... {end} region")
-        block = "\n".join([begin, "", body, "", end])
-        new = new[: new.index(begin)] + block + new[new.index(end) + len(end) :]
-    if args.check:
-        if new != text:
-            print(f"VERIFY FAILED: the generated tables in {args.readme} are stale; run `quality`", file=sys.stderr)
-            return 1
-        print("VERIFY OK: the generated overview + Results tables match hash_algorithms.json + the bundle", file=sys.stderr)
-        return 0
-    if new != text:
-        with open(args.readme, "w") as handle:
-            handle.write(new)
-        print(f"wrote the overview + Results tables into {args.readme}", file=sys.stderr)
-    else:
-        print(f"the generated tables are already current in {args.readme}", file=sys.stderr)
     return 0
 
 
@@ -1638,11 +1657,28 @@ def add_command_bundle_results(sub):
 
 
 def add_command_publish(sub):
-    p_publish = sub.add_parser("publish", help="render the labeled per-machine perf section (charts + tables) into the README from selected bundles")
+    p_publish = sub.add_parser("publish", help="Perform all publish tasks, update performance (charts + tables) and quality sections in the README from selected bundles")
     p_publish.add_argument("--bundles", nargs="+", required=True, help="the .tgz bundles to feature, in display order")
     p_publish.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
     p_publish.add_argument("--readme", default="mbo/hash/README.md")
     p_publish.set_defaults(func=dispatch_publish)
+
+
+def add_command_publish_charts(sub):
+    p_publish_charts = sub.add_parser("publish-charts", help="render the labeled per-machine perf section (charts + tables) into the README from selected bundles")
+    p_publish_charts.add_argument("--bundles", nargs="+", required=True, help="the .tgz bundles to feature, in display order")
+    p_publish_charts.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
+    p_publish_charts.add_argument("--readme", default="mbo/hash/README.md")
+    p_publish_charts.set_defaults(func=dispatch_publish_charts)
+
+
+def add_command_publish_quality(sub):
+    p_publish_quality = sub.add_parser("quality", help="render the Algorithm-overview + SMHasher3 Results tables into the README from hash_algorithms.json (manual) and a measured bundle")
+    p_publish_quality.add_argument("--readme", default="mbo/hash/README.md")
+    p_publish_quality.add_argument("bundle_pos", nargs="?", metavar="BUNDLE", help="data bundle .tgz (same as --bundle)")
+    p_publish_quality.add_argument("--bundle", help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
+    p_publish_quality.add_argument("--check", action="store_true", help="For quality verification, check that the README tables match instead of writing (exit 1 on drift)")
+    p_publish_quality.set_defaults(func=dispatch_publish_quality)
 
 
 def add_command_verify(sub):
@@ -1650,15 +1686,6 @@ def add_command_verify(sub):
     p_verify.add_argument("--readme", default="mbo/hash/README.md")
     p_verify.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
     p_verify.set_defaults(func=dispatch_verify)
-
-
-def add_command_quality(sub):
-    p_quality = sub.add_parser("quality", help="render the Algorithm-overview + SMHasher3 Results tables into the README from hash_algorithms.json (manual) and a measured bundle")
-    p_quality.add_argument("--readme", default="mbo/hash/README.md")
-    p_quality.add_argument("bundle_pos", nargs="?", metavar="BUNDLE", help="data bundle .tgz (same as --bundle)")
-    p_quality.add_argument("--bundle", help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
-    p_quality.add_argument("--check", action="store_true", help="verify the README tables match instead of writing (exit 1 on drift)")
-    p_quality.set_defaults(func=dispatch_quality)
 
 
 def add_command_consistency(sub):
@@ -1712,7 +1739,8 @@ def main(argv):
         add_command_help,
         add_command_plot,
         add_command_publish,
-        add_command_quality,
+        add_command_publish_charts,
+        add_command_publish_quality,
         add_command_run,
         add_command_smhasher,
         add_command_store,

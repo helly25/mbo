@@ -893,6 +893,5 @@ reads as the compact MUM hash rather than a second tuned one:
   # Re-render this README from the chosen bundles, then refresh the SMHasher3
   # Results table from the same bundle's measured data.
   mbo/hash/measurements/hash_benchmark_report.py publish --bundles data/<bundle>.tgz ...
-  mbo/hash/measurements/hash_benchmark_report.py quality data/<bundle>.tgz
   git add mbo/hash/README.md mbo/hash/measurements/charts
   ```
