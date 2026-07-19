@@ -73,7 +73,7 @@ def _verify_digest_test_impl(ctx):
         fail("verify_digest_test needs at least one file to check.")
 
     checks = "\n".join([
-        '"${{DIGEST}}" --algorithm={algorithm} --check "{sidecar}" || rc=1'.format(
+        '"${{DIGEST}}" --algorithm={algorithm} --check "{sidecar}" || sidecar="{sidecar}"'.format(
             algorithm = ctx.attr.algorithm,
             sidecar = sidecar,
         )
@@ -90,9 +90,13 @@ cd "${{TEST_SRCDIR}}/${{TEST_WORKSPACE}}"
 DIGEST="{digest_tool}"
 
 rc=0
+sidecar=""
 {checks}
-if [[ "${{rc}}" -ne 0 ]]; then
-  echo >&2 "FAIL: a file no longer matches its committed {algorithm} digest; regenerate the saved digest(s) if the change is intended."
+if [[ -n "${{sidecar}}" ]]; then
+  rc=1
+  input="$(head -n 1 ${{sidecar}} | cut -d' ' -f3-)"
+  echo >&2 "FAIL: a file no longer matches its committed {algorithm} digest; to regenerate the saved digest(s):"
+  echo >&2 "  bazel run //mbo/digest -- -a {algorithm} --cwd=\"\${{PWD}}\" '${{input}}'"
 fi
 exit "${{rc}}"
 """.format(
