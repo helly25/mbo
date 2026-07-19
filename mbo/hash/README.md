@@ -814,7 +814,7 @@ benchmark plus both SMHasher3 batteries):
    parallelism (ILP) and resolves hardware pipeline execution stalls without
    altering the underlying hash values. Unfortunately even in 2026 the algorithm
    uses more registers than compilers can use for full ILP, so either a redesign
-   or altogether new algorithm is needed. 
+   or altogether new algorithm is needed.
 
 ### dumbo: the measured design iterations
 
