@@ -26,12 +26,20 @@
 
 #include "mbo/hash/hash_types.h"
 
+#if defined(__GNUC__) || defined(__clang__)
+# define MBO_FORCE_INLINE inline __attribute__((always_inline))
+#elif defined(_MSC_VER)
+# define MBO_FORCE_INLINE __forceinline
+#else
+# define MBO_FORCE_INLINE inline
+#endif
+
 namespace mbo::hash::hash_internal {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-identifier-naming)
 
 // Final mixer (MurmurHash3 `fmix64`) that spreads entropy across all 64 bits.
-constexpr uint64_t Fmix64(uint64_t val) noexcept {
+MBO_FORCE_INLINE constexpr uint64_t Fmix64(uint64_t val) noexcept {
   val ^= val >> 33U;
   val *= 0xff51afd7ed558ccdULL;
   val ^= val >> 33U;
@@ -50,7 +58,7 @@ constexpr uint64_t Fmix64(uint64_t val) noexcept {
 // gcc 13: 8x movzx+or, ~3x slower hashing) -- hence the explicit `memcpy` path.
 // Both paths produce identical values; the ConstexprMatchesRuntime test guards
 // this equality.
-constexpr uint64_t Load64(const char* ptr) noexcept {
+MBO_FORCE_INLINE constexpr uint64_t Load64(const char* ptr) noexcept {
   if (!std::is_constant_evaluated()) {
     if constexpr (std::endian::native == std::endian::little) {
       uint64_t result = 0;
@@ -70,7 +78,7 @@ constexpr uint64_t Load64(const char* ptr) noexcept {
 // unlike the hash algorithms in this library; the primitive lives here so the
 // dual-path byte-load logic exists exactly once. The runtime path is `memcpy`
 // plus a byteswap on little-endian targets (same rationale as `Load64`).
-constexpr uint32_t Load32BE(const char* ptr) noexcept {
+MBO_FORCE_INLINE constexpr uint32_t Load32BE(const char* ptr) noexcept {
   if (!std::is_constant_evaluated()) {
 #if defined(__GNUC__) || defined(__clang__)
     uint32_t result = 0;
@@ -89,7 +97,7 @@ constexpr uint32_t Load32BE(const char* ptr) noexcept {
 
 // Loads 8 bytes as a **big-endian** `uint64_t` (same rationale as `Load32BE`;
 // used by the 64-bit-word digest specifications, e.g. SHA-512).
-constexpr uint64_t Load64BE(const char* ptr) noexcept {
+MBO_FORCE_INLINE constexpr uint64_t Load64BE(const char* ptr) noexcept {
   if (!std::is_constant_evaluated()) {
 #if defined(__GNUC__) || defined(__clang__)
     uint64_t result = 0;
@@ -108,7 +116,7 @@ constexpr uint64_t Load64BE(const char* ptr) noexcept {
 }
 
 // Loads 4 bytes as a **little-endian** `uint32_t` (same rationale as `Load64`).
-constexpr uint32_t Load32(const char* ptr) noexcept {
+MBO_FORCE_INLINE constexpr uint32_t Load32(const char* ptr) noexcept {
   if (!std::is_constant_evaluated()) {
     if constexpr (std::endian::native == std::endian::little) {
       uint32_t result = 0;
@@ -131,7 +139,7 @@ constexpr uint32_t Load32(const char* ptr) noexcept {
 // [n-4..n-1], and in the overlap both operands carry the same byte at the same
 // bit position, so the OR reproduces the exact little-endian value (the
 // canonical known-answer tests verify path equality).
-constexpr uint64_t LoadTail(const char* ptr, std::size_t remaining) noexcept {
+MBO_FORCE_INLINE constexpr uint64_t LoadTail(const char* ptr, std::size_t remaining) noexcept {
   if (!std::is_constant_evaluated()) {
     if constexpr (std::endian::native == std::endian::little) {
       if (remaining >= 4) {
@@ -150,53 +158,107 @@ constexpr uint64_t LoadTail(const char* ptr, std::size_t remaining) noexcept {
 
 // Folds the two 64-bit lanes into one (offsetting `h2` so equal lanes do not
 // cancel) and finalizes the result.
-constexpr uint64_t Hash128To64(Hash128 hash) noexcept {
+MBO_FORCE_INLINE constexpr uint64_t Hash128To64(Hash128 hash) noexcept {
   const uint64_t combined = hash.h1 ^ (hash.h2 + 0x9e3779b97f4a7c15ULL);
   return Fmix64(combined);
 }
 
+#if defined(__cpp_lib_int_128)
+using mbo_uint128_t = std::uint128_t;
+inline constexpr bool has_128_bit = true;
+#elif defined(__SIZEOF_INT128__)
+using mbo_uint128_t = unsigned __int128;
+inline constexpr bool has_128_bit = true;
+#else
+// Fallback to 64-bit if compiling for a 32-bit system
+using mbo_uint128_t = void;  // Placeholder type, not usable
+inline constexpr bool has_128_bit = false;
+#endif
+
 // Full 64x64->128 multiply; returns the low half in `h1` and the high half in
 // `h2`. Uses `__uint128_t` where the compiler provides it (gcc/clang,
 // constexpr-legal); the portable 32-bit schoolbook multiply otherwise.
-constexpr Hash128 Mult128(uint64_t lhs, uint64_t rhs) noexcept {
-#if defined(__SIZEOF_INT128__)
-  const auto product = static_cast<unsigned __int128>(lhs) * static_cast<unsigned __int128>(rhs);
-  return {.h1 = static_cast<uint64_t>(product), .h2 = static_cast<uint64_t>(product >> 64U)};
-#else   // defined(__SIZEOF_INT128__)
-  const uint64_t lo_lo = (lhs & 0xFFFFFFFFULL) * (rhs & 0xFFFFFFFFULL);
-  const uint64_t hi_lo = (lhs >> 32U) * (rhs & 0xFFFFFFFFULL);
-  const uint64_t lo_hi = (lhs & 0xFFFFFFFFULL) * (rhs >> 32U);
-  const uint64_t hi_hi = (lhs >> 32U) * (rhs >> 32U);
-  const uint64_t cross = (lo_lo >> 32U) + (hi_lo & 0xFFFFFFFFULL) + lo_hi;
-  return {
-      .h1 = (cross << 32U) | (lo_lo & 0xFFFFFFFFULL),
-      .h2 = (hi_lo >> 32U) + (cross >> 32U) + hi_hi,
-  };
-#endif  // defined(__SIZEOF_INT128__)
+MBO_FORCE_INLINE constexpr Hash128 Mult128(uint64_t lhs, uint64_t rhs) noexcept {
+  if constexpr (has_128_bit) {
+    const auto product = static_cast<mbo_uint128_t>(lhs) * static_cast<mbo_uint128_t>(rhs);
+    return {.h1 = static_cast<uint64_t>(product), .h2 = static_cast<uint64_t>(product >> 64U)};
+  } else {
+    const uint64_t lo_lo = (lhs & 0xFFFFFFFFULL) * (rhs & 0xFFFFFFFFULL);
+    const uint64_t hi_lo = (lhs >> 32U) * (rhs & 0xFFFFFFFFULL);
+    const uint64_t lo_hi = (lhs & 0xFFFFFFFFULL) * (rhs >> 32U);
+    const uint64_t hi_hi = (lhs >> 32U) * (rhs >> 32U);
+    const uint64_t cross = (lo_lo >> 32U) + (hi_lo & 0xFFFFFFFFULL) + lo_hi;
+    return {
+        .h1 = (cross << 32U) | (lo_lo & 0xFFFFFFFFULL),
+        .h2 = (hi_lo >> 32U) + (cross >> 32U) + hi_hi,
+    };
+  }
 }
 
 // Full 64x64->128 multiply folded to 64 bits by XORing the halves (the core
 // mixer of the xxh3/wyhash algorithm family). Uses `__uint128_t` where the
 // compiler provides it (gcc/clang, constexpr-legal); the portable 32-bit
 // schoolbook multiply otherwise.
-constexpr uint64_t Mul128Fold64(uint64_t lhs, uint64_t rhs) noexcept {
-#if defined(__SIZEOF_INT128__)
-  const auto product = static_cast<unsigned __int128>(lhs) * static_cast<unsigned __int128>(rhs);
-  return static_cast<uint64_t>(product) ^ static_cast<uint64_t>(product >> 64U);
-#else   // defined(__SIZEOF_INT128__)
-  const uint64_t lo_lo = (lhs & 0xFFFFFFFFULL) * (rhs & 0xFFFFFFFFULL);
-  const uint64_t hi_lo = (lhs >> 32U) * (rhs & 0xFFFFFFFFULL);
-  const uint64_t lo_hi = (lhs & 0xFFFFFFFFULL) * (rhs >> 32U);
-  const uint64_t hi_hi = (lhs >> 32U) * (rhs >> 32U);
-  const uint64_t cross = (lo_lo >> 32U) + (hi_lo & 0xFFFFFFFFULL) + lo_hi;
-  const uint64_t upper = (hi_lo >> 32U) + (cross >> 32U) + hi_hi;
-  const uint64_t lower = (cross << 32U) | (lo_lo & 0xFFFFFFFFULL);
-  return lower ^ upper;
-#endif  // defined(__SIZEOF_INT128__)
+MBO_FORCE_INLINE constexpr uint64_t Mul128Fold64(uint64_t lhs, uint64_t rhs) noexcept {
+  if constexpr (has_128_bit) {
+    const auto product = static_cast<mbo_uint128_t>(lhs) * static_cast<mbo_uint128_t>(rhs);
+    return static_cast<uint64_t>(product) ^ static_cast<uint64_t>(product >> 64U);
+  } else {
+    const uint64_t lo_lo = (lhs & 0xFFFFFFFFULL) * (rhs & 0xFFFFFFFFULL);
+    const uint64_t hi_lo = (lhs >> 32U) * (rhs & 0xFFFFFFFFULL);
+    const uint64_t lo_hi = (lhs & 0xFFFFFFFFULL) * (rhs >> 32U);
+    const uint64_t hi_hi = (lhs >> 32U) * (rhs >> 32U);
+    const uint64_t cross = (lo_lo >> 32U) + (hi_lo & 0xFFFFFFFFULL) + lo_hi;
+    const uint64_t upper = (hi_lo >> 32U) + (cross >> 32U) + hi_hi;
+    const uint64_t lower = (cross << 32U) | (lo_lo & 0xFFFFFFFFULL);
+    return lower ^ upper;
+  }
 }
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic)
+// Loads the (0..16 byte) small-key input into two words; see the structure
+// notes in the header comment.
+struct SmallInput {
+  uint64_t a = 0;
+  uint64_t b = 0;
+};
+
+MBO_FORCE_INLINE constexpr SmallInput LoadSmall(const char* ptr, std::size_t len) noexcept {
+  // NOLINTNEXTLINE(readability-identifier-length): byte-widening helper.
+  const auto u8 = [](char chr) constexpr { return static_cast<uint64_t>(static_cast<uint8_t>(chr)); };
+  // If-ladder, common 4..16 range gated first: the dense switch compiled to a
+  // jump table (indirect branch + table load) that dominated the small-key
+  // cost; here 9..16 (the bulk of hashed string keys, and of the SSO range)
+  // resolve on the first compare. Values are byte-identical to the previous
+  // switch at every length.
+  if (len >= 4) {
+    if (len >= 9) {  // 9..16: two 64-bit loads overlapping the end.
+      return {.a = Load64(ptr), .b = Load64(ptr + len - 8)};
+    }
+    if (len == 8) {
+      const uint64_t val = Load64(ptr);
+      return {.a = val, .b = val};
+    }
+    return {.a = Load32(ptr), .b = Load32(ptr + len - 4)};  // 4..7 (len 4 -> both equal)
+  }
+  if (len == 3) {
+    const uint64_t val = (u8(ptr[0]) << 45U) | (u8(ptr[1]) << 8U) | u8(ptr[2]);
+    return {.a = val, .b = val};
+  }
+  if (len == 2) {
+    const uint64_t val = (u8(ptr[0]) << 45U) | (u8(ptr[1]) << 8U) | u8(ptr[0]);
+    return {.a = val, .b = val};
+  }
+  if (len == 1) {
+    const uint64_t val = u8(ptr[0]);
+    return {.a = (val << 45U) | val, .b = (val << 45U) | val};
+  }
+  return {.a = 0, .b = 0};
+}
+
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-identifier-naming)
 
 }  // namespace mbo::hash::hash_internal
+
+#undef MBO_FORCE_INLINE
 
 #endif  // MBO_HASH_HASH_INTERNAL_UTIL_H_

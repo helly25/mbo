@@ -1,6 +1,7 @@
 # 0.13.3
 
 - Added `diff-charts` sub-command for the `hash_benchmark_report.py` tool.
+- Updated `mumbo` to V5 which aims at improved Instruction-level parallelism (ILP).
 
 # 0.13.2
 
