@@ -803,6 +803,7 @@ def _svg_plot(data, algos, title, path, label_map=None, subtitle=None, linear_y=
     if not sizes or not algos:
         return
     width, height, pad_l, pad_r, pad_t, pad_b = 900, 536, 66, 132, 62, 52
+    height += min(max(0, len(algos) - 5), 10) * 30  # extra legend rows
     plot_w, plot_h = width - pad_l - pad_r, height - pad_t - pad_b
     x0, x1 = math.log10(sizes[0]), math.log10(sizes[-1])
     vals = [_val(data[a][str(s)]) for a in algos for s in sizes if str(s) in data[a] and _val(data[a][str(s)]) > 0]
@@ -1239,10 +1240,13 @@ def dispatch_publish_charts(args, stamp):
         # immediately followed by its table, in layout order.
         parts = [f"### {label}", "", f"<!-- {label}; {_agg_label(ctx)} -->"]
         extras = []
+        extras_out = []
         for extra_key in ["config", "copt", "host_copt"]:
             if ctx.get(extra_key):
                 extras += [f"- **{extra_key}**: " + ", ".join([f"`{x}`" for x in ctx[extra_key]])]
+                extras_out += [f"{extra_key}={','.join(ctx[extra_key])}"]
         if extras:
+            print(f"bundle {bundle_path} has extras: {'; '.join(extras_out)}", file=sys.stderr)
             parts += ["", "#### Extra build configuration", ""] + extras
         for section in _sections(full):
             if section["tag"] in charts:
@@ -1381,9 +1385,12 @@ def dispatch_consistency(args, stamp):
 
 def dispatch_bundle_results(args, stamp):
     results = _load_dataset(_one_path([args.dataset, args.results, args.bundle], "dataset"))
-    out_path = _timestamped(args.out, stamp)
-    _dump_canonical(results, out_path)
-    print(f"wrote {out_path}", file=sys.stderr)
+    if args.out in ["/dev/stdout", "/dev/stderr", None]:
+        _dump_canonical(results, args.out or "/dev/stdout")
+    else:
+        out_path = _timestamped(args.out, stamp)
+        _dump_canonical(results, out_path)
+        print(f"wrote {out_path}", file=sys.stderr)
     return 0
 
 
@@ -1652,7 +1659,7 @@ def add_command_bundle(sub):
 def add_command_bundle_results(sub):
     p_bundle_results = sub.add_parser("bundle-results", help="extract the canonical results.json from a bundle .tgz")
     _add_dataset_arg(p_bundle_results)
-    p_bundle_results.add_argument("--out", required=True, help="write the distilled canonical results JSON here")
+    p_bundle_results.add_argument("--out", default="/dev/stdout", help="write the distilled canonical results JSON here")
     p_bundle_results.set_defaults(func=dispatch_bundle_results)
 
 

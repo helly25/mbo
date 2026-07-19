@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="536" font-family="sans-serif">
 <rect width="900" height="536" fill="white"/>
 <text x="450" y="24" font-size="15" font-weight="bold" text-anchor="middle">mbo/hash - 128-bit throughput (Short)</text>
-<text x="450" y="44" font-size="12" fill="#6b7280" text-anchor="middle">Apple M5 Pro · MacOS · arm64 · 18-core · clang-21 · 29b54ccd</text>
+<text x="450" y="44" font-size="12" fill="#6b7280" text-anchor="middle">Apple M5 Pro · MacOS · arm64 · 18-core · clang-21 · 29b54ccd · higher is better</text>
 <line x1="66" y1="393.0" x2="768.0" y2="393.0" stroke="#eee"/>
 <text x="60" y="396.0" font-size="10" text-anchor="end">1</text>
 <line x1="66" y1="219.5" x2="768.0" y2="219.5" stroke="#eee"/>
