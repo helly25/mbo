@@ -1,0 +1,52 @@
+// SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "mbo/log/scoped_stream.h"
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+
+namespace mbo::log {
+namespace log_internal {
+
+struct ScopedStreamTestAccess {
+  template<typename ScopedStream>
+  static std::string GetStr(const ScopedStream& str) {  // NOLINT(*-anonymous-namespace)
+    return str.TestGetStr();
+  }
+};
+
+}  // namespace log_internal
+
+namespace {
+
+struct ScopedStreamTest
+    : ::testing::Test
+    , log_internal::ScopedStreamTestAccess {};
+
+TEST_F(ScopedStreamTest, TestOut) {
+  auto str = ScopedStreamOut();
+  str << "Here" << "We" << "Go!";
+  EXPECT_THAT(GetStr(str), "HereWeGo!");
+}
+
+TEST_F(ScopedStreamTest, TestVoid) {
+  auto str = ScopedStreamVoid();
+  str << "Ignored";
+  EXPECT_THAT(GetStr(str), "");
+}
+
+}  // namespace
+}  // namespace mbo::log
