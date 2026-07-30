@@ -16,51 +16,27 @@
 #ifndef MBO_LOG_SCOPED_STREAM_H_
 #define MBO_LOG_SCOPED_STREAM_H_
 
+#include <concepts>  // IWYU pragma: keep
 #include <iostream>
 #include <source_location>
 #include <sstream>
 
+#if defined(__GNUC__) || defined(__clang__)
+# define MBO_FORCE_INLINE inline __attribute__((always_inline))
+#elif defined(_MSC_VER)
+# define MBO_FORCE_INLINE __forceinline
+#else
+# define MBO_FORCE_INLINE inline
+#endif
+
 namespace mbo::log {
-namespace log_internal {
 
-template<typename OStreamT = std::ostream, typename StringStreamT = std::stringstream>
-class ScopedStream {
- public:
-  using OStream = OStreamT;
-  using StringStream = StringStreamT;
-
-  ScopedStream() = delete;
-
-  explicit ScopedStream(const std::source_location& loc, OStream& out) : loc_(loc), out_(out) {}
-
-  ~ScopedStream() {
-    out_ << "[" << loc_.file_name() << ":" << loc_.line() << "] @" << loc_.function_name();
-    if (str_) {
-      out_ << " : " << str_.str();
-    }
-    out_ << "\n";
-  }
-
-  ScopedStream(const ScopedStream&) = delete;
-  ScopedStream& operator=(const ScopedStream&) = delete;
-  ScopedStream(ScopedStream&&) = delete;
-  ScopedStream& operator=(ScopedStream&&) = delete;
-
-  template<typename T>
-  StringStream& operator<<(const T& val) {
-    str_ << val;
-    return str_;
-  }
-
- private:
-  friend struct ScopedStreamTestAccess;
-
-  std::string TestGetStr() const { return std::string{str_.str()}; }
-
-  const std::source_location loc_;
-  OStream& out_;
-  StringStream str_;
+enum class ScopedStreamMode {
+  kContinue = 0,
+  kQuickExit = 1,
 };
+
+namespace log_internal {
 
 struct VoidStream {
   VoidStream() = default;
@@ -76,15 +52,70 @@ struct VoidStream {
   constexpr std::string_view str() const noexcept { return {}; }
 
   template<typename T>
-  VoidStream& operator<<(const T&) {
+  VoidStream& operator<<(const T&) noexcept {  // NOLINT(*-named-parameter)
     return *this;
   }
 };
 
+template<
+    ScopedStreamMode kMode = ScopedStreamMode::kContinue,
+    typename StringStreamT = std::stringstream,
+    typename OStreamT = std::ostream>
+class ScopedStream {
+ public:
+  using Mode = ScopedStreamMode;
+  using StringStream = StringStreamT;
+  using OStream = OStreamT;
+
+  ScopedStream() = delete;
+
+  explicit ScopedStream(const std::source_location& loc, OStream& out) : loc_(loc), out_(out) {}
+
+  ~ScopedStream() {
+    out_ << "[" << loc_.file_name() << ":" << loc_.line() << "] @" << loc_.function_name();
+    if (str_) {
+      out_ << " : " << str_.str();
+    }
+    out_ << "\n";
+    switch (kMode) {
+      case ScopedStreamMode::kContinue: break;
+      case ScopedStreamMode::kQuickExit: {
+        if constexpr (!std::same_as<OStream, VoidStream>) {
+          out_ << std::flush;
+        }
+        std::quick_exit(1);
+      }
+    }
+  }
+
+  ScopedStream(const ScopedStream&) = delete;
+  ScopedStream& operator=(const ScopedStream&) = delete;
+  ScopedStream(ScopedStream&&) = delete;
+  ScopedStream& operator=(ScopedStream&&) = delete;
+
+  template<typename T>
+  StringStream& operator<<(const T& val) {
+    str_ << val;
+    return str_;
+  }
+
+  StringStream& Stream() noexcept { return str_; }
+
+ private:
+  friend struct ScopedStreamTestAccess;
+
+  std::string TestGetStr() const { return std::string{str_.str()}; }
+
+  const std::source_location loc_;
+  OStream& out_;
+  StringStream str_;
+};
+
 }  // namespace log_internal
 
-inline auto ScopedStreamOut(std::source_location loc = std::source_location::current()) {
-  return log_internal::ScopedStream<std::ostream>(loc, std::cout);
+template<ScopedStreamMode kMode = ScopedStreamMode::kContinue>
+MBO_FORCE_INLINE auto ScopedStreamOut(std::source_location loc = std::source_location::current()) {
+  return log_internal::ScopedStream<kMode>(loc, std::cout);
 }
 
 template<typename Disallowed>
@@ -92,8 +123,9 @@ void ScopedStreamOut(const Disallowed&&) {
   static_assert(false, "Must not call ScopedStreamOut with arguments");
 }
 
-inline auto ScopedStreamErr(std::source_location loc = std::source_location::current()) {
-  return log_internal::ScopedStream(loc, std::cerr);
+template<ScopedStreamMode kMode = ScopedStreamMode::kContinue>
+MBO_FORCE_INLINE auto ScopedStreamErr(std::source_location loc = std::source_location::current()) {
+  return log_internal::ScopedStream<kMode>(loc, std::cerr);
 }
 
 template<typename Disallowed>
@@ -101,10 +133,11 @@ void ScopedStreamErr(const Disallowed&&) {
   static_assert(false, "Must not call ScopedStreamErr with arguments");
 }
 
-inline auto ScopedStreamVoid(std::source_location loc = std::source_location::current()) {
+template<ScopedStreamMode kMode = ScopedStreamMode::kContinue>
+MBO_FORCE_INLINE auto ScopedStreamVoid(std::source_location loc = std::source_location::current()) {
   using log_internal::VoidStream;
   static VoidStream void_stream;
-  return log_internal::ScopedStream<VoidStream, VoidStream>(loc, void_stream);
+  return log_internal::ScopedStream<kMode, VoidStream, VoidStream>(loc, void_stream);
 }
 
 template<typename Disallowed>
@@ -113,5 +146,7 @@ void ScopedStreamVoid(const Disallowed&&) {
 }
 
 }  // namespace mbo::log
+
+#undef MBO_FORCE_INLINE
 
 #endif  // MBO_LOG_SCOPED_STREAM_H_
