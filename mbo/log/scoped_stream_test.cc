@@ -73,7 +73,7 @@ TEST_F(ScopedStreamTest, TestVoid) {
   std::stringstream out;
   {
     auto str = log_internal::ScopedStream<ScopedStreamMode::kContinue, log_internal::VoidStream>(
-        std::source_location::current(), out);
+        std::source_location::current(), out, "Still Here");
     str << "Ignored!";
     EXPECT_THAT(GetStr(str), IsEmpty());
   }
@@ -81,7 +81,7 @@ TEST_F(ScopedStreamTest, TestVoid) {
       out.str(),
       AllOf(
           MatchesRegex(
-              R"rx(^\[[^\]]*/scoped_stream_test.cc:[0-9]+\] @.*void mbo::log.*::ScopedStreamTest_TestVoid_Test::TestBody\(\)\n$)rx"),
+              R"rx(^\[[^\]]*/scoped_stream_test.cc:[0-9]+\] @.*void mbo::log.*::ScopedStreamTest_TestVoid_Test::TestBody\(\) : Still Here\n$)rx"),
           Not(HasSubstr("Ignored!"))));
 }
 

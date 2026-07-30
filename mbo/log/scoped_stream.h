@@ -60,7 +60,8 @@ struct VoidStream {
 template<
     ScopedStreamMode kMode = ScopedStreamMode::kContinue,
     typename StringStreamT = std::stringstream,
-    typename OStreamT = std::ostream>
+    typename OStreamT = std::ostream,
+    typename MsgT = std::string_view>
 class ScopedStream {
  public:
   using Mode = ScopedStreamMode;
@@ -69,14 +70,21 @@ class ScopedStream {
 
   ScopedStream() = delete;
 
-  explicit ScopedStream(const std::source_location& loc, OStream& out) : loc_(loc), out_(out) {}
+  explicit ScopedStream(const std::source_location& loc, OStream& out, const MsgT&& msg = {})
+      : loc_(loc), out_(out), msg_(std::forward<const MsgT>(msg)) {}
 
   ~ScopedStream() {
-    out_ << "[" << loc_.file_name() << ":" << loc_.line() << "] @" << loc_.function_name();
-    if (str_) {
-      out_ << " : " << str_.str();
+    // Technically a compiler could optimize this for `VoidStream`, but we drop this explicitly.
+    if constexpr (!std::same_as<OStream, VoidStream>) {
+      out_ << "[" << loc_.file_name() << ":" << loc_.line() << "] @" << loc_.function_name();
+      if (!msg_.empty()) {
+        out_ << " : " << msg_;
+      }
+      if (str_) {
+        out_ << " : " << str_.str();
+      }
+      out_ << "\n";
     }
-    out_ << "\n";
     switch (kMode) {
       case ScopedStreamMode::kContinue: break;
       case ScopedStreamMode::kQuickExit: {
@@ -109,6 +117,7 @@ class ScopedStream {
   const std::source_location loc_;
   OStream& out_;
   StringStream str_;
+  const MsgT msg_;
 };
 
 }  // namespace log_internal
