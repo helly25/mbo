@@ -31,13 +31,7 @@
 
 namespace mbo::log {
 
-enum class ScopedStreamMode {
-  kContinue = 0,
-  kQuickExit = 1,
-};
-
-namespace log_internal {
-
+// A stream handler that simply ignores all and any output.
 struct VoidStream {
   VoidStream() = default;
   ~VoidStream() = default;
@@ -57,6 +51,15 @@ struct VoidStream {
   }
 };
 
+enum class ScopedStreamMode {
+  kContinue = 0,
+  kQuickExit = 1,
+};
+
+// The `ScopedStream` allows to collect some output and send it to an output stream on destruction.
+// The stream will always start output with file/line/function information from the provided `loc`.
+// Secondary output can be fully suppressed including most code, so the compiler should be able to
+// optimize out all secondary stream code. This is done by setting `StringStreamT` to `VoidStream`.
 template<
     ScopedStreamMode kMode = ScopedStreamMode::kContinue,
     typename StringStreamT = std::stringstream,
@@ -96,6 +99,7 @@ class ScopedStream {
     }
   }
 
+  // It is important for these to be deleted since that ensures they cannot leave local scope.
   ScopedStream(const ScopedStream&) = delete;
   ScopedStream& operator=(const ScopedStream&) = delete;
   ScopedStream(ScopedStream&&) = delete;
@@ -110,21 +114,19 @@ class ScopedStream {
   StringStream& Stream() noexcept { return str_; }
 
  private:
-  friend struct ScopedStreamTestAccess;
+  friend struct ScopedStreamTest;
 
   std::string TestGetStr() const { return std::string{str_.str()}; }
 
-  const std::source_location loc_;
+  const std::source_location& loc_;
   OStream& out_;
   StringStream str_;
   const MsgT msg_;
 };
 
-}  // namespace log_internal
-
 template<ScopedStreamMode kMode = ScopedStreamMode::kContinue>
 MBO_FORCE_INLINE auto ScopedStreamOut(std::source_location loc = std::source_location::current()) {
-  return log_internal::ScopedStream<kMode>(loc, std::cout);
+  return ScopedStream<kMode>(loc, std::cout);
 }
 
 template<typename Disallowed>
@@ -134,7 +136,7 @@ void ScopedStreamOut(const Disallowed&&) {
 
 template<ScopedStreamMode kMode = ScopedStreamMode::kContinue>
 MBO_FORCE_INLINE auto ScopedStreamErr(std::source_location loc = std::source_location::current()) {
-  return log_internal::ScopedStream<kMode>(loc, std::cerr);
+  return ScopedStream<kMode>(loc, std::cerr);
 }
 
 template<typename Disallowed>
@@ -144,9 +146,8 @@ void ScopedStreamErr(const Disallowed&&) {
 
 template<ScopedStreamMode kMode = ScopedStreamMode::kContinue>
 MBO_FORCE_INLINE auto ScopedStreamVoid(std::source_location loc = std::source_location::current()) {
-  using log_internal::VoidStream;
   static VoidStream void_stream;
-  return log_internal::ScopedStream<kMode, VoidStream, VoidStream>(loc, void_stream);
+  return ScopedStream<kMode, VoidStream, VoidStream>(loc, void_stream);
 }
 
 template<typename Disallowed>

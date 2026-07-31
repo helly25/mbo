@@ -23,18 +23,6 @@
 #include "gtest/gtest.h"
 
 namespace mbo::log {
-namespace log_internal {
-
-struct ScopedStreamTestAccess {
-  template<typename ScopedStream>
-  static std::string GetStr(const ScopedStream& str) {  // NOLINT(*-anonymous-namespace)
-    return str.TestGetStr();
-  }
-};
-
-}  // namespace log_internal
-
-namespace {
 
 using ::testing::AllOf;
 using ::testing::HasSubstr;
@@ -42,9 +30,14 @@ using ::testing::IsEmpty;
 using ::testing::MatchesRegex;
 using ::testing::Not;
 
-struct ScopedStreamTest
-    : ::testing::Test
-    , log_internal::ScopedStreamTestAccess {};
+struct ScopedStreamTest : ::testing::Test {
+  template<typename ScopedStream>
+  static std::string GetStr(const ScopedStream& str) {  // NOLINT(*-anonymous-namespace)
+    return str.TestGetStr();
+  }
+};
+
+namespace {
 
 TEST_F(ScopedStreamTest, TestOut) {
   {
@@ -54,7 +47,7 @@ TEST_F(ScopedStreamTest, TestOut) {
   }
   std::stringstream out;
   {
-    auto str = log_internal::ScopedStream(std::source_location::current(), out);
+    auto str = ScopedStream(std::source_location::current(), out);
     str << "Here" << "We" << "Go!";
     EXPECT_THAT(GetStr(str), "HereWeGo!");
   }
@@ -72,8 +65,8 @@ TEST_F(ScopedStreamTest, TestVoid) {
   }
   std::stringstream out;
   {
-    auto str = log_internal::ScopedStream<ScopedStreamMode::kContinue, log_internal::VoidStream>(
-        std::source_location::current(), out, "Still Here");
+    auto str =
+        ScopedStream<ScopedStreamMode::kContinue, VoidStream>(std::source_location::current(), out, "Still Here");
     str << "Ignored!";
     EXPECT_THAT(GetStr(str), IsEmpty());
   }
