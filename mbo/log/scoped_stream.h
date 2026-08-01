@@ -44,7 +44,9 @@ struct Voidifier {
   Voidifier& operator=(Voidifier&&) noexcept = default;
 
   template<typename T>
-  Voidifier& operator=(const T&&) noexcept {}  // NOLINT(*-named-parameter)
+  Voidifier& operator=(const T&&) noexcept {  // NOLINT(*-named-parameter)
+    return *this;
+  }
 };
 
 static_assert(std::is_empty_v<Voidifier>);
