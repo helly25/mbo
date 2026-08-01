@@ -215,7 +215,7 @@ class ScopedStream {
 
   std::string TestGetStr() const { return std::string{str_.str()}; }
 
-  const std::source_location& loc_;
+  const std::source_location loc_;  // Must be the actual value.
   [[no_unique_address]] StringStream str_;
   [[no_unique_address]] OStreamField out_;
   [[no_unique_address]] MsgT msg_;
