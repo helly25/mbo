@@ -17,9 +17,13 @@
 #define MBO_LOG_SCOPED_STREAM_H_
 
 #include <concepts>  // IWYU pragma: keep
+#include <cstdlib>
 #include <iostream>
 #include <source_location>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <type_traits>
 
 #if defined(__GNUC__) || defined(__clang__)
 # define MBO_FORCE_INLINE inline __attribute__((always_inline))
