@@ -189,7 +189,7 @@ jobs:
           if [ -n "${{inputs.bazel_version}}" ]; then
             echo "${{inputs.bazel_version}}" > .bazelversion
           fi
-          if [ -n "${SDKPATH}" ]; then
+          if [ -n "${SDKPATH:-}" ]; then
             BAZEL_ARGS+=(--action_env=SDKROOT=${SDKPATH})
           fi
           EXPECT_BAZEL="$(tr -d '[:space:]' < .bazelversion 2>/dev/null || true)"
