@@ -29,9 +29,7 @@ struct ScopedLogCheckTest : ::testing::Test {};
 TEST_F(ScopedLogCheckTest, ScopedLogCheck) {
   {
     testing::internal::CaptureStderr();
-    {
-      ScopedLogCheck(true, "Test") << "NothingToShow";
-    }
+    { ScopedLogCheck(true, "Test") << "NothingToShow"; }
     EXPECT_THAT(testing::internal::GetCapturedStderr(), IsEmpty());
   }
   {
@@ -51,9 +49,7 @@ TEST_F(ScopedLogCheckTest, MboLogCheck) {
   constexpr int two = 2;  // NOLINT(*-identifier-naming)
   {
     testing::internal::CaptureStderr();
-    {
-      MBO_LOG_CHECK(one < two) << "NothingToShow";
-    }
+    { MBO_LOG_CHECK(one < two) << "NothingToShow"; }
     EXPECT_THAT(testing::internal::GetCapturedStderr(), IsEmpty());
   }
   {
