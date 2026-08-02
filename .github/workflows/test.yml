@@ -189,6 +189,9 @@ jobs:
           if [ -n "${{inputs.bazel_version}}" ]; then
             echo "${{inputs.bazel_version}}" > .bazelversion
           fi
+          if [ -n "${SDKPATH}" ]; then
+            BAZEL_ARGS+=(--action_env=SDKROOT=${SDKPATH})
+          fi
           EXPECT_BAZEL="$(tr -d '[:space:]' < .bazelversion 2>/dev/null || true)"
           echo "BAZEL_INIT=${BAZEL_INIT[*]}" >> "${GITHUB_ENV}"
           echo "BAZEL_ARGS=${BAZEL_ARGS[*]}" >> "${GITHUB_ENV}"
