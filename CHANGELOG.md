@@ -6,6 +6,7 @@
 - Improved publish for `hash_benchmark_report.py` which updates README.md with the latest benchmark results, charts and quality tables.
 - Added `--cwd` param to `mbo/digest` tool.
 - Added `mbo_log::ScopedStream*` helpers.
+- Added macro `MBO_LOG_CHECK`: A local optimized check implementation, it only processes the log stream if its `check` is false.
 
 # 0.13.2
 

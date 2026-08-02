@@ -85,7 +85,8 @@ void TestFail() {
 
 TEST_F(ScopedStreamTest, TestFail) {
   EXPECT_DEATH(
-      TestFail(), R"rx(^\[[^\]]*/scoped_stream_test.cc:[0-9]+\] @.*void mbo::log.*::TestFail\(\) : YouAreDead\n$)rx");
+      TestFail(),  //
+      R"rx(^\[[^\]]*/scoped_stream_test.cc:[0-9]+\] @.*void mbo::log.*::TestFail\(\) : YouAreDead\n$)rx");
 }
 
 }  // namespace

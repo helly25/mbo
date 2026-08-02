@@ -46,11 +46,6 @@ struct Voidifier {
   Voidifier& operator=(const Voidifier&) = default;
   Voidifier(Voidifier&&) noexcept = default;
   Voidifier& operator=(Voidifier&&) noexcept = default;
-
-  template<typename T>
-  Voidifier& operator=(const T&&) noexcept {  // NOLINT(*-named-parameter)
-    return *this;
-  }
 };
 
 static_assert(std::is_empty_v<Voidifier>);
@@ -60,8 +55,6 @@ static_assert(sizeof(Voidifier) == 1);
 struct VoidStream {
   ~VoidStream() = default;
   VoidStream() = default;
-
-  VoidStream(const std::ostream&) {}  // NOLINT(*-named-parameter,*-explicit-*)
 
   VoidStream(const Voidifier&) {}  // NOLINT(*-named-parameter,*-explicit-*)
 
@@ -131,7 +124,7 @@ concept IsStringViewOrVoidifier = std::same_as<T, std::string_view> || std::same
 //     and send output to it.
 //   The type controls the output stream used to send the output to and default to `std::ostream`.
 //
-// Type `MsgT` can be set to one of the following:
+// Type `MessageT` can be set to one of the following:
 //   - `std::string_view` to store a string view and send output to it, or
 //   - `Voidifier` to avoid storing a string view and suppress all output.
 //   The type controls the additional message prefixthat is used to send output to.
@@ -140,7 +133,7 @@ concept IsStringViewOrVoidifier = std::same_as<T, std::string_view> || std::same
 // `Voidifier` types. The default types are chosen to be the most common use case and provide a good
 // balance between functionality and storage size.
 //
-// The reson to use `std::string_view` for `MsgT` is that it is a non-owning type which does not
+// The reson to use `std::string_view` for `MessageT` is that it is a non-owning type which does not
 // require any additional storage. It is also a very common type to use for messages. That message
 // con be a geneated `constexpr` and will be output even if the `StringStreamT` is `VoidStream`.
 // The `ScopedStream` will not take ownership of the message and will not copy it. It will only
@@ -150,7 +143,7 @@ template<
     ScopedStreamMode kMode = ScopedStreamMode::kContinue,
     log_internal::HasOStreamOperator StringStreamT = std::stringstream,
     log_internal::HasOStreamOperatorOrIsVoidifier OStreamT = std::ostream,
-    log_internal::IsStringViewOrVoidifier MsgT = std::string_view>
+    log_internal::IsStringViewOrVoidifier MessageT = std::string_view>
 class ScopedStream {
  public:
   using Mode = ScopedStreamMode;
@@ -159,10 +152,11 @@ class ScopedStream {
   static constexpr bool kSaveOStream = !std::same_as<OStreamRaw, Voidifier> && !std::same_as<OStreamRaw, VoidStream>;
   using OStreamParam = OStreamRaw;
   using OStreamField = std::conditional_t<kSaveOStream, OStreamT&, Voidifier>;
+  using MessageField = MessageT;
 
   ScopedStream() = delete;
 
-  explicit ScopedStream(const std::source_location& loc, OStreamField out = std::cerr, const MsgT& msg = {})
+  explicit ScopedStream(const std::source_location& loc, OStreamField out = std::cerr, const MessageField& msg = {})
       : loc_(loc), out_(out), msg_(msg) {}
 
   ~ScopedStream() {
@@ -204,12 +198,12 @@ class ScopedStream {
 
   void OutPrefix(std::ostream& out) {
     out << "[" << loc_.file_name() << ":" << loc_.line() << "] @" << loc_.function_name();
-    if constexpr (!std::same_as<OStreamT, Voidifier>) {
+    if constexpr (!std::same_as<OStreamT, Voidifier> && !std::same_as<MessageT, Voidifier>) {
       if (!msg_.empty()) {
         out << " : " << msg_;
       }
     }
-    if (str_) {
+    if (str_ && !str_.str().empty()) {
       out << " : " << str_.str();
     }
     out << "\n";
@@ -222,11 +216,13 @@ class ScopedStream {
   const std::source_location loc_;  // Must be the actual value.
   [[no_unique_address]] StringStream str_;
   [[no_unique_address]] OStreamField out_;
-  [[no_unique_address]] MsgT msg_;
+  [[no_unique_address]] MessageField msg_;
 };
 
 // NOLINTBEGIN(*-magic-numbers)
 
+static_assert(!std::copy_constructible<ScopedStream<>>, "Stream handling depends on this!");
+static_assert(!std::move_constructible<ScopedStream<>>, "Stream handling depends on this!");
 static_assert(sizeof(ScopedStream<>) == (2 * sizeof(void*)) + sizeof(std::string_view) + sizeof(std::stringstream));
 static_assert(sizeof(ScopedStream<ScopedStreamMode::kContinue, VoidStream>) <= 32);
 static_assert(sizeof(ScopedStream<ScopedStreamMode::kContinue, VoidStream, std::ostream>) <= 32);
@@ -244,17 +240,17 @@ MBO_FORCE_INLINE auto ScopedStreamOut(const std::source_location& loc = std::sou
 
 template<typename Disallowed>
 void ScopedStreamOut(const Disallowed&&) {  // NOLINT(*-named-parameter)
-  static_assert(false, "Must not call ScopedStreamOut with arguments");
+  static_assert(false, "Must call ScopedStreamVoid with exactly one arguments");
 }
 
 template<ScopedStreamMode kMode = ScopedStreamMode::kContinue>
 MBO_FORCE_INLINE auto ScopedStreamErr(const std::source_location& loc = std::source_location::current()) {
-  return ScopedStream<kMode, std::stringstream, Voidifier>(loc);
+  return ScopedStream<kMode, std::stringstream, Voidifier, Voidifier>(loc);
 }
 
 template<typename Disallowed>
 void ScopedStreamErr(const Disallowed&&) {  // NOLINT(*-named-parameter)
-  static_assert(false, "Must not call ScopedStreamErr with arguments");
+  static_assert(false, "Must call ScopedStreamVoid with exactly one arguments");
 }
 
 template<ScopedStreamMode kMode = ScopedStreamMode::kContinue>
@@ -265,7 +261,7 @@ MBO_FORCE_INLINE auto ScopedStreamVoid(const std::source_location& loc = std::so
 
 template<typename Disallowed>
 void ScopedStreamVoid(const Disallowed&&) {  // NOLINT(*-named-parameter)
-  static_assert(false, "Must not call ScopedStreamVoid with arguments");
+  static_assert(false, "Must call ScopedStreamVoid with exactly one arguments");
 }
 
 }  // namespace mbo::log
