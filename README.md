@@ -125,6 +125,11 @@ The C++ library is organized in functional groups each residing in their own dir
     - functions `Demangle` to log de-mangled typeid names.
   - mbo/log:log_timing_cc, mbo/log/log_timing.h
     - functoin `LogTiming([args])` a simple timing logger.
+  - mbo/log:scoped_stream_cc, mbo/log/scoped_stream.h
+    - struct `VoidStream`: A suppressing output stream.
+    - template struct `ScopedStream`: A scoped output stream for function location logging.
+    - enum `ScopedStreamMode`: Controls how `scopedStream` handles output.
+    - macro `MBO_LOG_CHECK`: A local optimized check implementation, it only processes the log stream if its `check` is false.
 - Mope
   - `namespace mbo::mope`
   - The `MOPE` templating engine. Run `bazel run //mbo/mope -- --help` for detailed documentation.

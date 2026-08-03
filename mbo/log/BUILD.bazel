@@ -57,3 +57,36 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "scoped_stream_cc",
+    hdrs = ["scoped_stream.h"],
+)
+
+cc_test(
+    name = "scoped_stream_test",
+    size = "small",
+    srcs = ["scoped_stream_test.cc"],
+    deps = [
+        "scoped_stream_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "scoped_log_check_cc",
+    hdrs = ["scoped_log_check.h"],
+    deps = ["scoped_stream_cc"],
+)
+
+cc_test(
+    name = "scoped_log_check_test",
+    size = "small",
+    srcs = ["scoped_log_check_test.cc"],
+    deps = [
+        "scoped_log_check_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
