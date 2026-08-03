@@ -192,13 +192,6 @@ jobs:
           if [ -n "${SDKPATH:-}" ]; then
             BAZEL_ARGS+=(--action_env=SDKROOT=${SDKPATH})
           fi
-          if [[ "${RUNNER_OS}" == "macOS" ]]; then
-            echo "Applying macOS Xcode header workaround flags..."
-            BAZEL_ARGS+=(
-                "--noinclude_checking"
-                "--experimental_no_invalidation_for_builtin_system_headers"
-            )
-          fi
           EXPECT_BAZEL="$(tr -d '[:space:]' < .bazelversion 2>/dev/null || true)"
           echo "BAZEL_INIT=${BAZEL_INIT[*]}" >> "${GITHUB_ENV}"
           echo "BAZEL_ARGS=${BAZEL_ARGS[*]}" >> "${GITHUB_ENV}"
