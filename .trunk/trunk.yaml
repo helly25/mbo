@@ -48,25 +48,15 @@ lint:
       version_command:
         parse_regex: ${semver}
         run: buildifier --version
-    # clang-tidy is fundamentally useless without a compile_commands.json. Local
-    # devs generate it via `bazel run @hedron_compile_commands//:refresh_all`;
-    # CI does not. Override the plugin's `run_when` to skip CI so trunk's CI
-    # job doesn't bomb on "<header> file not found".
-    - name: clang-tidy
-      commands:
-        - name: lint
-          output: llvm
-          run: clang-tidy --export-fixes=${tmpfile} ${target} -p ${compile_commands_dir}
-          success_codes: [0, 1]
-          cache_results: true
-          run_from: ${compile_command}
-          read_output_from: tmp_file
-          run_when: [cli, monitor]
-          max_concurrency: 4
+  # clang-tidy is deliberately NOT a trunk linter: trunk pins clang-tidy 16, which
+  # mis-parses this C++23 codebase, and its `--export-fixes` runs then rewrote the
+  # working tree with build-breaking "fixes". trunk.io 403s any modern clang-tidy
+  # download, so a version bump here is not possible. It now lives in the local-only
+  # `clang-tidy` pre-commit hook (tools/clang_tidy.sh, hermetic clang >= 18); CI's
+  # hard gate stays the bazel -Werror matrix. Do not re-add it here.
   enabled:
     - buildifier@8.5.1
     - checkov@3.3.6
-    - clang-tidy@16.0.3
     - git-diff-check
     - markdownlint@0.49.0
     - prettier@3.9.4

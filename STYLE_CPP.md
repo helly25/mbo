@@ -11,11 +11,15 @@ an AI assistant) can follow them without reverse-engineering the tooling.
   best-effort basis.
 - **`clang-format`** with [`.clang-format`](.clang-format) formats all C++ code. Run
   it; do not hand-format against it. CI rejects any reformatting diff.
-- **`clang-tidy`** with [`.clang-tidy`](.clang-tidy) (`WarningsAsErrors: true`) runs **locally**
-  via `trunk` (a `trunk check` and the editor daemon) against a `compile_commands.json` you
-  generate with `bazel run @hedron_compile_commands//:refresh_all`. **CI does not run it** (no
-  compile DB there), so CI's hard gate is the compiler `-Werror` in the bazel matrix; still treat
-  a clang-tidy finding as a must-fix before pushing. The enabled set is broad: `abseil-*`,
+- **`clang-tidy`** with [`.clang-tidy`](.clang-tidy) (`WarningsAsErrors: '*'`) runs **locally**
+  via the opt-in `clang-tidy` pre-commit hook (`pre-commit run clang-tidy --all-files`, which
+  shells out to [`tools/clang_tidy.sh`](tools/clang_tidy.sh)) against a `compile_commands.json`
+  you generate with [`./compile_commands-update.sh`](compile_commands-update.sh). It is
+  report-only (never `--fix`) and needs a hermetic clang-tidy >= 18; it skips cleanly without
+  either, and it is **not** run by `trunk` - trunk pins clang-tidy 16, which mis-parses this
+  C++23 code and whose auto-applied fixes broke the build. **CI does not run it** (no compile DB
+  there), so CI's hard gate is the compiler `-Werror` in the bazel matrix; still treat a
+  clang-tidy finding as a must-fix before pushing. The enabled set is broad: `abseil-*`,
   `bugprone-*`, `cppcoreguidelines-*`, `google-*`, `misc-*`, `modernize-*`, `performance-*`,
   `portability-*`, `readability-*`.
 

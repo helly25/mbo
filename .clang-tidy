@@ -1,7 +1,21 @@
 ---
+# abseil-unchecked-statusor-access is off because clang-tidy 22.1.8 SEGFAULTS in
+# it: its dataflow analysis (runTypeErasedDataflowAnalysis) crashes on
+# mbo/strings/strip.cc, reproducibly on both macOS and Linux. Re-test on a future
+# LLVM and re-enable if fixed.
+# Two llvm-* checks are off because they fight documented conventions:
+# * llvm-header-guard - STYLE_CPP.md mandates `{PATH}_{FILE}_` guards, not LLVM's
+#   path-derived style. With no header root configured it derives the guard from
+#   the absolute checkout path (`USERS_..._MBO_LOG_SCOPED_STREAM_H`), so every
+#   header in the repo is flagged.
+# * llvm-prefer-static-over-anonymous-namespace - internal-linkage helpers are
+#   grouped in an anonymous namespace here, not marked per-function `static`.
+# Comments must stay outside the `Checks: >` folded scalar below: text inside it
+# is content, not YAML comments, and would be parsed as check globs.
 Checks: >
   *,
   abseil-*,
+  -abseil-unchecked-statusor-access,
   -altera-*,
   -boost-*,
   bugprone-*,
@@ -18,7 +32,9 @@ Checks: >
   -google-build-using-namespace,
   -hicpp-no-assembler,
   -llvm-else-after-return,
+  -llvm-header-guard,
   -llvm-include-order,
+  -llvm-prefer-static-over-anonymous-namespace,
   -llvmlibc-*,
   misc-*,
   modernize-*,
@@ -33,10 +49,12 @@ Checks: >
   -readability-else-after-return,
   -readability-redundant-inline-specifier,
 
-WarningsAsErrors: true
+# A check-name glob, not a bool: the former `true` matched no check, so findings
+# never escalated to a non-zero exit.
+WarningsAsErrors: '*'
 FormatStyle:       '.clang-format'
 CheckOptions:
-  - key:             bugprone-signed-char-misuse.CharTypdefsToIgnore
+  - key:             bugprone-signed-char-misuse.CharTypedefsToIgnore
     value:           'int8_t'
   - key:             google-readability-braces-around-statements.ShortStatementLines
     value:           '1'
@@ -132,6 +150,4 @@ CheckOptions:
     value:           'type'
   - key:             readability-identifier-naming.ConstexprVariableIgnoredRegexp
     value:           'value|index|.*[a-z]V'
-  - key:             llvm-header-guard.HeaderFileExtensions
-    value:           'h,hh,hpp,hxx'
 ...
