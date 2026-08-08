@@ -142,7 +142,7 @@ struct GlobEntry : mbo::types::Extend<GlobEntry> {
       return 0;
     }
     std::error_code error;
-    std::size_t result = entry.file_size(error);
+    const std::size_t result = entry.file_size(error);
     return error ? 0 : result;
   }
 };

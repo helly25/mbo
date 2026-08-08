@@ -34,13 +34,13 @@ void UpdateAbslLogFlags() {
   // cannot be called to prevent duplicate initalization which triggers
   // `absl::log_internal::SetTimeZone() has already been called`.
   {
-    absl::CommandLineFlag* flag = absl::FindCommandLineFlag("minloglevel");
+    const absl::CommandLineFlag* flag = absl::FindCommandLineFlag("minloglevel");
     if (flag->CurrentValue() == flag->DefaultValue()) {
       absl::SetFlag(&FLAGS_minloglevel, 1);
     }
   }
   {
-    absl::CommandLineFlag* flag = absl::FindCommandLineFlag("stderrthreshold");
+    const absl::CommandLineFlag* flag = absl::FindCommandLineFlag("stderrthreshold");
     if (flag->CurrentValue() == flag->DefaultValue()) {
       absl::SetFlag(&FLAGS_stderrthreshold, 1);
     }
