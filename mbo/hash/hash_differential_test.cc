@@ -31,7 +31,11 @@
 namespace mbo::hash {
 namespace {
 
-// NOLINTBEGIN(*-magic-numbers)
+// readability-implicit-bool-conversion is suppressed rather than "fixed": inside
+// the reference macros (XXH64 / XXH3_*) it misattributes a conversion to the gtest
+// `<<` message chain, pointing at string literals like "len: " and proposing they
+// be replaced with `true`. Nothing here converts anything to bool.
+// NOLINTBEGIN(*-magic-numbers,readability-implicit-bool-conversion)
 
 TEST(DifferentialTest, Xxh64MatchesReference) {
   std::mt19937_64 rng(0xD1FF64U);  // NOLINT(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): reproducible
@@ -89,7 +93,7 @@ TEST(DifferentialTest, Xxh3Hash128MatchesReference) {
   }
 }
 
-// NOLINTEND(*-magic-numbers)
+// NOLINTEND(*-magic-numbers,readability-implicit-bool-conversion)
 
 }  // namespace
 }  // namespace mbo::hash

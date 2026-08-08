@@ -51,7 +51,7 @@ unsigned BigNumberLen(T v) {
   // We first check whether we can do even better by limiting us to 4 byte types.
   // We use a macro to let the compiler compute the actual length values.
   if constexpr (sizeof(v) <= 4) {
-#define CHECK_CAP(cap) std::make_pair<uint32_t, unsigned>(cap, std::string_view(#cap).size() - 3)
+#define CHECK_CAP(cap) std::pair<uint32_t, unsigned>(cap, std::string_view(#cap).size() - 3)
     constexpr auto kData = mbo::container::ToLimitedMap<std::pair<uint32_t, unsigned>>({
         CHECK_CAP(4'294'967'295ULL),
         CHECK_CAP(999'999'999ULL),
@@ -68,7 +68,7 @@ unsigned BigNumberLen(T v) {
 #undef CHECK_CAP
     return kData.lower_bound(v)->second;
   } else {
-#define CHECK_CAP(cap) std::make_pair<uint64_t, unsigned>(cap, std::string_view(#cap).size() - 3)
+#define CHECK_CAP(cap) std::pair<uint64_t, unsigned>(cap, std::string_view(#cap).size() - 3)
     constexpr auto kData = mbo::container::ToLimitedMap<std::pair<uint64_t, unsigned>>({
         CHECK_CAP(18'446'744'073'709'551'615ULL),
         CHECK_CAP(9'999'999'999'999'999'999ULL),
