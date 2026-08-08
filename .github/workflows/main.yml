@@ -66,10 +66,9 @@ jobs:
   clang-tidy:
     needs: [trunk, pre-commit]
     runs-on: ubuntu-latest
-    # TODO(helly25): drop this once the clang-tidy finding sweep lands.
-    # `.clang-tidy` sets `WarningsAsErrors: '*'` and the tree is not clean yet,
-    # so for now the job must report without blocking.
-    continue-on-error: true
+    # Note there is deliberately no job-level `continue-on-error`: building the
+    # compile DB must gate, so a broken extractor/toolchain fails this job. Only
+    # the findings themselves are tolerated, at the step below.
     steps:
       - uses: actions/checkout@v6
       - uses: bazelbuild/setup-bazelisk@v3
@@ -104,6 +103,12 @@ jobs:
           if-no-files-found: error
 
       - uses: pre-commit/action@v3.0.1
+        # TODO(helly25): drop this once the finding sweep lands, which is what
+        # turns this job into a real gate. `.clang-tidy` sets
+        # `WarningsAsErrors: '*'` and the tree is not clean yet, so findings are
+        # reported here rather than enforced. Scoped to this step so that a
+        # failure to produce the compile DB above still fails the job.
+        continue-on-error: true
         with:
           # Only the clang-tidy hook: every other hook already ran in the
           # `pre-commit` job. `--hook-stage manual` is required while the hook
