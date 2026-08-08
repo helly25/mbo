@@ -149,12 +149,44 @@ jobs:
         # exact same commands and to inspect flag/toolchain drift. A branch run
         # lints only what the branch changed, so its DB describes a near-empty
         # lint and is not worth storing.
+        id: upload_cdb
         if: github.ref == 'refs/heads/main'
         with:
           name: compile-commands-json
           path: compile_commands.json
           retention-days: 14
           if-no-files-found: error
+
+      - name: Summarize the compile DB
+        # Renders at the top of the run page, so the DB's shape and (on main) a
+        # direct link to it are visible without digging through step logs or
+        # scrolling to the artifacts panel.
+        run: |
+          set -euo pipefail
+          STATS="$(python3 -c '
+          import collections, json
+          entries = json.load(open("compile_commands.json"))
+          files = collections.Counter(e["file"] for e in entries)
+          print(len(entries), len(files), sum(n - 1 for n in files.values() if n > 1))
+          ')"
+          read -r ENTRIES UNIQUE DUPES <<<"${STATS}"
+          {
+            echo "### clang-tidy compile database"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Entries | ${ENTRIES} |"
+            echo "| Unique files | ${UNIQUE} |"
+            echo "| Duplicate entries | ${DUPES} |"
+            echo "| Lint scope | \`${CLANG_TIDY_SCOPE}\` |"
+            if [ -n "${CDB_ARTIFACT_URL}" ]; then
+              echo "| Artifact | [compile-commands-json](${CDB_ARTIFACT_URL}) |"
+            else
+              echo "| Artifact | not uploaded (branch run; only \`main\` publishes one) |"
+            fi
+          } >>"${GITHUB_STEP_SUMMARY}"
+        env:
+          CDB_ARTIFACT_URL: ${{steps.upload_cdb.outputs.artifact-url}}
 
       - uses: pre-commit/action@v3.0.1
         # TODO(helly25): drop this once the finding sweep lands, which is what
