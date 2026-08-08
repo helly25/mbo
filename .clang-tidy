@@ -1,4 +1,19 @@
 ---
+# The CppCoreGuidelines bounds / type-safety profile is off. Those checks assume
+# code sits above a safe container abstraction, but this library IS that layer:
+# they fire on the deliberate design of the containers and hashes, not on defects
+# (961 of 1600 findings, 60% of everything the linter reports here; measured
+# across all 81 sources, counting each distinct diagnostic once).
+#   * pro-bounds-avoid-unchecked-container-access - flags every `operator[]`,
+#     including inside the containers implementing it.
+#   * pro-type-union-access - the `limited_ordered` union is how LimitedSet/
+#     LimitedMap avoid default-constructing their elements.
+#   * pro-bounds-constant-array-index, pro-bounds-pointer-arithmetic,
+#     pro-bounds-array-to-pointer-decay and its alias hicpp-no-array-decay -
+#     raw-buffer indexing and pointer walking are the point of the hash code.
+# Bounds safety here is a matter for tests, sanitizers (--config=asan) and review.
+# Re-enabling any of them means auditing its findings, not just flipping the flag.
+#
 # abseil-unchecked-statusor-access is off because clang-tidy 22.1.8 SEGFAULTS in
 # it: its dataflow analysis (runTypeErasedDataflowAnalysis) crashes on
 # mbo/strings/strip.cc, reproducibly on both macOS and Linux. Re-test on a future
@@ -27,9 +42,15 @@ Checks: >
   -clang-diagnostic-unused-command-line-argument,
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-union-access,
   -fuchsia*,
   google-*,
   -google-build-using-namespace,
+  -hicpp-no-array-decay,
   -hicpp-no-assembler,
   -llvm-else-after-return,
   -llvm-header-guard,
