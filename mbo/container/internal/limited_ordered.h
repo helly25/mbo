@@ -627,7 +627,7 @@ class [[nodiscard]] LimitedOrdered {
   MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
   requires(!kOptimizeIndexOf || (kOptimizeIndexOf && !kCustomIndexOfBeyondUnroll && Capacity > kUnrollMaxCapacity))
   {
-    const_iterator it = lower_bound(key);
+    const const_iterator it = lower_bound(key);
     return it == end() || key_comp_(key, GetKey(*it)) ? npos : it - begin();
   }
 
@@ -643,17 +643,17 @@ class [[nodiscard]] LimitedOrdered {
 
   MBO_FORCE_INLINE constexpr iterator find(const Key& key) {
     if constexpr (kOptimizeIndexOf) {
-      std::size_t pos = index_of(key);
+      const std::size_t pos = index_of(key);
       return pos == npos ? end() : iterator(&values_[pos]);
     } else {  // Not kOptimizeIndexOf
-      iterator it = lower_bound(key);
+      const iterator it = lower_bound(key);
       return it == end() || key_comp_(key, GetKey(*it)) ? end() : it;
     }
   }
 
   MBO_FORCE_INLINE constexpr const_iterator find(const Key& key) const {
     if constexpr (kOptimizeIndexOf) {
-      std::size_t pos = index_of(key);
+      const std::size_t pos = index_of(key);
       return pos == npos ? end() : const_iterator(&values_[pos]);
     } else {  // Not kOptimizeIndexOf
       const_iterator it = lower_bound(key);
@@ -755,8 +755,8 @@ class [[nodiscard]] LimitedOrdered {
         std::swap(values_[pos].data.second, other.values_[pos].data.second);
       }
     }
-    std::size_t other_size = other.size_;
-    std::size_t this_size = size_;
+    const std::size_t other_size = other.size_;
+    const std::size_t this_size = size_;
     for (; pos < size_; ++pos) {
       other.emplace(std::move(values_[pos].data));
     }
@@ -769,7 +769,7 @@ class [[nodiscard]] LimitedOrdered {
 
   template<typename... Args>
   constexpr std::pair<iterator, bool> emplace(Args&&... args) noexcept(!kRequireThrows) {
-    RawValue new_val(std::forward<Args>(args)...);
+    const RawValue new_val(std::forward<Args>(args)...);
     const iterator dst = lower_bound(GetKey(new_val));
     if (dst != end() && !key_comp_(GetKey(*dst), GetKey(new_val)) && !key_comp_(GetKey(new_val), GetKey(*dst))) {
       return std::make_pair(dst, false);

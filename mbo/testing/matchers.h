@@ -247,7 +247,7 @@ class CapacityIsMatcher {
     }
 
     bool MatchAndExplain(Container container, ::testing::MatchResultListener* listener) const override {
-      CapacityType capacity = container.capacity();
+      const CapacityType capacity = container.capacity();
       ::testing::StringMatchResultListener capacity_listener;
       const bool result = capacity_matcher_.MatchAndExplain(capacity, &capacity_listener);
       *listener << "whose capacity " << capacity << (result ? " matches" : " doesn't match");

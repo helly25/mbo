@@ -388,7 +388,7 @@ class Json {
       std::ostream& os,
       SerializeMode mode = SerializeMode::kCompact,
       const types::StringifyRootOptions& root_options = types::StringifyRootOptions{}) const {
-    ::mbo::types::Stringify stringify{static_cast<types::Stringify::OutputMode>(mode), root_options};
+    const ::mbo::types::Stringify stringify{static_cast<types::Stringify::OutputMode>(mode), root_options};
     if (IsNull()) {
       struct Null {};
 

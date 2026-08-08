@@ -27,7 +27,7 @@ class AtLast {
   explicit AtLast(char sep) : sep_(sep) {}
 
   std::string_view Find(std::string_view text, std::size_t pos) const {
-    std::size_t next_pos = text.substr(pos).rfind(sep_);
+    const std::size_t next_pos = text.substr(pos).rfind(sep_);
     if (next_pos == std::string_view::npos) {
       return std::string_view{text.data() + text.size(), 0};
     }

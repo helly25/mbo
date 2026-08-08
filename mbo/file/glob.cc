@@ -149,7 +149,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobRangeInfo> GlobFindRange(std::string_view& 
         result.has_slash = true;
         continue;
       case '-': {
-        char last = re2_pattern.back();
+        const char last = re2_pattern.back();
         re2_pattern += chr;
         pattern.remove_prefix(1);
         if (pattern.front() == ']') {
