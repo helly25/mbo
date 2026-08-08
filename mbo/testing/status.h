@@ -334,7 +334,7 @@ class StatusPayloads {
       payload_map.emplace(type_url, payload);
     });
     ::testing::StringMatchResultListener inner;
-    bool match = payload_matcher_.MatchAndExplain(payload_map, &inner);
+    const bool match = payload_matcher_.MatchAndExplain(payload_map, &inner);
     if (inner.str().empty()) {
       if (actual_status.ok()) {
         *listener << "which has OK status (and no payload)";

@@ -267,8 +267,8 @@ class LimitedVector final {
     for (; pos < size_ && pos < other.size(); ++pos) {
       std::swap(values_[pos].data, other.at(pos));
     }
-    std::size_t other_size = other.size_;
-    std::size_t this_size = size_;
+    const std::size_t other_size = other.size_;
+    const std::size_t this_size = size_;
     for (; pos < size_; ++pos) {
       other.emplace_back(std::move(values_[pos].data));
     }
@@ -519,7 +519,7 @@ LimitedVector(T&&... v) -> LimitedVector<std::common_type_t<T...>, sizeof...(T)>
 template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
-  std::size_t minsize = std::min(LN, RN);
+  const std::size_t minsize = std::min(LN, RN);
   for (std::size_t index = 0; index < minsize; ++index) {
     const auto comp = lhs[index] <=> rhs[index];
     if (comp != 0) {
@@ -535,7 +535,7 @@ constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const Limite
   if (lhs.size() != rhs.size()) {
     return false;
   }
-  std::size_t minsize = std::min(LN, RN);
+  const std::size_t minsize = std::min(LN, RN);
   for (std::size_t index = 0; index < minsize; ++index) {
     const auto comp = lhs[index] <=> rhs[index];
     if (comp != 0) {
@@ -548,7 +548,7 @@ constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const Limite
 template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline bool operator<(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
-  std::size_t minsize = std::min(LN, RN);
+  const std::size_t minsize = std::min(LN, RN);
   for (std::size_t index = 0; index < minsize; ++index) {
     const auto comp = lhs[index] <=> rhs[index];
     if (comp != 0) {

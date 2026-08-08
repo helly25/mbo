@@ -176,7 +176,7 @@ TEST_F(StatusMatcherTest, StatusIsWithCodeMatcher) {
   EXPECT_THAT(absl::OkStatus(), Not(StatusIs(Ne(absl::StatusCode::kOk))));
   EXPECT_THAT(absl::AbortedError("boom"), StatusIs(Ne(absl::StatusCode::kOk), HasSubstr("boom")));
 
-  absl::StatusOr<int> status_or = absl::UnavailableError("down");
+  const absl::StatusOr<int> status_or = absl::UnavailableError("down");
   EXPECT_THAT(status_or, StatusIs(AnyOf(absl::StatusCode::kUnavailable, absl::StatusCode::kDeadlineExceeded)));
   EXPECT_THAT(status_or, Not(StatusIs(absl::StatusCode::kNotFound)));
 

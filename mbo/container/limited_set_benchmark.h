@@ -103,8 +103,8 @@ class Benchmarks {
       }
       return test_data;
     }();
-    std::size_t test = 0;
-    std::size_t item = 0;
+    const std::size_t test = 0;
+    const std::size_t item = 0;
     int64_t item_count = 0;
     const auto* data = &test_data[0].data;
     const auto* input = &test_data[0].input;

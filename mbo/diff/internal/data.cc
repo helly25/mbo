@@ -82,7 +82,7 @@ std::vector<Data::LineCache> Data::SplitAndAdaptLastLine(
   const std::size_t count = std::count_if(text.begin(), text.end(), [](char chr) { return chr == '\n'; });
   std::vector<LineCache> result;
   result.reserve(count + 1);  // N newlines split into N + 1 lines.
-  for (std::string_view line : absl::StrSplit(text, '\n')) {
+  for (const std::string_view line : absl::StrSplit(text, '\n')) {
     result.push_back(Process(options, regex_replace, line, owned));
   }
   // A missing final newline normally makes the last line carry the `\ No newline at end of file`
