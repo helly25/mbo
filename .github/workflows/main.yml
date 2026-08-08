@@ -144,8 +144,12 @@ jobs:
         run: ./compile_commands-update.sh
 
       - uses: actions/upload-artifact@v4
-        # Published so a failing finding can be reproduced locally against the
-        # exact same compile DB, and to inspect flag/toolchain drift.
+        # Only from `main`, which is the run that lints the whole tree: that DB
+        # is the one worth keeping, to reproduce a finding locally against the
+        # exact same commands and to inspect flag/toolchain drift. A branch run
+        # lints only what the branch changed, so its DB describes a near-empty
+        # lint and is not worth storing.
+        if: github.ref == 'refs/heads/main'
         with:
           name: compile-commands-json
           path: compile_commands.json
