@@ -89,7 +89,7 @@ absl::Status IniFile::Write(std::string_view filename) const {
 
 std::size_t IniFile::size() const {
   std::size_t size = 0;
-  for (const auto& [_, kvs] : data_) {
+  for (const auto& [unused, kvs] : data_) {
     size += kvs.size();
   }
   return size;

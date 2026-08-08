@@ -269,14 +269,14 @@ std::size_t SampleLength(const LatencyDist& dist, double percentile) {
 const std::vector<std::string>& ThroughputKeys(std::size_t dist_index, std::size_t bound_index) {
   static const std::array<std::array<std::vector<std::string>, kCdfPoints>, kLatencyDists.size()> kKeySets = [] {
     std::array<std::array<std::vector<std::string>, kCdfPoints>, kLatencyDists.size()> sets;
-    for (std::size_t d = 0; d < kLatencyDists.size(); ++d) {
-      const LatencyDist& dist = kLatencyDists[d];
-      for (std::size_t b = 0; b < kCdfPoints; ++b) {
+    for (std::size_t dist_idx = 0; dist_idx < kLatencyDists.size(); ++dist_idx) {
+      const LatencyDist& dist = kLatencyDists[dist_idx];
+      for (std::size_t point = 0; point < kCdfPoints; ++point) {
         // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed, reproducible set
         std::mt19937_64 rng(0x1a7e9c1);
-        const double bound_pct = dist.cdf[b].first;
-        const auto bound_len = static_cast<std::size_t>(dist.cdf[b].second);
-        std::vector<std::string>& keys = sets[d][b];
+        const double bound_pct = dist.cdf[point].first;
+        const auto bound_len = static_cast<std::size_t>(dist.cdf[point].second);
+        std::vector<std::string>& keys = sets[dist_idx][point];
         keys.reserve(kLatencyKeys);
         for (std::size_t i = 0; i + 1 < kLatencyKeys; ++i) {
           const double draw = static_cast<double>(rng()) / (static_cast<double>(UINT64_MAX) + 1.0);
