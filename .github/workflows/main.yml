@@ -71,10 +71,34 @@ jobs:
     # the findings themselves are tolerated, at the step below.
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Full history so the branch can be diffed against `main` to pick the
+          # changed sources below.
+          fetch-depth: 0
       - uses: bazelbuild/setup-bazelisk@v3
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+
+      - name: Select the scope to lint
+        # clang-tidy costs ~50s per translation unit here, so linting all 81
+        # sources takes ~24 minutes even though pre-commit already spreads them
+        # over every core. On a branch, lint only what the branch changed; `main`
+        # still gets the whole tree after merge.
+        # Known gap: editing only a header changes findings in the sources that
+        # include it, and none of those are in the branch's changed-file set. The
+        # post-merge run on `main` is what catches that.
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            echo "CLANG_TIDY_SCOPE=--all-files" >>"${GITHUB_ENV}"
+            echo "Linting the whole tree (on main)."
+          else
+            git fetch --no-tags --quiet origin main
+            echo "CLANG_TIDY_SCOPE=--from-ref origin/main --to-ref HEAD" >>"${GITHUB_ENV}"
+            echo "Linting sources changed against origin/main:"
+            git diff --name-only origin/main...HEAD -- '*.cc' '*.cpp' '*.cxx' | sed 's/^/  /'
+          fi
 
       - uses: actions/cache/restore@v5
         id: cache_restore
@@ -139,7 +163,9 @@ jobs:
           # Only the clang-tidy hook: every other hook already ran in the
           # `pre-commit` job. `--hook-stage manual` is required while the hook
           # is opt-in; it stays harmless once it becomes an automatic gate.
-          extra_args: clang-tidy --all-files --hook-stage manual
+          # Scope comes from the step above: changed sources on a branch, the
+          # whole tree on main.
+          extra_args: clang-tidy --hook-stage manual ${{env.CLANG_TIDY_SCOPE}}
 
       - uses: actions/cache/save@v5
         if: always() && steps.cache_restore.outputs.cache-hit != 'true'
