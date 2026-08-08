@@ -353,7 +353,7 @@ class AnyScanImpl {
   // For MakAnyScan / MakeConstScan
   template<AcceptableContainer Container>
   requires(kAccessByRef)
-  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
+  explicit AnyScanImpl(const MakeAnyScanData<Container, kScanMode>& data)
       : funcs_{
             .iter =
                 [data = data] {
@@ -374,7 +374,7 @@ class AnyScanImpl {
       !kAccessByRef  // This is the ConvertingScan constructor
       && types::ConstructibleFrom<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>>
       && types::ConstructibleFrom<value_type, AccessType>)
-  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
+  explicit AnyScanImpl(const MakeAnyScanData<Container, kScanMode>& data)
       : funcs_{
             // NOTE: data must be copied here!
             .iter =
