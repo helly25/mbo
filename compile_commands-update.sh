@@ -71,6 +71,16 @@ fi
 # exec configuration keep their command, so nothing leaves the compile DB.
 declare -a BCCE_ARGS=("--bcce-compiler=${CLANG}" "--bcce-prefer-target-config")
 
+# Parse against libc++ on EVERY platform, so clang-tidy sees the same standard
+# library everywhere. The extracted commands come from the default build
+# configuration, not `--config=clang`, so they carry no `-stdlib`; the hermetic
+# clang then falls back to each platform's default - libc++ on macOS, libstdc++
+# on Linux. That made the same check report differently per platform: a finding
+# fixed on a Mac could be absent on the Linux CI runner and the reverse. The
+# hermetic toolchain ships its own libc++ on both, so asking for it is enough
+# (a no-op on macOS, the actual switch on Linux).
+BCCE_ARGS+=("--bcce-copt=-stdlib=libc++")
+
 # The hermetic clang carries its own libc++ but no system C headers: without the
 # SDK sysroot its <locale> support headers fail on `'time.h' file not found`.
 # The bazel `--config=clang` toolchain supplies this itself; the extracted
