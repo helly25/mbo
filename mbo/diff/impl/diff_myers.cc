@@ -32,6 +32,14 @@
 #include "mbo/file/artefact.h"
 #include "mbo/hash/hash.h"
 
+// This file uses the notation from Myers' paper throughout: `n`/`m` are the two
+// sequence lengths, `d` the edit cost, `k` the diagonal, `x`/`y` the grid
+// coordinates, `kf`/`kr` the forward and reverse diagonals, and `lo`/`hi` the
+// window bounds. Expanding those to three-character names would break the
+// correspondence to the paper that makes this code checkable, so the length
+// rule is waived here rather than per line.
+// NOLINTBEGIN(readability-identifier-length)
+
 namespace mbo::diff {
 namespace {
 
@@ -310,3 +318,5 @@ DiffMyers::Snake DiffMyers::FindMiddleSnake(const Span& span) {
 }
 
 }  // namespace mbo::diff
+
+// NOLINTEND(readability-identifier-length)

@@ -90,7 +90,7 @@ std::string LongLines(
   return text;
 }
 
-std::string MovedBlock(std::size_t count, std::string_view tag, std::size_t from, std::size_t len, std::size_t to) {
+std::string MovedBlock(std::size_t count, std::string_view tag, std::size_t from, std::size_t len, std::size_t to_pos) {
   const std::string base = NumberedLines(count, tag);
   std::vector<std::string_view> lines = absl::StrSplit(base, '\n');
   lines.pop_back();
@@ -101,9 +101,9 @@ std::string MovedBlock(std::size_t count, std::string_view tag, std::size_t from
       continue;
     }
     result.push_back(lines[i]);
-    if (i == to) {
-      for (std::size_t j = from; j < from + len; ++j) {
-        result.push_back(lines[j]);
+    if (i == to_pos) {
+      for (std::size_t pos = from; pos < from + len; ++pos) {
+        result.push_back(lines[pos]);
       }
     }
   }
