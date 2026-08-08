@@ -14,6 +14,16 @@
 # Bounds safety here is a matter for tests, sanitizers (--config=asan) and review.
 # Re-enabling any of them means auditing its findings, not just flipping the flag.
 #
+# misc-include-cleaner is off. It demands a direct include for every symbol used,
+# which fights this codebase's umbrella headers: a test includes `stringify.h` and
+# uses the concepts that header exists to expose, and the check asks it to reach
+# past the public header into `internal/struct_names.h` instead - deepening the
+# coupling the umbrella header was written to avoid. That accounted for 69
+# findings across 30 files. The check is also reported to mishandle concepts
+# (uses inside `requires` clauses going unattributed); that is a known issue and
+# not something verified here, so the umbrella-header conflict is the operative
+# reason. If the include hygiene is ever wanted, IWYU proper is the better tool.
+#
 # abseil-unchecked-statusor-access is off because clang-tidy 22.1.8 SEGFAULTS in
 # it: its dataflow analysis (runTypeErasedDataflowAnalysis) crashes on
 # mbo/strings/strip.cc, reproducibly on both macOS and Linux. Re-test on a future
@@ -58,6 +68,7 @@ Checks: >
   -llvm-prefer-static-over-anonymous-namespace,
   -llvmlibc-*,
   misc-*,
+  -misc-include-cleaner,
   modernize-*,
   -modernize-use-nodiscard,
   -modernize-use-std-format,
