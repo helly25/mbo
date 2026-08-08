@@ -54,10 +54,67 @@ jobs:
       - uses: pre-commit/action@v3.0.1
         env:
           # The `trunk` job runs the full `trunk check`; do not also run trunk
-          # from pre-commit in CI (see the trunk-fmt hook).
-          SKIP: trunk-fmt
+          # from pre-commit in CI (see the trunk-fmt hook). Likewise the
+          # `clang-tidy` job owns clang-tidy: it needs a compile_commands.json
+          # this job deliberately does not build. `clang-tidy` is `stages:
+          # [manual]` today, so it is already absent here; naming it keeps that
+          # true when the hook is promoted to an automatic gate.
+          SKIP: trunk-fmt,clang-tidy
       - uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
+
+  clang-tidy:
+    needs: [trunk, pre-commit]
+    runs-on: ubuntu-latest
+    # TODO(helly25): drop this once the clang-tidy finding sweep lands.
+    # `.clang-tidy` sets `WarningsAsErrors: '*'` and the tree is not clean yet,
+    # so for now the job must report without blocking.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: bazelbuild/setup-bazelisk@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: actions/cache/restore@v5
+        id: cache_restore
+        with:
+          path: "~/.cache/bazel"
+          key: clang-tidy-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            clang-tidy-${{github.ref}}
+            clang-tidy-refs/heads/main
+            clang-tidy
+
+      - name: Generate compile_commands.json
+        # The compile DB is a local artifact (gitignored), so it has to be built
+        # here. The script fetches the hermetic LLVM toolchain if needed and
+        # records ITS clang as the compiler, which is what makes the resulting
+        # commands parseable by the matching hermetic clang-tidy.
+        run: ./compile_commands-update.sh
+
+      - uses: actions/upload-artifact@v4
+        # Published so a failing finding can be reproduced locally against the
+        # exact same compile DB, and to inspect flag/toolchain drift.
+        with:
+          name: compile-commands-json
+          path: compile_commands.json
+          retention-days: 14
+          if-no-files-found: error
+
+      - uses: pre-commit/action@v3.0.1
+        with:
+          # Only the clang-tidy hook: every other hook already ran in the
+          # `pre-commit` job. `--hook-stage manual` is required while the hook
+          # is opt-in; it stays harmless once it becomes an automatic gate.
+          extra_args: clang-tidy --all-files --hook-stage manual
+
+      - uses: actions/cache/save@v5
+        if: always() && steps.cache_restore.outputs.cache-hit != 'true'
+        with:
+          path: "~/.cache/bazel"
+          key: clang-tidy-${{github.ref}}-${{github.sha}}
 
   test-gcc:
     needs: [trunk, pre-commit]
@@ -158,7 +215,7 @@ jobs:
       bazel_config: ${{ matrix.bazel_config }}
 
   done:
-    needs: [trunk, pre-commit, test-gcc, test-clang, test-bcr]
+    needs: [trunk, pre-commit, clang-tidy, test-gcc, test-clang, test-bcr]
     if: always()
     runs-on: ubuntu-latest
     steps:

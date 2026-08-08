@@ -128,6 +128,32 @@ repos:
         entry: python .pre-commit/check_done_gate.py
         files: ^\.github/workflows/main\.yml$
         pass_filenames: false
+      - id: clang-tidy
+        name: clang-tidy (opt-in; gated by the CI clang-tidy job)
+        description: |
+          Runs clang-tidy over the given C++ sources via tools/clang_tidy.sh, a report-only
+          pass (no --fix, so it never rewrites the tree). It needs a compile_commands.json
+          (a gitignored local artifact; build it with ./compile_commands-update.sh) and a
+          clang-tidy >= 18 for this C++23 codebase.
+          * clang-tidy used to run under trunk, pinned at 16; that version mis-parses C++23
+            and trunk auto-applied its build-breaking fixes. Do not re-add it to trunk.
+          * Run it explicitly: `pre-commit run clang-tidy --all-files --hook-stage manual`.
+          * In CI the dedicated `clang-tidy` job owns this: it builds the compile DB, uploads
+            it as an artifact, and runs this hook. The main `pre-commit` job skips it.
+          * `stages: [manual]` keeps it OFF the automatic commit gate for now, because
+            `WarningsAsErrors: '*'` plus a tree that is not yet clean would block nearly every
+            commit. Promoting it to an automatic gate means: re-tune `.clang-tidy` (the
+            new-in-22 checks are very noisy here - cppcoreguidelines-pro-bounds-avoid-unchecked
+            -container-access alone accounts for the bulk of the findings), then sweep the
+            residual findings across mbo/, then drop `stages` here AND drop the
+            `continue-on-error` from the CI job. When it becomes automatic, tools/clang_tidy.sh
+            should also stop skipping and start failing on a missing/stale compile DB.
+          * To run `pre-commit` without this hook, run `SKIP="clang-tidy" pre-commit`.
+        language: script
+        entry: tools/clang_tidy.sh
+        types_or: [c++]
+        files: \.(cc|cpp|cxx)$
+        stages: [manual]
       - id: trunk-fmt
         name: trunk fmt
         description: |

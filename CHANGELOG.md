@@ -7,6 +7,11 @@
 - Added `--cwd` param to `mbo/digest` tool.
 - Added `mbo_log::ScopedStream*` helpers.
 - Added macro `MBO_LOG_CHECK`: A local optimized check implementation, it only processes the log stream if its `check` is false.
+- Moved `clang-tidy` from `trunk` to the opt-in `clang-tidy` pre-commit hook (`tools/clang_tidy.sh`).
+- Fixed `.clang-tidy`: `WarningsAsErrors` never escalated findings, and a misspelled option key was dead.
+- Disabled `llvm-header-guard` and `llvm-prefer-static-over-anonymous-namespace`, which contradict `STYLE_CPP.md`.
+- Fixed `compile_commands-update.sh` to record the hermetic clang, so clangd and clang-tidy parse what `--config=clang` builds.
+- Dropped 196 duplicate exec-configuration compile commands via the extractor's new `--bcce-prefer-target-config`.
 
 # 0.13.2
 
