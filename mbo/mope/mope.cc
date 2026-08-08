@@ -437,6 +437,9 @@ std::pair<std::size_t, std::size_t> Template::MaybeExpandWhiteSpace(
                                                                  : std::make_pair(tag_pos, tag.start.length());
 }
 
+// A single scan over the output that dispatches on each tag kind it meets; at 32 it is barely over
+// the threshold, and the tag handling reads as one sequence rather than as separable steps.
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 absl::Status Template::ExpandInternal(Context& ctx, std::string& output) const {
   std::string_view pos = output;
   while (true) {

@@ -109,7 +109,35 @@ done
 # Nothing to check (pre-commit may invoke with no matching files).
 [ "${#}" -gt 0 ] || exit 0
 
+# Checks that carry no meaning in test code, disabled for `*_test.cc` only. Doing
+# it here rather than with a NOLINT per test keeps one statement of the rule
+# instead of a comment repeated on every test, and new tests are covered without
+# anyone remembering to annotate them.
+#   * readability-function-cognitive-complexity: a gtest TestBody's score comes
+#     from ASSERT_*/EXPECT_* macros expanding to branches, not from logic that
+#     could be refactored. Test bodies reached 122 against a threshold of 30.
+# `--checks` APPENDS to the `Checks` in .clang-tidy (it does not replace it), so
+# every other check still applies to tests.
+readonly TEST_DISABLED_CHECKS='-readability-function-cognitive-complexity'
+
+declare -a SOURCES=()
+declare -a TESTS=()
+for FILE in "${@}"; do
+  case "${FILE}" in
+    *_test.cc | *_test.cpp | *_test.cxx) TESTS+=("${FILE}") ;;
+    *) SOURCES+=("${FILE}") ;;
+  esac
+done
+
 # Report only: --header-filter restricts diagnostics to this repo's own headers
 # (not the toolchain's force-included / system headers), -p points at the compile
 # DB. WarningsAsErrors in .clang-tidy makes any finding a non-zero exit.
-exec "${CLANG_TIDY}" --header-filter='(^|/)mbo/' -p . "${@}"
+# Both groups must run, and a finding in either has to fail, so no `exec` here.
+STATUS=0
+if [ "${#SOURCES[@]}" -gt 0 ]; then
+  "${CLANG_TIDY}" --header-filter='(^|/)mbo/' -p . "${SOURCES[@]}" || STATUS=1
+fi
+if [ "${#TESTS[@]}" -gt 0 ]; then
+  "${CLANG_TIDY}" --header-filter='(^|/)mbo/' --checks="${TEST_DISABLED_CHECKS}" -p . "${TESTS[@]}" || STATUS=1
+fi
+exit "${STATUS}"

@@ -181,6 +181,10 @@ void DiffMyers::Loop() {
   }
 }
 
+// The forward/reverse D-path search is one algorithm from Myers' paper, and the bookkeeping (the two
+// diagonal windows, the parity rule and the overlap test) only makes sense read together. Splitting
+// it into helpers would hide the correspondence to the paper without making any part simpler.
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 DiffMyers::Snake DiffMyers::FindMiddleSnake(const Span& span) {
   // The span was trimmed: both sides are non-empty and neither the first nor
   // the last lines match, so the minimal cost is >= 2 and the first overlap
