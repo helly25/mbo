@@ -1,4 +1,8 @@
 ---
+# abseil-unchecked-statusor-access is off because clang-tidy 22.1.8 SEGFAULTS in
+# it: its dataflow analysis (runTypeErasedDataflowAnalysis) crashes on
+# mbo/strings/strip.cc, reproducibly on both macOS and Linux. Re-test on a future
+# LLVM and re-enable if fixed.
 # Two llvm-* checks are off because they fight documented conventions:
 # * llvm-header-guard - STYLE_CPP.md mandates `{PATH}_{FILE}_` guards, not LLVM's
 #   path-derived style. With no header root configured it derives the guard from
@@ -11,6 +15,7 @@
 Checks: >
   *,
   abseil-*,
+  -abseil-unchecked-statusor-access,
   -altera-*,
   -boost-*,
   bugprone-*,

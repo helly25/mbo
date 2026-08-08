@@ -86,6 +86,32 @@ jobs:
             clang-tidy-refs/heads/main
             clang-tidy
 
+      - name: Build generated sources and headers
+        # Generated headers must exist on disk before the compile DB is
+        # extracted, or the extractor cannot resolve the sources that include
+        # them (`hash_mangle_seed_gen.h is missing`) and those translation units
+        # land in the DB degraded - which would later read as clang-tidy
+        # findings rather than as the build artifact gap it really is.
+        # Generated headers are the only build output a translation unit needs to
+        # parse, so this builds just those rather than all of `//...`; the query
+        # keeps it correct as generated files are added.
+        run: |
+          set -euo pipefail
+          # Read into an array without `mapfile`, so this snippet can also be run
+          # as-is on stock macOS bash 3.2 when reproducing a CI result locally.
+          GENERATED=()
+          while IFS= read -r target; do
+            GENERATED+=("${target}")
+          done < <(bazel query 'kind("generated file", //...:*)' |
+            grep -E '\.(h|hh|hpp|inc|ipp|cc|cpp|cxx)$')
+          if [ "${#GENERATED[@]}" -eq 0 ]; then
+            echo "::error::No generated sources/headers found. Either the query or the extension filter needs updating; without this the compile DB silently degrades."
+            exit 1
+          fi
+          printf 'Building %s generated file(s):\n' "${#GENERATED[@]}"
+          printf '  %s\n' "${GENERATED[@]}"
+          bazel build --config=clang "${GENERATED[@]}"
+
       - name: Generate compile_commands.json
         # The compile DB is a local artifact (gitignored), so it has to be built
         # here. The script fetches the hermetic LLVM toolchain if needed and
