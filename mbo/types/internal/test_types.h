@@ -16,30 +16,32 @@
 #ifndef MBO_TYPES_INTERNAL_TEST_TYPES_H_
 #define MBO_TYPES_INTERNAL_TEST_TYPES_H_
 
+#include <cstddef>
+
 #include "gtest/gtest.h"
 #include "mbo/types/internal/cases.h"
 
 namespace mbo::types::types_internal::test_types {
 
 struct Empty {
-  enum { kFieldCount = 0 };
+  static constexpr std::size_t kFieldCount = 0;
 };
 
 struct Base1 {
-  enum { kFieldCount = 1 };
+  static constexpr std::size_t kFieldCount = 1;
 
   int a;
 };
 
 struct Base2 {
-  enum { kFieldCount = 2 };
+  static constexpr std::size_t kFieldCount = 2;
 
   int a;
   int b;
 };
 
 struct Base3 {
-  enum { kFieldCount = 3 };
+  static constexpr std::size_t kFieldCount = 3;
 
   int a;
   int b;
@@ -62,14 +64,14 @@ template<typename Base>
 struct Derived0 : Base {
   using BaseType = Base;
 
-  enum { kFieldCount = 0 };
+  static constexpr std::size_t kFieldCount = 0;
 };
 
 template<typename Base>
 struct Derived1 : Base {
   using BaseType = Base;
 
-  enum { kFieldCount = 1 };
+  static constexpr std::size_t kFieldCount = 1;
 
   int a;
 };
@@ -78,7 +80,7 @@ template<typename Base>
 struct Derived2 : Base {
   using BaseType = Base;
 
-  enum { kFieldCount = 2 };
+  static constexpr std::size_t kFieldCount = 2;
 
   int a;
   int b;
@@ -88,7 +90,7 @@ template<typename Base>
 struct Derived3 : Base {
   using BaseType = Base;
 
-  enum { kFieldCount = 3 };
+  static constexpr std::size_t kFieldCount = 3;
 
   int a;
   int b;
@@ -132,7 +134,7 @@ struct Multi0
   using BaseAType = BaseA;
   using BaseBType = BaseB;
 
-  enum { kFieldCount = 0 };
+  static constexpr std::size_t kFieldCount = 0;
 };
 
 template<typename BaseA, typename BaseB>
@@ -142,7 +144,7 @@ struct Multi1
   using BaseAType = BaseA;
   using BaseBType = BaseB;
 
-  enum { kFieldCount = 1 };
+  static constexpr std::size_t kFieldCount = 1;
 
   int a;
 };
@@ -154,7 +156,7 @@ struct Multi2
   using BaseAType = BaseA;
   using BaseBType = BaseB;
 
-  enum { kFieldCount = 2 };
+  static constexpr std::size_t kFieldCount = 2;
 
   int a;
   int b;
@@ -165,24 +167,24 @@ struct MultiOutOfRange final {
 };
 
 struct EmptyB {
-  enum { kFieldCount = 0 };
+  static constexpr std::size_t kFieldCount = 0;
 };
 
 struct Base1B {
-  enum { kFieldCount = 1 };
+  static constexpr std::size_t kFieldCount = 1;
 
   int b_a;
 };
 
 struct Base2B {
-  enum { kFieldCount = 2 };
+  static constexpr std::size_t kFieldCount = 2;
 
   int b_a;
   int b_b;
 };
 
 struct Base3B {
-  enum { kFieldCount = 3 };
+  static constexpr std::size_t kFieldCount = 3;
 
   int b_a;
   int b_b;

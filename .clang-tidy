@@ -24,6 +24,18 @@
 # not something verified here, so the umbrella-header conflict is the operative
 # reason. If the include hygiene is ever wanted, IWYU proper is the better tool.
 #
+# bugprone-easily-swappable-parameters is off. It flags any run of adjacent
+# same-type parameters - e.g. `LongLines(std::size_t, std::size_t, std::size_t)` -
+# without evidence that a call site ever got them wrong. Satisfying it means
+# reordering parameters or introducing strong types to please a heuristic.
+# TODO(helly25): re-enable once the interfaces it flags are revisited; it does
+# catch real swap hazards where a strong type would genuinely help.
+#
+# readability-use-concise-preprocessor-directives is off. It rewrites
+# `#if defined(X)` into `#ifdef X`, which is purely cosmetic and cannot apply to
+# the compound conditions sitting right next to them, so following it makes
+# neighbouring directives LESS consistent rather than more.
+#
 # abseil-unchecked-statusor-access is off because clang-tidy 22.1.8 SEGFAULTS in
 # it: its dataflow analysis (runTypeErasedDataflowAnalysis) crashes on
 # mbo/strings/strip.cc, reproducibly on both macOS and Linux. Re-test on a future
@@ -44,6 +56,7 @@ Checks: >
   -altera-*,
   -boost-*,
   bugprone-*,
+  -bugprone-easily-swappable-parameters,
   -bugprone-exception-escape,
   -cert-err58-cpp,
   clang*,
@@ -80,6 +93,7 @@ Checks: >
   -readability-avoid-nested-conditional-operator,
   -readability-else-after-return,
   -readability-redundant-inline-specifier,
+  -readability-use-concise-preprocessor-directives,
 
 # A check-name glob, not a bool: the former `true` matched no check, so findings
 # never escalated to a non-zero exit.
