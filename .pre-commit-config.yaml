@@ -83,6 +83,18 @@ repos:
         entry: .pre-commit/check_version.sh
         pass_filenames: False
         types: [text]
+      - id: clang-tidy-targets-match-tag
+        name: clang-tidy targets match the tag
+        description: |
+          `CLANG_TIDY_MANUAL_TARGETS` in bazelmod/clang_tidy_targets.bzl must equal the set of
+          targets tagged `clang-tidy`. The list exists because aquery expands `//...` with
+          `manual` targets already removed, so //bazelmod:refresh_compile_commands has to name
+          them explicitly or they never reach compile_commands.json. The tag states the intent;
+          this stops the two drifting apart. Skips when bazel is unavailable.
+        language: system
+        entry: .pre-commit/check_clang_tidy_targets.sh
+        pass_filenames: false
+        files: ^(.*/BUILD\.bazel|bazelmod/clang_tidy_targets\.bzl)$
       - id: no-do-not-merge
         name: No 'DO NOT MERGE'
         description: |
