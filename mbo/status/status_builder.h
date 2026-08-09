@@ -73,7 +73,14 @@ class StatusBuilder final {
   }
 
   // Switching the builder to append mode.
-  enum Append { Append };  // NOLINT(*-identifier-naming)
+  //
+  // A tag enum, unscoped on purpose: the whole point is that a caller writes
+  // `builder << Append` at the use site. Scoping it would make that
+  // `builder << StatusBuilder::Append::Append`, which is worse to read and an
+  // API break for every caller, to satisfy a rule aimed at enums that carry
+  // values.
+  // NOLINTNEXTLINE(*-identifier-naming,cppcoreguidelines-use-enum-class)
+  enum Append { Append };
 
   StatusBuilder& operator<<(enum Append /* unused */) & { return SetAppend(); }
 

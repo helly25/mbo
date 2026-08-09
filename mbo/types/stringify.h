@@ -224,7 +224,7 @@ struct StringifyOptions {
   // Special types:
 
   // Handling of containers whose first type is convertible to a string.
-  enum StrKeyed {
+  enum class StrKeyed {
     // No special treatment
     kNormal = 0,
 
