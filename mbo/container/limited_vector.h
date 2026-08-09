@@ -217,6 +217,8 @@ class LimitedVector final {
 
   template<types::ConstructibleInto<T> U, auto OtherN>
   requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
+  // Moved element-wise below; `other` has a different type, so it cannot be moved as a whole.
+  // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
   constexpr explicit LimitedVector(LimitedVector<U, OtherN>&& other) noexcept {
     for (; size_ < other.size(); ++size_) {
       std::construct_at(const_cast<std::remove_const_t<T>*>(&values_[size_].data), std::move(other.at(size_)));
@@ -226,6 +228,8 @@ class LimitedVector final {
 
   template<types::ConstructibleInto<T> U, auto OtherN>
   requires(MakeLimitedOptions<OtherN>().kCapacity <= Capacity)
+  // Moved element-wise below; `other` has a different type, so it cannot be moved as a whole.
+  // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
   constexpr LimitedVector& operator=(LimitedVector<U, OtherN>&& other) noexcept {
     clear();
     for (; size_ < other.size(); ++size_) {
@@ -619,6 +623,7 @@ constexpr LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> T
 }
 
 template<typename T, LimitedOptionsFlag... Flags, int&..., std::size_t N>
+// NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved): an array is moved element-wise.
 constexpr LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> ToLimitedVector(T (&&array)[N]) {
   LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> result;
   for (std::size_t idx = 0; idx < N; ++idx) {

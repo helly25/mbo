@@ -55,10 +55,12 @@ ABSL_FLAG(
 
 namespace mbo {
 
+namespace {
 struct Options {
   std::string template_name;
   std::string generate_name;
 };
+}  // namespace
 
 namespace {
 
