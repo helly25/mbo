@@ -835,7 +835,7 @@ class Stringify {
         return;
       }
       os_ << "\n";
-      for (std::string_view level : level_) {
+      for (const std::string_view level : level_) {
         os_ << level;
       }
     }

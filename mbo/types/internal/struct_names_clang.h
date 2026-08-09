@@ -121,8 +121,10 @@ class StructMetaBase {
   }
 
   static constexpr std::size_t ComputeFieldCount() {
+    // NOLINTNEXTLINE(misc-const-correctness): passed to FieldCount() by non-const reference.
     std::size_t field_index{0};
     if constexpr (!IsEmptyType<T>) {
+      // NOLINTNEXTLINE(misc-const-correctness): `&storage.Get()` needs a mutable object.
       Storage storage{};
       FieldCount(&storage.Get(), field_index);
     }
@@ -184,6 +186,7 @@ class StructMeta final {
   inline static constexpr FieldData kFieldData = []() consteval {
     FieldData fields;
     if constexpr (!IsEmptyType<T>) {
+      // NOLINTNEXTLINE(misc-const-correctness): `&storage.Get()` needs a mutable object.
       typename StructMetaBase<T>::Storage storage{};
       std::size_t field_index = 0;
       Init(&storage.Get(), fields, field_index);
@@ -256,6 +259,7 @@ class StructMeta<T, true, false> final {
   inline static const FieldData kFieldData = []() {
     FieldData fields;
     if constexpr (!IsEmptyType<T>) {
+      // NOLINTNEXTLINE(misc-const-correctness): `&storage.Get()` needs a mutable object.
       typename StructMetaBase<T>::Storage storage{};
       std::size_t field_index = 0;
       Init(&storage.Get(), fields, field_index);
