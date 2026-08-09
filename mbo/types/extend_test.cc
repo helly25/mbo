@@ -255,7 +255,6 @@ TEST_F(ExtendTest, Streamable) {
 
 namespace debug {
 
-// NOLINTBEGIN(bugprone-easily-swappable-parameters,cert-dcl50-cpp)
 int DumpStructVisitor(
     std::size_t /*field_index*/,
     std::string_view format,
@@ -314,8 +313,6 @@ void PrintStructVisitor(
     fields.emplace_back(StructVisitorElement{.format{format}, .indent{indent}, .type{type}, .name{name}, .line = line});
   }
 }
-
-// NOLINTEND(bugprone-easily-swappable-parameters,cert-dcl50-cpp)
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 template<typename T>

@@ -98,9 +98,7 @@ class StructMetaBase {
     Uninitialized storage_;
   };
 
-  // NOLINTBEGIN(*-swappable-parameters)
-
-  static constexpr int DumpStructFieldCounter(  // NOLINT(cert-dcl50-cpp)
+  static constexpr int DumpStructFieldCounter(
       std::size_t& field_index,
       std::string_view format,
       std::string_view indent = {},
@@ -112,8 +110,6 @@ class StructMetaBase {
     }
     return 0;
   }
-
-  // NOLINTEND(*-swappable-parameters)
 
   static constexpr int FieldCount(const T* ptr, std::size_t& field_index) {
     __builtin_dump_struct(ptr, &DumpStructFieldCounter, field_index);  // NOLINT(*-vararg)
@@ -156,9 +152,7 @@ class StructMeta final {
 
   using FieldData = std::array<FieldInfo, kFieldCount>;
 
-  // NOLINTBEGIN(*-swappable-parameters)
-
-  static constexpr int DumpStructVisitor(  // NOLINT(cert-dcl50-cpp)
+  static constexpr int DumpStructVisitor(
       FieldData& fields,
       std::size_t& field_index,
       std::string_view format,
@@ -175,8 +169,6 @@ class StructMeta final {
     }
     return 0;
   }
-
-  // NOLINTEND(*-swappable-parameters)
 
   static constexpr void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
     __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
@@ -230,9 +222,7 @@ class StructMeta<T, true, false> final {
 
   using FieldData = std::array<FieldInfo, kFieldCount>;
 
-  // NOLINTBEGIN(*-swappable-parameters)
-
-  static int DumpStructVisitor(  // NOLINT(cert-dcl50-cpp)
+  static int DumpStructVisitor(
       FieldData& fields,
       std::size_t& field_index,
       std::string_view format,
@@ -248,8 +238,6 @@ class StructMeta<T, true, false> final {
     }
     return 0;
   }
-
-  // NOLINTEND(*-swappable-parameters)
 
   static void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
     __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
