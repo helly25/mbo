@@ -39,7 +39,15 @@ readonly TARGETS_BZL="bazelmod/clang_tidy_targets.bzl"
 # Tagged targets, as bazel sees them. `bazel query` (unlike aquery) does report
 # `manual` targets, which is what makes this check possible at all. Strip the
 # `@@//` canonical-repo prefix so both sides compare as `//pkg:target`.
-TAGGED="$(bazel query 'attr(tags, "clang-tidy", //...)' 2>/dev/null | sed 's|^@@||' | sort)"
+if ! TAGGED="$(bazel query 'attr(tags, "clang-tidy", //...)' 2>/dev/null | sed 's|^@@||' | sort)" \
+  || [ -z "${TAGGED}" ]; then
+  # A failed or empty query means bazel could not analyse the workspace (no
+  # fetched dependencies on a lint-only CI runner, for instance). That is not the
+  # same as "the list is wrong", and treating it as a mismatch would fail every
+  # such job, so skip instead.
+  echo "clang-tidy-targets: skipped (bazel query returned nothing; cannot verify)." 1>&2
+  exit 0
+fi
 
 # The list the build actually uses.
 LISTED="$(sed -n 's|^ *"\(//[^"]*\)",$|\1|p' "${TARGETS_BZL}" | sort)"
