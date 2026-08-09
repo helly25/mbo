@@ -124,6 +124,11 @@ declare -a SOURCES=()
 declare -a TESTS=()
 for FILE in "${@}"; do
   case "${FILE}" in
+    # Not built by bazel at all: an SMHasher3 plugin, copied into that project by
+    # mbo/hash/measurements/build_smhasher3.sh and compiled by ITS cmake. It has
+    # no compile command here, so clang-tidy would lint it with flags guessed from
+    # unrelated files and report its SMHasher3 includes as missing.
+    mbo/hash/measurements/smhasher3/*) continue ;;
     *_test.cc | *_test.cpp | *_test.cxx) TESTS+=("${FILE}") ;;
     *) SOURCES+=("${FILE}") ;;
   esac

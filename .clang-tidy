@@ -31,6 +31,23 @@
 # trying to enforce is already covered - clang-format's `InsertBraces` adds braces
 # to real if/else bodies on every commit.
 #
+# misc-no-recursion is off. Recursion is the natural shape of the code it flags:
+# Stringify walks nested structures, DebugStr formats them, BigNumberLen recurses
+# once for the negative case. The check reports every member of a call chain, so a
+# single recursive algorithm produces a cluster of findings, and the alternative -
+# an explicit stack - would be longer and harder to read.
+#
+# bugprone-std-namespace-modification is off. The `namespace std` blocks here are
+# the sanctioned kind: specialisations of std templates for our own types
+# (`std::hash`, structured-binding support), which is exactly how those extension
+# points are meant to be used. The check cannot tell those from adding new
+# declarations to std.
+#
+# cppcoreguidelines-avoid-magic-numbers / readability-magic-numbers (aliases) are
+# off. They fire on test expectations and on the numeric tables that ARE the
+# subject - digit-count boundaries, diff offsets, hash constants - where naming
+# each value would obscure it rather than explain it.
+#
 # bugprone-easily-swappable-parameters is off. It flags any run of adjacent
 # same-type parameters - e.g. `LongLines(std::size_t, std::size_t, std::size_t)` -
 # without evidence that a call site ever got them wrong. Satisfying it means
@@ -74,6 +91,7 @@ Checks: >
   -boost-*,
   bugprone-*,
   -bugprone-easily-swappable-parameters,
+  -bugprone-std-namespace-modification,
   -bugprone-exception-escape,
   -cert-err58-cpp,
   clang*,
@@ -82,6 +100,7 @@ Checks: >
   -clang-diagnostic-unused-command-line-argument,
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
   -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
   -cppcoreguidelines-pro-bounds-constant-array-index,
@@ -99,6 +118,7 @@ Checks: >
   -llvmlibc-*,
   misc-*,
   -misc-include-cleaner,
+  -misc-no-recursion,
   modernize-*,
   -modernize-use-nodiscard,
   -modernize-use-std-format,
@@ -108,6 +128,7 @@ Checks: >
   portability-*,
   readability-*,
   -readability-avoid-nested-conditional-operator,
+  -readability-magic-numbers,
   -readability-else-after-return,
   -readability-inconsistent-ifelse-braces,
   -readability-redundant-inline-specifier,
