@@ -322,7 +322,9 @@ The project only comes with a Bazel BUILD.bazel file and can be added to other B
 
 The project is formatted with specific clang-format settings which require clang 16+ (in case of MacOs LLVM 16+ can be installed using brew). For simplicity in dev mode the project pulls the appropriate clang tools and can be compiled with those tools using `bazel [build|test] --config=clang ...`.
 
-Lint and format are driven by [Trunk](https://docs.trunk.io/cli). Devs are **required** to install the CLI locally — `curl https://get.trunk.io -fsSL | bash` — then run `trunk check` and `trunk fmt` before pushing. The repo enables `trunk-fmt-pre-commit` and `trunk-check-pre-push` so the hooks run automatically once installed. CI runs `trunk check` only (no auto-fixing on the GitHub side); failing lint must be fixed locally and re-pushed.
+Lint and format are driven by [Trunk](https://docs.trunk.io/cli) plus [pre-commit](https://pre-commit.com). Devs are **required** to install both — `curl https://get.trunk.io -fsSL | bash` and `pip install pre-commit` (or your package manager's equivalent) — then run `pre-commit install` **once**. pre-commit is this repo's single git-hook entry point and delegates `trunk fmt` to trunk on every commit; trunk's own git-hook actions are deliberately disabled in `.trunk/trunk.yaml` so the two cannot fight over `.git/hooks` (a CI check fails the build if they are re-enabled). CI runs `pre-commit`, `trunk check` and `clang-tidy` as separate jobs and never auto-fixes; failing lint must be fixed locally and re-pushed.
+
+`clang-tidy` is one of these pre-commit hooks as well — it moved there from trunk, which pinned a version too old to parse this code. It is opt-in for now (`pre-commit run clang-tidy --all-files --hook-stage manual`) and becomes automatic like the rest once the finding sweep lands. See [STYLE_CPP.md](STYLE_CPP.md) for how to run it and how to build the `compile_commands.json` it needs.
 
 ### MODULES.bazel
 
