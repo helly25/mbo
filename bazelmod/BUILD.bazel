@@ -13,9 +13,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
+load(":clang_tidy_targets.bzl", "CLANG_TIDY_MANUAL_TARGETS")
+
 package(default_visibility = [])
 
 exports_files([
     "dev.MODULE.bazel",
     "llvm.MODULE.bazel",
 ])
+
+# Generates `compile_commands.json`; run it through `//compile_commands-update.sh`.
+#
+# Lives here rather than in the root package because the extractor is a
+# `dev_dependency`: the root package defines `//:clang-format` and `//:is_clang`,
+# which library targets reference, so a module consumer would load it and fail on
+# the missing dev dep. Nothing outside MODULE.bazel references `//bazelmod`.
+#
+# One entry, because the key is interpolated into `deps(...)` and so may be a
+# query EXPRESSION rather than a single pattern. The union is required: aquery
+# expands `//...` with `manual` targets already excluded, so the benchmarks and
+# other manual targets we still want indexed have to be named explicitly (a
+# `attr(tags, "clang-tidy", //...)` filter returns nothing extra, because the
+# exclusion happens before the filter). `//bazelmod:clang_tidy_manual_targets`
+# below keeps that list honest against the tag.
+refresh_compile_commands(
+    name = "refresh_compile_commands",
+    tags = ["manual"],
+    targets = {
+        " + ".join([
+            "@//...",
+        ] + CLANG_TIDY_MANUAL_TARGETS): "--config=clang-tidy",
+    },
+)

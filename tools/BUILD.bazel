@@ -60,5 +60,8 @@ sh_binary(
 cc_binary(
     name = "show_compiler",
     srcs = ["show_compiler.cc"],
-    tags = ["manual"],
+    tags = [
+        "clang-tidy",
+        "manual",
+    ],
 )

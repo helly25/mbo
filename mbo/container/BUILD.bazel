@@ -174,7 +174,10 @@ cc_binary(
     name = "limited_set_benchmark",
     testonly = 1,
     srcs = ["limited_set_benchmark_main.cc"],
-    tags = ["manual"],
+    tags = [
+        "clang-tidy",
+        "manual",
+    ],
     visibility = ["//visibility:private"],
     deps = [
         ":limited_options_cc",
