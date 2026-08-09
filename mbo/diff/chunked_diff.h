@@ -69,4 +69,4 @@ class ChunkedDiff : public BaseDiff {
 
 }  // namespace mbo::diff
 
-#endif  // MBO_DIFF_DIFF_H_
+#endif  // MBO_DIFF_CHUNKED_DIFF_H_

@@ -166,4 +166,4 @@ inline std::strong_ordering WeakToStrong(std::weak_ordering order) {
 
 }  // namespace mbo::types
 
-#endif  // MBO_TYPES_COMPARE_H
+#endif  // MBO_TYPES_COMPARE_H_
