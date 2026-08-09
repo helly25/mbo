@@ -104,7 +104,7 @@ TEST_F(OptionalDataOrRefTest, InitRef) {
 
 TEST_F(OptionalDataOrRefTest, Value) {
   int val = 10;
-  static_assert(std::same_as<int, typename OptionalDataOrRef<int>::value_type>);
+  static_assert(std::same_as<int, OptionalDataOrRef<int>::value_type>);
   OptionalDataOrRef<int> ref(val);
   EXPECT_THAT(ref.has_value(), true);
   EXPECT_THAT(ref.HoldsData(), false);

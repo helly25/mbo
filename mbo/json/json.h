@@ -415,7 +415,7 @@ class Json {
   }
 
   // Change value to an `Array`.
-  Json& MakeArray() { return MakeType(std::make_unique<typename Array::element_type>()); }
+  Json& MakeArray() { return MakeType(std::make_unique<Array::element_type>()); }
 
   // Change value to an `Object`
   Json& MakeObject() { return MakeType(Object{}); }

@@ -132,13 +132,13 @@ struct MakeExtender {
 
   template<typename ExtenderOrActualType>
   struct Impl : ImplT<ExtenderOrActualType> {
-    using Type = typename ExtenderOrActualType::Type;
+    using Type = ExtenderOrActualType::Type;
   };
 };
 
 template<typename ExtenderBase>
 struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
-  using Type = typename ExtenderBase::Type;
+  using Type = ExtenderBase::Type;
 
   template<typename Other>
   friend struct AbslStringify_;
@@ -164,7 +164,7 @@ struct AbslStringify_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
 template<typename ExtenderBase>
 struct AbslHashable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
  private:
-  using T = typename ExtenderBase::Type;
+  using T = ExtenderBase::Type;
 
  public:
   template<typename H>
@@ -176,7 +176,7 @@ struct AbslHashable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
 template<typename ExtenderBase>
 struct Comparable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
  private:
-  using T = typename ExtenderBase::Type;
+  using T = ExtenderBase::Type;
 
  public:
   // Define operator `<=>` on `const T&` since that is what defines the
@@ -232,7 +232,7 @@ struct Comparable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
 template<typename ExtenderBase>
 struct Printable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
  public:
-  using T = typename ExtenderBase::Type;
+  using T = ExtenderBase::Type;
 
   // Produce a string based on control via `field_options`.
   //

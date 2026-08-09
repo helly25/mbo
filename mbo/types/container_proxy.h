@@ -58,7 +58,7 @@ namespace mbo::types {
 // ```
 template<
     typename T,
-    typename Container = typename T::element_type,
+    typename Container = T::element_type,
     Container& (T::*GetMutable)() = &T::operator*,
     const Container& (T::*GetConst)() const = &T::operator*>
 requires requires { typename std::remove_cvref_t<Container>::value_type; }
@@ -78,8 +78,8 @@ struct ContainerProxy : T {
   }
 
  public:
-  using size_type = typename C::size_type;
-  using value_type = typename C::value_type;
+  using size_type = C::size_type;
+  using value_type = C::value_type;
 
   // NOLINTBEGIN(readability-identifier-naming)
   // clang-format off

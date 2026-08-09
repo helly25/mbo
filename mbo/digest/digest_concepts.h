@@ -40,7 +40,7 @@ concept IsDigestAlgorithm = requires(std::string_view data) {
 // Streaming (incremental) interface. `StreamFinalize` takes the state by
 // value, so a stream can be finalized ("peeked") and then continued.
 template<typename Algo>
-concept HasStreaming = requires(typename Algo::StreamState state, std::string_view data) {
+concept HasStreaming = requires(Algo::StreamState state, std::string_view data) {
   { Algo::StreamInit() } noexcept -> std::same_as<typename Algo::StreamState>;
   { Algo::StreamUpdate(state, data) } noexcept;
   { Algo::StreamFinalize(state) } noexcept -> std::same_as<typename Algo::DigestType>;

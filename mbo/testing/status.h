@@ -79,7 +79,7 @@ template<typename StatusOrType>
 class IsOkAndHoldsMatcherImpl : public ::testing::MatcherInterface<StatusOrType> {
  public:
   // NOLINTNEXTLINE(readability-identifier-naming)
-  using value_type = typename std::remove_reference<StatusOrType>::type::value_type;
+  using value_type = std::remove_reference<StatusOrType>::type::value_type;
 
   template<typename InnerMatcher, std::enable_if_t<!std::is_same_v<InnerMatcher, IsOkAndHoldsMatcherImpl>, int> = 0>
   explicit IsOkAndHoldsMatcherImpl(InnerMatcher&& inner_matcher)

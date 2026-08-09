@@ -304,7 +304,7 @@ class AnyScanImpl {
   requires(mbo::types::IsPair<std::remove_cvref_t<Pair>>)
   struct FirstType {
     using RawPair = std::remove_cvref_t<Pair>;
-    using RawFirst = typename RawPair::first_type;
+    using RawFirst = RawPair::first_type;
     using type = mbo::types::Cases<
         mbo::types::IfThen<std::is_const_v<Pair> && std::is_reference_v<Pair>, const RawFirst&>,
         mbo::types::IfThen<std::is_const_v<Pair>, const RawFirst>,
@@ -317,8 +317,8 @@ class AnyScanImpl {
     using RawSrc = std::remove_cvref_t<SrcValueTypeT>;
     using RawDst = std::remove_cvref_t<DstAccessType>;
     if constexpr (::mbo::types::IsPair<RawSrc> && ::mbo::types::IsPair<RawDst>) {
-      using SrcFirstType = typename FirstType<SrcValueTypeT>::type;
-      using DstFirstType = typename FirstType<DstAccessType>::type;
+      using SrcFirstType = FirstType<SrcValueTypeT>::type;
+      using DstFirstType = FirstType<DstAccessType>::type;
       static_assert(
           std::convertible_to<SrcFirstType, DstFirstType>,
           "A common reason for this to fail is scanning over `std::map` and similar indexed containers "
