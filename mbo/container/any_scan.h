@@ -352,7 +352,7 @@ class AnyScanImpl {
 
   // For MakAnyScan / MakeConstScan
   template<AcceptableContainer Container>
-  requires(kAccessByRef)
+  requires kAccessByRef
   explicit AnyScanImpl(const MakeAnyScanData<Container, kScanMode>& data)
       : funcs_{
             .iter =
