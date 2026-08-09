@@ -112,23 +112,36 @@ std::string MovedBlock(std::size_t count, std::string_view tag, std::size_t from
 
 const std::vector<Case>& Cases() {
   static const auto* const kCases = new std::vector<Case>{
-      {"equal_10k", {NumberedLines(10'000, "line-"), "lhs"}, {NumberedLines(10'000, "line-"), "rhs"}},
-      {"edits_10k", {NumberedLines(10'000, "line-"), "lhs"}, {EditedLines(10'000, "line-", 200), "rhs"}},
-      {"moved_10k", {NumberedLines(10'000, "line-"), "lhs"}, {MovedBlock(10'000, "line-", 2'000, 100, 7'000), "rhs"}},
-      {"disjoint_2k", {NumberedLines(2'000, "left-"), "lhs"}, {NumberedLines(2'000, "right-"), "rhs"}},
-      {"tokenize_20k_long", {LongLines(20'000, 120, 0), "lhs"}, {LongLines(20'000, 120, 500), "rhs"}},
-      {"tokenize_20k_long_icase", {LongLines(20'000, 120, 0), "lhs"}, {LongLines(20'000, 120, 500), "rhs"}, true},
+      {.name = "equal_10k",
+       .lhs = {.data = NumberedLines(10'000, "line-"), .name = "lhs"},
+       .rhs = {.data = NumberedLines(10'000, "line-"), .name = "rhs"}},
+      {.name = "edits_10k",
+       .lhs = {.data = NumberedLines(10'000, "line-"), .name = "lhs"},
+       .rhs = {.data = EditedLines(10'000, "line-", 200), .name = "rhs"}},
+      {.name = "moved_10k",
+       .lhs = {.data = NumberedLines(10'000, "line-"), .name = "lhs"},
+       .rhs = {.data = MovedBlock(10'000, "line-", 2'000, 100, 7'000), .name = "rhs"}},
+      {.name = "disjoint_2k",
+       .lhs = {.data = NumberedLines(2'000, "left-"), .name = "lhs"},
+       .rhs = {.data = NumberedLines(2'000, "right-"), .name = "rhs"}},
+      {.name = "tokenize_20k_long",
+       .lhs = {.data = LongLines(20'000, 120, 0), .name = "lhs"},
+       .rhs = {.data = LongLines(20'000, 120, 500), .name = "rhs"}},
+      {.name = "tokenize_20k_long_icase",
+       .lhs = {.data = LongLines(20'000, 120, 0), .name = "lhs"},
+       .rhs = {.data = LongLines(20'000, 120, 500), .name = "rhs"},
+       .ignore_case = true},
       // Lines differing only in trailing space: the strip is a pure suffix trim.
       {.name = "tokenize_20k_trail_space",
-       .lhs = {LongLines(20'000, 120, 0, "aBcDeFgHiJkLmNoP", "  "), "lhs"},
-       .rhs = {LongLines(20'000, 120, 500, "aBcDeFgHiJkLmNoP", " "), "rhs"},
+       .lhs = {.data = LongLines(20'000, 120, 0, "aBcDeFgHiJkLmNoP", "  "), .name = "lhs"},
+       .rhs = {.data = LongLines(20'000, 120, 500, "aBcDeFgHiJkLmNoP", " "), .name = "rhs"},
        .ignore_trailing_space = true},
       // Lines differing only in internal spacing: every line gets rebuilt.
       // The width is a multiple of the pattern length so both sides strip to
       // identical text.
       {.name = "tokenize_20k_all_space",
-       .lhs = {LongLines(20'000, 108, 0, "aB cD eF gH iJ kL "), "lhs"},
-       .rhs = {LongLines(20'000, 108, 500, "aBcD eFg HiJ kL   "), "rhs"},
+       .lhs = {.data = LongLines(20'000, 108, 0, "aB cD eF gH iJ kL "), .name = "lhs"},
+       .rhs = {.data = LongLines(20'000, 108, 500, "aBcD eFg HiJ kL   "), .name = "rhs"},
        .ignore_all_space = true},
   };
   return *kCases;

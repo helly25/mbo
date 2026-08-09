@@ -24,6 +24,13 @@
 # not something verified here, so the umbrella-header conflict is the operative
 # reason. If the include hygiene is ever wanted, IWYU proper is the better tool.
 #
+# readability-inconsistent-ifelse-braces is off. 20 of its 25 findings were the
+# `if` INSIDE MBO_RETURN_IF_ERROR / MBO_ASSIGN_OR_RETURN: it points at the macro's
+# call site and demands braces that can only be written in the macro definition,
+# so there is no edit at the reported location that satisfies it. The rule it is
+# trying to enforce is already covered - clang-format's `InsertBraces` adds braces
+# to real if/else bodies on every commit.
+#
 # bugprone-easily-swappable-parameters is off. It flags any run of adjacent
 # same-type parameters - e.g. `LongLines(std::size_t, std::size_t, std::size_t)` -
 # without evidence that a call site ever got them wrong. Satisfying it means
@@ -102,6 +109,7 @@ Checks: >
   readability-*,
   -readability-avoid-nested-conditional-operator,
   -readability-else-after-return,
+  -readability-inconsistent-ifelse-braces,
   -readability-redundant-inline-specifier,
   -readability-use-concise-preprocessor-directives,
 
