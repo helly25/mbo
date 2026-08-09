@@ -31,6 +31,13 @@
 # trying to enforce is already covered - clang-format's `InsertBraces` adds braces
 # to real if/else bodies on every commit.
 #
+# cppcoreguidelines-rvalue-reference-param-not-moved is kept, but with
+# IgnoreNonDeducedTemplateTypes: a class template's `Container&&` is a genuine
+# rvalue reference, not a forwarding reference, and `ConvertContainer` correctly
+# uses `std::forward<Container>` because it may be instantiated with `T&`. The
+# check would demand `std::move`, which is wrong there. The option is exactly for
+# this case, so the check keeps working on ordinary rvalue-ref parameters.
+#
 # misc-no-recursion is off. Recursion is the natural shape of the code it flags:
 # Stringify walks nested structures, DebugStr formats them, BigNumberLen recurses
 # once for the negative case. The check reports every member of a call chain, so a
@@ -137,6 +144,11 @@ Checks: >
 # A check-name glob, not a bool: the former `true` matched no check, so findings
 # never escalated to a non-zero exit.
 WarningsAsErrors: '*'
+# Generated data tables (`*.inc`) are not hand-edited: any finding in one has to
+# be fixed in the generator that emits it, so reporting it at the generated file
+# is noise. `hash_test_vectors.inc` is the case in point - it is produced by
+# //mbo/hash:hash_test_vectors_gen and #included by hash_test.cc.
+ExcludeHeaderFilterRegex: '.*\.inc$'
 FormatStyle:       '.clang-format'
 CheckOptions:
   - key:             bugprone-signed-char-misuse.CharTypedefsToIgnore
@@ -169,6 +181,8 @@ CheckOptions:
     value:           'NULL'
   - key:             performance-unnecessary-value-param.AllowedTypes
     value:           'absl::Status;absl::StatusOr;std::string_view'
+  - key:             cppcoreguidelines-rvalue-reference-param-not-moved.IgnoreNonDeducedTemplateTypes
+    value:           '1'
   - key:             readability-implicit-bool-conversion.AllowIntegerConditions
     value:           '1'
   - key:             readability-implicit-bool-conversion.AllowPointerConditions
@@ -182,7 +196,7 @@ CheckOptions:
   - key:             readability-identifier-length.IgnoredParameterNames
     value:           'os|v'
   - key:             readability-identifier-length.IgnoredVariableNames
-    value:           'os|v|it'
+    value:           'os|v|it|_'
   - key:             cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
     value:           '1'
   - key:             readability-identifier-naming.ClassCase
