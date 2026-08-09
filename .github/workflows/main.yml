@@ -136,6 +136,20 @@ jobs:
           printf '  %s\n' "${GENERATED[@]}"
           bazel build --config=clang "${GENERATED[@]}"
 
+          # Also build the `manual` targets that are linted. `bazel test //...`
+          # skips them, so a change that breaks one compiles green everywhere and
+          # only surfaces when someone runs the benchmark by hand - which is how a
+          # bad `const` in limited_set_benchmark.h reached main in #275.
+          TAGGED=()
+          while IFS= read -r target; do
+            TAGGED+=("${target}")
+          done < <(bazel query 'attr(tags, "clang-tidy", //...)' | sed 's|^@@||')
+          if [ "${#TAGGED[@]}" -gt 0 ]; then
+            printf 'Building %s clang-tidy-tagged manual target(s):\n' "${#TAGGED[@]}"
+            printf '  %s\n' "${TAGGED[@]}"
+            bazel build --config=clang "${TAGGED[@]}"
+          fi
+
       - name: Generate compile_commands.json
         # The compile DB is a local artifact (gitignored), so it has to be built
         # here. The script fetches the hermetic LLVM toolchain if needed and

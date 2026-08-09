@@ -32,6 +32,7 @@ using ::testing::Not;
 struct OptionalRefTest : ::testing::Test {};
 
 TEST_F(OptionalRefTest, Null) {
+  // NOLINTNEXTLINE(misc-const-correctness): const would change decltype() in the static_assert below.
   OptionalRef<int> ref;
   static_assert(IsOptionalRef<decltype(ref)>);
   EXPECT_THAT(ref, IsNullopt());
