@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_TYPES_VARIANT_H
-#define MBO_TYPES_VARIANT_H
+#ifndef MBO_TYPES_VARIANT_H_
+#define MBO_TYPES_VARIANT_H_
 
 #include <type_traits>
 #include <variant>
@@ -75,4 +75,4 @@ Overloaded(Ts...) -> Overloaded<Ts...>;
 
 }  // namespace mbo::types
 
-#endif  // MBO_TYPES_VARIANT_H
+#endif  // MBO_TYPES_VARIANT_H_

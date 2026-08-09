@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_TYPES_COPY_CONVERT_CONTAINER_H_
-#define MBO_TYPES_COPY_CONVERT_CONTAINER_H_
+#ifndef MBO_CONTAINER_CONVERT_CONTAINER_H_
+#define MBO_CONTAINER_CONVERT_CONTAINER_H_
 
 #include "mbo/types/traits.h"
 
@@ -125,4 +125,4 @@ inline container_internal::ConvertContainer<const std::initializer_list<U>&, Fun
 
 }  // namespace mbo::container
 
-#endif  // MBO_TYPES_COPY_CONVERT_CONTAINER_H_
+#endif  // MBO_CONTAINER_CONVERT_CONTAINER_H_

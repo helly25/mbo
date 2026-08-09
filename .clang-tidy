@@ -36,6 +36,16 @@
 # the compound conditions sitting right next to them, so following it makes
 # neighbouring directives LESS consistent rather than more.
 #
+# readability-identifier-naming exempts guard-shaped macros via
+# MacroDefinitionIgnoredRegexp. That is not cosmetic: the check's UPPER_CASE
+# notion splits inside words at digit boundaries - it asks for
+# MBO_DIGEST_DIGEST_M_D5_H in place of MBO_DIGEST_DIGEST_MD5_H_ - and drops the
+# trailing underscore, so it can never accept the `{PATH}_{FILE}_` guards
+# STYLE_CPP.md mandates. The regexp previously omitted digits, so correct guards
+# containing one (BLAKE2B, SHA1, MD5) leaked through and were reported. The rule
+# itself is enforced by the `header-guards` pre-commit hook, which checks what
+# clang-tidy structurally cannot.
+#
 # abseil-unchecked-statusor-access is off because clang-tidy 22.1.8 SEGFAULTS in
 # it: its dataflow analysis (runTypeErasedDataflowAnalysis) crashes on
 # mbo/strings/strip.cc, reproducibly on both macOS and Linux. Re-test on a future
@@ -175,7 +185,7 @@ CheckOptions:
   - key:             readability-identifier-naming.MacroDefinitionCase
     value:           UPPER_CASE
   - key:             readability-identifier-naming.MacroDefinitionIgnoredRegexp
-    value:           '^[A-Z]+(_[A-Z]+)*_$'
+    value:           '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*_$'
   - key:             readability-identifier-naming.MemberCase
     value:           lower_case
   - key:             readability-identifier-naming.PrivateMemberSuffix

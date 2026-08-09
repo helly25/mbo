@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_TYPES_TYPED_VIEW_H
-#define MBO_TYPES_TYPED_VIEW_H
+#ifndef MBO_TYPES_TYPED_VIEW_H_
+#define MBO_TYPES_TYPED_VIEW_H_
 
 #include <iterator>
 #include <ranges>
@@ -52,4 +52,4 @@ class TypedView : std::ranges::view_interface<TypedView<View>> {
 
 // NOLINTEND(readability-identifier-naming)
 
-#endif  // MBO_TYPES_TYPED_VIEW_H
+#endif  // MBO_TYPES_TYPED_VIEW_H_

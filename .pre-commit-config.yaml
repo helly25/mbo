@@ -95,6 +95,19 @@ repos:
         entry: .pre-commit/check_clang_tidy_targets.sh
         pass_filenames: false
         files: ^(.*/BUILD\.bazel|bazelmod/clang_tidy_targets\.bzl)$
+      - id: header-guards
+        name: header guards follow STYLE_CPP
+        description: |
+          Header guards must be `{PATH}_{FILE}_` per STYLE_CPP.md. clang-tidy cannot check this:
+          readability-identifier-naming's UPPER_CASE splits inside words at digit boundaries (it
+          wants MBO_DIGEST_DIGEST_M_D5_H for digest_md5.h) and drops the trailing underscore, so
+          it can never accept the documented convention - which is why guard-shaped names are
+          exempted from it there. llvm-header-guard is likewise disabled, deriving the guard from
+          the absolute checkout path. This enforces the actual rule, including that the closing
+          `#endif` comment names the guard.
+        language: python
+        entry: .pre-commit/check_header_guards.py
+        files: \.h$
       - id: no-do-not-merge
         name: No 'DO NOT MERGE'
         description: |

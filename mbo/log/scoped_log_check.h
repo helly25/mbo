@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_LOG_SCOPED_CHECK_H_
-#define MBO_LOG_SCOPED_CHECK_H_
+#ifndef MBO_LOG_SCOPED_LOG_CHECK_H_
+#define MBO_LOG_SCOPED_LOG_CHECK_H_
 
 #include <concepts>  // IWYU pragma: keep
 #include <iostream>
@@ -140,4 +140,4 @@ void ScopedLogCheck(bool, std::string_view, const Disallowed&&) {  // NOLINT(*-n
   mbo::log::ScopedStream<ScopedStreamMode::kQuickExit>( \
       std::source_location::current(), std::cerr, "Failed MBO_LOG_CHECK(" #check ")")
 
-#endif  // MBO_LOG_SCOPED_STREAM_H_
+#endif  // MBO_LOG_SCOPED_LOG_CHECK_H_
