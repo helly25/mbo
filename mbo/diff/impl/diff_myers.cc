@@ -181,11 +181,21 @@ void DiffMyers::Loop() {
       continue;
     }
     const Snake snake = FindMiddleSnake(span);
-    stack.push_back({snake.lhs_begin + snake.length, span.lhs_end, snake.rhs_begin + snake.length, span.rhs_end, 0});
+    stack.push_back(
+        {.lhs_begin = snake.lhs_begin + snake.length,
+         .lhs_end = span.lhs_end,
+         .rhs_begin = snake.rhs_begin + snake.length,
+         .rhs_end = span.rhs_end,
+         .equals = 0});
     if (snake.length > 0) {
       stack.push_back({.equals = snake.length});
     }
-    stack.push_back({span.lhs_begin, snake.lhs_begin, span.rhs_begin, snake.rhs_begin, 0});
+    stack.push_back(
+        {.lhs_begin = span.lhs_begin,
+         .lhs_end = snake.lhs_begin,
+         .rhs_begin = span.rhs_begin,
+         .rhs_end = snake.rhs_begin,
+         .equals = 0});
   }
 }
 

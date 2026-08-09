@@ -874,7 +874,8 @@ TEST_F(DiffTest, SideBySideFormat) {
   // Side-by-side rows keep meaningful leading whitespace, so these tests
   // compare the raw output rather than using the DropIndent based helper.
   const auto diff = [](std::string_view lhs, std::string_view rhs, const Diff::Options& options) {
-    return mbo::diff::Diff::FileDiff({std::string(lhs), "lhs"}, {std::string(rhs), "rhs"}, options);
+    return mbo::diff::Diff::FileDiff(
+        {.data = std::string(lhs), .name = "lhs"}, {.data = std::string(rhs), .name = "rhs"}, options);
   };
   const Diff::Options options{
       .output_format = Diff::Options::OutputFormat::kSideBySide,
@@ -906,7 +907,8 @@ TEST_F(DiffTest, SideBySideFormat) {
 
 TEST_F(DiffTest, SideBySideFormatDetails) {
   const auto diff = [](std::string_view lhs, std::string_view rhs, const Diff::Options& options) {
-    return mbo::diff::Diff::FileDiff({std::string(lhs), "lhs"}, {std::string(rhs), "rhs"}, options);
+    return mbo::diff::Diff::FileDiff(
+        {.data = std::string(lhs), .name = "lhs"}, {.data = std::string(rhs), .name = "rhs"}, options);
   };
   // The "no newline" marker renders as its own full width line per side.
   EXPECT_THAT(
@@ -1097,7 +1099,7 @@ TEST_F(DiffTest, MyersRoundTrip) {
   }
   for (std::size_t idx = 0; idx < cases.size(); ++idx) {
     const auto& [lhs, rhs] = cases[idx];
-    const auto result = mbo::diff::Diff::FileDiff({lhs, "lhs"}, {rhs, "rhs"}, options);
+    const auto result = mbo::diff::Diff::FileDiff({.data = lhs, .name = "lhs"}, {.data = rhs, .name = "rhs"}, options);
     ASSERT_THAT(result, mbo::testing::IsOk()) << "case: " << idx;
     const std::optional<std::string> applied = ApplyUnifiedDiff(lhs, *result);
     ASSERT_TRUE(applied.has_value()) << "case: " << idx << " diff:\n" << *result;
@@ -1241,7 +1243,7 @@ TEST_F(DiffTest, MyersMinimalOption) {
   };
   const auto run = [&](bool minimal) {
     return mbo::diff::Diff::FileDiff(
-        {lhs, "lhs"}, {rhs, "rhs"},
+        {.data = lhs, .name = "lhs"}, {.data = rhs, .name = "rhs"},
         {
             .algorithm = Diff::Options::Algorithm::kMyers,
             .context_size = 0,
