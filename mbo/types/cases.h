@@ -63,7 +63,7 @@ using types_internal::IfFalseThenVoid;
 //   `Cases<IfThen<cond1, type1>, IfThen<cond2, type2>, IfElse<default_type>>`
 //
 template<typename... IfThenCases>
-using Cases = typename types_internal::CasesImpl<IfThenCases...>::type;
+using Cases = types_internal::CasesImpl<IfThenCases...>::type;
 
 // Evaluates the first non zero case (1-based, 0 if all zero).
 //

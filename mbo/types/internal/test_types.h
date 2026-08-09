@@ -51,7 +51,7 @@ struct BaseOutOfRange final {
 };
 
 template<std::size_t base>
-using ConstructBase = typename CasesImpl<
+using ConstructBase = CasesImpl<
     IfThen<base == 0, Empty>,
     IfThen<base == 1, Base1>,
     IfThen<base == 2, Base1>,
@@ -100,7 +100,7 @@ struct DerivedOutOfRange final {
 };
 
 template<std::size_t derived, std::size_t base>
-using ConstructType = typename CasesImpl<
+using ConstructType = CasesImpl<
     IfThen<derived == 0, Derived0<ConstructBase<base>>>,
     IfThen<derived == 1, Derived1<ConstructBase<base>>>,
     IfThen<derived == 2, Derived2<ConstructBase<base>>>,
@@ -190,7 +190,7 @@ struct Base3B {
 };
 
 template<std::size_t base>
-using ConstructBase2 = typename CasesImpl<
+using ConstructBase2 = CasesImpl<
     IfThen<base == 0, EmptyB>,
     IfThen<base == 1, Base2B>,
     IfThen<base == 2, Base2B>,
@@ -198,7 +198,7 @@ using ConstructBase2 = typename CasesImpl<
     IfElse<BaseOutOfRange>>::type;
 
 template<std::size_t derived, std::size_t a, std::size_t b>
-using ConstructMultiType = typename CasesImpl<
+using ConstructMultiType = CasesImpl<
     IfThen<derived == 0, Multi0<ConstructBase<a>, ConstructBase2<b>>>,
     IfThen<derived == 1, Multi1<ConstructBase<a>, ConstructBase2<b>>>,
     IfThen<derived == 2, Multi2<ConstructBase<a>, ConstructBase2<b>>>,

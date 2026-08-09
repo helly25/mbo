@@ -52,12 +52,12 @@ requires(IsDigestAlgorithm<Algo> && HasStreaming<Algo>)
 struct Hmac {
   static constexpr std::size_t kDigestSize = Algo::kDigestSize;
   static constexpr std::size_t kBlockSize = Algo::kBlockSize;
-  using DigestType = typename Algo::DigestType;
+  using DigestType = Algo::DigestType;
 
   static_assert(kDigestSize <= kBlockSize, "HMAC requires the digest to fit one block.");
 
   struct StreamState {
-    typename Algo::StreamState inner;
+    Algo::StreamState inner;
     std::array<char, kBlockSize> opad = {};
   };
 
@@ -116,7 +116,7 @@ template<typename Algo>
 requires(IsDigestAlgorithm<Algo> && HasStreaming<Algo>)
 class HmacStreamer {
  public:
-  using DigestType = typename Algo::DigestType;
+  using DigestType = Algo::DigestType;
 
   constexpr explicit HmacStreamer(std::string_view key) noexcept : state_(Hmac<Algo>::StreamInit(key)) {}
 
@@ -128,7 +128,7 @@ class HmacStreamer {
   [[nodiscard]] constexpr DigestType Finalize() const noexcept { return Hmac<Algo>::StreamFinalize(state_); }
 
  private:
-  typename Hmac<Algo>::StreamState state_;
+  Hmac<Algo>::StreamState state_;
 };
 
 // NOLINTEND(*-magic-numbers,*-easily-swappable-parameters,*-constant-array-index)

@@ -62,7 +62,7 @@ template<typename Algo>
 requires(IsDigestAlgorithm<Algo> && HasStreaming<Algo>)
 class Streamer {
  public:
-  using DigestType = typename Algo::DigestType;
+  using DigestType = Algo::DigestType;
 
   constexpr Streamer() noexcept : state_(Algo::StreamInit()) {}
 
@@ -74,7 +74,7 @@ class Streamer {
   [[nodiscard]] constexpr DigestType Finalize() const noexcept { return Algo::StreamFinalize(state_); }
 
  private:
-  typename Algo::StreamState state_;
+  Algo::StreamState state_;
 };
 
 // Lowercase hex rendering, the conventional presentation of a digest (matches
