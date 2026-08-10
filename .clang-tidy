@@ -65,6 +65,19 @@
 #      aggregates. The hardening would trade the entire feature for protection
 #      against `struct Evil : Extend<Other>`.
 #
+# bugprone-random-generator-seed is off. Every generator it flags is seeded with
+# a constant ON PURPOSE - tests and benchmarks must be reproducible, and a
+# randomly seeded one would make failures impossible to reproduce.
+#
+# cppcoreguidelines-macro-usage is off. The macros it flags define constants
+# consumed by the PREPROCESSOR (`#if MBO_LOG_HAS_CXA_DEMANGLE`), where a
+# `constexpr` cannot be used - the substitution it suggests does not compile.
+#
+# hicpp-signed-bitwise is off. It fires on parity tests like `(d + lo) & 1` over
+# `std::ptrdiff_t` in the Myers diff, where the signed type is required by the
+# algorithm (diagonals run negative) and masking the low bit is the standard way
+# to test it. Casting to unsigned to appease the check would obscure that.
+#
 # misc-no-recursion is off. Recursion is the natural shape of the code it flags:
 # Stringify walks nested structures, DebugStr formats them, BigNumberLen recurses
 # once for the negative case. The check reports every member of a call chain, so a
@@ -125,6 +138,7 @@ Checks: >
   -boost-*,
   bugprone-*,
   -bugprone-crtp-constructor-accessibility,
+  -bugprone-random-generator-seed,
   -bugprone-easily-swappable-parameters,
   -bugprone-std-namespace-modification,
   -bugprone-exception-escape,
@@ -137,6 +151,7 @@ Checks: >
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-const-or-ref-data-members,
   -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-macro-usage,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
   -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
   -cppcoreguidelines-pro-bounds-constant-array-index,
@@ -146,6 +161,7 @@ Checks: >
   google-*,
   -google-build-using-namespace,
   -hicpp-no-array-decay,
+  -hicpp-signed-bitwise,
   -hicpp-no-assembler,
   -llvm-else-after-return,
   -llvm-header-guard,

@@ -243,6 +243,9 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
   ABSL_QCHECK(output_format) << "Unknown format";
   ABSL_QCHECK(absl::GetFlag(FLAGS_algorithm) != "unified" || output_format == Diff::Options::OutputFormat::kUnified)
       << "The deprecated '--algorithm=unified' alias implies '--format=unified'.";
+  const std::optional<Diff::Options::FileHeaderUse> file_header_use =
+      Diff::Options::ParseFileHeaderUse(absl::GetFlag(FLAGS_file_header_use));
+  ABSL_QCHECK(file_header_use) << "Unknown file_header_use";
   const bool is_direct = algorithm == Diff::Options::Algorithm::kDirect;
   const bool is_normal = output_format == Diff::Options::OutputFormat::kNormal;
   const bool is_side_by_side = output_format == Diff::Options::OutputFormat::kSideBySide;
@@ -254,7 +257,7 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
       .output_format = *output_format,
       .context_size = GetFlagOrDefault(FLAGS_context, is_direct || is_normal || is_side_by_side, default_context),
       .side_by_side_width = absl::GetFlag(FLAGS_width),
-      .file_header_use = *Diff::Options::ParseFileHeaderUse(absl::GetFlag(FLAGS_file_header_use)),
+      .file_header_use = *file_header_use,
       .ignore_blank_lines = absl::GetFlag(FLAGS_ignore_blank_lines),
       .ignore_case = absl::GetFlag(FLAGS_ignore_case),
       .ignore_all_space = absl::GetFlag(FLAGS_ignore_all_space),
