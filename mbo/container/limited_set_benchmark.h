@@ -75,7 +75,7 @@ class Benchmarks {
     }
     std::vector<int> input;
     while (input.size() < kNumTestsValues) {
-      int value = random.Uniform();
+      const int value = random.Uniform();
       if (!data.contains(value)) {
         input.push_back(value);
       }

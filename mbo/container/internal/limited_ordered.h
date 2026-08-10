@@ -656,7 +656,7 @@ class [[nodiscard]] LimitedOrdered {
       const std::size_t pos = index_of(key);
       return pos == npos ? end() : const_iterator(&values_[pos]);
     } else {  // Not kOptimizeIndexOf
-      const_iterator it = lower_bound(key);
+      const const_iterator it = lower_bound(key);
       return it == end() || key_comp_(key, GetKey(*it)) ? end() : it;
     }
   }
@@ -825,12 +825,31 @@ class [[nodiscard]] LimitedOrdered {
     return count;
   }
 
+  // Forwarding into the loop below is exactly what this must not do, so `key` is bound
+  // once instead - see the comment there.
   template<typename K>
   requires(!IsIterator<K>::value)
+  // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
   constexpr size_type erase(K&& key) {
     size_type count = 0;
+    // `key` stays a forwarding reference on purpose: callers may pass an lvalue, a temporary
+    // or a value, and the compiler picks what is cheapest - a small type in registers beats a
+    // const& indirection.
+    //
+    // It is forwarded EXACTLY ONCE, here, rather than inside the loop. An object can only be
+    // forwarded once, so forwarding per iteration would claim a move of `key` each time round
+    // (bugprone-use-after-move) - and there is no "last iteration" to single out, because the
+    // loop runs until `find` fails.
+    //
+    // Forwarding into this binding is what makes it cheap, measured with a `Key` having both
+    // converting constructors from `K`, over three iterations:
+    //   * `find(key)` inside the loop:                    3 copy-conversions
+    //   * `find(std::forward<K>(key))` inside the loop:    3 move-conversions (and unsound)
+    //   * forwarded once into this binding:                1 conversion, a move for an rvalue
+    // When `K` is already `Key` it binds directly: no conversion at all.
+    const Key& key_ref = std::forward<K>(key);
     while (true) {
-      auto pos = find(std::forward<K>(key));
+      auto pos = find(key_ref);
       if (pos == end()) {
         break;
       }

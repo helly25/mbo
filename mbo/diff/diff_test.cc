@@ -58,7 +58,7 @@ class DiffTest : public ::testing::Test {
       const Diff::Options& options = Diff::Options::Default()) {
     lhs.data = DropIndent(lhs.data);
     rhs.data = DropIndent(rhs.data);
-    MBO_ASSIGN_OR_RETURN(std::string result, mbo::diff::Diff::FileDiff(lhs, rhs, options));
+    MBO_ASSIGN_OR_RETURN(const std::string result, mbo::diff::Diff::FileDiff(lhs, rhs, options));
     if (result.empty()) {
       return std::vector<std::string>{};
     }
