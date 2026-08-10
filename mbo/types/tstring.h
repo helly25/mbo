@@ -24,6 +24,7 @@
 #include <string_view>
 
 #include "mbo/hash/hash.h"
+#include "mbo/strings/contains.h"
 
 namespace mbo::types {
 
@@ -286,7 +287,7 @@ struct tstring final {
 
   static constexpr size_type find_first_of(std::string_view charset, size_type pos = 0) noexcept {
     for (; pos < num_chars; ++pos) {
-      if (charset.find(data[pos]) != std::string_view::npos) {
+      if (mbo::strings::Contains(charset, data[pos])) {
         return pos;
       }
     }
@@ -320,7 +321,7 @@ struct tstring final {
       pos = num_chars - 1;
     }
     while (true) {
-      if (charset.find(data[pos]) != std::string_view::npos) {
+      if (mbo::strings::Contains(charset, data[pos])) {
         return pos;
       }
       if (pos-- == 0) {
