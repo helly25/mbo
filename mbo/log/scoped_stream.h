@@ -63,7 +63,7 @@ struct VoidStream {
   VoidStream(VoidStream&&) noexcept = default;
   VoidStream& operator=(VoidStream&&) noexcept = default;
 
-  VoidStream& operator=(const Voidifier&) noexcept { return *this; }
+  VoidStream& operator=(const Voidifier& /*unused*/) noexcept { return *this; }
 
   operator bool() const noexcept { return false; }  // NOLINT(*-explicit-*)
 

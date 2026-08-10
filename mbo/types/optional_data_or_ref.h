@@ -46,7 +46,7 @@ class OptionalDataOrRef {
 
   constexpr ~OptionalDataOrRef() noexcept { Destruct(); }
 
-  constexpr OptionalDataOrRef() noexcept {}  // NOLINT(hicpp-use-equals-default): Not the same
+  constexpr OptionalDataOrRef() noexcept {}  // NOLINT(*-use-equals-default): Not the same
 
   constexpr OptionalDataOrRef(std::nullopt_t /* unused */) {}  // NOLINT(*-explicit-*)
 
@@ -193,6 +193,8 @@ class OptionalDataOrRef {
 
   // Returns `value()` if `holds_value()` is true, a reference `defaults`.
   // BEWARE of dangling references.
+  // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter): documented above; returning the
+  // caller's own reference is the point of the API.
   constexpr const_reference get(const T& defaults) const noexcept { return has_value() ? value() : defaults; }
 
   // Returns a reference to existing data or created data. If the object:
