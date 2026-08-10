@@ -40,11 +40,26 @@
 #
 # readability-redundant-parentheses is off because its fix CORRUPTS code. On
 # `__builtin_dump_struct(ptr, &Visitor, args...)` it deletes the callee - exactly
-# the 21 characters of the builtin's name - leaving `(ptr, &Visitor, args...)`, a
+# the characters of the builtin's name - leaving `(ptr, &Visitor, args...)`, a
 # comma expression that compiles to nothing and fails as
-# `-Werror,-Wunused-value`. It does this in struct_names_clang.h and
-# extend_test.cc, i.e. the reflection machinery. The findings it reports are
+# `-Werror,-Wunused-value`. The trigger is the builtin, not our use of it: it
+# fires on a plain `__builtin_dump_struct(ptr, &Counter, field_index)` with no
+# template parameter pack anywhere, and does NOT fire on an ordinary variadic
+# call of the same shape. What it trips over is the builtin's OWN expansion:
+# clang lowers `__builtin_dump_struct` into generated per-field visitor calls,
+# and the check does not see the result as a call it should leave alone, so it
+# reads the argument list as a parenthesised comma expression and "helpfully"
+# unwraps it. It hits struct_names_clang.h and extend_test.cc - the reflection
+# machinery, where these calls are the entire point. The findings it reports are
 # cosmetic; the risk of anyone running --fix is not.
+#
+# misc-use-internal-linkage is off. Its finding often agrees with us - internal
+# helpers do belong in an anonymous namespace, which is what STYLE_CPP.md says -
+# but its only fix mode is `FixMode: UseStatic`, and `static` is precisely what we
+# do NOT want. Worse, applying it to a function DECLARED in a header (as it did to
+# three in stringify_ostream.cc) produces `-Werror,-Wunused-function` and breaks
+# the build. Anonymous-namespace hygiene is covered by misc-use-anonymous-namespace
+# and by review, without the hazard.
 #
 # cert-dcl50-cpp and modernize-avoid-variadic-functions are off. C-style variadic
 # functions are not a legacy wart to be migrated away from here - they are how a
@@ -173,6 +188,7 @@ Checks: >
   -llvmlibc-*,
   misc-*,
   -misc-include-cleaner,
+  -misc-use-internal-linkage,
   -misc-no-recursion,
   modernize-*,
   -modernize-avoid-variadic-functions,
@@ -297,8 +313,16 @@ CheckOptions:
     value:           lower_case
   - key:             readability-identifier-naming.IgnoreMainLikeFunctions
     value:           1
+  # The C++ standard's container, iterator, allocator and functor requirements
+  # MANDATE these member type names, spelled exactly like this. A type that wants
+  # to satisfy them - and thus work with the standard algorithms, ranges, and
+  # anything else that asks a container for its `value_type` - has no choice about
+  # the spelling, so CamelCase is not an option. Everything else still has to be
+  # CamelCase.
   - key:             readability-identifier-naming.TypeAliasIgnoredRegexp
-    value:           'type'
+    value:           '^(type|value_type|size_type|difference_type|reference|const_reference|pointer|const_pointer|iterator|const_iterator|reverse_iterator|const_reverse_iterator|iterator_category|iterator_concept|allocator_type|key_type|mapped_type|key_compare|value_compare|key_equal|hasher|element_type|traits_type|char_type|int_type|pos_type|off_type|state_type|result_type|argument_type|first_argument_type|second_argument_type|is_transparent)$'
+  - key:             readability-identifier-naming.TypedefIgnoredRegexp
+    value:           '^(type|value_type|size_type|difference_type|reference|const_reference|pointer|const_pointer|iterator|const_iterator|reverse_iterator|const_reverse_iterator|iterator_category|iterator_concept|allocator_type|key_type|mapped_type|key_compare|value_compare|key_equal|hasher|element_type|traits_type|char_type|int_type|pos_type|off_type|state_type|result_type|argument_type|first_argument_type|second_argument_type|is_transparent)$'
   - key:             readability-identifier-naming.ClassIgnoredRegexp
     value:           'type'
   - key:             readability-identifier-naming.ConstexprVariableIgnoredRegexp

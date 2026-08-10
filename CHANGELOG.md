@@ -12,6 +12,8 @@
 - Disabled `llvm-header-guard` and `llvm-prefer-static-over-anonymous-namespace`, which contradict `STYLE_CPP.md`.
 - Fixed `compile_commands-update.sh` to record the hermetic clang, so clangd and clang-tidy parse what `--config=clang` builds.
 - Dropped 196 duplicate exec-configuration compile commands via the extractor's new `--bcce-prefer-target-config`.
+- Exempted the standard-mandated container member type names (`value_type`, `size_type`, ...) from `readability-identifier-naming`, which demanded CamelCase the standard does not permit.
+- Disabled `misc-use-internal-linkage` (its only fix is `static`, while `STYLE_CPP.md` wants an anonymous namespace) and `readability-redundant-parentheses` (its fix deletes the `__builtin_dump_struct` callee).
 
 # 0.13.2
 
