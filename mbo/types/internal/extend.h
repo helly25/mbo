@@ -74,7 +74,7 @@ template<typename Extender>
 using GetRequirement = GetRequirementImpl<Extender>::type;
 
 template<std::size_t N, typename... Ts>
-using GetType = std::tuple_element<N, std::tuple<Ts...>>::type;
+using GetType = std::tuple_element_t<N, std::tuple<Ts...>>;
 
 template<std::size_t N, typename Required, typename... Extenders>
 struct RequiredPresentForIndexImpl

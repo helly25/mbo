@@ -38,6 +38,14 @@
 # check would demand `std::move`, which is wrong there. The option is exactly for
 # this case, so the check keeps working on ordinary rvalue-ref parameters.
 #
+# readability-redundant-parentheses is off because its fix CORRUPTS code. On
+# `__builtin_dump_struct(ptr, &Visitor, args...)` it deletes the callee - exactly
+# the 21 characters of the builtin's name - leaving `(ptr, &Visitor, args...)`, a
+# comma expression that compiles to nothing and fails as
+# `-Werror,-Wunused-value`. It does this in struct_names_clang.h and
+# extend_test.cc, i.e. the reflection machinery. The findings it reports are
+# cosmetic; the risk of anyone running --fix is not.
+#
 # misc-no-recursion is off. Recursion is the natural shape of the code it flags:
 # Stringify walks nested structures, DebugStr formats them, BigNumberLen recurses
 # once for the negative case. The check reports every member of a call chain, so a
@@ -139,6 +147,7 @@ Checks: >
   -readability-else-after-return,
   -readability-inconsistent-ifelse-braces,
   -readability-redundant-inline-specifier,
+  -readability-redundant-parentheses,
   -readability-use-concise-preprocessor-directives,
 
 # A check-name glob, not a bool: the former `true` matched no check, so findings

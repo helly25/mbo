@@ -81,7 +81,7 @@ DiffMyers::DiffMyers(const file::Artefact& lhs, const file::Artefact& rhs, const
   const std::size_t rhs_size = RhsData().Size();
   max_cost_ =
       options.minimal ? std::numeric_limits<std::size_t>::max() : std::max<std::size_t>(64, ISqrt(lhs_size + rhs_size));
-  const std::size_t v_size = 2 * (std::max(lhs_size, rhs_size) + 2) + 1;
+  const std::size_t v_size = (2 * (std::max(lhs_size, rhs_size) + 2)) + 1;
   fwd_.assign(v_size, kOutside);
   bwd_.assign(v_size, kOutside);
 }
@@ -207,13 +207,13 @@ DiffMyers::Snake DiffMyers::FindMiddleSnake(const Span& span) {
   // The span was trimmed: both sides are non-empty and neither the first nor
   // the last lines match, so the minimal cost is >= 2 and the first overlap
   // of the forward and backward searches yields a valid middle snake.
-  const std::ptrdiff_t n = static_cast<std::ptrdiff_t>(span.lhs_end - span.lhs_begin);
-  const std::ptrdiff_t m = static_cast<std::ptrdiff_t>(span.rhs_end - span.rhs_begin);
+  const auto n = static_cast<std::ptrdiff_t>(span.lhs_end - span.lhs_begin);
+  const auto m = static_cast<std::ptrdiff_t>(span.rhs_end - span.rhs_begin);
   const std::ptrdiff_t delta = n - m;
   const bool odd = (delta & 1) != 0;
   const Token* lhs = lhs_tokens_.data() + span.lhs_begin;
   const Token* rhs = rhs_tokens_.data() + span.rhs_begin;
-  const std::ptrdiff_t center = static_cast<std::ptrdiff_t>(fwd_.size() / 2);
+  const auto center = static_cast<std::ptrdiff_t>(fwd_.size() / 2);
   // Cost 0: neither search extends (the corner lines differ).
   fwd_[center] = 0;
   bwd_[center] = 0;
@@ -224,7 +224,7 @@ DiffMyers::Snake DiffMyers::FindMiddleSnake(const Span& span) {
   std::ptrdiff_t best_fwd_y = 0;
   std::ptrdiff_t best_bwd_x = 0;
   std::ptrdiff_t best_bwd_y = 0;
-  const std::ptrdiff_t d_max = (n + m + 1) / 2 + 1;
+  const std::ptrdiff_t d_max = ((n + m + 1) / 2) + 1;
   for (std::ptrdiff_t d = 1; d <= d_max; ++d) {
     std::ptrdiff_t kmin = 0;
     std::ptrdiff_t kmax = 0;

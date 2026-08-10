@@ -43,9 +43,9 @@ absl::StatusOr<char> ParseOctal(char first_char, std::string_view& data) {
   static constexpr int kOctalDigit = 8;
   int next_chr = first_char - '0';
   if (!data.empty() && data[0] >= '0' && data[0] <= '7') {
-    next_chr = next_chr * kOctalDigit + (PopChar(data) - '0');
+    next_chr = (next_chr * kOctalDigit) + (PopChar(data) - '0');
     if (!data.empty() && data[0] >= '0' && data[0] <= '7') {
-      next_chr = next_chr * kOctalDigit + (PopChar(data) - '0');
+      next_chr = (next_chr * kOctalDigit) + (PopChar(data) - '0');
     }
   }
   if (octal_23) {
@@ -63,15 +63,15 @@ bool NextHexChar(std::string_view& data, int& hex) {
   }
   static constexpr int kHexDigit = 16;
   if (data[0] >= '0' && data[0] <= '9') {
-    hex = hex * kHexDigit + (PopChar(data) - '0');
+    hex = (hex * kHexDigit) + (PopChar(data) - '0');
     return true;
   }
   if (data[0] >= 'a' && data[0] <= 'f') {
-    hex = hex * kHexDigit + (PopChar(data) - 'a');
+    hex = (hex * kHexDigit) + (PopChar(data) - 'a');
     return true;
   }
   if (data[0] >= 'A' && data[0] <= 'F') {
-    hex = hex * kHexDigit + (PopChar(data) - 'A');
+    hex = (hex * kHexDigit) + (PopChar(data) - 'A');
     return true;
   }
   return false;
