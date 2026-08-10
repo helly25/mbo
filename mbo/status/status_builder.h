@@ -42,6 +42,9 @@ class StatusBuilder final {
   ~StatusBuilder() noexcept = default;
   StatusBuilder() noexcept = default;
 
+  // NOLINTNEXTLINE(modernize-make-unique): `Data` is an aggregate initialised with a designated
+  // initialiser, which make_unique cannot express - it forwards to a constructor, so the nearest
+  // form is `make_unique<Data>(Data{...})`, adding a move of the Status for no benefit.
   explicit StatusBuilder(absl::Status status)
       : data_(status.ok() ? nullptr : std::unique_ptr<Data>(new Data{.status = std::move(status)})) {}
 

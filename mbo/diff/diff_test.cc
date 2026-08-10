@@ -48,6 +48,7 @@ using ::mbo::testing::IsOkAndHolds;
 using ::testing::ElementsAreArray;
 using ::testing::IsEmpty;
 using ::testing::Not;
+using ::testing::Optional;
 
 class DiffTest : public ::testing::Test {
  public:
@@ -1102,8 +1103,7 @@ TEST_F(DiffTest, MyersRoundTrip) {
     const auto result = mbo::diff::Diff::FileDiff({.data = lhs, .name = "lhs"}, {.data = rhs, .name = "rhs"}, options);
     ASSERT_THAT(result, mbo::testing::IsOk()) << "case: " << idx;
     const std::optional<std::string> applied = ApplyUnifiedDiff(lhs, *result);
-    ASSERT_TRUE(applied.has_value()) << "case: " << idx << " diff:\n" << *result;
-    EXPECT_EQ(*applied, rhs) << "case: " << idx << " diff:\n" << *result;
+    EXPECT_THAT(applied, Optional(rhs)) << "case: " << idx << " diff:\n" << *result;
   }
 }
 
@@ -1257,10 +1257,8 @@ TEST_F(DiffTest, MyersMinimalOption) {
   ASSERT_THAT(minimal, IsOk());
   const std::optional<std::string> capped_applied = ApplyUnifiedDiff(lhs, *capped);
   const std::optional<std::string> minimal_applied = ApplyUnifiedDiff(lhs, *minimal);
-  ASSERT_TRUE(capped_applied.has_value());
-  ASSERT_TRUE(minimal_applied.has_value());
-  EXPECT_EQ(*capped_applied, rhs);
-  EXPECT_EQ(*minimal_applied, rhs);
+  EXPECT_THAT(capped_applied, Optional(rhs));
+  EXPECT_THAT(minimal_applied, Optional(rhs));
   EXPECT_LT(count_edits(*minimal), count_edits(*capped));
 }
 
