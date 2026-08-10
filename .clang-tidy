@@ -46,6 +46,25 @@
 # extend_test.cc, i.e. the reflection machinery. The findings it reports are
 # cosmetic; the risk of anyone running --fix is not.
 #
+# cert-dcl50-cpp and modernize-avoid-variadic-functions are off. C-style variadic
+# functions are not a legacy wart to be migrated away from here - they are how a
+# reflection library talks to the compiler. `__builtin_dump_struct` calls back
+# into a variadic visitor, and that signature is fixed by the builtin, not chosen.
+# Both checks would have every such visitor carry a suppression forever, so the
+# decision belongs in this file rather than scattered through the code.
+#
+# bugprone-crtp-constructor-accessibility is off, and this was checked by trying
+# its advice rather than assuming. It asks for the CRTP base's constructor to be
+# private with the derived class as friend. Two things break:
+#   1. `friend T` alone is not enough - the shorthand wrappers (mbo::types::Extend
+#      and friends) sit between `T` and the base and run its constructor, so they
+#      need befriending too. That part is solvable.
+#   2. The blocker: a private constructor makes the type a NON-AGGREGATE, and
+#      Extend types exist to be aggregates - `const Extend2 ext2{.a = 25, .b = 42}`
+#      is how they are built, and the reflection machinery decomposes them as
+#      aggregates. The hardening would trade the entire feature for protection
+#      against `struct Evil : Extend<Other>`.
+#
 # misc-no-recursion is off. Recursion is the natural shape of the code it flags:
 # Stringify walks nested structures, DebugStr formats them, BigNumberLen recurses
 # once for the negative case. The check reports every member of a call chain, so a
@@ -105,9 +124,11 @@ Checks: >
   -altera-*,
   -boost-*,
   bugprone-*,
+  -bugprone-crtp-constructor-accessibility,
   -bugprone-easily-swappable-parameters,
   -bugprone-std-namespace-modification,
   -bugprone-exception-escape,
+  -cert-dcl50-cpp,
   -cert-err58-cpp,
   clang*,
   clang-analyzer-*,
@@ -135,6 +156,7 @@ Checks: >
   -misc-include-cleaner,
   -misc-no-recursion,
   modernize-*,
+  -modernize-avoid-variadic-functions,
   -modernize-use-nodiscard,
   -modernize-use-std-format,
   -modernize-use-trailing-return-type,
