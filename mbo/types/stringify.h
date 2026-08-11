@@ -911,6 +911,9 @@ class Stringify {
         [&](const auto&... fields) {
           const SO::Format& format = *options.outer.format;
           os.IncStruct(format);
+          // `idx` is incremented by the fold below, which expands to nothing for a
+          // zero-field struct - and it is those instantiations that suggest `const`.
+          // NOLINTNEXTLINE(misc-const-correctness)
           std::size_t idx{0};
           // NOLINTNEXTLINE(readability-suspicious-call-argument)
           ((StreamField(os, options, use_sep, value, TsValue<T>(idx, value, fields), idx, field_names, use_field_names),

@@ -57,6 +57,10 @@ class Benchmarks {
  private:
   enum class Function { kContains, kFind, kIndexOf };
 
+  // TODO(helly25): Revisit once LimitedOrdered supports transparent (heterogeneous)
+  // lookup. `Compare` is declared `template<typename> typename`, so `Compare<>` is
+  // ill-formed here regardless - the parameter would have to default first.
+  // NOLINTNEXTLINE(modernize-use-transparent-functors)
   using BenchmarkedContainer = LimitedSet<int, LimitedOptions<Size, Flags...>{}, Compare<int>>;
 
   static constexpr std::size_t kNumTestsValues = 100'000;

@@ -155,6 +155,9 @@ void BmDiff(benchmark::State& state, DiffOptions::Algorithm algorithm, std::size
       .ignore_all_space = bm_case.ignore_all_space,
       .ignore_trailing_space = bm_case.ignore_trailing_space,
   };
+  // google-benchmark's iteration idiom: the loop variable exists to drive
+  // `state`'s iterator and is deliberately never read.
+  // NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores)
   for (auto unused : state) {
     auto result = Diff::FileDiff(bm_case.lhs, bm_case.rhs, options);
     benchmark::DoNotOptimize(result);
