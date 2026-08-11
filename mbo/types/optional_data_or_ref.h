@@ -192,9 +192,11 @@ class OptionalDataOrRef {
 #endif  // __cplusplus >= 202302L
 
   // Returns `value()` if `holds_value()` is true, a reference `defaults`.
-  // BEWARE of dangling references.
-  // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter): documented above; returning the
-  // caller's own reference is the point of the API.
+  // BEWARE of dangling references: returning the caller's own reference is the
+  // point of this API, so the caller owns the lifetime question. The suppression
+  // must sit on the line immediately above the declaration - a rationale placed
+  // between it and the declaration would bind it to the comment instead.
+  // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)
   constexpr const_reference get(const T& defaults) const noexcept { return has_value() ? value() : defaults; }
 
   // Returns a reference to existing data or created data. If the object:

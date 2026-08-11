@@ -74,7 +74,12 @@ struct ExtendBase {
   auto ToTuple() && { return StructToTuple(std::move(*this)); }
 
  private:  // DO NOT expose anything publicly.
+  // The `index_sequence` is a pure tag - it carries `Idx...` in its type and has
+  // no value to read, so it is deliberately unnamed. And `args` IS consumed: it
+  // is forwarded element-wise below via `std::forward<...>(std::get<Idx>(args))`,
+  // one forward per field, which the check does not recognise as moving `args`.
   template<std::size_t... Idx, typename... Args>
+  // NOLINTNEXTLINE(hicpp-named-parameter,readability-named-parameter,cppcoreguidelines-rvalue-reference-param-not-moved)
   static Type ConstructFromConversionsImpl(std::index_sequence<Idx...>, std::tuple<Args...>&& args) {
     using FieldTypes = decltype(std::declval<const ExtendBase<ActualType>&>().ToTuple());
     using ArgTypes = std::tuple<Args...>;

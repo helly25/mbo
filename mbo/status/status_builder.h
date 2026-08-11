@@ -42,7 +42,12 @@ class StatusBuilder final {
   ~StatusBuilder() noexcept = default;
   StatusBuilder() noexcept = default;
 
+  // `Data` is an aggregate initialised with a designated initialiser, which make_unique cannot
+  // express - it forwards to a constructor, so the nearest form is `make_unique<Data>(Data{...})`,
+  // adding a move of the Status for no benefit. The suppression must sit bare on the line directly
+  // above the one the check REPORTS - the initialiser below, not the signature.
   explicit StatusBuilder(absl::Status status)
+      // NOLINTNEXTLINE(modernize-make-unique)
       : data_(status.ok() ? nullptr : std::unique_ptr<Data>(new Data{.status = std::move(status)})) {}
 
   template<typename T>

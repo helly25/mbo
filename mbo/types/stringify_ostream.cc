@@ -30,7 +30,6 @@ std::shared_ptr<const Stringify> g_stringify ABSL_GUARDED_BY(g_mx) = nullptr;
 
 namespace types_internal {
 
-// NOLINTNEXTLINE(misc-use-internal-linkage): declared in stringify_ostream.h and used from there.
 std::shared_ptr<const Stringify> GetStringifyForOstream() {
   const absl::MutexLock lock(g_mx);
   if (g_stringify == nullptr) {
@@ -41,13 +40,11 @@ std::shared_ptr<const Stringify> GetStringifyForOstream() {
 
 }  // namespace types_internal
 
-// NOLINTNEXTLINE(misc-use-internal-linkage): declared in stringify_ostream.h and used from there.
 void SetStringifyOstreamOutputMode(Stringify::OutputMode output_mode) {
   const absl::MutexLock lock(g_mx);
   g_stringify.reset(new Stringify(output_mode));  // NOLINT
 }
 
-// NOLINTNEXTLINE(misc-use-internal-linkage): declared in stringify_ostream.h and used from there.
 void SetStringifyOstreamOptions(const StringifyOptions& options) {
   const absl::MutexLock lock(g_mx);
   g_stringify.reset(new Stringify(options));  // NOLINT

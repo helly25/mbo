@@ -175,6 +175,10 @@ struct ContainerProxy : T {
 
 }  // namespace mbo::types
 
+// Specialising `std::hash` for a program-defined type is explicitly permitted by
+// [namespace.std]; what is UB is ADDING declarations to `std`, which this is not.
+// The check cannot tell the two apart.
+// NOLINTBEGIN(cert-dcl58-cpp)
 namespace std {
 
 template<typename T, typename R, std::remove_cvref_t<R>& (T::*F)(), const std::remove_cvref_t<R>& (T::*FC)() const>
@@ -185,5 +189,7 @@ struct hash<mbo::types::ContainerProxy<T, R, F, FC>> {
   }
 };
 }  // namespace std
+
+// NOLINTEND(cert-dcl58-cpp)
 
 #endif  // MBO_TYPES_CONTAINER_PROXY_H_

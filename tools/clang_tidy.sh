@@ -134,6 +134,37 @@ for FILE in "${@}"; do
   esac
 done
 
+# A source file with no entry in the compile DB is NOT linted with the right
+# flags - clang-tidy falls back to guessed defaults, fails to find even <gtest>,
+# and then reports a cascade of nonsense (invalid case style for `TEST_F`, and
+# so on) from the wreckage of a failed parse. That looks like real findings and
+# is entirely an artefact of a stale DB, so fail loudly with the one command
+# that fixes it. Only sources are checked: every .cc bazel builds has a compile
+# command, whereas headers legitimately may not.
+declare -a MISSING=()
+for FILE in ${SOURCES[@]+"${SOURCES[@]}"} ${TESTS[@]+"${TESTS[@]}"}; do
+  case "${FILE}" in
+    *.cc | *.cpp | *.cxx) ;;
+    *) continue ;;
+  esac
+  python3 -c '
+import json, os, sys
+want = os.path.realpath(sys.argv[1])
+db = json.load(open("compile_commands.json"))
+for e in db:
+    f = e["file"]
+    p = f if os.path.isabs(f) else os.path.join(e.get("directory", "."), f)
+    if os.path.realpath(p) == want:
+        sys.exit(0)
+sys.exit(1)
+' "${FILE}" || MISSING+=("${FILE}")
+done
+if [ "${#MISSING[@]}" -gt 0 ]; then
+  echo "ERROR: clang-tidy: not in compile_commands.json: ${MISSING[*]}" 1>&2
+  echo "       The compile DB is stale. Regenerate it with './compile_commands-update.sh'." 1>&2
+  exit 1
+fi
+
 # Report only: --header-filter restricts diagnostics to this repo's own headers
 # (not the toolchain's force-included / system headers), -p points at the compile
 # DB. WarningsAsErrors in .clang-tidy makes any finding a non-zero exit.
