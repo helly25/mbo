@@ -161,9 +161,9 @@ class Template {
 
   template<typename Sink>
   friend void AbslStringify(Sink& /*sink*/, TagType /*tag*/);
-  friend std::ostream& operator<<(std::ostream&, TagType);
+  friend std::ostream& operator<<(std::ostream& /*os*/, TagType /*tag*/);
 
-  DataMap data_ = {};
+  DataMap data_;
 };
 
 }  // namespace mbo::mope

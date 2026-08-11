@@ -255,8 +255,8 @@ void ScopedStreamErr(const Disallowed&&) {  // NOLINT(*-named-parameter)
 
 template<ScopedStreamMode kMode = ScopedStreamMode::kContinue>
 MBO_FORCE_INLINE auto ScopedStreamVoid(const std::source_location& loc = std::source_location::current()) {
-  static const VoidStream void_stream;
-  return ScopedStream<kMode, VoidStream, VoidStream>(loc, void_stream);
+  static const VoidStream kVoidStream;
+  return ScopedStream<kMode, VoidStream, VoidStream>(loc, kVoidStream);
 }
 
 template<typename Disallowed>
