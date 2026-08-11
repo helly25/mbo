@@ -22,6 +22,7 @@
 #include <limits>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
@@ -296,7 +297,7 @@ DiffMyers::Snake DiffMyers::FindMiddleSnake(const Span& span) {
     }
     bwd_kmin = kmin;
     bwd_kmax = kmax;
-    if (static_cast<std::size_t>(d) < max_cost_) {
+    if (std::cmp_less(d, max_cost_)) {
       continue;
     }
     // Too expensive (like git): split at the furthest reaching point. Both

@@ -412,7 +412,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<std::string> Glob2Re2ExpressionImpl(
 namespace file_internal {
 
 absl::StatusOr<GlobParts> GlobSplitParts(std::string_view pattern, const Glob2Re2Options& options) {
-  MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), GlobData data);
+  MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), const GlobData data);
   if (data.mixed) {
     return GlobParts{
         .path_pattern{data.pattern},
@@ -455,7 +455,7 @@ absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(
 }
 
 absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options) {
-  MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), GlobData data);
+  MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), const GlobData data);
   std::string_view root(data.pattern);
   root.remove_suffix(root.size() - data.root_len);
   std::string_view patt(data.pattern);
