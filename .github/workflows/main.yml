@@ -203,19 +203,11 @@ jobs:
           CDB_ARTIFACT_URL: ${{steps.upload_cdb.outputs.artifact-url}}
 
       - uses: pre-commit/action@v3.0.1
-        # TODO(helly25): drop this once the finding sweep lands, which is what
-        # turns this job into a real gate. `.clang-tidy` sets
-        # `WarningsAsErrors: '*'` and the tree is not clean yet, so findings are
-        # reported here rather than enforced. Scoped to this step so that a
-        # failure to produce the compile DB above still fails the job.
-        continue-on-error: true
         with:
           # Only the clang-tidy hook: every other hook already ran in the
-          # `pre-commit` job. `--hook-stage manual` is required while the hook
-          # is opt-in; it stays harmless once it becomes an automatic gate.
-          # Scope comes from the step above: changed sources on a branch, the
-          # whole tree on main.
-          extra_args: clang-tidy --hook-stage manual ${{env.CLANG_TIDY_SCOPE}}
+          # `pre-commit` job. Scope comes from the step above: changed sources
+          # on a branch, the whole tree on main.
+          extra_args: clang-tidy ${{env.CLANG_TIDY_SCOPE}}
 
       - uses: actions/cache/save@v5
         if: always() && steps.cache_restore.outputs.cache-hit != 'true'

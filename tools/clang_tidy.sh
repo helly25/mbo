@@ -40,14 +40,19 @@ set -euo pipefail
 # The minimum clang-tidy major version. Below this, C++23 parsing is unreliable.
 readonly MIN_MAJOR=18
 
-function skip() {
-  echo "clang-tidy: skipped (${*}). It is a local-only aid; CI relies on the bazel -Werror gate." 1>&2
-  exit 0
+# clang-tidy is an automatic commit gate, so a missing prerequisite is a setup
+# ERROR rather than a reason to wave the commit through. Silently skipping would
+# mean a developer without a compile DB never runs the gate at all and only finds
+# out in CI - which is exactly the failure mode the gate exists to prevent.
+function die() {
+  echo "ERROR: clang-tidy: ${*}" 1>&2
+  echo "       (to commit without this hook: SKIP=\"clang-tidy\" git commit ...)" 1>&2
+  exit 1
 }
 
 # A compile DB is mandatory; without it clang-tidy cannot resolve include paths.
 [ -f "compile_commands.json" ] \
-  || skip "no compile_commands.json; generate it with './compile_commands-update.sh'"
+  || die "no compile_commands.json; generate it with './compile_commands-update.sh'"
 
 # The `bazel-<repo>` convenience link points at the execroot; fall back to cwd.
 BAZEL_OUTPUT="bazel-$(basename "${PWD}")"
@@ -104,7 +109,7 @@ for LOC in "${CLANG_TIDY_LOCS[@]}"; do
 done
 
 [ -n "${CLANG_TIDY}" ] \
-  || skip "no clang-tidy >= ${MIN_MAJOR} found; build once with --config=clang to fetch the hermetic toolchain, or install a recent clang-tidy"
+  || die "no clang-tidy >= ${MIN_MAJOR} found; build once with --config=clang to fetch the hermetic toolchain, or install a recent clang-tidy"
 
 # Nothing to check (pre-commit may invoke with no matching files).
 [ "${#}" -gt 0 ] || exit 0

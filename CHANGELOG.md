@@ -15,6 +15,7 @@
 - Fixed `IniFile::SetKey` to move its `std::string&&` instead of copying it through `assign`.
 - Removed a pointless `std::floor` over integer division in `mbo/strings/numbers.h`, which round-tripped a `size_t` through `double`.
 - Fixed `mbo::types::tstring::is` to take its ignored argument by const reference rather than by value.
+- Promoted `clang-tidy` to an enforcing pre-commit gate: it now runs automatically on the C++ sources a commit touches, and any finding fails the commit.
 - Exempted the standard-mandated container member type names (`value_type`, `size_type`, ...) from `readability-identifier-naming`, which demanded CamelCase the standard does not permit.
 - Disabled `misc-use-internal-linkage` (its only fix is `static`, while `STYLE_CPP.md` wants an anonymous namespace) and `readability-redundant-parentheses` (its fix deletes the `__builtin_dump_struct` callee).
 
