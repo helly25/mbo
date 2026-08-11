@@ -911,7 +911,11 @@ class Stringify {
         [&](const auto&... fields) {
           const SO::Format& format = *options.outer.format;
           os.IncStruct(format);
+          // `idx` is incremented by the fold below, which expands to nothing for a
+          // zero-field struct - and it is those instantiations that suggest `const`.
+          // NOLINTNEXTLINE(misc-const-correctness)
           std::size_t idx{0};
+          // NOLINTNEXTLINE(readability-suspicious-call-argument)
           ((StreamField(os, options, use_sep, value, TsValue<T>(idx, value, fields), idx, field_names, use_field_names),
             ++idx),
            ...);
@@ -1168,11 +1172,11 @@ class Stringify {
       case SO::StrKeyed::kFirstIsNameOrdered: {
         absl::btree_map<std::string_view, std::reference_wrapper<const typename C::value_type::second_type>> ordered;
         std::size_t index = 0;
-        for (const auto& [k, v] : vs) {
+        for (const auto& [key, val] : vs) {
           if (++index > options.outer.value_control->container_max_len) {
             break;
           }
-          ordered.emplace(k, v);
+          ordered.emplace(key, val);
         }
         StreamStringKeyedContainer(os, options, ordered, allow_field_names);
         return;
@@ -1299,7 +1303,7 @@ class Stringify {
         if (v == '\'') {
           StreamValueStr(os, options.outer, "\\'");
         } else {
-          std::string_view vv{reinterpret_cast<const char*>(&v), 1};  // NOLINT(*-type-reinterpret-cast)
+          const std::string_view vv{reinterpret_cast<const char*>(&v), 1};  // NOLINT(*-type-reinterpret-cast)
           StreamValueStr(os, options.outer, vv);
         }
         os << options.outer.format->char_delim;

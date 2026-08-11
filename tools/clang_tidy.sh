@@ -116,9 +116,16 @@ done
 #   * readability-function-cognitive-complexity: a gtest TestBody's score comes
 #     from ASSERT_*/EXPECT_* macros expanding to branches, not from logic that
 #     could be refactored. Test bodies reached 122 against a threshold of 30.
+#   * clang-analyzer-cplusplus.NewDeleteLeaks: a false positive raised inside
+#     gmock-matchers.h, on the hand-rolled union buffer gmock uses for matcher
+#     storage. It is third-party code we cannot annotate, and neither
+#     --header-filter nor ExcludeHeaderFilterRegex suppresses it - the
+#     clang-analyzer checks report regardless of header filtering. It reaches us
+#     only through gmock, so it can go with the test partition rather than being
+#     disabled for first-party code, where the check is worth having.
 # `--checks` APPENDS to the `Checks` in .clang-tidy (it does not replace it), so
 # every other check still applies to tests.
-readonly TEST_DISABLED_CHECKS='-readability-function-cognitive-complexity'
+readonly TEST_DISABLED_CHECKS='-readability-function-cognitive-complexity,-clang-analyzer-cplusplus.NewDeleteLeaks'
 
 declare -a SOURCES=()
 declare -a TESTS=()

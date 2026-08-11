@@ -67,6 +67,9 @@ concept IsVariantMemberType = types_internal::IsVariantMemberType<Variant, Type,
 // )
 // ```
 template<class... Ts>
+// Inheriting each callable IS the overload-set mechanism; `using Ts::operator()...`
+// below is its whole purpose.
+// NOLINTNEXTLINE(misc-multiple-inheritance)
 struct Overloaded : Ts... {
   using Ts::operator()...;
 };

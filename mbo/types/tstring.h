@@ -120,7 +120,7 @@ struct tstring final {
   // the actual string data at run-time or the in/equality operators that are
   // performed on run-time or compile-time base on the compared to type.
   template<typename Other>
-  static constexpr bool is(Other /* other */) noexcept {
+  static constexpr bool is(const Other& /* other */) noexcept {
     return std::is_same_v<tstring, Other>;
   }
 

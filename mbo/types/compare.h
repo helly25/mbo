@@ -119,6 +119,7 @@ inline std::strong_ordering CompareScalar(Lhs lhs, Rhs rhs) {
     }
   } else {
     if constexpr (std::floating_point<Lhs> || std::floating_point<Rhs>) {
+      // NOLINTNEXTLINE(google-runtime-float)
       return CompareFloat<long double>(lhs, rhs);
     } else if constexpr (std::same_as<bool, Lhs> || std::same_as<bool, Rhs>) {
       return static_cast<bool>(lhs) <=> static_cast<bool>(rhs);

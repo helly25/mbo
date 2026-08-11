@@ -363,8 +363,8 @@ static_assert(ThreeWayComparableTo<B, C, std::partial_ordering>);
 template<ThreeWayComparableTo<B> T>
 struct X {};
 
-[[maybe_unused]] X<C> test1{};
-// [[maybe_unused]] X<A> test2{}; Does not compile because `A <=> B` is deleted.
+[[maybe_unused]] const X<C> kTest1{};
+// [[maybe_unused]] const X<A> kTest2{}; Does not compile because `A <=> B` is deleted.
 
 }  // namespace three_way_comparable_to_2
 

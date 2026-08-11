@@ -17,7 +17,6 @@
 #define MBO_STRINGS_NUMBERS_H_
 
 #include <cassert>
-#include <cmath>
 #include <concepts>
 #include <limits>
 #include <string>
@@ -105,7 +104,7 @@ std::string BigNumber(T v) {
   const std::size_t ofs = tmp.size() % 3;
   std::string res;
   {
-    const std::size_t cap = tmp.size() + std::floor((tmp.size() - neg - 1) / 3);
+    const std::size_t cap = tmp.size() + ((tmp.size() - neg - 1) / 3);
     if (cap > res.capacity()) {
       res.reserve(cap);
     }

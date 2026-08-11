@@ -15,6 +15,7 @@
 
 #include "mbo/diff/internal/data.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -36,7 +37,11 @@
 namespace mbo::diff::diff_internal {
 
 namespace {
+// The overload-set idiom: inheriting each callable IS the mechanism, and
+// `using Args::operator()...` below is what it exists for. The suppression sits
+// directly above the line the check reports - the `struct`, not the `template`.
 template<class... Args>
+// NOLINTNEXTLINE(misc-multiple-inheritance)
 struct Select : Args... {
   explicit Select(Args... args) : Args(args)... {}
 
@@ -79,7 +84,7 @@ std::vector<Data::LineCache> Data::SplitAndAdaptLastLine(
     // For that case `diff -du` does not show 'No newline at end of file'.
     return {};
   }
-  const std::size_t count = std::count_if(text.begin(), text.end(), [](char chr) { return chr == '\n'; });
+  const std::size_t count = std::ranges::count_if(text, [](char chr) { return chr == '\n'; });
   std::vector<LineCache> result;
   result.reserve(count + 1);  // N newlines split into N + 1 lines.
   for (const std::string_view line : absl::StrSplit(text, '\n')) {
