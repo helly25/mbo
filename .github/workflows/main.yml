@@ -116,9 +116,13 @@ jobs:
         # them (`hash_mangle_seed_gen.h is missing`) and those translation units
         # land in the DB degraded - which would later read as clang-tidy
         # findings rather than as the build artifact gap it really is.
-        # Generated headers are the only build output a translation unit needs to
-        # parse, so this builds just those rather than all of `//...`; the query
-        # keeps it correct as generated files are added.
+        # Generated headers are NOT the only build output a translation unit needs
+        # to parse: headers from external repos (`rules_cc/cc/runfiles/runfiles.h`
+        # and friends) are materialised into the execroot only once something that
+        # depends on them is built. A partial build leaves them absent, the TU
+        # fails to resolve the include, and clang-tidy then reports confident
+        # nonsense from the wreckage of that parse - which is how a clean local
+        # sweep and a red CI run can disagree. So build `//...` too.
         run: |
           set -euo pipefail
           # Read into an array without `mapfile`, so this snippet can also be run
@@ -135,6 +139,9 @@ jobs:
           printf 'Building %s generated file(s):\n' "${#GENERATED[@]}"
           printf '  %s\n' "${GENERATED[@]}"
           bazel build --config=clang "${GENERATED[@]}"
+
+          # Everything else a linted TU includes, external repo headers included.
+          bazel build --config=clang-tidy //...
 
           # Also build the `manual` targets that are linted. `bazel test //...`
           # skips them, so a change that breaks one compiles green everywhere and
