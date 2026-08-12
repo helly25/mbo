@@ -68,8 +68,8 @@ absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_
   // NOLINTNEXTLINE(concurrency-mt-unsafe)
   const std::string workspace_env = SafeStr(getenv("TEST_WORKSPACE"), workspace);
 
-  std::string error;
-  std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest(std::string(workspace_env), &error));
+  std::string error;  // NOLINT(misc-const-correctness)
+  const std::unique_ptr<const Runfiles> runfiles(Runfiles::CreateForTest(std::string(workspace_env), &error));
   if (runfiles == nullptr) {
     return absl::NotFoundError(absl::StrCat("Could not determine runfiles directory: ", error));
   }

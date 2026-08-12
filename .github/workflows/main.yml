@@ -112,13 +112,7 @@ jobs:
 
       - name: Build generated sources and headers
         # Generated headers must exist on disk before the compile DB is
-        # extracted, or the extractor cannot resolve the sources that include
-        # them (`hash_mangle_seed_gen.h is missing`) and those translation units
-        # land in the DB degraded - which would later read as clang-tidy
-        # findings rather than as the build artifact gap it really is.
-        # Generated headers are the only build output a translation unit needs to
-        # parse, so this builds just those rather than all of `//...`; the query
-        # keeps it correct as generated files are added.
+        # extracted, so build `//...` beforehand.
         run: |
           set -euo pipefail
           # Read into an array without `mapfile`, so this snippet can also be run
