@@ -30,7 +30,7 @@
 #include "absl/strings/str_split.h"
 #include "mbo/file/file.h"
 #include "mbo/status/status_macros.h"
-#include "tools/cpp/runfiles/runfiles.h"
+#include "rules_cc/cc/runfiles/runfiles.h"
 
 namespace mbo::testing {
 namespace {
@@ -42,7 +42,7 @@ std::string SafeStr(const char* str, std::string_view default_str) {
 }
 }  // namespace
 
-using bazel::tools::cpp::runfiles::Runfiles;
+using rules_cc::cc::runfiles::Runfiles;
 
 absl::StatusOr<std::string> RunfilesDir(std::string_view source) {
   if (source.starts_with("@")) {
