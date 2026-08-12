@@ -587,6 +587,124 @@ TEST_F(LimitedSetTest, AtIndexNonExistingThrows) {
   }
 }
 
+// Transparent (heterogeneous) lookup.
+//
+// A `Key` that counts its own construction, so the tests below can assert the
+// POINT of transparent lookup - that no temporary key is materialised - rather
+// than merely that the call compiles.
+struct CountedString {
+  static std::size_t constructions;  // NOLINT(*-non-const-global-variables)
+
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
+  CountedString(std::string_view str) : value(str) { ++constructions; }  // NOLINT(*-explicit-*)
+
+  CountedString(const CountedString& other) : value(other.value) { ++constructions; }
+
+  // Defaulted: only the CONSTRUCTORS need to count, and the default handles
+  // self-assignment correctly where a hand-written `value = other.value` does not.
+  CountedString& operator=(const CountedString&) = default;
+
+  CountedString(CountedString&&) noexcept = default;
+  CountedString& operator=(CountedString&&) noexcept = default;
+  ~CountedString() = default;
+
+  auto operator<=>(const CountedString& other) const { return value <=> other.value; }
+
+  bool operator==(const CountedString& other) const { return value == other.value; }
+
+  std::string value;
+};
+
+std::size_t CountedString::constructions = 0;  // NOLINT(*-non-const-global-variables)
+
+// Orders `CountedString` against anything convertible to `std::string_view`
+// without building a `CountedString` to do it.
+struct CountedLess {
+  using is_transparent = void;
+
+  bool operator()(const CountedString& lhs, const CountedString& rhs) const { return lhs.value < rhs.value; }
+
+  bool operator()(const CountedString& lhs, std::string_view rhs) const { return lhs.value < rhs; }
+
+  bool operator()(std::string_view lhs, const CountedString& rhs) const { return lhs < rhs.value; }
+
+  bool operator()(std::string_view lhs, std::string_view rhs) const { return lhs < rhs; }
+};
+
+// Named because the raw type contains commas, which a function-like macro such as
+// EXPECT_THAT cannot parse as a single argument.
+using CountedSet = LimitedSet<CountedString, LimitedOptions<4>{}, CountedLess>;
+
+// Detects whether a foreign key may be looked up at all. As a named concept the
+// substitution failure stays in the immediate context, so it yields false rather
+// than a hard error.
+template<typename Set, typename K>
+concept CanFindWith = requires(const Set& set, const K& key) { set.find(key); };
+
+TEST_F(LimitedSetTest, TransparentLookupFindsWithoutConstructingAKey) {
+  CountedSet set;
+  set.emplace(CountedString("aaa"));
+  set.emplace(CountedString("bbb"));
+  set.emplace(CountedString("ccc"));
+
+  const std::size_t before = CountedString::constructions;
+
+  EXPECT_THAT(set.find(std::string_view("bbb")), set.begin() + 1);
+  EXPECT_THAT(set.contains(std::string_view("bbb")), true);
+  EXPECT_THAT(set.contains(std::string_view("zzz")), false);
+  EXPECT_THAT(set.count(std::string_view("ccc")), 1);
+  EXPECT_THAT(set.count(std::string_view("zzz")), 0);
+  EXPECT_THAT(set.find(std::string_view("zzz")), set.end());
+
+  // The whole point: not one `CountedString` was built to perform those lookups.
+  EXPECT_THAT(CountedString::constructions, before) << "transparent lookup constructed a Key";
+}
+
+TEST_F(LimitedSetTest, TransparentLookupBoundsAndEqualRange) {
+  CountedSet set;
+  set.emplace(CountedString("aaa"));
+  set.emplace(CountedString("bbb"));
+  set.emplace(CountedString("ccc"));
+
+  const std::size_t before = CountedString::constructions;
+
+  EXPECT_THAT(set.lower_bound(std::string_view("bbb")), set.begin() + 1);
+  EXPECT_THAT(set.upper_bound(std::string_view("bbb")), set.begin() + 2);
+  const auto [first, last] = set.equal_range(std::string_view("bbb"));
+  EXPECT_THAT(first, set.begin() + 1);
+  EXPECT_THAT(last, set.begin() + 2);
+  EXPECT_THAT(set.index_of(std::string_view("ccc")), 2);
+  EXPECT_THAT(set.index_of(std::string_view("zzz")), CountedSet::npos);
+
+  EXPECT_THAT(CountedString::constructions, before) << "transparent lookup constructed a Key";
+}
+
+TEST_F(LimitedSetTest, NonTransparentComparatorHasNoForeignKeyLookup) {
+  // `std::less<int>` is not transparent, so the foreign-key overloads must not
+  // exist - otherwise they would silently accept anything convertible to the key.
+  // `std::less<int>` is the point of this test - `std::less<>` IS transparent and
+  // would make the container under test transparent too, asserting nothing.
+  // NOLINTNEXTLINE(modernize-use-transparent-functors)
+  using NonTransparent = LimitedSet<int, LimitedOptions<4>{}, std::less<int>>;
+  static_assert(!NonTransparent::kTransparent);
+  static_assert(!CanFindWith<NonTransparent, const char*>);
+
+  // ... whereas a transparent one does.
+  static_assert(CountedSet::kTransparent);
+  static_assert(CanFindWith<CountedSet, std::string_view>);
+  // An exact `Key` still works on both.
+  static_assert(CanFindWith<NonTransparent, int>);
+  static_assert(CanFindWith<CountedSet, CountedString>);
+}
+
+TEST_F(LimitedSetTest, CountReturnsPresenceForOrdinaryKeys) {
+  // `count` never compiled before: it returned `last - false` instead of
+  // `last - first`, which no test instantiated.
+  const auto set = MakeLimitedSet(1, 2, 3);
+  EXPECT_THAT(set.count(2), 1);
+  EXPECT_THAT(set.count(9), 0);
+}
+
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace
