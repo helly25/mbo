@@ -705,6 +705,58 @@ TEST_F(LimitedSetTest, CountReturnsPresenceForOrdinaryKeys) {
   EXPECT_THAT(set.count(9), 0);
 }
 
+TEST_F(LimitedSetTest, TransparentEraseConstructsNoKey) {
+  CountedSet set;
+  set.emplace(CountedString("aaa"));
+  set.emplace(CountedString("bbb"));
+  set.emplace(CountedString("ccc"));
+
+  const std::size_t before = CountedString::constructions;
+
+  EXPECT_THAT(set.erase(std::string_view("bbb")), 1);
+  EXPECT_THAT(set.erase(std::string_view("zzz")), 0) << "absent key erases nothing";
+  EXPECT_THAT(set, SizeIs(2));
+
+  // With a transparent comparator `erase` compares the foreign key directly, so it
+  // has no reason to build a Key at all.
+  EXPECT_THAT(CountedString::constructions, before) << "transparent erase constructed a Key";
+}
+
+TEST_F(LimitedSetTest, EraseByExactKeyUsesTheNonTemplateOverload) {
+  // A non-const lvalue is the case that regressed: `K&&` deduces `Key&`, which beats
+  // `const Key&` at overload resolution unless the template excludes `Key`.
+  CountedSet set;
+  set.emplace(CountedString("aaa"));
+  set.emplace(CountedString("bbb"));
+
+  // Deliberately NOT const: a non-const lvalue is the case under test, since that is
+  // what `K&&` deduces as `Key&`. Making it const would exercise a different overload.
+  // NOLINTNEXTLINE(misc-const-correctness)
+  CountedString key("aaa");
+  const std::size_t before = CountedString::constructions;
+  EXPECT_THAT(set.erase(key), 1) << "erase by non-const lvalue key";
+  EXPECT_THAT(CountedString::constructions, before) << "erase by exact key copied the key";
+  EXPECT_THAT(set, SizeIs(1));
+
+  // A temporary of the exact key type must work too, and still not convert.
+  EXPECT_THAT(set.erase(CountedString("bbb")), 1);
+  EXPECT_THAT(set, IsEmpty());
+}
+
+TEST_F(LimitedSetTest, EraseByConvertibleKeyWithoutTransparentComparator) {
+  // No `is_transparent`: the foreign key must be converted to a Key exactly once,
+  // which is the path the forwarding reference exists for.
+  LimitedSet<long, LimitedOptions<4>{}> set;  // NOLINT(google-runtime-int)
+  set.emplace(1);
+  set.emplace(2);
+  set.emplace(3);
+
+  EXPECT_THAT(set.erase(2), 1) << "int erased from a set of long";
+  EXPECT_THAT(set, ElementsAre(1, 3));
+  EXPECT_THAT(set.erase(9), 0);
+  EXPECT_THAT(set, SizeIs(2));
+}
+
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace
