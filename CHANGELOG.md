@@ -1,15 +1,12 @@
 # 0.13.3
 
+- Added a `cc-target-naming` pre-commit check (ported from helly25/xff): `cc_library` target names must end in `_cc`. Renamed `hash_internal_util` and `hash_test_util` accordingly.
 - `mbo::types::CompareLess` now declares `is_transparent`, so its existing heterogeneous overloads are reachable through `LimitedSet`/`LimitedMap` instead of every lookup having to build a key first.
-
 - Extended transparent lookup to every read operation: `LimitedMap::at`, `contains_all`/`contains_any` (which previously rejected foreign keys outright), and `index_of`, so a foreign key now takes the same unrolled fast path as an exact key instead of falling back to a binary search.
-
 - `LimitedSet`/`LimitedMap` `erase` no longer constructs a key when the comparator is transparent, and its template overload is now constrained to foreign keys only.
-
 - Added transparent (heterogeneous) lookup to `LimitedSet`/`LimitedMap`: when the comparator declares `is_transparent`, `find`, `contains`, `count`, `index_of`, `lower_bound`, `upper_bound` and `equal_range` accept any type the comparator can order against the key, without constructing a key.
 - Fixed `LimitedOrdered::count` which returned `last - false` instead of `last - first` and did not compile at all (no test instantiated it).
 - Added a `library-test-coverage` pre-commit check: every `cc_library` under `//mbo/...` must be reachable from some test target.
-
 - Added `diff-charts` sub-command for the `hash_benchmark_report.py` tool.
 - Added `bundle-context` sub-command for the `hash_benchmark_report.py` tool.
 - Updated `mumbo` to V5 which aims at improved Instruction-level parallelism (ILP).
