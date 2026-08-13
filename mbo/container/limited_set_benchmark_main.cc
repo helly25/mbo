@@ -31,9 +31,9 @@ namespace mbo::container {
   MBO_REGISTER_BENCHMARK(Size, Compare, Func, HaveOrMiss, LimitedOptionsFlag::kDefault); \
   MBO_REGISTER_BENCHMARK(Size, Compare, Func, HaveOrMiss, LimitedOptionsFlag::kNoOptimizeIndexOf)
 
-#define MBO_REGISTER_BENCHMARKS_COMPARE(Size, Func, HaveOrMiss)     \
-  MBO_REGISTER_BENCHMARKS_FLAGS(Size, std::less, Func, HaveOrMiss); \
-  MBO_REGISTER_BENCHMARKS_FLAGS(Size, mbo::types::CompareLess, Func, HaveOrMiss)
+#define MBO_REGISTER_BENCHMARKS_COMPARE(Size, Func, HaveOrMiss)       \
+  MBO_REGISTER_BENCHMARKS_FLAGS(Size, std::less<>, Func, HaveOrMiss); \
+  MBO_REGISTER_BENCHMARKS_FLAGS(Size, mbo::types::CompareLess<int>, Func, HaveOrMiss)
 
 #define MBO_REGISTER_BENCHMARKS_SIZE(Size)                  \
   MBO_REGISTER_BENCHMARKS_COMPARE(Size, BmContains, true);  \
