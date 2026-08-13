@@ -1,5 +1,7 @@
 # 0.13.3
 
+- Extended transparent lookup to every read operation: `LimitedMap::at`, `contains_all`/`contains_any` (which previously rejected foreign keys outright), and `index_of`, so a foreign key now takes the same unrolled fast path as an exact key instead of falling back to a binary search.
+
 - `LimitedSet`/`LimitedMap` `erase` no longer constructs a key when the comparator is transparent, and its template overload is now constrained to foreign keys only.
 
 - Added transparent (heterogeneous) lookup to `LimitedSet`/`LimitedMap`: when the comparator declares `is_transparent`, `find`, `contains`, `count`, `index_of`, `lower_bound`, `upper_bound` and `equal_range` accept any type the comparator can order against the key, without constructing a key.

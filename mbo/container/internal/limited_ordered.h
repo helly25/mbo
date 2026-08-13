@@ -562,7 +562,13 @@ class [[nodiscard]] LimitedOrdered {
   }
 
   // NOLINTBEGIN(*-magic-numbers,*-macro-usage,*-function-size,readability-function-cognitive-complexity)
-  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
+  // Templated on the key so a transparent lookup gets the SAME dispatch - including
+  // the unrolled fast path below. Routing foreign keys through `lower_bound` instead
+  // would make them slower than exact keys on exactly the small containers this
+  // class exists for. `K` defaults to `Key`, so an exact-key call is unchanged.
+  template<typename K = Key>
+  requires(std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>> || kIsForeignKey<K>)
+  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const K& key) const
   requires(kOptimizeIndexOf && Capacity <= kUnrollMaxCapacity)
   {
 #define MBO_CASE_LIMITED_POS_COMP(POS)                                     \
@@ -628,7 +634,9 @@ class [[nodiscard]] LimitedOrdered {
     return npos;
   }  // NOLINTEND(*-magic-numbers,*-macro-usage,*-function-size,readability-function-cognitive-complexity)
 
-  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
+  template<typename K = Key>
+  requires(std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>> || kIsForeignKey<K>)
+  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const K& key) const
   requires(
       kOptimizeIndexOf && kCustomIndexOfBeyondUnroll
       && mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
@@ -649,7 +657,9 @@ class [[nodiscard]] LimitedOrdered {
     return npos;
   }
 
-  MBO_ALWAYS_INLINE std::size_t index_of(const Key& key) const
+  template<typename K = Key>
+  requires(std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>> || kIsForeignKey<K>)
+  MBO_ALWAYS_INLINE std::size_t index_of(const K& key) const
   requires(
       kOptimizeIndexOf && kCustomIndexOfBeyondUnroll
       && !mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
@@ -680,7 +690,9 @@ class [[nodiscard]] LimitedOrdered {
     }
   }
 
-  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
+  template<typename K = Key>
+  requires(std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>> || kIsForeignKey<K>)
+  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const K& key) const
   requires(!kOptimizeIndexOf || (kOptimizeIndexOf && !kCustomIndexOfBeyondUnroll && Capacity > kUnrollMaxCapacity))
   {
     const const_iterator it = lower_bound(key);
@@ -725,33 +737,49 @@ class [[nodiscard]] LimitedOrdered {
     }
   }
 
-  // Transparent `find`/`contains`. These deliberately go through `lower_bound`
-  // rather than `index_of`: the unrolled `index_of` fast path compares against
-  // `Key` directly, so it cannot take a foreign key.
+  // Transparent `find`/`contains`. These mirror the exact-key versions above rather
+  // than taking a separate route: `index_of` is templated on the key, so a foreign
+  // key gets the same unrolled fast path and is not penalised for being foreign.
 
   template<typename K>
   requires(kIsForeignKey<K>)
   MBO_FORCE_INLINE constexpr iterator find(const K& key) {
-    const iterator it = lower_bound(key);
-    return it == end() || val_comp_(key, *it) ? end() : it;
+    if constexpr (kOptimizeIndexOf) {
+      const std::size_t pos = index_of(key);
+      return pos == npos ? end() : iterator(&values_[pos]);
+    } else {
+      const iterator it = lower_bound(key);
+      return it == end() || val_comp_(key, *it) ? end() : it;
+    }
   }
 
   template<typename K>
   requires(kIsForeignKey<K>)
   MBO_FORCE_INLINE constexpr const_iterator find(const K& key) const {
-    const const_iterator it = lower_bound(key);
-    return it == end() || val_comp_(key, *it) ? end() : it;
+    if constexpr (kOptimizeIndexOf) {
+      const std::size_t pos = index_of(key);
+      return pos == npos ? end() : const_iterator(&values_[pos]);
+    } else {
+      const const_iterator it = lower_bound(key);
+      return it == end() || val_comp_(key, *it) ? end() : it;
+    }
   }
 
   template<typename K>
   requires(kIsForeignKey<K>)
   MBO_FORCE_INLINE constexpr bool contains(const K& key) const {
-    return std::binary_search(begin(), end(), key, val_comp_);
+    if constexpr (kOptimizeIndexOf) {
+      return index_of(key) != npos;
+    } else {
+      return std::binary_search(begin(), end(), key, val_comp_);
+    }
   }
 
   // Performs contains-all-of functionality (not part of STL).
   template<typename Other>
-  requires(types::ContainerIsForwardIteratable<Other> && std::equality_comparable_with<typename Other::value_type, Key>)
+  requires(
+      types::ContainerIsForwardIteratable<Other>
+      && (std::equality_comparable_with<typename Other::value_type, Key> || kIsForeignKey<typename Other::value_type>))
   constexpr bool contains_all(const Other& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (!contains(*it)) {
@@ -763,7 +791,7 @@ class [[nodiscard]] LimitedOrdered {
 
   // Performs contains-all-of functionality (not part of STL).
   template<typename U>
-  requires(std::equality_comparable_with<Key, U>)
+  requires(std::equality_comparable_with<Key, U> || kIsForeignKey<U>)
   constexpr bool contains_all(const std::initializer_list<U>& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (!contains(*it)) {
@@ -775,7 +803,9 @@ class [[nodiscard]] LimitedOrdered {
 
   // Performs contains-any-of functionality (not part of STL).
   template<typename Other = std::initializer_list<Key>>
-  requires(types::ContainerIsForwardIteratable<Other> && std::equality_comparable_with<typename Other::value_type, Key>)
+  requires(
+      types::ContainerIsForwardIteratable<Other>
+      && (std::equality_comparable_with<typename Other::value_type, Key> || kIsForeignKey<typename Other::value_type>))
   constexpr bool contains_any(const Other& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (contains(*it)) {
@@ -787,7 +817,7 @@ class [[nodiscard]] LimitedOrdered {
 
   // Performs contains-any-of functionality (not part of STL).
   template<typename U>
-  requires(std::equality_comparable_with<Key, U>)
+  requires(std::equality_comparable_with<Key, U> || kIsForeignKey<U>)
   constexpr bool contains_any(const std::initializer_list<U>& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (contains(*it)) {
@@ -827,13 +857,6 @@ class [[nodiscard]] LimitedOrdered {
   constexpr std::size_t count(const K& key) const {
     const auto [first, last] = equal_range(key);
     return last - first;
-  }
-
-  template<typename K>
-  requires(kIsForeignKey<K>)
-  constexpr std::size_t index_of(const K& key) const {
-    const const_iterator it = lower_bound(key);
-    return it == end() || val_comp_(key, *it) ? npos : it - begin();
   }
 
   // Mofification: clear, swap, emplace, insert

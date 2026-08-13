@@ -544,6 +544,85 @@ TEST_F(LimitedMapTest, StringToString) {
   EXPECT_THAT(kData, Contains(Pair("something_else_long", "something_else_long!")));
 }
 
+// Transparent (heterogeneous) lookup on a map.
+//
+// The key is EXPLICIT from `string_view` on purpose: an implicit conversion would
+// let these pass without the transparent machinery doing anything.
+struct MapKey {
+  static std::size_t constructions;  // NOLINT(*-non-const-global-variables)
+
+  explicit MapKey(std::string_view str) : value(str) { ++constructions; }
+
+  MapKey(const MapKey& other) : value(other.value) { ++constructions; }
+
+  MapKey& operator=(const MapKey&) = default;
+  MapKey(MapKey&&) noexcept = default;
+  MapKey& operator=(MapKey&&) noexcept = default;
+  ~MapKey() = default;
+
+  auto operator<=>(const MapKey& other) const { return value <=> other.value; }
+
+  bool operator==(const MapKey& other) const { return value == other.value; }
+
+  std::string value;
+};
+
+std::size_t MapKey::constructions = 0;  // NOLINT(*-non-const-global-variables)
+
+struct MapKeyLess {
+  using is_transparent = void;
+
+  bool operator()(const MapKey& lhs, const MapKey& rhs) const { return lhs.value < rhs.value; }
+
+  bool operator()(const MapKey& lhs, std::string_view rhs) const { return lhs.value < rhs; }
+
+  bool operator()(std::string_view lhs, const MapKey& rhs) const { return lhs < rhs.value; }
+
+  bool operator()(std::string_view lhs, std::string_view rhs) const { return lhs < rhs; }
+};
+
+using TransparentMap = LimitedMap<MapKey, int, LimitedOptions<4>{}, MapKeyLess>;
+
+// As a named concept the substitution failure stays in the immediate context and
+// yields false, where the same requires-expression written inline in a static_assert
+// produces a hard error.
+template<typename Map, typename K>
+concept CanSubscriptWith = requires(Map& map, const K& key) { map[key]; };
+
+template<typename Map, typename K>
+concept CanAtWith = requires(const Map& map, const K& key) { map.at(key); };
+
+TEST_F(LimitedMapTest, TransparentLookupAndAt) {
+  TransparentMap map;
+  map.try_emplace(MapKey("aaa"), 1);
+  map.try_emplace(MapKey("bbb"), 2);
+
+  const std::size_t before = MapKey::constructions;
+
+  EXPECT_THAT(map.at(std::string_view("bbb")), 2) << "at() by foreign key";
+  EXPECT_THAT(map.contains(std::string_view("aaa")), true);
+  EXPECT_THAT(map.contains(std::string_view("zzz")), false);
+  EXPECT_THAT(map.count(std::string_view("aaa")), 1);
+  EXPECT_THAT(map.find(std::string_view("zzz")), map.end());
+
+  // at() is pure lookup, so like the rest it builds no key.
+  EXPECT_THAT(MapKey::constructions, before) << "transparent map lookup constructed a Key";
+
+  const auto& const_map = map;
+  EXPECT_THAT(const_map.at(std::string_view("aaa")), 1) << "const at() by foreign key";
+}
+
+TEST_F(LimitedMapTest, InsertingOperationsStillRequireARealKey) {
+  // operator[], try_emplace and insert_or_assign insert when the key is absent, and a
+  // container cannot store a key it was never given. The standard draws the same line:
+  // std::map has heterogeneous find/count/contains but no heterogeneous operator[].
+  static_assert(!CanSubscriptWith<TransparentMap, std::string_view>);
+  static_assert(CanSubscriptWith<TransparentMap, MapKey>);
+  // ... while `at`, being pure lookup, takes both.
+  static_assert(CanAtWith<TransparentMap, std::string_view>);
+  static_assert(CanAtWith<TransparentMap, MapKey>);
+}
+
 // NOLINTEND(*-magic-numbers)
 
 }  // namespace
