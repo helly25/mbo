@@ -182,10 +182,47 @@ fi
 # DB. WarningsAsErrors in .clang-tidy makes any finding a non-zero exit.
 # Both groups must run, and a finding in either has to fail, so no `exec` here.
 STATUS=0
+# Output is teed so it can be scanned afterwards, while still streaming to the
+# user as it is produced.
+OUTPUT="$(mktemp -t clang_tidy_out)"
+trap 'rm -f "${OUTPUT}"' EXIT
+
 if [ "${#SOURCES[@]}" -gt 0 ]; then
-  "${CLANG_TIDY}" --header-filter='(^|/)mbo/' -p . "${SOURCES[@]}" || STATUS=1
+  "${CLANG_TIDY}" --header-filter='(^|/)mbo/' -p . "${SOURCES[@]}" 2>&1 | tee -a "${OUTPUT}" || STATUS=1
+  [ "${PIPESTATUS[0]:-0}" -eq 0 ] || STATUS=1
 fi
 if [ "${#TESTS[@]}" -gt 0 ]; then
-  "${CLANG_TIDY}" --header-filter='(^|/)mbo/' --checks="${TEST_DISABLED_CHECKS}" -p . "${TESTS[@]}" || STATUS=1
+  "${CLANG_TIDY}" --header-filter='(^|/)mbo/' --checks="${TEST_DISABLED_CHECKS}" -p . "${TESTS[@]}" 2>&1 \
+    | tee -a "${OUTPUT}" || STATUS=1
+  [ "${PIPESTATUS[0]:-0}" -eq 0 ] || STATUS=1
 fi
+
+# A `clang-diagnostic-error` means the translation unit did not PARSE - a missing
+# header, an unresolvable include. That is a broken environment, not a finding
+# about the code, and it must not be reported as one: from the wreckage of a
+# failed parse clang-tidy emits confident nonsense. It once claimed a variable
+# `can be declared const` where const does not even compile, because the type
+# that writes to it had become unknown.
+#
+# Both known causes are environmental and both are fixed the same way:
+#   * a generated header that has not been built yet, and
+#   * a dependency reached through a `_virtual_includes` directory, which bazel
+#     materialises only once that target is built.
+if grep -q 'clang-diagnostic-error' "${OUTPUT}"; then
+  {
+    echo ""
+    echo "ERROR: clang-tidy: a source failed to PARSE (clang-diagnostic-error above)."
+    echo "       These are NOT findings about the code. Any other diagnostic reported"
+    echo "       for an affected file is unreliable and should not be 'fixed'."
+    echo ""
+    echo "       The usual cause is a compile DB that does not match the build tree:"
+    echo "       generated headers or a dependency's '_virtual_includes' directory"
+    echo "       exist only once bazel has built them. Rebuild and re-extract:"
+    echo ""
+    echo "         bazel build --config=clang-tidy //... && ./compile_commands-update.sh"
+    echo ""
+  } 1>&2
+  exit 1
+fi
+
 exit "${STATUS}"
