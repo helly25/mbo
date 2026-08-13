@@ -184,7 +184,10 @@ fi
 STATUS=0
 # Output is teed so it can be scanned afterwards, while still streaming to the
 # user as it is produced.
-OUTPUT="$(mktemp -t clang_tidy_out)"
+# An explicit template, not `mktemp -t`: BSD mktemp (macOS) takes a bare prefix
+# there, while GNU mktemp (Linux, and so CI) requires the trailing X's and fails
+# with "too few X's in template". A full path template is accepted by both.
+OUTPUT="$(mktemp "${TMPDIR:-/tmp}/clang_tidy_out.XXXXXX")"
 trap 'rm -f "${OUTPUT}"' EXIT
 
 if [ "${#SOURCES[@]}" -gt 0 ]; then
