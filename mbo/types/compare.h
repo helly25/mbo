@@ -35,6 +35,13 @@ template<std::three_way_comparable T>
 struct CompareLess {
   using value_type = T;  // NOLINT(readability-identifier-naming)
 
+  // This comparator has always ordered `value_type` against any type three-way
+  // comparable with it - see the `other_type` overloads below. `is_transparent` is
+  // how a container ASKS whether that is allowed, so without it those overloads were
+  // unreachable through `LimitedSet`/`LimitedMap`: every lookup had to materialise a
+  // `value_type` first, which is the cost heterogeneous comparison exists to avoid.
+  using is_transparent = void;  // NOLINT(readability-identifier-naming)
+
   constexpr ~CompareLess() noexcept = default;
   constexpr CompareLess() noexcept = default;
   constexpr CompareLess(const CompareLess&) noexcept = default;

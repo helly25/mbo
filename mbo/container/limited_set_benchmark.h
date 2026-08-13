@@ -52,16 +52,16 @@ class Random {
   std::uniform_int_distribution<int> uniform_;
 };
 
-template<std::size_t Size, bool HaveOrMiss, template<typename> typename Compare, LimitedOptionsFlag... Flags>
+template<std::size_t Size, bool HaveOrMiss, typename Compare, LimitedOptionsFlag... Flags>
 class Benchmarks {
  private:
   enum class Function { kContains, kFind, kIndexOf };
 
-  // TODO(helly25): Revisit once LimitedOrdered supports transparent (heterogeneous)
-  // lookup. `Compare` is declared `template<typename> typename`, so `Compare<>` is
-  // ill-formed here regardless - the parameter would have to default first.
-  // NOLINTNEXTLINE(modernize-use-transparent-functors)
-  using BenchmarkedContainer = LimitedSet<int, LimitedOptions<Size, Flags...>{}, Compare<int>>;
+  // The comparator arrives as a concrete type rather than a template to instantiate.
+  // The caller then picks the form it wants - `std::less<>` transparent, or
+  // `CompareLess<int>` - instead of this header hard-coding `Compare<int>` and forcing
+  // the non-transparent spelling on everything.
+  using BenchmarkedContainer = LimitedSet<int, LimitedOptions<Size, Flags...>{}, Compare>;
 
   static constexpr std::size_t kNumTestsValues = 100'000;
 
