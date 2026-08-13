@@ -43,7 +43,7 @@ template<
     bool = Index<std::variant_size_v<V>> struct IsVariantMemberType : std::false_type {};
 
 template<typename V, typename T, std::size_t Index>
-struct IsVariantMemberType<V, T, Index, false>
+struct IsVariantMemberType<V, T, Index, true>
     : std::bool_constant<
           std::same_as<T, std::variant_alternative_t<Index, V>> || IsVariantMemberType<V, T, Index + 1>::value> {};
 

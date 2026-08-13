@@ -1,5 +1,8 @@
 # 0.13.3
 
+- Fixed `mbo::types::IsVariantMemberType`, which was always `false`: its recursion specialised the out-of-range case, so an in-range index fell through to the `false_type` primary template.
+- Added `mbo/types:variant_test` and `mbo/log:demangle_test`.
+
 - Added `mbo/types:compare_test`, covering `CompareLess`, `CompareFloat`'s NaN total order and `CompareScalar`'s mixed-signedness branches.
 - Fixed `//mbo/types:compare_cc` to declare its dependency on `traits_cc`, which it includes but never listed.
 
