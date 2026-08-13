@@ -1,5 +1,7 @@
 # 0.13.3
 
+- `LimitedSet`/`LimitedMap` `erase` no longer constructs a key when the comparator is transparent, and its template overload is now constrained to foreign keys only.
+
 - Added transparent (heterogeneous) lookup to `LimitedSet`/`LimitedMap`: when the comparator declares `is_transparent`, `find`, `contains`, `count`, `index_of`, `lower_bound`, `upper_bound` and `equal_range` accept any type the comparator can order against the key, without constructing a key.
 - Fixed `LimitedOrdered::count` which returned `last - false` instead of `last - first` and did not compile at all (no test instantiated it).
 - Added a `library-test-coverage` pre-commit check: every `cc_library` under `//mbo/...` must be reachable from some test target.

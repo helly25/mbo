@@ -931,36 +931,56 @@ class [[nodiscard]] LimitedOrdered {
     return count;
   }
 
-  // Forwarding into the loop below is exactly what this must not do, so `key` is bound
-  // once instead - see the comment there.
+  // Erase by a key that is NOT this container's key type.
+  //
+  // Excluding `Key` gives the two overloads non-overlapping domains: an exact key -
+  // lvalue, temporary or value - always binds to the simple overload above, and this
+  // one only ever sees a foreign key. Without the constraint `K&&` deduces `Key&` for a
+  // non-const lvalue and outranks `const Key&`, so the template silently handled that
+  // case too. That was not a bug - it bound `const Key&` without converting, and with a
+  // transparent comparator compared directly - which is why the tests pass either way.
+  // The constraint is here so the dispatch is stated rather than inferred.
   template<typename K>
-  requires(!IsIterator<K>::value)
+  requires(!IsIterator<K>::value && !std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>>)
   // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
   constexpr size_type erase(K&& key) {
     size_type count = 0;
-    // `key` stays a forwarding reference on purpose: callers may pass an lvalue, a temporary
-    // or a value, and the compiler picks what is cheapest - a small type in registers beats a
-    // const& indirection.
-    //
-    // It is forwarded EXACTLY ONCE, here, rather than inside the loop. An object can only be
-    // forwarded once, so forwarding per iteration would claim a move of `key` each time round
-    // (bugprone-use-after-move) - and there is no "last iteration" to single out, because the
-    // loop runs until `find` fails.
-    //
-    // Forwarding into this binding is what makes it cheap, measured with a `Key` having both
-    // converting constructors from `K`, over three iterations:
-    //   * `find(key)` inside the loop:                    3 copy-conversions
-    //   * `find(std::forward<K>(key))` inside the loop:    3 move-conversions (and unsound)
-    //   * forwarded once into this binding:                1 conversion, a move for an rvalue
-    // When `K` is already `Key` it binds directly: no conversion at all.
-    const Key& key_ref = std::forward<K>(key);
-    while (true) {
-      auto pos = find(key_ref);
-      if (pos == end()) {
-        break;
+    if constexpr (kTransparent) {
+      // Nothing to convert: `find` compares the foreign key directly, so no `Key` is
+      // ever built. `key` is therefore never forwarded - there is no target to move
+      // into - which is what the NOLINT above is about.
+      while (true) {
+        auto pos = find(key);
+        if (pos == end()) {
+          break;
+        }
+        erase(pos);
+        ++count;
       }
-      erase(pos);
-      ++count;
+    } else {
+      // A `Key` has to be materialised, because the comparator can only compare keys.
+      //
+      // `key` stays a forwarding reference on purpose: callers may pass an lvalue, a
+      // temporary or a value, and the compiler picks what is cheapest - a small type in
+      // registers beats a const& indirection.
+      //
+      // It is forwarded EXACTLY ONCE, into this binding, rather than inside the loop. An
+      // object can only be forwarded once, so forwarding per iteration would claim a move
+      // of `key` every time round (bugprone-use-after-move), and there is no "last
+      // iteration" to single out because the loop runs until `find` fails. Measured with a
+      // `Key` having both converting constructors, over three iterations:
+      //   * `find(key)` inside the loop:                   3 copy-conversions
+      //   * `find(std::forward<K>(key))` inside the loop:   3 move-conversions (and unsound)
+      //   * forwarded once into this binding:               1 conversion, a move for an rvalue
+      const Key& key_ref = std::forward<K>(key);
+      while (true) {
+        auto pos = find(key_ref);
+        if (pos == end()) {
+          break;
+        }
+        erase(pos);
+        ++count;
+      }
     }
     return count;
   }
