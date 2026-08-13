@@ -1,5 +1,8 @@
 # 0.13.3
 
+- Added `mbo/types:compare_test`, covering `CompareLess`, `CompareFloat`'s NaN total order and `CompareScalar`'s mixed-signedness branches.
+- Fixed `//mbo/types:compare_cc` to declare its dependency on `traits_cc`, which it includes but never listed.
+
 - `mbo::types::CompareLess` now declares `is_transparent`, so its existing heterogeneous overloads are reachable through `LimitedSet`/`LimitedMap` instead of every lookup having to build a key first.
 
 - Extended transparent lookup to every read operation: `LimitedMap::at`, `contains_all`/`contains_any` (which previously rejected foreign keys outright), and `index_of`, so a foreign key now takes the same unrolled fast path as an exact key instead of falling back to a binary search.
