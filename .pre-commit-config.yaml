@@ -95,6 +95,20 @@ repos:
         entry: .pre-commit/check_clang_tidy_targets.sh
         pass_filenames: false
         files: ^(.*/BUILD\.bazel|bazelmod/clang_tidy_targets\.bzl)$
+      - id: library-test-coverage
+        name: every cc_library is reached by a test
+        description: |
+          Every `cc_library` under //mbo/... must be reachable from at least one test target, so a
+          library cannot be added - or orphaned by a deleted test - with nothing exercising it.
+          Reachability rather than a `<xxx>_cc`/`<xxx>_test` naming rule: the naming rule calls 32
+          of 75 libraries unpaired, nearly all wrongly (//mbo/types/internal:extend_cc is well
+          covered by //mbo/types:extend_test, it just has a different name), and a rule needing a
+          32-entry allowlist on day one enforces nothing. Matches `.*_test`, not `cc_test`, because
+          mope is covered entirely by `*_diff_test` golden targets. Skips when bazel is unavailable.
+        language: system
+        entry: .pre-commit/check_library_test_coverage.sh
+        pass_filenames: false
+        files: ^.*/BUILD\.bazel$
       - id: header-guards
         name: header guards follow STYLE_CPP
         description: |
