@@ -33,6 +33,7 @@
 #include "mbo/config/config.h"
 #include "mbo/container/limited_options.h"
 #include "mbo/testing/matchers.h"
+#include "mbo/types/compare.h"
 
 // Clang has issues with exception tracing in ASAN, so corresponding tests must
 // be disabled. But we do so for all known ASAN identification methods.
@@ -778,6 +779,28 @@ TEST_F(LimitedSetTest, TransparentContainsAllAndAny) {
   EXPECT_THAT(set.contains_any(absent), false);
 
   EXPECT_THAT(CountedString::constructions, before) << "contains_all/any constructed a Key";
+}
+
+TEST_F(LimitedSetTest, CompareLessIsTransparent) {
+  // CompareLess always ordered its value_type against anything three-way comparable
+  // with it; it just never said `is_transparent`, so a container could not use those
+  // overloads and every lookup had to build a key first.
+  using CompareLessSet =
+      LimitedSet<long, LimitedOptions<4>{}, mbo::types::CompareLess<long>>;  // NOLINT(google-runtime-int)
+  static_assert(CompareLessSet::kTransparent);
+
+  CompareLessSet set;
+  set.emplace(1);
+  set.emplace(2);
+  set.emplace(3);
+
+  // `int` is a foreign key here: the set's key type is `long`.
+  EXPECT_THAT(set.contains(2), true);
+  EXPECT_THAT(set.count(3), 1);
+  EXPECT_THAT(set.find(9), set.end());
+  EXPECT_THAT(set.index_of(1), 0);
+  EXPECT_THAT(set.erase(2), 1);
+  EXPECT_THAT(set, ElementsAre(1, 3));
 }
 
 // NOLINTEND(*-magic-numbers)
