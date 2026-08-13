@@ -15,7 +15,7 @@
 
 namespace mbo::hash::kat {
 
-enum class Algo { kMumbo, kJumbo, kDumbo };
+enum class Algo { kMumbo, kJumbo, kDumbo, kFambo };
 
 struct Vector {
   Algo algo;
@@ -25,7 +25,7 @@ struct Vector {
   std::uint64_t high;
 };
 
-inline constexpr std::array<Vector, 78> kVectors{{
+inline constexpr std::array<Vector, 104> kVectors{{
     {.algo = Algo::kMumbo, .seed = 0ULL, .len = 0, .low = 0x9e90b4b50bf8f128ULL, .high = 0x0000000000000000ULL},
     {.algo = Algo::kMumbo, .seed = 0ULL, .len = 1, .low = 0x09a8bf9cba8898c9ULL, .high = 0x0000000000000000ULL},
     {.algo = Algo::kMumbo, .seed = 0ULL, .len = 3, .low = 0xe390dec772023600ULL, .high = 0x0000000000000000ULL},
@@ -104,6 +104,32 @@ inline constexpr std::array<Vector, 78> kVectors{{
     {.algo = Algo::kDumbo, .seed = 5381ULL, .len = 64, .low = 0x179ac0a8f22758cfULL, .high = 0x0000000000000000ULL},
     {.algo = Algo::kDumbo, .seed = 5381ULL, .len = 128, .low = 0xfba28095e266f740ULL, .high = 0x0000000000000000ULL},
     {.algo = Algo::kDumbo, .seed = 5381ULL, .len = 256, .low = 0xea266d25f8552d65ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 0, .low = 0xcc19c824ff741fa0ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 1, .low = 0xd1fe68d124723c61ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 3, .low = 0xdd5481c2b51a704dULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 7, .low = 0x707fc8c94e0a0166ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 8, .low = 0xd6d7beda7c873a04ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 15, .low = 0xfe6ce332d538e7b1ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 16, .low = 0x65529f32a8f0db33ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 17, .low = 0xf8d8d5739c6e4231ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 32, .low = 0xf2d774d4864904c2ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 33, .low = 0x4f6df57808adcbeeULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 64, .low = 0x0245fd5a7790d3a5ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 128, .low = 0x06bd71d4bb3553c2ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 0ULL, .len = 256, .low = 0xa99cc3eae20ef1bdULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 0, .low = 0x38c891584df68a16ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 1, .low = 0xb93c7da6530fb689ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 3, .low = 0x2f209116a65a727dULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 7, .low = 0x690f210e79d6047dULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 8, .low = 0x97ef2f51d9e30b67ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 15, .low = 0xc65bc3cc98ecba17ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 16, .low = 0x37f2a16879709a7eULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 17, .low = 0x67f1844a9a050f3cULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 32, .low = 0xbd8436b33bc48087ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 33, .low = 0x86628628ed9ba750ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 64, .low = 0xb7d3056123751160ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 128, .low = 0x89b267b128188135ULL, .high = 0x0000000000000000ULL},
+    {.algo = Algo::kFambo, .seed = 5381ULL, .len = 256, .low = 0x494deda7be1ff16dULL, .high = 0x0000000000000000ULL},
 }};
 
 }  // namespace mbo::hash::kat

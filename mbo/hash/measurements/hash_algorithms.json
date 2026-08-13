@@ -22,6 +22,17 @@
       "starlark": "yes"
     },
     {
+      "algo": "fambo",
+      "bits": 64,
+      "smhasher": "fambo-64",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
       "algo": "fnv1a",
       "bits": 64,
       "smhasher": "FNV-1a-64",
@@ -128,6 +139,7 @@
     "SipHash-2-4",
     "FNV-1a-64",
     "dumbo-64",
+    "fambo-64",
     "rapidhash",
     "XXH-64",
     "XXH3-64",

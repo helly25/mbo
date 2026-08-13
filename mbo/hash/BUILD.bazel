@@ -101,6 +101,7 @@ cc_library(
     name = "hash_cc",
     srcs = [
         "hash_dumbo.h",
+        "hash_fambo.h",
         "hash_fnv1a.h",
         "hash_mumbo.h",
         "hash_murmur3.h",

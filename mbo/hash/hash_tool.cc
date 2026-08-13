@@ -41,6 +41,7 @@ using HashFn = uint64_t (*)(std::string_view);
 // (dumbo 0, fnv1a offset basis, ...). Captureless lambdas decay to `HashFn`.
 constexpr auto kAlgorithms = mbo::container::ToLimitedMap<std::string_view, HashFn>({
     {"dumbo", [](std::string_view data) { return mbo::hash::dumbo::Algorithm::GetHash64(data); }},
+    {"fambo", [](std::string_view data) { return mbo::hash::fambo::Algorithm::GetHash64(data); }},
     {"fnv1a", [](std::string_view data) { return mbo::hash::fnv1a::Algorithm::GetHash64(data); }},
     {"mumbo", [](std::string_view data) { return mbo::hash::mumbo::Algorithm::GetHash64(data); }},
     {"murmur3", [](std::string_view data) { return mbo::hash::murmur3::Algorithm::GetHash64(data); }},
@@ -67,7 +68,8 @@ int main(int argc, char** argv) {
   }
   const std::optional<HashFn> hash_fn = Lookup(args[1]);
   if (!hash_fn.has_value()) {
-    std::cerr << absl::StreamFormat("Unknown algo '%s'; known: dumbo, fnv1a, mumbo, murmur3, siphash.\n", args[1]);
+    std::cerr << absl::StreamFormat(
+        "Unknown algo '%s'; known: dumbo, fambo, fnv1a, mumbo, murmur3, siphash.\n", args[1]);
     return 2;
   }
   if (args.size() == 3) {
