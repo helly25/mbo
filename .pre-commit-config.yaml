@@ -95,6 +95,17 @@ repos:
         entry: .pre-commit/check_clang_tidy_targets.sh
         pass_filenames: false
         files: ^(.*/BUILD\.bazel|bazelmod/clang_tidy_targets\.bzl)$
+      - id: cc-target-naming
+        name: cc_library targets end in _cc
+        description: |
+          A C++ library target is named `<thing>_cc`, so a label reads as "the C++ library for
+          <thing>" and never collides with the directory, file or binary of the same name. Ported
+          from helly25/xff, which enforces the same convention; two targets here had drifted
+          (`hash_internal_util`, `hash_test_util`). The check is pure BUILD-file parsing, so it
+          needs no bazel and runs anywhere.
+        language: system
+        entry: tools/check_cc_target_naming.py
+        files: ^.*/(BUILD\.bazel|BUILD)$
       - id: library-test-coverage
         name: every cc_library is reached by a test
         description: |
