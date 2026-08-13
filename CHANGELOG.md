@@ -1,5 +1,8 @@
 # 0.13.3
 
+- Added transparent (heterogeneous) lookup to `LimitedSet`/`LimitedMap`: when the comparator declares `is_transparent`, `find`, `contains`, `count`, `index_of`, `lower_bound`, `upper_bound` and `equal_range` accept any type the comparator can order against the key, without constructing a key.
+- Fixed `LimitedOrdered::count` which returned `last - false` instead of `last - first` and did not compile at all (no test instantiated it).
+
 - Added `diff-charts` sub-command for the `hash_benchmark_report.py` tool.
 - Added `bundle-context` sub-command for the `hash_benchmark_report.py` tool.
 - Updated `mumbo` to V5 which aims at improved Instruction-level parallelism (ILP).
