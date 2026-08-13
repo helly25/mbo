@@ -751,7 +751,9 @@ class [[nodiscard]] LimitedOrdered {
 
   // Performs contains-all-of functionality (not part of STL).
   template<typename Other>
-  requires(types::ContainerIsForwardIteratable<Other> && std::equality_comparable_with<typename Other::value_type, Key>)
+  requires(
+      types::ContainerIsForwardIteratable<Other>
+      && (std::equality_comparable_with<typename Other::value_type, Key> || kIsForeignKey<typename Other::value_type>))
   constexpr bool contains_all(const Other& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (!contains(*it)) {
@@ -763,7 +765,7 @@ class [[nodiscard]] LimitedOrdered {
 
   // Performs contains-all-of functionality (not part of STL).
   template<typename U>
-  requires(std::equality_comparable_with<Key, U>)
+  requires(std::equality_comparable_with<Key, U> || kIsForeignKey<U>)
   constexpr bool contains_all(const std::initializer_list<U>& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (!contains(*it)) {
@@ -775,7 +777,9 @@ class [[nodiscard]] LimitedOrdered {
 
   // Performs contains-any-of functionality (not part of STL).
   template<typename Other = std::initializer_list<Key>>
-  requires(types::ContainerIsForwardIteratable<Other> && std::equality_comparable_with<typename Other::value_type, Key>)
+  requires(
+      types::ContainerIsForwardIteratable<Other>
+      && (std::equality_comparable_with<typename Other::value_type, Key> || kIsForeignKey<typename Other::value_type>))
   constexpr bool contains_any(const Other& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (contains(*it)) {
@@ -787,7 +791,7 @@ class [[nodiscard]] LimitedOrdered {
 
   // Performs contains-any-of functionality (not part of STL).
   template<typename U>
-  requires(std::equality_comparable_with<Key, U>)
+  requires(std::equality_comparable_with<Key, U> || kIsForeignKey<U>)
   constexpr bool contains_any(const std::initializer_list<U>& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (contains(*it)) {

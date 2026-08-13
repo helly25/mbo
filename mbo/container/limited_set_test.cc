@@ -595,8 +595,11 @@ TEST_F(LimitedSetTest, AtIndexNonExistingThrows) {
 struct CountedString {
   static std::size_t constructions;  // NOLINT(*-non-const-global-variables)
 
-  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
-  CountedString(std::string_view str) : value(str) { ++constructions; }  // NOLINT(*-explicit-*)
+  // EXPLICIT on purpose. An implicit conversion would make `string_view` and
+  // `CountedString` `equality_comparable_with` each other via that conversion, which
+  // is exactly what transparent lookup exists to avoid needing - and it would let the
+  // tests below pass without the transparent machinery doing anything.
+  explicit CountedString(std::string_view str) : value(str) { ++constructions; }
 
   CountedString(const CountedString& other) : value(other.value) { ++constructions; }
 
@@ -755,6 +758,26 @@ TEST_F(LimitedSetTest, EraseByConvertibleKeyWithoutTransparentComparator) {
   EXPECT_THAT(set, ElementsAre(1, 3));
   EXPECT_THAT(set.erase(9), 0);
   EXPECT_THAT(set, SizeIs(2));
+}
+
+TEST_F(LimitedSetTest, TransparentContainsAllAndAny) {
+  CountedSet set;
+  set.emplace(CountedString("aaa"));
+  set.emplace(CountedString("bbb"));
+  set.emplace(CountedString("ccc"));
+
+  const std::vector<std::string_view> present{"aaa", "ccc"};
+  const std::vector<std::string_view> partial{"aaa", "zzz"};
+  const std::vector<std::string_view> absent{"yyy", "zzz"};
+
+  const std::size_t before = CountedString::constructions;
+
+  EXPECT_THAT(set.contains_all(present), true);
+  EXPECT_THAT(set.contains_all(partial), false);
+  EXPECT_THAT(set.contains_any(partial), true);
+  EXPECT_THAT(set.contains_any(absent), false);
+
+  EXPECT_THAT(CountedString::constructions, before) << "contains_all/any constructed a Key";
 }
 
 // NOLINTEND(*-magic-numbers)

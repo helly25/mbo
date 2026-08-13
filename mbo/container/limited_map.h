@@ -164,6 +164,28 @@ class LimitedMap final
     return it->second;
   }
 
+  // `at` is pure lookup, so it takes a foreign key like the rest of them.
+  //
+  // `operator[]`, `try_emplace` and `insert_or_assign` deliberately do NOT: each
+  // inserts when the key is absent, and a container cannot store a key it was
+  // never given. The standard draws the same line - `std::map` has heterogeneous
+  // `find`/`count`/`contains` but no heterogeneous `operator[]`.
+  template<typename K>
+  requires(LimitedBase::template kIsForeignKey<K>)
+  constexpr Value& at(const K& key) {
+    auto it = find(key);
+    MBO_CONFIG_REQUIRE(it != end(), "Out of range");
+    return it->second;
+  }
+
+  template<typename K>
+  requires(LimitedBase::template kIsForeignKey<K>)
+  constexpr const Value& at(const K& key) const {
+    auto it = find(key);
+    MBO_CONFIG_REQUIRE(it != end(), "Out of range");
+    return it->second;
+  }
+
   constexpr Value& operator[](const Key& key) { return try_emplace(key, mapped_type{}).first->second; }
 
   constexpr Value& operator[](Key&& key) { return try_emplace(std::move(key), mapped_type{}).first->second; }
