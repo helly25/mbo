@@ -442,6 +442,15 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+cc_test(
+    name = "typed_view_test",
+    srcs = ["typed_view_test.cc"],
+    deps = [
+        ":typed_view_cc",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "variant_cc",
     hdrs = ["variant.h"],
