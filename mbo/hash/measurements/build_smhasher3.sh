@@ -77,6 +77,7 @@ HASH_SRC="${REPO}/mbo/hash"
 HASH_DST="${SRC_DIR}/mbo_include/mbo/hash"
 mkdir -p "${HASH_DST}"
 cp "${HASH_SRC}/hash_dumbo.h" "${HASH_DST}/"
+cp "${HASH_SRC}/hash_fambo.h" "${HASH_DST}/"
 cp "${HASH_SRC}/hash_internal_util.h" "${HASH_DST}/"
 cp "${HASH_SRC}/hash_mumbo.h" "${HASH_DST}/"
 cp "${HASH_SRC}/hash_types.h" "${HASH_DST}/"
@@ -101,4 +102,4 @@ docker run --rm -v "${SRC_DIR}:/src" -w /src "${BUILD_IMAGE}" bash -c '
 '
 
 echo "SMHasher3 built: ${SRC_DIR}/build/SMHasher3"
-echo "In-house hashes: ${SRC_DIR}/build/SMHasher3 --list | grep -Ei 'mumbo|jumbo|dumbo'"
+echo "In-house hashes: ${SRC_DIR}/build/SMHasher3 --list | grep -Ei 'mumbo|jumbo|dumbo|fambo'"

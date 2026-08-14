@@ -66,7 +66,7 @@ import tempfile
 
 # Ordering uses the benchmark's algorithm keys (data keys); _LABEL_128 only
 # renames "mumbo" to "jumbo" for display in the 128-bit table.
-_ORDER_64 = ["mumbo", "rapidhash", "xxh3", "xxh64", "murmur3", "siphash24", "fnv1a", "dumbo"]
+_ORDER_64 = ["mumbo", "fambo", "rapidhash", "xxh3", "xxh64", "murmur3", "siphash24", "fnv1a", "dumbo"]
 _ORDER_128 = ["mumbo", "xxh3", "murmur3"]
 _LABEL_128 = {"mumbo": "jumbo"}  # BmHash128<mumbo> is the jumbo (128-bit) face
 
@@ -86,6 +86,7 @@ _SMHASHER_NAMES = {
     "mumbo": ["mumbo-64"],
     "jumbo": ["jumbo-128"],
     "dumbo": ["dumbo-64"],
+    "fambo": ["fambo-64"],
     "fnv1a": ["FNV-1a-64"],
     "xxh64": ["XXH-64"],
     "xxh3": ["XXH3-64", "XXH3-128"],
@@ -94,7 +95,7 @@ _SMHASHER_NAMES = {
     "murmur3": ["MurmurHash3-128"],
 }
 # Default set - ALL algorithms, explicitly including the legacy `dumbo`.
-_SMHASHER_ALL = ["mumbo", "jumbo", "dumbo", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
+_SMHASHER_ALL = ["mumbo", "jumbo", "dumbo", "fambo", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
 
 # Legacy / short SMHasher3 names -> the current registered name, applied when a
 # bundle's logs are re-parsed so an older dataset (recorded before a name was
@@ -215,7 +216,7 @@ def _run_benchmark(mode, reps, min_time, warmup, config=None, copt=None, host_co
         "--benchmark_format=console",
         f"--benchmark_repetitions={reps}",
         f"--benchmark_min_time={min_time}s",
-        f"--benchmark_min_warmup_time={warmup}s",
+        f"--benchmark_min_warmup_time={warmup}",
         "--benchmark_enable_random_interleaving=true",
         "--benchmark_display_aggregates_only=true",
     ]
@@ -785,7 +786,7 @@ def _linear_ticks(vmax, target=6):
     return ticks
 
 
-def _svg_plot(data, algos, title, path, label_map=None, subtitle=None, linear_y=False, y_label="ns / op", x_label="key length"):
+def _svg_plot(*, data, algos, title, path, label_map=None, subtitle=None, linear_y=False, y_label="ns / op", x_label="key length", width=None, height=None):
     """Dependency-free value-vs-length SVG, one line per algorithm (best-k mean).
 
     The x-axis (key length) is ALWAYS log-scaled: lengths are sampled
@@ -802,8 +803,10 @@ def _svg_plot(data, algos, title, path, label_map=None, subtitle=None, linear_y=
     sizes = sorted({int(s) for a in data.values() for s in a})
     if not sizes or not algos:
         return
-    width, height, pad_l, pad_r, pad_t, pad_b = 900, 536, 66, 132, 62, 52
-    height += min(max(0, len(algos) - 5), 10) * 30  # extra legend rows
+    pad_l, pad_r, pad_t, pad_b = 66, 132, 62, 52
+    width = width or 900
+    height = height or (536 + min(max(0, len(algos) - 5), 10) * 30)  # extra legend rows
+    print(f"Width x Height: {width} x {height}", file=sys.stderr)
     plot_w, plot_h = width - pad_l - pad_r, height - pad_t - pad_b
     x0, x1 = math.log10(sizes[0]), math.log10(sizes[-1])
     vals = [_val(data[a][str(s)]) for a in algos for s in sizes if str(s) in data[a] and _val(data[a][str(s)]) > 0]
@@ -1094,8 +1097,8 @@ def _render_charts(full, stem, charts_dir, subtitle):
         full_subtitle = f"{subtitle} · {better}" if subtitle else better
 
         _svg_plot(
-            data, _order(list(data), section["order"]), f"mbo/hash - {section['title']}",
-            os.path.join(charts_dir, name), section["relabel"], subtitle=full_subtitle, y_label=y_label, x_label=x_label,
+            data=data, algos=_order(list(data), section["order"]), title=f"mbo/hash - {section['title']}",
+            path=os.path.join(charts_dir, name), label_map=section["relabel"], subtitle=full_subtitle, y_label=y_label, x_label=x_label,
         )
         written.append((section["tag"], name))
     return written
@@ -1171,8 +1174,8 @@ def dispatch_plot(args, stamp):
         better = "lower is better" if section["kind"] == "latency" else "higher is better"
 
         _svg_plot(
-            data, _order(list(data), section["order"]), f"mbo/hash - {section['title']}",
-            f"{base}_{section['tag']}{ext}", section["relabel"], subtitle=better, linear_y=linear_y, y_label=y_label, x_label=x_label,
+            data=data, algos=_order(list(data), section["order"]), title=f"mbo/hash - {section['title']}",
+            path=f"{base}_{section['tag']}{ext}", label_map=section["relabel"], subtitle=better, linear_y=linear_y, y_label=y_label, x_label=x_label,
         )
     return 0
 
@@ -1546,7 +1549,8 @@ def dispatch_diff_charts(args, stamp):
         if not chart_data:
             continue
 
-        out_path = os.path.join(args.output_dir, f"diff_{file_suffix}.svg")
+        out_prefix = args.output_prefix + ("_" if args.output_prefix else "")
+        out_path = os.path.join(args.output_dir, f"{out_prefix}diff_{file_suffix}.svg")
         title_kind = f"{dist_filter} Throughput" if kind == "throughput" else "Latency"
         y_label, x_label = ("GiB / s", "max length") if kind == "throughput" else ("ns / op", "key length")
 
@@ -1563,7 +1567,9 @@ def dispatch_diff_charts(args, stamp):
             subtitle=f"Log-Log Scale ({better}) | Environment index detailed below",
             linear_y=False,
             y_label=y_label,
-            x_label=x_label
+            x_label=x_label,
+            width=args.svg_width,
+            height=args.svg_height,
         )
 
         # 4. Inject Environment Metadata Table
@@ -1589,7 +1595,7 @@ def add_command_run(sub):
     p_run.add_argument("--out", help="write the distilled canonical results JSON here")
     p_run.add_argument("--tables", action="store_true")
     p_run.add_argument("--config", action="append", default=[], help="bazel --config for the benchmark build (e.g. `--config=clang`); works well with .user.bazelrc to pick the toolchain and the recorded compiler")
-    p_run.add_argument("--copt", action="append", default=[], help="bazel --copt for the benchmark build (e.g. `--copt=-O3`); allows manual fine tuning of the compiler flags")
+    p_run.add_argument("--copt", action="append", default=[], help="bazel --copt for the benchmark build (e.g. `--copt=-O3`, `--copt=-mcpu=apple-m5`, `--copt=-march=znver5`); allows manual fine tuning of the compiler flags")
     p_run.add_argument("--host_copt", action="append", default=[], help="bazel --host_copt for the benchmark build (e.g. `--host_copt=-O3`); allows manual fine tuning of the host compiler flags")
     p_run.set_defaults(func=dispatch_run)
 
@@ -1742,10 +1748,27 @@ def add_command_diff_charts(sub):
         help="Where to save the rendered chart images."
     )
     p_diff_charts.add_argument(
+        "--output-prefix",
+        default=".",
+        help="Filename prefix for the rendered chart images."
+    )
+    p_diff_charts.add_argument(
         "--charts",
         nargs="+",
         default=[],
         help="Filter charts to render by token match (e.g., '64', 'latency', 'short', 'throughput-64-web'). Leave empty to render all."
+    )
+    p_diff_charts.add_argument(
+        "--svg-width",
+        default=0,
+        type=int,
+        help="Width for generated images (or 0 for auto default)."
+    )
+    p_diff_charts.add_argument(
+        "--svg-height",
+        default=0,
+        type=int,
+        help="Height for generated images (or 0 for auto default)."
     )
     p_diff_charts.set_defaults(func=dispatch_diff_charts)
 

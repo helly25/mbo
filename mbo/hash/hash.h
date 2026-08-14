@@ -22,6 +22,7 @@
 #include <string_view>
 
 #include "mbo/hash/hash_dumbo.h"          // IWYU pragma: export
+#include "mbo/hash/hash_fambo.h"          // IWYU pragma: export
 #include "mbo/hash/hash_fnv1a.h"          // IWYU pragma: export
 #include "mbo/hash/hash_internal_util.h"  // IWYU pragma: export
 #include "mbo/hash/hash_mumbo.h"          // IWYU pragma: export

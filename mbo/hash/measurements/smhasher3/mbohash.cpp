@@ -16,6 +16,7 @@
 #include "Hashlib.h"
 // clang-format on
 #include "mbo/hash/hash_dumbo.h"
+#include "mbo/hash/hash_fambo.h"
 #include "mbo/hash/hash_mumbo.h"
 
 //------------------------------------------------------------
@@ -42,6 +43,13 @@ template<bool bswap>
 static void DumboHash64(const void* in, const size_t len, const seed_t seed, void* out) {
   const std::string_view data((const char*)in, len);
   const uint64_t h = ::mbo::hash::dumbo::Algorithm::GetHash64(data, (uint64_t)seed);
+  PUT_U64<bswap>(h, (uint8_t*)out, 0);
+}
+
+template<bool bswap>
+static void FamboHash64(const void* in, const size_t len, const seed_t seed, void* out) {
+  const std::string_view data((const char*)in, len);
+  const uint64_t h = ::mbo::hash::fambo::Algorithm::GetHash64(data, (uint64_t)seed);
   PUT_U64<bswap>(h, (uint8_t*)out, 0);
 }
 
@@ -80,3 +88,14 @@ REGISTER_HASH(
     $.verification_BE = 0x36783BC3,
     $.hashfn_native = DumboHash64<false>,
     $.hashfn_bswap = DumboHash64<true>);
+
+REGISTER_HASH(
+    fambo_64,
+    $.desc = "fambo, mbo/hash in-house 64-bit (fast adaptive MUM)",
+    $.hash_flags = 0,
+    $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
+    $.bits = 64,
+    $.verification_LE = 0xBDF11D70,
+    $.verification_BE = 0x87654321,
+    $.hashfn_native = FamboHash64<false>,
+    $.hashfn_bswap = FamboHash64<true>);

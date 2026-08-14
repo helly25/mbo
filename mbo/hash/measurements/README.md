@@ -190,7 +190,8 @@ two documented fixes (missing `<cstdlib>` in `lib/AEStest.cpp`; replace
 methodology in `../README.md`. The third-party algorithms are SMHasher3
 built-ins and work immediately.
 
-The in-house `mumbo`/`jumbo` and `dumbo` are registered by `smhasher3/mbohash.cpp`,
+The in-house `mumbo`/`jumbo` and `dumbo`, `fambo` are registered by
+`smhasher3/mbohash.cpp`,
 which `#include`s the ACTUAL `mbo/hash` headers (so the real implementation is
 verified, not a transcription). `build_smhasher3.sh` copies the headers + plugin
 into the tree and registers the source, so one script run yields a SMHasher3

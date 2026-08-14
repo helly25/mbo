@@ -664,6 +664,7 @@ constexpr std::size_t CountKatAlgo(kat::Algo algo) {
 static_assert(CountKatAlgo(kat::Algo::kMumbo) >= 20);
 static_assert(CountKatAlgo(kat::Algo::kJumbo) >= 20);
 static_assert(CountKatAlgo(kat::Algo::kDumbo) >= 20);
+static_assert(CountKatAlgo(kat::Algo::kFambo) >= 20);
 // Constexpr smoke (kVectors[0] is mumbo, seed 0, empty input).
 static_assert(mumbo::GetHash64("", 0) == kat::kVectors[0].low);
 
@@ -684,6 +685,9 @@ TEST_F(KnownAnswerTest, InHouseVectors) {
         break;
       case kat::Algo::kDumbo:
         EXPECT_THAT(dumbo::GetHash64(data, seed), Eq(low)) << "dumbo len: " << len << ", seed: " << seed;
+        break;
+      case kat::Algo::kFambo:
+        EXPECT_THAT(fambo::GetHash64(data, seed), Eq(low)) << "fambo len: " << len << ", seed: " << seed;
         break;
     }
   }
