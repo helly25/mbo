@@ -26,6 +26,15 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+cc_test(
+    name = "demangle_test",
+    srcs = ["demangle_test.cc"],
+    deps = [
+        ":demangle_cc",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "log_timing_cc",
     srcs = ["log_timing.cc"],

@@ -39,6 +39,25 @@ cc_library(
     name = "compare_cc",
     hdrs = ["compare.h"],
     visibility = ["//visibility:public"],
+    deps = [":traits_cc"],
+)
+
+cc_test(
+    name = "compare_test",
+    srcs = ["compare_test.cc"],
+    deps = [
+        ":compare_cc",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "variant_test",
+    srcs = ["variant_test.cc"],
+    deps = [
+        ":variant_cc",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_library(

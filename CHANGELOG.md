@@ -1,5 +1,9 @@
 # 0.13.3
 
+- Fixed `mbo::types::IsVariantMemberType`, which was always `false`: its recursion specialised the out-of-range case, so an in-range index fell through to the `false_type` primary template.
+- Added `mbo/types:variant_test` and `mbo/log:demangle_test`.
+- Added `mbo/types:compare_test`, covering `CompareLess`, `CompareFloat`'s NaN total order and `CompareScalar`'s mixed-signedness branches.
+- Fixed `//mbo/types:compare_cc` to declare its dependency on `traits_cc`, which it includes but never listed.
 - Added a `cc-target-naming` pre-commit check (ported from helly25/xff): `cc_library` target names must end in `_cc`. Renamed `hash_internal_util` and `hash_test_util` accordingly.
 - `mbo::types::CompareLess` now declares `is_transparent`, so its existing heterogeneous overloads are reachable through `LimitedSet`/`LimitedMap` instead of every lookup having to build a key first.
 - Extended transparent lookup to every read operation: `LimitedMap::at`, `contains_all`/`contains_any` (which previously rejected foreign keys outright), and `index_of`, so a foreign key now takes the same unrolled fast path as an exact key instead of falling back to a binary search.
