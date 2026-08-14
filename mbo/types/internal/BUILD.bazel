@@ -23,6 +23,15 @@ cc_library(
     hdrs = ["cases.h"],
 )
 
+cc_test(
+    name = "cases_internal_test",
+    srcs = ["cases_test.cc"],
+    deps = [
+        ":cases_cc",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "extender_cc",
     hdrs = ["extender.h"],
@@ -75,6 +84,15 @@ cc_library(
     deps = [
         ":cases_cc",
         "//mbo/types:template_search_cc",
+    ],
+)
+
+cc_test(
+    name = "traits_internal_test",
+    srcs = ["traits_test.cc"],
+    deps = [
+        ":traits_cc",
+        "@googletest//:gtest_main",
     ],
 )
 

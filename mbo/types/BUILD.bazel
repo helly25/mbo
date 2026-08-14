@@ -179,6 +179,15 @@ cc_library(
 )
 
 cc_test(
+    name = "container_proxy_test",
+    srcs = ["container_proxy_test.cc"],
+    deps = [
+        ":container_proxy_cc",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "opaque_test",
     srcs = ["opaque_test.cc"],
     deps = [

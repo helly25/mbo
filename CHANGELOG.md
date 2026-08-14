@@ -1,5 +1,7 @@
 # 0.13.3
 
+- Added tests for `container_proxy_cc`, `cases_cc` and `traits_cc` (internal).
+
 - Fixed `mbo::types::TypedView` to derive from `std::ranges::view_interface` PUBLICLY; private inheritance made every member it supplies inaccessible.
 - Added `mbo/types:typed_view_test`, and normalised colon-less deps in BUILD files.
 
