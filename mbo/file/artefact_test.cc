@@ -21,6 +21,7 @@
 #include <string_view>
 
 #include "absl/status/status.h"
+#include "absl/time/clock.h"
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -100,11 +101,19 @@ TEST_F(ArtefactTest, SkipTimeLeavesTheTimeAtItsDefault) {
   EXPECT_THAT(artefact->time, absl::FromUnixSeconds(0)) << "skip_time means the file's mtime is not read";
 }
 
-TEST_F(ArtefactTest, WithoutSkipTimeTheTimeIsPopulated) {
+TEST_F(ArtefactTest, WithoutSkipTimeReadsTheRealMTime) {
+  const absl::Time before = absl::Now() - absl::Minutes(1);
   const std::string path = Write("timed2.txt", "x");
   const auto artefact = Artefact::Read(path);
   ASSERT_THAT(artefact.status(), absl::OkStatus());
-  EXPECT_THAT(artefact->time > absl::FromUnixSeconds(0), IsTrue()) << "a real mtime was read";
+  // A WINDOW around now, not merely "after the epoch". std::filesystem::file_clock has
+  // an implementation-defined epoch - libc++ uses the Unix epoch, libstdc++ uses
+  // 2174-01-01 - so a conversion that assumes the two clocks share an origin lands
+  // roughly 148 years off. "> epoch" only catches that in the negative direction, and
+  // so passed on macOS while the value was wrong on Linux.
+  EXPECT_THAT(artefact->time > before, IsTrue()) << "mtime is not implausibly old: " << artefact->time;
+  EXPECT_THAT(artefact->time < absl::Now() + absl::Minutes(1), IsTrue())
+      << "mtime is not in the future: " << artefact->time;
 }
 
 TEST_F(ArtefactTest, ReadMaxLinesTruncatesToTheLimit) {
