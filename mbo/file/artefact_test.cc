@@ -45,7 +45,7 @@ struct ArtefactTest : ::testing::Test {
 
   void TearDown() override { fs::remove_all(tmp_dir); }
 
-  std::string Write(const std::string_view name, const std::string_view content) const {
+  std::string Write(std::string_view name, std::string_view content) const {
     const fs::path path = tmp_dir / name;
     std::ofstream out(path);
     out << content;
