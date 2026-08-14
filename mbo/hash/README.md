@@ -609,7 +609,7 @@ numbers are directly comparable.
 | Algorithm   | Bits | Role in mbo/hash          | SMHasher3 result | Failures                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ----------- | ---: | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dumbo`     |   64 | `hash.h` (compact MUM)    | **PASS**         | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `fambo`     |   64 | fast (64)                 | 187/188          | Sanity [Implementation verification]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `fambo`     |   64 | fast (64)                 | 187/188          | Sanity [Implementation verification]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `fnv1a`     |   64 | `hash.h`                  | 7/186            | Avalanche [3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 20, 64, 128], BIC [3, 8, 11, 15], Zeroes [], Cyclic [4 cycles of 3 bytes, 4 cycles of 4 bytes, 4 cycles of 5 bytes, 4 cycles of 8 bytes, 8 cycles of 3 bytes, 8 cycles of 4 bytes, 8 cycles of 5 bytes, 8 cycles of 8 bytes, 12 cycles of 3 bytes, 12 cycles of 4 bytes, 12 cycles of 5 bytes, 12 cycles of 8 bytes, 16 cycles of 3 bytes, 16 cycles of 4 bytes, 16 cycles of 5 bytes, 16 cycles of 8 bytes], Sparse [6/2, 4/3, 4/4, 4/5, 3/6, 3/7, 3/8, 3/9, 3/10, 3/12, 3/14, 10/2, 20/3, 9/4, 5/9, 4/14, 4/16, 3/32, 3/48, 3/64, 3/96, 2/128, 2/256, 2/512, 2/1024, 2/1280] |
 | `mumbo`     |   64 | default (64/32/streaming) | **PASS**         | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `rapidhash` |   64 | extra (`hash_extra_cc`)   | **PASS**         | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -701,39 +701,39 @@ in order to develop a faster algorithm we need to sacrifice some of the `mumbo`
 advantages. So `fambo` is derived from `mumbo` with the primary difference being
 its restriction to 4 lanes.
 
-* **The Architecture: 8 Lanes vs. 4 Lanes**
+- **The Architecture: 8 Lanes vs. 4 Lanes**
 
-  * **mumbo (The High-Quality Heavyweight)**: Natively relies on an 8-lane parallel bulk ingestion tier (a 128-byte window). While this provides exceptional diffusion and statistical guarantees, it demands more architectural registers than a standard x86-64 or ARM64 CPU can comfortably provide without spilling state to the stack (rsp/rbp thrashing). This register starvation effectively stalls the CPU's out-of-order execution engine, limiting the real-world instruction-level parallelism (ILP) you can achieve. The best measured algorithm in the mid/long term
-  usually is `rapidhash` which uses 7 lanes. Conventional wisdom suggests that this is not optimal in many ways (due to
-  compute-engine layout in concrete CPU architectures) and that it should be possible to take advantage of AVX registers
-  and heavy register renaming capabilities. Non-theless, empirically `rapidhash` demonstrates 7 as a sweetspot.
+  - **mumbo (The High-Quality Heavyweight)**: Natively relies on an 8-lane parallel bulk ingestion tier (a 128-byte window). While this provides exceptional diffusion and statistical guarantees, it demands more architectural registers than a standard x86-64 or ARM64 CPU can comfortably provide without spilling state to the stack (rsp/rbp thrashing). This register starvation effectively stalls the CPU's out-of-order execution engine, limiting the real-world instruction-level parallelism (ILP) you can achieve. The best measured algorithm in the mid/long term
+    usually is `rapidhash` which uses 7 lanes. Conventional wisdom suggests that this is not optimal in many ways (due to
+    compute-engine layout in concrete CPU architectures) and that it should be possible to take advantage of AVX registers
+    and heavy register renaming capabilities. Non-theless, empirically `rapidhash` demonstrates 7 as a sweetspot.
 
-  * **fambo (The Lean Speed Demon)**: In the first generation `fambo` intentionally scales the core loop tier down to 4 completely independent lanes, shrinking the bulk window to 64 bytes. This matches standard CPU L1 cache line boundaries perfectly and frees up critical hardware registers. Combined with an explicit read-before-write temporary variable layout, it gives the compiler full clearance to schedule all four Mul128Fold64 pipelines concurrently, maximizing ILP and matching the throughput of ultra-fast hashes like `rapidhash`. However, measurement shows that after 1 KiB of input both `numbo` and `rapidhash` win. Presumably this is the switch from L1 to L2 cache where data fetching takes longer and the higher parallelism wins out. Below 1 KiB `fambo` 1st gen sits between the two, and for some sizes is out right slower anyway. This indicates that a flexible and compile time configurable approach is needed.
+  - **fambo (The Lean Speed Demon)**: In the first generation `fambo` intentionally scales the core loop tier down to 4 completely independent lanes, shrinking the bulk window to 64 bytes. This matches standard CPU L1 cache line boundaries perfectly and frees up critical hardware registers. Combined with an explicit read-before-write temporary variable layout, it gives the compiler full clearance to schedule all four Mul128Fold64 pipelines concurrently, maximizing ILP and matching the throughput of ultra-fast hashes like `rapidhash`. However, measurement shows that after 1 KiB of input both `numbo` and `rapidhash` win. Presumably this is the switch from L1 to L2 cache where data fetching takes longer and the higher parallelism wins out. Below 1 KiB `fambo` 1st gen sits between the two, and for some sizes is out right slower anyway. This indicates that a flexible and compile time configurable approach is needed.
 
-  * **tail if-ladder and small finalizer**: At the end of the block we have at most the block size minus one bytes to process. And have at least the tiniy size (16 bytes) to process. So we can use an if-ladder (block count - 1)
-  before the final read (backtracked using remaining legth). And finally we do an actual finalizer that uses the remainder (instead of size, after bulk processing).
+  - **tail if-ladder and small finalizer**: At the end of the block we have at most the block size minus one bytes to process. And have at least the tiniy size (16 bytes) to process. So we can use an if-ladder (block count - 1)
+    before the final read (backtracked using remaining legth). And finally we do an actual finalizer that uses the remainder (instead of size, after bulk processing).
 
-  * **further potential**: While 4 lanes proovingly allows for full ILP, it has to be proven still what the maximum
-  lane count is that modent CPUs can handle (4, 5, 6, or 7). However, this is a compromise:
-    * More lanes in the bulk block, means faster bulk processing.
-    * More lanes also has a potential for slower processing of the non tiny, non bulk range `[17, N * 64]`.
-    * More lanes likely mean fewer mix-in constants can be used (otherwise they would constantly needing to be fetched from L1 cache.
+  - **further potential**: While 4 lanes proovingly allows for full ILP, it has to be proven still what the maximum
+    lane count is that modent CPUs can handle (4, 5, 6, or 7). However, this is a compromise:
+    - More lanes in the bulk block, means faster bulk processing.
+    - More lanes also has a potential for slower processing of the non tiny, non bulk range `[17, N * 64]`.
+    - More lanes likely mean fewer mix-in constants can be used (otherwise they would constantly needing to be fetched from L1 cache.
 
-* **The Finalization & Distribution Trade-off**
+- **The Finalization & Distribution Trade-off**
 
-  * **Quality Matrix**: mumbo uses a strict, multi-multiply finalizer tree that mixes both halves of widening 128-bit products back against each other. This heavy mathematical overhead ensures it easily passes 188/188 tests in the SMHasher3 battery, making it highly resilient against worst-case, sparse, or structured data distributions.
+  - **Quality Matrix**: mumbo uses a strict, multi-multiply finalizer tree that mixes both halves of widening 128-bit products back against each other. This heavy mathematical overhead ensures it easily passes 188/188 tests in the SMHasher3 battery, making it highly resilient against worst-case, sparse, or structured data distributions.
 
-  * **Streamlined Finalization**: fambo optimizes the latency of small keys (≤16 bytes) by dropping to a streamlined, high-efficiency mixing step. While its raw speed is dramatically higher, early iterations risked structural symmetry issues (like the Sanity and Zeroes failures in SMHasher3). By isolating seed transformations from length injection and isolating lane variables using distinct secret primes, fambo maintains its hardware-sympathetic speed edge without dropping its guard on distribution quality.
+  - **Streamlined Finalization**: fambo optimizes the latency of small keys (≤16 bytes) by dropping to a streamlined, high-efficiency mixing step. While its raw speed is dramatically higher, early iterations risked structural symmetry issues (like the Sanity and Zeroes failures in SMHasher3). By isolating seed transformations from length injection and isolating lane variables using distinct secret primes, fambo maintains its hardware-sympathetic speed edge without dropping its guard on distribution quality.
 
-* **Bottom Line**
+- **Bottom Line**
 
-  Metric / Feature   | mumbo                                | fambo
-  -------------------|--------------------------------------|-----------
-  Bulk Window Size   | 128 Bytes	                        | 64 Bytes
-  Register Pressure  | High (Potential stack spilling)      | Low (Pure register execution)
-  ILP Efficiency	 | Restricted by register availability  | Maximum (Concurrent lane dispatch)
-  Small Key Latency  | Higher cycle overhead                | Ultra-low cycle overhead
-  Primary Target     | General-purpose safety & strict maps | Hot execution paths & data pipelines
+  | Metric / Feature  | mumbo                                | fambo                                |
+  | ----------------- | ------------------------------------ | ------------------------------------ |
+  | Bulk Window Size  | 128 Bytes                            | 64 Bytes                             |
+  | Register Pressure | High (Potential stack spilling)      | Low (Pure register execution)        |
+  | ILP Efficiency    | Restricted by register availability  | Maximum (Concurrent lane dispatch)   |
+  | Small Key Latency | Higher cycle overhead                | Ultra-low cycle overhead             |
+  | Primary Target    | General-purpose safety & strict maps | Hot execution paths & data pipelines |
 
 ### dumbo: the measured design iterations
 
