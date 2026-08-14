@@ -49,7 +49,7 @@ cc_test(
     size = "small",
     srcs = ["file_test.cc"],
     deps = [
-        "file_cc",
+        ":file_cc",
         "//mbo/testing:status_cc",
         "@abseil-cpp//absl/status",
         "@googletest//:gtest",

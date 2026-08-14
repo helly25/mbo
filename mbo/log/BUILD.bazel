@@ -54,7 +54,7 @@ cc_test(
     size = "small",
     srcs = ["log_timing_test.cc"],
     deps = [
-        "log_timing_cc",
+        ":log_timing_cc",
         "@abseil-cpp//absl/base:log_severity",
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/log:initialize",
@@ -77,7 +77,7 @@ cc_test(
     size = "small",
     srcs = ["scoped_stream_test.cc"],
     deps = [
-        "scoped_stream_cc",
+        ":scoped_stream_cc",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
@@ -94,7 +94,7 @@ cc_test(
     size = "small",
     srcs = ["scoped_log_check_test.cc"],
     deps = [
-        "scoped_log_check_cc",
+        ":scoped_log_check_cc",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],

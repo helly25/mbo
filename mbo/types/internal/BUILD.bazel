@@ -83,7 +83,7 @@ cc_library(
     testonly = 1,
     hdrs = ["test_types.h"],
     deps = [
-        "cases_cc",
+        ":cases_cc",
         "@googletest//:gtest",
     ],
 )

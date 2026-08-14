@@ -41,7 +41,7 @@ cc_test(
         "tests/*.ini",
     ]),
     deps = [
-        "ini_file_cc",
+        ":ini_file_cc",
         "//mbo/diff:diff_cc",
         "//mbo/file:artefact_cc",
         "//mbo/file:file_cc",
