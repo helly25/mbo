@@ -11,13 +11,18 @@ an AI assistant) can follow them without reverse-engineering the tooling.
   best-effort basis.
 - **`clang-format`** with [`.clang-format`](.clang-format) formats all C++ code. Run
   it; do not hand-format against it. CI rejects any reformatting diff.
-- **`clang-tidy`** with [`.clang-tidy`](.clang-tidy) (`WarningsAsErrors: true`) runs **locally**
-  via `trunk` (a `trunk check` and the editor daemon) against a `compile_commands.json` you
-  generate with `bazel run @hedron_compile_commands//:refresh_all`. **CI does not run it** (no
-  compile DB there), so CI's hard gate is the compiler `-Werror` in the bazel matrix; still treat
-  a clang-tidy finding as a must-fix before pushing. The enabled set is broad: `abseil-*`,
-  `bugprone-*`, `cppcoreguidelines-*`, `google-*`, `misc-*`, `modernize-*`, `performance-*`,
-  `portability-*`, `readability-*`.
+- **`clang-tidy`** with [`.clang-tidy`](.clang-tidy) (`WarningsAsErrors: '*'`) runs via the
+  opt-in `clang-tidy` pre-commit hook (`pre-commit run clang-tidy --all-files --hook-stage manual`,
+  which shells out to [`tools/clang_tidy.sh`](tools/clang_tidy.sh)) against a `compile_commands.json`
+  you generate with [`./compile_commands-update.sh`](compile_commands-update.sh). It is report-only
+  (never `--fix`) and needs a hermetic clang-tidy (>= clang-22 for this C++23 code); it skips cleanly
+  when either is missing. It is **not** run by `trunk` (trunk pinned clang-tidy 16, which mis-parses
+  C++23 and auto-applied build-breaking fixes - do not re-add it there). In **CI** the dedicated
+  `clang-tidy` job owns it: it builds the compile DB (`compile_commands-update.sh`, hermetic clang)
+  and runs this hook, report-only (`continue-on-error`) until the finding sweep lands, then a hard
+  gate. A branch lints only the sources it changed; `main` lints the whole tree. The enabled set is
+  broad: `abseil-*`, `bugprone-*`, `cppcoreguidelines-*`, `google-*`, `misc-*`, `modernize-*`,
+  `performance-*`, `portability-*`, `readability-*`.
 
 ### What `.clang-format` decides (do not fight it)
 
@@ -94,6 +99,14 @@ clang-format picks a layout per line; these habits steer it toward the readable 
    };
    ```
 
+   **In a long array of struct literals - a registry-style table such as `kGlobals` or
+   `kDescriptors` - put the trailing comma on _every_ element**, even the short ones that
+   would fit on a single line, so clang-format expands the whole table uniformly, one
+   field per line. A consistent table you scroll through reads better than a mix of
+   one-liners and exploded rows packed to save height. This stays a deliberate, per-table
+   choice made element by element: `InsertTrailingCommas` is off (we do not always want
+   trailing commas), so clang-format never forces it for you.
+
 3. **Force a line break with a comment rather than let clang-format cram a value at the right
    margin.** A long argument - especially a raw string such as a proto `R"pb(...)pb"` - otherwise
    gets packed onto the call line and shoved against the 120 column, unreadable. A trailing
@@ -143,12 +156,34 @@ clang-format picks a layout per line; these habits steer it toward the readable 
     cache-friendlier. In tests, `std::map` / `std::set` are fine.
   - Small compile-time tables: `mbo::container::LimitedMap` / `LimitedSet`.
   - A type-detection trait may name a `std::` container type freely - it must, to recognize it.
-- **A by-value `std::string_view` is never `const`.** The characters it views are already
-  `const`; making the view itself `const` only disables the view's own API
-  (`remove_prefix`, `remove_suffix`, reassignment) for no benefit. This applies to locals
-  and range-`for` variables. (Not to `std::string_view::size_type`, which is a `size_t`,
-  nor to `absl::Span<const std::string_view>`, where `const` is the element type of an
-  immutable span.)
+- **A read-only string parameter is `std::string_view` (by value), not `const std::string&`.**
+  This is pretty much always: a `std::string_view` binds to a `std::string`, a string literal,
+  a `char*`, or another view with no allocation and no `.c_str()` dance, so the `const&` only
+  narrows what callers may pass. Keep `const std::string&` (or `std::string` by value) only
+  when the body genuinely needs a `std::string` - it calls `.c_str()` for a C API, stores or
+  moves the argument, or passes it to something that itself wants `const std::string&`.
+- **A by-value `std::string_view` follows ordinary const-correctness: `const` when you never
+  mutate the view, non-`const` only when you do.** The characters it views are already `const`,
+  but the view itself is a normal local: `const` documents that you never reslice or reassign it,
+  and `misc-const-correctness` (enabled) flags a never-mutated view that is not `const`. Drop the
+  `const` exactly when you mutate the view in place - `remove_prefix`, `remove_suffix`, or
+  reassignment. (This concerns the view; not `std::string_view::size_type`, which is a `size_t`,
+  nor `absl::Span<const std::string_view>`, where `const` is the span's element type.)
+  **Corollary: when a loop view needs trimming, iterate a mutable (non-`const`) by-value view and
+  mutate it in place - never `const` the loop view and then copy it to a mutable local just to
+  mutate the copy.**
+
+  ```cpp
+  const std::string_view name = label.empty() ? id : label;      // read-only: const
+  for (std::string_view line : absl::StrSplit(text, '\n')) {      // mutated: non-const, trim in place
+    if (!line.empty() && line.back() == '\r') line.remove_suffix(1);
+  }
+  for (const std::string_view raw : absl::StrSplit(text, '\n')) {  // no: const + copy-to-mutate
+    std::string_view line = raw;
+    if (!line.empty() && line.back() == '\r') line.remove_suffix(1);
+  }
+  ```
+
 - **Do not overload `const T*` to express "optional" or to conflate omission with value.** A
   raw pointer mixes nullability, the pointed-at value, and ownership/lifetime into one type
   the caller has to second-guess. For an optional reference use
@@ -173,6 +208,10 @@ Propagate errors with the macros from `mbo/status/status_macros.h`
 (`@helly25_mbo//mbo/status:status_macros_cc`), not a hand-written
 `if (!x.ok()) return x.status();`.
 
+- **A "value or error" type IS `absl::StatusOr<T>`.** Do not hand-roll a struct that bundles
+  a value (or a `std::vector` / `std::optional`) with an `absl::Status` plus an "ok" flag:
+  `absl::StatusOr<T>` is exactly that, enforces the not-ok-has-no-value invariant by
+  construction, composes with the macros below, and matches every other API.
 - **`MBO_RETURN_IF_ERROR(expr)`** evaluates a `Status` or `StatusOr` and returns early if
   it is not OK. It returns a `mbo::status::StatusBuilder`, which converts to the calling
   function's `absl::Status` or `absl::StatusOr<T>`, so it works in both.
@@ -294,6 +333,11 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
   give far better failure messages. The accepted exception is the boolean `EXPECT_TRUE` /
   `EXPECT_FALSE` (and `ASSERT_TRUE` / `ASSERT_FALSE`), which read fine on their own. Within a
   single test keep one style - do not mix, say, `EXPECT_TRUE(x)` and `EXPECT_THAT(y, IsTrue())`.
+- **Name matchers unqualified - never the `::testing::` prefix inline.** Bring each matcher in with
+  a `using ::testing::Foo;` (or `using ::mbo::testing::Foo;`) in the test file's anonymous namespace
+  and use the bare name in the `EXPECT_THAT` / `ASSERT_THAT` expression; a `::testing::Foo(...)`
+  written inline in an assertion is the smell to fix by adding the `using`. (Fixture utilities such
+  as `::testing::Test` / `::testing::TempDir` are not matchers and keep their qualification.)
 - **`Eq` is optional - a readability choice, not a rule.** `EXPECT_THAT(x, value)` auto-wraps a
   bare value in `Eq`, so both forms compile. The value of `EXPECT_THAT` is that the line reads as
   a sentence - `EXPECT_THAT(foo, Eq(25))` is "expect that foo equals 25" - so keep `Eq` where it
@@ -303,6 +347,41 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
   below). Strings sometimes need `StrEq` (e.g. a `char*` subject, where bare `Eq` compares
   pointers). For booleans, `IsTrue()` / `IsFalse()` usually read better than a bare `true` /
   `false` or `Eq(true)`: `EXPECT_THAT(found, IsTrue())`.
+- **Multi-line text: `mbo::testing::EqualsText`, not `EXPECT_EQ`.** For a multi-line string
+  (a rendered table, generated `--help`, file contents) prefer
+  `EXPECT_THAT(actual, EqualsText(golden))` (`//mbo/testing:matchers_cc`): it compares line by line
+  with unified-diff output, so a mismatch points at the offending line instead of dumping the whole
+  blob. A bare `EXPECT_EQ` on a multi-line string is now only the fallback for text that is not
+  line-oriented.
+  - **Write the golden as a `DropIndent`-filtered raw string, not concatenated `"...\n"` literals.**
+    `clang-format` shoves adjacent string literals hard against the `EqualsText(` bracket (aligned to
+    the open paren, often at column ~35), which is unreadable and drifts with the call length. Instead
+    write the expected block as an indented raw string and strip the source indent with
+    `WithDropIndent`, which `clang-format` leaves untouched:
+
+    ```cpp
+    using ::mbo::testing::EqualsText;
+    using ::mbo::testing::WithDropIndent;
+    EXPECT_THAT(RenderTable(Format::kAligned, header, rows), WithDropIndent(EqualsText(R"out(
+        name    size
+        ------  ----
+        a.txt   3
+        )out")));
+    ```
+
+    `mbo::strings::DropIndent` (which `WithDropIndent` applies to the **expected** text only) drops the
+    empty first line after `R"out(`, strips the first content line's indent from every line, and clears
+    a whitespace-only last line - so the block reads as the literal expected output. The subject stays
+    as-is; only de-indent it too (`EXPECT_THAT(DropIndent(actual), WithDropIndent(EqualsText(golden)))`,
+    `//mbo/strings:indent_cc`) when the actual is itself an indented literal. Use any raw delimiter
+    (`R"out(`, `R"md(`); a raw string also needs no `\n` / `\\` escaping.
+
+  - **Caveat - trailing whitespace.** A raw-string golden cannot carry significant _trailing_ spaces on
+    a line: the `trim trailing whitespace` pre-commit hook strips them, silently changing the golden. If
+    the expected output has meaningful trailing whitespace (e.g. right-padded columns), fall back to the
+    concatenated-literal form for that case and accept the paren alignment.
+  - `DropIndentAndSplit` returns the de-indented lines as a `std::vector<std::string_view>` for when you
+    would rather match them with `ElementsAre`.
 - **Floats / doubles**: never `Eq` / `==`; use `FloatEq` / `DoubleEq` (or `Near`).
 - **Optionals**: `EXPECT_THAT(opt, Eq(std::nullopt))` for empty, `Optional(...)` for a
   value. Nested matchers do **not** auto-wrap: `Optional(Eq("x"))` and `Pointee(Eq("x"))`
@@ -311,6 +390,22 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
   `IsEmpty()` cover size + order + contents in one matcher, instead of an
   `ASSERT_EQ(v.size(), n)` followed by indexed `EXPECT_EQ`s. `ElementsAre` auto-wraps
   each bare element in `Eq`.
+  - **For a longer matcher list, prefer `ElementsAreArray({m1, ..., mN,})` with a
+    trailing comma over `ElementsAre(m1, ..., mN)`.** `ElementsAre` is variadic, so
+    clang-format bin-packs it into an unreadable run; `ElementsAreArray` takes a
+    braced init-list, so the manual trailing comma opts it into one-matcher-per-line
+    (the same trailing-comma lever as any aggregate, see the Formatting section).
+    A short list that reads on one line stays `ElementsAre`.
+- **Size and emptiness: match the container, never extract then match.** Use
+  `SizeIs` / `IsEmpty` on the container itself, not `.size()` / `.empty()` fed to a
+  scalar matcher or `EXPECT_TRUE` - the matcher form prints the container on failure
+  while the extracted form throws it away. So:
+  - `EXPECT_THAT(v, SizeIs(3))`, not `EXPECT_THAT(v.size(), 3)` / `EXPECT_EQ(v.size(), 3)`.
+  - `SizeIs` composes with a matcher for bounds: `EXPECT_THAT(v, SizeIs(Le(90)))`,
+    not `EXPECT_THAT(v.size(), Le(90))`.
+  - `EXPECT_THAT(v, IsEmpty())` / `EXPECT_THAT(v, Not(IsEmpty()))`, not
+    `EXPECT_TRUE(v.empty())` / `EXPECT_FALSE(v.empty())` (this is the one place a
+    `.empty()` boolean should still become a matcher).
 - **Struct elements**: fold per-field checks into the element matcher with the
   **3-arg, named** `Field("member", &T::member, m)` + `AllOf`, ideally via a small
   `testing::Matcher<T> FooIs(...)` helper, so a mismatch names the field rather than
@@ -345,6 +440,24 @@ serialized-string comparison. See the Protocol Buffers section.
 - Use **helly25/bashtest** (`bazel_dep(name = "helly25_bashtest")`), not a hand-rolled
   `sh_test`: `load("@helly25_bashtest//bashtest:bashtest.bzl", "bashtest")`, then a
   script that `source`s `"${helly25_bashtest}"`, defines `test::name()` functions using
-  `expect_eq` / `expect_contains` / `expect_not_contains`, and ends with `test_runner`.
+  the `expect_*` assertions, and ends with `test_runner`.
+- **Assert on captured output with bashtest's content matchers (>= 0.5.0), never a
+  hand-rolled `grep`.** `expect_output_contains` / `expect_output_not_contains` for a
+  literal substring; `expect_matches` / `expect_not_matches` for an ERE. They take the
+  pattern / substring **first** and the text **second**, and match via bash's built-in
+  `[[ =~ ]]` (no subprocess), so - unlike `printf ... | grep -qE` - they cannot misfire
+  on SIGPIPE under `set -o pipefail`. `expect_eq` / `expect_ne` stay for scalar checks
+  (exit codes, counts); `expect_contains` / `expect_not_contains` are **array**-membership,
+  not substring. Do not reintroduce a `_has`-style `grep -q` wrapper.
+  - **Anchoring caveat:** `expect_matches` matches the **whole** text, so `^` / `$` anchor
+    the whole output, not a line (unlike `grep`). For a per-line anchor use a real newline:
+    `NL=$'\n'`, then `(^|${NL})X` for a line start and `X($|${NL})` for a line end (`\n` is
+    not a portable ERE escape, so embed the newline via `${NL}`).
+- **For a whole-output-per-case golden, prefer a golden-file test over scraping.** When a
+  test wants to lock an entire rendered output (not just probe for substrings), commit one
+  expected-output file per case and diff against it with `diff_test`
+  ([`//mbo/diff:diff.bzl`](mbo/diff/diff.bzl)), which fails printing the offending diff.
+  This is the output analogue of `EqualsText` for C++ and reads far better than a pile of
+  `expect_output_contains` probes.
 - It runs under macOS bash 3.2: **no `mapfile` / `readarray`** or other bash-4 features.
   Read lines with `while IFS= read -r line; do arr+=("$line"); done <<< "$out"`.

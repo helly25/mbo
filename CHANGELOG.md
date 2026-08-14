@@ -1,10 +1,34 @@
 # 0.13.3
 
+- Fixed `mbo::types::IsVariantMemberType`, which was always `false`: its recursion specialised the out-of-range case, so an in-range index fell through to the `false_type` primary template.
+- Added `mbo/types:variant_test` and `mbo/log:demangle_test`.
+- Added `mbo/types:compare_test`, covering `CompareLess`, `CompareFloat`'s NaN total order and `CompareScalar`'s mixed-signedness branches.
+- Fixed `//mbo/types:compare_cc` to declare its dependency on `traits_cc`, which it includes but never listed.
+- Added a `cc-target-naming` pre-commit check (ported from helly25/xff): `cc_library` target names must end in `_cc`. Renamed `hash_internal_util` and `hash_test_util` accordingly.
+- `mbo::types::CompareLess` now declares `is_transparent`, so its existing heterogeneous overloads are reachable through `LimitedSet`/`LimitedMap` instead of every lookup having to build a key first.
+- Extended transparent lookup to every read operation: `LimitedMap::at`, `contains_all`/`contains_any` (which previously rejected foreign keys outright), and `index_of`, so a foreign key now takes the same unrolled fast path as an exact key instead of falling back to a binary search.
+- `LimitedSet`/`LimitedMap` `erase` no longer constructs a key when the comparator is transparent, and its template overload is now constrained to foreign keys only.
+- Added transparent (heterogeneous) lookup to `LimitedSet`/`LimitedMap`: when the comparator declares `is_transparent`, `find`, `contains`, `count`, `index_of`, `lower_bound`, `upper_bound` and `equal_range` accept any type the comparator can order against the key, without constructing a key.
+- Fixed `LimitedOrdered::count` which returned `last - false` instead of `last - first` and did not compile at all (no test instantiated it).
+- Added a `library-test-coverage` pre-commit check: every `cc_library` under `//mbo/...` must be reachable from some test target.
 - Added `diff-charts` sub-command for the `hash_benchmark_report.py` tool.
 - Added `bundle-context` sub-command for the `hash_benchmark_report.py` tool.
 - Updated `mumbo` to V5 which aims at improved Instruction-level parallelism (ILP).
 - Improved publish for `hash_benchmark_report.py` which updates README.md with the latest benchmark results, charts and quality tables.
 - Added `--cwd` param to `mbo/digest` tool.
+- Added `mbo_log::ScopedStream*` helpers.
+- Added macro `MBO_LOG_CHECK`: A local optimized check implementation, it only processes the log stream if its `check` is false.
+- Moved `clang-tidy` from `trunk` to the opt-in `clang-tidy` pre-commit hook (`tools/clang_tidy.sh`).
+- Fixed `.clang-tidy`: `WarningsAsErrors` never escalated findings, and a misspelled option key was dead.
+- Disabled `llvm-header-guard` and `llvm-prefer-static-over-anonymous-namespace`, which contradict `STYLE_CPP.md`.
+- Fixed `compile_commands-update.sh` to record the hermetic clang, so clangd and clang-tidy parse what `--config=clang` builds.
+- Dropped 196 duplicate exec-configuration compile commands via the extractor's new `--bcce-prefer-target-config`.
+- Fixed `IniFile::SetKey` to move its `std::string&&` instead of copying it through `assign`.
+- Removed a pointless `std::floor` over integer division in `mbo/strings/numbers.h`, which round-tripped a `size_t` through `double`.
+- Fixed `mbo::types::tstring::is` to take its ignored argument by const reference rather than by value.
+- Promoted `clang-tidy` to an enforcing pre-commit gate: it now runs automatically on the C++ sources a commit touches, and any finding fails the commit.
+- Exempted the standard-mandated container member type names (`value_type`, `size_type`, ...) from `readability-identifier-naming`, which demanded CamelCase the standard does not permit.
+- Disabled `misc-use-internal-linkage` (its only fix is `static`, while `STYLE_CPP.md` wants an anonymous namespace) and `readability-redundant-parentheses` (its fix deletes the `__builtin_dump_struct` callee).
 
 # 0.13.2
 

@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_TYPES_VARIANT_H
-#define MBO_TYPES_VARIANT_H
+#ifndef MBO_TYPES_VARIANT_H_
+#define MBO_TYPES_VARIANT_H_
 
 #include <type_traits>
 #include <variant>
@@ -43,7 +43,7 @@ template<
     bool = Index<std::variant_size_v<V>> struct IsVariantMemberType : std::false_type {};
 
 template<typename V, typename T, std::size_t Index>
-struct IsVariantMemberType<V, T, Index, false>
+struct IsVariantMemberType<V, T, Index, true>
     : std::bool_constant<
           std::same_as<T, std::variant_alternative_t<Index, V>> || IsVariantMemberType<V, T, Index + 1>::value> {};
 
@@ -67,6 +67,9 @@ concept IsVariantMemberType = types_internal::IsVariantMemberType<Variant, Type,
 // )
 // ```
 template<class... Ts>
+// Inheriting each callable IS the overload-set mechanism; `using Ts::operator()...`
+// below is its whole purpose.
+// NOLINTNEXTLINE(misc-multiple-inheritance)
 struct Overloaded : Ts... {
   using Ts::operator()...;
 };
@@ -75,4 +78,4 @@ Overloaded(Ts...) -> Overloaded<Ts...>;
 
 }  // namespace mbo::types
 
-#endif  // MBO_TYPES_VARIANT_H
+#endif  // MBO_TYPES_VARIANT_H_

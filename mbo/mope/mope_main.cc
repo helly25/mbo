@@ -55,38 +55,52 @@ ABSL_FLAG(
 
 namespace mbo {
 
+namespace {
 struct Options {
   std::string template_name;
   std::string generate_name;
 };
+}  // namespace
 
 namespace {
+
+// Applies a single `--set=<key>=<value>` argument. The key may be a ':' separated section path, in
+// which case the value is set on the addressed (possibly nested) section; without a path it becomes
+// a global context value. No path component may be empty.
+absl::Status ApplySetFlag(
+    std::string_view set_kv,
+    mbo::mope::Template& mope_template,
+    absl::flat_hash_map<std::string, std::string>& context_data) {
+  static constexpr std::string_view kEmptyPartError =
+      "No part of the key in `--set=<key>=<value>` may be empty if split by ':'.";
+  const auto [names, value] = std::pair<std::string_view, std::string_view>(absl::StrSplit(set_kv, '='));
+  std::vector<std::string_view> section_names = absl::StrSplit(names, ':');
+  const std::string_view key = section_names.back();
+  if (key.empty()) {
+    return absl::InvalidArgumentError(kEmptyPartError);
+  }
+  section_names.pop_back();
+  if (section_names.size() == 1 && section_names[0].empty()) {
+    context_data[key].assign(value);  // Global context_data
+    return absl::OkStatus();
+  }
+  auto* section = &mope_template;
+  for (const std::string_view section_name : section_names) {
+    if (section_name.empty()) {
+      return absl::InvalidArgumentError(kEmptyPartError);
+    }
+    MBO_ASSIGN_OR_RETURN(section, section->AddSection(section_name));
+  }
+  return section->SetValue(key, value);
+}
+
 absl::Status Process(const Options& opts) {
   auto input = mbo::file::Artefact::Read(opts.template_name);
   mbo::mope::Template mope_template;
   // Add `--set` flag values.
   absl::flat_hash_map<std::string, std::string> context_data;
   for (const auto& set_kv : absl::GetFlag(FLAGS_set)) {
-    const auto [names, value] = std::pair<std::string_view, std::string_view>(absl::StrSplit(set_kv, '='));
-    std::vector<std::string_view> section_names = absl::StrSplit(names, ':');
-    std::string_view key = section_names.back();
-    if (key.empty()) {
-      return absl::InvalidArgumentError("No part of the key in `--set=<key>=<value>` may be empty if split by ':'.");
-    }
-    section_names.pop_back();
-    if (section_names.size() == 1 && section_names[0].empty()) {
-      context_data[key].assign(value);  // Global context_data
-    } else {
-      auto* section = &mope_template;
-      for (std::string_view section_name : section_names) {
-        if (section_name.empty()) {
-          return absl::InvalidArgumentError(
-              "No part of the key in `--set=<key>=<value>` may be empty if split by ':'.");
-        }
-        MBO_ASSIGN_OR_RETURN(section, section->AddSection(section_name));
-      }
-      MBO_RETURN_IF_ERROR(section->SetValue(key, value));
-    }
+    MBO_RETURN_IF_ERROR(ApplySetFlag(set_kv, mope_template, context_data));
   }
   // Read `--ini` file if present.
   const std::string ini_filename = absl::GetFlag(FLAGS_ini);

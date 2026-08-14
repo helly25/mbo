@@ -42,7 +42,7 @@ cc_library(
     ],
     hdrs = ["digest.h"],
     visibility = ["//visibility:public"],
-    deps = ["//mbo/hash:hash_internal_util"],
+    deps = ["//mbo/hash:hash_internal_util_cc"],
 )
 
 cc_test(

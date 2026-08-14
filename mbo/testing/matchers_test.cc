@@ -304,44 +304,44 @@ TEST_F(MatcherTest, IsElementOfEmptyDescriptions) {
 }
 
 TEST_F(MatcherTest, IsKeyAndIsValueOfMap) {
-  const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
-  EXPECT_THAT(1, IsKeyOf(m));
-  EXPECT_THAT(2, IsKeyOf(m));
-  EXPECT_THAT(3, Not(IsKeyOf(m)));
-  EXPECT_THAT("a", IsValueOf(m));
-  EXPECT_THAT("b", IsValueOf(m));
-  EXPECT_THAT("z", Not(IsValueOf(m)));
+  const std::map<int, std::string> map{{1, "a"}, {2, "b"}};
+  EXPECT_THAT(1, IsKeyOf(map));
+  EXPECT_THAT(2, IsKeyOf(map));
+  EXPECT_THAT(3, Not(IsKeyOf(map)));
+  EXPECT_THAT("a", IsValueOf(map));
+  EXPECT_THAT("b", IsValueOf(map));
+  EXPECT_THAT("z", Not(IsValueOf(map)));
 }
 
 TEST_F(MatcherTest, IsKeyAndIsValueOfEmptyMap) {
-  const std::map<int, std::string> m;
-  EXPECT_THAT(0, Not(IsKeyOf(m)));
-  EXPECT_THAT(42, Not(IsKeyOf(m)));
-  EXPECT_THAT("", Not(IsValueOf(m)));
-  EXPECT_THAT("anything", Not(IsValueOf(m)));
+  const std::map<int, std::string> map;
+  EXPECT_THAT(0, Not(IsKeyOf(map)));
+  EXPECT_THAT(42, Not(IsKeyOf(map)));
+  EXPECT_THAT("", Not(IsValueOf(map)));
+  EXPECT_THAT("anything", Not(IsValueOf(map)));
 }
 
 TEST_F(MatcherTest, IsKeyAndIsValueOfUnorderedMap) {
-  const std::unordered_map<int, std::string> m{{1, "a"}, {2, "b"}};
-  EXPECT_THAT(1, IsKeyOf(m));
-  EXPECT_THAT(2, IsKeyOf(m));
-  EXPECT_THAT(3, Not(IsKeyOf(m)));
-  EXPECT_THAT("a", IsValueOf(m));
-  EXPECT_THAT("b", IsValueOf(m));
-  EXPECT_THAT("z", Not(IsValueOf(m)));
+  const std::unordered_map<int, std::string> map{{1, "a"}, {2, "b"}};
+  EXPECT_THAT(1, IsKeyOf(map));
+  EXPECT_THAT(2, IsKeyOf(map));
+  EXPECT_THAT(3, Not(IsKeyOf(map)));
+  EXPECT_THAT("a", IsValueOf(map));
+  EXPECT_THAT("b", IsValueOf(map));
+  EXPECT_THAT("z", Not(IsValueOf(map)));
 }
 
 TEST_F(MatcherTest, IsKeyAndIsValueOfMultimap) {
   // multimap allows duplicate keys; from the membership orientation duplicate
   // entries are simply both present.
-  const std::multimap<int, std::string> mm{{1, "a"}, {1, "b"}, {2, "c"}};
-  EXPECT_THAT(1, IsKeyOf(mm));
-  EXPECT_THAT(2, IsKeyOf(mm));
-  EXPECT_THAT(3, Not(IsKeyOf(mm)));
-  EXPECT_THAT("a", IsValueOf(mm));
-  EXPECT_THAT("b", IsValueOf(mm));
-  EXPECT_THAT("c", IsValueOf(mm));
-  EXPECT_THAT("z", Not(IsValueOf(mm)));
+  const std::multimap<int, std::string> multi_map{{1, "a"}, {1, "b"}, {2, "c"}};
+  EXPECT_THAT(1, IsKeyOf(multi_map));
+  EXPECT_THAT(2, IsKeyOf(multi_map));
+  EXPECT_THAT(3, Not(IsKeyOf(multi_map)));
+  EXPECT_THAT("a", IsValueOf(multi_map));
+  EXPECT_THAT("b", IsValueOf(multi_map));
+  EXPECT_THAT("c", IsValueOf(multi_map));
+  EXPECT_THAT("z", Not(IsValueOf(multi_map)));
 }
 
 TEST_F(MatcherTest, IsKeyOfStringMap) {
@@ -356,8 +356,8 @@ TEST_F(MatcherTest, IsKeyOfStringMap) {
 }
 
 TEST_F(MatcherTest, IsKeyOfDescriptions) {
-  const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
-  const ::testing::Matcher<int> matcher = IsKeyOf(m);
+  const std::map<int, std::string> map{{1, "a"}, {2, "b"}};
+  const ::testing::Matcher<int> matcher = IsKeyOf(map);
   EXPECT_THAT(Describe(matcher), "is a key of {1, 2}");
   EXPECT_THAT(DescribeNegation(matcher), "is not a key of {1, 2}");
   EXPECT_THAT(MatchAndExplain(matcher, 1), Pair(true, "which equals element #0 (1)"));
@@ -365,16 +365,16 @@ TEST_F(MatcherTest, IsKeyOfDescriptions) {
 }
 
 TEST_F(MatcherTest, IsKeyOfEmptyMapDescriptions) {
-  const std::map<int, std::string> m;
-  const ::testing::Matcher<int> matcher = IsKeyOf(m);
+  const std::map<int, std::string> map;
+  const ::testing::Matcher<int> matcher = IsKeyOf(map);
   EXPECT_THAT(Describe(matcher), "is a key of {}");
   EXPECT_THAT(DescribeNegation(matcher), "is not a key of {}");
   EXPECT_THAT(MatchAndExplain(matcher, 42), Pair(false, ""));
 }
 
 TEST_F(MatcherTest, IsValueOfDescriptions) {
-  const std::map<int, std::string> m{{1, "a"}, {2, "b"}};
-  const ::testing::Matcher<std::string> matcher = IsValueOf(m);
+  const std::map<int, std::string> map{{1, "a"}, {2, "b"}};
+  const ::testing::Matcher<std::string> matcher = IsValueOf(map);
   EXPECT_THAT(Describe(matcher), "is a value of {\"a\", \"b\"}");
   EXPECT_THAT(DescribeNegation(matcher), "is not a value of {\"a\", \"b\"}");
   EXPECT_THAT(MatchAndExplain(matcher, std::string{"a"}), Pair(true, "which equals element #0 (\"a\")"));
@@ -382,8 +382,8 @@ TEST_F(MatcherTest, IsValueOfDescriptions) {
 }
 
 TEST_F(MatcherTest, IsValueOfEmptyMapDescriptions) {
-  const std::map<int, std::string> m;
-  const ::testing::Matcher<std::string> matcher = IsValueOf(m);
+  const std::map<int, std::string> map;
+  const ::testing::Matcher<std::string> matcher = IsValueOf(map);
   EXPECT_THAT(Describe(matcher), "is a value of {}");
   EXPECT_THAT(DescribeNegation(matcher), "is not a value of {}");
   EXPECT_THAT(MatchAndExplain(matcher, std::string{"anything"}), Pair(false, ""));

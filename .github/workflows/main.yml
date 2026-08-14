@@ -54,10 +54,173 @@ jobs:
       - uses: pre-commit/action@v3.0.1
         env:
           # The `trunk` job runs the full `trunk check`; do not also run trunk
-          # from pre-commit in CI (see the trunk-fmt hook).
-          SKIP: trunk-fmt
+          # from pre-commit in CI (see the trunk-fmt hook). Likewise the
+          # `clang-tidy` job owns clang-tidy: it needs a compile_commands.json
+          # this job deliberately does not build. `clang-tidy` is `stages:
+          # [manual]` today, so it is already absent here; naming it keeps that
+          # true when the hook is promoted to an automatic gate.
+          SKIP: trunk-fmt,clang-tidy
       - uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
+
+  clang-tidy:
+    needs: [trunk, pre-commit]
+    runs-on: ubuntu-latest
+    # Note there is deliberately no job-level `continue-on-error`: building the
+    # compile DB must gate, so a broken extractor/toolchain fails this job. Only
+    # the findings themselves are tolerated, at the step below.
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Full history so the branch can be diffed against `main` to pick the
+          # changed sources below.
+          fetch-depth: 0
+      - uses: bazelbuild/setup-bazelisk@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Select the scope to lint
+        # clang-tidy costs ~50s per translation unit here, so linting all 81
+        # sources takes ~24 minutes even though pre-commit already spreads them
+        # over every core. On a branch, lint only what the branch changed; `main`
+        # still gets the whole tree after merge.
+        # Known gap: editing only a header changes findings in the sources that
+        # include it, and none of those are in the branch's changed-file set. The
+        # post-merge run on `main` is what catches that.
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            echo "CLANG_TIDY_SCOPE=--all-files" >>"${GITHUB_ENV}"
+            echo "Linting the whole tree (on main)."
+          else
+            git fetch --no-tags --quiet origin main
+            echo "CLANG_TIDY_SCOPE=--from-ref origin/main --to-ref HEAD" >>"${GITHUB_ENV}"
+            echo "Linting sources changed against origin/main:"
+            git diff --name-only origin/main...HEAD -- '*.cc' '*.cpp' '*.cxx' | sed 's/^/  /'
+          fi
+
+      - uses: actions/cache/restore@v5
+        id: cache_restore
+        with:
+          path: "~/.cache/bazel"
+          key: clang-tidy-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            clang-tidy-${{github.ref}}
+            clang-tidy-refs/heads/main
+            clang-tidy
+
+      - name: Build generated sources and headers
+        # Generated headers must exist on disk before the compile DB is
+        # extracted, or the extractor cannot resolve the sources that include
+        # them (`hash_mangle_seed_gen.h is missing`) and those translation units
+        # land in the DB degraded - which would later read as clang-tidy
+        # findings rather than as the build artifact gap it really is.
+        # Generated headers are NOT the only build output a translation unit needs
+        # to parse: headers from external repos (`rules_cc/cc/runfiles/runfiles.h`
+        # and friends) are materialised into the execroot only once something that
+        # depends on them is built. A partial build leaves them absent, the TU
+        # fails to resolve the include, and clang-tidy then reports confident
+        # nonsense from the wreckage of that parse - which is how a clean local
+        # sweep and a red CI run can disagree. So build `//...` too.
+        run: |
+          set -euo pipefail
+          # Read into an array without `mapfile`, so this snippet can also be run
+          # as-is on stock macOS bash 3.2 when reproducing a CI result locally.
+          GENERATED=()
+          while IFS= read -r target; do
+            GENERATED+=("${target}")
+          done < <(bazel query 'kind("generated file", //...:*)' |
+            grep -E '\.(h|hh|hpp|inc|ipp|cc|cpp|cxx)$')
+          if [ "${#GENERATED[@]}" -eq 0 ]; then
+            echo "::error::No generated sources/headers found. Either the query or the extension filter needs updating; without this the compile DB silently degrades."
+            exit 1
+          fi
+          printf 'Building %s generated file(s):\n' "${#GENERATED[@]}"
+          printf '  %s\n' "${GENERATED[@]}"
+          bazel build --config=clang "${GENERATED[@]}"
+
+          # Everything else a linted TU includes, external repo headers included.
+          bazel build --config=clang-tidy //...
+
+          # Also build the `manual` targets that are linted. `bazel test //...`
+          # skips them, so a change that breaks one compiles green everywhere and
+          # only surfaces when someone runs the benchmark by hand - which is how a
+          # bad `const` in limited_set_benchmark.h reached main in #275.
+          TAGGED=()
+          while IFS= read -r target; do
+            TAGGED+=("${target}")
+          done < <(bazel query 'attr(tags, "clang-tidy", //...)' | sed 's|^@@||')
+          if [ "${#TAGGED[@]}" -gt 0 ]; then
+            printf 'Building %s clang-tidy-tagged manual target(s):\n' "${#TAGGED[@]}"
+            printf '  %s\n' "${TAGGED[@]}"
+            bazel build --config=clang "${TAGGED[@]}"
+          fi
+
+      - name: Generate compile_commands.json
+        # The compile DB is a local artifact (gitignored), so it has to be built
+        # here. The script fetches the hermetic LLVM toolchain if needed and
+        # records ITS clang as the compiler, which is what makes the resulting
+        # commands parseable by the matching hermetic clang-tidy.
+        run: ./compile_commands-update.sh
+
+      - uses: actions/upload-artifact@v4
+        # Only from `main`, which is the run that lints the whole tree: that DB
+        # is the one worth keeping, to reproduce a finding locally against the
+        # exact same commands and to inspect flag/toolchain drift. A branch run
+        # lints only what the branch changed, so its DB describes a near-empty
+        # lint and is not worth storing.
+        id: upload_cdb
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: compile-commands-json
+          path: compile_commands.json
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Summarize the compile DB
+        # Renders at the top of the run page, so the DB's shape and (on main) a
+        # direct link to it are visible without digging through step logs or
+        # scrolling to the artifacts panel.
+        run: |
+          set -euo pipefail
+          STATS="$(python3 -c '
+          import collections, json
+          entries = json.load(open("compile_commands.json"))
+          files = collections.Counter(e["file"] for e in entries)
+          print(len(entries), len(files), sum(n - 1 for n in files.values() if n > 1))
+          ')"
+          read -r ENTRIES UNIQUE DUPES <<<"${STATS}"
+          {
+            echo "### clang-tidy compile database"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Entries | ${ENTRIES} |"
+            echo "| Unique files | ${UNIQUE} |"
+            echo "| Duplicate entries | ${DUPES} |"
+            echo "| Lint scope | \`${CLANG_TIDY_SCOPE}\` |"
+            if [ -n "${CDB_ARTIFACT_URL}" ]; then
+              echo "| Artifact | [compile-commands-json](${CDB_ARTIFACT_URL}) |"
+            else
+              echo "| Artifact | not uploaded (branch run; only \`main\` publishes one) |"
+            fi
+          } >>"${GITHUB_STEP_SUMMARY}"
+        env:
+          CDB_ARTIFACT_URL: ${{steps.upload_cdb.outputs.artifact-url}}
+
+      - uses: pre-commit/action@v3.0.1
+        with:
+          # Only the clang-tidy hook: every other hook already ran in the
+          # `pre-commit` job. Scope comes from the step above: changed sources
+          # on a branch, the whole tree on main.
+          extra_args: clang-tidy ${{env.CLANG_TIDY_SCOPE}}
+
+      - uses: actions/cache/save@v5
+        if: always() && steps.cache_restore.outputs.cache-hit != 'true'
+        with:
+          path: "~/.cache/bazel"
+          key: clang-tidy-${{github.ref}}-${{github.sha}}
 
   test-gcc:
     needs: [trunk, pre-commit]
@@ -158,7 +321,7 @@ jobs:
       bazel_config: ${{ matrix.bazel_config }}
 
   done:
-    needs: [trunk, pre-commit, test-gcc, test-clang, test-bcr]
+    needs: [trunk, pre-commit, clang-tidy, test-gcc, test-clang, test-bcr]
     if: always()
     runs-on: ubuntu-latest
     steps:

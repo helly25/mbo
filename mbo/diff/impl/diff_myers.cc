@@ -22,6 +22,7 @@
 #include <limits>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
@@ -31,6 +32,14 @@
 #include "mbo/diff/internal/data.h"
 #include "mbo/file/artefact.h"
 #include "mbo/hash/hash.h"
+
+// This file uses the notation from Myers' paper throughout: `n`/`m` are the two
+// sequence lengths, `d` the edit cost, `k` the diagonal, `x`/`y` the grid
+// coordinates, `kf`/`kr` the forward and reverse diagonals, and `lo`/`hi` the
+// window bounds. Expanding those to three-character names would break the
+// correspondence to the paper that makes this code checkable, so the length
+// rule is waived here rather than per line.
+// NOLINTBEGIN(readability-identifier-length)
 
 namespace mbo::diff {
 namespace {
@@ -73,7 +82,7 @@ DiffMyers::DiffMyers(const file::Artefact& lhs, const file::Artefact& rhs, const
   const std::size_t rhs_size = RhsData().Size();
   max_cost_ =
       options.minimal ? std::numeric_limits<std::size_t>::max() : std::max<std::size_t>(64, ISqrt(lhs_size + rhs_size));
-  const std::size_t v_size = 2 * (std::max(lhs_size, rhs_size) + 2) + 1;
+  const std::size_t v_size = (2 * (std::max(lhs_size, rhs_size) + 2)) + 1;
   fwd_.assign(v_size, kOutside);
   bwd_.assign(v_size, kOutside);
 }
@@ -173,25 +182,39 @@ void DiffMyers::Loop() {
       continue;
     }
     const Snake snake = FindMiddleSnake(span);
-    stack.push_back({snake.lhs_begin + snake.length, span.lhs_end, snake.rhs_begin + snake.length, span.rhs_end, 0});
+    stack.push_back(
+        {.lhs_begin = snake.lhs_begin + snake.length,
+         .lhs_end = span.lhs_end,
+         .rhs_begin = snake.rhs_begin + snake.length,
+         .rhs_end = span.rhs_end,
+         .equals = 0});
     if (snake.length > 0) {
       stack.push_back({.equals = snake.length});
     }
-    stack.push_back({span.lhs_begin, snake.lhs_begin, span.rhs_begin, snake.rhs_begin, 0});
+    stack.push_back(
+        {.lhs_begin = span.lhs_begin,
+         .lhs_end = snake.lhs_begin,
+         .rhs_begin = span.rhs_begin,
+         .rhs_end = snake.rhs_begin,
+         .equals = 0});
   }
 }
 
+// The forward/reverse D-path search is one algorithm from Myers' paper, and the bookkeeping (the two
+// diagonal windows, the parity rule and the overlap test) only makes sense read together. Splitting
+// it into helpers would hide the correspondence to the paper without making any part simpler.
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 DiffMyers::Snake DiffMyers::FindMiddleSnake(const Span& span) {
   // The span was trimmed: both sides are non-empty and neither the first nor
   // the last lines match, so the minimal cost is >= 2 and the first overlap
   // of the forward and backward searches yields a valid middle snake.
-  const std::ptrdiff_t n = static_cast<std::ptrdiff_t>(span.lhs_end - span.lhs_begin);
-  const std::ptrdiff_t m = static_cast<std::ptrdiff_t>(span.rhs_end - span.rhs_begin);
+  const auto n = static_cast<std::ptrdiff_t>(span.lhs_end - span.lhs_begin);
+  const auto m = static_cast<std::ptrdiff_t>(span.rhs_end - span.rhs_begin);
   const std::ptrdiff_t delta = n - m;
   const bool odd = (delta & 1) != 0;
   const Token* lhs = lhs_tokens_.data() + span.lhs_begin;
   const Token* rhs = rhs_tokens_.data() + span.rhs_begin;
-  const std::ptrdiff_t center = static_cast<std::ptrdiff_t>(fwd_.size() / 2);
+  const auto center = static_cast<std::ptrdiff_t>(fwd_.size() / 2);
   // Cost 0: neither search extends (the corner lines differ).
   fwd_[center] = 0;
   bwd_[center] = 0;
@@ -202,7 +225,7 @@ DiffMyers::Snake DiffMyers::FindMiddleSnake(const Span& span) {
   std::ptrdiff_t best_fwd_y = 0;
   std::ptrdiff_t best_bwd_x = 0;
   std::ptrdiff_t best_bwd_y = 0;
-  const std::ptrdiff_t d_max = (n + m + 1) / 2 + 1;
+  const std::ptrdiff_t d_max = ((n + m + 1) / 2) + 1;
   for (std::ptrdiff_t d = 1; d <= d_max; ++d) {
     std::ptrdiff_t kmin = 0;
     std::ptrdiff_t kmax = 0;
@@ -274,7 +297,7 @@ DiffMyers::Snake DiffMyers::FindMiddleSnake(const Span& span) {
     }
     bwd_kmin = kmin;
     bwd_kmax = kmax;
-    if (static_cast<std::size_t>(d) < max_cost_) {
+    if (std::cmp_less(d, max_cost_)) {
       continue;
     }
     // Too expensive (like git): split at the furthest reaching point. Both
@@ -306,3 +329,5 @@ DiffMyers::Snake DiffMyers::FindMiddleSnake(const Span& span) {
 }
 
 }  // namespace mbo::diff
+
+// NOLINTEND(readability-identifier-length)

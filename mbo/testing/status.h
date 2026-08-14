@@ -79,10 +79,11 @@ template<typename StatusOrType>
 class IsOkAndHoldsMatcherImpl : public ::testing::MatcherInterface<StatusOrType> {
  public:
   // NOLINTNEXTLINE(readability-identifier-naming)
-  using value_type = typename std::remove_reference<StatusOrType>::type::value_type;
+  using value_type = std::remove_reference_t<StatusOrType>::value_type;
 
-  template<typename InnerMatcher, std::enable_if_t<!std::is_same_v<InnerMatcher, IsOkAndHoldsMatcherImpl>, int> = 0>
+  template<typename InnerMatcher>
   explicit IsOkAndHoldsMatcherImpl(InnerMatcher&& inner_matcher)
+  requires(!std::is_same_v<InnerMatcher, IsOkAndHoldsMatcherImpl>)
       : inner_matcher_(::testing::SafeMatcherCast<const value_type&>(std::forward<InnerMatcher>(inner_matcher))) {}
 
   void DescribeTo(std::ostream* os) const override {
@@ -334,7 +335,7 @@ class StatusPayloads {
       payload_map.emplace(type_url, payload);
     });
     ::testing::StringMatchResultListener inner;
-    bool match = payload_matcher_.MatchAndExplain(payload_map, &inner);
+    const bool match = payload_matcher_.MatchAndExplain(payload_map, &inner);
     if (inner.str().empty()) {
       if (actual_status.ok()) {
         *listener << "which has OK status (and no payload)";
@@ -371,9 +372,8 @@ inline testing_internal::IsOkMatcher IsOk() {
 // Returns a gMock matcher that matches a StatusOr<> whose status is
 // OK and whose value matches the inner matcher.
 template<typename InnerMatcher>
-testing_internal::IsOkAndHoldsMatcher<typename std::decay<InnerMatcher>::type> IsOkAndHolds(
-    InnerMatcher&& inner_matcher) {
-  return testing_internal::IsOkAndHoldsMatcher<typename std::decay<InnerMatcher>::type>(
+testing_internal::IsOkAndHoldsMatcher<std::decay_t<InnerMatcher>> IsOkAndHolds(InnerMatcher&& inner_matcher) {
+  return testing_internal::IsOkAndHoldsMatcher<std::decay_t<InnerMatcher>>(
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
       std::forward<InnerMatcher>(inner_matcher));
 }

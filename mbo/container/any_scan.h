@@ -304,7 +304,7 @@ class AnyScanImpl {
   requires(mbo::types::IsPair<std::remove_cvref_t<Pair>>)
   struct FirstType {
     using RawPair = std::remove_cvref_t<Pair>;
-    using RawFirst = typename RawPair::first_type;
+    using RawFirst = RawPair::first_type;
     using type = mbo::types::Cases<
         mbo::types::IfThen<std::is_const_v<Pair> && std::is_reference_v<Pair>, const RawFirst&>,
         mbo::types::IfThen<std::is_const_v<Pair>, const RawFirst>,
@@ -317,8 +317,8 @@ class AnyScanImpl {
     using RawSrc = std::remove_cvref_t<SrcValueTypeT>;
     using RawDst = std::remove_cvref_t<DstAccessType>;
     if constexpr (::mbo::types::IsPair<RawSrc> && ::mbo::types::IsPair<RawDst>) {
-      using SrcFirstType = typename FirstType<SrcValueTypeT>::type;
-      using DstFirstType = typename FirstType<DstAccessType>::type;
+      using SrcFirstType = FirstType<SrcValueTypeT>::type;
+      using DstFirstType = FirstType<DstAccessType>::type;
       static_assert(
           std::convertible_to<SrcFirstType, DstFirstType>,
           "A common reason for this to fail is scanning over `std::map` and similar indexed containers "
@@ -352,8 +352,8 @@ class AnyScanImpl {
 
   // For MakAnyScan / MakeConstScan
   template<AcceptableContainer Container>
-  requires(kAccessByRef)
-  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
+  requires kAccessByRef
+  explicit AnyScanImpl(const MakeAnyScanData<Container, kScanMode>& data)
       : funcs_{
             .iter =
                 [data = data] {
@@ -374,7 +374,7 @@ class AnyScanImpl {
       !kAccessByRef  // This is the ConvertingScan constructor
       && types::ConstructibleFrom<AccessType, ::mbo::types::ContainerConstIteratorValueType<Container>>
       && types::ConstructibleFrom<value_type, AccessType>)
-  explicit AnyScanImpl(MakeAnyScanData<Container, kScanMode> data)
+  explicit AnyScanImpl(const MakeAnyScanData<Container, kScanMode>& data)
       : funcs_{
             // NOTE: data must be copied here!
             .iter =
@@ -516,8 +516,8 @@ class AnyScan : public container_internal::AnyScanImpl<ValueType, DifferenceType
   template<::mbo::types::ContainerHasInputIterator Container>
   requires(types::ConstructibleFrom<ValueType, typename std::remove_cvref_t<Container>::value_type>)
   AnyScan(  // NOLINT(*-explicit-constructor,*-explicit-conversions)
-      container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kAny> data)
-      : AnyScanImpl(std::move(data)) {}
+      const container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kAny>& data)
+      : AnyScanImpl(data) {}
 
   using AnyScanImpl::begin;
   using AnyScanImpl::end;
@@ -539,8 +539,8 @@ class ConstScan
   template<container_internal::AcceptableContainer Container>
   requires(types::ConstructibleFrom<const ValueType, typename std::remove_cvref_t<Container>::value_type>)
   ConstScan(  // NOLINT(*-explicit-constructor,*-explicit-conversions)
-      container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConst> data)
-      : AnyScanImpl(std::move(data)) {}
+      const container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConst>& data)
+      : AnyScanImpl(data) {}
 
   using AnyScanImpl::begin;
   using AnyScanImpl::end;
@@ -562,8 +562,8 @@ class ConvertingScan
   template<container_internal::AcceptableContainer Container>
   requires(types::ConstructibleFrom<ValueType, typename std::remove_cvref_t<Container>::value_type>)
   ConvertingScan(  // NOLINT(*-explicit-constructor,*-explicit-conversions)
-      container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConverting> data)
-      : AnyScanImpl(std::move(data)) {}
+      const container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConverting>& data)
+      : AnyScanImpl(data) {}
 
   using AnyScanImpl::begin;
   using AnyScanImpl::end;

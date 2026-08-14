@@ -160,10 +160,10 @@ class Template {
   static absl::Status ExpandSection(const TagData<Section>& tag, Context& ctx, std::string& output);
 
   template<typename Sink>
-  friend void AbslStringify(Sink&, TagType);
-  friend std::ostream& operator<<(std::ostream&, TagType);
+  friend void AbslStringify(Sink& /*sink*/, TagType /*tag*/);
+  friend std::ostream& operator<<(std::ostream& /*os*/, TagType /*tag*/);
 
-  DataMap data_ = {};
+  DataMap data_;
 };
 
 }  // namespace mbo::mope

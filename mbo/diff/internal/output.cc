@@ -74,6 +74,10 @@ void AppendUnified(
   }
 }
 
+// As with AppendSideBySide: the branching enumerates the context format's cases (change blocks
+// showing '!' on both sides versus lone '-' / '+' runs), which is the specification this function
+// implements rather than incidental complexity.
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void AppendContext(
     std::string& output,
     const DiffOptions& options,
@@ -185,6 +189,11 @@ void AppendNormal(
   }
 }
 
+// The branching is the side-by-side format itself: the four row kinds and their gutter markers,
+// plus padding and truncation per cell. The emitted text is the contract these functions exist to
+// produce, so splitting on a complexity metric would trade a readable format description for
+// helpers that can only be understood together.
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void AppendSideBySide(
     std::string& output,
     const DiffOptions& options,

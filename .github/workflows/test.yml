@@ -82,6 +82,25 @@ jobs:
             ${{env.CACHE_KEY_PREFIX}}-refs/heads/main
             ${{env.CACHE_KEY_PREFIX}}
 
+      - name: Verify Xcode & SDK
+        if: runner.os == 'macOS'
+        run: |
+          echo "=== xcode-select ==="
+          xcode-select -p || { echo "xcode-select not configured"; exit 1; }
+          echo "=== xcodebuild version ==="
+          xcodebuild -version || { echo "xcodebuild not available"; exit 1; }
+          echo "=== clang version ==="
+          clang --version || echo "clang not found"
+          echo "=== show sdk path via xcrun ==="
+          SDKPATH="$(xcrun --show-sdk-path 2>/dev/null || true)"
+          echo "SDKPATH=${SDKPATH}"
+          if [ -z "${SDKPATH}" ]; then
+          echo "ERROR: xcrun could not find an SDK. Xcode/CLT may not be installed or xcode-select is misconfigured."
+          exit 1
+          fi
+          echo "Exporting SDKROOT=${SDKPATH}"
+          echo "SDKROOT=${SDKPATH}" >> $GITHUB_ENV
+
       - name: Setup
         # Resolve the C++ toolchain selection and the Bazel invocation flags
         # exactly ONCE, then export them via `$GITHUB_ENV` so that both
@@ -169,6 +188,9 @@ jobs:
           echo "USE_BAZEL_VERSION=" >> "${GITHUB_ENV}"
           if [ -n "${{inputs.bazel_version}}" ]; then
             echo "${{inputs.bazel_version}}" > .bazelversion
+          fi
+          if [ -n "${SDKPATH:-}" ]; then
+            BAZEL_ARGS+=(--action_env=SDKROOT=${SDKPATH})
           fi
           EXPECT_BAZEL="$(tr -d '[:space:]' < .bazelversion 2>/dev/null || true)"
           echo "BAZEL_INIT=${BAZEL_INIT[*]}" >> "${GITHUB_ENV}"

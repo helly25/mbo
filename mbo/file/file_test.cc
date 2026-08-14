@@ -41,10 +41,14 @@ struct FileTest : public ::testing::Test {
 
   FileTest() : tmp_dir(TestDir()) {}
 
+ protected:
+  // `::testing::Test` declares these protected; widening them to public would let
+  // anything call the fixture's setup/teardown out of band.
   void SetUp() override { fs::create_directory(tmp_dir); }
 
   void TearDown() override { fs::remove_all(tmp_dir); }
 
+ public:
   const fs::path tmp_dir;
 };
 

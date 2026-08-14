@@ -79,7 +79,7 @@ class IniFile {
 
   void SetKey(const GroupKey& group_key, std::string&& new_value = "") {
     const auto [group, key] = Clean(group_key);
-    data_[group][key].assign(std::forward<std::string>(new_value));
+    data_[group][key] = std::move(new_value);
   }
 
   template<
@@ -92,7 +92,7 @@ class IniFile {
 
   absl::btree_set<std::string> GetGroups() const {
     absl::btree_set<std::string> result;
-    for (const auto& [group, _] : data_) {
+    for (const auto& [group, unused] : data_) {
       result.emplace(group);
     }
     return result;

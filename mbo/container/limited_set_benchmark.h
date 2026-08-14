@@ -52,12 +52,16 @@ class Random {
   std::uniform_int_distribution<int> uniform_;
 };
 
-template<std::size_t Size, bool HaveOrMiss, template<typename> typename Compare, LimitedOptionsFlag... Flags>
+template<std::size_t Size, bool HaveOrMiss, typename Compare, LimitedOptionsFlag... Flags>
 class Benchmarks {
  private:
   enum class Function { kContains, kFind, kIndexOf };
 
-  using BenchmarkedContainer = LimitedSet<int, LimitedOptions<Size, Flags...>{}, Compare<int>>;
+  // The comparator arrives as a concrete type rather than a template to instantiate.
+  // The caller then picks the form it wants - `std::less<>` transparent, or
+  // `CompareLess<int>` - instead of this header hard-coding `Compare<int>` and forcing
+  // the non-transparent spelling on everything.
+  using BenchmarkedContainer = LimitedSet<int, LimitedOptions<Size, Flags...>{}, Compare>;
 
   static constexpr std::size_t kNumTestsValues = 100'000;
 
@@ -75,7 +79,7 @@ class Benchmarks {
     }
     std::vector<int> input;
     while (input.size() < kNumTestsValues) {
-      int value = random.Uniform();
+      const int value = random.Uniform();
       if (!data.contains(value)) {
         input.push_back(value);
       }

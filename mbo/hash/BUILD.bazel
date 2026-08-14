@@ -86,7 +86,7 @@ mangle_seed_gen(
 )
 
 cc_library(
-    name = "hash_internal_util",
+    name = "hash_internal_util_cc",
     hdrs = [
         "hash_internal_util.h",
         "hash_types.h",
@@ -109,7 +109,7 @@ cc_library(
     ],
     hdrs = ["hash.h"],
     visibility = ["//visibility:public"],
-    deps = [":hash_internal_util"],
+    deps = [":hash_internal_util_cc"],
 )
 
 cc_library(
@@ -137,12 +137,12 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":hash_cc",
-        ":hash_internal_util",
+        ":hash_internal_util_cc",
     ],
 )
 
 cc_library(
-    name = "hash_test_util",
+    name = "hash_test_util_cc",
     testonly = True,
     hdrs = ["hash_test_util.h"],
     deps = [
@@ -159,7 +159,7 @@ cc_test(
     ],
     deps = [
         ":hash_cc",
-        ":hash_test_util",
+        ":hash_test_util_cc",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/strings",
@@ -178,7 +178,7 @@ cc_test(
     deps = [
         ":hash_cc",
         ":hash_mangle_cc",
-        ":hash_test_util",
+        ":hash_test_util_cc",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
@@ -191,10 +191,13 @@ cc_test(
     # module is loaded (bazelmod/dev.MODULE.bazel) - i.e. when helly25_mbo is
     # the root module. Wildcards used by consumers must not analyze it; CI runs
     # it explicitly (see .github/workflows/test.yml).
-    tags = ["manual"],
+    tags = [
+        "clang-tidy",
+        "manual",
+    ],
     deps = [
         ":hash_cc",
-        ":hash_test_util",
+        ":hash_test_util_cc",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@xxhash_reference//:xxhash",
@@ -205,9 +208,12 @@ cc_binary(
     name = "hash_benchmark",
     testonly = True,
     srcs = ["hash_benchmark.cc"],
-    tags = ["manual"],
+    tags = [
+        "clang-tidy",
+        "manual",
+    ],
     deps = [
-        ":hash_test_util",
+        ":hash_test_util_cc",
         "@abseil-cpp//absl/strings",
         "@com_github_google_benchmark//:benchmark",
     ],

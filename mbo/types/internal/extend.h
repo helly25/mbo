@@ -67,14 +67,14 @@ struct GetRequirementImpl {
 
 template<typename Extender>
 struct GetRequirementImpl<Extender, true> {
-  using type = typename Extender::RequiredExtender;
+  using type = Extender::RequiredExtender;
 };
 
 template<typename Extender>
-using GetRequirement = typename GetRequirementImpl<Extender>::type;
+using GetRequirement = GetRequirementImpl<Extender>::type;
 
 template<std::size_t N, typename... Ts>
-using GetType = typename std::tuple_element<N, std::tuple<Ts...>>::type;
+using GetType = std::tuple_element_t<N, std::tuple<Ts...>>;
 
 template<std::size_t N, typename Required, typename... Extenders>
 struct RequiredPresentForIndexImpl
@@ -116,7 +116,7 @@ concept HasExtenderTuple = requires { typename T::ExtenderTuple; };
 // There is also the special case of a shorthand extender which has a `ExtenderTuple` member type.
 template<typename T, bool = HasExtenderTuple<T>>
 struct ExtendExtenderTupleElemT {
-  using type = typename T::ExtenderTuple;
+  using type = T::ExtenderTuple;
 };
 
 template<typename T>

@@ -35,6 +35,13 @@ template<std::three_way_comparable T>
 struct CompareLess {
   using value_type = T;  // NOLINT(readability-identifier-naming)
 
+  // This comparator has always ordered `value_type` against any type three-way
+  // comparable with it - see the `other_type` overloads below. `is_transparent` is
+  // how a container ASKS whether that is allowed, so without it those overloads were
+  // unreachable through `LimitedSet`/`LimitedMap`: every lookup had to materialise a
+  // `value_type` first, which is the cost heterogeneous comparison exists to avoid.
+  using is_transparent = void;  // NOLINT(readability-identifier-naming)
+
   constexpr ~CompareLess() noexcept = default;
   constexpr CompareLess() noexcept = default;
   constexpr CompareLess(const CompareLess&) noexcept = default;
@@ -119,6 +126,7 @@ inline std::strong_ordering CompareScalar(Lhs lhs, Rhs rhs) {
     }
   } else {
     if constexpr (std::floating_point<Lhs> || std::floating_point<Rhs>) {
+      // NOLINTNEXTLINE(google-runtime-float)
       return CompareFloat<long double>(lhs, rhs);
     } else if constexpr (std::same_as<bool, Lhs> || std::same_as<bool, Rhs>) {
       return static_cast<bool>(lhs) <=> static_cast<bool>(rhs);
@@ -166,4 +174,4 @@ inline std::strong_ordering WeakToStrong(std::weak_ordering order) {
 
 }  // namespace mbo::types
 
-#endif  // MBO_TYPES_COMPARE_H
+#endif  // MBO_TYPES_COMPARE_H_

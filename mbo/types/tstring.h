@@ -24,6 +24,7 @@
 #include <string_view>
 
 #include "mbo/hash/hash.h"
+#include "mbo/strings/contains.h"
 
 namespace mbo::types {
 
@@ -119,7 +120,7 @@ struct tstring final {
   // the actual string data at run-time or the in/equality operators that are
   // performed on run-time or compile-time base on the compared to type.
   template<typename Other>
-  static constexpr bool is(Other /* other */) noexcept {
+  static constexpr bool is(const Other& /* other */) noexcept {
     return std::is_same_v<tstring, Other>;
   }
 
@@ -286,7 +287,7 @@ struct tstring final {
 
   static constexpr size_type find_first_of(std::string_view charset, size_type pos = 0) noexcept {
     for (; pos < num_chars; ++pos) {
-      if (charset.find(data[pos]) != std::string_view::npos) {
+      if (mbo::strings::Contains(charset, data[pos])) {
         return pos;
       }
     }
@@ -320,7 +321,7 @@ struct tstring final {
       pos = num_chars - 1;
     }
     while (true) {
-      if (charset.find(data[pos]) != std::string_view::npos) {
+      if (mbo::strings::Contains(charset, data[pos])) {
         return pos;
       }
       if (pos-- == 0) {

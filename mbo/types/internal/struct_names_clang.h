@@ -98,9 +98,7 @@ class StructMetaBase {
     Uninitialized storage_;
   };
 
-  // NOLINTBEGIN(*-swappable-parameters)
-
-  static constexpr int DumpStructFieldCounter(  // NOLINT(cert-dcl50-cpp)
+  static constexpr int DumpStructFieldCounter(
       std::size_t& field_index,
       std::string_view format,
       std::string_view indent = {},
@@ -113,16 +111,16 @@ class StructMetaBase {
     return 0;
   }
 
-  // NOLINTEND(*-swappable-parameters)
-
   static constexpr int FieldCount(const T* ptr, std::size_t& field_index) {
     __builtin_dump_struct(ptr, &DumpStructFieldCounter, field_index);  // NOLINT(*-vararg)
     return 0;
   }
 
   static constexpr std::size_t ComputeFieldCount() {
+    // NOLINTNEXTLINE(misc-const-correctness): passed to FieldCount() by non-const reference.
     std::size_t field_index{0};
     if constexpr (!IsEmptyType<T>) {
+      // NOLINTNEXTLINE(misc-const-correctness): `&storage.Get()` needs a mutable object.
       Storage storage{};
       FieldCount(&storage.Get(), field_index);
     }
@@ -154,9 +152,7 @@ class StructMeta final {
 
   using FieldData = std::array<FieldInfo, kFieldCount>;
 
-  // NOLINTBEGIN(*-swappable-parameters)
-
-  static constexpr int DumpStructVisitor(  // NOLINT(cert-dcl50-cpp)
+  static constexpr int DumpStructVisitor(
       FieldData& fields,
       std::size_t& field_index,
       std::string_view format,
@@ -174,8 +170,6 @@ class StructMeta final {
     return 0;
   }
 
-  // NOLINTEND(*-swappable-parameters)
-
   static constexpr void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
     __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
   }
@@ -184,6 +178,7 @@ class StructMeta final {
   inline static constexpr FieldData kFieldData = []() consteval {
     FieldData fields;
     if constexpr (!IsEmptyType<T>) {
+      // NOLINTNEXTLINE(misc-const-correctness): `&storage.Get()` needs a mutable object.
       typename StructMetaBase<T>::Storage storage{};
       std::size_t field_index = 0;
       Init(&storage.Get(), fields, field_index);
@@ -227,9 +222,7 @@ class StructMeta<T, true, false> final {
 
   using FieldData = std::array<FieldInfo, kFieldCount>;
 
-  // NOLINTBEGIN(*-swappable-parameters)
-
-  static int DumpStructVisitor(  // NOLINT(cert-dcl50-cpp)
+  static int DumpStructVisitor(
       FieldData& fields,
       std::size_t& field_index,
       std::string_view format,
@@ -246,8 +239,6 @@ class StructMeta<T, true, false> final {
     return 0;
   }
 
-  // NOLINTEND(*-swappable-parameters)
-
   static void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
     __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
   }
@@ -256,6 +247,7 @@ class StructMeta<T, true, false> final {
   inline static const FieldData kFieldData = []() {
     FieldData fields;
     if constexpr (!IsEmptyType<T>) {
+      // NOLINTNEXTLINE(misc-const-correctness): `&storage.Get()` needs a mutable object.
       typename StructMetaBase<T>::Storage storage{};
       std::size_t field_index = 0;
       Init(&storage.Get(), fields, field_index);

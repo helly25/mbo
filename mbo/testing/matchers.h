@@ -168,10 +168,10 @@ namespace testing_internal {
 // `IsElementOf`). Not exposed at namespace scope because the natural calling convention puts
 // the projection on the right of `EXPECT_THAT`, inside another matcher.
 template<typename Map>
-inline std::vector<typename Map::key_type> AllKeys(const Map& m) {
+inline std::vector<typename Map::key_type> AllKeys(const Map& map) {
   std::vector<typename Map::key_type> keys;
-  keys.reserve(m.size());
-  for (const auto& kv : m) {
+  keys.reserve(map.size());
+  for (const auto& kv : map) {
     keys.push_back(kv.first);
   }
   return keys;
@@ -180,10 +180,10 @@ inline std::vector<typename Map::key_type> AllKeys(const Map& m) {
 // Returns the mapped values of an associative container as a `std::vector<mapped_type>` in
 // iteration order. Internal: see `AllKeys` above.
 template<typename Map>
-inline std::vector<typename Map::mapped_type> AllValues(const Map& m) {
+inline std::vector<typename Map::mapped_type> AllValues(const Map& map) {
   std::vector<typename Map::mapped_type> values;
-  values.reserve(m.size());
-  for (const auto& kv : m) {
+  values.reserve(map.size());
+  for (const auto& kv : map) {
     values.push_back(kv.second);
   }
   return values;
@@ -193,22 +193,22 @@ inline std::vector<typename Map::mapped_type> AllValues(const Map& m) {
 
 // Matcher that asserts the value-under-test equals at least one key of `map`.
 //
-//   std::map<int, std::string> m = {{1, "a"}, {2, "b"}};
-//   EXPECT_THAT(key, IsKeyOf(m));
+//   std::map<int, std::string> map = {{1, "a"}, {2, "b"}};
+//   EXPECT_THAT(key, IsKeyOf(map));
 template<typename Map>
-inline auto IsKeyOf(const Map& m) {
-  auto keys = testing_internal::AllKeys(m);
+inline auto IsKeyOf(const Map& map) {
+  auto keys = testing_internal::AllKeys(map);
   using KeysContainer = decltype(keys);
   return testing_internal::IsElementOfMatcher<KeysContainer>(std::move(keys), "is a key of", "is not a key of");
 }
 
 // Matcher that asserts the value-under-test equals at least one mapped value of `map`.
 //
-//   std::map<int, std::string> m = {{1, "a"}, {2, "b"}};
-//   EXPECT_THAT(value, IsValueOf(m));
+//   std::map<int, std::string> map = {{1, "a"}, {2, "b"}};
+//   EXPECT_THAT(value, IsValueOf(map));
 template<typename Map>
-inline auto IsValueOf(const Map& m) {
-  auto values = testing_internal::AllValues(m);
+inline auto IsValueOf(const Map& map) {
+  auto values = testing_internal::AllValues(map);
   using ValuesContainer = decltype(values);
   return testing_internal::IsElementOfMatcher<ValuesContainer>(std::move(values), "is a value of", "is not a value of");
 }
@@ -247,7 +247,7 @@ class CapacityIsMatcher {
     }
 
     bool MatchAndExplain(Container container, ::testing::MatchResultListener* listener) const override {
-      CapacityType capacity = container.capacity();
+      const CapacityType capacity = container.capacity();
       ::testing::StringMatchResultListener capacity_listener;
       const bool result = capacity_matcher_.MatchAndExplain(capacity, &capacity_listener);
       *listener << "whose capacity " << capacity << (result ? " matches" : " doesn't match");

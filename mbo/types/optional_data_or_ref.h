@@ -46,7 +46,7 @@ class OptionalDataOrRef {
 
   constexpr ~OptionalDataOrRef() noexcept { Destruct(); }
 
-  constexpr OptionalDataOrRef() noexcept {}  // NOLINT(hicpp-use-equals-default): Not the same
+  constexpr OptionalDataOrRef() noexcept {}  // NOLINT(*-use-equals-default): Not the same
 
   constexpr OptionalDataOrRef(std::nullopt_t /* unused */) {}  // NOLINT(*-explicit-*)
 
@@ -149,8 +149,10 @@ class OptionalDataOrRef {
     return *this;
   }
 
-  template<typename... Args, typename = std::enable_if_t<ConstructibleFrom<T, Args...>>>
-  constexpr OptionalDataOrRef& emplace(Args&&... args) noexcept {
+  template<typename... Args>
+  constexpr OptionalDataOrRef& emplace(Args&&... args) noexcept
+  requires(ConstructibleFrom<T, Args...>)
+  {
     if (is_val_) {
       std::destroy_at(&union_.val);
     }
@@ -190,15 +192,21 @@ class OptionalDataOrRef {
 #endif  // __cplusplus >= 202302L
 
   // Returns `value()` if `holds_value()` is true, a reference `defaults`.
-  // BEWARE of dangling references.
+  // BEWARE of dangling references: returning the caller's own reference is the
+  // point of this API, so the caller owns the lifetime question. The suppression
+  // must sit on the line immediately above the declaration - a rationale placed
+  // between it and the declaration would bind it to the comment instead.
+  // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)
   constexpr const_reference get(const T& defaults) const noexcept { return has_value() ? value() : defaults; }
 
   // Returns a reference to existing data or created data. If the object:
   // * is `std::nullopt`, then a default value will be emplace and is reference returned.
   // * contains a value, then its reference will be returned.
   // * contains a reference, then that reference is emplace and then its reference returned.
-  template<typename... Args, typename = std::enable_if_t<ConstructibleFrom<T, Args...>>>
-  constexpr value_type& as_data(Args&&... args) noexcept {
+  template<typename... Args>
+  constexpr value_type& as_data(Args&&... args) noexcept
+  requires(ConstructibleFrom<T, Args...>)
+  {
     if (!is_val_) {
       if (union_.ptr != nullptr) {
         emplace(*union_.ptr);

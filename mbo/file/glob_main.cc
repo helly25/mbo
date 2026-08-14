@@ -59,6 +59,8 @@ ABSL_FLAG(bool, type, false, "Whether to show the file type");
 using mbo::strings::BigNumber;
 using mbo::strings::BigNumberLen;
 
+namespace {
+
 class Entries {
  public:
   struct Entry : mbo::types::Extend<Entry> {
@@ -241,6 +243,8 @@ class Entries {
   std::size_t seen_{0};
   const absl::btree_map<std::string, std::size_t&> stats_;
 };
+
+}  // namespace
 
 constexpr std::string_view kUsage = R"usage(glob [<flags>*] [<root_path>] <pattern>
 

@@ -138,7 +138,7 @@ struct Hasher {
 // (e.g. rapidhash in hash_extra.h has no canonical streaming form) -- absence
 // is honest.
 template<typename Algo>
-concept HasStreaming = requires(typename Algo::StreamState state, std::string_view data, uint64_t seed) {
+concept HasStreaming = requires(Algo::StreamState state, std::string_view data, uint64_t seed) {
   { Algo::StreamInit(seed) } noexcept -> std::same_as<typename Algo::StreamState>;
   { Algo::StreamUpdate(state, data) } noexcept;
   { Algo::StreamFinalize(state) } noexcept -> std::same_as<uint64_t>;
@@ -167,7 +167,7 @@ class Streamer {
   [[nodiscard]] constexpr uint64_t Finalize() const noexcept { return Algo::StreamFinalize(state_); }
 
  private:
-  typename Algo::StreamState state_;
+  Algo::StreamState state_;
 };
 
 // The selected default algorithms behind the `mbo::hash` entry points.

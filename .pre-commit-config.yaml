@@ -83,6 +83,56 @@ repos:
         entry: .pre-commit/check_version.sh
         pass_filenames: False
         types: [text]
+      - id: clang-tidy-targets-match-tag
+        name: clang-tidy targets match the tag
+        description: |
+          `CLANG_TIDY_MANUAL_TARGETS` in bazelmod/clang_tidy_targets.bzl must equal the set of
+          targets tagged `clang-tidy`. The list exists because aquery expands `//...` with
+          `manual` targets already removed, so //bazelmod:refresh_compile_commands has to name
+          them explicitly or they never reach compile_commands.json. The tag states the intent;
+          this stops the two drifting apart. Skips when bazel is unavailable.
+        language: system
+        entry: .pre-commit/check_clang_tidy_targets.sh
+        pass_filenames: false
+        files: ^(.*/BUILD\.bazel|bazelmod/clang_tidy_targets\.bzl)$
+      - id: cc-target-naming
+        name: cc_library targets end in _cc
+        description: |
+          A C++ library target is named `<thing>_cc`, so a label reads as "the C++ library for
+          <thing>" and never collides with the directory, file or binary of the same name. Ported
+          from helly25/xff, which enforces the same convention; two targets here had drifted
+          (`hash_internal_util`, `hash_test_util`). The check is pure BUILD-file parsing, so it
+          needs no bazel and runs anywhere.
+        language: system
+        entry: tools/check_cc_target_naming.py
+        files: ^.*/(BUILD\.bazel|BUILD)$
+      - id: library-test-coverage
+        name: every cc_library is reached by a test
+        description: |
+          Every `cc_library` under //mbo/... must be reachable from at least one test target, so a
+          library cannot be added - or orphaned by a deleted test - with nothing exercising it.
+          Reachability rather than a `<xxx>_cc`/`<xxx>_test` naming rule: the naming rule calls 32
+          of 75 libraries unpaired, nearly all wrongly (//mbo/types/internal:extend_cc is well
+          covered by //mbo/types:extend_test, it just has a different name), and a rule needing a
+          32-entry allowlist on day one enforces nothing. Matches `.*_test`, not `cc_test`, because
+          mope is covered entirely by `*_diff_test` golden targets. Skips when bazel is unavailable.
+        language: system
+        entry: .pre-commit/check_library_test_coverage.sh
+        pass_filenames: false
+        files: ^.*/BUILD\.bazel$
+      - id: header-guards
+        name: header guards follow STYLE_CPP
+        description: |
+          Header guards must be `{PATH}_{FILE}_` per STYLE_CPP.md. clang-tidy cannot check this:
+          readability-identifier-naming's UPPER_CASE splits inside words at digit boundaries (it
+          wants MBO_DIGEST_DIGEST_M_D5_H for digest_md5.h) and drops the trailing underscore, so
+          it can never accept the documented convention - which is why guard-shaped names are
+          exempted from it there. llvm-header-guard is likewise disabled, deriving the guard from
+          the absolute checkout path. This enforces the actual rule, including that the closing
+          `#endif` comment names the guard.
+        language: python
+        entry: .pre-commit/check_header_guards.py
+        files: \.h$
       - id: no-do-not-merge
         name: No 'DO NOT MERGE'
         description: |
@@ -128,6 +178,30 @@ repos:
         entry: python .pre-commit/check_done_gate.py
         files: ^\.github/workflows/main\.yml$
         pass_filenames: false
+      - id: clang-tidy
+        name: clang-tidy
+        description: |
+          Runs clang-tidy over the given C++ sources via tools/clang_tidy.sh, an enforcing
+          pass (no --fix, so it never rewrites the tree). It needs a compile_commands.json
+          (a gitignored local artifact; build it with ./compile_commands-update.sh) and a
+          clang-tidy >= 18 for this C++23 codebase.
+          * clang-tidy used to run under trunk, pinned at 16; that version mis-parses C++23
+            and trunk auto-applied its build-breaking fixes. Do not re-add it to trunk.
+          * Run it over everything: `pre-commit run clang-tidy --all-files`.
+          * In CI the dedicated `clang-tidy` job owns this: it builds the compile DB, uploads
+            it as an artifact, and runs this hook. The main `pre-commit` job skips it.
+          * This is now an AUTOMATIC gate: it runs on the C++ sources a commit touches, and
+            `WarningsAsErrors: '*'` makes any finding fail the commit. It only reached that
+            point once the tree was clean - see the `.clang-tidy` comments for which checks
+            were turned off and why.
+          * It needs a compile DB, and it FAILS rather than skips without one: an incomplete
+            dev environment is an error, not a reason to wave a commit through. Build it with
+            ./compile_commands-update.sh.
+          * To run `pre-commit` without this hook, run `SKIP="clang-tidy" pre-commit`.
+        language: script
+        entry: tools/clang_tidy.sh
+        types_or: [c++]
+        files: \.(cc|cpp|cxx)$
       - id: trunk-fmt
         name: trunk fmt
         description: |

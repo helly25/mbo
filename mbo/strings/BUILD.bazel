@@ -18,6 +18,21 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "contains_cc",
+    hdrs = ["contains.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "contains_test",
+    srcs = ["contains_test.cc"],
+    deps = [
+        ":contains_cc",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "indent_cc",
     srcs = ["indent.cc"],
     hdrs = ["indent.h"],

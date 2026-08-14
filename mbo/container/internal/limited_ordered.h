@@ -122,6 +122,19 @@ class [[nodiscard]] LimitedOrdered {
 
   static constexpr size_type npos = static_cast<size_type>(-1);  // Result of `index_of` if not found.
 
+  // Heterogeneous ("transparent") lookup, as `std::set`/`std::map` do it: when the
+  // comparator declares `is_transparent`, lookups accept any type the comparator
+  // can order against `Key`, instead of forcing the caller to materialise a `Key`.
+  // For `LimitedSet<std::string>` that turns `set.find(std::string_view)` from a
+  // string construction per call into a plain comparison.
+  static constexpr bool kTransparent = requires { typename Compare::is_transparent; };
+
+  // A key that is NOT the container's own key type. Lookup templates are
+  // constrained on this so they never shadow the exact-`Key` overloads - those
+  // stay the better match and keep working when the comparator is not transparent.
+  template<typename K>
+  static constexpr bool kIsForeignKey = kTransparent && !std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>>;
+
   struct ValueCompare {
     // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)
     MBO_ALWAYS_INLINE static constexpr const Key& GetKey(const Key& key) noexcept { return key; }
@@ -140,6 +153,20 @@ class [[nodiscard]] LimitedOrdered {
       }
     }
 
+    // A transparent lookup key is not a `Key` and holds no key to extract: it IS
+    // the thing being compared, so it passes through untouched.
+    template<typename K>
+    requires(
+        kIsForeignKey<K> && !std::same_as<std::remove_cvref_t<K>, RawValue>
+        && !std::same_as<std::remove_cvref_t<K>, Data>)
+    MBO_ALWAYS_INLINE static constexpr const K& GetKey(const K& key) noexcept {
+      // Returning the caller's own reference is the point: the lookup key outlives the
+      // comparison, and copying it is precisely what transparent lookup exists to avoid.
+      // The suppression sits on the line the check reports - the return, not the signature.
+      // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)
+      return key;
+    }
+
     constexpr ~ValueCompare() noexcept = default;
 
     constexpr explicit ValueCompare() noexcept = default;
@@ -151,16 +178,16 @@ class [[nodiscard]] LimitedOrdered {
     constexpr ValueCompare(ValueCompare&&) noexcept = default;
     constexpr ValueCompare& operator=(ValueCompare&&) noexcept = default;
 
+    // A side of the comparison is acceptable if it is the key, a stored value, or -
+    // when the comparator is transparent - any type it can order against the key.
+    // `std::lower_bound` calls the comparator both ways round, so both sides need it.
+    template<typename T>
+    static constexpr bool kComparableSide =
+        std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<Key>> || std::same_as<std::remove_cvref_t<T>, RawValue>
+        || std::same_as<std::remove_cvref_t<T>, Data> || kTransparent;
+
     template<typename L, typename R>
-    requires(  // clang-format off
-      (std::same_as<std::remove_cvref_t<L>, std::remove_cvref_t<Key>> ||
-       std::same_as<std::remove_cvref_t<L>, RawValue> ||
-       std::same_as<std::remove_cvref_t<L>, Data>
-      ) &&
-      (std::same_as<std::remove_cvref_t<R>, std::remove_cvref_t<Key>> ||
-       std::same_as<std::remove_cvref_t<R>, RawValue> ||
-       std::same_as<std::remove_cvref_t<R>, Data>)
-    )  // clang-format on
+    requires(kComparableSide<L> && kComparableSide<R>)
     MBO_FORCE_INLINE constexpr bool operator()(const L& lhs, const R& rhs) const noexcept {
       return key_comp(GetKey(lhs), GetKey(rhs));
     }
@@ -505,8 +532,43 @@ class [[nodiscard]] LimitedOrdered {
     return std::upper_bound(begin(), end(), key, val_comp_);
   }
 
+  // Transparent overloads. Each is constrained on `kIsForeignKey`, so it only
+  // exists when the comparator opts in via `is_transparent` AND the argument is
+  // not already a `Key` - an exact `Key` argument keeps binding to the non-template
+  // overload above, which remains the better match.
+
+  template<typename K>
+  requires(kIsForeignKey<K>)
+  MBO_FORCE_INLINE constexpr iterator lower_bound(const K& key) {
+    return std::lower_bound(begin(), end(), key, val_comp_);
+  }
+
+  template<typename K>
+  requires(kIsForeignKey<K>)
+  MBO_FORCE_INLINE constexpr const_iterator lower_bound(const K& key) const {
+    return std::lower_bound(begin(), end(), key, val_comp_);
+  }
+
+  template<typename K>
+  requires(kIsForeignKey<K>)
+  MBO_FORCE_INLINE constexpr iterator upper_bound(const K& key) {
+    return std::upper_bound(begin(), end(), key, val_comp_);
+  }
+
+  template<typename K>
+  requires(kIsForeignKey<K>)
+  MBO_FORCE_INLINE constexpr const_iterator upper_bound(const K& key) const {
+    return std::upper_bound(begin(), end(), key, val_comp_);
+  }
+
   // NOLINTBEGIN(*-magic-numbers,*-macro-usage,*-function-size,readability-function-cognitive-complexity)
-  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
+  // Templated on the key so a transparent lookup gets the SAME dispatch - including
+  // the unrolled fast path below. Routing foreign keys through `lower_bound` instead
+  // would make them slower than exact keys on exactly the small containers this
+  // class exists for. `K` defaults to `Key`, so an exact-key call is unchanged.
+  template<typename K = Key>
+  requires(std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>> || kIsForeignKey<K>)
+  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const K& key) const
   requires(kOptimizeIndexOf && Capacity <= kUnrollMaxCapacity)
   {
 #define MBO_CASE_LIMITED_POS_COMP(POS)                                     \
@@ -572,7 +634,9 @@ class [[nodiscard]] LimitedOrdered {
     return npos;
   }  // NOLINTEND(*-magic-numbers,*-macro-usage,*-function-size,readability-function-cognitive-complexity)
 
-  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
+  template<typename K = Key>
+  requires(std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>> || kIsForeignKey<K>)
+  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const K& key) const
   requires(
       kOptimizeIndexOf && kCustomIndexOfBeyondUnroll
       && mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
@@ -593,7 +657,9 @@ class [[nodiscard]] LimitedOrdered {
     return npos;
   }
 
-  MBO_ALWAYS_INLINE std::size_t index_of(const Key& key) const
+  template<typename K = Key>
+  requires(std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>> || kIsForeignKey<K>)
+  MBO_ALWAYS_INLINE std::size_t index_of(const K& key) const
   requires(
       kOptimizeIndexOf && kCustomIndexOfBeyondUnroll
       && !mbo::types::IsCompareLess<Compare> && Capacity > kUnrollMaxCapacity)
@@ -624,10 +690,12 @@ class [[nodiscard]] LimitedOrdered {
     }
   }
 
-  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const Key& key) const
+  template<typename K = Key>
+  requires(std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>> || kIsForeignKey<K>)
+  MBO_ALWAYS_INLINE constexpr std::size_t index_of(const K& key) const
   requires(!kOptimizeIndexOf || (kOptimizeIndexOf && !kCustomIndexOfBeyondUnroll && Capacity > kUnrollMaxCapacity))
   {
-    const_iterator it = lower_bound(key);
+    const const_iterator it = lower_bound(key);
     return it == end() || key_comp_(key, GetKey(*it)) ? npos : it - begin();
   }
 
@@ -643,20 +711,20 @@ class [[nodiscard]] LimitedOrdered {
 
   MBO_FORCE_INLINE constexpr iterator find(const Key& key) {
     if constexpr (kOptimizeIndexOf) {
-      std::size_t pos = index_of(key);
+      const std::size_t pos = index_of(key);
       return pos == npos ? end() : iterator(&values_[pos]);
     } else {  // Not kOptimizeIndexOf
-      iterator it = lower_bound(key);
+      const iterator it = lower_bound(key);
       return it == end() || key_comp_(key, GetKey(*it)) ? end() : it;
     }
   }
 
   MBO_FORCE_INLINE constexpr const_iterator find(const Key& key) const {
     if constexpr (kOptimizeIndexOf) {
-      std::size_t pos = index_of(key);
+      const std::size_t pos = index_of(key);
       return pos == npos ? end() : const_iterator(&values_[pos]);
     } else {  // Not kOptimizeIndexOf
-      const_iterator it = lower_bound(key);
+      const const_iterator it = lower_bound(key);
       return it == end() || key_comp_(key, GetKey(*it)) ? end() : it;
     }
   }
@@ -669,9 +737,49 @@ class [[nodiscard]] LimitedOrdered {
     }
   }
 
+  // Transparent `find`/`contains`. These mirror the exact-key versions above rather
+  // than taking a separate route: `index_of` is templated on the key, so a foreign
+  // key gets the same unrolled fast path and is not penalised for being foreign.
+
+  template<typename K>
+  requires(kIsForeignKey<K>)
+  MBO_FORCE_INLINE constexpr iterator find(const K& key) {
+    if constexpr (kOptimizeIndexOf) {
+      const std::size_t pos = index_of(key);
+      return pos == npos ? end() : iterator(&values_[pos]);
+    } else {
+      const iterator it = lower_bound(key);
+      return it == end() || val_comp_(key, *it) ? end() : it;
+    }
+  }
+
+  template<typename K>
+  requires(kIsForeignKey<K>)
+  MBO_FORCE_INLINE constexpr const_iterator find(const K& key) const {
+    if constexpr (kOptimizeIndexOf) {
+      const std::size_t pos = index_of(key);
+      return pos == npos ? end() : const_iterator(&values_[pos]);
+    } else {
+      const const_iterator it = lower_bound(key);
+      return it == end() || val_comp_(key, *it) ? end() : it;
+    }
+  }
+
+  template<typename K>
+  requires(kIsForeignKey<K>)
+  MBO_FORCE_INLINE constexpr bool contains(const K& key) const {
+    if constexpr (kOptimizeIndexOf) {
+      return index_of(key) != npos;
+    } else {
+      return std::binary_search(begin(), end(), key, val_comp_);
+    }
+  }
+
   // Performs contains-all-of functionality (not part of STL).
   template<typename Other>
-  requires(types::ContainerIsForwardIteratable<Other> && std::equality_comparable_with<typename Other::value_type, Key>)
+  requires(
+      types::ContainerIsForwardIteratable<Other>
+      && (std::equality_comparable_with<typename Other::value_type, Key> || kIsForeignKey<typename Other::value_type>))
   constexpr bool contains_all(const Other& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (!contains(*it)) {
@@ -683,7 +791,7 @@ class [[nodiscard]] LimitedOrdered {
 
   // Performs contains-all-of functionality (not part of STL).
   template<typename U>
-  requires(std::equality_comparable_with<Key, U>)
+  requires(std::equality_comparable_with<Key, U> || kIsForeignKey<U>)
   constexpr bool contains_all(const std::initializer_list<U>& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (!contains(*it)) {
@@ -695,7 +803,9 @@ class [[nodiscard]] LimitedOrdered {
 
   // Performs contains-any-of functionality (not part of STL).
   template<typename Other = std::initializer_list<Key>>
-  requires(types::ContainerIsForwardIteratable<Other> && std::equality_comparable_with<typename Other::value_type, Key>)
+  requires(
+      types::ContainerIsForwardIteratable<Other>
+      && (std::equality_comparable_with<typename Other::value_type, Key> || kIsForeignKey<typename Other::value_type>))
   constexpr bool contains_any(const Other& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (contains(*it)) {
@@ -707,7 +817,7 @@ class [[nodiscard]] LimitedOrdered {
 
   // Performs contains-any-of functionality (not part of STL).
   template<typename U>
-  requires(std::equality_comparable_with<Key, U>)
+  requires(std::equality_comparable_with<Key, U> || kIsForeignKey<U>)
   constexpr bool contains_any(const std::initializer_list<U>& other) const {
     for (auto it = other.begin(); it != other.end(); ++it) {
       if (contains(*it)) {
@@ -727,7 +837,26 @@ class [[nodiscard]] LimitedOrdered {
 
   constexpr std::size_t count(const Key& key) const {
     const auto [first, last] = equal_range(key);
-    return last - false;
+    return last - first;
+  }
+
+  template<typename K>
+  requires(kIsForeignKey<K>)
+  constexpr std::pair<iterator, iterator> equal_range(const K& key) {
+    return std::equal_range(begin(), end(), key, val_comp_);
+  }
+
+  template<typename K>
+  requires(kIsForeignKey<K>)
+  constexpr std::pair<const_iterator, const_iterator> equal_range(const K& key) const {
+    return std::equal_range(begin(), end(), key, val_comp_);
+  }
+
+  template<typename K>
+  requires(kIsForeignKey<K>)
+  constexpr std::size_t count(const K& key) const {
+    const auto [first, last] = equal_range(key);
+    return last - first;
   }
 
   // Mofification: clear, swap, emplace, insert
@@ -755,8 +884,8 @@ class [[nodiscard]] LimitedOrdered {
         std::swap(values_[pos].data.second, other.values_[pos].data.second);
       }
     }
-    std::size_t other_size = other.size_;
-    std::size_t this_size = size_;
+    const std::size_t other_size = other.size_;
+    const std::size_t this_size = size_;
     for (; pos < size_; ++pos) {
       other.emplace(std::move(values_[pos].data));
     }
@@ -769,7 +898,7 @@ class [[nodiscard]] LimitedOrdered {
 
   template<typename... Args>
   constexpr std::pair<iterator, bool> emplace(Args&&... args) noexcept(!kRequireThrows) {
-    RawValue new_val(std::forward<Args>(args)...);
+    const RawValue new_val(std::forward<Args>(args)...);
     const iterator dst = lower_bound(GetKey(new_val));
     if (dst != end() && !key_comp_(GetKey(*dst), GetKey(new_val)) && !key_comp_(GetKey(new_val), GetKey(*dst))) {
       return std::make_pair(dst, false);
@@ -825,17 +954,56 @@ class [[nodiscard]] LimitedOrdered {
     return count;
   }
 
+  // Erase by a key that is NOT this container's key type.
+  //
+  // Excluding `Key` gives the two overloads non-overlapping domains: an exact key -
+  // lvalue, temporary or value - always binds to the simple overload above, and this
+  // one only ever sees a foreign key. Without the constraint `K&&` deduces `Key&` for a
+  // non-const lvalue and outranks `const Key&`, so the template silently handled that
+  // case too. That was not a bug - it bound `const Key&` without converting, and with a
+  // transparent comparator compared directly - which is why the tests pass either way.
+  // The constraint is here so the dispatch is stated rather than inferred.
   template<typename K>
-  requires(!IsIterator<K>::value)
+  requires(!IsIterator<K>::value && !std::same_as<std::remove_cvref_t<K>, std::remove_cvref_t<Key>>)
+  // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
   constexpr size_type erase(K&& key) {
     size_type count = 0;
-    while (true) {
-      auto pos = find(std::forward<K>(key));
-      if (pos == end()) {
-        break;
+    if constexpr (kTransparent) {
+      // Nothing to convert: `find` compares the foreign key directly, so no `Key` is
+      // ever built. `key` is therefore never forwarded - there is no target to move
+      // into - which is what the NOLINT above is about.
+      while (true) {
+        auto pos = find(key);
+        if (pos == end()) {
+          break;
+        }
+        erase(pos);
+        ++count;
       }
-      erase(pos);
-      ++count;
+    } else {
+      // A `Key` has to be materialised, because the comparator can only compare keys.
+      //
+      // `key` stays a forwarding reference on purpose: callers may pass an lvalue, a
+      // temporary or a value, and the compiler picks what is cheapest - a small type in
+      // registers beats a const& indirection.
+      //
+      // It is forwarded EXACTLY ONCE, into this binding, rather than inside the loop. An
+      // object can only be forwarded once, so forwarding per iteration would claim a move
+      // of `key` every time round (bugprone-use-after-move), and there is no "last
+      // iteration" to single out because the loop runs until `find` fails. Measured with a
+      // `Key` having both converting constructors, over three iterations:
+      //   * `find(key)` inside the loop:                   3 copy-conversions
+      //   * `find(std::forward<K>(key))` inside the loop:   3 move-conversions (and unsound)
+      //   * forwarded once into this binding:               1 conversion, a move for an rvalue
+      const Key& key_ref = std::forward<K>(key);
+      while (true) {
+        auto pos = find(key_ref);
+        if (pos == end()) {
+          break;
+        }
+        erase(pos);
+        ++count;
+      }
     }
     return count;
   }

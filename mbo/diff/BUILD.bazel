@@ -131,7 +131,10 @@ cc_binary(
     name = "diff_benchmark",
     testonly = True,
     srcs = ["diff_benchmark.cc"],
-    tags = ["manual"],
+    tags = [
+        "clang-tidy",
+        "manual",
+    ],
     deps = [
         ":diff_cc",
         "//mbo/file:artefact_cc",

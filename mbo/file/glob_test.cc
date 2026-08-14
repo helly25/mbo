@@ -300,7 +300,7 @@ absl::StatusOr<std::filesystem::path> CreateFileSystemEntries(
       return absl::AbortedError(absl::StrCat("Cannot create dir: ", path));
     }
     if (!file.empty()) {
-      std::ofstream output(*root / path / file, std::ios::binary);
+      const std::ofstream output(*root / path / file, std::ios::binary);
     }
   }
   return *root;

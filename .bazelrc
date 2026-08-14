@@ -60,6 +60,16 @@ common:clang --define is_clang=true
 # https://github.com/llvm/llvm-project/issues/100909
 common:clang --cxxopt=-Wno-unused-command-line-argument
 
+# The configuration the code is INDEXED in: `compile_commands.json` (see
+# `compile_commands-update.sh`) and therefore clangd and clang-tidy. It is
+# `--config=clang` plus an explicit libc++, because that is what development
+# actually targets and the compile DB must say so rather than inherit whatever
+# the driver defaults to - libc++ on macOS but libstdc++ on Linux, which made
+# the same clang-tidy check report differently per platform.
+common:clang-tidy --config=clang
+common:clang-tidy --cxxopt=-stdlib=libc++
+common:clang-tidy --linkopt=-stdlib=libc++
+
 common:symbolizer --strip=never
 common:symbolizer --run_under=//tools:run_under_symbolizer
 

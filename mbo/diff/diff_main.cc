@@ -225,15 +225,10 @@ constexpr int kExitEqual = 0;
 constexpr int kExitDifferent = 1;
 constexpr int kExitTrouble = 2;
 
-int Diff(std::string_view lhs_name, std::string_view rhs_name) {
-  const auto lhs = Read(lhs_name);
-  if (!lhs.ok()) {
-    return kExitTrouble;
-  }
-  const auto rhs = Read(rhs_name);
-  if (!rhs.ok()) {
-    return kExitTrouble;
-  }
+// Builds the diff options from the command-line flags. Split out of `Diff` so
+// that reading the inputs and reporting the result stay legible next to the
+// flag validation and the two option-building lambdas.
+Diff::Options MakeDiffOptions() {
   const std::string strip_comments = absl::GetFlag(FLAGS_strip_comments);
   const std::optional<Diff::Options::Algorithm> algorithm =
       Diff::Options::ParseAlgorithmFlag(absl::GetFlag(FLAGS_algorithm));
@@ -243,18 +238,21 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
   ABSL_QCHECK(output_format) << "Unknown format";
   ABSL_QCHECK(absl::GetFlag(FLAGS_algorithm) != "unified" || output_format == Diff::Options::OutputFormat::kUnified)
       << "The deprecated '--algorithm=unified' alias implies '--format=unified'.";
+  const std::optional<Diff::Options::FileHeaderUse> file_header_use =
+      Diff::Options::ParseFileHeaderUse(absl::GetFlag(FLAGS_file_header_use));
+  ABSL_QCHECK(file_header_use) << "Unknown file_header_use";
   const bool is_direct = algorithm == Diff::Options::Algorithm::kDirect;
   const bool is_normal = output_format == Diff::Options::OutputFormat::kNormal;
   const bool is_side_by_side = output_format == Diff::Options::OutputFormat::kSideBySide;
   // Side-by-side shows the full files by default (halved to keep the context
   // size arithmetic overflow free); direct and normal formats show none.
   const std::size_t default_context = is_side_by_side ? std::numeric_limits<std::size_t>::max() / 2 : 0;
-  const Diff::Options diff_options{
+  return Diff::Options{
       .algorithm = *algorithm,
       .output_format = *output_format,
       .context_size = GetFlagOrDefault(FLAGS_context, is_direct || is_normal || is_side_by_side, default_context),
       .side_by_side_width = absl::GetFlag(FLAGS_width),
-      .file_header_use = *Diff::Options::ParseFileHeaderUse(absl::GetFlag(FLAGS_file_header_use)),
+      .file_header_use = *file_header_use,
       .ignore_blank_lines = absl::GetFlag(FLAGS_ignore_blank_lines),
       .ignore_case = absl::GetFlag(FLAGS_ignore_case),
       .ignore_all_space = absl::GetFlag(FLAGS_ignore_all_space),
@@ -290,6 +288,18 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
       .regex_replace_rhs{Diff::Options::ParseRegexReplaceFlag(absl::GetFlag(FLAGS_regex_replace_rhs))},
       .strip_file_header_prefix = absl::GetFlag(FLAGS_strip_file_header_prefix),
   };
+}
+
+int Diff(std::string_view lhs_name, std::string_view rhs_name) {
+  const auto lhs = Read(lhs_name);
+  if (!lhs.ok()) {
+    return kExitTrouble;
+  }
+  const auto rhs = Read(rhs_name);
+  if (!rhs.ok()) {
+    return kExitTrouble;
+  }
+  const Diff::Options diff_options = MakeDiffOptions();
   const auto result = Diff::FileDiff(*lhs, *rhs, diff_options);
   if (!result.ok()) {
     ABSL_LOG(ERROR) << "ERROR: " << result.status();

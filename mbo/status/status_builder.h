@@ -42,7 +42,12 @@ class StatusBuilder final {
   ~StatusBuilder() noexcept = default;
   StatusBuilder() noexcept = default;
 
+  // `Data` is an aggregate initialised with a designated initialiser, which make_unique cannot
+  // express - it forwards to a constructor, so the nearest form is `make_unique<Data>(Data{...})`,
+  // adding a move of the Status for no benefit. The suppression must sit bare on the line directly
+  // above the one the check REPORTS - the initialiser below, not the signature.
   explicit StatusBuilder(absl::Status status)
+      // NOLINTNEXTLINE(modernize-make-unique)
       : data_(status.ok() ? nullptr : std::unique_ptr<Data>(new Data{.status = std::move(status)})) {}
 
   template<typename T>
@@ -73,7 +78,14 @@ class StatusBuilder final {
   }
 
   // Switching the builder to append mode.
-  enum Append { Append };  // NOLINT(*-identifier-naming)
+  //
+  // A tag enum, unscoped on purpose: the whole point is that a caller writes
+  // `builder << Append` at the use site. Scoping it would make that
+  // `builder << StatusBuilder::Append::Append`, which is worse to read and an
+  // API break for every caller, to satisfy a rule aimed at enums that carry
+  // values.
+  // NOLINTNEXTLINE(*-identifier-naming,cppcoreguidelines-use-enum-class)
+  enum Append { Append };
 
   StatusBuilder& operator<<(enum Append /* unused */) & { return SetAppend(); }
 

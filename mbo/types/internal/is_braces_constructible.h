@@ -127,7 +127,7 @@ template<typename T, typename... Args>
 struct IsBracesConstructibleImpl : decltype(types_internal::IsBracesConstructibleFunc<T, Args...>(0)) {};
 
 template<typename T, typename... Args>
-using IsBracesConstructibleImplT = typename IsBracesConstructibleImpl<T, Args...>::type;
+using IsBracesConstructibleImplT = IsBracesConstructibleImpl<T, Args...>::type;
 
 #ifdef __clang__
 # pragma clang diagnostic pop

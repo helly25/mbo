@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MBO_TYPES_STATUS_STATUS_MACROS_H_
-#define MBO_TYPES_STATUS_STATUS_MACROS_H_
+#ifndef MBO_STATUS_STATUS_MACROS_H_
+#define MBO_STATUS_STATUS_MACROS_H_
 
 #include <utility>  // IWYU pragma: keep
 
@@ -124,4 +124,4 @@
   case 0:                                              \
   default:  // NOLINT
 
-#endif  // MBO_TYPES_STATUS_STATUS_MACROS_H_
+#endif  // MBO_STATUS_STATUS_MACROS_H_

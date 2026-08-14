@@ -39,6 +39,7 @@ struct OptionalDataOrRefTest : ::testing::Test {};
 
 TEST_F(OptionalDataOrRefTest, Constexpr) {
   {
+    // NOLINTNEXTLINE(misc-const-correctness): const would change decltype() in the static_assert below.
     constexpr OptionalDataOrRef<int> kRef;
     static_assert(IsOptionalDataOrRef<std::remove_const_t<decltype(kRef)>>);
     EXPECT_THAT(kRef, std::nullopt);
@@ -62,6 +63,7 @@ TEST_F(OptionalDataOrRefTest, Constexpr) {
 }
 
 TEST_F(OptionalDataOrRefTest, InitNone) {
+  // NOLINTNEXTLINE(misc-const-correctness): the test exercises the mutable type; const changes what is under test.
   OptionalDataOrRef<int> ref;
   EXPECT_THAT(ref, std::nullopt);
   EXPECT_THAT(ref, IsNullopt());
@@ -72,6 +74,7 @@ TEST_F(OptionalDataOrRefTest, InitNone) {
 }
 
 TEST_F(OptionalDataOrRefTest, InitNullopt) {
+  // NOLINTNEXTLINE(misc-const-correctness): the test exercises the mutable type; const changes what is under test.
   OptionalDataOrRef<int> ref(std::nullopt);
   EXPECT_THAT(ref, std::nullopt);
   EXPECT_THAT(ref, IsNullopt());
@@ -82,6 +85,7 @@ TEST_F(OptionalDataOrRefTest, InitNullopt) {
 }
 
 TEST_F(OptionalDataOrRefTest, InitVal) {
+  // NOLINTNEXTLINE(misc-const-correctness): the test exercises the mutable type; const changes what is under test.
   OptionalDataOrRef<int> ref(42);
   EXPECT_THAT(ref, Eq(42));
   EXPECT_THAT(ref, Not(IsNullopt()));
@@ -93,6 +97,7 @@ TEST_F(OptionalDataOrRefTest, InitVal) {
 
 TEST_F(OptionalDataOrRefTest, InitRef) {
   int val = 42;
+  // NOLINTNEXTLINE(misc-const-correctness): the test exercises the mutable type; const changes what is under test.
   OptionalDataOrRef<int> ref(val);
   EXPECT_THAT(ref, Eq(42));
   EXPECT_THAT(ref, Not(IsNullopt()));
@@ -104,7 +109,8 @@ TEST_F(OptionalDataOrRefTest, InitRef) {
 
 TEST_F(OptionalDataOrRefTest, Value) {
   int val = 10;
-  static_assert(std::same_as<int, typename OptionalDataOrRef<int>::value_type>);
+  static_assert(std::same_as<int, OptionalDataOrRef<int>::value_type>);
+  // NOLINTNEXTLINE(misc-const-correctness): the test exercises the mutable type; const changes what is under test.
   OptionalDataOrRef<int> ref(val);
   EXPECT_THAT(ref.has_value(), true);
   EXPECT_THAT(ref.HoldsData(), false);
@@ -204,6 +210,7 @@ TEST_F(OptionalDataOrRefTest, Value) {
 }
 
 TEST_F(OptionalDataOrRefTest, DifferentType) {
+  // NOLINTNEXTLINE(misc-const-correctness): the test exercises the mutable type; const changes what is under test.
   OptionalDataOrRef<std::string> ref;
   EXPECT_THAT(ref.has_value(), false);
   EXPECT_THAT(ref.HoldsData(), false);
@@ -234,7 +241,7 @@ TEST_F(OptionalDataOrRefTest, DifferentType) {
   EXPECT_THAT(ref.HoldsNullopt(), false);
   EXPECT_THAT(ref.HoldsReference(), false);
   EXPECT_THAT(ref, "400");
-  std::string str{"500"};
+  const std::string str{"500"};
   ref = str;
   EXPECT_THAT(ref.has_value(), true);
   EXPECT_THAT(ref.HoldsData(), true);
@@ -257,6 +264,7 @@ TEST_F(OptionalDataOrRefTest, Compare) {
 }
 
 TEST_F(OptionalDataOrRefTest, ConsRef) {
+  // NOLINTNEXTLINE(misc-const-correctness): the test exercises the mutable type; const changes what is under test.
   OptionalDataOrConstRef<int> ref(42);
   static_assert(IsOptionalDataOrRef<decltype(ref)>);
   EXPECT_THAT(ref, Eq(42));
@@ -276,6 +284,7 @@ struct TestAsData {
 };
 
 TEST_F(OptionalDataOrRefTest, AsData) {
+  // NOLINTNEXTLINE(misc-const-correctness): the test exercises the mutable type; const changes what is under test.
   OptionalDataOrRef<TestAsData> ref;
   EXPECT_THAT(ref.has_value(), false);
   EXPECT_THAT(ref.HoldsData(), false);

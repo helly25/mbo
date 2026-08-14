@@ -48,6 +48,7 @@ using ::mbo::testing::IsOkAndHolds;
 using ::testing::ElementsAreArray;
 using ::testing::IsEmpty;
 using ::testing::Not;
+using ::testing::Optional;
 
 class DiffTest : public ::testing::Test {
  public:
@@ -58,7 +59,7 @@ class DiffTest : public ::testing::Test {
       const Diff::Options& options = Diff::Options::Default()) {
     lhs.data = DropIndent(lhs.data);
     rhs.data = DropIndent(rhs.data);
-    MBO_ASSIGN_OR_RETURN(std::string result, mbo::diff::Diff::FileDiff(lhs, rhs, options));
+    MBO_ASSIGN_OR_RETURN(const std::string result, mbo::diff::Diff::FileDiff(lhs, rhs, options));
     if (result.empty()) {
       return std::vector<std::string>{};
     }
@@ -874,7 +875,8 @@ TEST_F(DiffTest, SideBySideFormat) {
   // Side-by-side rows keep meaningful leading whitespace, so these tests
   // compare the raw output rather than using the DropIndent based helper.
   const auto diff = [](std::string_view lhs, std::string_view rhs, const Diff::Options& options) {
-    return mbo::diff::Diff::FileDiff({std::string(lhs), "lhs"}, {std::string(rhs), "rhs"}, options);
+    return mbo::diff::Diff::FileDiff(
+        {.data = std::string(lhs), .name = "lhs"}, {.data = std::string(rhs), .name = "rhs"}, options);
   };
   const Diff::Options options{
       .output_format = Diff::Options::OutputFormat::kSideBySide,
@@ -906,7 +908,8 @@ TEST_F(DiffTest, SideBySideFormat) {
 
 TEST_F(DiffTest, SideBySideFormatDetails) {
   const auto diff = [](std::string_view lhs, std::string_view rhs, const Diff::Options& options) {
-    return mbo::diff::Diff::FileDiff({std::string(lhs), "lhs"}, {std::string(rhs), "rhs"}, options);
+    return mbo::diff::Diff::FileDiff(
+        {.data = std::string(lhs), .name = "lhs"}, {.data = std::string(rhs), .name = "rhs"}, options);
   };
   // The "no newline" marker renders as its own full width line per side.
   EXPECT_THAT(
@@ -1097,11 +1100,10 @@ TEST_F(DiffTest, MyersRoundTrip) {
   }
   for (std::size_t idx = 0; idx < cases.size(); ++idx) {
     const auto& [lhs, rhs] = cases[idx];
-    const auto result = mbo::diff::Diff::FileDiff({lhs, "lhs"}, {rhs, "rhs"}, options);
+    const auto result = mbo::diff::Diff::FileDiff({.data = lhs, .name = "lhs"}, {.data = rhs, .name = "rhs"}, options);
     ASSERT_THAT(result, mbo::testing::IsOk()) << "case: " << idx;
     const std::optional<std::string> applied = ApplyUnifiedDiff(lhs, *result);
-    ASSERT_TRUE(applied.has_value()) << "case: " << idx << " diff:\n" << *result;
-    EXPECT_EQ(*applied, rhs) << "case: " << idx << " diff:\n" << *result;
+    EXPECT_THAT(applied, Optional(rhs)) << "case: " << idx << " diff:\n" << *result;
   }
 }
 
@@ -1241,7 +1243,7 @@ TEST_F(DiffTest, MyersMinimalOption) {
   };
   const auto run = [&](bool minimal) {
     return mbo::diff::Diff::FileDiff(
-        {lhs, "lhs"}, {rhs, "rhs"},
+        {.data = lhs, .name = "lhs"}, {.data = rhs, .name = "rhs"},
         {
             .algorithm = Diff::Options::Algorithm::kMyers,
             .context_size = 0,
@@ -1255,10 +1257,8 @@ TEST_F(DiffTest, MyersMinimalOption) {
   ASSERT_THAT(minimal, IsOk());
   const std::optional<std::string> capped_applied = ApplyUnifiedDiff(lhs, *capped);
   const std::optional<std::string> minimal_applied = ApplyUnifiedDiff(lhs, *minimal);
-  ASSERT_TRUE(capped_applied.has_value());
-  ASSERT_TRUE(minimal_applied.has_value());
-  EXPECT_EQ(*capped_applied, rhs);
-  EXPECT_EQ(*minimal_applied, rhs);
+  EXPECT_THAT(capped_applied, Optional(rhs));
+  EXPECT_THAT(minimal_applied, Optional(rhs));
   EXPECT_LT(count_edits(*minimal), count_edits(*capped));
 }
 

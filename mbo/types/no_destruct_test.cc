@@ -32,8 +32,9 @@ using ::testing::Conditional;
 using ::testing::Ge;  // NOLINT(misc-unused-using-decls)
 using ::testing::Ne;
 
-static constexpr int kValueA = 25;
-static constexpr int kValueB = 42;
+namespace {
+constexpr int kValueA = 25;
+constexpr int kValueB = 42;
 
 struct TestSimple : Extend<TestSimple> {
   int a = kValueA;
@@ -51,10 +52,8 @@ static_assert(IsAggregate<TestString>, "Must be aggregate");
 static_assert(DecomposeCountV<TestSimple> == 2, "There are 2 fields, no?");
 static_assert(DecomposeCountV<TestString> == 2, "There are 2 fields, no?");
 
-static const NoDestruct<TestSimple> kTestSimple;
-static const NoDestruct<TestString> kTestString;
-
-namespace {
+const NoDestruct<TestSimple> kTestSimple;
+const NoDestruct<TestString> kTestString;
 
 class NoDestructTest : public ::testing::Test {};
 
