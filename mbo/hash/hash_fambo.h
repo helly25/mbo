@@ -46,16 +46,16 @@ inline constexpr std::array<uint64_t, 4> kSecret = {
     0xA54FF53A5F1D36F1,  // Prime
 
     // Bulk Block Multiplier Secrets (Lanes 0..3 - Strictly Odd Primes)
-    //0x510E527FADE682D1,  // Prime
-    //0x9B05688C2B3E6C1F,  // Prime
-    //0x1F83D9ABFB41BD6B,  // Prime
-    //0x5BE0CD19137E2179,  // Prime
+    // 0x510E527FADE682D1,  // Prime
+    // 0x9B05688C2B3E6C1F,  // Prime
+    // 0x1F83D9ABFB41BD6B,  // Prime
+    // 0x5BE0CD19137E2179,  // Prime
 
     // Distinct Initializer Secrets (Strictly Odd Primes)
-    //0xCBBB9D5DC1059ED9,  // Prime
-    //0x629A292A367CD50D,  // Prime
-    //0x9159015A3070DD17,  // Prime
-    //0x152FECD8F70E5939,  // Prime
+    // 0xCBBB9D5DC1059ED9,  // Prime
+    // 0x629A292A367CD50D,  // Prime
+    // 0x9159015A3070DD17,  // Prime
+    // 0x152FECD8F70E5939,  // Prime
 };
 
 // FAMBO Core Loop Tier: 4 completely independent lanes.
@@ -99,9 +99,9 @@ MBO_FORCE_INLINE constexpr uint64_t GetHash64(std::string_view str, uint64_t see
     // Each lane is independent, so the compiler can schedule the four Mul128Fold64 operations concurrently, allowing
     // for better instruction-level parallelism and throughput. This works due to the temp vars.
     uint64_t lane0 = seed ^ len;  // kSecret[0] ^ len;  // Must use length at least once.
-    uint64_t lane1 = seed;  // ^ kSecret[1];
-    uint64_t lane2 = seed;  // ^ kSecret[2];
-    uint64_t lane3 = seed;  // ^ kSecret[3];
+    uint64_t lane1 = seed;        // ^ kSecret[1];
+    uint64_t lane2 = seed;        // ^ kSecret[2];
+    uint64_t lane3 = seed;        // ^ kSecret[3];
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
     do {
       lane0 = Mul128Fold64(Load64(ptr + 0) ^ kSecret[0], Load64(ptr + 8) ^ lane0);

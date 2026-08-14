@@ -716,23 +716,23 @@ its restriction to 4 lanes.
   * **further potential**: While 4 lanes proovingly allows for full ILP, it has to be proven still what the maximum
   lane count is that modent CPUs can handle (4, 5, 6, or 7). However, this is a compromise:
     * More lanes in the bulk block, means faster bulk processing.
-    * More lanes also has a potential for slower processing of the non tiny, non bulk range `[17, N * 64]`. 
+    * More lanes also has a potential for slower processing of the non tiny, non bulk range `[17, N * 64]`.
     * More lanes likely mean fewer mix-in constants can be used (otherwise they would constantly needing to be fetched from L1 cache.
 
 * **The Finalization & Distribution Trade-off**
 
   * **Quality Matrix**: mumbo uses a strict, multi-multiply finalizer tree that mixes both halves of widening 128-bit products back against each other. This heavy mathematical overhead ensures it easily passes 188/188 tests in the SMHasher3 battery, making it highly resilient against worst-case, sparse, or structured data distributions.
 
-  * **Streamlined Finalization**: fambo optimizes the latency of small keys (≤16 bytes) by dropping to a streamlined, high-efficiency mixing step. While its raw speed is dramatically higher, early iterations risked structural symmetry issues (like the Sanity and Zeroes failures in SMHasher3). By isolating seed transformations from length injection and isolating lane variables using distinct secret primes, fambo maintains its hardware-sympathetic speed edge without dropping its guard on distribution quality.  
+  * **Streamlined Finalization**: fambo optimizes the latency of small keys (≤16 bytes) by dropping to a streamlined, high-efficiency mixing step. While its raw speed is dramatically higher, early iterations risked structural symmetry issues (like the Sanity and Zeroes failures in SMHasher3). By isolating seed transformations from length injection and isolating lane variables using distinct secret primes, fambo maintains its hardware-sympathetic speed edge without dropping its guard on distribution quality.
 
 * **Bottom Line**
 
   Metric / Feature   | mumbo                                | fambo
   -------------------|--------------------------------------|-----------
-  Bulk Window Size   | 128 Bytes	                        | 64 Bytes  
-  Register Pressure  | High (Potential stack spilling)      | Low (Pure register execution)  
-  ILP Efficiency	 | Restricted by register availability  | Maximum (Concurrent lane dispatch)  
-  Small Key Latency  | Higher cycle overhead                | Ultra-low cycle overhead  
+  Bulk Window Size   | 128 Bytes	                        | 64 Bytes
+  Register Pressure  | High (Potential stack spilling)      | Low (Pure register execution)
+  ILP Efficiency	 | Restricted by register availability  | Maximum (Concurrent lane dispatch)
+  Small Key Latency  | Higher cycle overhead                | Ultra-low cycle overhead
   Primary Target     | General-purpose safety & strict maps | Hot execution paths & data pipelines
 
 ### dumbo: the measured design iterations
