@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <string_view>
 
 #include "absl/status/status.h"
 #include "absl/time/time.h"
@@ -42,7 +43,7 @@ struct ArtefactTest : ::testing::Test {
 
   void TearDown() override { fs::remove_all(tmp_dir); }
 
-  std::string Write(const std::string& name, const std::string& content) const {
+  std::string Write(std::string_view name, std::string_view content) const {
     const fs::path path = tmp_dir / name;
     std::ofstream out(path);
     out << content;
