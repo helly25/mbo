@@ -26,6 +26,7 @@ namespace {
 
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
+using ::testing::IsTrue;
 
 // NOLINTBEGIN(*-magic-numbers)
 
@@ -68,7 +69,7 @@ TEST_F(ContainerProxyTest, ExposesTheContainersTypeAliases) {
 
 TEST_F(ContainerProxyTest, ForwardsConstIteration) {
   const HeldVec proxy{{.data = {1, 2}}};
-  EXPECT_THAT(proxy.begin() != proxy.end(), true);
+  EXPECT_THAT(proxy.begin() != proxy.end(), IsTrue());
   EXPECT_THAT(*proxy.begin(), 1);
   EXPECT_THAT(*proxy.cbegin(), 1);
 }
@@ -89,7 +90,7 @@ TEST_F(ContainerProxyTest, MutationThroughTheProxyReachesTheContainer) {
 TEST_F(ContainerProxyTest, HandlesAnEmptyContainer) {
   HeldVec proxy{{.data = {}}};
   EXPECT_THAT(proxy, IsEmpty());
-  EXPECT_THAT(proxy.begin() == proxy.end(), true);
+  EXPECT_THAT(proxy.begin() == proxy.end(), IsTrue());
 }
 
 TEST_F(ContainerProxyTest, WorksWithANonTrivialValueType) {

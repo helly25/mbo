@@ -28,6 +28,7 @@ cc_test(
     srcs = ["cases_test.cc"],
     deps = [
         ":cases_cc",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

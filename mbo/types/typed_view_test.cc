@@ -29,6 +29,7 @@ namespace {
 
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
+using ::testing::IsTrue;
 
 // NOLINTBEGIN(*-magic-numbers)
 
@@ -53,7 +54,7 @@ TEST_F(TypedViewTest, IteratesAnEmptyView) {
   const std::vector<int> data;
   auto view = TypedView(std::views::all(data));
   EXPECT_THAT(view, IsEmpty());
-  EXPECT_THAT(view.begin() == view.end(), true);
+  EXPECT_THAT(view.begin() == view.end(), IsTrue());
 }
 
 TEST_F(TypedViewTest, WrapsATransformedView) {

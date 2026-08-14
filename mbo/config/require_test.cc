@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/config/config.h"
 
@@ -29,7 +30,7 @@ TEST_F(RequireTest, SatisfiedRequirementDoesNothing) {
   int side_effect = 0;
   MBO_CONFIG_REQUIRE(true, "never reported");
   side_effect = 1;
-  EXPECT_EQ(side_effect, 1) << "execution continues past a satisfied requirement";
+  EXPECT_THAT(side_effect, 1) << "execution continues past a satisfied requirement";
 }
 
 TEST_F(RequireTest, ConditionIsEvaluatedExactlyOnce) {
@@ -42,7 +43,7 @@ TEST_F(RequireTest, ConditionIsEvaluatedExactlyOnce) {
     return true;
   };
   MBO_CONFIG_REQUIRE(condition(), "message");
-  EXPECT_EQ(calls, 1);
+  EXPECT_THAT(calls, 1);
 }
 
 TEST_F(RequireTest, WorksInsideAnIfElseChainWithoutSwallowingTheElse) {
@@ -57,7 +58,7 @@ TEST_F(RequireTest, WorksInsideAnIfElseChainWithoutSwallowingTheElse) {
   } else {
     branch = "else";
   }
-  EXPECT_EQ(branch, "else");
+  EXPECT_THAT(branch, "else");
 }
 
 TEST_F(RequireTest, DebugVariantCompilesAndPassesWhenSatisfied) {

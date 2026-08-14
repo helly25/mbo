@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <string>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 namespace mbo::types::types_internal {
@@ -77,11 +78,11 @@ TEST_F(CasesInternalTest, IsIfThenAcceptsOnlyCaseLikeTypes) {
 TEST_F(CasesInternalTest, CaseIndexIsOneBasedAndZeroForNoMatch) {
   // `CaseIndexImpl` reports 1-based position of the winning case, and 0 when none
   // of the caller's own cases matched - so 0 is distinguishable from "case 1".
-  EXPECT_EQ((CaseIndexImpl<IfThen<true, int>>::index), 1U);
-  EXPECT_EQ((CaseIndexImpl<IfThen<false, int>, IfThen<true, std::string>>::index), 2U);
-  EXPECT_EQ((CaseIndexImpl<IfThen<false, int>, IfThen<false, std::string>, IfThen<true, double>>::index), 3U);
-  EXPECT_EQ((CaseIndexImpl<IfThen<false, int>>::index), 0U) << "no case matched";
-  EXPECT_EQ((CaseIndexImpl<IfThen<false, int>, IfThen<false, std::string>>::index), 0U);
+  EXPECT_THAT((CaseIndexImpl<IfThen<true, int>>::index), 1U);
+  EXPECT_THAT((CaseIndexImpl<IfThen<false, int>, IfThen<true, std::string>>::index), 2U);
+  EXPECT_THAT((CaseIndexImpl<IfThen<false, int>, IfThen<false, std::string>, IfThen<true, double>>::index), 3U);
+  EXPECT_THAT((CaseIndexImpl<IfThen<false, int>>::index), 0U) << "no case matched";
+  EXPECT_THAT((CaseIndexImpl<IfThen<false, int>, IfThen<false, std::string>>::index), 0U);
 }
 
 }  // namespace

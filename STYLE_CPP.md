@@ -133,6 +133,16 @@ clang-format picks a layout per line; these habits steer it toward the readable 
 
 ## Idioms
 
+- **A defaulted move constructor and move assignment are explicitly `noexcept`.**
+  `Type(Type&&) noexcept = default;` and `Type& operator=(Type&&) noexcept = default;`. A
+  defaulted move is only _implicitly_ `noexcept` when every base and member move is, so one
+  member that is not silently makes the whole type's move throwing - and the standard library
+  then quietly downgrades: `std::vector` reallocation copies instead of moving
+  (`move_if_noexcept`), and `std::swap` and friends lose their strong guarantee. Spelling
+  `noexcept` out states the intent and turns a violation into a compile error rather than a
+  silent performance loss. The same applies to a defaulted destructor's implicit `noexcept`,
+  which needs no annotation.
+
 - **Pass `absl::Status` by value**, not `const&`: it is a tagged pointer, and
   `.clang-tidy performance-unnecessary-value-param` allowlists it (with `absl::StatusOr`
   and `std::string_view`). `StatusOr<T>`'s cost depends on `T`.

@@ -31,6 +31,8 @@ namespace {
 namespace fs = std::filesystem;
 
 using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 
 struct ArtefactTest : ::testing::Test {
  protected:
@@ -43,7 +45,7 @@ struct ArtefactTest : ::testing::Test {
 
   void TearDown() override { fs::remove_all(tmp_dir); }
 
-  std::string Write(std::string_view name, std::string_view content) const {
+  std::string Write(const std::string_view name, const std::string_view content) const {
     const fs::path path = tmp_dir / name;
     std::ofstream out(path);
     out << content;
@@ -67,7 +69,7 @@ TEST_F(ArtefactTest, DefaultsAreTheDocumentedOnes) {
 
 TEST_F(ArtefactTest, OptionsDefaultToKeepingTheTime) {
   const Artefact::Options options = Artefact::Options::Default();
-  EXPECT_THAT(options.skip_time, false);
+  EXPECT_THAT(options.skip_time, IsFalse());
   EXPECT_THAT(options.tz, absl::UTCTimeZone());
 }
 
@@ -88,7 +90,7 @@ TEST_F(ArtefactTest, ReadsAnEmptyFile) {
 
 TEST_F(ArtefactTest, ReadingAMissingFileFails) {
   const auto artefact = Artefact::Read((tmp_dir / "does_not_exist.txt").string());
-  EXPECT_THAT(artefact.ok(), false);
+  EXPECT_THAT(artefact.ok(), IsFalse());
 }
 
 TEST_F(ArtefactTest, SkipTimeLeavesTheTimeAtItsDefault) {
@@ -102,7 +104,7 @@ TEST_F(ArtefactTest, WithoutSkipTimeTheTimeIsPopulated) {
   const std::string path = Write("timed2.txt", "x");
   const auto artefact = Artefact::Read(path);
   ASSERT_THAT(artefact.status(), absl::OkStatus());
-  EXPECT_THAT(artefact->time > absl::FromUnixSeconds(0), true) << "a real mtime was read";
+  EXPECT_THAT(artefact->time > absl::FromUnixSeconds(0), IsTrue()) << "a real mtime was read";
 }
 
 TEST_F(ArtefactTest, ReadMaxLinesTruncatesToTheLimit) {

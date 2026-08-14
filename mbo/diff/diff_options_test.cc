@@ -24,6 +24,8 @@ namespace {
 using ::testing::AllOf;
 using ::testing::Eq;
 using ::testing::Field;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::Optional;
 
@@ -44,9 +46,9 @@ TEST_F(DiffOptionsTest, UnifiedIsADeprecatedAliasForMyers) {
 }
 
 TEST_F(DiffOptionsTest, RejectsAnUnknownAlgorithm) {
-  EXPECT_THAT(DiffOptions::ParseAlgorithmFlag("garbage").has_value(), false);
-  EXPECT_THAT(DiffOptions::ParseAlgorithmFlag("").has_value(), false);
-  EXPECT_THAT(DiffOptions::ParseAlgorithmFlag("Myers").has_value(), false) << "matching is case sensitive";
+  EXPECT_THAT(DiffOptions::ParseAlgorithmFlag("garbage").has_value(), IsFalse());
+  EXPECT_THAT(DiffOptions::ParseAlgorithmFlag("").has_value(), IsFalse());
+  EXPECT_THAT(DiffOptions::ParseAlgorithmFlag("Myers").has_value(), IsFalse()) << "matching is case sensitive";
 }
 
 TEST_F(DiffOptionsTest, ParsesEveryOutputFormat) {
@@ -57,8 +59,8 @@ TEST_F(DiffOptionsTest, ParsesEveryOutputFormat) {
 }
 
 TEST_F(DiffOptionsTest, RejectsAnUnknownOutputFormat) {
-  EXPECT_THAT(DiffOptions::ParseOutputFormatFlag("garbage").has_value(), false);
-  EXPECT_THAT(DiffOptions::ParseOutputFormatFlag("side_by_side").has_value(), false) << "the separator is a dash";
+  EXPECT_THAT(DiffOptions::ParseOutputFormatFlag("garbage").has_value(), IsFalse());
+  EXPECT_THAT(DiffOptions::ParseOutputFormatFlag("side_by_side").has_value(), IsFalse()) << "the separator is a dash";
 }
 
 TEST_F(DiffOptionsTest, ParsesEveryFileHeaderUse) {
@@ -70,8 +72,8 @@ TEST_F(DiffOptionsTest, ParsesEveryFileHeaderUse) {
 
 TEST_F(DiffOptionsTest, RejectsAnUnknownFileHeaderUse) {
   // This is the exact input that used to reach an unchecked dereference.
-  EXPECT_THAT(DiffOptions::ParseFileHeaderUse("garbage").has_value(), false);
-  EXPECT_THAT(DiffOptions::ParseFileHeaderUse("").has_value(), false);
+  EXPECT_THAT(DiffOptions::ParseFileHeaderUse("garbage").has_value(), IsFalse());
+  EXPECT_THAT(DiffOptions::ParseFileHeaderUse("").has_value(), IsFalse());
 }
 
 // Regex replace ---------------------------------------------------------------
@@ -96,7 +98,7 @@ TEST_F(DiffOptionsTest, RegexReplaceTakesItsSeparatorFromTheFirstCharacter) {
 }
 
 TEST_F(DiffOptionsTest, EmptyRegexReplaceFlagIsNullopt) {
-  EXPECT_THAT(DiffOptions::ParseRegexReplaceFlag("").has_value(), false);
+  EXPECT_THAT(DiffOptions::ParseRegexReplaceFlag("").has_value(), IsFalse());
 }
 
 TEST_F(DiffOptionsTest, MalformedRegexReplaceFlagAborts) {
@@ -113,7 +115,7 @@ TEST_F(DiffOptionsTest, MalformedRegexReplaceFlagAborts) {
 TEST_F(DiffOptionsTest, DefaultIsStable) {
   const DiffOptions& first = DiffOptions::Default();
   const DiffOptions& second = DiffOptions::Default();
-  EXPECT_THAT(&first == &second, true) << "Default() returns the same instance";
+  EXPECT_THAT(&first == &second, IsTrue()) << "Default() returns the same instance";
 }
 
 }  // namespace

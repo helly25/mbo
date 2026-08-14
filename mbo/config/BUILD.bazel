@@ -60,6 +60,7 @@ cc_test(
     srcs = ["config_test.cc"],
     deps = [
         ":config_cc",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -80,6 +81,7 @@ cc_test(
     deps = [
         ":config_cc",
         ":require_cc",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

@@ -46,8 +46,8 @@ struct WithVirtual {
   WithVirtual() = default;
   WithVirtual(const WithVirtual&) = default;
   WithVirtual& operator=(const WithVirtual&) = default;
-  WithVirtual(WithVirtual&&) = default;
-  WithVirtual& operator=(WithVirtual&&) = default;
+  WithVirtual(WithVirtual&&) noexcept = default;
+  WithVirtual& operator=(WithVirtual&&) noexcept = default;
   virtual ~WithVirtual() = default;
 };
 

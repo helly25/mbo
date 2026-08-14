@@ -18,6 +18,7 @@
 #include <concepts>
 #include <cstddef>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 namespace mbo::config {
@@ -58,7 +59,7 @@ TEST_F(ConfigTest, Constexpr23MacroIsDefined) {
 #endif
   // It must also be usable in a declaration under either standard.
   MBO_CONFIG_CONSTEXPR_23 const int value = 42;  // NOLINT(*-magic-numbers)
-  EXPECT_EQ(value, 42);                          // NOLINT(*-magic-numbers)
+  EXPECT_THAT(value, 42);                        // NOLINT(*-magic-numbers)
 }
 
 }  // namespace
