@@ -30,6 +30,17 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "artefact_test",
+    srcs = ["artefact_test.cc"],
+    deps = [
+        ":artefact_cc",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/time",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "file_cc",
     srcs = ["file.cc"],

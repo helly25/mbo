@@ -1,5 +1,7 @@
 # 0.13.3
 
+- Added `mbo/file:artefact_test`.
+
 - Added tests for `container_proxy_cc`, `cases_cc`, `traits_cc` (internal), `config_cc` and `require_cc`.
 
 - Fixed `mbo::types::TypedView` to derive from `std::ranges::view_interface` PUBLICLY; private inheritance made every member it supplies inaccessible.
