@@ -1,5 +1,7 @@
 # 0.13.3
 
+- Added `mbo/diff:diff_options_test`, covering every flag parser including the unknown-value paths.
+
 - Added `mbo/file:artefact_test`.
 
 - Added tests for `container_proxy_cc`, `cases_cc`, `traits_cc` (internal), `config_cc` and `require_cc`.
