@@ -107,19 +107,28 @@ repos:
         entry: tools/check_cc_target_naming.py
         files: ^.*/(BUILD\.bazel|BUILD)$
       - id: library-test-coverage
-        name: every cc_library is reached by a test
+        name: every cc_library has a test in its own package
         description: |
-          Every `cc_library` under //mbo/... must be reachable from at least one test target, so a
-          library cannot be added - or orphaned by a deleted test - with nothing exercising it.
-          Reachability rather than a `<xxx>_cc`/`<xxx>_test` naming rule: the naming rule calls 32
-          of 75 libraries unpaired, nearly all wrongly (//mbo/types/internal:extend_cc is well
-          covered by //mbo/types:extend_test, it just has a different name), and a rule needing a
-          32-entry allowlist on day one enforces nothing. Matches `.*_test`, not `cc_test`, because
-          mope is covered entirely by `*_diff_test` golden targets. Skips when bazel is unavailable.
+          Every `cc_library` needs a test in the SAME package with a DIRECT dependency on it
+          (STYLE_CPP.md). Transitive coverage does not count - a library pulled in by another
+          library that happens to have a test is not itself tested - and neither does a non-test
+          dependent. Replaces the earlier reachability check, which reported 1 untested library
+          where this rule finds the truth (it reported ~30 before the burn-down). Exceptions live
+          in the tool's _ALLOWLIST with their reason. Pure BUILD-file parsing: no bazel needed.
         language: system
-        entry: .pre-commit/check_library_test_coverage.sh
-        pass_filenames: false
-        files: ^.*/BUILD\.bazel$
+        entry: tools/check_cc_library_tested.py
+        files: ^.*/(BUILD\.bazel|BUILD)$
+      - id: headers-claimed
+        name: every header is claimed by its package BUILD file
+        description: |
+          A header no target lists in hdrs/srcs is invisible to the build and therefore to the
+          clang-tidy gate, which reaches headers only through an including translation unit. Found
+          a real one on first run: hash_tembo.h, orphaned since #306. Textual and package-scoped,
+          mirroring bazel's package-relative labels; exceptions live in the tool's _ALLOWLIST with
+          reasons. No bazel needed.
+        language: system
+        entry: tools/check_headers_claimed.py
+        files: ^(mbo/.*\.h|.*/BUILD\.bazel)$
       - id: header-guards
         name: header guards follow STYLE_CPP
         description: |
