@@ -100,10 +100,15 @@ jobs:
             git diff --name-only origin/main...HEAD -- '*.cc' '*.cpp' '*.cxx' | sed 's/^/  /'
           fi
 
+      # Disk cache only (compiled action outputs). The output root is not cached:
+      # it holds the extracted hermetic LLVM, which crowded the cache limit for no
+      # benefit. Every bazel call in this job picks the flag up via .bazelrc.user.
+      - name: Route bazel to a disk cache
+        run: echo "common --disk_cache=$HOME/.cache/bazel_disk-cache" > .bazelrc.user
       - uses: actions/cache/restore@v5
         id: cache_restore
         with:
-          path: "~/.cache/bazel"
+          path: "~/.cache/bazel_disk-cache"
           key: clang-tidy-${{github.ref}}-${{github.sha}}
           restore-keys: |
             clang-tidy-${{github.ref}}
@@ -219,7 +224,7 @@ jobs:
       - uses: actions/cache/save@v5
         if: always() && steps.cache_restore.outputs.cache-hit != 'true'
         with:
-          path: "~/.cache/bazel"
+          path: "~/.cache/bazel_disk-cache"
           key: clang-tidy-${{github.ref}}-${{github.sha}}
 
   test-gcc:
