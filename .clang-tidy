@@ -165,7 +165,6 @@ Checks: >
   clang*,
   clang-analyzer-*,
   clang-diagnostic-*,
-  -clang-diagnostic-unused-command-line-argument,
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-const-or-ref-data-members,
   -cppcoreguidelines-avoid-magic-numbers,

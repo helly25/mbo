@@ -143,6 +143,16 @@ clang-format picks a layout per line; these habits steer it toward the readable 
   silent performance loss. The same applies to a defaulted destructor's implicit `noexcept`,
   which needs no annotation.
 
+- **An initialised array constant uses `std::to_array`, never a hand-counted size.**
+  `static constexpr auto kExamples = std::to_array<DocPair>({...});`, not
+  `static constexpr std::array<DocPair, 6> kExamples = {...}`. The literal size is a second
+  statement of something the initialiser already says, and the two drift: adding an entry and
+  forgetting the count is a compile error at best and a silently truncated or
+  default-padded array at worst. `to_array` deduces the extent, so there is nothing to keep in
+  sync. Keep an explicit extent only where the size is part of the CONTRACT rather than a count
+  of what was written - a fixed-size buffer, a spec-mandated width (`std::array<uint64_t, 8>` for
+  BLAKE2b's state), or a function parameter type, where the extent IS the type.
+
 - **Pass `absl::Status` by value**, not `const&`: it is a tagged pointer, and
   `.clang-tidy performance-unnecessary-value-param` allowlists it (with `absl::StatusOr`
   and `std::string_view`). `StatusOr<T>`'s cost depends on `T`.
