@@ -1,5 +1,6 @@
 # 0.13.3
 
+- CI no longer caches the hermetic LLVM (ported from helly25/xff #409+#411): jobs cache bazel's disk cache instead of the output root, non-clang cells keep a small repo cache, and the symbolizer wrapper resolves `llvm-symbolizer` via runfiles so a fresh LLVM fetch location cannot break asan/tsan.
 - Replaced the reachability-based `library-test-coverage` hook with xff's strict rule: every `cc_library` needs a test in its own package with a direct dependency; exceptions live in the tool's `_ALLOWLIST` with reasons.
 - Converted assert-status-then-dereference in the new tests to `IsOkAndHolds`/`MBO_ASSERT_OK_AND_ASSIGN`, and imported four rules from helly25/xff's style guide (`_cc` naming, per-package tests, no braced-init-list iteration, `lhs`/`rhs` comparator parameters).
 - Added tests for `hash_extra_cc`, `hash_internal_util_cc`, `mope_cc`, `ini_cc`, `runfiles_dir_cc`, `extend_cc`, `extender_cc` and `test_types_cc` - every library now has a test in its own package.

@@ -72,15 +72,30 @@ jobs:
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{inputs.gcc_version}} 100 --slave /usr/bin/g++ g++ /usr/bin/g++-${{inputs.gcc_version}} --slave /usr/bin/gcov gcov /usr/bin/gcov-${{inputs.gcc_version}}
           sudo update-alternatives --set gcc /usr/bin/gcc-${{inputs.gcc_version}}
 
+      # The DISK cache (compiled action outputs) is what recurs and what pays; the
+      # output root is deliberately NOT cached anymore - for clang cells it holds the
+      # extracted ~4 GB hermetic LLVM, which crowded the 10 GB repo limit for no
+      # benefit (LLVM re-downloads quickly, and the symbolizer wrapper resolves via
+      # runfiles so a fresh fetch location is fine). Ported from helly25/xff #409+#411.
       - uses: actions/cache/restore@v5
         id: cache_restore
         with:
-          path: "~/.cache/bazel"
+          path: "~/.cache/bazel_disk-cache"
           key: ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}-${{github.sha}}
           restore-keys: |
             ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}
             ${{env.CACHE_KEY_PREFIX}}-refs/heads/main
             ${{env.CACHE_KEY_PREFIX}}
+      # The repository cache (downloaded archives) is small WITHOUT the hermetic LLVM,
+      # so it is cached only for non-clang cells; a clang cell re-fetches LLVM each run.
+      - uses: actions/cache/restore@v5
+        if: inputs.compiler != 'clang'
+        id: repo_cache_restore
+        with:
+          path: "~/.cache/bazel_repo-cache"
+          key: repo-${{env.CACHE_KEY_PREFIX}}-${{hashFiles('MODULE.bazel.lock')}}
+          restore-keys: |
+            repo-${{env.CACHE_KEY_PREFIX}}-
 
       - name: Verify Xcode & SDK
         if: runner.os == 'macOS'
@@ -121,6 +136,7 @@ jobs:
           CACHE_ROOT=~/.cache
           BAZEL_INIT+=("--output_user_root=${CACHE_ROOT}/bazel")
           BAZEL_ARGS+=("--repository_cache=${CACHE_ROOT}/bazel_repo-cache")
+          BAZEL_ARGS+=("--disk_cache=${CACHE_ROOT}/bazel_disk-cache")
           EXPECT=""
           if [ "${{inputs.compiler}}" == "clang" ]; then
             # We deliberately do NOT clear CC/CXX here (the old `unset CC/CXX`).
@@ -243,8 +259,13 @@ jobs:
         if: ${{!startsWith(github.ref, 'refs/tags/')}}
         id: cache_save
         with:
-          path: "~/.cache/bazel"
+          path: "~/.cache/bazel_disk-cache"
           key: ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}-${{github.sha}}
+      - uses: actions/cache/save@v5
+        if: ${{!startsWith(github.ref, 'refs/tags/') && inputs.compiler != 'clang' && steps.repo_cache_restore.outputs.cache-hit != 'true'}}
+        with:
+          path: "~/.cache/bazel_repo-cache"
+          key: repo-${{env.CACHE_KEY_PREFIX}}-${{hashFiles('MODULE.bazel.lock')}}
 
       - name: Cleanup old caches
         if: ${{!startsWith(github.ref, 'refs/tags/') && steps.cache_restore.outputs.cache-hit}}

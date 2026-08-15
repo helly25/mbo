@@ -1,33 +1,63 @@
 #!/usr/bin/env bash
 
-if [[ "%%LLVM_SYMBOLIZER_PATH%%" == "auto" ]] && [[ -z "${LLVM_SYMBOLIZER_PATH}" ]]; then
-  LOCATIONS=(
-    $(which llvm_symbolizer)
-    /usr/local/bin/llvm-symbolizer
-    /usr/bin/llvm-symbolizer
-    /opt/homebrew/opt/llvm/bin/llvm-symbolizer
-  )
-  for LOC in "${LOCATIONS[@]}"; do
-    if [[ -x "${LOC}" ]]; then
-      export LLVM_SYMBOLIZER_PATH="${LOC}"
-      break
-    fi
-  done
+# --- begin runfiles.bash initialization v3 ---
+# Locate the Bash runfiles library so the hermetic llvm-symbolizer can be found by
+# its runfiles path (stable across LLVM re-fetches) rather than a baked absolute path.
+set -uo pipefail
+f=bazel_tools/tools/bash/runfiles/runfiles.bash
+# shellcheck disable=SC1090
+source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null ||
+  source "$(grep -sm1 "^$f " "${RUNFILES_MANIFEST_FILE:-/dev/null}" | cut -f2- -d' ')" 2>/dev/null ||
+  source "$0.runfiles/$f" 2>/dev/null ||
+  source "$(grep -sm1 "^$f " "$0.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/null ||
+  source "$(grep -sm1 "^$f " "$0.exe.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/null ||
+  {
+    echo >&2 "ERROR: cannot find the bash runfiles library"
+    exit 1
+  }
+# --- end runfiles.bash initialization v3 ---
+
+# Under --config=clang the genrule bakes the RUNFILES path of the hermetic
+# llvm-symbolizer (an rlocation string), which the runfiles library resolves inside
+# THIS wrapper's runfiles. That path is relative to the runfiles tree, not the
+# repository cache, so it stays valid even when the LLVM toolchain is re-fetched to
+# a new location each run - the failure mode of a baked `readlink -f` absolute path.
+# The default (non-clang) build bakes "auto" and falls back to a system symbolizer.
+SYMBOLIZER_RLOCATION="%%SYMBOLIZER_RLOCATION%%"
+
+if [[ "${SYMBOLIZER_RLOCATION}" == "auto" ]]; then
+  if [[ -z "${LLVM_SYMBOLIZER_PATH:-}" ]]; then
+    for LOC in \
+      "$(command -v llvm-symbolizer 2>/dev/null)" \
+      /usr/local/bin/llvm-symbolizer \
+      /usr/bin/llvm-symbolizer \
+      /opt/homebrew/opt/llvm/bin/llvm-symbolizer; do
+      if [[ -n "${LOC}" ]] && [[ -x "${LOC}" ]]; then
+        export LLVM_SYMBOLIZER_PATH="${LOC}"
+        break
+      fi
+    done
+  fi
 else
-  export LLVM_SYMBOLIZER_PATH="%%LLVM_SYMBOLIZER_PATH%%"
+  LLVM_SYMBOLIZER_PATH="$(rlocation "${SYMBOLIZER_RLOCATION}")"
+  export LLVM_SYMBOLIZER_PATH
 fi
 
-if [[ -z "${LLVM_SYMBOLIZER_PATH}" ]] || ! [[ -x "${LLVM_SYMBOLIZER_PATH}" ]]; then
-  echo "Cannot find llvm-symbolizer or configured symbolier not executable: '${LLVM_SYMBOLIZER_PATH}'." 1>&2
-  die 1
+if [[ -z "${LLVM_SYMBOLIZER_PATH:-}" ]] || ! [[ -x "${LLVM_SYMBOLIZER_PATH}" ]]; then
+  echo "Cannot find llvm-symbolizer or configured symbolizer not executable: '${LLVM_SYMBOLIZER_PATH:-}'." 1>&2
+  exit 1
 fi
 
 export ASAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
 export TSAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
+# MSan needs its own variable; without it a MemorySanitizer report is a list of raw
+# addresses, which is unusable for triage (the whole point of the report is the frame
+# that read the uninitialized value).
+export MSAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
 
 BIN="$(realpath "${PWD}/${1}")"
 
-if [[ -x "$(which dsymutil)" ]]; then
+if [[ -x "$(command -v dsymutil 2>/dev/null)" ]]; then
   dsymutil "${BIN}"
 fi
 

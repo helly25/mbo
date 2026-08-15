@@ -22,22 +22,19 @@ package(default_visibility = ["//visibility:private"])
 
 _SYMBOLIZER = "@llvm_toolchain_llvm//:llvm-symbolizer"
 
+# Bake the hermetic llvm-symbolizer's RUNFILES path (an rlocation string) into the
+# run-under wrapper under --config=clang; otherwise "auto" (system autodetection).
+# A runfiles path stays valid when the LLVM toolchain is re-fetched to a new
+# location each run, unlike a `readlink -f` absolute path into the output tree -
+# which only survived because CI cached the whole output root, the very thing the
+# cache split stops doing.
 genrule(
     name = "generate_run_under_script",
     srcs = [":run_under_symbolizer.sh.in"],
     outs = ["run_under_symbolizer.sh"],
     cmd = select({
-        "//:is_clang": """
-            LLVM_SYMBOLIZER_PATH="$$(readlink -f $${{PWD}}/$(location {SYMBOLIZER}))"
-            sed "s,%%LLVM_SYMBOLIZER_PATH%%,$${{LLVM_SYMBOLIZER_PATH}}," $< > $@
-        """.format(
-            SYMBOLIZER = _SYMBOLIZER,
-        ),
-        "//conditions:default": """
-            sed "s,%%LLVM_SYMBOLIZER_PATH%%,auto," $< > $@
-        """.format(
-            SYMBOLIZER = "/usr/local/llvm/bin/llvm-symbolizer",
-        ),
+        "//:is_clang": "sed 's,%%SYMBOLIZER_RLOCATION%%,$(rlocationpath " + _SYMBOLIZER + "),' $< > $@",
+        "//conditions:default": "sed 's,%%SYMBOLIZER_RLOCATION%%,auto,' $< > $@",
     }),
     executable = True,
     tags = ["manual"],
@@ -55,6 +52,7 @@ sh_binary(
         "//conditions:default": [],
     }),
     tags = ["manual"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
 )
 
 cc_binary(
