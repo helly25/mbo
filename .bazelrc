@@ -27,6 +27,16 @@ common --define absl=1
 
 common --cxxopt=-std=c++20 --host_cxxopt=-std=c++20 --cxxopt=-Werror
 
+# Own the warning SET, not just the escalation: -Wall -Wextra explicitly, so the
+# first-party bar does not depend on which toolchain's defaults happen to apply.
+# missing-field-initializers is the one -Wextra class suppressed: designated init
+# relying on defaulted trailing fields is this repo's deliberate idiom.
+common --cxxopt=-Wall --host_cxxopt=-Wall
+common --cxxopt=-Wextra --host_cxxopt=-Wextra
+common --cxxopt=-Wno-missing-field-initializers --host_cxxopt=-Wno-missing-field-initializers
+common:clang --cxxopt=-Wno-missing-designated-field-initializers
+common:clang --host_cxxopt=-Wno-missing-designated-field-initializers
+
 # Keep -Werror first-party only: external headers become -isystem, external sources drop -Werror.
 common --features=external_include_paths
 common --per_file_copt=external/.*@-Wno-error
