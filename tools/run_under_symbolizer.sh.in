@@ -11,10 +11,9 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null ||
   source "$0.runfiles/$f" 2>/dev/null ||
   source "$(grep -sm1 "^$f " "$0.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/null ||
   source "$(grep -sm1 "^$f " "$0.exe.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/null ||
-  {
-    echo >&2 "ERROR: cannot find the bash runfiles library"
-    exit 1
-  }
+  RUNFILES_LIB_MISSING=1
+# The library is only NEEDED to resolve a baked rlocation; the "auto" build finds a
+# system symbolizer (or none) without it, so its absence is not an error here.
 # --- end runfiles.bash initialization v3 ---
 
 # Under --config=clang the genrule bakes the RUNFILES path of the hermetic
@@ -39,21 +38,34 @@ if [[ "${SYMBOLIZER_RLOCATION}" == "auto" ]]; then
     done
   fi
 else
+  if [[ -n "${RUNFILES_LIB_MISSING:-}" ]]; then
+    echo "Cannot resolve baked llvm-symbolizer: bash runfiles library not found." 1>&2
+    exit 1
+  fi
   LLVM_SYMBOLIZER_PATH="$(rlocation "${SYMBOLIZER_RLOCATION}")"
   export LLVM_SYMBOLIZER_PATH
 fi
 
 if [[ -z "${LLVM_SYMBOLIZER_PATH:-}" ]] || ! [[ -x "${LLVM_SYMBOLIZER_PATH}" ]]; then
-  echo "Cannot find llvm-symbolizer or configured symbolizer not executable: '${LLVM_SYMBOLIZER_PATH:-}'." 1>&2
-  exit 1
+  if [[ "${SYMBOLIZER_RLOCATION}" == "auto" ]]; then
+    # No system symbolizer (gcc CI runners ship none). A sanitizer report then
+    # prints raw addresses - degraded, not broken - so run anyway. This is the
+    # behaviour the old script had by ACCIDENT: its not-found handler called an
+    # undefined `die`, printing "die: command not found" and carrying on.
+    echo "WARNING: no llvm-symbolizer found; sanitizer reports will be unsymbolized." 1>&2
+  else
+    # The baked runfiles path was configured and MUST resolve; its absence means
+    # the toolchain is broken, not merely missing a nicety.
+    echo "Cannot resolve baked llvm-symbolizer: '${LLVM_SYMBOLIZER_PATH:-}'." 1>&2
+    exit 1
+  fi
+else
+  export ASAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
+  export TSAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
+  # MSan needs its own variable; without it a MemorySanitizer report is a list of
+  # raw addresses, unusable for triage.
+  export MSAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
 fi
-
-export ASAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
-export TSAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
-# MSan needs its own variable; without it a MemorySanitizer report is a list of raw
-# addresses, which is unusable for triage (the whole point of the report is the frame
-# that read the uninitialized value).
-export MSAN_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH}"
 
 BIN="$(realpath "${PWD}/${1}")"
 
