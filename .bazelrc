@@ -36,6 +36,21 @@ common --cxxopt=-Wextra --host_cxxopt=-Wextra
 common --cxxopt=-Wno-missing-field-initializers --host_cxxopt=-Wno-missing-field-initializers
 common:clang --cxxopt=-Wno-missing-designated-field-initializers
 common:clang --host_cxxopt=-Wno-missing-designated-field-initializers
+# -Wpedantic, with three named carve-outs under clang: gnu-statement-expression is
+# decompose_count.h's reflection core (ours, by design); c2y-extensions and
+# nullability-extension are absl macros (ABSL_FLAG's __COUNTER__, ABSL_CHECK's
+# _Nullable) expanding inside our translation units.
+common --cxxopt=-Wpedantic --host_cxxopt=-Wpedantic
+common:clang --cxxopt=-Wno-gnu-statement-expression
+common:clang --host_cxxopt=-Wno-gnu-statement-expression
+# ABSL_FLAG expands __COUNTER__, a C2y extension in clang's pedantic eyes; the
+# macro is absl's, expanded in our TUs, and the flag idiom is not negotiable.
+common:clang --cxxopt=-Wno-c2y-extensions
+common:clang --host_cxxopt=-Wno-c2y-extensions
+# ABSL_CHECK_* expand clang nullability annotations (_Nullable/_Nonnull) inside
+# our translation units; also absl's, also not negotiable.
+common:clang --cxxopt=-Wno-nullability-extension
+common:clang --host_cxxopt=-Wno-nullability-extension
 
 # Keep -Werror first-party only: external headers become -isystem, external sources drop -Werror.
 common --features=external_include_paths
