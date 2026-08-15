@@ -1,157 +1,61 @@
 ---
-# The CppCoreGuidelines bounds / type-safety profile is off. Those checks assume
-# code sits above a safe container abstraction, but this library IS that layer:
-# they fire on the deliberate design of the containers and hashes, not on defects
-# (961 of 1600 findings, 60% of everything the linter reports here; measured
-# across all 81 sources, counting each distinct diagnostic once).
-#   * pro-bounds-avoid-unchecked-container-access - flags every `operator[]`,
-#     including inside the containers implementing it. Re-measured 2026-08-15 on
-#     its own: 2,953 findings. ~2,500 sit in the hash/digest kernels (hash_mumbo
-#     alone: 1,386), where indices are in range by construction (loop bounds equal
-#     array extents) and a checked access is a branch in the innermost loop; the
-#     ~450 elsewhere would additionally change BEHAVIOUR, not just add safety -
-#     this repo builds -fno-exceptions, so the `.at()` rewrite aborts where
-#     `operator[]` was UB, a trade to make case by case, not by lint sweep.
-#   * pro-type-union-access - the `limited_ordered` union is how LimitedSet/
-#     LimitedMap avoid default-constructing their elements.
-#   * pro-bounds-constant-array-index, pro-bounds-pointer-arithmetic,
-#     pro-bounds-array-to-pointer-decay and its alias hicpp-no-array-decay -
-#     raw-buffer indexing and pointer walking are the point of the hash code.
-# Bounds safety here is a matter for tests, sanitizers (--config=asan) and review.
-# Re-enabling any of them means auditing its findings, not just flipping the flag.
+# One terse line per decision; the full rationale for each - measurements, failed
+# experiments, reproduction steps - lives in the commit that made it (git log -S
+# the check name) and its PR. Sorted like the list below: by check name, ignoring
+# the leading '-'.
 #
-# misc-include-cleaner is off. It demands a direct include for every symbol used,
-# which fights this codebase's umbrella headers: a test includes `stringify.h` and
-# uses the concepts that header exists to expose, and the check asks it to reach
-# past the public header into `internal/struct_names.h` instead - deepening the
-# coupling the umbrella header was written to avoid. That accounted for 69
-# findings across 30 files. The check is also reported to mishandle concepts
-# (uses inside `requires` clauses going unattributed); that is a known issue and
-# not something verified here, so the umbrella-header conflict is the operative
-# reason. If the include hygiene is ever wanted, IWYU proper is the better tool.
+# The CppCoreGuidelines bounds/type-safety profile (pro-bounds-*, pro-type-union-
+# access, hicpp-no-array-decay) is off as a group: this library IS the container/
+# hash layer those checks assume code sits above. avoid-unchecked-container-access
+# re-measured 2026-08-15: 2,953 findings, ~2,500 in hash/digest kernels whose
+# indices are in-range by construction - and `.at()` aborts under -fno-exceptions,
+# a behaviour change, not hardening. Bounds safety here: tests, --config=asan, review.
 #
-# readability-inconsistent-ifelse-braces is off. 20 of its 25 findings were the
-# `if` INSIDE MBO_RETURN_IF_ERROR / MBO_ASSIGN_OR_RETURN: it points at the macro's
-# call site and demands braces that can only be written in the macro definition,
-# so there is no edit at the reported location that satisfies it. The rule it is
-# trying to enforce is already covered - clang-format's `InsertBraces` adds braces
-# to real if/else bodies on every commit.
+# abseil-unchecked-statusor-access: clang-tidy 22.1.8 SEGFAULTS in its dataflow on
+#   this code; re-test on a future LLVM.
+# bugprone-crtp-constructor-accessibility: its advice was tried - a private ctor
+#   makes Extend types non-aggregates, breaking `{.a = ...}` construction.
+# bugprone-easily-swappable-parameters: flags adjacent same-type params on pure
+#   heuristic. TODO(helly25): re-enable once the flagged interfaces are revisited.
+# bugprone-random-generator-seed (+ cert-msc32-c, cert-msc51-cpp): constant seeds
+#   are deliberate - tests and benchmarks must reproduce.
+# bugprone-std-namespace-modification: our `namespace std` blocks are sanctioned
+#   specialisations (std::hash, structured bindings), not additions.
+# cert-dcl50-cpp (+ modernize-avoid-variadic-functions): variadic visitors are the
+#   signature __builtin_dump_struct dictates; the reflection core cannot avoid them.
+# cppcoreguidelines-macro-usage: the flagged macros feed the PREPROCESSOR (#if),
+#   where constexpr does not exist.
+# cppcoreguidelines-avoid-magic-numbers (+ readability-magic-numbers, aliases):
+#   fire on test expectations and the numeric tables that ARE the subject.
+# hicpp-signed-bitwise: parity masks over signed ptrdiff_t in the Myers diff;
+#   diagonals run negative, the signedness is the algorithm's.
+# llvm-header-guard: STYLE_CPP mandates {PATH}_{FILE}_; the header-guards hook
+#   enforces what this check structurally cannot.
+# llvm-prefer-static-over-anonymous-namespace: anonymous namespaces are the
+#   convention here, not per-function static.
+# misc-include-cleaner: fights the umbrella headers by demanding includes of
+#   internal/ headers; IWYU proper is the tool if hygiene is ever wanted.
+# misc-no-recursion: the flagged code is recursive by design (Stringify walks,
+#   parser descent); an explicit stack would be longer and less clear.
+# misc-use-internal-linkage: its only fix is `static` (against STYLE_CPP), and on
+#   header-declared functions that breaks the build via -Wunused-function.
+# readability-inconsistent-ifelse-braces: 20/25 findings point INTO the
+#   MBO_*_RETURN macros' call sites, unfixable there; clang-format's InsertBraces
+#   already braces real bodies.
+# readability-redundant-parentheses: its fix deletes the __builtin_dump_struct
+#   callee (a clang-tidy bug around the builtin's own expansion), corrupting the
+#   reflection machinery.
+# readability-use-concise-preprocessor-directives: the #ifdef rewrite cannot apply
+#   to the compound conditions next door, making neighbours less consistent.
 #
-# cppcoreguidelines-rvalue-reference-param-not-moved is kept, but with
-# IgnoreNonDeducedTemplateTypes: a class template's `Container&&` is a genuine
-# rvalue reference, not a forwarding reference, and `ConvertContainer` correctly
-# uses `std::forward<Container>` because it may be instantiated with `T&`. The
-# check would demand `std::move`, which is wrong there. The option is exactly for
-# this case, so the check keeps working on ordinary rvalue-ref parameters.
+# Kept, with options below: cppcoreguidelines-rvalue-reference-param-not-moved
+# uses IgnoreNonDeducedTemplateTypes (a class template's Container&& is a real
+# rvalue ref that may instantiate as T&, where std::forward is correct);
+# readability-identifier-naming exempts {PATH}_{FILE}_ guard macros its UPPER_CASE
+# splitter can never accept (the header-guards hook owns that rule).
 #
-# readability-redundant-parentheses is off because its fix CORRUPTS code. On
-# `__builtin_dump_struct(ptr, &Visitor, args...)` it deletes the callee - exactly
-# the characters of the builtin's name - leaving `(ptr, &Visitor, args...)`, a
-# comma expression that compiles to nothing and fails as
-# `-Werror,-Wunused-value`. The trigger is the builtin, not our use of it: it
-# fires on a plain `__builtin_dump_struct(ptr, &Counter, field_index)` with no
-# template parameter pack anywhere, and does NOT fire on an ordinary variadic
-# call of the same shape. What it trips over is the builtin's OWN expansion:
-# clang lowers `__builtin_dump_struct` into generated per-field visitor calls,
-# and the check does not see the result as a call it should leave alone, so it
-# reads the argument list as a parenthesised comma expression and "helpfully"
-# unwraps it. It hits struct_names_clang.h and extend_test.cc - the reflection
-# machinery, where these calls are the entire point. The findings it reports are
-# cosmetic; the risk of anyone running --fix is not.
-#
-# misc-use-internal-linkage is off. Its finding often agrees with us - internal
-# helpers do belong in an anonymous namespace, which is what STYLE_CPP.md says -
-# but its only fix mode is `FixMode: UseStatic`, and `static` is precisely what we
-# do NOT want. Worse, applying it to a function DECLARED in a header (as it did to
-# three in stringify_ostream.cc) produces `-Werror,-Wunused-function` and breaks
-# the build. Anonymous-namespace hygiene is covered by misc-use-anonymous-namespace
-# and by review, without the hazard.
-#
-# cert-dcl50-cpp and modernize-avoid-variadic-functions are off. C-style variadic
-# functions are not a legacy wart to be migrated away from here - they are how a
-# reflection library talks to the compiler. `__builtin_dump_struct` calls back
-# into a variadic visitor, and that signature is fixed by the builtin, not chosen.
-# Both checks would have every such visitor carry a suppression forever, so the
-# decision belongs in this file rather than scattered through the code.
-#
-# bugprone-crtp-constructor-accessibility is off, and this was checked by trying
-# its advice rather than assuming. It asks for the CRTP base's constructor to be
-# private with the derived class as friend. Two things break:
-#   1. `friend T` alone is not enough - the shorthand wrappers (mbo::types::Extend
-#      and friends) sit between `T` and the base and run its constructor, so they
-#      need befriending too. That part is solvable.
-#   2. The blocker: a private constructor makes the type a NON-AGGREGATE, and
-#      Extend types exist to be aggregates - `const Extend2 ext2{.a = 25, .b = 42}`
-#      is how they are built, and the reflection machinery decomposes them as
-#      aggregates. The hardening would trade the entire feature for protection
-#      against `struct Evil : Extend<Other>`.
-#
-# bugprone-random-generator-seed - and its cert aliases cert-msc32-c / cert-msc51-cpp -
-# are off. Every generator they flag is seeded with
-# a constant ON PURPOSE - tests and benchmarks must be reproducible, and a
-# randomly seeded one would make failures impossible to reproduce.
-#
-# cppcoreguidelines-macro-usage is off. The macros it flags define constants
-# consumed by the PREPROCESSOR (`#if MBO_LOG_HAS_CXA_DEMANGLE`), where a
-# `constexpr` cannot be used - the substitution it suggests does not compile.
-#
-# hicpp-signed-bitwise is off. It fires on parity tests like `(d + lo) & 1` over
-# `std::ptrdiff_t` in the Myers diff, where the signed type is required by the
-# algorithm (diagonals run negative) and masking the low bit is the standard way
-# to test it. Casting to unsigned to appease the check would obscure that.
-#
-# misc-no-recursion is off. Recursion is the natural shape of the code it flags:
-# Stringify walks nested structures, DebugStr formats them, BigNumberLen recurses
-# once for the negative case. The check reports every member of a call chain, so a
-# single recursive algorithm produces a cluster of findings, and the alternative -
-# an explicit stack - would be longer and harder to read.
-#
-# bugprone-std-namespace-modification is off. The `namespace std` blocks here are
-# the sanctioned kind: specialisations of std templates for our own types
-# (`std::hash`, structured-binding support), which is exactly how those extension
-# points are meant to be used. The check cannot tell those from adding new
-# declarations to std.
-#
-# cppcoreguidelines-avoid-magic-numbers / readability-magic-numbers (aliases) are
-# off. They fire on test expectations and on the numeric tables that ARE the
-# subject - digit-count boundaries, diff offsets, hash constants - where naming
-# each value would obscure it rather than explain it.
-#
-# bugprone-easily-swappable-parameters is off. It flags any run of adjacent
-# same-type parameters - e.g. `LongLines(std::size_t, std::size_t, std::size_t)` -
-# without evidence that a call site ever got them wrong. Satisfying it means
-# reordering parameters or introducing strong types to please a heuristic.
-# TODO(helly25): re-enable once the interfaces it flags are revisited; it does
-# catch real swap hazards where a strong type would genuinely help.
-#
-# readability-use-concise-preprocessor-directives is off. It rewrites
-# `#if defined(X)` into `#ifdef X`, which is purely cosmetic and cannot apply to
-# the compound conditions sitting right next to them, so following it makes
-# neighbouring directives LESS consistent rather than more.
-#
-# readability-identifier-naming exempts guard-shaped macros via
-# MacroDefinitionIgnoredRegexp. That is not cosmetic: the check's UPPER_CASE
-# notion splits inside words at digit boundaries - it asks for
-# MBO_DIGEST_DIGEST_M_D5_H in place of MBO_DIGEST_DIGEST_MD5_H_ - and drops the
-# trailing underscore, so it can never accept the `{PATH}_{FILE}_` guards
-# STYLE_CPP.md mandates. The regexp previously omitted digits, so correct guards
-# containing one (BLAKE2B, SHA1, MD5) leaked through and were reported. The rule
-# itself is enforced by the `header-guards` pre-commit hook, which checks what
-# clang-tidy structurally cannot.
-#
-# abseil-unchecked-statusor-access is off because clang-tidy 22.1.8 SEGFAULTS in
-# it: its dataflow analysis (runTypeErasedDataflowAnalysis) crashes on
-# mbo/strings/strip.cc, reproducibly on both macOS and Linux. Re-test on a future
-# LLVM and re-enable if fixed.
-# Two llvm-* checks are off because they fight documented conventions:
-# * llvm-header-guard - STYLE_CPP.md mandates `{PATH}_{FILE}_` guards, not LLVM's
-#   path-derived style. With no header root configured it derives the guard from
-#   the absolute checkout path (`USERS_..._MBO_LOG_SCOPED_STREAM_H`), so every
-#   header in the repo is flagged.
-# * llvm-prefer-static-over-anonymous-namespace - internal-linkage helpers are
-#   grouped in an anonymous namespace here, not marked per-function `static`.
-# Comments must stay outside the `Checks: >` folded scalar below: text inside it
-# is content, not YAML comments, and would be parsed as check globs.
+# Comments must stay OUTSIDE the folded scalar below: text inside it is content,
+# parsed as check globs.
 Checks: >
   *,
   abseil-*,
@@ -160,14 +64,14 @@ Checks: >
   -boost-*,
   bugprone-*,
   -bugprone-crtp-constructor-accessibility,
-  -bugprone-random-generator-seed,
   -bugprone-easily-swappable-parameters,
-  -bugprone-std-namespace-modification,
   -bugprone-exception-escape,
+  -bugprone-random-generator-seed,
+  -bugprone-std-namespace-modification,
   -cert-dcl50-cpp,
+  -cert-err58-cpp,
   -cert-msc32-c,
   -cert-msc51-cpp,
-  -cert-err58-cpp,
   clang*,
   clang-analyzer-*,
   clang-diagnostic-*,
@@ -184,8 +88,8 @@ Checks: >
   google-*,
   -google-build-using-namespace,
   -hicpp-no-array-decay,
-  -hicpp-signed-bitwise,
   -hicpp-no-assembler,
+  -hicpp-signed-bitwise,
   -llvm-else-after-return,
   -llvm-header-guard,
   -llvm-include-order,
@@ -193,8 +97,8 @@ Checks: >
   -llvmlibc-*,
   misc-*,
   -misc-include-cleaner,
-  -misc-use-internal-linkage,
   -misc-no-recursion,
+  -misc-use-internal-linkage,
   modernize-*,
   -modernize-avoid-variadic-functions,
   -modernize-use-nodiscard,
@@ -205,9 +109,9 @@ Checks: >
   portability-*,
   readability-*,
   -readability-avoid-nested-conditional-operator,
-  -readability-magic-numbers,
   -readability-else-after-return,
   -readability-inconsistent-ifelse-braces,
+  -readability-magic-numbers,
   -readability-redundant-inline-specifier,
   -readability-redundant-parentheses,
   -readability-use-concise-preprocessor-directives,
