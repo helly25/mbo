@@ -724,6 +724,7 @@ constexpr std::array<char, 240> kTemboKatPattern = TemboBytePattern<240>();
 static_assert(
     tembo::GetHash64<7, 8, true>(std::string_view(kTemboKatPattern.data(), kTemboKatPattern.size()), 42)
     == 0xd2713e2ba0fdce94);
+
 // NOLINTEND(*-magic-numbers)
 
 // Every vector is re-derived from the LIVE algorithm and compared to the value
