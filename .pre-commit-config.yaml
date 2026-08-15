@@ -118,6 +118,17 @@ repos:
         language: system
         entry: tools/check_cc_library_tested.py
         files: ^.*/(BUILD\.bazel|BUILD)$
+      - id: headers-claimed
+        name: every header is claimed by its package BUILD file
+        description: |
+          A header no target lists in hdrs/srcs is invisible to the build and therefore to the
+          clang-tidy gate, which reaches headers only through an including translation unit. Found
+          a real one on first run: hash_tembo.h, orphaned since #306. Textual and package-scoped,
+          mirroring bazel's package-relative labels; exceptions live in the tool's _ALLOWLIST with
+          reasons. No bazel needed.
+        language: system
+        entry: tools/check_headers_claimed.py
+        files: ^(mbo/.*\.h|.*/BUILD\.bazel)$
       - id: header-guards
         name: header guards follow STYLE_CPP
         description: |
