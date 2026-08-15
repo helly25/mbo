@@ -133,6 +133,56 @@ clang-format picks a layout per line; these habits steer it toward the readable 
 
 ## Idioms
 
+- **A `cc_library` target is named `<thing>_cc`** (`file_cc`, `diff_options_cc`, `hash_cc`), so a
+  label reads as "the C++ library for `<thing>`" and never collides with the directory,
+  header, or binary of the same name. `cc_test` keeps its `_test` suffix, and a `cc_binary`
+  keeps the plain program name (`mope`, `diff`). Enforced by the `cc-target-naming` pre-commit
+  hook ([`tools/check_cc_target_naming.py`](tools/check_cc_target_naming.py)), so the
+  convention cannot drift back the way four extras targets did.
+- **Every `cc_library` has a test in its own package depending on it.** This is the
+  Testing section's "all exported code must be tested" stated as a build rule, and it is
+  enforced by the `check-cc-library-tested` pre-commit hook
+  ([`tools/check_cc_library_tested.py`](tools/check_cc_library_tested.py)). Two things
+  deliberately do **not** count: _transitive_ coverage (a test of a library that merely
+  deps yours) and a non-test dependent (a `cc_binary`, a `bashtest`) - neither exercises
+  your unit directly. Same-package is part of the rule too: the test belongs next to the
+  code it covers. A library with genuinely no testable surface goes into the tool's
+  `_ALLOWLIST` **with its reason recorded there** (today's single entry is
+  `//mbo/container:limited_set_benchmark_cc`, the benchmark harness, which makes no
+  correctness claim a test could check).
+- **Never range-iterate an inline braced-init-list; iterate a NAMED `constexpr std::array`.** A loop
+  over `{a, b, c}` hides what the set IS behind the mechanics of visiting it, gives the reader nothing
+  to grep for, and puts the data at the point of use so the next case that needs the same set copies it
+  instead of sharing it. Build the set with `std::to_array<T>({...})` (a trailing comma on the last
+  element, so `clang-format` breaks it one per line - see the Formatting section) and give it a `k`
+  name that says what the set is, not what the loop does. `static constexpr` inside a function when it
+  is used once; at namespace scope in the anonymous namespace when more than one case needs it.
+  Deducing `std::array` from `to_array` also keeps the element type in exactly one place, and an
+  explicit type stops a literal from being deduced as `const char*` where `std::string_view` was meant.
+
+  ```cpp
+  // POSIX precedence: LC_ALL overrides LC_CTYPE, which overrides LANG.
+  static constexpr std::array kLocaleVars = std::to_array<std::string_view>({
+      "LC_ALL",
+      "LC_CTYPE",
+      "LANG",
+  });
+  for (const std::string_view var : kLocaleVars) {  // not: for (... : {"LC_ALL", "LC_CTYPE", "LANG"})
+  ```
+
+  Enforced by the `no-braced-init-list-loop` pre-commit hook, so it cannot drift back. This is about a
+  RANGE-FOR over a literal list; passing a braced list as an argument (`ElementsAre`, a `std::vector`
+  initializer, an aggregate) is untouched by the rule.
+
+- **Comparison functions name their parameters `lhs` and `rhs`** - a sort comparator, an
+  `operator==`/`operator<=>`, any two-things-of-one-type predicate. Never `a`/`b` (which
+  `readability-identifier-length` rejects at under 2 characters) and not `x`/`y` either: `lhs`/`rhs`
+  names the ROLE, so `lhs.name < rhs.name` reads as the ordering it implements.
+
+  ```cpp
+  absl::c_sort(topics, [](const HelpTopic& lhs, const HelpTopic& rhs) { return lhs.name < rhs.name; });
+  ```
+
 - **A defaulted move constructor and move assignment are explicitly `noexcept`.**
   `Type(Type&&) noexcept = default;` and `Type& operator=(Type&&) noexcept = default;`. A
   defaulted move is only _implicitly_ `noexcept` when every base and member move is, so one
