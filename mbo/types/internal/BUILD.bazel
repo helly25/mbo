@@ -120,3 +120,15 @@ mope_test(
     ],
     clang_format = True,
 )
+
+cc_test(
+    name = "extend_internal_test",
+    srcs = ["extend_internal_test.cc"],
+    deps = [
+        ":extend_cc",
+        ":extender_cc",
+        ":test_types_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

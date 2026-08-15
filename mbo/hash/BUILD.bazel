@@ -279,3 +279,14 @@ cc_binary(
 # Verifies the bzl hash ports against the C++ prime (hash_tool), one diff_test
 # per offered algorithm: hash_bzl_vs_cpp_dumbo_test, hash_bzl_vs_cpp_fnv1a_test.
 hash_bzl_verify(name = "hash_bzl_vs_cpp")
+
+cc_test(
+    name = "hash_extra_test",
+    srcs = ["hash_extra_test.cc"],
+    deps = [
+        ":hash_extra_cc",
+        ":hash_internal_util_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

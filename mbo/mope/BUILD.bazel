@@ -15,7 +15,7 @@
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("mope.bzl", "mope_test")
 
 package(default_visibility = ["//visibility:private"])
@@ -106,4 +106,16 @@ bzl_library(
     srcs = ["mope.bzl"],
     visibility = ["//visibility:public"],
     deps = ["//mbo/diff:diff_bzl"],
+)
+
+cc_test(
+    name = "mope_lib_test",
+    srcs = ["mope_test.cc"],
+    deps = [
+        ":ini_cc",
+        ":mope_cc",
+        "@abseil-cpp//absl/status",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
