@@ -1,5 +1,6 @@
 # 0.13.3
 
+- The warning set is now owned by the repo: explicit `-Wall -Wextra` (as errors) on all first-party code, with `missing-field-initializers` suppressed as the deliberate designated-init idiom; previously only `-Werror` was ours and the set came from each toolchain's defaults.
 - CI no longer caches the hermetic LLVM (ported from helly25/xff #409+#411): jobs cache bazel's disk cache instead of the output root, non-clang cells keep a small repo cache, and the symbolizer wrapper resolves `llvm-symbolizer` via runfiles so a fresh LLVM fetch location cannot break asan/tsan.
 - Added a `headers-claimed` pre-commit check: every tracked header must be listed in its package's BUILD file. Found `hash_tembo.h` orphaned since #306 on its first run (temporarily allowlisted; re-listed by #311).
 - Replaced the reachability-based `library-test-coverage` hook with xff's strict rule: every `cc_library` needs a test in its own package with a direct dependency; exceptions live in the tool's `_ALLOWLIST` with reasons.
