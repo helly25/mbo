@@ -87,21 +87,28 @@ TEST_F(BaseDiffTest, RightHeadersUseTheRightNameOnBothLines) {
 
 TEST_F(BaseDiffTest, CompareEqIsExactByDefault) {
   const DiffOptions options = BareOptions();
-  const BaseDiff diff(Text("AbC\n"), Text("abc\n"), options);
+  // The artefacts must outlive the diff: BaseDiff's line caches VIEW their data.
+  const file::Artefact lhs = Text("AbC\n");
+  const file::Artefact rhs = Text("abc\n");
+  const BaseDiff diff(lhs, rhs, options);
   EXPECT_THAT(diff.CompareEq(0, 0), IsFalse());
 }
 
 TEST_F(BaseDiffTest, CompareEqHonoursIgnoreCase) {
   DiffOptions options = BareOptions();
   options.ignore_case = true;
-  const BaseDiff diff(Text("AbC\n"), Text("abc\n"), options);
+  const file::Artefact lhs = Text("AbC\n");
+  const file::Artefact rhs = Text("abc\n");
+  const BaseDiff diff(lhs, rhs, options);
   EXPECT_THAT(diff.CompareEq(0, 0), IsTrue());
 }
 
 TEST_F(BaseDiffTest, HeaderIsTheRenderedFileHeaders) {
   DiffOptions options = BareOptions();
   options.file_header_use = DiffOptions::FileHeaderUse::kBoth;
-  const BaseDiff diff(Text("x\n", "l"), Text("y\n", "r"), options);
+  const file::Artefact lhs = Text("x\n", "l");
+  const file::Artefact rhs = Text("y\n", "r");
+  const BaseDiff diff(lhs, rhs, options);
   EXPECT_THAT(diff.Header(), BaseDiff::FileHeaders(Text("x\n", "l"), Text("y\n", "r"), options));
 }
 
@@ -109,7 +116,9 @@ TEST_F(BaseDiffTest, HeaderIsTheRenderedFileHeaders) {
 
 TEST_F(BaseDiffTest, ChunkedDiffReplaysAnEditScript) {
   const DiffOptions options = BareOptions();
-  ChunkedDiff diff(Text("a\nb\nc\n"), Text("a\nX\nc\n"), options);
+  const file::Artefact lhs = Text("a\nb\nc\n");
+  const file::Artefact rhs = Text("a\nX\nc\n");
+  ChunkedDiff diff(lhs, rhs, options);
   EXPECT_THAT(diff.More(), IsTrue());
   diff.PushEqual();  // a == a
   diff.PushDiff();   // b -> X
@@ -122,7 +131,9 @@ TEST_F(BaseDiffTest, ChunkedDiffReplaysAnEditScript) {
 
 TEST_F(BaseDiffTest, ChunkedDiffAllEqualFinalizesEmpty) {
   const DiffOptions options = BareOptions();
-  ChunkedDiff diff(Text("a\nb\n"), Text("a\nb\n"), options);
+  const file::Artefact lhs = Text("a\nb\n");
+  const file::Artefact rhs = Text("a\nb\n");
+  ChunkedDiff diff(lhs, rhs, options);
   diff.PushEqual();
   diff.PushEqual();
   const auto result = diff.Finalize();
@@ -141,7 +152,9 @@ struct OneSidedDiff : ChunkedDiff {
 TEST_F(BaseDiffTest, ChunkedDiffOneSidedPushes) {
   // Pure insertion: rhs has an extra line.
   const DiffOptions options = BareOptions();
-  OneSidedDiff diff(Text("a\nc\n"), Text("a\nb\nc\n"), options);
+  const file::Artefact lhs = Text("a\nc\n");
+  const file::Artefact rhs = Text("a\nb\nc\n");
+  OneSidedDiff diff(lhs, rhs, options);
   diff.PushEqual();  // a
   diff.PushRhs();    // +b
   diff.Chunk().MoveDiffs();
