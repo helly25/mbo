@@ -1,4 +1,6 @@
-/__pycache__
+# Python bytecode caches, at any depth (tooling under mbo/hash/measurements etc.).
+__pycache__/
+*.pyc
 
 # Ignore the `external` link (that is added by `bazel-compile-commands-extractor`). The link differs between macOS/Linux and Windows, so it shouldn't be checked in. The pattern must not end with a trailing `/` because it's a symlink on macOS/Linux.
 /external

@@ -668,6 +668,64 @@ static_assert(CountKatAlgo(kat::Algo::kFambo) >= 20);
 // Constexpr smoke (kVectors[0] is mumbo, seed 0, empty input).
 static_assert(mumbo::GetHash64("", 0) == kat::kVectors[0].low);
 
+// Compile-time guard for tembo: every input byte must influence the hash.
+//
+// This is the check that turns a dead-lane rewrite into a build failure. A
+// 2026-08 rewrite of hash_tembo.h folded lanes 4..7 against lane3, so the
+// lane4..6 sections of every non-final bulk window never reached the output:
+// 48 of 240 input bytes were ignored, and nothing failed. tembo has constexpr
+// evaluation paths, so the property is provable at compile time.
+//
+// The byte range is chunked because each static_assert is one constant
+// evaluation and the full sweep of a large config exceeds clang's default
+// constexpr step limit (-fconstexpr-steps, 2^20).
+
+// Deterministic pattern long enough for two bulk windows plus tail.
+template<std::size_t kLen>
+constexpr std::array<char, kLen> TemboBytePattern() {
+  std::array<char, kLen> data{};
+  for (std::size_t i = 0; i < kLen; ++i) {
+    data[i] = static_cast<char>((i * 7) + 3);  // NOLINT(*-magic-numbers)
+  }
+  return data;
+}
+
+// Flips each byte in [begin, end) once; true iff every flip changes the hash.
+template<uint64_t kNumLanes, uint64_t kNumConsts, bool kSecretLoopInit, std::size_t kLen>
+constexpr bool TemboEveryByteMatters(std::size_t begin, std::size_t end) {
+  std::array<char, kLen> data = TemboBytePattern<kLen>();
+  constexpr uint64_t kSeed = 42;
+  const uint64_t base =
+      tembo::GetHash64<kNumLanes, kNumConsts, kSecretLoopInit>(std::string_view(data.data(), kLen), kSeed);
+  for (std::size_t i = begin; i < end; ++i) {
+    data[i] = static_cast<char>(data[i] ^ 0x5A);  // NOLINT(*-magic-numbers)
+    const uint64_t hash =
+        tembo::GetHash64<kNumLanes, kNumConsts, kSecretLoopInit>(std::string_view(data.data(), kLen), kSeed);
+    data[i] = static_cast<char>(data[i] ^ 0x5A);  // NOLINT(*-magic-numbers)
+    if (hash == base) {
+      return false;  // byte i is dead: it never reaches the output
+    }
+  }
+  return true;
+}
+
+// NOLINTBEGIN(*-magic-numbers): lengths are 2 * kNumLanes * 16 + 16 per config.
+static_assert(TemboEveryByteMatters<7, 8, true, 240>(0, 120));
+static_assert(TemboEveryByteMatters<7, 8, true, 240>(120, 240));
+static_assert(TemboEveryByteMatters<4, 4, false, 144>(0, 144));
+static_assert(TemboEveryByteMatters<16, 8, true, 528>(0, 132));
+static_assert(TemboEveryByteMatters<16, 8, true, 528>(132, 264));
+static_assert(TemboEveryByteMatters<16, 8, true, 528>(264, 396));
+static_assert(TemboEveryByteMatters<16, 8, true, 528>(396, 528));
+
+// Compile-time KAT: pins the exact tembo output across the bulk loop, the
+// if-ladder, and the tail (240 = 2 windows + 16 for the 7-lane config).
+constexpr std::array<char, 240> kTemboKatPattern = TemboBytePattern<240>();
+static_assert(
+    tembo::GetHash64<7, 8, true>(std::string_view(kTemboKatPattern.data(), kTemboKatPattern.size()), 42)
+    == 0xd2713e2ba0fdce94);
+// NOLINTEND(*-magic-numbers)
+
 // Every vector is re-derived from the LIVE algorithm and compared to the value
 // pinned in the generated .inc. This fails if either the data or the algorithm
 // changed without a matched regeneration (the diff_test in BUILD.bazel catches

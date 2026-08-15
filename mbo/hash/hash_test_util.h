@@ -26,6 +26,8 @@
 // The public concepts (`HasGetHash64` / `HasGetHash128`) detect whether an
 // algorithm is 64- or 128-bit based. Shared by hash_test.cc and hash_benchmark.cc.
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <random>
 #include <string>
@@ -107,11 +109,64 @@ struct Murmur3Hash : ::mbo::hash::murmur3::Algorithm {
   static constexpr std::string_view Name() { return "murmur3"; }
 };
 
+template<uint64_t kNumLanes, uint64_t kNumConsts, bool kSecretLoopInit = false>
+struct TemboHash : ::mbo::hash::tembo::Algorithm<kNumLanes, kNumConsts, kSecretLoopInit> {
+  static constexpr bool kStrongAvalanche = true;
+  static constexpr bool kSeeded = true;
+
+ private:
+  static constexpr std::string ToStr(std::size_t num) {
+    std::string str;
+    do {                                                // NOLINT(*-avoid-do-while)
+      str.push_back('0' + static_cast<int>(num % 10));  // NOLINT(*-magic-numbers,*-narrowing-conversions)
+      num /= 10;                                        // NOLINT(*-magic-numbers)
+    } while (num > 0);
+    std::ranges::reverse(str);
+    return str;
+  }
+
+  static constexpr std::string GetName() {
+    std::string name = "tembo_";
+    name += ToStr(kNumLanes) + "_" + ToStr(kNumConsts);
+    if (kSecretLoopInit) {
+      name += "_I";
+    }
+    return name;
+  }
+
+ public:
+  static constexpr std::string kName = GetName();
+
+  static constexpr std::string_view Name() { return kName; }
+};
+
 // All registered algorithm descriptors. The typed tests and the benchmark both
 // derive their coverage from this single list, so adding a descriptor here is
 // sufficient to test AND benchmark a new algorithm.
-using AllAlgorithms =
-    std::tuple<DumboHash, FamboHash, MumboHash, Fnv1aHash, Xxh64Hash, Xxh3Hash, RapidHash, SipHash24Hash, Murmur3Hash>;
+using AllAlgorithms = std::tuple<
+    DumboHash,
+    FamboHash,
+    MumboHash,
+    Fnv1aHash,
+    Xxh64Hash,
+    Xxh3Hash,
+    RapidHash,
+    SipHash24Hash,
+    Murmur3Hash,
+    // NOLINTBEGIN(*-magic-numbers)
+    TemboHash<3, 4>,
+    TemboHash<4, 4>,
+    TemboHash<5, 4>,
+    TemboHash<6, 4>,
+    TemboHash<7, 4>,
+    TemboHash<8, 4>,
+    TemboHash<12, 4>,
+    TemboHash<16, 4>,
+    TemboHash<8, 8>,
+    TemboHash<12, 8>,
+    TemboHash<16, 8>
+    // NOLINTEND(*-magic-numbers)
+    >;
 
 // The bit width the algorithm is based on: 128 if it exposes a 128-bit variant.
 template<typename Algo>
@@ -125,6 +180,21 @@ inline std::string RandomString(std::mt19937_64& rng, std::size_t length) {
   for (std::size_t i = 0; i < length; ++i) {
     result[i] = static_cast<char>(dist(rng));
   }
+  return result;
+}
+
+template<std::size_t algo>
+requires(algo < std::tuple_size_v<AllAlgorithms>)
+inline constexpr void FillAlgoName(std::array<std::string_view, std::tuple_size_v<AllAlgorithms>>& names) {
+  names[algo] = std::tuple_element_t<algo, AllAlgorithms>::Name();
+  if constexpr (algo > 0) {
+    FillAlgoName<algo - 1>(names);
+  }
+}
+
+inline constexpr std::array<std::string_view, std::tuple_size_v<AllAlgorithms>> GetAlgoNames() {
+  std::array<std::string_view, std::tuple_size_v<AllAlgorithms>> result;
+  FillAlgoName<std::tuple_size_v<AllAlgorithms> - 1>(result);
   return result;
 }
 

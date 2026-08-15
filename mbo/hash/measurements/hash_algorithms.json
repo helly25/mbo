@@ -22,6 +22,17 @@
       "starlark": "yes"
     },
     {
+      "algo": "fambo",
+      "bits": 64,
+      "smhasher": "fambo-64",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
       "algo": "fnv1a",
       "bits": 64,
       "smhasher": "FNV-1a-64",
@@ -119,6 +130,127 @@
       "seeded": "yes",
       "streaming": "no",
       "starlark": "no"
+    },
+    {
+      "algo": "tembo_3_4",
+      "bits": 64,
+      "smhasher": "tembo_3_4",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "tembo_4_4",
+      "bits": 64,
+      "smhasher": "tembo_4_4",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "tembo_5_4",
+      "bits": 64,
+      "smhasher": "tembo_5_4",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "tembo_6_4",
+      "bits": 64,
+      "smhasher": "tembo_6_4",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "tembo_7_4",
+      "bits": 64,
+      "smhasher": "tembo_7_4",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "tembo_8_4",
+      "bits": 64,
+      "smhasher": "tembo_8_4",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "tembo_8_8",
+      "bits": 64,
+      "smhasher": "tembo_8_8",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "tembo_12_4",
+      "bits": 64,
+      "smhasher": "tembo_12_4",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "tembo_12_8",
+      "bits": 64,
+      "smhasher": "tembo_12_8",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "tembo_16_4",
+      "bits": 64,
+      "smhasher": "tembo_16_4",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
+    },
+    {
+      "algo": "tembo_16_8",
+      "bits": 64,
+      "smhasher": "tembo_16_8",
+      "available_via": "`hash.h`",
+      "role": "fast (64)",
+      "notice": "none (in-house)",
+      "seeded": "yes",
+      "streaming": "no",
+      "starlark": "no"
     }
   ],
   "overview_order": [
@@ -128,9 +260,21 @@
     "SipHash-2-4",
     "FNV-1a-64",
     "dumbo-64",
+    "fambo-64",
     "rapidhash",
     "XXH-64",
     "XXH3-64",
-    "XXH3-128"
+    "XXH3-128",
+    "tembo_3_4",
+    "tembo_4_4",
+    "tembo_5_4",
+    "tembo_6_4",
+    "tembo_7_4",
+    "tembo_8_4",
+    "tembo_8_8",
+    "tembo_12_4",
+    "tembo_12_8",
+    "tembo_16_4",
+    "tembo_16_8"
   ]
 }
