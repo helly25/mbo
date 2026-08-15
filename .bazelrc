@@ -62,12 +62,20 @@ common:clang --cxxopt=-Wno-unused-command-line-argument
 
 # The configuration the code is INDEXED in: `compile_commands.json` (see
 # `compile_commands-update.sh`) and therefore clangd and clang-tidy. It is
-# `--config=clang` plus an explicit libc++, because that is what development
-# actually targets and the compile DB must say so rather than inherit whatever
-# the driver defaults to - libc++ on macOS but libstdc++ on Linux, which made
-# the same clang-tidy check report differently per platform.
+# `--config=clang` plus an explicit libc++ at LINK time, because that is what
+# development actually targets and the compile DB must say so rather than inherit
+# whatever the driver defaults to.
+#
+# There is deliberately no `--cxxopt=-stdlib=libc++` here. The hermetic toolchain
+# already passes `-stdlib=libc++` on compiles: its default is
+# `stdlib = "builtin-libc++"`, and that branch is keyed on the stdlib setting, not
+# on the OS. Adding the cxxopt put the flag in the compile command TWICE - measured
+# with aquery: `--config=clang` alone yields one occurrence, adding the cxxopt
+# yields two - which is where the "unused argument -stdlib=libc++" warnings came
+# from. The linkopt below is not redundant: it does not appear in compile actions
+# at all (still one occurrence when added alone) and is what selects the standard
+# library for linking.
 common:clang-tidy --config=clang
-common:clang-tidy --cxxopt=-stdlib=libc++
 common:clang-tidy --linkopt=-stdlib=libc++
 
 common:symbolizer --strip=never

@@ -1,5 +1,6 @@
 # 0.13.3
 
+- Removed the redundant `--cxxopt=-stdlib=libc++` from the `clang-tidy` bazel config; the hermetic toolchain already passes it, so it appeared twice and produced "unused argument" warnings.
 - Fixed `mbo::file::GetMTime` on libstdc++: it read `std::filesystem::file_clock` time as Unix seconds, but that clock's epoch is implementation-defined (2174-01-01 on libstdc++), so every file's mtime was ~148 years off on Linux.
 - Added `mbo/diff:diff_options_test`, covering every flag parser including the unknown-value paths.
 - Added `mbo/file:artefact_test`.
