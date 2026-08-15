@@ -135,11 +135,20 @@ a single `publish` renders the README from the machines you choose.
 **1. Measure, per machine** (repo root, clean `main` for authoritative provenance):
 
 ```sh
-mbo/hash/measurements/run_measurements.py --config clang --jobs 4  # clang; omit --config for native gcc
+# ALWAYS add the machine's `opt_<machine>` config (defined in .bazelrc): without
+# -march/-mcpu the benchmark measures generic codegen, which understates
+# SIMD-heavy competitors (xxh3 +27% at 1 KiB under znver5) and can hide
+# target-specific pathologies (mumbo is 2x slower under clang znver5 >= 1 KiB).
+mbo/hash/measurements/run_measurements.py --config clang --config opt_zen5 --jobs 4      # AMD Zen 5
+mbo/hash/measurements/run_measurements.py --config clang --config opt_apple_m5 --jobs 4  # Apple M5
 # faster: in-house family only, or perf only
 mbo/hash/measurements/run_measurements.py --algos mumbo,jumbo,dumbo --jobs 1
 mbo/hash/measurements/run_measurements.py --skip-smhasher
 ```
+
+New machine: add a `common:opt_<machine> --copt=-march=...` (or `-mcpu=...`)
+entry to `.bazelrc` first. The `--config` values are recorded in the dataset
+context, so the tuning target is part of the bundle's provenance.
 
 ONE full perf sweep runs first and alone (SMHasher3 would contend for CPU and
 skew the sub-ns numbers), then the battery (`--jobs` at once; pass/fail is

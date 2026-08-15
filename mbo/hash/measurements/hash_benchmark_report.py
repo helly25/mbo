@@ -136,47 +136,14 @@ _SMH_NAME_ALIASES = {
 # The measured columns (verdict/score/failures) come from a data bundle.
 _ALGORITHMS_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hash_algorithms.json")
 
-# TEMPORARY stopgap: the committed bundles were recorded under the invalid short
-# names `FNV-1a`/`MurmurHash3` (rejected by the pinned SMHasher3 build), so their
-# logs are the "Invalid hash" stub and carry no real data for these two. Hardcode
-# the known values until a bundle carries a real `FNV-1a-64`/`MurmurHash3-128`
-# measurement, then DELETE the matching entry. `failures` is the editorial summary
-# (both fail most of the battery, so listing every family would be noise).
-_MISSING_MEASURED = {
-    "FNV-1a-64": {
-        "verdict": "FAIL",
-        "passed": 7,
-        "total": 186,
-        "failures": [
-            "nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, "
-            "Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster"
-        ],
-    },
-    "MurmurHash3-128": {
-        "verdict": "FAIL",
-        "passed": 123,
-        "total": 188,
-        "failures": ["BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)"],
-    },
-    # Measured 2026-07-21 (full clang-22 battery, local bundle
-    # ..._83c56a80_20260721_124550_fambo_v4.tgz, smhasher summary
-    # 20260721_122213_smhasher.json) but that bundle is not committed yet.
-    # DELETE once a committed bundle carries a real `fambo-64` measurement.
-    "fambo-64": {
-        "verdict": "PASS",
-        "passed": 188,
-        "total": 188,
-        "failures": [],
-    },
-    # The tembo configurations are registered but the SMHasher3 battery has not
-    # been run for them yet (the zen5 runs used --skip-smhasher). `TBD` renders
-    # as "not measured" rather than inventing a verdict. DELETE each entry once
-    # a committed bundle carries its measurement.
-    **{
-        f"tembo_{lanes}_{consts}": {"verdict": "TBD"}
-        for lanes, consts in [(3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (8, 8), (12, 4), (12, 8), (16, 4), (16, 8)]
-    },
-}
+# TEMPORARY stopgap for algorithms listed in hash_algorithms.json whose
+# measurement no committed bundle carries yet. Every algorithm here renders
+# from these hardcoded values instead of a log, so keep this EMPTY whenever
+# possible and DELETE entries as soon as a committed bundle measures them.
+# An entry with only {"verdict": "TBD"} renders as "not measured" - use that
+# for a newly registered config instead of inventing a PASS/FAIL.
+# (Since the 2026-08-15 full battery every registered algorithm is measured.)
+_MISSING_MEASURED = {}
 
 
 def _timestamp():
