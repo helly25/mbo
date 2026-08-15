@@ -17,6 +17,22 @@
 
 bazel_dep(name = "toolchains_llvm", version = "1.8.0")
 
+# Points at the helly25 fork for one fix: upstream puts `-stdlib=libc++` into the
+# COMPILE flags for `builtin-libc++` while also passing `-nostdinc++` plus explicit
+# `-cxx-isystem` paths, so the flag selects nothing and clang reports
+# `-Wunused-command-line-argument` on every object file - including every `[for tool]`
+# action, which is where the noise in the clang-tidy CI job came from. The fork drops
+# it (helly25/toolchains_llvm c3ac93f); libc++ is still linked explicitly, and cxx_flags
+# never reach the link action, so nothing else changes.
+#
+# The alternative was `-Wno-unused-command-line-argument`, which hides a true report
+# instead of removing the useless flag.
+git_override(
+    module_name = "toolchains_llvm",
+    commit = "c3ac93f5c61cb78487765d2e81e7485ad3f8bf2c",
+    remote = "https://github.com/helly25/toolchains_llvm.git",
+)
+
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 llvm.toolchain(
     name = "llvm_toolchain_llvm",
