@@ -49,6 +49,19 @@ common:clang --define is_clang=true
 # flags: the toolchain handles libc++ itself (see git_override in bazelmod/llvm.MODULE.bazel).
 common:clang-tidy --config=clang
 
+# Per-machine benchmark tuning configs, opt-in for measurement runs (see
+# mbo/hash/measurements/README.md). A published dataset must be built for the
+# machine it runs on: without -march/-mcpu the benchmark measures generic
+# codegen, which understates SIMD-heavy competitors (xxh3 +27% at 1 KiB under
+# znver5) and can hide target-specific pathologies (mumbo is 2x SLOWER under
+# clang znver5 at >= 1 KiB). Never fold these into a default: the flag must be
+# an explicit, recorded axis of the dataset (`--config` lands in the context).
+# Add an `opt_<machine>` entry here when a new machine joins the measurement
+# pool; prefer an explicit -march/-mcpu over -march=native so the dataset
+# records WHAT was targeted, not just that something was.
+common:opt_zen5 --copt=-march=znver5
+common:opt_apple_m5 --copt=-mcpu=apple-m5
+
 common:symbolizer --strip=never
 common:symbolizer --run_under=//tools:run_under_symbolizer
 

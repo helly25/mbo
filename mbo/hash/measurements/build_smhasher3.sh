@@ -80,6 +80,7 @@ cp "${HASH_SRC}/hash_dumbo.h" "${HASH_DST}/"
 cp "${HASH_SRC}/hash_fambo.h" "${HASH_DST}/"
 cp "${HASH_SRC}/hash_internal_util.h" "${HASH_DST}/"
 cp "${HASH_SRC}/hash_mumbo.h" "${HASH_DST}/"
+cp "${HASH_SRC}/hash_tembo.h" "${HASH_DST}/"
 cp "${HASH_SRC}/hash_types.h" "${HASH_DST}/"
 cp "${HASH_SRC}/measurements/smhasher3/mbohash.cpp" "${SRC_DIR}/hashes/mbohash.cpp"
 grep -q 'hashes/mbohash.cpp' "${SRC_DIR}/hashes/Hashsrc.cmake" \
@@ -102,4 +103,4 @@ docker run --rm -v "${SRC_DIR}:/src" -w /src "${BUILD_IMAGE}" bash -c '
 '
 
 echo "SMHasher3 built: ${SRC_DIR}/build/SMHasher3"
-echo "In-house hashes: ${SRC_DIR}/build/SMHasher3 --list | grep -Ei 'mumbo|jumbo|dumbo|fambo'"
+echo "In-house hashes: ${SRC_DIR}/build/SMHasher3 --list | grep -Ei 'mumbo|jumbo|dumbo|fambo|tembo'"

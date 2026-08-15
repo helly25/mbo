@@ -1,4 +1,9 @@
-/__pycache__
+# Python bytecode caches, at any depth (tooling under mbo/hash/measurements etc.).
+__pycache__/
+*.pyc
+
+# SMHasher3 build tree (created by mbo/hash/measurements/build_smhasher3.sh).
+/.smhasher3
 
 # Ignore the `external` link (that is added by `bazel-compile-commands-extractor`). The link differs between macOS/Linux and Windows, so it shouldn't be checked in. The pattern must not end with a trailing `/` because it's a symlink on macOS/Linux.
 /external
