@@ -58,7 +58,14 @@ common:clang --host_linkopt=-fuse-ld=lld
 common:clang --define is_clang=true
 # Some newer Clang versions really do not like '-c':
 # https://github.com/llvm/llvm-project/issues/100909
+# Both configurations. The toolchain passes `-stdlib=libc++` on compiles, but it
+# also passes explicit `-nostdinc++` + include paths, so the flag has no effect
+# there and clang reports it "unused during compilation". Without the `host_`
+# counterpart the suppression covers only target-configuration compiles, and every
+# `[for tool]` action - re2, protobuf and friends built for a generator - still
+# warns. That is where the remaining noise in the clang-tidy CI job came from.
 common:clang --cxxopt=-Wno-unused-command-line-argument
+common:clang --host_cxxopt=-Wno-unused-command-line-argument
 
 # The configuration the code is INDEXED in: `compile_commands.json` (see
 # `compile_commands-update.sh`) and therefore clangd and clang-tidy. It is
