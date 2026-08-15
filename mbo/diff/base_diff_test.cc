@@ -34,6 +34,8 @@ namespace {
 
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
 
 struct BaseDiffTest : ::testing::Test {
@@ -86,14 +88,14 @@ TEST_F(BaseDiffTest, RightHeadersUseTheRightNameOnBothLines) {
 TEST_F(BaseDiffTest, CompareEqIsExactByDefault) {
   const DiffOptions options = BareOptions();
   const BaseDiff diff(Text("AbC\n"), Text("abc\n"), options);
-  EXPECT_THAT(diff.CompareEq(0, 0), false);
+  EXPECT_THAT(diff.CompareEq(0, 0), IsFalse());
 }
 
 TEST_F(BaseDiffTest, CompareEqHonoursIgnoreCase) {
   DiffOptions options = BareOptions();
   options.ignore_case = true;
   const BaseDiff diff(Text("AbC\n"), Text("abc\n"), options);
-  EXPECT_THAT(diff.CompareEq(0, 0), true);
+  EXPECT_THAT(diff.CompareEq(0, 0), IsTrue());
 }
 
 TEST_F(BaseDiffTest, HeaderIsTheRenderedFileHeaders) {
@@ -108,11 +110,11 @@ TEST_F(BaseDiffTest, HeaderIsTheRenderedFileHeaders) {
 TEST_F(BaseDiffTest, ChunkedDiffReplaysAnEditScript) {
   const DiffOptions options = BareOptions();
   ChunkedDiff diff(Text("a\nb\nc\n"), Text("a\nX\nc\n"), options);
-  EXPECT_THAT(diff.More(), true);
+  EXPECT_THAT(diff.More(), IsTrue());
   diff.PushEqual();  // a == a
   diff.PushDiff();   // b -> X
   diff.PushEqual();  // c == c
-  EXPECT_THAT(diff.More(), false);
+  EXPECT_THAT(diff.More(), IsFalse());
   const auto result = diff.Finalize();
   ASSERT_THAT(result.status(), absl::OkStatus());
   EXPECT_THAT(*result, "@@ -2 +2 @@\n-b\n+X\n");

@@ -34,6 +34,8 @@ namespace {
 
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 
 struct DiffInternalTest : ::testing::Test {
   static DiffOptions Options(std::size_t context) {
@@ -49,8 +51,8 @@ struct DiffInternalTest : ::testing::Test {
 TEST_F(DiffInternalTest, ContextStartsEmpty) {
   const DiffOptions options = Options(2);
   const Context context(options);
-  EXPECT_THAT(context.Empty(), true);
-  EXPECT_THAT(context.Full(), false);
+  EXPECT_THAT(context.Empty(), IsTrue());
+  EXPECT_THAT(context.Full(), IsFalse());
 }
 
 TEST_F(DiffInternalTest, ContextFillsToTwiceTheContextSize) {
@@ -58,12 +60,12 @@ TEST_F(DiffInternalTest, ContextFillsToTwiceTheContextSize) {
   Context context(options);
   // Full() means 2 * context_size entries: enough trailing context to close one
   // chunk plus leading context to open the next.
-  EXPECT_THAT(context.Push("1"), false);
-  EXPECT_THAT(context.Push("2"), false);
-  EXPECT_THAT(context.Push("3"), false);
-  EXPECT_THAT(context.Push("4"), true) << "full at 2 * context_size";
-  EXPECT_THAT(context.Full(), true);
-  EXPECT_THAT(context.HalfFull(), true);
+  EXPECT_THAT(context.Push("1"), IsFalse());
+  EXPECT_THAT(context.Push("2"), IsFalse());
+  EXPECT_THAT(context.Push("3"), IsFalse());
+  EXPECT_THAT(context.Push("4"), IsTrue()) << "full at 2 * context_size";
+  EXPECT_THAT(context.Full(), IsTrue());
+  EXPECT_THAT(context.HalfFull(), IsTrue());
 }
 
 TEST_F(DiffInternalTest, ContextDropsTheOldestOnceFull) {
@@ -74,14 +76,14 @@ TEST_F(DiffInternalTest, ContextDropsTheOldestOnceFull) {
   context.Push("new");  // Capacity 2: pushes "old" out.
   EXPECT_THAT(context.PopFront(), "mid");
   EXPECT_THAT(context.PopFront(), "new");
-  EXPECT_THAT(context.Empty(), true);
+  EXPECT_THAT(context.Empty(), IsTrue());
 }
 
 TEST_F(DiffInternalTest, ContextSizeZeroKeepsNothing) {
   const DiffOptions options = Options(0);
   Context context(options);
-  EXPECT_THAT(context.Push("a"), true) << "a zero-context ring is always 'full'";
-  EXPECT_THAT(context.Empty(), true) << "and stores nothing";
+  EXPECT_THAT(context.Push("a"), IsTrue()) << "a zero-context ring is always 'full'";
+  EXPECT_THAT(context.Empty(), IsTrue()) << "and stores nothing";
 }
 
 // Data: the preprocessed line cache. --------------------------------------------
@@ -90,13 +92,13 @@ TEST_F(DiffInternalTest, DataSplitsLinesAndIterates) {
   const DiffOptions options = Options(0);
   Data data(options, std::nullopt, "a\nb\nc\n");
   EXPECT_THAT(data.Size(), 3);
-  EXPECT_THAT(data.Done(), false);
+  EXPECT_THAT(data.Done(), IsFalse());
   EXPECT_THAT(data.Line(), "a");
   EXPECT_THAT(data.Next(), "a");
   EXPECT_THAT(data.Idx(), 1);
   EXPECT_THAT(data.Next(), "b");
   EXPECT_THAT(data.Next(), "c");
-  EXPECT_THAT(data.Done(), true);
+  EXPECT_THAT(data.Done(), IsTrue());
   EXPECT_THAT(data.Next(), "") << "exhausted data yields empty lines";
 }
 
@@ -104,7 +106,7 @@ TEST_F(DiffInternalTest, DataEmptyTextHasNoLines) {
   const DiffOptions options = Options(0);
   const Data data(options, std::nullopt, "");
   EXPECT_THAT(data.Size(), 0);
-  EXPECT_THAT(data.Done(), true);
+  EXPECT_THAT(data.Done(), IsTrue());
 }
 
 TEST_F(DiffInternalTest, DataHandlesAMissingFinalNewline) {
@@ -129,7 +131,7 @@ TEST_F(DiffInternalTest, DataCachesTheProcessedComparisonText) {
 TEST_F(DiffInternalTest, DataAppliesRegexReplace) {
   const DiffOptions options = Options(0);
   const auto replace = DiffOptions::ParseRegexReplaceFlag("/[0-9]+/N/");
-  ASSERT_THAT(replace.has_value(), true);
+  ASSERT_THAT(replace.has_value(), IsTrue());
   const Data data(options, replace, "line 42\n");
   EXPECT_THAT(data.GetCache(0).line, "line 42") << "the original text is preserved";
   EXPECT_THAT(data.GetCache(0).processed, "line N") << "the comparison text is rewritten";
