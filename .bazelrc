@@ -10,8 +10,7 @@ common:macos --features=-macos_default_link_flags
 common:macos --features=-supports_dynamic_linker
 common:macos --linkopt=-framework --linkopt=CoreFoundation --host_linkopt=-framework --host_linkopt=CoreFoundation
 common:macos --linkopt=-Wl,-undefined,dynamic_lookup --host_linkopt=-Wl,-undefined,dynamic_lookup
-# Apple Silicon only: 11.0 is the earliest arm64 macOS and clears libc++'s
-# `std::filesystem` availability gate (the APIs are "introduced in macOS 10.15").
+# Earliest arm64 macOS; also clears libc++'s std::filesystem availability gate.
 common:macos --cxxopt=-mmacosx-version-min=11.0 --host_cxxopt=-mmacosx-version-min=11.0
 common:macos --linkopt=-mmacosx-version-min=11.0 --host_linkopt=-mmacosx-version-min=11.0
 
@@ -28,14 +27,7 @@ common --define absl=1
 
 common --cxxopt=-std=c++20 --host_cxxopt=-std=c++20 --cxxopt=-Werror
 
-# Don't let our global -Werror be tripped by third-party (external) code; newer
-# compilers keep adding warnings inside dependencies we don't control (clang 21:
-# -Wcharacter-conversion in googletest, -Wthread-safety-analysis in
-# google_benchmark). Two complementary scopes keep -Werror strict for our own code:
-#  - external_include_paths: external repo *headers* become -isystem, so their
-#    warnings are ignored even when our first-party TUs include them.
-#  - per_file_copt on external/* sources: downgrades -Werror when *compiling* an
-#    external repo's own .cc / internal (src/) headers.
+# Keep -Werror first-party only: external headers become -isystem, external sources drop -Werror.
 common --features=external_include_paths
 common --per_file_copt=external/.*@-Wno-error
 
@@ -44,11 +36,7 @@ test --test_output=errors
 common --copt=-fdiagnostics-color=always
 common --copt=-fno-exceptions
 
-# Register the hermetic LLVM/clang toolchain ONLY for `--config=clang`. Bazel 9
-# always resolves C++ toolchains, so registering it unconditionally (in
-# llvm.MODULE.bazel) would hijack the gcc/native builds that omit this config.
-# `--extra_toolchains` registers it at higher priority than the autodetected
-# local toolchain, so clang wins here and only here.
+# Hermetic LLVM only under this config; registering it unconditionally would hijack gcc/native builds.
 common:clang --extra_toolchains=@llvm_toolchain_llvm//:all
 common:clang --//mbo/mope:clang_format=
 common:clang --cxxopt=-gmlt
@@ -57,23 +45,8 @@ common:clang --linkopt=-fuse-ld=lld
 common:clang --host_linkopt=-fuse-ld=lld
 common:clang --define is_clang=true
 
-# The configuration the code is INDEXED in: `compile_commands.json` (see
-# `compile_commands-update.sh`) and therefore clangd and clang-tidy. It is a named
-# alias for `--config=clang` so the DB's configuration has a stable name, and it
-# deliberately adds NO flags of its own.
-#
-# In particular there is no `-stdlib=libc++` anywhere in it, in either direction:
-#  * not as a cxxopt - the toolchain locates the libc++ HEADERS explicitly with
-#    `-nostdinc++` + `-cxx-isystem`, so at compile time the flag selects nothing;
-#  * not as a linkopt - the toolchain LINKS libc++ explicitly too (its own
-#    stdlib link libs), so the flag is equally unused at link time. Measured: with
-#    the linkopt present, all 60 link actions warned "argument unused during
-#    compilation"; without it, zero.
-# Every `-stdlib=libc++` this repo ever passed was reported unused by the driver.
-# The one place the flag WAS load-bearing - upstream toolchains_llvm's own compile
-# flags - is fixed at source via the git_override in bazelmod/llvm.MODULE.bazel,
-# which is also why no -Wno-unused-command-line-argument suppression is needed:
-# a reappearing warning here means a real regression, and should be visible.
+# Named config the compile DB is generated in (compile_commands-update.sh). Adds no
+# flags: the toolchain handles libc++ itself (see git_override in bazelmod/llvm.MODULE.bazel).
 common:clang-tidy --config=clang
 
 common:symbolizer --strip=never
