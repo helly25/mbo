@@ -42,10 +42,6 @@ import sys
 from pathlib import Path
 
 _ALLOWLIST: dict[str, str] = {
-    "mbo/hash/hash_tembo.h": (
-        "TEMPORARY: landed orphaned in #306 (WIP) and is re-listed in a target by PR #311; "
-        "remove this entry once that merges"
-    ),
     "mbo/hash/measurements/smhasher3/mbohash.h": (
         "an SMHasher3 plugin: copied into that project by build_smhasher3.sh and compiled by ITS "
         "cmake; there is no BUILD file here on purpose"
