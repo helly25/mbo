@@ -15,7 +15,7 @@
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "int_flag")
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load(":internal/config.bzl", "config_gen")
 
 # Create custom bazel flag `--//mbo/config:limited_ordered_max_unroll_capacity`.
@@ -55,6 +55,16 @@ cc_library(
     visibility = ["//mbo:__subpackages__"],
 )
 
+cc_test(
+    name = "config_test",
+    srcs = ["config_test.cc"],
+    deps = [
+        ":config_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "require_cc",
     hdrs = ["require.h"],
@@ -62,5 +72,16 @@ cc_library(
     deps = [
         ":config_cc",
         "@abseil-cpp//absl/log:absl_log",
+    ],
+)
+
+cc_test(
+    name = "require_test",
+    srcs = ["require_test.cc"],
+    deps = [
+        ":config_cc",
+        ":require_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )

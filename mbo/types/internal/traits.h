@@ -19,7 +19,8 @@
 // IWYU pragma: private, include "mbo/types/traits.h"
 // IWYU pragma: friend "mbo/types/internal/.*"
 
-#include <concepts>  // IWYU pragma: keep
+#include <concepts>     // IWYU pragma: keep
+#include <type_traits>  // IWYU pragma: keep
 
 namespace mbo::types::types_internal {
 

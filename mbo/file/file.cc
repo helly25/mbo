@@ -135,10 +135,14 @@ absl::StatusOr<absl::Time> GetMTime(const std::filesystem::path& file_name) {
   if (error) {
     return absl::NotFoundError(absl::StrCat("File error: '", file_name.native(), "': ", error.message()));
   }
-  // const auto seconds =
-  // std::chrono::duration_cast<std::chrono::seconds>(ftime.time_since_epoch());
-  const int64_t seconds = std::chrono::duration_cast<std::chrono::seconds>(ftime.time_since_epoch()).count();
-  return absl::FromUnixSeconds(seconds);
+  // `last_write_time` returns a `file_clock` time, and file_clock's EPOCH IS
+  // IMPLEMENTATION-DEFINED: libc++ puts it at the Unix epoch, while libstdc++ puts it
+  // at 2174-01-01. Reading `time_since_epoch()` as Unix seconds therefore silently
+  // produced a large NEGATIVE time on Linux/gcc - every file appeared to predate 1970.
+  // `to_sys` performs the documented conversion to system_clock instead of assuming
+  // the two clocks share an origin.
+  return absl::FromChrono(
+      std::chrono::time_point_cast<std::chrono::system_clock::duration>(std::chrono::file_clock::to_sys(ftime)));
 }
 
 }  // namespace mbo::file

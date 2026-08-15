@@ -47,7 +47,7 @@ cc_test(
     size = "small",
     srcs = ["indent_test.cc"],
     deps = [
-        "indent_cc",
+        ":indent_cc",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],

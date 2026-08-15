@@ -42,6 +42,16 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "diff_options_test",
+    srcs = ["diff_options_test.cc"],
+    deps = [
+        ":diff_options_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "base_diff_cc",
     srcs = ["base_diff.cc"],

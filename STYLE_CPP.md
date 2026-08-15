@@ -133,6 +133,16 @@ clang-format picks a layout per line; these habits steer it toward the readable 
 
 ## Idioms
 
+- **A defaulted move constructor and move assignment are explicitly `noexcept`.**
+  `Type(Type&&) noexcept = default;` and `Type& operator=(Type&&) noexcept = default;`. A
+  defaulted move is only _implicitly_ `noexcept` when every base and member move is, so one
+  member that is not silently makes the whole type's move throwing - and the standard library
+  then quietly downgrades: `std::vector` reallocation copies instead of moving
+  (`move_if_noexcept`), and `std::swap` and friends lose their strong guarantee. Spelling
+  `noexcept` out states the intent and turns a violation into a compile error rather than a
+  silent performance loss. The same applies to a defaulted destructor's implicit `noexcept`,
+  which needs no annotation.
+
 - **Pass `absl::Status` by value**, not `const&`: it is a tagged pointer, and
   `.clang-tidy performance-unnecessary-value-param` allowlists it (with `absl::StatusOr`
   and `std::string_view`). `StatusOr<T>`'s cost depends on `T`.
@@ -172,6 +182,19 @@ clang-format picks a layout per line; these habits steer it toward the readable 
   **Corollary: when a loop view needs trimming, iterate a mutable (non-`const`) by-value view and
   mutate it in place - never `const` the loop view and then copy it to a mutable local just to
   mutate the copy.**
+- **This applies to LOCALS, never to PARAMETERS. A by-value parameter is never top-level
+  `const`** - not `std::string_view`, and not any other simple type (`int`, `bool`,
+  `std::size_t`, ...). The top-level `const` is invisible to callers (it is not part of the
+  function type, so it does not even change the signature), it is noise in every declaration,
+  and on a `std::string_view` it forbids exactly what the type is designed for: re-slicing the
+  parameter in place with `remove_prefix` / `remove_suffix` instead of copying it to a mutable
+  local first. The characters a view refers to are already `const`; the view itself is meant to
+  be movable over them.
+
+  ```cpp
+  std::string Write(std::string_view name, std::string_view content);       // yes
+  std::string Write(const std::string_view name, const std::string_view c); // no: const by value
+  ```
 
   ```cpp
   const std::string_view name = label.empty() ? id : label;      // read-only: const

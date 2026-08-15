@@ -23,6 +23,16 @@ cc_library(
     hdrs = ["cases.h"],
 )
 
+cc_test(
+    name = "cases_internal_test",
+    srcs = ["cases_test.cc"],
+    deps = [
+        ":cases_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "extender_cc",
     hdrs = ["extender.h"],
@@ -78,12 +88,21 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "traits_internal_test",
+    srcs = ["traits_test.cc"],
+    deps = [
+        ":traits_cc",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "test_types_cc",
     testonly = 1,
     hdrs = ["test_types.h"],
     deps = [
-        "cases_cc",
+        ":cases_cc",
         "@googletest//:gtest",
     ],
 )

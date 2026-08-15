@@ -27,7 +27,11 @@ namespace mbo::types {
 // Wrapper for STL views that provides type definitions, most importantly `value_type`.
 // That allows such views to be used with GoogleTest container matchers.
 template<typename View>
-class TypedView : std::ranges::view_interface<TypedView<View>> {
+// `public` is load-bearing: `class` inherits privately by default, which makes every
+// member `view_interface` exists to supply - empty(), size(), operator[], front() -
+// inaccessible, and breaks its CRTP downcast outright. Deriving from it at all is
+// pointless without this.
+class TypedView : public std::ranges::view_interface<TypedView<View>> {
  private:
   using iterator_type = decltype(std::declval<View&>().begin());
 
@@ -40,6 +44,11 @@ class TypedView : std::ranges::view_interface<TypedView<View>> {
 
   explicit TypedView(View&& view) : view_(std::move(view)) {}
 
+  // NOTE: only const-iterable views can be wrapped. `filter_view` and
+  // `drop_while_view` have no const `begin()` - finding the first element mutates
+  // their cache - so `TypedView(std::views::filter(...))` does not compile. Adding
+  // non-const overloads is not enough, because const consumers still need the const
+  // pair; the const ones would have to be constrained on the underlying view.
   auto begin() const { return view_.begin(); }
 
   auto end() const { return view_.end(); }
