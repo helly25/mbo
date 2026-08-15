@@ -56,27 +56,25 @@ common:clang --host_cxxopt=-gmlt
 common:clang --linkopt=-fuse-ld=lld
 common:clang --host_linkopt=-fuse-ld=lld
 common:clang --define is_clang=true
-# Some newer Clang versions really do not like '-c':
-# https://github.com/llvm/llvm-project/issues/100909
-common:clang --cxxopt=-Wno-unused-command-line-argument
 
 # The configuration the code is INDEXED in: `compile_commands.json` (see
-# `compile_commands-update.sh`) and therefore clangd and clang-tidy. It is
-# `--config=clang` plus an explicit libc++ at LINK time, because that is what
-# development actually targets and the compile DB must say so rather than inherit
-# whatever the driver defaults to.
+# `compile_commands-update.sh`) and therefore clangd and clang-tidy. It is a named
+# alias for `--config=clang` so the DB's configuration has a stable name, and it
+# deliberately adds NO flags of its own.
 #
-# There is deliberately no `--cxxopt=-stdlib=libc++` here. The hermetic toolchain
-# already passes `-stdlib=libc++` on compiles: its default is
-# `stdlib = "builtin-libc++"`, and that branch is keyed on the stdlib setting, not
-# on the OS. Adding the cxxopt put the flag in the compile command TWICE - measured
-# with aquery: `--config=clang` alone yields one occurrence, adding the cxxopt
-# yields two - which is where the "unused argument -stdlib=libc++" warnings came
-# from. The linkopt below is not redundant: it does not appear in compile actions
-# at all (still one occurrence when added alone) and is what selects the standard
-# library for linking.
+# In particular there is no `-stdlib=libc++` anywhere in it, in either direction:
+#  * not as a cxxopt - the toolchain locates the libc++ HEADERS explicitly with
+#    `-nostdinc++` + `-cxx-isystem`, so at compile time the flag selects nothing;
+#  * not as a linkopt - the toolchain LINKS libc++ explicitly too (its own
+#    stdlib link libs), so the flag is equally unused at link time. Measured: with
+#    the linkopt present, all 60 link actions warned "argument unused during
+#    compilation"; without it, zero.
+# Every `-stdlib=libc++` this repo ever passed was reported unused by the driver.
+# The one place the flag WAS load-bearing - upstream toolchains_llvm's own compile
+# flags - is fixed at source via the git_override in bazelmod/llvm.MODULE.bazel,
+# which is also why no -Wno-unused-command-line-argument suppression is needed:
+# a reappearing warning here means a real regression, and should be visible.
 common:clang-tidy --config=clang
-common:clang-tidy --linkopt=-stdlib=libc++
 
 common:symbolizer --strip=never
 common:symbolizer --run_under=//tools:run_under_symbolizer
