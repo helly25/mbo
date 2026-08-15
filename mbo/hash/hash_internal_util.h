@@ -167,7 +167,9 @@ MBO_FORCE_INLINE constexpr uint64_t Hash128To64(Hash128 hash) noexcept {
 using mbo_uint128_t = std::uint128_t;
 inline constexpr bool has_128_bit = true;
 #elif defined(__SIZEOF_INT128__)
-using mbo_uint128_t = unsigned __int128;
+// __extension__: the compiler advertised __int128 via __SIZEOF_INT128__, so using
+// it is deliberate; the keyword keeps -Wpedantic quiet at exactly this one site.
+__extension__ typedef unsigned __int128 mbo_uint128_t;  // NOLINT(modernize-use-using): __extension__ needs typedef.
 inline constexpr bool has_128_bit = true;
 #else
 // Fallback to 64-bit if compiling for a 32-bit system
