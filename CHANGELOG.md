@@ -1,5 +1,6 @@
 # 0.13.3
 
+- Re-measured `pro-bounds-avoid-unchecked-container-access` (task: attempt to enable): 2,953 findings, ~2,500 in hash/digest kernels where indices are in-range by construction; stays disabled with the data recorded in `.clang-tidy`.
 - Added a `headers-claimed` pre-commit check: every tracked header must be listed in its package's BUILD file. Found `hash_tembo.h` orphaned since #306 on its first run (temporarily allowlisted; re-listed by #311).
 - Replaced the reachability-based `library-test-coverage` hook with xff's strict rule: every `cc_library` needs a test in its own package with a direct dependency; exceptions live in the tool's `_ALLOWLIST` with reasons.
 - Converted assert-status-then-dereference in the new tests to `IsOkAndHolds`/`MBO_ASSERT_OK_AND_ASSIGN`, and imported four rules from helly25/xff's style guide (`_cc` naming, per-package tests, no braced-init-list iteration, `lhs`/`rhs` comparator parameters).

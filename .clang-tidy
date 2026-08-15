@@ -5,7 +5,13 @@
 # (961 of 1600 findings, 60% of everything the linter reports here; measured
 # across all 81 sources, counting each distinct diagnostic once).
 #   * pro-bounds-avoid-unchecked-container-access - flags every `operator[]`,
-#     including inside the containers implementing it.
+#     including inside the containers implementing it. Re-measured 2026-08-15 on
+#     its own: 2,953 findings. ~2,500 sit in the hash/digest kernels (hash_mumbo
+#     alone: 1,386), where indices are in range by construction (loop bounds equal
+#     array extents) and a checked access is a branch in the innermost loop; the
+#     ~450 elsewhere would additionally change BEHAVIOUR, not just add safety -
+#     this repo builds -fno-exceptions, so the `.at()` rewrite aborts where
+#     `operator[]` was UB, a trade to make case by case, not by lint sweep.
 #   * pro-type-union-access - the `limited_ordered` union is how LimitedSet/
 #     LimitedMap avoid default-constructing their elements.
 #   * pro-bounds-constant-array-index, pro-bounds-pointer-arithmetic,
@@ -170,6 +176,7 @@ Checks: >
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-macro-usage,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
   -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
   -cppcoreguidelines-pro-bounds-constant-array-index,
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
