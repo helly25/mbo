@@ -48,6 +48,8 @@ import glob
 import os
 import subprocess
 import sys
+import time
+import threading
 
 
 def newest(pattern):
@@ -65,6 +67,8 @@ def main(argv):
     parser.add_argument("--config", action="append", default=[], help="bazel --config for the benchmark build (e.g. `--config=clang`); works well with .user.bazelrc to pick the toolchain and the recorded compiler")
     parser.add_argument("--copt", action="append", default=[], help="bazel --copt for the benchmark build (e.g. `--copt=-O3`); allows manual fine tuning of the compiler flags")
     parser.add_argument("--host_copt", action="append", default=[], help="bazel --host_copt for the benchmark build (e.g. `--host_copt=-O3`); allows manual fine tuning of the host compiler flags")
+    parser.add_argument("--name", help="Optional name to save in the context")
+    parser.add_argument("--filename_extra", help="Extra information appended to the generated base filename.")
     parser.add_argument(
         "--workdir",
         default=os.path.expanduser("~/.cache/mbo-hash-smh"),
@@ -73,6 +77,7 @@ def main(argv):
     parser.add_argument("--image", default="gcc:13", help="container image the binary runs in (matches build_smhasher3.sh)")
     parser.add_argument("--skip-perf", action="store_true", help="skip the performance sweep + chart")
     parser.add_argument("--skip-smhasher", action="store_true", help="skip the SMHasher3 battery")
+    parser.add_argument("--log", action="store_true", help="write a log file")
     args = parser.parse_args(argv)
 
     repo = subprocess.run(
@@ -98,6 +103,40 @@ def main(argv):
     canonical = None  # the run's distilled results.json (drives the charts and the bundle)
     extras = []  # extra files packed alongside the canonical in the per-machine bundle
 
+    log_file_obj = None
+    if args.log:
+        # 1. Open the log file
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        log_file_path = os.path.join(data, f"{timestamp}_benchmark.log")
+        log_fd = os.open(log_file_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        extras.append(log_file_path)
+
+        # 2. Save original stdout/stderr file descriptors to restore later
+        saved_stdout_fd = os.dup(1)
+        saved_stderr_fd = os.dup(2)
+
+        # 3. Create OS pipes for stdout and stderr
+        r_out, w_out = os.pipe()
+        r_err, w_err = os.pipe()
+
+        # 4. Redirect FDs 1 and 2 to the write ends of the pipes
+        os.dup2(w_out, 1)
+        os.dup2(w_err, 2)
+
+        # 5. Background thread to copy pipe output to BOTH original FD and log file
+        def tee_pipe(pipe_read_fd, original_fd, log_fd):
+            while True:
+                data = os.read(pipe_read_fd, 1024)
+                if not data:
+                    break
+                os.write(original_fd, data)
+                os.write(log_fd, data)
+
+        t1 = threading.Thread(target=tee_pipe, args=(r_out, saved_stdout_fd, log_fd), daemon=True)
+        t2 = threading.Thread(target=tee_pipe, args=(r_err, saved_stderr_fd, log_fd), daemon=True)
+        t1.start()
+        t2.start()
+
     if not args.skip_perf:
         cfg = []
         if args.config:
@@ -106,6 +145,8 @@ def main(argv):
             cfg.extend([f"--copt={arg}" for arg in args.copt])
         if args.host_copt:
             cfg.extend([f"--host_copt={arg}" for arg in args.host_copt])
+        if args.name:
+            cfg.extend([f"--name={args.name}"])
         print(">>> [perf] full performance sweep (runs solo for clean numbers)", file=sys.stderr)
         # A single FULL run: the dense curve AND (via readme_sizes in its context) the
         # curated README table are both extracted from it downstream by `publish`.
@@ -138,11 +179,28 @@ def main(argv):
             extras.append(max(smh, key=os.path.getmtime))
         extras.extend(sorted(glob.glob(os.path.join(data, "*_smhasher_*.log.gz"))))
 
+    # Flush Python buffers before restoring FDs
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    if args.log:
+        # Restore original FDs
+        os.dup2(saved_stdout_fd, 1)
+        os.dup2(saved_stderr_fd, 2)
+        os.close(saved_stdout_fd)
+        os.close(saved_stderr_fd)
+        os.close(w_out)
+        os.close(w_err)
+        os.close(log_fd)
+
     bundle = None
     if canonical:
+        cfg = []
+        if args.filename_extra:
+            cfg.extend([f"--filename_extra={args.filename_extra}"])
         print(">>> [bundle] packing the per-machine .tgz (canonical + raw + SMHasher)", file=sys.stderr)
         bundle = subprocess.run(
-            [*report, "bundle", "--results", canonical, "--include", *extras, "--data-dir", data],
+            [*report, "bundle", "--results", canonical, "--include", *extras, "--data-dir", data] + cfg,
             capture_output=True, text=True, check=True,
         ).stdout.strip()
     elif not args.skip_smhasher:

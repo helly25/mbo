@@ -49,7 +49,9 @@ import concurrent.futures
 import datetime
 import filecmp
 import gzip
+import html
 import json
+import math
 import os
 import re
 import shlex
@@ -66,17 +68,22 @@ import tempfile
 
 # Ordering uses the benchmark's algorithm keys (data keys); _LABEL_128 only
 # renames "mumbo" to "jumbo" for display in the 128-bit table.
-_ORDER_64 = ["mumbo", "fambo", "rapidhash", "xxh3", "xxh64", "murmur3", "siphash24", "fnv1a", "dumbo"]
+_ORDER_TEMBO = ["tembo_3_4", "tembo_4_4", "tembo_5_4", "tembo_6_4", "tembo_7_4", "tembo_8_4", "tembo_8_8", "tembo_12_4", "tembo_12_8", "tembo_16_4", "tembo_16_8"]
+_ORDER_64 = ["mumbo", "fambo", "rapidhash", "xxh3", "xxh64", "murmur3", "siphash24", "fnv1a", "dumbo"] + _ORDER_TEMBO
 _ORDER_128 = ["mumbo", "xxh3", "murmur3"]
 _LABEL_128 = {"mumbo": "jumbo"}  # BmHash128<mumbo> is the jumbo (128-bit) face
 
 # Exact-length LATENCY: BmHash64/BmHash128<algo>/<len> - cost of hashing one exact
 # length in a hot loop, reported as ns.
-_LATENCY_RE = re.compile(r"^BmHash(64|128)<([A-Za-z0-9]+)>/(\d+)$")
+_LATENCY_RE = re.compile(r"^BmHash(64|128)<([-_A-Za-z0-9]+)>/(\d+)$")
 # Bounded-range THROUGHPUT: BmHash{64,128}Throughput<algo>/<Dist>:<bound> - bytes/s
 # over a length distribution truncated to each upper bound (Dist in {Short, Web}).
-_THROUGHPUT_RE = re.compile(r"^BmHash(64|128)Throughput<([A-Za-z0-9]+)>/([A-Za-z][A-Za-z0-9-]*):(\d+)$")
+_THROUGHPUT_RE = re.compile(r"^BmHash(64|128)Throughput<([-_A-Za-z0-9]+)>/([A-Za-z][-_A-Za-z0-9]*):(\d+)$")
 _BENCHMARK_TARGET = "//mbo/hash:hash_benchmark"
+_TEMBO_4 = [f"tembo_{lanes}_4" for lanes in [3, 4, 5, 6, 7, 8, 12, 16]]
+_TEMBO_8 = [f"tembo_{lanes}_8" for lanes in [8, 12, 16]]
+_TEMBO_ALL = _TEMBO_4 + _TEMBO_8
+_MBO_ALL = _TEMBO_ALL + ["mumbo", "jumbo", "dumbo", "fambo"]
 
 # mbo algorithm -> SMHasher3 registration name(s). The in-house mumbo/jumbo/
 # dumbo require a patched SMHasher3 that registers them (see the SMHasher3
@@ -92,10 +99,26 @@ _SMHASHER_NAMES = {
     "xxh3": ["XXH3-64", "XXH3-128"],
     "rapidhash": ["rapidhash"],
     "siphash": ["SipHash-2-4"],
+    "mbo": _MBO_ALL,
     "murmur3": ["MurmurHash3-128"],
+    "tembo": _TEMBO_ALL,
+    "tembo_4": _TEMBO_4,
+    "tembo_8": _TEMBO_8,
+    "tembo_3_4": ["tembo_3_4"],
+    "tembo_4_4": ["tembo_4_4"],
+    "tembo_5_4": ["tembo_5_4"],
+    "tembo_6_4": ["tembo_6_4"],
+    "tembo_7_4": ["tembo_7_4"],
+    "tembo_8_4": ["tembo_8_4"],
+    "tembo_8_8": ["tembo_8_8"],
+    "tembo_12_4": ["tembo_12_4"],
+    "tembo_12_8": ["tembo_12_8"],
+    "tembo_16_4": ["tembo_16_4"],
+    "tembo_16_8": ["tembo_16_8"],
 }
+
 # Default set - ALL algorithms, explicitly including the legacy `dumbo`.
-_SMHASHER_ALL = ["mumbo", "jumbo", "dumbo", "fambo", "fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
+_SMHASHER_ALL = _MBO_ALL + ["fnv1a", "xxh64", "xxh3", "rapidhash", "siphash", "murmur3"]
 
 # Legacy / short SMHasher3 names -> the current registered name, applied when a
 # bundle's logs are re-parsed so an older dataset (recorded before a name was
@@ -113,29 +136,14 @@ _SMH_NAME_ALIASES = {
 # The measured columns (verdict/score/failures) come from a data bundle.
 _ALGORITHMS_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hash_algorithms.json")
 
-# TEMPORARY stopgap: the committed bundles were recorded under the invalid short
-# names `FNV-1a`/`MurmurHash3` (rejected by the pinned SMHasher3 build), so their
-# logs are the "Invalid hash" stub and carry no real data for these two. Hardcode
-# the known values until a bundle carries a real `FNV-1a-64`/`MurmurHash3-128`
-# measurement, then DELETE the matching entry. `failures` is the editorial summary
-# (both fail most of the battery, so listing every family would be noise).
-_MISSING_MEASURED = {
-    "FNV-1a-64": {
-        "verdict": "FAIL",
-        "passed": 7,
-        "total": 186,
-        "failures": [
-            "nearly every family: Avalanche, BIC, Sparse, Cyclic, Permutation, "
-            "Text, TwoBytes, Bitflip, PerlinNoise, and the complete Seed* cluster"
-        ],
-    },
-    "MurmurHash3-128": {
-        "verdict": "FAIL",
-        "passed": 123,
-        "total": 188,
-        "failures": ["BIC, Zeroes, Permutation, and the complete Seed* cluster (11 families)"],
-    },
-}
+# TEMPORARY stopgap for algorithms listed in hash_algorithms.json whose
+# measurement no committed bundle carries yet. Every algorithm here renders
+# from these hardcoded values instead of a log, so keep this EMPTY whenever
+# possible and DELETE entries as soon as a committed bundle measures them.
+# An entry with only {"verdict": "TBD"} renders as "not measured" - use that
+# for a newly registered config instead of inventing a PASS/FAIL.
+# (Since the 2026-08-15 full battery every registered algorithm is measured.)
+_MISSING_MEASURED = {}
 
 
 def _timestamp():
@@ -166,7 +174,12 @@ def _source_provenance():
     dirty = bool(_sh(["git", "status", "--porcelain"]))
     branch = _sh(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     authoritative = (branch == "main") and not dirty
-    return {"git_sha": sha, "git_dirty": dirty, "git_branch": branch, "authoritative": authoritative}
+    git_config = {}
+    for kv in _sh(["git", "config", "list"]).split("\n"):
+        key, val = kv.split("=")
+        if val:
+            git_config[key] = val
+    return {"git_sha": sha, "git_dirty": dirty, "git_branch": branch, "authoritative": authoritative, "git_config": git_config}
 
 
 def _machine_augment():
@@ -292,11 +305,13 @@ def _distill_buckets(raw):
     return buckets, reps_seen, best_k_seen
 
 
-def distill(raw, mode):
+def distill(*, raw, mode, name=""):
     """Raw google/benchmark JSON -> canonical per-case stats + full context."""
     ctx = dict(raw.get("context", {}))
     ctx.update(_machine_augment())
     ctx["source"] = _source_provenance()
+    if name:
+        ctx["name"] = name
     buckets, reps_seen, best_k_seen = _distill_buckets(raw)
     ctx["measurement"] = {"mode": mode, "aggregate": "best-k mean", "reps": reps_seen, "best_k": best_k_seen}
     return {"context": ctx, **buckets}
@@ -702,8 +717,6 @@ def _geomean(ratios):
     """Geometric mean of per-case B/A ratios - the right average for ratios; a
     +10%/-10% pair nets ~0, not the misleading 0 an arithmetic mean of the deltas
     would also give but for the wrong reason. Returns None for an empty list."""
-    import math
-
     return math.exp(sum(math.log(r) for r in ratios) / len(ratios)) if ratios else None
 
 
@@ -772,8 +785,6 @@ def render_compare(base, new):
 def _linear_ticks(vmax, target=6):
     """~`target` 'nice' gridline values 0..>=vmax with a 1/2/2.5/5 * 10^k step,
     for the linear y-axis (`--scale linear-log`)."""
-    import math
-
     if vmax <= 0:
         return [0.0]
     raw = vmax / target
@@ -796,9 +807,8 @@ def _svg_plot(*, data, algos, title, path, label_map=None, subtitle=None, linear
     a linear y crushes every fast algorithm onto the baseline. `linear_y` switches
     the y-axis to a 0-based linear scale (the `--scale linear-log` mode) to read
     absolute ns gaps within a narrow range. `subtitle` (the machine identifier) is
-    drawn under the title so a chart is self-labeling."""
-    import math
-
+    drawn under the title so a chart is self-labeling.
+    """
     label_map = label_map or {}
     sizes = sorted({int(s) for a in data.values() for s in a})
     if not sizes or not algos:
@@ -928,9 +938,9 @@ def _measured_entry(name, measured):
     entry = measured.get(name)
     if entry is None:
         raise SystemExit(f"{name}: no measured data - pass a bundle that measured it (or add a stopgap)")
-    if entry["verdict"] not in ("PASS", "FAIL"):
+    if entry["verdict"] not in ("PASS", "FAIL", "TBD"):
         raise SystemExit(
-            f"{name}: measured verdict {entry['verdict']!r} is not PASS/FAIL - the battery did not "
+            f"{name}: measured verdict {entry['verdict']!r} is not PASS/FAIL/TBD - the battery did not "
             f"complete ({entry.get('error') or 'bad name/crash'}); fix the measurement before regenerating"
         )
     return entry
@@ -946,6 +956,8 @@ def render_results_table(algorithms, measured):
         entry = _measured_entry(algo["smhasher"], measured)
         if entry["verdict"] == "PASS":
             result, failures = "**PASS**", "none"
+        elif entry["verdict"] == "TBD":
+            result, failures = "not measured", "battery not yet run"
         else:
             passed, total = entry.get("passed"), entry.get("total")
             if passed is None or total is None or passed >= total:
@@ -1040,29 +1052,38 @@ def _resolve_dataset(args):
 _SMH_LOG_RE = re.compile(r"^(\d{8}_\d{6})_smhasher_(.+)\.log(\.gz)?$")
 
 
-def _measured_from_bundle(path):
-    """Re-parse a bundle's per-algorithm SMHasher3 logs into a measured map
-    {registered-name: entry} with the CURRENT parser. The bundle's stored
-    smhasher.json is ignored (it predates parser fixes, so it is score-less); the
-    LOGS are the measured truth. The newest log per name wins, and legacy / short
-    log names are normalized to their registered form (see _SMH_NAME_ALIASES)."""
+def _measured_from_bundles(paths):
+    """Re-parse per-algorithm SMHasher3 logs from one or more bundles into a
+    measured map {registered-name: entry} with the CURRENT parser. The bundles'
+    stored smhasher.json is ignored (it predates parser fixes, so it is
+    score-less); the LOGS are the measured truth. The newest log per name wins
+    ACROSS all given bundles, so a newer bundle can supply algorithms an older
+    bundle never measured (quality is machine-independent, see the consistency
+    check). Legacy / short log names are normalized to their registered form
+    (see _SMH_NAME_ALIASES)."""
     latest = {}  # name -> (stamp, text)
-    with tempfile.TemporaryDirectory() as tmp:
-        _extract_bundle(path, tmp)
-        for fname in sorted(os.listdir(tmp)):
-            match = _SMH_LOG_RE.match(fname)
-            if not match:
-                continue
-            stamp, name, gz = match.group(1), match.group(2), match.group(3)
-            opener = gzip.open if gz else open
-            with opener(os.path.join(tmp, fname), "rt") as handle:
-                text = handle.read()
-            if name not in latest or stamp >= latest[name][0]:
-                latest[name] = (stamp, text)
+    for path in paths:
+        with tempfile.TemporaryDirectory() as tmp:
+            _extract_bundle(path, tmp)
+            for fname in sorted(os.listdir(tmp)):
+                match = _SMH_LOG_RE.match(fname)
+                if not match:
+                    continue
+                stamp, name, gz = match.group(1), match.group(2), match.group(3)
+                opener = gzip.open if gz else open
+                with opener(os.path.join(tmp, fname), "rt") as handle:
+                    text = handle.read()
+                if name not in latest or stamp >= latest[name][0]:
+                    latest[name] = (stamp, text)
     measured = {}
     for name, (_, text) in latest.items():
         measured[_SMH_NAME_ALIASES.get(name, name)] = _parse_smhasher(text)
     return measured
+
+
+def _measured_from_bundle(path):
+    """Single-bundle form of `_measured_from_bundles`."""
+    return _measured_from_bundles([path])
 
 
 def _fill_missing_measured(measured):
@@ -1078,7 +1099,8 @@ def _fill_missing_measured(measured):
                 f"(delete _MISSING_MEASURED[{name!r}] once a bundle carries real data).",
                 file=sys.stderr,
             )
-            out[name] = {**stub, "score": f"{stub['passed']} / {stub['total']}", "returncode": 0, "error": None}
+            score = "n/a" if stub["verdict"] == "TBD" else f"{stub['passed']} / {stub['total']}"
+            out[name] = {**stub, "score": score, "returncode": 0, "error": None}
     return out
 
 
@@ -1126,7 +1148,7 @@ def dispatch_run(args, stamp):
         with opener(raw_path, "wt") as handle:
             json.dump(raw, handle)
         print(f"wrote {raw_path}", file=sys.stderr)
-    results = distill(raw, args.mode)
+    results = distill(raw=raw, mode=args.mode, name=args.name)
     context = results.setdefault("context", {})
     context["config"] = args.config
     context["copt"] = args.copt
@@ -1142,7 +1164,7 @@ def dispatch_run(args, stamp):
 
 
 def dispatch_store(args, stamp):
-    results = distill(_load_json(args.raw), args.mode)
+    results = distill(raw=_load_json(args.raw), mode=args.mode, name=args.name)
     _warn_context(results)
     out_path = _timestamped(args.out, stamp)
     _dump_canonical(results, out_path)
@@ -1215,9 +1237,10 @@ def dispatch_bundle(args, stamp):
     cores = ctx.get("num_cpus", "?")
     compiler = _slug(ctx.get("compiler") or "cc")
     sha = ((ctx.get("source") or {}).get("git_sha") or "nogit")[:8]
+    filename_extra = f"_{args.filename_extra}" if args.filename_extra else ""
     # Flat: the filename already carries the full machine identity, so no subdir.
     os.makedirs(args.data_dir, exist_ok=True)
-    dest = os.path.join(args.data_dir, f"{slug}_{cores}c_{compiler}_{sha}_{stamp}.tgz")
+    dest = os.path.join(args.data_dir, f"{slug}_{cores}c_{compiler}_{sha}_{stamp}{filename_extra}.tgz")
     with tarfile.open(dest, "w:gz") as tar:
         tar.add(args.results, arcname="results.json")  # canonical: chart + tables + verify
         for path in args.include:
@@ -1274,9 +1297,11 @@ def dispatch_publish_charts(args, stamp):
     return 0
 
 
-def impl_publish_quality(args_bundle, args_bundle_pos, args_readme, args_check):
+def impl_publish_quality(args_bundles, args_readme, args_check):
     algorithms, overview_order = _load_algorithms()
-    measured = _fill_missing_measured(_measured_from_bundle(_one_path([args_bundle_pos, args_bundle], "bundle")))
+    if not args_bundles:
+        raise SystemExit("quality: at least one bundle is required (positional or --bundle)")
+    measured = _fill_missing_measured(_measured_from_bundles(args_bundles))
     text = open(args_readme).read()
     regions = [
         (_OVERVIEW_BEGIN, _OVERVIEW_END, render_overview_table(algorithms, measured, overview_order)),
@@ -1304,15 +1329,17 @@ def impl_publish_quality(args_bundle, args_bundle_pos, args_readme, args_check):
 
 
 def dispatch_publish_quality(args, stamp):
-    # Command may be invoked as `publish --bundles` or with as `publish-quality --bundle`; both are valid.
-    args_bundle = getattr(args, 'bundle', None)
-    args_bundles = getattr(args, 'bundles', None)
-    if not args_bundle and args_bundles:
-        args_bundle = args_bundles[0]
-    args_bundle_pos = getattr(args, 'bundle_pos', None)
+    # Command may be invoked as `publish --bundles` or as `quality [BUNDLE...]
+    # [--bundle B]`; all bundle sources are combined and their logs merged.
+    bundles = []
+    bundles.extend(getattr(args, 'bundle_pos', None) or [])
+    bundle = getattr(args, 'bundle', None)
+    if bundle:
+        bundles.append(bundle)
+    bundles.extend(getattr(args, 'bundles', None) or [])
     args_check = getattr(args, 'check', False)
     args_readme = getattr(args, 'readme', None)
-    return impl_publish_quality(args_bundle, args_bundle_pos, args_readme, args_check)
+    return impl_publish_quality(bundles, args_readme, args_check)
 
 
 def dispatch_publish(args, stamp):
@@ -1447,9 +1474,6 @@ def _extract_diff_chart_data(datasets, bundles_ordered, config, algos):
 
 
 def _append_svg_config_index(out_path, bundles_ordered):
-    import html
-    import re
-
     try:
         with open(out_path, "r") as handle:
             svg_content = handle.read().strip()
@@ -1516,9 +1540,10 @@ def dispatch_diff_charts(args, stamp):
         datasets[bundle_label] = _load_dataset(path)
         bundles_ordered.append(bundle_label)
 
-    if len(bundles_ordered) < 2:
-        print("Error: Provide at least 2 bundles to compute a differential chart.", file=sys.stderr)
-        return 1
+    # TODO(helly25): Consider re-enabling
+    #if len(bundles_ordered) < 2:
+    #    print("Error: Provide at least 2 bundles to compute a differential chart.", file=sys.stderr)
+    #    return 1
 
     section_configs = [
         ("latency64", 64, {}, "latency", None),
@@ -1579,198 +1604,201 @@ def dispatch_diff_charts(args, stamp):
 
 
 def add_command_help(sub):
-    p_help = sub.add_parser("help", help="show help")
-    p_help.set_defaults(func=None)  # handled specially in main()
+    parser = sub.add_parser("help", help="show help")
+    parser.set_defaults(func=None)  # handled specially in main()
 
 
 def add_command_run(sub):
-    p_run = sub.add_parser("run", help="run the benchmark, then store and/or render")
-    p_run.add_argument("--mode", choices=["fast", "full"], default="full")
+    parser = sub.add_parser("run", help="run the benchmark, then store and/or render")
+    parser.add_argument("--mode", choices=["fast", "full"], default="full")
     # 9 reps is google/benchmark's recommended minimum for its compare.py U-test,
     # so two stored datasets can be compared for statistical significance.
-    p_run.add_argument("--reps", type=int, default=9)
-    p_run.add_argument("--min-time", type=float, default=0.1)
-    p_run.add_argument("--warmup", type=float, default=0.05)
-    p_run.add_argument("--raw", help="write google/benchmark raw JSON here (.gz compresses)")
-    p_run.add_argument("--out", help="write the distilled canonical results JSON here")
-    p_run.add_argument("--tables", action="store_true")
-    p_run.add_argument("--config", action="append", default=[], help="bazel --config for the benchmark build (e.g. `--config=clang`); works well with .user.bazelrc to pick the toolchain and the recorded compiler")
-    p_run.add_argument("--copt", action="append", default=[], help="bazel --copt for the benchmark build (e.g. `--copt=-O3`, `--copt=-mcpu=apple-m5`, `--copt=-march=znver5`); allows manual fine tuning of the compiler flags")
-    p_run.add_argument("--host_copt", action="append", default=[], help="bazel --host_copt for the benchmark build (e.g. `--host_copt=-O3`); allows manual fine tuning of the host compiler flags")
-    p_run.set_defaults(func=dispatch_run)
+    parser.add_argument("--reps", type=int, default=9)
+    parser.add_argument("--min-time", type=float, default=0.1)
+    parser.add_argument("--warmup", type=float, default=0.05)
+    parser.add_argument("--raw", help="write google/benchmark raw JSON here (.gz compresses)")
+    parser.add_argument("--out", help="write the distilled canonical results JSON here")
+    parser.add_argument("--tables", action="store_true")
+    parser.add_argument("--config", action="append", default=[], help="bazel --config for the benchmark build (e.g. `--config=clang`); works well with .user.bazelrc to pick the toolchain and the recorded compiler")
+    parser.add_argument("--copt", action="append", default=[], help="bazel --copt for the benchmark build (e.g. `--copt=-O3`, `--copt=-mcpu=apple-m5`, `--copt=-march=znver5`); allows manual fine tuning of the compiler flags")
+    parser.add_argument("--host_copt", action="append", default=[], help="bazel --host_copt for the benchmark build (e.g. `--host_copt=-O3`); allows manual fine tuning of the host compiler flags")
+    parser.add_argument("--name", help="Optional name to save in the context")
+    parser.set_defaults(func=dispatch_run)
 
 
 def add_command_store(sub):
-    p_store = sub.add_parser("store", help="distill raw benchmark JSON to canonical results JSON")
-    p_store.add_argument("--raw", required=True)
-    p_store.add_argument("--out", required=True)
-    p_store.add_argument("--mode", choices=["fast", "full"], default="full")
-    p_store.set_defaults(func=dispatch_store)
+    parser = sub.add_parser("store", help="distill raw benchmark JSON to canonical results JSON")
+    parser.add_argument("--raw", required=True)
+    parser.add_argument("--out", required=True)
+    parser.add_argument("--mode", choices=["fast", "full"], default="full")
+    parser.add_argument("--name", help="Optional name to save in the context")
+    parser.set_defaults(func=dispatch_store)
 
 
 def add_command_tables(sub):
-    p_tables = sub.add_parser("tables", help="render README markdown tables from a dataset (results JSON or .tgz bundle)")
-    _add_dataset_arg(p_tables)
-    p_tables.set_defaults(func=dispatch_tables)
+    parser = sub.add_parser("tables", help="render README markdown tables from a dataset (results JSON or .tgz bundle)")
+    _add_dataset_arg(parser)
+    parser.set_defaults(func=dispatch_tables)
 
 
 def add_command_compare(sub):
-    p_compare = sub.add_parser("compare", help="compare two datasets (results JSON or .tgz bundles): per-case Δ%% + geomean")
-    p_compare.add_argument("a", metavar="A", help="baseline dataset: results.json[.gz] or a bundle .tgz")
-    p_compare.add_argument("b", metavar="B", help="new dataset: results.json[.gz] or a bundle .tgz")
-    p_compare.set_defaults(func=dispatch_compare)
+    parser = sub.add_parser("compare", help="compare two datasets (results JSON or .tgz bundles): per-case Δ%% + geomean")
+    parser.add_argument("a", metavar="A", help="baseline dataset: results.json[.gz] or a bundle .tgz")
+    parser.add_argument("b", metavar="B", help="new dataset: results.json[.gz] or a bundle .tgz")
+    parser.set_defaults(func=dispatch_compare)
 
 
 def add_command_plot(sub):
-    p_plot = sub.add_parser("plot", help="render SVG ns-vs-length curves from a dataset (results JSON or .tgz bundle)")
-    _add_dataset_arg(p_plot)
-    p_plot.add_argument("--out", required=True)
-    p_plot.add_argument(
+    parser = sub.add_parser("plot", help="render SVG ns-vs-length curves from a dataset (results JSON or .tgz bundle)")
+    _add_dataset_arg(parser)
+    parser.add_argument("--out", required=True)
+    parser.add_argument(
         "--kind",
         choices=["throughput", "latency", "all"],
         default="throughput",
         help="which curves to render: 'throughput' (64+128, default), 'latency' (now dense enough for log-log), or 'all'",
     )
-    p_plot.add_argument(
+    parser.add_argument(
         "--scale",
         choices=["log-log", "linear-log"],
         default="log-log",
         help="axis scaling: 'log-log' (default) or 'linear-log' (linear y / log x, to read absolute ns gaps). x is always log",
     )
-    p_plot.set_defaults(func=dispatch_plot)
+    parser.set_defaults(func=dispatch_plot)
 
 
 def add_command_smhasher(sub):
-    p_smh = sub.add_parser("smhasher", help="run the SMHasher3 quality battery over a set of algorithms")
-    p_smh.add_argument(
+    parser = sub.add_parser("smhasher", help="run the SMHasher3 quality battery over a set of algorithms")
+    parser.add_argument(
         "--smhasher3",
         required=True,
         help="SMHasher3 invocation: a native binary path, or a wrapper command "
         "like 'docker run --rm -v <tree>:/src -w /src <image> ./build/SMHasher3'",
     )
-    p_smh.add_argument(
+    parser.add_argument(
         "--algos",
         default="all",
         help="comma-separated algorithms (default 'all', which includes the legacy dumbo)",
     )
-    p_smh.add_argument("--out", help="write the results JSON here")
-    p_smh.add_argument("--raw-dir", default="mbo/hash/measurements/data", help="directory for per-run SMHasher3 logs")
-    p_smh.add_argument(
+    parser.add_argument("--out", help="write the results JSON here")
+    parser.add_argument("--raw-dir", default="mbo/hash/measurements/data", help="directory for per-run SMHasher3 logs")
+    parser.add_argument(
         "--jobs",
         type=int,
         default=1,
         help="batteries to run concurrently (independent; pass/fail is load-independent, so this only trades cores for wall-clock)",
     )
-    p_smh.set_defaults(func=dispatch_smhasher)
+    parser.set_defaults(func=dispatch_smhasher)
 
 
 def add_command_bundle(sub):
-    p_bundle = sub.add_parser("bundle", help="pack a run's artifacts into a per-machine .tgz under data/ (LFS-tracked)")
-    p_bundle.add_argument("--results", required=True, help="canonical results JSON (drives chart + tables); its context names the machine")
-    p_bundle.add_argument("--include", nargs="*", default=[], help="extra files to pack (raw.json.gz, smhasher.json, logs)")
-    p_bundle.add_argument("--data-dir", default="mbo/hash/measurements/data")
-    p_bundle.set_defaults(func=dispatch_bundle)
+    parser = sub.add_parser("bundle", help="pack a run's artifacts into a per-machine .tgz under data/ (LFS-tracked)")
+    parser.add_argument("--results", required=True, help="canonical results JSON (drives chart + tables); its context names the machine")
+    parser.add_argument("--include", nargs="*", default=[], help="extra files to pack (raw.json.gz, smhasher.json, logs)")
+    parser.add_argument("--data-dir", default="mbo/hash/measurements/data", help="Output directory")
+    parser.add_argument("--filename_extra", help="Extra information appended to the generated base filename.")
+    parser.set_defaults(func=dispatch_bundle)
 
 
 def add_command_bundle_context(sub):
-    p_bundle_context = sub.add_parser("bundle-context", help="extract the canonical results.json from a bundle .tgz and shows only the context")
-    _add_dataset_arg(p_bundle_context)
-    p_bundle_context.add_argument("--out", default="/dev/stdout", help="write the distilled canonical results JSON here")
-    p_bundle_context.set_defaults(func=dispatch_bundle_context)
+    parser = sub.add_parser("bundle-context", help="extract the canonical results.json from a bundle .tgz and shows only the context")
+    _add_dataset_arg(parser)
+    parser.add_argument("--out", default="/dev/stdout", help="write the distilled canonical results JSON here")
+    parser.set_defaults(func=dispatch_bundle_context)
 
 
 def add_command_bundle_results(sub):
-    p_bundle_results = sub.add_parser("bundle-results", help="extract the canonical results.json from a bundle .tgz")
-    _add_dataset_arg(p_bundle_results)
-    p_bundle_results.add_argument("--out", default="/dev/stdout", help="write the distilled canonical results JSON here")
-    p_bundle_results.set_defaults(func=dispatch_bundle_results)
+    parser = sub.add_parser("bundle-results", help="extract the canonical results.json from a bundle .tgz")
+    _add_dataset_arg(parser)
+    parser.add_argument("--out", default="/dev/stdout", help="write the distilled canonical results JSON here")
+    parser.set_defaults(func=dispatch_bundle_results)
 
 
 def add_command_publish(sub):
-    p_publish = sub.add_parser("publish", help="Perform all publish tasks, update performance (charts + tables) and quality sections in the README from selected bundles")
-    p_publish.add_argument("--bundles", nargs="+", required=True, help="the .tgz bundles to feature, in display order")
-    p_publish.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
-    p_publish.add_argument("--readme", default="mbo/hash/README.md")
-    p_publish.set_defaults(func=dispatch_publish)
+    parser = sub.add_parser("publish", help="Perform all publish tasks, update performance (charts + tables) and quality sections in the README from selected bundles")
+    parser.add_argument("--bundles", nargs="+", required=True, help="the .tgz bundles to feature, in display order")
+    parser.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
+    parser.add_argument("--readme", default="mbo/hash/README.md")
+    parser.set_defaults(func=dispatch_publish)
 
 
 def add_command_publish_charts(sub):
-    p_publish_charts = sub.add_parser("publish-charts", help="render the labeled per-machine perf section (charts + tables) into the README from selected bundles")
-    p_publish_charts.add_argument("--bundles", nargs="+", required=True, help="the .tgz bundles to feature, in display order")
-    p_publish_charts.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
-    p_publish_charts.add_argument("--readme", default="mbo/hash/README.md")
-    p_publish_charts.set_defaults(func=dispatch_publish_charts)
+    parser = sub.add_parser("publish-charts", help="render the labeled per-machine perf section (charts + tables) into the README from selected bundles")
+    parser.add_argument("--bundles", nargs="+", required=True, help="the .tgz bundles to feature, in display order")
+    parser.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
+    parser.add_argument("--readme", default="mbo/hash/README.md")
+    parser.set_defaults(func=dispatch_publish_charts)
 
 
 def add_command_publish_quality(sub):
-    p_publish_quality = sub.add_parser("quality", help="render the Algorithm-overview + SMHasher3 Results tables into the README from hash_algorithms.json (manual) and a measured bundle")
-    p_publish_quality.add_argument("--readme", default="mbo/hash/README.md")
-    p_publish_quality.add_argument("bundle_pos", nargs="?", metavar="BUNDLE", help="data bundle .tgz (same as --bundle)")
-    p_publish_quality.add_argument("--bundle", help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
-    p_publish_quality.add_argument("--check", action="store_true", help="For quality verification, check that the README tables match instead of writing (exit 1 on drift)")
-    p_publish_quality.set_defaults(func=dispatch_publish_quality)
+    parser = sub.add_parser("quality", help="render the Algorithm-overview + SMHasher3 Results tables into the README from hash_algorithms.json (manual) and a measured bundle")
+    parser.add_argument("--readme", default="mbo/hash/README.md")
+    parser.add_argument("bundle_pos", nargs="*", metavar="BUNDLE", help="data bundle(s) .tgz; logs are merged, newest per algorithm wins")
+    parser.add_argument("--bundle", help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
+    parser.add_argument("--check", action="store_true", help="For quality verification, check that the README tables match instead of writing (exit 1 on drift)")
+    parser.set_defaults(func=dispatch_publish_quality)
 
 
 def add_command_verify(sub):
-    p_verify = sub.add_parser("verify", help="re-render charts from the README's bundle manifest and diff the committed charts")
-    p_verify.add_argument("--readme", default="mbo/hash/README.md")
-    p_verify.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
-    p_verify.set_defaults(func=dispatch_verify)
+    parser = sub.add_parser("verify", help="re-render charts from the README's bundle manifest and diff the committed charts")
+    parser.add_argument("--readme", default="mbo/hash/README.md")
+    parser.add_argument("--charts-dir", default="mbo/hash/measurements/charts")
+    parser.set_defaults(func=dispatch_verify)
 
 
 def add_command_consistency(sub):
-    p_consistency = sub.add_parser("consistency", help="verify all data bundles from the same source SHA report identical SMHasher3 measurements (quality is machine-independent)")
-    p_consistency.add_argument("--bundles", nargs="+", help="bundles to compare (default: all data/*.tgz)")
-    p_consistency.add_argument("--data-dir", default="mbo/hash/measurements/data")
-    p_consistency.set_defaults(func=dispatch_consistency)
+    parser = sub.add_parser("consistency", help="verify all data bundles from the same source SHA report identical SMHasher3 measurements (quality is machine-independent)")
+    parser.add_argument("--bundles", nargs="+", help="bundles to compare (default: all data/*.tgz)")
+    parser.add_argument("--data-dir", default="mbo/hash/measurements/data", help="Directory where to look for bundles")
+    parser.set_defaults(func=dispatch_consistency)
 
 
 def add_command_diff_charts(sub):
-    p_diff_charts = sub.add_parser(
+    parser = sub.add_parser(
         "diff-charts",
         help="Render diff charts for latency, throughput-short, and throughput-web across bundles."
     )
-    p_diff_charts.add_argument(
+    parser.add_argument(
         "--bundles",
         nargs="+",
         required=True,
         help="List of paths to the bundle data files to compare."
     )
-    p_diff_charts.add_argument(
+    parser.add_argument(
         "--algos",
         nargs="+",
         required=True,
         help="The specific algorithms to filter and show in the charts."
     )
-    p_diff_charts.add_argument(
+    parser.add_argument(
         "--output-dir",
         default=".",
         help="Where to save the rendered chart images."
     )
-    p_diff_charts.add_argument(
+    parser.add_argument(
         "--output-prefix",
         default=".",
         help="Filename prefix for the rendered chart images."
     )
-    p_diff_charts.add_argument(
+    parser.add_argument(
         "--charts",
         nargs="+",
         default=[],
         help="Filter charts to render by token match (e.g., '64', 'latency', 'short', 'throughput-64-web'). Leave empty to render all."
     )
-    p_diff_charts.add_argument(
+    parser.add_argument(
         "--svg-width",
         default=0,
         type=int,
         help="Width for generated images (or 0 for auto default)."
     )
-    p_diff_charts.add_argument(
+    parser.add_argument(
         "--svg-height",
         default=0,
         type=int,
         help="Height for generated images (or 0 for auto default)."
     )
-    p_diff_charts.set_defaults(func=dispatch_diff_charts)
+    parser.set_defaults(func=dispatch_diff_charts)
 
 
 def main(argv):
