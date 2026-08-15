@@ -35,6 +35,7 @@ cc_test(
     srcs = ["artefact_test.cc"],
     deps = [
         ":artefact_cc",
+        "//mbo/testing:status_cc",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/time",
         "@googletest//:gtest_main",

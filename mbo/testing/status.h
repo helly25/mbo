@@ -120,6 +120,11 @@ class IsOkAndHoldsMatcherImpl : public ::testing::MatcherInterface<StatusOrType>
 template<typename InnerMatcher>
 class IsOkAndHoldsMatcher {
  public:
+  // The canonical sink: take by value, move into place. The check cannot see the
+  // move when InnerMatcher is a copy-only gmock composite (VariadicMatcher has no
+  // move constructor), and taking const& instead would force that copy on movable
+  // matchers too.
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
   explicit IsOkAndHoldsMatcher(InnerMatcher inner_matcher) : inner_matcher_(std::move(inner_matcher)) {}
 
   // Converts this polymorphic matcher to a monomorphic matcher of the

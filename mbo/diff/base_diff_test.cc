@@ -24,6 +24,7 @@
 #include "mbo/diff/chunked_diff.h"
 #include "mbo/diff/diff_options.h"
 #include "mbo/file/artefact.h"
+#include "mbo/testing/status.h"
 
 // Tests the shared diff plumbing the algorithms are built on: BaseDiff (headers,
 // preprocessed data, option-aware comparison) and ChunkedDiff (the push/finalize
@@ -32,6 +33,7 @@
 namespace mbo::diff {
 namespace {
 
+using ::mbo::testing::IsOkAndHolds;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::IsFalse;
@@ -124,9 +126,7 @@ TEST_F(BaseDiffTest, ChunkedDiffReplaysAnEditScript) {
   diff.PushDiff();   // b -> X
   diff.PushEqual();  // c == c
   EXPECT_THAT(diff.More(), IsFalse());
-  const auto result = diff.Finalize();
-  ASSERT_THAT(result.status(), absl::OkStatus());
-  EXPECT_THAT(*result, "@@ -2 +2 @@\n-b\n+X\n");
+  EXPECT_THAT(diff.Finalize(), IsOkAndHolds("@@ -2 +2 @@\n-b\n+X\n"));
 }
 
 TEST_F(BaseDiffTest, ChunkedDiffAllEqualFinalizesEmpty) {
@@ -136,9 +136,7 @@ TEST_F(BaseDiffTest, ChunkedDiffAllEqualFinalizesEmpty) {
   ChunkedDiff diff(lhs, rhs, options);
   diff.PushEqual();
   diff.PushEqual();
-  const auto result = diff.Finalize();
-  ASSERT_THAT(result.status(), absl::OkStatus());
-  EXPECT_THAT(*result, IsEmpty());
+  EXPECT_THAT(diff.Finalize(), IsOkAndHolds(IsEmpty()));
 }
 
 // Exercises the protected Chunk() accessor the way the algorithms do: through a
@@ -159,9 +157,7 @@ TEST_F(BaseDiffTest, ChunkedDiffOneSidedPushes) {
   diff.PushRhs();    // +b
   diff.Chunk().MoveDiffs();
   diff.PushEqual();  // c
-  const auto result = diff.Finalize();
-  ASSERT_THAT(result.status(), absl::OkStatus());
-  EXPECT_THAT(*result, "@@ -1,0 +2 @@\n+b\n");
+  EXPECT_THAT(diff.Finalize(), IsOkAndHolds("@@ -1,0 +2 @@\n+b\n"));
 }
 
 }  // namespace

@@ -17,9 +17,11 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mbo/testing/status.h"
 
 // Runs under bazel, so real runfiles exist: the test's own data dependency is the
 // fixture. The one-argument label forms are the interesting surface - they parse
@@ -35,29 +37,24 @@ namespace fs = std::filesystem;
 struct RunfilesDirTest : ::testing::Test {};
 
 TEST_F(RunfilesDirTest, ResolvesAPlainPath) {
-  const auto dir = RunfilesDir("mbo/testing/runfiles_dir.h");
-  ASSERT_THAT(dir.ok(), IsTrue()) << dir.status();
-  EXPECT_THAT(fs::exists(*dir), IsTrue()) << *dir;
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string dir, RunfilesDir("mbo/testing/runfiles_dir.h"));
+  EXPECT_THAT(fs::exists(dir), IsTrue()) << dir;
 }
 
 TEST_F(RunfilesDirTest, ResolvesAWorkspaceRootedLabel) {
-  const auto dir = RunfilesDir("//mbo/testing:runfiles_dir.h");
-  ASSERT_THAT(dir.ok(), IsTrue()) << dir.status();
-  EXPECT_THAT(fs::exists(*dir), IsTrue()) << *dir;
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string dir, RunfilesDir("//mbo/testing:runfiles_dir.h"));
+  EXPECT_THAT(fs::exists(dir), IsTrue()) << dir;
 }
 
 TEST_F(RunfilesDirTest, LabelColonBecomesASlash) {
-  const auto by_label = RunfilesDir("//mbo/testing:runfiles_dir.h");
-  const auto by_path = RunfilesDir("mbo/testing/runfiles_dir.h");
-  ASSERT_THAT(by_label.ok(), IsTrue()) << by_label.status();
-  ASSERT_THAT(by_path.ok(), IsTrue()) << by_path.status();
-  EXPECT_THAT(*by_label, *by_path);
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string by_label, RunfilesDir("//mbo/testing:runfiles_dir.h"));
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string by_path, RunfilesDir("mbo/testing/runfiles_dir.h"));
+  EXPECT_THAT(by_label, by_path);
 }
 
 TEST_F(RunfilesDirTest, OrDieVariantAgreesWithTheStatusVariant) {
-  const auto dir = RunfilesDir("mbo/testing/runfiles_dir.h");
-  ASSERT_THAT(dir.ok(), IsTrue()) << dir.status();
-  EXPECT_THAT(RunfilesDirOrDie("mbo/testing/runfiles_dir.h"), *dir);
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string dir, RunfilesDir("mbo/testing/runfiles_dir.h"));
+  EXPECT_THAT(RunfilesDirOrDie("mbo/testing/runfiles_dir.h"), dir);
 }
 
 TEST_F(RunfilesDirTest, TwoArgumentFormMatchesTheOneArgumentForm) {
@@ -68,11 +65,9 @@ TEST_F(RunfilesDirTest, TwoArgumentFormMatchesTheOneArgumentForm) {
   // NOLINTNEXTLINE(concurrency-mt-unsafe)
   const char* workspace = std::getenv("TEST_WORKSPACE");
   ASSERT_THAT(workspace != nullptr, IsTrue()) << "bazel always sets TEST_WORKSPACE for tests";
-  const auto two_arg = RunfilesDir(workspace, "mbo/testing/runfiles_dir.h");
-  const auto one_arg = RunfilesDir("mbo/testing/runfiles_dir.h");
-  ASSERT_THAT(two_arg.ok(), IsTrue()) << two_arg.status();
-  ASSERT_THAT(one_arg.ok(), IsTrue()) << one_arg.status();
-  EXPECT_THAT(*two_arg, *one_arg);
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string two_arg, RunfilesDir(workspace, "mbo/testing/runfiles_dir.h"));
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string one_arg, RunfilesDir("mbo/testing/runfiles_dir.h"));
+  EXPECT_THAT(two_arg, one_arg);
 }
 
 }  // namespace

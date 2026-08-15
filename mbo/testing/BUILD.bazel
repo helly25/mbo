@@ -94,6 +94,7 @@ cc_test(
     data = ["runfiles_dir.h"],
     deps = [
         ":runfiles_dir_cc",
+        ":status_cc",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
