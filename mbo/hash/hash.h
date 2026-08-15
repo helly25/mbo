@@ -28,6 +28,7 @@
 #include "mbo/hash/hash_mumbo.h"          // IWYU pragma: export
 #include "mbo/hash/hash_murmur3.h"        // IWYU pragma: export
 #include "mbo/hash/hash_siphash.h"        // IWYU pragma: export
+#include "mbo/hash/hash_tembo.h"          // IWYU pragma: export
 #include "mbo/hash/hash_types.h"          // IWYU pragma: export
 
 namespace mbo::hash {

@@ -94,6 +94,35 @@ inline constexpr std::array<uint64_t, 40> kSecretCodes = {
     0x717316A3DF5D26E3,  // Prime 239
 };
 
+// True if the first `count` entries of `arr` are pairwise distinct. Guards the
+// per-instantiation secret selections below against transcription errors: a
+// duplicated index silently weakens mixing (this exact bug shipped once - an
+// if-ladder rewrite used the same secret twice).
+template<std::size_t N>
+constexpr bool FirstEntriesDistinct(const std::array<uint64_t, N>& arr, std::size_t count) {
+  for (std::size_t i = 0; i < count; ++i) {
+    for (std::size_t j = i + 1; j < count; ++j) {
+      if (arr[i] == arr[j]) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// The table itself: every secret must be odd (an even multiplier operand
+// throws away a low bit in the widening multiply) and pairwise distinct.
+static_assert(
+    []() constexpr {
+      for (const auto& secret_code : kSecretCodes) {
+        if ((secret_code & 1U) == 0U) {
+          return false;
+        }
+      }
+      return FirstEntriesDistinct(kSecretCodes, kSecretCodes.size());
+    }(),
+    "kSecretCodes entries must be odd and pairwise distinct");
+
 #if defined(__GNUC__) || defined(__clang__)
 # define MBO_FORCE_INLINE inline __attribute__((always_inline))
 #elif defined(_MSC_VER)
@@ -106,17 +135,148 @@ template<uint64_t kNumber, uint64_t kMin, uint64_t kMax>
 concept NumberInRangeInclusive = requires { requires(kNumber >= kMin && kMax >= kNumber); };
 
 template<uint64_t kNumLanes, uint64_t kMin, uint64_t kMax>
-concept NumLanesInRange = NumberInRangeInclusive<kNumLanes, kMin, kMax>;
+concept NumLanesInRangeInclusive = NumberInRangeInclusive<kNumLanes, kMin, kMax>;
 
 template<uint64_t kNumConsts, uint64_t kMin, uint64_t kMax>
-concept NumConstsInRange = NumberInRangeInclusive<kNumConsts, kMin, kMax>;
+concept NumConstsInRangeInclusive = NumberInRangeInclusive<kNumConsts, kMin, kMax>;
+
+using u64 = uint64_t;  // NOLINT(readability-identifier-naming)
+
+MBO_FORCE_INLINE constexpr u64 MUM2FX(const char* ptr1, u64 xor1, const char* ptr2, u64 xor2) {
+  return Mul128Fold64(Load64(ptr1) ^ xor1, Load64(ptr2) ^ xor2);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM2(u64 v0, u64 v1) {
+  return Mul128Fold64(v0, v1);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM3(u64 v0, u64 v1, u64 v2) {
+  return Mul128Fold64(v0 ^ v2, v1);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM4(u64 v0, u64 v1, u64 v2, u64 v3) {
+  return MUM2(v0 ^ v2, v1 ^ v3);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM5(u64 v0, u64 v1, u64 v2, u64 v3, u64 v4) {
+  return MUM2(MUM2(v0, v2) ^ v4, v1 ^ v3);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM6(u64 v0, u64 v1, u64 v2, u64 v3, u64 v4, u64 v5) {
+  return MUM2(MUM2(v0, v2) ^ v4, MUM2(v1, v3) ^ v5);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM7(u64 v0, u64 v1, u64 v2, u64 v3, u64 v4, u64 v5, u64 v6) {
+  return MUM2(MUM2(v0, v2) ^ MUM2(v4, v6), MUM2(v1, v3) ^ v5);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM9(u64 v0, u64 v1, u64 v2, u64 v3, u64 v4, u64 v5, u64 v6, u64 v7, u64 v8) {
+  return MUM2(MUM2(v0, v2) ^ MUM2(v4, v6), MUM2(v1, v3) ^ MUM2(v5, v7) ^ v8);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM10(u64 v0, u64 v1, u64 v2, u64 v3, u64 v4, u64 v5, u64 v6, u64 v7, u64 v8, u64 v9) {
+  return MUM2(MUM2(v0, v2) ^ MUM2(v4, v6) ^ v8, MUM2(v1, v3) ^ MUM2(v5, v7) ^ v9);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM11(
+    u64 v0,
+    u64 v1,
+    u64 v2,
+    u64 v3,
+    u64 v4,
+    u64 v5,
+    u64 v6,
+    u64 v7,
+    u64 v8,
+    u64 v9,
+    u64 v10) {
+  return MUM2(MUM2(v0, v2) ^ MUM2(v4, v6) ^ MUM2(v8, v10), MUM2(v1, v3) ^ MUM2(v5, v7) ^ v9);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM13(
+    u64 v0,
+    u64 v1,
+    u64 v2,
+    u64 v3,
+    u64 v4,
+    u64 v5,
+    u64 v6,
+    u64 v7,
+    u64 v8,
+    u64 v9,
+    u64 v10,
+    u64 v11,
+    u64 v12) {
+  return MUM2(MUM2(v0, v2) ^ MUM2(v4, v6) ^ MUM2(v8, v10) ^ v12, MUM2(v1, v3) ^ MUM2(v5, v7) ^ MUM2(v9, v11));
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM14(
+    u64 v0,
+    u64 v1,
+    u64 v2,
+    u64 v3,
+    u64 v4,
+    u64 v5,
+    u64 v6,
+    u64 v7,
+    u64 v8,
+    u64 v9,
+    u64 v10,
+    u64 v11,
+    u64 v12,
+    u64 v13) {
+  return MUM2(MUM2(v0, v2) ^ MUM2(v4, v6) ^ MUM2(v8, v10) ^ v12, MUM2(v1, v3) ^ MUM2(v5, v7) ^ MUM2(v9, v11) ^ v13);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM15(
+    u64 v0,
+    u64 v1,
+    u64 v2,
+    u64 v3,
+    u64 v4,
+    u64 v5,
+    u64 v6,
+    u64 v7,
+    u64 v8,
+    u64 v9,
+    u64 v10,
+    u64 v11,
+    u64 v12,
+    u64 v13,
+    u64 v14) {
+  return MUM2(
+      MUM2(v0, v2) ^ MUM2(v4, v6) ^ MUM2(v8, v10) ^ MUM2(v12, v14), MUM2(v1, v3) ^ MUM2(v5, v7) ^ MUM2(v9, v11) ^ v13);
+}
+
+MBO_FORCE_INLINE constexpr u64 MUM17(
+    u64 v0,
+    u64 v1,
+    u64 v2,
+    u64 v3,
+    u64 v4,
+    u64 v5,
+    u64 v6,
+    u64 v7,
+    u64 v8,
+    u64 v9,
+    u64 v10,
+    u64 v11,
+    u64 v12,
+    u64 v13,
+    u64 v14,
+    u64 v15,
+    u64 v16) {
+  return MUM2(
+      MUM2(v0, v2) ^ MUM2(v4, v6) ^ MUM2(v8, v10) ^ MUM2(v12, v14) ^ v16,
+      MUM2(v1, v3) ^ MUM2(v5, v7) ^ MUM2(v9, v11) ^ MUM2(v13, v15));
+}
 
 }  // namespace tembo_internal
 
-template<uint64_t kNumLanes = 7, uint64_t kNumConsts = 8, bool kSecretLoopInit = true>
+template<uint64_t kNumLanes, uint64_t kNumConsts, bool kSecretLoopInit>
 requires(
-    tembo_internal::NumLanesInRange<kNumLanes, 2, 8>
-    && tembo_internal::NumConstsInRange<kNumConsts, 3, tembo_internal::kSecretCodes.size()>)
+    tembo_internal::NumLanesInRangeInclusive<kNumLanes, 2, 16>
+    && tembo_internal::NumConstsInRangeInclusive<kNumConsts, 3, tembo_internal::kSecretCodes.size()>)
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 MBO_FORCE_INLINE constexpr uint64_t GetHash64(std::string_view str, uint64_t seed = kDefaultSeed) noexcept {
   using namespace tembo_internal;
@@ -139,6 +299,8 @@ MBO_FORCE_INLINE constexpr uint64_t GetHash64(std::string_view str, uint64_t see
   seed ^= Mul128Fold64(seed ^ kSecretCodes[0], kSecretCodes[1]);
 
   if (len <= 16) {
+    // 16 optimization that passes SMHasher3 as a short input optimisation.
+    // This guaranteeds that we can later back-read 16 bytes at least.
     const SmallInput input = LoadSmall(ptr, len);
     const Hash128 product = Mult128(input.a ^ kSecretCodes[2], input.b ^ seed);
     // Length is injected exactly once here at the very end to protect
@@ -148,106 +310,356 @@ MBO_FORCE_INLINE constexpr uint64_t GetHash64(std::string_view str, uint64_t see
 
   // Bulk tier entry
   if (len >= kBulkWindow) {
-    [[maybe_unused]] uint64_t lane0 = seed ^ len;
-    [[maybe_unused]] uint64_t lane1 = seed;
-    [[maybe_unused]] uint64_t lane2 = seed;
-    [[maybe_unused]] uint64_t lane3 = seed;
-    [[maybe_unused]] uint64_t lane4 = seed;
-    [[maybe_unused]] uint64_t lane5 = seed;
-    [[maybe_unused]] uint64_t lane6 = seed;
-    [[maybe_unused]] uint64_t lane7 = seed;
+    // NOLINTBEGIN(misc-const-correctness): whether a lane is mutated depends on
+    // kNumLanes per instantiation; lanes above kNumLanes stay untouched by design.
+    [[maybe_unused]] uint64_t lane_0 = seed ^ len;
+    [[maybe_unused]] uint64_t lane_1 = seed;
+    [[maybe_unused]] uint64_t lane_2 = seed;
+    [[maybe_unused]] uint64_t lane_3 = seed;
+    [[maybe_unused]] uint64_t lane_4 = seed;
+    [[maybe_unused]] uint64_t lane_5 = seed;
+    [[maybe_unused]] uint64_t lane_6 = seed;
+    [[maybe_unused]] uint64_t lane_7 = seed;
+    [[maybe_unused]] uint64_t lane_8 = seed;
+    [[maybe_unused]] uint64_t lane_9 = seed;
+    [[maybe_unused]] uint64_t lane_a = seed;
+    [[maybe_unused]] uint64_t lane_b = seed;
+    [[maybe_unused]] uint64_t lane_c = seed;
+    [[maybe_unused]] uint64_t lane_d = seed;
+    [[maybe_unused]] uint64_t lane_e = seed;
+    [[maybe_unused]] uint64_t lane_f = seed;
+    // NOLINTEND(misc-const-correctness)
     // Each lane is independent, so the compiler can schedule the four Mul128Fold64 operations concurrently, allowing
     // for better instruction-level parallelism and throughput. This works due to the temp vars.
     // Must use length at least once.
     if constexpr (kSecretLoopInit) {
-      lane0 ^= kSecretCodes[(kLoopInitConstIndex + 0) % kNumConsts];
-      lane1 ^= kSecretCodes[(kLoopInitConstIndex + 1) % kNumConsts];
-      lane2 ^= kSecretCodes[(kLoopInitConstIndex + 2) % kNumConsts];
-      lane3 ^= kSecretCodes[(kLoopInitConstIndex + 3) % kNumConsts];
-      lane4 ^= kSecretCodes[(kLoopInitConstIndex + 4) % kNumConsts];
-      lane5 ^= kSecretCodes[(kLoopInitConstIndex + 5) % kNumConsts];
-      lane6 ^= kSecretCodes[(kLoopInitConstIndex + 6) % kNumConsts];
-      lane7 ^= kSecretCodes[(kLoopInitConstIndex + 7) % kNumConsts];
+      lane_0 ^= kSecretCodes[(kLoopInitConstIndex + 0x00) % kNumConsts];
+      if constexpr (kNumLanes > 0x01) {
+        lane_1 ^= kSecretCodes[(kLoopInitConstIndex + 0x01) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x02) {
+        lane_2 ^= kSecretCodes[(kLoopInitConstIndex + 0x02) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x03) {
+        lane_3 ^= kSecretCodes[(kLoopInitConstIndex + 0x03) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x04) {
+        lane_4 ^= kSecretCodes[(kLoopInitConstIndex + 0x04) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x05) {
+        lane_5 ^= kSecretCodes[(kLoopInitConstIndex + 0x05) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x06) {
+        lane_6 ^= kSecretCodes[(kLoopInitConstIndex + 0x06) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x07) {
+        lane_7 ^= kSecretCodes[(kLoopInitConstIndex + 0x07) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x08) {
+        lane_8 ^= kSecretCodes[(kLoopInitConstIndex + 0x08) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x09) {
+        lane_9 ^= kSecretCodes[(kLoopInitConstIndex + 0x09) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x0a) {
+        lane_a ^= kSecretCodes[(kLoopInitConstIndex + 0x0a) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x0b) {
+        lane_b ^= kSecretCodes[(kLoopInitConstIndex + 0x0b) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x0c) {
+        lane_c ^= kSecretCodes[(kLoopInitConstIndex + 0x0c) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x0d) {
+        lane_d ^= kSecretCodes[(kLoopInitConstIndex + 0x0d) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x0e) {
+        lane_e ^= kSecretCodes[(kLoopInitConstIndex + 0x0e) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 0x0f) {
+        lane_f ^= kSecretCodes[(kLoopInitConstIndex + 0x0f) % kNumConsts];
+      }
     }
-    // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
-    do {
-      constexpr uint64_t kSecret0 = kSecretCodes[(kLoopBaseConstIndex + 0) % kNumConsts];
-      constexpr uint64_t kSecret1 = kSecretCodes[(kLoopBaseConstIndex + 1) % kNumConsts];
-      constexpr uint64_t kSecret2 = kSecretCodes[(kLoopBaseConstIndex + 2) % kNumConsts];
-      constexpr uint64_t kSecret3 = kSecretCodes[(kLoopBaseConstIndex + 3) % kNumConsts];
-      constexpr uint64_t kSecret4 = kSecretCodes[(kLoopBaseConstIndex + 4) % kNumConsts];
-      constexpr uint64_t kSecret5 = kSecretCodes[(kLoopBaseConstIndex + 5) % kNumConsts];
-      constexpr uint64_t kSecret6 = kSecretCodes[(kLoopBaseConstIndex + 6) % kNumConsts];
-      constexpr uint64_t kSecret7 = kSecretCodes[(kLoopBaseConstIndex + 7) % kNumConsts];
-      lane0 = Mul128Fold64(Load64(ptr + 0) ^ kSecret0, Load64(ptr + 8) ^ lane0);
+    constexpr std::array<uint64_t, kNumLanes> kLaneSecrets = [&]() constexpr {
+      std::array<uint64_t, kNumLanes> secrets;  // NOLINT(*-member-init)
+      secrets[0x00] = kSecretCodes[(kLoopBaseConstIndex + 0x00) % kNumConsts];
       if constexpr (kNumLanes > 1) {
-        lane1 = Mul128Fold64(Load64(ptr + 16) ^ kSecret1, Load64(ptr + 24) ^ lane1);
+        secrets[0x01] = kSecretCodes[(kLoopBaseConstIndex + 0x01) % kNumConsts];
       }
       if constexpr (kNumLanes > 2) {
-        lane2 = Mul128Fold64(Load64(ptr + 32) ^ kSecret2, Load64(ptr + 40) ^ lane2);
+        secrets[0x02] = kSecretCodes[(kLoopBaseConstIndex + 0x02) % kNumConsts];
       }
       if constexpr (kNumLanes > 3) {
-        lane3 = Mul128Fold64(Load64(ptr + 48) ^ kSecret3, Load64(ptr + 56) ^ lane3);
+        secrets[0x03] = kSecretCodes[(kLoopBaseConstIndex + 0x03) % kNumConsts];
       }
       if constexpr (kNumLanes > 4) {
-        lane4 = Mul128Fold64(Load64(ptr + 64) ^ kSecret4, Load64(ptr + 72) ^ lane3);
+        secrets[0x04] = kSecretCodes[(kLoopBaseConstIndex + 0x04) % kNumConsts];
       }
       if constexpr (kNumLanes > 5) {
-        lane5 = Mul128Fold64(Load64(ptr + 80) ^ kSecret5, Load64(ptr + 88) ^ lane3);
+        secrets[0x05] = kSecretCodes[(kLoopBaseConstIndex + 0x05) % kNumConsts];
       }
       if constexpr (kNumLanes > 6) {
-        lane6 = Mul128Fold64(Load64(ptr + 96) ^ kSecret6, Load64(ptr + 104) ^ lane3);
+        secrets[0x06] = kSecretCodes[(kLoopBaseConstIndex + 0x06) % kNumConsts];
       }
       if constexpr (kNumLanes > 7) {
-        lane7 = Mul128Fold64(Load64(ptr + 112) ^ kSecret7, Load64(ptr + 120) ^ lane3);
+        secrets[0x07] = kSecretCodes[(kLoopBaseConstIndex + 0x07) % kNumConsts];
       }
+      if constexpr (kNumLanes > 8) {
+        secrets[0x08] = kSecretCodes[(kLoopBaseConstIndex + 0x08) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 9) {
+        secrets[0x09] = kSecretCodes[(kLoopBaseConstIndex + 0x09) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 10) {
+        secrets[0x0a] = kSecretCodes[(kLoopBaseConstIndex + 0x0a) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 11) {
+        secrets[0x0b] = kSecretCodes[(kLoopBaseConstIndex + 0x0b) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 12) {
+        secrets[0x0c] = kSecretCodes[(kLoopBaseConstIndex + 0x0c) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 13) {
+        secrets[0x0d] = kSecretCodes[(kLoopBaseConstIndex + 0x0d) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 14) {
+        secrets[0x0e] = kSecretCodes[(kLoopBaseConstIndex + 0x0e) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 15) {
+        secrets[0x0f] = kSecretCodes[(kLoopBaseConstIndex + 0x0f) % kNumConsts];
+      }
+      return secrets;
+    }();
+    // With fewer constants than lanes the selection wraps by design; distinctness
+    // can only be required for the first min(kNumLanes, kNumConsts) entries.
+    static_assert(
+        FirstEntriesDistinct(kLaneSecrets, kNumLanes < kNumConsts ? kNumLanes : kNumConsts),
+        "bulk-loop lane secrets must not repeat within one constant window");
+
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
+    do {
+      lane_0 = MUM2FX(ptr + 0, kLaneSecrets[0x00], ptr + 8, lane_0);
+      if constexpr (kNumLanes > 0x01) {
+        lane_1 = MUM2FX(ptr + 16, kLaneSecrets[0x01], ptr + 24, lane_1);
+      }
+      if constexpr (kNumLanes > 0x02) {
+        lane_2 = MUM2FX(ptr + 32, kLaneSecrets[0x02], ptr + 40, lane_2);
+      }
+      if constexpr (kNumLanes > 0x03) {
+        lane_3 = MUM2FX(ptr + 48, kLaneSecrets[0x03], ptr + 56, lane_3);
+      }
+      if constexpr (kNumLanes > 0x04) {  // TODO(helly25): consider reordering 6-4-7-5
+        lane_4 = MUM2FX(ptr + 64, kLaneSecrets[0x04], ptr + 72, lane_4);
+      }
+      if constexpr (kNumLanes > 0x05) {
+        lane_5 = MUM2FX(ptr + 80, kLaneSecrets[0x05], ptr + 88, lane_5);
+      }
+      if constexpr (kNumLanes > 0x06) {
+        lane_6 = MUM2FX(ptr + 96, kLaneSecrets[0x06], ptr + 104, lane_6);
+      }
+      if constexpr (kNumLanes > 0x07) {
+        lane_7 = MUM2FX(ptr + 112, kLaneSecrets[0x07], ptr + 120, lane_7);
+      }
+      if constexpr (kNumLanes > 0x08) {
+        lane_8 = MUM2FX(ptr + 128, kLaneSecrets[0x08], ptr + 136, lane_8);
+      }
+      if constexpr (kNumLanes > 0x09) {
+        lane_9 = MUM2FX(ptr + 144, kLaneSecrets[0x09], ptr + 152, lane_9);
+      }
+      if constexpr (kNumLanes > 0x0a) {
+        lane_a = MUM2FX(ptr + 160, kLaneSecrets[0x0a], ptr + 168, lane_a);
+      }
+      if constexpr (kNumLanes > 0x0b) {
+        lane_b = MUM2FX(ptr + 176, kLaneSecrets[0x0b], ptr + 184, lane_b);
+      }
+      if constexpr (kNumLanes > 0x0c) {
+        lane_c = MUM2FX(ptr + 192, kLaneSecrets[0x0c], ptr + 200, lane_c);
+      }
+      if constexpr (kNumLanes > 0x0d) {
+        lane_d = MUM2FX(ptr + 208, kLaneSecrets[0x0d], ptr + 216, lane_d);
+      }
+      if constexpr (kNumLanes > 0x0e) {
+        lane_e = MUM2FX(ptr + 224, kLaneSecrets[0x0e], ptr + 232, lane_e);
+      }
+      if constexpr (kNumLanes > 0x0f) {
+        lane_f = MUM2FX(ptr + 240, kLaneSecrets[0x0f], ptr + 248, lane_f);
+      }
+
       ptr += kBulkWindow;
       len -= kBulkWindow;
     } while (len >= kBulkWindow);
-    if constexpr (kNumLanes == 1) {
-      seed = lane0;
-    } else if constexpr (kNumLanes == 2) {
-      seed = Mul128Fold64(lane0, lane1);
-    } else if constexpr (kNumLanes == 3) {
-      seed = Mul128Fold64(lane0 ^ lane2, lane1);
-    } else if constexpr (kNumLanes == 4) {
-      seed = Mul128Fold64(lane0 ^ lane2, lane1 ^ lane3);
-    } else if constexpr (kNumLanes == 5) {
-      seed = Mul128Fold64(lane0 ^ lane2 ^ lane4, lane1 ^ lane3);
-    } else if constexpr (kNumLanes == 6) {
-      seed = Mul128Fold64(lane0 ^ lane2 ^ lane4, lane1 ^ lane3 ^ lane5);
-    } else if constexpr (kNumLanes == 7) {
-      seed = Mul128Fold64(lane0 ^ lane2 ^ lane4 ^ lane6, lane1 ^ lane3 ^ lane5);
-    } else if constexpr (kNumLanes == 8) {
-      seed = Mul128Fold64(lane0 ^ lane2 ^ lane4 ^ lane6, lane1 ^ lane3 ^ lane5 ^ lane7);
+    if constexpr (kNumLanes == 0x01) {
+      seed = lane_0;
+    } else if constexpr (kNumLanes == 0x02) {
+      seed = MUM2(lane_0, lane_1);
+    } else if constexpr (kNumLanes == 0x03) {
+      seed = MUM3(lane_0, lane_1, lane_2);
+    } else if constexpr (kNumLanes == 0x04) {
+      seed = MUM4(lane_0, lane_1, lane_2, lane_3);
+    } else if constexpr (kNumLanes == 0x05) {
+      seed = MUM5(lane_0, lane_1, lane_2, lane_3, lane_4);
+    } else if constexpr (kNumLanes == 0x06) {
+      seed = MUM6(lane_0, lane_1, lane_2, lane_3, lane_4, lane_5);
+    } else if constexpr (kNumLanes == 0x07) {
+      seed = MUM7(lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6);
+    } else if constexpr (kNumLanes == 0x08) {
+      seed = MUM9(lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7, kSecretCodes[3]);
+    } else if constexpr (kNumLanes == 0x09) {
+      seed = MUM9(lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7, lane_8);
+    } else if constexpr (kNumLanes == 0x0a) {
+      seed = MUM10(lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7, lane_8, lane_9);
+    } else if constexpr (kNumLanes == 0x0b) {
+      seed = MUM11(lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7, lane_8, lane_9, lane_a);
+    } else if constexpr (kNumLanes == 0x0c) {
+      seed = MUM13(
+          lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7, lane_8, lane_9, lane_a, lane_b,
+          kSecretCodes[2]);
+    } else if constexpr (kNumLanes == 0x0d) {
+      seed =
+          MUM13(lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7, lane_8, lane_9, lane_a, lane_b, lane_c);
+    } else if constexpr (kNumLanes == 0x0e) {
+      seed = MUM14(
+          lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7, lane_8, lane_9, lane_a, lane_b, lane_c,
+          lane_d);
+    } else if constexpr (kNumLanes == 0x0f) {
+      seed = MUM15(
+          lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7, lane_8, lane_9, lane_a, lane_b, lane_c,
+          lane_d, lane_e);
+    } else if constexpr (kNumLanes == 0x10) {
+      seed = MUM17(
+          lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7, lane_8, lane_9, lane_a, lane_b, lane_c,
+          lane_d, lane_e, lane_f, kSecretCodes[1]);
     }
   }
 
   // No longer update `ptr` or `len`.
   // If we we were at actual bulk size, then we would use another bulk process step.
   // We support kBulkWindow size minus the final backwards read size.
-  // The first here is `+2` and not `+0`. Otherwise `fambo` fails SMHasher.
-  constexpr uint64_t kSecret0 = kSecretCodes[(kIfLadderConstIndex + 2) % kNumConsts];
-  constexpr uint64_t kSecret1 = kSecretCodes[(kIfLadderConstIndex + 1) % kNumConsts];
-  constexpr uint64_t kSecret2 = kSecretCodes[(kIfLadderConstIndex + 2) % kNumConsts];
-  constexpr uint64_t kSecret3 = kSecretCodes[(kIfLadderConstIndex + 3) % kNumConsts];
-  constexpr uint64_t kSecret4 = kSecretCodes[(kIfLadderConstIndex + 4) % kNumConsts];
-  constexpr uint64_t kSecret5 = kSecretCodes[(kIfLadderConstIndex + 5) % kNumConsts];
-  constexpr uint64_t kSecret6 = kSecretCodes[(kIfLadderConstIndex + 6) % kNumConsts];
   if (len > 16) {
-    seed = Mul128Fold64(Load64(ptr) ^ kSecret0, Load64(ptr + 8) ^ seed);
-    if (len > 32) {
-      seed = Mul128Fold64(Load64(ptr + 16) ^ kSecret1, Load64(ptr + 24) ^ seed);
-      if (len > 48) {
-        seed = Mul128Fold64(Load64(ptr + 32) ^ kSecret2, Load64(ptr + 40) ^ seed);
-        if (len > 64) {
-          seed = Mul128Fold64(Load64(ptr + 48) ^ kSecret3, Load64(ptr + 56) ^ seed);
-          if (len > 80) {
-            seed = Mul128Fold64(Load64(ptr + 64) ^ kSecret4, Load64(ptr + 72) ^ seed);
-            if (len > 96) {
-              seed = Mul128Fold64(Load64(ptr + 80) ^ kSecret5, Load64(ptr + 88) ^ seed);
-              if (len > 112) {
-                seed = Mul128Fold64(Load64(ptr + 96) ^ kSecret6, Load64(ptr + 104) ^ seed);
+    // The first here is `+2` and not `+0`. Otherwise `fambo` fails SMHasher.
+    // Technically we need kNumLaneCount - 1, but it is simpler to go up to kLanecount.
+    constexpr std::array<uint64_t, kNumLanes> kILSecrets = [&]() constexpr {
+      std::array<uint64_t, kNumLanes> secrets;  // NOLINT(*-member-init)
+      secrets[0x00] = kSecretCodes[(kIfLadderConstIndex + 0x02) % kNumConsts];
+      if constexpr (kNumLanes > 1) {
+        secrets[0x01] = kSecretCodes[(kIfLadderConstIndex + 0x01) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 2) {
+        secrets[0x02] = kSecretCodes[(kIfLadderConstIndex + 0x00) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 3) {
+        secrets[0x03] = kSecretCodes[(kIfLadderConstIndex + 0x03) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 4) {
+        secrets[0x04] = kSecretCodes[(kIfLadderConstIndex + 0x04) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 5) {
+        secrets[0x05] = kSecretCodes[(kIfLadderConstIndex + 0x05) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 6) {
+        secrets[0x06] = kSecretCodes[(kIfLadderConstIndex + 0x06) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 7) {
+        secrets[0x07] = kSecretCodes[(kIfLadderConstIndex + 0x07) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 8) {
+        secrets[0x08] = kSecretCodes[(kIfLadderConstIndex + 0x08) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 9) {
+        secrets[0x09] = kSecretCodes[(kIfLadderConstIndex + 0x09) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 10) {
+        secrets[0x0a] = kSecretCodes[(kIfLadderConstIndex + 0x0a) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 11) {
+        secrets[0x0b] = kSecretCodes[(kIfLadderConstIndex + 0x0b) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 12) {
+        secrets[0x0c] = kSecretCodes[(kIfLadderConstIndex + 0x0c) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 13) {
+        secrets[0x0d] = kSecretCodes[(kIfLadderConstIndex + 0x0d) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 14) {
+        secrets[0x0e] = kSecretCodes[(kIfLadderConstIndex + 0x0e) % kNumConsts];
+      }
+      if constexpr (kNumLanes > 15) {
+        secrets[0x0f] = kSecretCodes[(kIfLadderConstIndex + 0x0f) % kNumConsts];
+      }
+      return secrets;
+    }();
+    // The if-ladder consumes at most kNumLanes - 1 secrets; the same wrap
+    // caveat as for the bulk-loop secrets applies.
+    static_assert(
+        FirstEntriesDistinct(kILSecrets, kNumLanes < kNumConsts ? kNumLanes : kNumConsts),
+        "if-ladder secrets must not repeat within one constant window");
+    // Maximum number of MUM2FX = lane_count -1
+    // Read 1st lane, 16 bytes
+    seed = MUM2FX(ptr, kILSecrets[0], ptr + 8, seed);
+    if constexpr (kNumLanes > 2) {
+      if (len > 32) {
+        seed = MUM2FX(ptr + 16, kILSecrets[1], ptr + 24, seed);
+        if constexpr (kNumLanes > 3) {
+          if (len > 48) {
+            seed = MUM2FX(ptr + 32, kILSecrets[2], ptr + 40, seed);
+            if constexpr (kNumLanes > 4) {
+              if (len > 64) {
+                seed = MUM2FX(ptr + 48, kILSecrets[3], ptr + 56, seed);
+                if constexpr (kNumLanes > 5) {
+                  if (len > 80) {
+                    seed = MUM2FX(ptr + 64, kILSecrets[4], ptr + 72, seed);
+                    if constexpr (kNumLanes > 6) {
+                      if (len > 96) {
+                        seed = MUM2FX(ptr + 80, kILSecrets[5], ptr + 88, seed);
+                        if constexpr (kNumLanes > 7) {
+                          if (len > 112) {
+                            seed = MUM2FX(ptr + 96, kILSecrets[6], ptr + 104, seed);
+                            if constexpr (kNumLanes > 8) {
+                              if (len > 128) {
+                                seed = MUM2FX(ptr + 112, kILSecrets[7], ptr + 120, seed);
+                                if constexpr (kNumLanes > 9) {
+                                  if (len > 144) {
+                                    seed = MUM2FX(ptr + 128, kILSecrets[8], ptr + 136, seed);
+                                    if constexpr (kNumLanes > 10) {
+                                      if (len > 160) {
+                                        seed = MUM2FX(ptr + 144, kILSecrets[9], ptr + 152, seed);
+                                        if constexpr (kNumLanes > 11) {
+                                          if (len > 176) {
+                                            seed = MUM2FX(ptr + 160, kILSecrets[0x0a], ptr + 168, seed);
+                                            if constexpr (kNumLanes > 12) {
+                                              if (len > 192) {
+                                                seed = MUM2FX(ptr + 176, kILSecrets[0x0b], ptr + 184, seed);
+                                                if constexpr (kNumLanes > 13) {
+                                                  if (len > 208) {
+                                                    seed = MUM2FX(ptr + 192, kILSecrets[0x0c], ptr + 200, seed);
+                                                    if constexpr (kNumLanes > 14) {
+                                                      if (len > 224) {
+                                                        seed = MUM2FX(ptr + 208, kILSecrets[0x0d], ptr + 216, seed);
+                                                        if constexpr (kNumLanes > 15) {
+                                                          if (len > 240) {
+                                                            seed = MUM2FX(ptr + 224, kILSecrets[0x0e], ptr + 232, seed);
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           }
@@ -266,9 +678,13 @@ MBO_FORCE_INLINE constexpr uint64_t GetHash64(std::string_view str, uint64_t see
 
 // The algorithm struct (see `mbo::hash::IsHashAlgorithm` in hash.h). Weakly
 // seeded: the seed folds into the initial state and rides the MUM chain.
+template<uint64_t kNumLanes, uint64_t kNumConsts, bool kSecretLoopInit = false>
+requires(
+    tembo_internal::NumLanesInRangeInclusive<kNumLanes, 2, 16>
+    && tembo_internal::NumConstsInRangeInclusive<kNumConsts, 3, tembo_internal::kSecretCodes.size()>)
 struct Algorithm {
   static constexpr uint64_t GetHash64(std::string_view data, uint64_t seed = 0) noexcept {
-    return mbo::hash::tembo::GetHash64<7>(data, seed);
+    return mbo::hash::tembo::GetHash64<kNumLanes, kNumConsts, kSecretLoopInit>(data, seed);
   }
 };
 

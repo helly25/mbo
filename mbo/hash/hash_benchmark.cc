@@ -393,6 +393,7 @@ int main(int argc, char** argv) {
 
   mbo::hash::RegisterAll(mbo::hash::algo::AllAlgorithms{});
   benchmark::Initialize(&argc, argv);
+  benchmark::AddCustomContext("algos", absl::StrJoin(mbo::hash::algo::GetAlgoNames(), ", "));
   // The build compiler is a first-class axis of a measurement (GCC vs Clang perf
   // differs), so record what THIS binary was built with in the dataset context;
   // the stored bundle's filename is tagged with `compiler` too.
@@ -410,15 +411,13 @@ int main(int argc, char** argv) {
   // Export the throughput length distributions in use as "name=pct:len,...;..."
   // (the full inverse-CDF, not just the bound labels), so a dataset records
   // exactly which mix produced its BmHash64Throughput<algo>/<name>:<bound> numbers.
-  benchmark::AddCustomContext(
-      "throughput_dists",
-      absl::StrJoin(mbo::hash::kLatencyDists, ";", [](std::string* out, const mbo::hash::LatencyDist& dist) {
-        absl::StrAppend(
-            out, dist.name, "=",
-            absl::StrJoin(dist.cdf, ",", [](std::string* cdf_out, const std::pair<double, int>& point) {
-              absl::StrAppend(cdf_out, point.first, ":", point.second);
-            }));
-      }));
+  for (const auto& throughput_dists : mbo::hash::kLatencyDists) {
+    benchmark::AddCustomContext(
+        absl::StrCat("throughput_dists:", throughput_dists.name),
+        absl::StrJoin(throughput_dists.cdf, ",", [](std::string* cdf_out, const std::pair<double, int>& point) {
+          absl::StrAppend(cdf_out, point.first, ":", point.second);
+        }));
+  }
   benchmark::RunSpecifiedBenchmarks();
   benchmark::Shutdown();
   return 0;
