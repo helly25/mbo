@@ -43,14 +43,15 @@ declare -r MEAS REPORT README
 BUNDLES=("${MEAS}"/data/*.tgz)
 [[ -f ${BUNDLES[0]} ]] || die "no data bundles found (run: git lfs pull)."
 [[ $(wc -c <"${BUNDLES[0]}") -gt 1024 ]] || die "bundle is a Git-LFS pointer; run: git lfs pull."
-declare -r BUNDLE="${BUNDLES[0]}"
 
 PYTHON="${PYTHON:-python3}"
 command -v "${PYTHON}" >/dev/null || die "python3 not found on PATH."
 declare -r PYTHON
 
 function quality() {
-  "${PYTHON}" "${REPORT}" quality --bundle "${BUNDLE}" "$@"
+  # All bundles: their logs are merged (newest per algorithm wins), so a newer
+  # bundle can carry measurements for algorithms older bundles predate.
+  "${PYTHON}" "${REPORT}" quality "${BUNDLES[@]}" "$@"
 }
 
 # The committed tables must match hash_algorithms.json x the bundle measurements.

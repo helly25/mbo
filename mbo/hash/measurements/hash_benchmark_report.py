@@ -1085,29 +1085,38 @@ def _resolve_dataset(args):
 _SMH_LOG_RE = re.compile(r"^(\d{8}_\d{6})_smhasher_(.+)\.log(\.gz)?$")
 
 
-def _measured_from_bundle(path):
-    """Re-parse a bundle's per-algorithm SMHasher3 logs into a measured map
-    {registered-name: entry} with the CURRENT parser. The bundle's stored
-    smhasher.json is ignored (it predates parser fixes, so it is score-less); the
-    LOGS are the measured truth. The newest log per name wins, and legacy / short
-    log names are normalized to their registered form (see _SMH_NAME_ALIASES)."""
+def _measured_from_bundles(paths):
+    """Re-parse per-algorithm SMHasher3 logs from one or more bundles into a
+    measured map {registered-name: entry} with the CURRENT parser. The bundles'
+    stored smhasher.json is ignored (it predates parser fixes, so it is
+    score-less); the LOGS are the measured truth. The newest log per name wins
+    ACROSS all given bundles, so a newer bundle can supply algorithms an older
+    bundle never measured (quality is machine-independent, see the consistency
+    check). Legacy / short log names are normalized to their registered form
+    (see _SMH_NAME_ALIASES)."""
     latest = {}  # name -> (stamp, text)
-    with tempfile.TemporaryDirectory() as tmp:
-        _extract_bundle(path, tmp)
-        for fname in sorted(os.listdir(tmp)):
-            match = _SMH_LOG_RE.match(fname)
-            if not match:
-                continue
-            stamp, name, gz = match.group(1), match.group(2), match.group(3)
-            opener = gzip.open if gz else open
-            with opener(os.path.join(tmp, fname), "rt") as handle:
-                text = handle.read()
-            if name not in latest or stamp >= latest[name][0]:
-                latest[name] = (stamp, text)
+    for path in paths:
+        with tempfile.TemporaryDirectory() as tmp:
+            _extract_bundle(path, tmp)
+            for fname in sorted(os.listdir(tmp)):
+                match = _SMH_LOG_RE.match(fname)
+                if not match:
+                    continue
+                stamp, name, gz = match.group(1), match.group(2), match.group(3)
+                opener = gzip.open if gz else open
+                with opener(os.path.join(tmp, fname), "rt") as handle:
+                    text = handle.read()
+                if name not in latest or stamp >= latest[name][0]:
+                    latest[name] = (stamp, text)
     measured = {}
     for name, (_, text) in latest.items():
         measured[_SMH_NAME_ALIASES.get(name, name)] = _parse_smhasher(text)
     return measured
+
+
+def _measured_from_bundle(path):
+    """Single-bundle form of `_measured_from_bundles`."""
+    return _measured_from_bundles([path])
 
 
 def _fill_missing_measured(measured):
@@ -1321,9 +1330,11 @@ def dispatch_publish_charts(args, stamp):
     return 0
 
 
-def impl_publish_quality(args_bundle, args_bundle_pos, args_readme, args_check):
+def impl_publish_quality(args_bundles, args_readme, args_check):
     algorithms, overview_order = _load_algorithms()
-    measured = _fill_missing_measured(_measured_from_bundle(_one_path([args_bundle_pos, args_bundle], "bundle")))
+    if not args_bundles:
+        raise SystemExit("quality: at least one bundle is required (positional or --bundle)")
+    measured = _fill_missing_measured(_measured_from_bundles(args_bundles))
     text = open(args_readme).read()
     regions = [
         (_OVERVIEW_BEGIN, _OVERVIEW_END, render_overview_table(algorithms, measured, overview_order)),
@@ -1351,15 +1362,17 @@ def impl_publish_quality(args_bundle, args_bundle_pos, args_readme, args_check):
 
 
 def dispatch_publish_quality(args, stamp):
-    # Command may be invoked as `publish --bundles` or with as `publish-quality --bundle`; both are valid.
-    args_bundle = getattr(args, 'bundle', None)
-    args_bundles = getattr(args, 'bundles', None)
-    if not args_bundle and args_bundles:
-        args_bundle = args_bundles[0]
-    args_bundle_pos = getattr(args, 'bundle_pos', None)
+    # Command may be invoked as `publish --bundles` or as `quality [BUNDLE...]
+    # [--bundle B]`; all bundle sources are combined and their logs merged.
+    bundles = []
+    bundles.extend(getattr(args, 'bundle_pos', None) or [])
+    bundle = getattr(args, 'bundle', None)
+    if bundle:
+        bundles.append(bundle)
+    bundles.extend(getattr(args, 'bundles', None) or [])
     args_check = getattr(args, 'check', False)
     args_readme = getattr(args, 'readme', None)
-    return impl_publish_quality(args_bundle, args_bundle_pos, args_readme, args_check)
+    return impl_publish_quality(bundles, args_readme, args_check)
 
 
 def dispatch_publish(args, stamp):
@@ -1753,7 +1766,7 @@ def add_command_publish_charts(sub):
 def add_command_publish_quality(sub):
     parser = sub.add_parser("quality", help="render the Algorithm-overview + SMHasher3 Results tables into the README from hash_algorithms.json (manual) and a measured bundle")
     parser.add_argument("--readme", default="mbo/hash/README.md")
-    parser.add_argument("bundle_pos", nargs="?", metavar="BUNDLE", help="data bundle .tgz (same as --bundle)")
+    parser.add_argument("bundle_pos", nargs="*", metavar="BUNDLE", help="data bundle(s) .tgz; logs are merged, newest per algorithm wins")
     parser.add_argument("--bundle", help="data bundle .tgz whose per-algorithm SMHasher3 logs are re-parsed for verdict/score/failures")
     parser.add_argument("--check", action="store_true", help="For quality verification, check that the README tables match instead of writing (exit 1 on drift)")
     parser.set_defaults(func=dispatch_publish_quality)

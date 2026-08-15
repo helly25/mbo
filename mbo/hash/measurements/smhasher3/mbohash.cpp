@@ -103,8 +103,8 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0xBDF11D70,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0x8BD8598B,
+    $.verification_BE = 0x6BED7A2A,
     $.hashfn_native = FamboHash64<false>,
     $.hashfn_bswap = FamboHash64<true>);
 
@@ -115,7 +115,7 @@ REGISTER_HASH(
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
     $.verification_LE = 0xE5F354B0,
-    $.verification_BE = 0x87654321,
+    $.verification_BE = 0xF50EC47B,
     $.hashfn_native = TemboHash64<false, 3, 4>,
     $.hashfn_bswap = TemboHash64<true, 3, 4>);
 
@@ -125,8 +125,8 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x6EFF1A2B,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0xDA640897,
+    $.verification_BE = 0xEA9AB0D5,
     $.hashfn_native = TemboHash64<false, 4, 4>,
     $.hashfn_bswap = TemboHash64<true, 4, 4>);
 
@@ -136,8 +136,8 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x8BD8598B,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0x9132741E,
+    $.verification_BE = 0x8C8BC6A6,
     $.hashfn_native = TemboHash64<false, 5, 4>,
     $.hashfn_bswap = TemboHash64<true, 5, 4>);
 
@@ -147,8 +147,8 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x8BD8598B,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0x30434D3C,
+    $.verification_BE = 0x5EDB4BA3,
     $.hashfn_native = TemboHash64<false, 6, 4>,
     $.hashfn_bswap = TemboHash64<true, 6, 4>);
 
@@ -158,8 +158,8 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x8BD8598B,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0x0F9938CC,
+    $.verification_BE = 0x0F8EB571,
     $.hashfn_native = TemboHash64<false, 7, 4>,
     $.hashfn_bswap = TemboHash64<true, 7, 4>);
 
@@ -169,8 +169,8 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x8BD8598B,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0x57AD94BE,
+    $.verification_BE = 0xF379E0EA,
     $.hashfn_native = TemboHash64<false, 8, 4>,
     $.hashfn_bswap = TemboHash64<true, 8, 4>);
 
@@ -180,8 +180,8 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x8BD8598B,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0xD9E7F32B,
+    $.verification_BE = 0x89FFB83A,
     $.hashfn_native = TemboHash64<false, 8, 8>,
     $.hashfn_bswap = TemboHash64<true, 8, 8>);
 
@@ -191,8 +191,8 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x8BD8598B,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0x3407252B,
+    $.verification_BE = 0xC6E33B35,
     $.hashfn_native = TemboHash64<false, 12, 4>,
     $.hashfn_bswap = TemboHash64<true, 12, 4>);
 
@@ -202,8 +202,8 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x8BD8598B,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0x23385515,
+    $.verification_BE = 0xE8B10871,
     $.hashfn_native = TemboHash64<false, 12, 8>,
     $.hashfn_bswap = TemboHash64<true, 12, 8>);
 
@@ -213,8 +213,8 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x8BD8598B,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0xF8A4C7A5,
+    $.verification_BE = 0x6E7E4F4A,
     $.hashfn_native = TemboHash64<false, 16, 4>,
     $.hashfn_bswap = TemboHash64<true, 16, 4>);
 
@@ -224,7 +224,7 @@ REGISTER_HASH(
     $.hash_flags = 0,
     $.impl_flags = FLAG_IMPL_MULTIPLY_64_128 | FLAG_IMPL_CANONICAL_LE,
     $.bits = 64,
-    $.verification_LE = 0x8BD8598B,
-    $.verification_BE = 0x87654321,
+    $.verification_LE = 0x8583841C,
+    $.verification_BE = 0x9694C3A1,
     $.hashfn_native = TemboHash64<false, 16, 8>,
     $.hashfn_bswap = TemboHash64<true, 16, 8>);
