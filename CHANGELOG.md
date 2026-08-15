@@ -1,5 +1,6 @@
 # 0.13.3
 
+- Added tests for all ten diff libraries: the three algorithms (`diff_direct_cc`, `diff_myers_cc`, `diff_naive_cc`), the shared plumbing (`base_diff_cc`, `chunked_diff_cc`) and the internals (`chunk_cc`, `context_cc`, `data_cc`, `output_cc`, `update_absl_log_flags_cc`).
 - Removed every `-stdlib=libc++` and every `-Wno-unused-command-line-argument` suppression: the hermetic toolchain resolves libc++ headers via `-cxx-isystem` and links libc++ explicitly, so the flag was inert (driver-confirmed) at compile and link alike; the one load-bearing copy, in upstream `toolchains_llvm`'s compile flags, is fixed at source via a `git_override` on the helly25 fork.
 - Removed the redundant `--cxxopt=-stdlib=libc++` from the `clang-tidy` bazel config; the hermetic toolchain already passes it, so it appeared twice and produced "unused argument" warnings.
 - Fixed `mbo::file::GetMTime` on libstdc++: it read `std::filesystem::file_clock` time as Unix seconds, but that clock's epoch is implementation-defined (2174-01-01 on libstdc++), so every file's mtime was ~148 years off on Linux.

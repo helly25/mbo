@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 package(
     default_visibility = ["//mbo/diff:__subpackages__"],
@@ -89,5 +89,20 @@ cc_library(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@re2",
+    ],
+)
+
+cc_test(
+    name = "diff_internal_test",
+    srcs = ["diff_internal_test.cc"],
+    deps = [
+        ":chunk_cc",
+        ":context_cc",
+        ":data_cc",
+        ":output_cc",
+        ":update_absl_log_flags_cc",
+        "//mbo/diff:diff_options_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
