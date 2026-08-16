@@ -205,6 +205,19 @@ jobs:
           if [ -n "${{inputs.bazel_version}}" ]; then
             echo "${{inputs.bazel_version}}" > .bazelversion
           fi
+          # Bazel 7/8 half-apply `external_include_paths`: they add the
+          # `-isystem external/...` entries but keep the legacy `-iquote`
+          # duplicates, so a quoted `#include "absl/..."` resolves via the
+          # quote path and loses system-header warning suppression - external
+          # pedantic findings (absl's diagnose_if, __int128) then fail our
+          # -Werror. Bazel 9 drops the -iquote duplicates. The old-bazel rungs
+          # exist as build-system-compat checks; the warning bar is enforced by
+          # every bazel-9 job, so relax -Wpedantic here rather than carve out
+          # each external finding compiler by compiler.
+          case "$(tr -d '[:space:]' < .bazelversion)" in
+            7.*|8.*)
+              BAZEL_ARGS+=("--cxxopt=-Wno-pedantic" "--host_cxxopt=-Wno-pedantic") ;;
+          esac
           if [ -n "${SDKPATH:-}" ]; then
             BAZEL_ARGS+=(--action_env=SDKROOT=${SDKPATH})
           fi
