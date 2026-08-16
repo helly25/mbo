@@ -25,7 +25,7 @@ checked only after its pull request has been merged.
   - Check `seekg`/`tellg` before converting the size.
   - Read in binary mode so byte counts remain consistent across platforms.
   - Add failure-path tests where practical.
-  - PR: pending.
+  - PR: [#329](https://github.com/helly25/mbo/pull/329).
 - [ ] Make `GetMaxLines` distinguish EOF from an I/O failure.
   - Return an error when the stream enters `badbit`.
   - Add regression coverage.
