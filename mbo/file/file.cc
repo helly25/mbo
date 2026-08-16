@@ -137,7 +137,9 @@ absl::StatusOr<std::string> GetMaxLines(const std::filesystem::path& file_name, 
 
   while (curr_line++ < max_lines) {
     line.clear();
-    std::getline(ifs, line, '\n');
+    if (!std::getline(ifs, line, '\n') && !ifs.eof()) {
+      return absl::UnknownError(absl::StrFormat("Unable to read file: '%s'", file_name));
+    }
     absl::StrAppend(&result, line);
     if (ifs.eof()) {
       break;

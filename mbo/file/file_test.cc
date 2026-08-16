@@ -148,6 +148,12 @@ TEST_F(FileTest, GetMaxLines) {
   }
 }
 
+#ifdef __linux__
+TEST_F(FileTest, GetMaxLinesReportsReadError) {
+  EXPECT_THAT(GetMaxLines("/proc/self/mem", 1), StatusIs(absl::StatusCode::kUnknown, HasSubstr("Unable to read file")));
+}
+#endif
+
 TEST_F(FileTest, IsAbsolutePath) {
   EXPECT_TRUE(IsAbsolutePath(tmp_dir));
 }

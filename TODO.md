@@ -21,7 +21,7 @@ checked only after its pull request has been merged.
 
 ## File API robustness and portability
 
-- [ ] Make `GetContents` handle failed seeks and non-seekable inputs safely.
+- [x] Make `GetContents` handle failed seeks and non-seekable inputs safely.
   - Check `seekg`/`tellg` before converting the size.
   - Read in binary mode so byte counts remain consistent across platforms.
   - Add failure-path tests where practical.
