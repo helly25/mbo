@@ -10,7 +10,7 @@ checked only after its pull request has been merged.
   - Replace placement construction over live iterator objects with ordinary
     variant assignment and default same-type special members where possible.
   - Cover copy, move, mutable-to-const, self, array, and object assignments.
-  - PR: pending.
+  - PR: [#326](https://github.com/helly25/mbo/pull/326).
 - [ ] Reject truncated glob ranges without accessing an empty pattern.
   - Cover `[`, `[-`, `[a-`, negative ranges, and trailing escapes.
   - PR: pending.
