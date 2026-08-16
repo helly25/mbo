@@ -13,7 +13,7 @@ checked only after its pull request has been merged.
   - PR: [#326](https://github.com/helly25/mbo/pull/326).
 - [ ] Reject truncated glob ranges without accessing an empty pattern.
   - Cover `[`, `[-`, `[a-`, negative ranges, and trailing escapes.
-  - PR: pending.
+  - PR: [#327](https://github.com/helly25/mbo/pull/327).
 - [ ] Fix main-branch cache cleanup prefix matching.
   - Pass the prefix to `jq` without relying on expansion inside single quotes.
   - Add a regression test with representative cache keys.
