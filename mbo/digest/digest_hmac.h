@@ -36,7 +36,7 @@
 // independent reference.
 namespace mbo::digest {
 
-// NOLINTBEGIN(*-magic-numbers,*-easily-swappable-parameters,*-constant-array-index)
+// NOLINTBEGIN(*-magic-numbers,*-easily-swappable-parameters,*-constant-array-index,*-avoid-unchecked-container-access)
 
 // HMAC over `Algo`, e.g. `Hmac<sha256::Algorithm>`. One-shot:
 //
@@ -131,7 +131,7 @@ class HmacStreamer {
   Hmac<Algo>::StreamState state_;
 };
 
-// NOLINTEND(*-magic-numbers,*-easily-swappable-parameters,*-constant-array-index)
+// NOLINTEND(*-magic-numbers,*-easily-swappable-parameters,*-constant-array-index,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::digest
 

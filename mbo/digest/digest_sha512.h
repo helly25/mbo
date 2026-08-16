@@ -35,7 +35,7 @@
 // programmatically; all values are pinned in digest_test.cc.
 namespace mbo::digest {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-avoid-unchecked-container-access)
 // NOLINTBEGIN(readability-identifier-length): the two-letter working
 // variables in Compress mirror the spec's a..h (FIPS 180-4, section 6.4.2).
 
@@ -270,7 +270,7 @@ constexpr Algorithm::DigestType Digest(std::string_view data) noexcept {
 }  // namespace sha512_256
 
 // NOLINTEND(readability-identifier-length)
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::digest
 
