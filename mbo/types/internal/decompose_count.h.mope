@@ -117,10 +117,13 @@ auto MakeOverloadedSet(Ts&&... v) {
     return OverloadSet<Ts...>(std::forward<Ts>(v)...);
 }
 
+// __extension__ on each statement expression: the GNU extension is this file's
+// deliberate mechanism, and the keyword scopes -Wpedantic acceptance to exactly
+// these uses - under EVERY compiler, unlike a -Wno- flag tied to one config.
 template <typename T>
 auto DecomposeCountFunc(T&& v) {
 {{#num_fields=1;max_fields}}
-    auto fn{{num_fields}} = [](auto&& v) -> decltype(({
+    auto fn{{num_fields}} = [](auto&& v) -> decltype(__extension__({
       [[maybe_unused]] auto&& [{{#field=1;num_fields;;', '}}a{{field}}{{/field}}] = std::forward<decltype(v)>(v);
       std::integral_constant<std::size_t, {{num_fields}}>{};
     })){ return {}; };
