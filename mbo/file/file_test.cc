@@ -15,6 +15,7 @@
 
 #include "mbo/file/file.h"
 
+#include <atomic>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -80,11 +81,15 @@ TEST_F(FileTest, GetContentsPreservesBinaryBytes) {
 TEST_F(FileTest, GetContentsRejectsNonSeekableFile) {
   const fs::path fifo = JoinPaths(tmp_dir, "contents.fifo");
   ASSERT_EQ(::mkfifo(fifo.c_str(), 0600), 0);
-  const std::jthread writer([&fifo] {
-    std::ofstream output(fifo, std::ios_base::binary);
-    output << "contents";
+  std::atomic_bool reader_done = false;
+  const std::jthread writer([&fifo, &reader_done] {
+    const std::ofstream output(fifo, std::ios_base::binary);
+    while (!reader_done.load()) {
+      std::this_thread::yield();
+    }
   });
   EXPECT_THAT(GetContents(fifo), StatusIs(absl::StatusCode::kUnknown, HasSubstr("Unable to determine file size")));
+  reader_done = true;
 }
 #endif
 
