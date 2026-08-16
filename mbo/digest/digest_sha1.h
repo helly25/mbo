@@ -35,7 +35,7 @@
 // content. Use SHA-256 (or wider) for adversarial integrity.
 namespace mbo::digest {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-avoid-unchecked-container-access)
 
 namespace sha1_internal {
 
@@ -191,7 +191,7 @@ struct Algorithm {
 
 }  // namespace sha1
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::digest
 

@@ -35,7 +35,7 @@
 // own MAC, no HMAC construction needed.
 namespace mbo::digest {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters,*-avoid-unchecked-container-access)
 // NOLINTBEGIN(readability-identifier-length): MixG's parameters mirror the
 // spec's a/b/c/d state indices and x/y message words (RFC 7693, section 3.1).
 
@@ -243,7 +243,7 @@ constexpr Algorithm::DigestType Digest(std::string_view data) noexcept {
 }  // namespace blake2b_256
 
 // NOLINTEND(readability-identifier-length)
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::digest
 
