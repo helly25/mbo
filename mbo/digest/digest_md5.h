@@ -38,7 +38,7 @@
 // Use SHA-256 for adversarial integrity.
 namespace mbo::digest {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-avoid-unchecked-container-access)
 
 namespace md5_internal {
 
@@ -209,7 +209,7 @@ struct Algorithm {
 
 }  // namespace md5
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::digest
 

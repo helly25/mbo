@@ -28,7 +28,7 @@
 
 namespace mbo::hash::fambo {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters,readability-identifier-length)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters,readability-identifier-length,*-avoid-unchecked-container-access)
 
 inline constexpr uint64_t kDefaultSeed = ::mbo::hash::kDefaultSeed;
 
@@ -141,7 +141,7 @@ struct Algorithm {
   }
 };
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters,readability-identifier-length)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters,readability-identifier-length,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::hash::fambo
 

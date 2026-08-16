@@ -43,7 +43,7 @@
 // variant many hash tables use.
 namespace mbo::hash::siphash {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-avoid-unchecked-container-access)
 
 namespace siphash_internal {
 
@@ -206,7 +206,7 @@ struct Algorithm {
   }
 };
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::hash::siphash
 

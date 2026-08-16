@@ -39,7 +39,7 @@
 // xxHash implementations and tools.
 namespace mbo::hash::xxh64 {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-avoid-unchecked-container-access)
 
 inline constexpr uint64_t kPrime1 = 0x9E3779B185EBCA87ULL;
 inline constexpr uint64_t kPrime2 = 0xC2B2AE3D27D4EB4FULL;
@@ -194,7 +194,7 @@ struct Algorithm {
   }
 };
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::hash::xxh64
 

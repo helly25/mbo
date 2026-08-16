@@ -46,7 +46,7 @@
 // follows the public specification (see the repository-root NOTICE file).
 namespace mbo::digest {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters,*-avoid-unchecked-container-access)
 
 namespace blake3_internal {
 
@@ -402,7 +402,7 @@ struct Algorithm {
 
 }  // namespace blake3
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::digest
 
