@@ -884,8 +884,11 @@ TEST_F(HasherTest, TopLevelFunctionsArePluggable) {
 // ---------------------------------------------------------------------------
 TEST_F(HasherTest, WorksAsTransparentContainerFunctor) {
   absl::flat_hash_map<std::string, int, DefaultHasher, std::equal_to<>> map;
+  // map insert: operator[] creates the entry, so there is no range to exceed.
+  // NOLINTBEGIN(*-avoid-unchecked-container-access)
   map["alpha"] = 1;
   map["beta"] = 2;
+  // NOLINTEND(*-avoid-unchecked-container-access)
   const std::string_view lookup = "alpha";  // heterogeneous: no temporary std::string
   const auto it = map.find(lookup);
   ASSERT_THAT(it, Ne(map.end()));

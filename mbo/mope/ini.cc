@@ -33,6 +33,8 @@ absl::Status ReadIniToTemlate(std::string_view ini_filename, Template& root_temp
   using SectionPath = std::vector<std::pair<std::string, std::string>>;
   MBO_ASSIGN_OR_RETURN(const mbo::file::IniFile ini, mbo::file::IniFile::Read(ini_filename));
   absl::btree_map<SectionPath, mbo::mope::Template*> sections;
+  // map insert: operator[] creates the entry, so there is no range to exceed.
+  // NOLINTNEXTLINE(*-avoid-unchecked-container-access)
   sections[{{"", ""}}] = &root_template;
   for (const std::string& group : ini.GetGroups()) {
     mbo::mope::Template* target = &root_template;

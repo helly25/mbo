@@ -111,6 +111,8 @@ class Entries {
       size_ += size;
       size_max_ = std::max(size_max_, size);
       if (sum_extensions_) {
+        // NOLINTBEGIN(*-avoid-unchecked-container-access)
+        // map insert: operator[] creates the entry, so there is no range to exceed.
         if (glob_entry.entry.path().has_extension()) {
           const auto ext = glob_entry.entry.path().extension().string();
           ++extensions_[absl::StrCat("FileExt(", ext, ")")];
@@ -124,6 +126,7 @@ class Entries {
           ++extensions_["FileExt()"];
           extensions_["FileSize()"] += size;
         }
+        // NOLINTEND(*-avoid-unchecked-container-access)
       }
     } else {
       ++other_;
