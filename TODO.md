@@ -14,7 +14,7 @@ checked only after its pull request has been merged.
 - [x] Reject truncated glob ranges without accessing an empty pattern.
   - Cover `[`, `[-`, `[a-`, negative ranges, and trailing escapes.
   - PR: [#327](https://github.com/helly25/mbo/pull/327).
-- [ ] Fix main-branch cache cleanup prefix matching.
+- [x] Fix main-branch cache cleanup prefix matching.
   - Pass the prefix to `jq` without relying on expansion inside single quotes.
   - Add a regression test with representative cache keys.
   - PR: [#328](https://github.com/helly25/mbo/pull/328).
@@ -25,7 +25,7 @@ checked only after its pull request has been merged.
   - Check `seekg`/`tellg` before converting the size.
   - Read in binary mode so byte counts remain consistent across platforms.
   - Add failure-path tests where practical.
-  - PR: pending.
+  - PR: [#329](https://github.com/helly25/mbo/pull/329).
 - [ ] Make `GetMaxLines` distinguish EOF from an I/O failure.
   - Return an error when the stream enters `badbit`.
   - Add regression coverage.

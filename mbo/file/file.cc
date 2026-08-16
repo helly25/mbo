@@ -21,6 +21,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -67,7 +68,7 @@ absl::Status Readable(const std::filesystem::path& file_name) {
   // to check for readability.
   std::ifstream ifs;
   ifs.exceptions(static_cast<std::ios_base::iostate>(0));
-  ifs.open(file_name, std::ios_base::in);
+  ifs.open(file_name, std::ios_base::in | std::ios_base::binary);
   if (!ifs) {
     return absl::NotFoundError(absl::StrFormat("Unable to read file: '%s'", file_name));
   }
@@ -83,9 +84,26 @@ absl::StatusOr<std::string> GetContents(const std::filesystem::path& file_name) 
     return absl::NotFoundError(absl::StrFormat("Unable to read file: '%s'", file_name));
   }
   ifs.seekg(0, std::ios::end);  // As opposed to adding mode `ate`
-  auto end = ifs.tellg();
+  if (!ifs) {
+    return absl::UnknownError(absl::StrFormat("Unable to determine file size: '%s'", file_name));
+  }
+  const auto end = ifs.tellg();
+  if (end == std::ifstream::pos_type(-1)) {
+    return absl::UnknownError(absl::StrFormat("Unable to determine file size: '%s'", file_name));
+  }
   ifs.seekg(0, std::ios::beg);
-  auto size = end - ifs.tellg();
+  if (!ifs) {
+    return absl::UnknownError(absl::StrFormat("Unable to seek in file: '%s'", file_name));
+  }
+  const auto begin = ifs.tellg();
+  if (begin == std::ifstream::pos_type(-1)) {
+    return absl::UnknownError(absl::StrFormat("Unable to determine file size: '%s'", file_name));
+  }
+  const auto size = end - begin;
+
+  if (size < 0 || size > std::numeric_limits<std::streamsize>::max()) {
+    return absl::ResourceExhaustedError(absl::StrFormat("File is too large to read: '%s'", file_name));
+  }
 
   if (size == 0) {
     return "";
@@ -94,7 +112,7 @@ absl::StatusOr<std::string> GetContents(const std::filesystem::path& file_name) 
   std::string result;
   result.resize(static_cast<std::size_t>(size));
 
-  if (!ifs.read(result.data(), size)) {
+  if (!ifs.read(result.data(), static_cast<std::streamsize>(size))) {
     return absl::UnknownError(absl::StrFormat("Unable to read file: '%s'", file_name));
   }
 
