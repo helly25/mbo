@@ -30,6 +30,10 @@
 
 namespace mbo::types {
 
+// NOLINTBEGIN(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
+// OptionalDataOrRef IS a union of owned data and a reference to foreign data.
+// Reading whichever member is active is the entire mechanism of the type.
+
 // NOLINTBEGIN(*-identifier-naming)
 
 template<typename T, typename RefT = T>
@@ -365,6 +369,8 @@ concept IsOptionalDataOrRef = requires {
 };
 
 // NOLINTEND(*-identifier-naming)
+
+// NOLINTEND(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
 
 }  // namespace mbo::types
 

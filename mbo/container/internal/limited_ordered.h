@@ -45,6 +45,10 @@
 
 namespace mbo::container::container_internal {
 
+// NOLINTBEGIN(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
+// LimitedSet/LimitedMap storage: a union keeps unused capacity uninitialized,
+// and the iterators are pointers into it. This is the implementation.
+
 // NOLINTBEGIN(readability-identifier-naming)
 
 template<typename Key, typename Mapped, typename Value>
@@ -1180,6 +1184,8 @@ class [[nodiscard]] LimitedOrdered {
 };
 
 // NOLINTEND(readability-identifier-naming)
+
+// NOLINTEND(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
 
 }  // namespace mbo::container::container_internal
 
