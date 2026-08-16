@@ -16,7 +16,13 @@
 #include "mbo/file/file.h"
 
 #include <filesystem>
+#include <fstream>
 #include <string>
+#include <thread>
+
+#ifndef _WIN32
+# include <sys/stat.h>
+#endif
 
 #include "absl/status/status.h"
 #include "gmock/gmock.h"
@@ -62,6 +68,25 @@ TEST_F(FileTest, SetGetContentsWithZero) {
   EXPECT_THAT(SetContents(tmp_file.string(), "foo\0bar"), IsOk());
   EXPECT_THAT(GetContents(tmp_file.string()), IsOkAndHolds("foo\0bar"));
 }
+
+TEST_F(FileTest, GetContentsPreservesBinaryBytes) {
+  const fs::path tmp_file = JoinPaths(tmp_dir, "binary.txt");
+  constexpr std::string_view kContents = "line one\r\nline two\0tail";
+  ASSERT_OK(SetContents(tmp_file, kContents));
+  EXPECT_THAT(GetContents(tmp_file), IsOkAndHolds(kContents));
+}
+
+#ifndef _WIN32
+TEST_F(FileTest, GetContentsRejectsNonSeekableFile) {
+  const fs::path fifo = JoinPaths(tmp_dir, "contents.fifo");
+  ASSERT_EQ(::mkfifo(fifo.c_str(), 0600), 0);
+  const std::jthread writer([&fifo] {
+    std::ofstream output(fifo, std::ios_base::binary);
+    output << "contents";
+  });
+  EXPECT_THAT(GetContents(fifo), StatusIs(absl::StatusCode::kUnknown, HasSubstr("Unable to determine file size")));
+}
+#endif
 
 TEST_F(FileTest, Readable) {
   EXPECT_THAT(
