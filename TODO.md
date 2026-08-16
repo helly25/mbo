@@ -29,7 +29,7 @@ checked only after its pull request has been merged.
 - [ ] Make `GetMaxLines` distinguish EOF from an I/O failure.
   - Return an error when the stream enters `badbit`.
   - Add regression coverage.
-  - PR: pending.
+  - PR: [#330](https://github.com/helly25/mbo/pull/330).
 - [ ] Make `NormalizePath` portable across native path character types.
   - Avoid constructing `std::string_view` directly from `path.c_str()`.
   - Add or document Windows-oriented behavior and tests.
