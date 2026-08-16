@@ -85,8 +85,8 @@ std::string ToHexString(const std::array<uint8_t, N>& digest) {
   std::string result;
   result.reserve(2 * N);
   for (const uint8_t byte : digest) {
-    result += kHexChars[byte >> 4U];
-    result += kHexChars[byte & 0x0FU];  // NOLINT(*-magic-numbers)
+    result += kHexChars[byte >> 4U];    // NOLINT(*-avoid-unchecked-container-access): 4-bit index, 16 chars.
+    result += kHexChars[byte & 0x0FU];  // NOLINT(*-magic-numbers,*-avoid-unchecked-container-access): 4-bit index.
   }
   return result;
 }

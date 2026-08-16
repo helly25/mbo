@@ -186,8 +186,8 @@ bool ParseChecksumLine(
     std::size_t hex_length,
     std::string_view& hex,
     std::string_view& file_name) {
-  if (line.size() < hex_length + 3 || line[hex_length] != ' '
-      || (line[hex_length + 1] != ' ' && line[hex_length + 1] != '*')) {
+  if (line.size() < hex_length + 3 || line.at(hex_length) != ' '
+      || (line.at(hex_length + 1) != ' ' && line.at(hex_length + 1) != '*')) {
     return false;
   }
   hex = line.substr(0, hex_length);
@@ -344,12 +344,12 @@ int main(int argc, char* argv[]) {
   const mbo::digest::NamedAlgorithm* algorithm = mbo::digest::FindAlgorithm(algorithm_name);
   if (algorithm == nullptr) {
     std::cerr << "Unknown --algorithm '" << algorithm_name
-              << "'. Use: " << std::filesystem::path(args[0]).filename().string() << " --help\n";
+              << "'. Use: " << std::filesystem::path(args.front()).filename().string() << " --help\n";
     return 1;
   }
   if (args.size() < 2) {  // [0] = program
     std::cerr << "At least one file (or '-' for stdin) is required. Use: "
-              << std::filesystem::path(args[0]).filename().string() << " --help\n";
+              << std::filesystem::path(args.front()).filename().string() << " --help\n";
     return 1;
   }
   if (!absl::GetFlag(FLAGS_cwd).empty()) {

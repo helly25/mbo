@@ -114,17 +114,17 @@ TYPED_TEST(HashTest, ConstexprMatchesRuntime) {
       "a long probe that spans multiple 32-byte stripes of the large-input hashing loop",
   };
   constexpr std::array<uint64_t, 3> kCompile{
-      TypeParam::GetHash64(kProbes[0], kSeed),
-      TypeParam::GetHash64(kProbes[1], kSeed),
-      TypeParam::GetHash64(kProbes[2], kSeed),
+      TypeParam::GetHash64(kProbes.at(0), kSeed),
+      TypeParam::GetHash64(kProbes.at(1), kSeed),
+      TypeParam::GetHash64(kProbes.at(2), kSeed),
   };
   for (std::size_t i = 0; i < kProbes.size(); ++i) {
     std::string_view runtime = kProbes.at(i);  // NOLINT(misc-const-correctness): non-const forces the runtime path
     EXPECT_THAT(kCompile.at(i), Eq(TypeParam::GetHash64(runtime, kSeed))) << "probe: \"" << runtime << "\"";
   }
   if constexpr (HasGetHash128<TypeParam>) {
-    constexpr Hash128 kCompile128 = TypeParam::GetHash128(kProbes[2], kSeed);
-    std::string_view runtime = kProbes[2];  // NOLINT(misc-const-correctness): non-const forces the runtime path
+    constexpr Hash128 kCompile128 = TypeParam::GetHash128(kProbes.at(2), kSeed);
+    std::string_view runtime = kProbes.at(2);  // NOLINT(misc-const-correctness): non-const forces the runtime path
     EXPECT_THAT(kCompile128, Eq(TypeParam::GetHash128(runtime, kSeed)));
   }
 }
@@ -182,7 +182,8 @@ TYPED_TEST(HashTest, Avalanche) {
       const std::size_t bit = rng() % (base.size() * 8);
       std::string mutated = base;
       const unsigned mask = 1U << (bit % 8U);
-      mutated[bit / 8] = static_cast<char>(static_cast<unsigned>(static_cast<unsigned char>(mutated[bit / 8])) ^ mask);
+      mutated.at(bit / 8) =
+          static_cast<char>(static_cast<unsigned>(static_cast<unsigned char>(mutated.at(bit / 8))) ^ mask);
       const uint64_t hash1 = TypeParam::GetHash64(mutated, kSeed);
       flipped += static_cast<std::size_t>(std::popcount(hash0 ^ hash1));
     }
@@ -244,7 +245,7 @@ TYPED_TEST(HashTest, StructuredKeysAreDistinct) {
   for (const std::size_t len : std::array<std::size_t, 2>{16, 64}) {
     for (std::size_t bit = 0; bit < len * 8; ++bit) {
       std::string key(len, '\0');
-      key[bit / 8] = static_cast<char>(1U << (bit % 8U));
+      key.at(bit / 8) = static_cast<char>(1U << (bit % 8U));
       inputs.insert(std::move(key));
     }
   }
@@ -427,7 +428,7 @@ TEST_F(KnownAnswerTest, Xxh64) {
 inline std::string PatternBuffer(std::size_t len) {
   std::string result(len, '\0');
   for (std::size_t i = 0; i < len; ++i) {
-    result[i] = static_cast<char>(((i * 131) + 7) % 256);
+    result.at(i) = static_cast<char>(((i * 131) + 7) % 256);
   }
   return result;
 }
@@ -666,7 +667,7 @@ static_assert(CountKatAlgo(kat::Algo::kJumbo) >= 20);
 static_assert(CountKatAlgo(kat::Algo::kDumbo) >= 20);
 static_assert(CountKatAlgo(kat::Algo::kFambo) >= 20);
 // Constexpr smoke (kVectors[0] is mumbo, seed 0, empty input).
-static_assert(mumbo::GetHash64("", 0) == kat::kVectors[0].low);
+static_assert(mumbo::GetHash64("", 0) == kat::kVectors.at(0).low);
 
 // Compile-time guard for tembo: every input byte must influence the hash.
 //
@@ -685,7 +686,7 @@ template<std::size_t kLen>
 constexpr std::array<char, kLen> TemboBytePattern() {
   std::array<char, kLen> data{};
   for (std::size_t i = 0; i < kLen; ++i) {
-    data[i] = static_cast<char>((i * 7) + 3);  // NOLINT(*-magic-numbers)
+    data.at(i) = static_cast<char>((i * 7) + 3);  // NOLINT(*-magic-numbers)
   }
   return data;
 }
@@ -698,10 +699,10 @@ constexpr bool TemboEveryByteMatters(std::size_t begin, std::size_t end) {
   const uint64_t base =
       tembo::GetHash64<kNumLanes, kNumConsts, kSecretLoopInit>(std::string_view(data.data(), kLen), kSeed);
   for (std::size_t i = begin; i < end; ++i) {
-    data[i] = static_cast<char>(data[i] ^ 0x5A);  // NOLINT(*-magic-numbers)
+    data.at(i) = static_cast<char>(data.at(i) ^ 0x5A);  // NOLINT(*-magic-numbers)
     const uint64_t hash =
         tembo::GetHash64<kNumLanes, kNumConsts, kSecretLoopInit>(std::string_view(data.data(), kLen), kSeed);
-    data[i] = static_cast<char>(data[i] ^ 0x5A);  // NOLINT(*-magic-numbers)
+    data.at(i) = static_cast<char>(data.at(i) ^ 0x5A);  // NOLINT(*-magic-numbers)
     if (hash == base) {
       return false;  // byte i is dead: it never reaches the output
     }

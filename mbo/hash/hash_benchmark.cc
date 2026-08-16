@@ -270,13 +270,13 @@ const std::vector<std::string>& ThroughputKeys(std::size_t dist_index, std::size
   static const std::array<std::array<std::vector<std::string>, kCdfPoints>, kLatencyDists.size()> kKeySets = [] {
     std::array<std::array<std::vector<std::string>, kCdfPoints>, kLatencyDists.size()> sets;
     for (std::size_t dist_idx = 0; dist_idx < kLatencyDists.size(); ++dist_idx) {
-      const LatencyDist& dist = kLatencyDists[dist_idx];
+      const LatencyDist& dist = kLatencyDists.at(dist_idx);
       for (std::size_t point = 0; point < kCdfPoints; ++point) {
         // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c,bugprone-random-generator-seed): fixed, reproducible set
         std::mt19937_64 rng(0x1a7e9c1);
-        const double bound_pct = dist.cdf[point].first;
-        const auto bound_len = static_cast<std::size_t>(dist.cdf[point].second);
-        std::vector<std::string>& keys = sets[dist_idx][point];
+        const double bound_pct = dist.cdf.at(point).first;
+        const auto bound_len = static_cast<std::size_t>(dist.cdf.at(point).second);
+        std::vector<std::string>& keys = sets.at(dist_idx).at(point);
         keys.reserve(kLatencyKeys);
         for (std::size_t i = 0; i + 1 < kLatencyKeys; ++i) {
           const double draw = static_cast<double>(rng()) / (static_cast<double>(UINT64_MAX) + 1.0);
@@ -287,7 +287,7 @@ const std::vector<std::string>& ThroughputKeys(std::size_t dist_index, std::size
     }
     return sets;
   }();
-  return kKeySets[dist_index][bound_index];
+  return kKeySets.at(dist_index).at(bound_index);
 }
 
 template<typename Algo>
@@ -300,6 +300,7 @@ void BmHash64Throughput(benchmark::State& state, std::size_t dist_index, std::si
   }
   std::size_t counter = 0;
   for (auto _ : state) {
+    // NOLINTNEXTLINE(*-avoid-unchecked-container-access): timed loop; the power-of-two mask keeps it in range.
     benchmark::DoNotOptimize(Algo::GetHash64(keys[counter++ & (kLatencyKeys - 1)], kSeed));
   }
   state.SetItemsProcessed(state.iterations());
@@ -318,6 +319,7 @@ void BmHash128Throughput(benchmark::State& state, std::size_t dist_index, std::s
   }
   std::size_t counter = 0;
   for (auto _ : state) {
+    // NOLINTNEXTLINE(*-avoid-unchecked-container-access): timed loop; the power-of-two mask keeps it in range.
     benchmark::DoNotOptimize(Algo::GetHash128(keys[counter++ & (kLatencyKeys - 1)], kSeed));
   }
   state.SetItemsProcessed(state.iterations());
@@ -345,8 +347,8 @@ void RegisterAlgo() {
       for (std::size_t bound = 0; bound < kCdfPoints; ++bound) {
         benchmark::RegisterBenchmark(
             absl::StrCat(
-                "BmHash64Throughput<", name, ">/", kLatencyDists[dist].name, ":",
-                kLatencyDists[dist].cdf[bound].second),
+                "BmHash64Throughput<", name, ">/", kLatencyDists.at(dist).name, ":",
+                kLatencyDists.at(dist).cdf.at(bound).second),
             [dist, bound](benchmark::State& state) { BmHash64Throughput<Algo>(state, dist, bound); });
       }
     }
@@ -360,8 +362,8 @@ void RegisterAlgo() {
       for (std::size_t bound = 0; bound < kCdfPoints; ++bound) {
         benchmark::RegisterBenchmark(
             absl::StrCat(
-                "BmHash128Throughput<", name, ">/", kLatencyDists[dist].name, ":",
-                kLatencyDists[dist].cdf[bound].second),
+                "BmHash128Throughput<", name, ">/", kLatencyDists.at(dist).name, ":",
+                kLatencyDists.at(dist).cdf.at(bound).second),
             [dist, bound](benchmark::State& state) { BmHash128Throughput<Algo>(state, dist, bound); });
       }
     }

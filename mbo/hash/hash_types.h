@@ -57,6 +57,7 @@ struct Hash128 {
     std::size_t pos = 2;
     for (const uint64_t lane : lanes) {
       for (int shift = 60; shift >= 0; shift -= 4) {
+        // NOLINTNEXTLINE(*-avoid-unchecked-container-access): 4-bit nibble into 16 chars; pos bounded by the format.
         buffer[pos++] = kHex[(lane >> static_cast<unsigned>(shift)) & 0xFU];
       }
     }

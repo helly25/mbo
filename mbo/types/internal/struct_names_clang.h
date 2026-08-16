@@ -161,8 +161,7 @@ class StructMeta final {
       std::string_view name = {},
       ...) {
     if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent == "  ") {
-      fields[field_index++] = {
-          // NOLINT(*-array-index)
+      fields.at(field_index++) = {
           .name = name,
           .type = type,
       };
@@ -190,7 +189,7 @@ class StructMeta final {
     std::array<std::string_view, kFieldCount> data;
     if constexpr (!IsEmptyType<T>) {
       for (std::size_t pos = 0; pos < kFieldCount; ++pos) {
-        data[pos] = kFieldData[pos].name;
+        data.at(pos) = kFieldData.at(pos).name;
       }
     }
     return data;
@@ -231,7 +230,7 @@ class StructMeta<T, true, false> final {
       std::string_view name = {},
       ...) {
     if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent == "  ") {
-      fields[field_index++] /* NOLINT(*-array-index) */ = {
+      fields.at(field_index++) = {
           .name = name,
           .type = type,
       };
@@ -265,7 +264,7 @@ class StructMeta<T, true, false> final {
       std::size_t pos = 0;
 # endif
       for (; pos < kFieldCount; ++pos) {
-        data[pos] = kFieldData[pos].name;
+        data.at(pos) = kFieldData.at(pos).name;
       }
     }
     return data;

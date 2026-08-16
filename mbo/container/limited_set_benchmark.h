@@ -34,6 +34,10 @@
 
 namespace mbo::container {
 
+// NOLINTBEGIN(*-avoid-unchecked-container-access): benchmark harness - the
+// timed loops measure the container's access itself, and every index wraps
+// within the generated test data by construction.
+
 class Random {
  public:
   static constexpr int kUniformValueMin = std::numeric_limits<int>::min();
@@ -167,6 +171,8 @@ std::string MakeName(std::string_view compare, std::string_view flags, std::stri
       },
       ", ");
 }
+
+// NOLINTEND(*-avoid-unchecked-container-access)
 
 }  // namespace mbo::container
 

@@ -378,6 +378,20 @@ TEST_F(LimitedVectorTest, Compare) {
   EXPECT_THAT(k42v25, Ge(k42));
 }
 
+TEST_F(LimitedVectorTest, ComparePartiallyFilled) {
+  // The comparison loops used to run to min(capacity, capacity) instead of
+  // min(size, size), reading uninitialized slots (or throwing under a
+  // require-throws build) whenever the vectors were not full.
+  const LimitedVector<int, 5UL> lhs{1, 2};
+  const LimitedVector<int, 5UL> rhs{1, 2};
+  EXPECT_THAT(lhs == rhs, true);
+  EXPECT_THAT((lhs <=> rhs) == 0, true);
+  EXPECT_THAT(lhs < rhs, false);
+  const LimitedVector<int, 7UL> shorter{1};
+  EXPECT_THAT(shorter < lhs, true);
+  EXPECT_THAT(lhs == shorter, false);
+}
+
 TEST_F(LimitedVectorTest, CompareDifferentType) {
   const auto k42v25 = MakeLimitedVector<std::string>("42", "25");
   constexpr auto k42o25 = MakeLimitedVector<std::string_view>("42", "25");

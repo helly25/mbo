@@ -55,9 +55,8 @@ constexpr std::array<uint8_t, DigestSize> FromHex(std::string_view hex) noexcept
     return result;  // Wrong-length vector: returns zeros, which cannot match a real digest.
   }
   for (std::size_t i = 0; i < DigestSize; ++i) {
-    // NOLINTNEXTLINE(*-constant-array-index)
-    result[i] = static_cast<uint8_t>(
-        (static_cast<uint32_t>(Nibble(hex[2 * i])) << 4U) | static_cast<uint32_t>(Nibble(hex[(2 * i) + 1])));
+    result.at(i) = static_cast<uint8_t>(
+        (static_cast<uint32_t>(Nibble(hex.at(2 * i))) << 4U) | static_cast<uint32_t>(Nibble(hex.at((2 * i) + 1))));
   }
   return result;
 }
@@ -494,8 +493,8 @@ TYPED_TEST(DigestTest, KnownAnswers) {
 TYPED_TEST(DigestTest, ConstexprMatchesRuntime) {
   using Traits = AlgoTraits<TypeParam>;
   // Compile-time proof for one vector per padding case...
-  static constexpr auto kCompileTime = TypeParam::Digest(Traits::kVectors[1].input);  // "abc"
-  static_assert(kCompileTime == FromHex<TypeParam::kDigestSize>(AlgoTraits<TypeParam>::kVectors[1].hex));
+  static constexpr auto kCompileTime = TypeParam::Digest(Traits::kVectors.at(1).input);  // "abc"
+  static_assert(kCompileTime == FromHex<TypeParam::kDigestSize>(AlgoTraits<TypeParam>::kVectors.at(1).hex));
   // ...and runtime==constexpr equality across all vectors (guards the
   // dual-path `Load32BE`).
   for (const TestVector& vector : Traits::kVectors) {
@@ -695,7 +694,7 @@ std::string Blake3PatternInput(std::size_t len) {
   std::string input(len, '\0');
   for (std::size_t i = 0; i < len; ++i) {
     constexpr std::size_t kPatternPeriod = 251;  // The official vectors' repeating byte pattern.
-    input[i] = static_cast<char>(i % kPatternPeriod);
+    input.at(i) = static_cast<char>(i % kPatternPeriod);
   }
   return input;
 }
@@ -749,10 +748,11 @@ TEST(Blake3Test, KeyedStreamingMatchesOneShot) {
 }
 
 // Compile-time proof for all three BLAKE3 modes (first official vector rows).
-static_assert(blake3::Digest("") == FromHex<blake3::kDigestSize>(kBlake3OfficialVectors[0].hash32));
-static_assert(blake3::DigestKeyed(kBlake3Key, "") == FromHex<blake3::kDigestSize>(kBlake3OfficialVectors[0].keyed32));
+static_assert(blake3::Digest("") == FromHex<blake3::kDigestSize>(kBlake3OfficialVectors.at(0).hash32));
 static_assert(
-    blake3::DeriveKey(kBlake3Context, "") == FromHex<blake3::kDigestSize>(kBlake3OfficialVectors[0].derived32));
+    blake3::DigestKeyed(kBlake3Key, "") == FromHex<blake3::kDigestSize>(kBlake3OfficialVectors.at(0).keyed32));
+static_assert(
+    blake3::DeriveKey(kBlake3Context, "") == FromHex<blake3::kDigestSize>(kBlake3OfficialVectors.at(0).derived32));
 
 // SHAKE outputs longer than the rate need squeeze-block iteration; 200 bytes
 // crosses it for both rates (168/136). Values from python hashlib.
@@ -828,7 +828,7 @@ TEST(Blake2bTest, KeyedKnownAnswers) {
 }
 
 TEST(Blake2bTest, KeyedStreamingMatchesOneShot) {
-  const Blake2bKeyedVector& vector = kBlake2bKeyedVectors[3];  // 64-byte key, 129-byte message.
+  const Blake2bKeyedVector& vector = kBlake2bKeyedVectors.at(3);  // 64-byte key, 129-byte message.
   auto state = blake2b::Algorithm::StreamInitKeyed(vector.key);
   for (const char& chr : vector.message) {
     blake2b::Algorithm::StreamUpdate(state, std::string_view(&chr, 1));
@@ -920,9 +920,9 @@ struct HmacTraits<sha3_256::Algorithm> {
 // Compile-time proof that HMAC is constexpr end to end.
 static_assert(
     Hmac<sha256::Algorithm>::Digest(
-        HmacTraits<sha256::Algorithm>::kVectors[0].key,
-        HmacTraits<sha256::Algorithm>::kVectors[0].message)
-    == FromHex<sha256::kDigestSize>(HmacTraits<sha256::Algorithm>::kVectors[0].hex));
+        HmacTraits<sha256::Algorithm>::kVectors.at(0).key,
+        HmacTraits<sha256::Algorithm>::kVectors.at(0).message)
+    == FromHex<sha256::kDigestSize>(HmacTraits<sha256::Algorithm>::kVectors.at(0).hex));
 
 template<typename Algo>
 class HmacTest : public ::testing::Test {};
@@ -939,7 +939,7 @@ TYPED_TEST(HmacTest, KnownAnswers) {
 }
 
 TYPED_TEST(HmacTest, StreamingMatchesOneShotAndPeeks) {
-  const HmacVector& vector = HmacTraits<TypeParam>::kVectors[0];
+  const HmacVector& vector = HmacTraits<TypeParam>::kVectors.at(0);
   HmacStreamer<TypeParam> stream(vector.key);
   for (const char& chr : vector.message) {
     stream.Update(std::string_view(&chr, 1));
