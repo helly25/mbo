@@ -25,6 +25,10 @@
 
 namespace mbo::types {
 
+// NOLINTBEGIN(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
+// NoDestruct holds its value in a union precisely so the destructor is never
+// run; accessing the member is the point of the type.
+
 // NOLINTBEGIN(*-pro-type-member-init)
 
 // Template `struct NoDestruct` allows to create `static const` (global) variables.
@@ -112,6 +116,8 @@ class NoDestruct final {
 };
 
 // NOLINTEND(*-pro-type-member-init)
+
+// NOLINTEND(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
 
 }  // namespace mbo::types
 

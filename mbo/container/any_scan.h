@@ -29,6 +29,9 @@
 
 namespace mbo::container {
 
+// NOLINTBEGIN(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
+// Type-erased scan machinery: it walks foreign storage through raw pointers.
+
 // Type `AnyScan` is similar to `std::span`, `std::range` and `absl::Span`. However it works with
 // any container that supports `begin()`, `end()` and whose `iterator` (likely the `const_iterator`)
 // is a `std::input_iterator`. Type `ConstScan` is similar to `absl::Span<const T>` made from
@@ -589,6 +592,8 @@ auto MakeConvertingScan(Container&& container) noexcept {
   return container_internal::MakeAnyScanData<Container, container_internal::ScanMode::kConverting>(
       std::forward<Container>(container));
 }
+
+// NOLINTEND(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
 
 }  // namespace mbo::container
 

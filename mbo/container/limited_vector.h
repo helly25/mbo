@@ -33,6 +33,11 @@
 
 namespace mbo::container {
 
+// NOLINTBEGIN(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
+// LimitedVector keeps its elements in a union so that unused capacity stays
+// uninitialized. Indexing that storage and reading the active member is the
+// container's implementation, not unchecked use of a container.
+
 // NOLINTBEGIN(readability-identifier-naming)
 
 template<typename T>
@@ -640,6 +645,8 @@ constexpr LimitedVector<std::remove_cvref_t<T>, LimitedOptions<N, Flags...>{}> T
 // NOLINTEND(*-avoid-c-arrays)
 
 // NOLINTEND(readability-identifier-naming)
+
+// NOLINTEND(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
 
 }  // namespace mbo::container
 

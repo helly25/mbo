@@ -27,7 +27,7 @@
 
 namespace mbo::hash::tembo {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters,readability-identifier-length,*-avoid-unchecked-container-access)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters,readability-identifier-length,*-avoid-unchecked-container-access)
 
 inline constexpr uint64_t kDefaultSeed = ::mbo::hash::kDefaultSeed;
 
@@ -688,7 +688,7 @@ struct Algorithm {
   }
 };
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-easily-swappable-parameters,readability-identifier-length,*-avoid-unchecked-container-access)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-easily-swappable-parameters,readability-identifier-length,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::hash::tembo
 

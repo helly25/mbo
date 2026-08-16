@@ -56,6 +56,9 @@ class StructMetaBase {
   template<typename U, bool, bool>
   friend class StructMeta;
 
+  // NOLINTBEGIN(*-pro-type-union-access): Storage IS a union - it holds either
+  // raw bytes or a T, so that a non-default-constructible T can be inspected
+  // without ever constructing one. Reading the active member is the mechanism.
   class Storage final {
    private:
     union Uninitialized {
@@ -97,6 +100,8 @@ class StructMetaBase {
    private:
     Uninitialized storage_;
   };
+
+  // NOLINTEND(*-pro-type-union-access)
 
   static constexpr int DumpStructFieldCounter(
       std::size_t& field_index,

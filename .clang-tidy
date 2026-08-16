@@ -4,12 +4,22 @@
 # the check name) and its PR. Sorted like the list below: by check name, ignoring
 # the leading '-'.
 #
-# The CppCoreGuidelines bounds/type-safety profile (pro-bounds-*, pro-type-union-
-# access, hicpp-no-array-decay) is off as a group: this library IS the container/
-# hash layer those checks assume code sits above. The one exception is
-# avoid-unchecked-container-access, ON since 2026-08-16. No ExcludeClasses: it
-# misses aliases and absl's inherited operator[], so exemptions live in the code
-# as ranged NOLINTs where they can be seen. It found a real bug.
+# The CppCoreGuidelines bounds/type-safety profile is triaged per check, not off
+# as a group: this library IS the container/hash layer those checks assume code
+# sits above, so each one is judged on where its findings actually land.
+#   ON  avoid-unchecked-container-access (2026-08-16). No ExcludeClasses: that
+#       option misses aliases and absl's inherited operator[], so exemptions live
+#       in the code as ranged NOLINTs where they can be seen. It found a real bug.
+#   ON  pro-type-union-access, pro-bounds-constant-array-index. 890 findings, but
+#       798 sit in four types whose union IS their storage (OptionalDataOrRef,
+#       LimitedVector, LimitedOrdered, NoDestruct) plus the kernels - all ranged
+#       NOLINT blocks, no code changed.
+#   OFF pro-bounds-pointer-arithmetic. Our iterators are raw pointers, so it fires
+#       on `it + n` - ordinary random-access iterator use, at every CALLER. A
+#       recurring tax on correct code, not a defect it can find.
+#   OFF pro-bounds-array-to-pointer-decay (= hicpp-no-array-decay). Fires wherever
+#       a string literal reaches generic code: StrAppend(&m, fwd<T>(arg)), the
+#       stream operators, forwarding ctors. Suppressing that is noise, not safety.
 #
 # abseil-unchecked-statusor-access: clang-tidy 22.1.8 SEGFAULTS in its dataflow on
 #   this code; re-test on a future LLVM.
@@ -27,8 +37,20 @@
 #   where constexpr does not exist.
 # cppcoreguidelines-avoid-magic-numbers (+ readability-magic-numbers, aliases):
 #   fire on test expectations and the numeric tables that ARE the subject.
-# hicpp-signed-bitwise: parity masks over signed ptrdiff_t in the Myers diff;
-#   diagonals run negative, the signedness is the algorithm's.
+# hicpp-*: off as a module, then two re-enabled. 27 of its 31 checks are ALIASES
+#   of checks we already run under their canonical names - verified: with both
+#   enabled a single diagnostic names both, e.g. `[cppcoreguidelines-pro-bounds-
+#   array-to-pointer-decay,hicpp-no-array-decay]`. Aliases add no coverage, only
+#   a second name and a second place to keep in sync. Of the 4 that are unique:
+#   - hicpp-exception-baseclass: ON. This repo does not use exceptions - the one
+#     path that can throw is MBO_CONFIG_REQUIRE under `kRequireThrows`, and it
+#     throws std::runtime_error. The check keeps it that way if that ever grows.
+#   - hicpp-multiway-paths-covered: ON. Wants every switch/if-else chain to cover
+#     its paths (default/else), which is a real bug class, not a style rule.
+#   - hicpp-signed-bitwise: OFF. Parity masks over signed ptrdiff_t in the Myers
+#     diff; diagonals run negative, the signedness is the algorithm's.
+#   - hicpp-no-assembler: OFF. No inline asm here; the check only adds noise if
+#     a portability-driven intrinsic ever needs it.
 # llvm-header-guard: STYLE_CPP mandates {PATH}_{FILE}_; the header-guards hook
 #   enforces what this check structurally cannot.
 # llvm-prefer-static-over-anonymous-namespace: anonymous namespaces are the
@@ -76,19 +98,17 @@ Checks: >
   clang-analyzer-*,
   clang-diagnostic-*,
   cppcoreguidelines-*,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-avoid-const-or-ref-data-members,
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-macro-usage,
-  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
-  -cppcoreguidelines-pro-bounds-constant-array-index,
-  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-  -cppcoreguidelines-pro-type-union-access,
   -fuchsia*,
   google-*,
   -google-build-using-namespace,
-  -hicpp-no-array-decay,
-  -hicpp-no-assembler,
-  -hicpp-signed-bitwise,
+  -hicpp-*,
+  hicpp-exception-baseclass,
+  hicpp-multiway-paths-covered,
   -llvm-else-after-return,
   -llvm-header-guard,
   -llvm-include-order,
