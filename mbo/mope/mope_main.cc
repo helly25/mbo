@@ -80,7 +80,7 @@ absl::Status ApplySetFlag(
     return absl::InvalidArgumentError(kEmptyPartError);
   }
   section_names.pop_back();
-  if (section_names.size() == 1 && section_names[0].empty()) {
+  if (section_names.size() == 1 && section_names.front().empty()) {
     context_data[key].assign(value);  // Global context_data
     return absl::OkStatus();
   }

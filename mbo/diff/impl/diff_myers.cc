@@ -42,6 +42,10 @@
 // NOLINTBEGIN(readability-identifier-length)
 
 namespace mbo::diff {
+
+// NOLINTBEGIN(*-avoid-unchecked-container-access): This file IS the Myers
+// kernel: every subscript is a diagonal index the algorithm keeps in range by
+// construction (kOutside sentinels pad both ends), on the hot path of the diff.
 namespace {
 
 // Sentinel written just outside the current diagonal window: smaller than any
@@ -327,6 +331,8 @@ DiffMyers::Snake DiffMyers::FindMiddleSnake(const Span& span) {
       .length = 0,
   };
 }
+
+// NOLINTEND(*-avoid-unchecked-container-access)
 
 }  // namespace mbo::diff
 

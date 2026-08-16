@@ -91,7 +91,7 @@ class DiffTest : public ::testing::Test {
       if (line.empty()) {
         continue;  // Trailing newline artifact.
       }
-      if (line[0] == '@') {
+      if (line.front() == '@') {
         std::string_view range = line;
         if (!absl::ConsumePrefix(&range, "@@ -")) {
           return std::nullopt;
@@ -118,17 +118,17 @@ class DiffTest : public ::testing::Test {
           return std::nullopt;
         }
         while (next < copy_until) {
-          result.push_back(lhs_lines[next++]);
+          result.push_back(lhs_lines.at(next++));
         }
         next += size;
-      } else if (line[0] == '+') {
+      } else if (line.front() == '+') {
         result.push_back(line.substr(1));
-      } else if (line[0] != '-') {
+      } else if (line.front() != '-') {
         return std::nullopt;  // Context lines are unexpected with context 0.
       }
     }
     while (next < lhs_lines.size()) {
-      result.push_back(lhs_lines[next++]);
+      result.push_back(lhs_lines.at(next++));
     }
     if (result.empty()) {
       return std::string();
@@ -1099,7 +1099,7 @@ TEST_F(DiffTest, MyersRoundTrip) {
     }
   }
   for (std::size_t idx = 0; idx < cases.size(); ++idx) {
-    const auto& [lhs, rhs] = cases[idx];
+    const auto& [lhs, rhs] = cases.at(idx);
     const auto result = mbo::diff::Diff::FileDiff({.data = lhs, .name = "lhs"}, {.data = rhs, .name = "rhs"}, options);
     ASSERT_THAT(result, mbo::testing::IsOk()) << "case: " << idx;
     const std::optional<std::string> applied = ApplyUnifiedDiff(lhs, *result);
@@ -1237,7 +1237,7 @@ TEST_F(DiffTest, MyersMinimalOption) {
   const auto count_edits = [](std::string_view diff) {
     std::size_t edits = 0;
     for (const std::string_view line : absl::StrSplit(diff, '\n')) {
-      edits += !line.empty() && (line[0] == '-' || line[0] == '+') ? 1 : 0;
+      edits += !line.empty() && (line.front() == '-' || line.front() == '+') ? 1 : 0;
     }
     return edits;
   };

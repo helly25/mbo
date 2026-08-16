@@ -27,7 +27,7 @@ namespace mbo::strings {
 
 inline char PopChar(std::string_view& data) {
   ABSL_CHECK(!data.empty());
-  const char result = data[0];
+  const char result = data.front();
   data.remove_prefix(1);
   return result;
 }

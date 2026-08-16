@@ -49,7 +49,7 @@ absl::StatusOr<std::string> RunfilesDir(std::string_view source) {
     std::pair<std::string_view, std::string> parts = absl::StrSplit(source, absl::MaxSplits("//", 1));
     parts.first.remove_prefix(1);
     if (auto pos = parts.second.find(':'); pos != std::string::npos) {
-      parts.second[pos] = '/';
+      parts.second.at(pos) = '/';
     }
     return RunfilesDir(parts.first, parts.second);
   }
@@ -57,7 +57,7 @@ absl::StatusOr<std::string> RunfilesDir(std::string_view source) {
     source.remove_prefix(2);
     std::string source_rel(source);
     if (auto pos = source_rel.find(':'); pos != std::string::npos) {
-      source_rel[pos] = '/';
+      source_rel.at(pos) = '/';
     }
     return RunfilesDir("", source_rel);
   }
@@ -89,8 +89,8 @@ absl::StatusOr<std::string> RunfilesDir(std::string_view workspace, std::string_
     MBO_ASSIGN_OR_RETURN(const std::string mapping, mbo::file::GetContents(mapping_file));
     for (const std::string_view line : absl::StrSplit(mapping, '\n')) {
       const std::vector<std::string_view> parts = absl::StrSplit(line, ',', absl::AllowEmpty());
-      if (parts.size() == 3 && parts[1] == workspace) {
-        return runfiles->Rlocation(mbo::file::JoinPaths(parts[2], source_rel));
+      if (parts.size() == 3 && parts.at(1) == workspace) {
+        return runfiles->Rlocation(mbo::file::JoinPaths(parts.at(2), source_rel));
       }
     }
     auto result = runfiles->Rlocation(mbo::file::JoinPaths(workspace, source_rel));

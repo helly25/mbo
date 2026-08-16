@@ -76,14 +76,14 @@ std::optional<DiffOptions::RegexReplace> DiffOptions::ParseRegexReplaceFlag(std:
   if (flag.empty()) {
     return std::nullopt;
   }
-  const char separator = flag[0];
+  const char separator = flag.front();
   std::vector<std::string> parts = absl::StrSplit(flag, separator);
   ABSL_CHECK_EQ(parts.size(), 4U);
-  ABSL_CHECK(parts[0].empty());
-  ABSL_CHECK(parts[3].empty());
+  ABSL_CHECK(parts.at(0).empty());
+  ABSL_CHECK(parts.at(3).empty());
   return DiffOptions::RegexReplace{
-      .regex = std::make_unique<RE2>(parts[1]),
-      .replace{parts[2]},
+      .regex = std::make_unique<RE2>(parts.at(1)),
+      .replace{parts.at(2)},
   };
 }
 

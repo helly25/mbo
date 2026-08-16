@@ -294,7 +294,7 @@ absl::StatusOr<std::filesystem::path> CreateFileSystemEntries(
       while (split.size() < 2) {
         split.emplace_back("");
       }
-      return std::make_pair(split[0], split[1]);
+      return std::make_pair(split.at(0), split.at(1));
     }();
     if (!path.empty() && created.emplace(path).second && !fs::create_directories(*root / path)) {
       return absl::AbortedError(absl::StrCat("Cannot create dir: ", path));

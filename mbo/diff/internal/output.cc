@@ -90,20 +90,20 @@ void AppendContext(
   bool lhs_changed = false;
   bool rhs_changed = false;
   for (std::size_t pos = 0; pos < num; ++pos) {
-    switch (entries[pos].kind) {
+    switch (entries.at(pos).kind) {
       case ' ': break;
       case '-': {
         std::size_t end = pos;
-        while (end < num && entries[end].kind == '-') {
-          marks[end++] = '-';
+        while (end < num && entries.at(end).kind == '-') {
+          marks.at(end++) = '-';
         }
         lhs_changed = true;
-        if (end < num && entries[end].kind == '+') {
+        if (end < num && entries.at(end).kind == '+') {
           for (std::size_t idx = pos; idx < end; ++idx) {
-            marks[idx] = '!';
+            marks.at(idx) = '!';
           }
-          while (end < num && entries[end].kind == '+') {
-            marks[end++] = '!';
+          while (end < num && entries.at(end).kind == '+') {
+            marks.at(end++) = '!';
           }
           rhs_changed = true;
         }
@@ -111,7 +111,7 @@ void AppendContext(
         break;
       }
       default:  // '+' without preceding deletions.
-        marks[pos] = '+';
+        marks.at(pos) = '+';
         rhs_changed = true;
         break;
     }
@@ -121,8 +121,8 @@ void AppendContext(
   }
   if (lhs_changed) {
     for (std::size_t pos = 0; pos < num; ++pos) {
-      if (entries[pos].kind != '+') {
-        absl::StrAppendFormat(&output, "%c %s\n", marks[pos], entries[pos].text);
+      if (entries.at(pos).kind != '+') {
+        absl::StrAppendFormat(&output, "%c %s\n", marks.at(pos), entries.at(pos).text);
       }
     }
   }
@@ -131,8 +131,8 @@ void AppendContext(
   }
   if (rhs_changed) {
     for (std::size_t pos = 0; pos < num; ++pos) {
-      if (entries[pos].kind != '-') {
-        absl::StrAppendFormat(&output, "%c %s\n", marks[pos], entries[pos].text);
+      if (entries.at(pos).kind != '-') {
+        absl::StrAppendFormat(&output, "%c %s\n", marks.at(pos), entries.at(pos).text);
       }
     }
   }
@@ -150,18 +150,18 @@ void AppendNormal(
   const std::size_t num = entries.size();
   std::size_t pos = 0;
   while (pos < num) {
-    if (entries[pos].kind == ' ') {
+    if (entries.at(pos).kind == ' ') {
       ++lhs_line;
       ++rhs_line;
       ++pos;
       continue;
     }
     const std::size_t del_begin = pos;
-    while (pos < num && entries[pos].kind == '-') {
+    while (pos < num && entries.at(pos).kind == '-') {
       ++pos;
     }
     const std::size_t del_end = pos;
-    while (pos < num && entries[pos].kind == '+') {
+    while (pos < num && entries.at(pos).kind == '+') {
       ++pos;
     }
     const std::size_t add_end = pos;
@@ -176,13 +176,13 @@ void AppendNormal(
           RangePos(rhs_line, adds));
     }
     for (std::size_t idx = del_begin; idx < del_end; ++idx) {
-      absl::StrAppendFormat(&output, "< %s\n", entries[idx].text);
+      absl::StrAppendFormat(&output, "< %s\n", entries.at(idx).text);
     }
     if (dels > 0 && adds > 0) {
       absl::StrAppend(&output, "---\n");
     }
     for (std::size_t idx = del_end; idx < add_end; ++idx) {
-      absl::StrAppendFormat(&output, "> %s\n", entries[idx].text);
+      absl::StrAppendFormat(&output, "> %s\n", entries.at(idx).text);
     }
     lhs_line += dels;
     rhs_line += adds;
@@ -240,19 +240,19 @@ void AppendSideBySide(
   const std::size_t num = entries.size();
   std::size_t pos = 0;
   while (pos < num) {
-    if (entries[pos].kind == ' ') {
-      const auto [text, extra] = split(entries[pos].text);
+    if (entries.at(pos).kind == ' ') {
+      const auto [text, extra] = split(entries.at(pos).text);
       row(text, ' ', text);
       extras(extra, {});  // Both sides share the line, show the marker once.
       ++pos;
       continue;
     }
     const std::size_t del_begin = pos;
-    while (pos < num && entries[pos].kind == '-') {
+    while (pos < num && entries.at(pos).kind == '-') {
       ++pos;
     }
     const std::size_t del_end = pos;
-    while (pos < num && entries[pos].kind == '+') {
+    while (pos < num && entries.at(pos).kind == '+') {
       ++pos;
     }
     const std::size_t add_end = pos;
@@ -261,8 +261,8 @@ void AppendSideBySide(
     for (std::size_t idx = 0; idx < std::max(dels, adds); ++idx) {
       const bool has_lhs = idx < dels;
       const bool has_rhs = idx < adds;
-      const auto [lhs, lhs_extra] = split(has_lhs ? entries[del_begin + idx].text : std::string_view());
-      const auto [rhs, rhs_extra] = split(has_rhs ? entries[del_end + idx].text : std::string_view());
+      const auto [lhs, lhs_extra] = split(has_lhs ? entries.at(del_begin + idx).text : std::string_view());
+      const auto [rhs, rhs_extra] = split(has_rhs ? entries.at(del_end + idx).text : std::string_view());
       row(lhs, has_lhs && has_rhs ? '|' : has_lhs ? '<' : '>', rhs);
       extras(lhs_extra, rhs_extra);
     }

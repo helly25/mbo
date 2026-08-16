@@ -47,14 +47,14 @@ std::pair<std::size_t, std::size_t> ExpandWhiteSpace(
     std::size_t tag_len) {
   std::size_t end = tag_pos + tag_len;
   // Is the tag followed by a new-line?
-  if (end < output.size() && (output[end] == '\n' || output[end] == '\r')) {
+  if (end < output.size() && (output.at(end) == '\n' || output.at(end) == '\r')) {
     ++end;
     std::size_t pos = tag_pos;
     // reverse past all space
-    while (pos > 0 && (output[pos - 1] == ' ' || output[pos - 1] == '\t')) {
+    while (pos > 0 && (output.at(pos - 1) == ' ' || output.at(pos - 1) == '\t')) {
       --pos;
     }
-    if (pos == 0 || output[pos - 1] == '\n' || output[pos - 1] == '\r') {
+    if (pos == 0 || output.at(pos - 1) == '\n' || output.at(pos - 1) == '\r') {
       return {pos, tag_pos - pos + tag_len + 1};
     }
   }
