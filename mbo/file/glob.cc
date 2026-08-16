@@ -152,6 +152,9 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobRangeInfo> GlobFindRange(std::string_view& 
         const char last = re2_pattern.back();
         re2_pattern += chr;
         pattern.remove_prefix(1);
+        if (pattern.empty()) {
+          return absl::InvalidArgumentError("Unterminated range expression.");
+        }
         if (pattern.front() == ']') {
           re2_pattern += ']';
           pattern.remove_prefix(1);

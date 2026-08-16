@@ -6,7 +6,7 @@ checked only after its pull request has been merged.
 
 ## Correctness
 
-- [ ] Fix undefined behavior in `mbo/json/json.h` iterator assignment.
+- [x] Fix undefined behavior in `mbo/json/json.h` iterator assignment.
   - Replace placement construction over live iterator objects with ordinary
     variant assignment and default same-type special members where possible.
   - Cover copy, move, mutable-to-const, self, array, and object assignments.
