@@ -17,7 +17,7 @@ checked only after its pull request has been merged.
 - [ ] Fix main-branch cache cleanup prefix matching.
   - Pass the prefix to `jq` without relying on expansion inside single quotes.
   - Add a regression test with representative cache keys.
-  - PR: pending.
+  - PR: [#328](https://github.com/helly25/mbo/pull/328).
 
 ## File API robustness and portability
 
