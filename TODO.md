@@ -1,0 +1,69 @@
+# Project TODO
+
+This file is the single source of truth for repository fixes and improvements.
+Each change is implemented and reviewed in its own pull request. An item is
+checked only after its pull request has been merged.
+
+## Correctness
+
+- [ ] Fix undefined behavior in `mbo/json/json.h` iterator assignment.
+  - Replace placement construction over live iterator objects with ordinary
+    variant assignment and default same-type special members where possible.
+  - Cover copy, move, mutable-to-const, self, array, and object assignments.
+  - PR: [#326](https://github.com/helly25/mbo/pull/326).
+- [ ] Reject truncated glob ranges without accessing an empty pattern.
+  - Cover `[`, `[-`, `[a-`, negative ranges, and trailing escapes.
+  - PR: pending.
+- [ ] Fix main-branch cache cleanup prefix matching.
+  - Pass the prefix to `jq` without relying on expansion inside single quotes.
+  - Add a regression test with representative cache keys.
+  - PR: pending.
+
+## File API robustness and portability
+
+- [ ] Make `GetContents` handle failed seeks and non-seekable inputs safely.
+  - Check `seekg`/`tellg` before converting the size.
+  - Read in binary mode so byte counts remain consistent across platforms.
+  - Add failure-path tests where practical.
+  - PR: pending.
+- [ ] Make `GetMaxLines` distinguish EOF from an I/O failure.
+  - Return an error when the stream enters `badbit`.
+  - Add regression coverage.
+  - PR: pending.
+- [ ] Make `NormalizePath` portable across native path character types.
+  - Avoid constructing `std::string_view` directly from `path.c_str()`.
+  - Add or document Windows-oriented behavior and tests.
+  - PR: pending.
+
+## Build, CI, and release engineering
+
+- [ ] Reduce external dependency warning noise in default builds.
+  - Treat external headers consistently as system headers or apply narrowly
+    scoped external-warning suppression.
+  - Verify project warnings remain errors.
+  - PR: pending.
+- [ ] Pin third-party GitHub Actions to immutable commit SHAs.
+  - Preserve readable version comments and automated update support.
+  - PR: pending.
+- [ ] Replace `mktemp -u` in release preparation with a safely created
+      temporary resource and cleanup trap.
+  - Exercise the release archive preparation path locally.
+  - PR: pending.
+
+## Documentation and quality coverage
+
+- [ ] Correct existing README and contributing-guide spelling errors and add a
+      lightweight documentation spell-checking hook.
+  - PR: pending.
+- [ ] Add fuzz targets for glob conversion, string parsing, INI parsing, diff
+      inputs/options, and digest checksum-file parsing.
+  - Split into independently reviewable PRs if the targets are not naturally
+    delivered together.
+  - PR: pending.
+- [ ] Add explicit UBSan coverage alongside ASan in CI.
+  - PR: pending.
+- [ ] Add coverage reporting focused on uninstantiated templates and malformed
+      input branches.
+  - PR: pending.
+- [ ] Add public-header API compatibility checking before releases.
+  - PR: pending.
