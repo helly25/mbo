@@ -43,7 +43,7 @@ namespace {
 std::string PatternBuffer(std::size_t len) {
   std::string result(len, '\0');
   for (std::size_t i = 0; i < len; ++i) {
-    result[i] = static_cast<char>(((i * 131) + 7) % 256);
+    result.at(i) = static_cast<char>(((i * 131) + 7) % 256);
   }
   return result;
 }

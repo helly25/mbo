@@ -36,7 +36,7 @@ struct GetFieldNamesAreImpl;
 
 template<typename T, std::size_t N, std::array<const char*, N> Names, std::size_t... Indices>
 struct GetFieldNamesAreImpl<T, N, Names, std::index_sequence<Indices...>>
-    : std::bool_constant<((GetFieldNames<T>()[Indices] == Names[Indices]) && ...)> {};
+    : std::bool_constant<((GetFieldNames<T>().at(Indices) == Names.at(Indices)) && ...)> {};
 
 template<typename T, tstring... Names>
 concept TestGetFieldNames = GetFieldNamesAreImpl<

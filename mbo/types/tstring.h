@@ -30,6 +30,10 @@ namespace mbo::types {
 
 // NOLINTBEGIN(readability-identifier-naming,readability-avoid-unconditional-preprocessor-if)
 
+// NOLINTBEGIN(*-avoid-unchecked-container-access): compile-time string type -
+// its subscripts are constant-evaluated or bounded by the length template
+// parameter, and an out-of-range index is a compile error, not UB.
+
 #if defined(__clang__)
 # pragma clang diagnostic push
 # pragma clang diagnostic ignored "-Wgnu-string-literal-operator-template"
@@ -604,6 +608,7 @@ constexpr auto make_ts(const char(&str)[N]) noexcept {
 # pragma GCC diagnostic pop
 #endif  // defined(__clang__)
 
+// NOLINTEND(*-avoid-unchecked-container-access)
 // NOLINTEND(readability-identifier-naming,readability-avoid-unconditional-preprocessor-if)
 
 }  // namespace mbo::types

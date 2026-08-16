@@ -1333,11 +1333,11 @@ class Stringify {
     if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyOptions<RawV>) {
       std::array<std::string_view, 2> field_names;
       if (options.outer.special->pair_keys.has_value()) {
-        field_names[0] = options.outer.special->pair_keys->first;
-        field_names[1] = options.outer.special->pair_keys->second;
+        std::get<0>(field_names) = options.outer.special->pair_keys->first;
+        std::get<1>(field_names) = options.outer.special->pair_keys->second;
       } else {
-        field_names[0] = "first";
-        field_names[1] = "second";
+        std::get<0>(field_names) = "first";
+        std::get<1>(field_names) = "second";
       }
       bool use_seperator = false;
       os.IncStruct(*options.outer.format);

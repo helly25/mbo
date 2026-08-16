@@ -178,7 +178,7 @@ inline std::string RandomString(std::mt19937_64& rng, std::size_t length) {
   std::string result(length, '\0');
   std::uniform_int_distribution<int> dist(0, kMaxByte);
   for (std::size_t i = 0; i < length; ++i) {
-    result[i] = static_cast<char>(dist(rng));
+    result.at(i) = static_cast<char>(dist(rng));
   }
   return result;
 }
@@ -186,7 +186,7 @@ inline std::string RandomString(std::mt19937_64& rng, std::size_t length) {
 template<std::size_t algo>
 requires(algo < std::tuple_size_v<AllAlgorithms>)
 inline constexpr void FillAlgoName(std::array<std::string_view, std::tuple_size_v<AllAlgorithms>>& names) {
-  names[algo] = std::tuple_element_t<algo, AllAlgorithms>::Name();
+  std::get<algo>(names) = std::tuple_element_t<algo, AllAlgorithms>::Name();
   if constexpr (algo > 0) {
     FillAlgoName<algo - 1>(names);
   }

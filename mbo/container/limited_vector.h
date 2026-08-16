@@ -523,7 +523,7 @@ LimitedVector(T&&... v) -> LimitedVector<std::common_type_t<T...>, sizeof...(T)>
 template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
-  const std::size_t minsize = std::min(LN, RN);
+  const std::size_t minsize = std::min(lhs.size(), rhs.size());
   for (std::size_t index = 0; index < minsize; ++index) {
     const auto comp = lhs[index] <=> rhs[index];
     if (comp != 0) {
@@ -539,7 +539,7 @@ constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const Limite
   if (lhs.size() != rhs.size()) {
     return false;
   }
-  const std::size_t minsize = std::min(LN, RN);
+  const std::size_t minsize = std::min(lhs.size(), rhs.size());
   for (std::size_t index = 0; index < minsize; ++index) {
     const auto comp = lhs[index] <=> rhs[index];
     if (comp != 0) {
@@ -552,7 +552,7 @@ constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const Limite
 template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline bool operator<(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
-  const std::size_t minsize = std::min(LN, RN);
+  const std::size_t minsize = std::min(lhs.size(), rhs.size());
   for (std::size_t index = 0; index < minsize; ++index) {
     const auto comp = lhs[index] <=> rhs[index];
     if (comp != 0) {

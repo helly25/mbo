@@ -63,16 +63,19 @@ int main(int argc, char** argv) {
   if (args.size() < 2 || args.size() > 3) {
     std::cerr << absl::StreamFormat(
         "Usage: %s <algo> [<data>]  (data read from stdin, one per line, if omitted)\n",
-        args.empty() ? "hash_tool" : args[0]);
+        args.empty() ? "hash_tool" : args.front());
     return 2;
   }
+  // NOLINTNEXTLINE(*-avoid-unchecked-container-access): std::span has no at() before C++26; size checked above.
   const std::optional<HashFn> hash_fn = Lookup(args[1]);
   if (!hash_fn.has_value()) {
     std::cerr << absl::StreamFormat(
-        "Unknown algo '%s'; known: dumbo, fambo, fnv1a, mumbo, murmur3, siphash.\n", args[1]);
+        "Unknown algo '%s'; known: dumbo, fambo, fnv1a, mumbo, murmur3, siphash.\n",
+        args[1]);  // NOLINT(*-avoid-unchecked-container-access): size checked above.
     return 2;
   }
   if (args.size() == 3) {
+    // NOLINTNEXTLINE(*-avoid-unchecked-container-access): std::span has no at() before C++26; size == 3 here.
     std::cout << absl::StreamFormat("%016X\n", (*hash_fn)(args[2]));
     return 0;
   }
