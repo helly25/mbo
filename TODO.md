@@ -6,14 +6,14 @@ checked only after its pull request has been merged.
 
 ## Correctness
 
-- [ ] Fix undefined behavior in `mbo/json/json.h` iterator assignment.
+- [x] Fix undefined behavior in `mbo/json/json.h` iterator assignment.
   - Replace placement construction over live iterator objects with ordinary
     variant assignment and default same-type special members where possible.
   - Cover copy, move, mutable-to-const, self, array, and object assignments.
   - PR: [#326](https://github.com/helly25/mbo/pull/326).
 - [ ] Reject truncated glob ranges without accessing an empty pattern.
   - Cover `[`, `[-`, `[a-`, negative ranges, and trailing escapes.
-  - PR: pending.
+  - PR: [#327](https://github.com/helly25/mbo/pull/327).
 - [ ] Fix main-branch cache cleanup prefix matching.
   - Pass the prefix to `jq` without relying on expansion inside single quotes.
   - Add a regression test with representative cache keys.

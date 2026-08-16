@@ -148,8 +148,15 @@ TEST_F(GlobTest, Glob2Re2PatternErrors) {
       StatusIs(absl::StatusCode::kInvalidArgument, "No character left to escape at end of pattern.");
   EXPECT_THAT(Glob2Re2Expression("\\"), no_char_to_escape);
   const auto unterminated_range = StatusIs(absl::StatusCode::kInvalidArgument, "Unterminated range expression.");
+  EXPECT_THAT(Glob2Re2Expression("["), unterminated_range);
+  EXPECT_THAT(Glob2Re2Expression("[-"), unterminated_range);
+  EXPECT_THAT(Glob2Re2Expression("[a-"), unterminated_range);
+  EXPECT_THAT(Glob2Re2Expression("[!-"), unterminated_range);
   EXPECT_THAT(Glob2Re2Expression("[]"), unterminated_range);
   EXPECT_THAT(Glob2Re2Expression("[!]"), unterminated_range);
+  EXPECT_THAT(Glob2Re2Expression("[\\"), no_char_to_escape);
+  EXPECT_THAT(Glob2Re2Expression("[a\\"), no_char_to_escape);
+  EXPECT_THAT(Glob2Re2Expression("[!a\\"), no_char_to_escape);
   const auto unterminated_char_class = StatusIs(absl::StatusCode::kInvalidArgument, "Unterminated character-class.");
   EXPECT_THAT(Glob2Re2Expression("[[:]"), unterminated_char_class);
   EXPECT_THAT(Glob2Re2Expression("[[:]]"), unterminated_char_class);
