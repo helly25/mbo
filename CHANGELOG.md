@@ -1,5 +1,6 @@
 # 0.13.3
 
+- Fixed `LimitedVector`'s comparison operators, which were declared over `std::size_t` capacities while the class takes `auto`: instances spelled via `MakeLimitedVector`/`LimitedOptions` or an `int` literal matched no operator at all and failed to compile.
 - Enabled `cppcoreguidelines-pro-bounds-avoid-unchecked-container-access`: unchecked `operator[]` is now a clang-tidy error. Containers that bounds-check themselves (`LimitedMap`, `LimitedVector`, `Json`) and insert-semantics maps (absl's) are excluded by class; the hash/digest kernels and other in-range-by-construction code carry scoped `NOLINT` blocks.
 - Fixed `LimitedVector` comparison operators (`==`, `<=>`, `<`), which looped to `min` of the CAPACITIES instead of the sizes: comparing partially-filled vectors read uninitialized slots (or threw in a require-throws build). Found by `pro-bounds-avoid-unchecked-container-access`.
 - Converted unchecked `operator[]` to `.at()`/`std::get` (or a reasoned `NOLINT` in benchmarks' timed loops and compile-time code) across the hash, digest, json, types and container libraries.

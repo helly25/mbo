@@ -523,7 +523,7 @@ LimitedVector(T&&... v) -> LimitedVector<std::common_type_t<T...>, sizeof...(T)>
 // NOLINTBEGIN(*-avoid-unchecked-container-access): LimitedVector's own
 // comparison implementation - every index is below min(lhs.size(), rhs.size()),
 // and going through the checked operator[] would re-verify that per element.
-template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
+template<auto LN, auto RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
   const std::size_t minsize = std::min(lhs.size(), rhs.size());
@@ -536,7 +536,7 @@ constexpr inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const Limit
   return lhs.size() <=> rhs.size();
 }
 
-template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
+template<auto LN, auto RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
   if (lhs.size() != rhs.size()) {
@@ -552,7 +552,7 @@ constexpr inline bool operator==(const LimitedVector<LHS, LN>& lhs, const Limite
   return true;
 }
 
-template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
+template<auto LN, auto RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline bool operator<(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
   const std::size_t minsize = std::min(lhs.size(), rhs.size());
