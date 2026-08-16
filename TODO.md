@@ -11,7 +11,7 @@ checked only after its pull request has been merged.
     variant assignment and default same-type special members where possible.
   - Cover copy, move, mutable-to-const, self, array, and object assignments.
   - PR: [#326](https://github.com/helly25/mbo/pull/326).
-- [ ] Reject truncated glob ranges without accessing an empty pattern.
+- [x] Reject truncated glob ranges without accessing an empty pattern.
   - Cover `[`, `[-`, `[a-`, negative ranges, and trailing escapes.
   - PR: [#327](https://github.com/helly25/mbo/pull/327).
 - [ ] Fix main-branch cache cleanup prefix matching.

@@ -187,6 +187,13 @@ repos:
         entry: python .pre-commit/check_done_gate.py
         files: ^\.github/workflows/main\.yml$
         pass_filenames: false
+      - id: cache-cleanup-selection
+        name: cache cleanup selects expired matching caches
+        description: Verify main-branch cache cleanup keeps the newest cache for each exact prefix.
+        language: system
+        entry: python3 -m unittest tools/cache_cleanup_test.py
+        files: ^(\.github/workflows/cache_cleanup\.yml|tools/cache_cleanup(_test)?\.py)$
+        pass_filenames: false
       - id: clang-tidy
         name: clang-tidy
         description: |
