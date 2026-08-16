@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <variant>
 
 #include "absl/container/flat_hash_map.h"
@@ -108,6 +109,9 @@ class Json {
   template<bool IsConst>
   class value_iterator_t {
    private:
+    template<bool>
+    friend class value_iterator_t;
+
     using array_iterator = std::conditional_t<IsConst, Json::const_array_iterator, Json::array_iterator>;
     using object_iterator = std::conditional_t<IsConst, Json::const_object_iterator, Json::object_iterator>;
 
@@ -129,21 +133,10 @@ class Json {
 
     explicit value_iterator_t(object_iterator obj_it) noexcept : it_(obj_it) {}
 
-    value_iterator_t(const value_iterator_t& other) noexcept : it_(other.it_) {}
-
-    value_iterator_t& operator=(const value_iterator_t& other) noexcept {
-      if (this != &other) {
-        std::construct_at(this, other.it_);
-      }
-      return *this;
-    }
-
-    value_iterator_t(value_iterator_t&& other) noexcept : it_(other.it_) {}
-
-    value_iterator_t& operator=(value_iterator_t&& other) noexcept {
-      std::construct_at(this, other.it_);
-      return *this;
-    }
+    value_iterator_t(const value_iterator_t&) noexcept = default;
+    value_iterator_t& operator=(const value_iterator_t&) noexcept = default;
+    value_iterator_t(value_iterator_t&&) noexcept = default;
+    value_iterator_t& operator=(value_iterator_t&&) noexcept = default;
 
     // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved,*explicit-*)
 
@@ -154,9 +147,7 @@ class Json {
     value_iterator_t& operator=(const mutable_iterator& other) noexcept
     requires std::same_as<value_iterator_t, const_iterator>
     {
-      if (this != other) {
-        std::construct_at(this, other.it_);
-      }
+      std::visit([this](const auto& iterator) { it_ = iterator; }, other.it_);
       return *this;
     }
 
@@ -167,7 +158,7 @@ class Json {
     value_iterator_t& operator=(mutable_iterator&& other) noexcept
     requires std::same_as<value_iterator_t, const_iterator>
     {
-      std::construct_at(this, other.it_);
+      std::visit([this](auto&& iterator) { it_ = std::forward<decltype(iterator)>(iterator); }, std::move(other.it_));
       return *this;
     }
 

@@ -201,6 +201,42 @@ TEST_F(JsonTest, PropertyIteration) {
   // EXPECT_THAT(json.values(), UnorderedElementsAreArray({1, 2, 3}));
 }
 
+TEST_F(JsonTest, ValueIteratorAssignment) {
+  Json array;
+  array.emplace_back(1);
+  array.emplace_back(2);
+  auto array_values = array.values();
+
+  Json::value_iterator mutable_it;
+  mutable_it = array_values.begin();
+  EXPECT_THAT(*mutable_it, 1);
+  const auto* mutable_it_ptr = &mutable_it;
+  mutable_it = *mutable_it_ptr;
+  EXPECT_THAT(*mutable_it, 1);
+
+  Json::value_iterator copied_it;
+  copied_it = mutable_it;
+  EXPECT_THAT(*copied_it, 1);
+  Json::value_iterator moved_it;
+  moved_it = Json::value_iterator{array_values.begin()};
+  EXPECT_THAT(*moved_it, 1);
+
+  Json::const_value_iterator const_it;
+  const_it = mutable_it;
+  EXPECT_THAT(*const_it, 1);
+  Json::const_value_iterator moved_const_it;
+  moved_const_it = array.values().begin();
+  EXPECT_THAT(*moved_const_it, 1);
+
+  Json object;
+  object["value"] = 3;
+  auto object_values = object.values();
+  moved_it = object_values.begin();
+  EXPECT_THAT(*moved_it, 3);
+  const_it = moved_it;
+  EXPECT_THAT(*const_it, 3);
+}
+
 }  // namespace
 }  // namespace mbo::json
 
