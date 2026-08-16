@@ -378,6 +378,28 @@ TEST_F(LimitedVectorTest, Compare) {
   EXPECT_THAT(k42v25, Ge(k42));
 }
 
+TEST_F(LimitedVectorTest, CompareAcrossCapacitySpellings) {
+  // The comparison operators used to be declared `template<std::size_t LN, ...>`
+  // while the class takes `template<typename T, auto CapacityOrOptions>`, so any
+  // instance NOT spelled with a `std::size_t` literal - a `LimitedOptions` value
+  // from MakeLimitedVector, or a plain `int` literal - matched no operator at all
+  // and failed to compile. `auto` capacity parameters match the class.
+  constexpr auto kOpts = MakeLimitedVector<int, 4>();  // LimitedOptions
+  constexpr auto kOptsSame = MakeLimitedVector<int, 4>();
+  EXPECT_THAT(kOpts == kOptsSame, true);
+  EXPECT_THAT((kOpts <=> kOptsSame) == 0, true);
+  EXPECT_THAT(kOpts < kOptsSame, false);
+
+  const LimitedVector<int, 5> int_literal{1, 2};  // `int`, not size_t
+  const LimitedVector<int, 5UL> size_literal{1, 2};
+  EXPECT_THAT(int_literal == size_literal, true);
+  EXPECT_THAT(int_literal < size_literal, false);
+
+  // Mixed spellings must compare too.
+  EXPECT_THAT(kOpts == int_literal, false);
+  EXPECT_THAT(kOpts < int_literal, true);
+}
+
 TEST_F(LimitedVectorTest, ComparePartiallyFilled) {
   // The comparison loops used to run to min(capacity, capacity) instead of
   // min(size, size), reading uninitialized slots (or throwing under a
