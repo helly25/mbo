@@ -571,7 +571,7 @@ TEST_F(LimitedVectorTest, Insert1Moving) {
     static constexpr auto kData = [] {
       LimitedVector<int, 5> result({1, 2});
       result.insert(result.begin(), 25);
-      result.insert(&result[2], 33);
+      result.insert(&result.at(2), 33);
       result.insert(result.end(), 42);
       return result;
     }();
@@ -605,7 +605,7 @@ TEST_F(LimitedVectorTest, Insert1ComplexType) {
     static const auto kData = [] {
       LimitedVector<std::string, 6> result(std::initializer_list<std::string_view>{kStr1, kStr2});
       result.insert(result.begin(), kStrA);
-      result.insert(&result[2], kStrB);
+      result.insert(&result.at(2), kStrB);
       result.insert(result.end(), std::initializer_list<std::string_view>{kStrC, kStrD});
       return result;
     }();
@@ -642,7 +642,7 @@ TEST_F(LimitedVectorTest, Insert2) {
     static constexpr auto kData = [] {
       LimitedVector<int, 10> result({1, 2});
       result.insert(result.begin(), 2, 25);
-      result.insert(&result[3], 3, 33);
+      result.insert(&result.at(3), 3, 33);
       result.insert(result.end(), 3, 42);
       return result;
     }();
@@ -677,7 +677,7 @@ TEST_F(LimitedVectorTest, Insert3) {
     static constexpr auto kData = [] {
       LimitedVector<int, 8> result({1, 2});
       result.insert(result.begin(), {21, 22});
-      result.insert(&result[3], {31, 32});
+      result.insert(&result.at(3), {31, 32});
       result.insert(result.end(), {41, 42});
       return result;
     }();

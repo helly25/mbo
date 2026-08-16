@@ -222,13 +222,17 @@ TEST_F(LimitedMapTest, Update) {
   EXPECT_THAT(test, SizeIs(4));
   EXPECT_THAT(test, CapacityIs(7));
   EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "b"), Pair("2", "c"), Pair("3", "d")));
+  // map insert: operator[] creates the entry, so there is no range to exceed.
+  // NOLINTNEXTLINE(*-avoid-unchecked-container-access)
   test["1"] = "bb";
   EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d")));
+  // NOLINTNEXTLINE(*-avoid-unchecked-container-access)
   test["4"] = "eeee";
   EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
   test.at("0") = "zero";
   EXPECT_THAT(test, ElementsAre(Pair("0", "zero"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
   EXPECT_THAT(test, CapacityIs(Gt(test.size())));
+  // NOLINTNEXTLINE(*-avoid-unchecked-container-access)
   test[" "] = "space";
   EXPECT_THAT(
       test,

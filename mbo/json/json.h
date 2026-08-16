@@ -493,6 +493,9 @@ class Json {
     }
   }
 
+  // NOLINTBEGIN(*-avoid-unchecked-container-access): Json's own accessors. Each
+  // either bounds-checks first (MBO_CONFIG_REQUIRE) or inserts; the subscripts
+  // below are the checked implementation, not unchecked use of it.
   Json& operator[](std::size_t index) {
     MakeArray();
     MBO_CONFIG_REQUIRE(index < size(), "Out of range.");
@@ -527,6 +530,8 @@ class Json {
   Json& at(std::string_view property) { return (*this)[property]; }
 
   const Json& at(std::string_view property) const { return (*this)[property]; }
+
+  // NOLINTEND(*-avoid-unchecked-container-access)
 
   iterator erase(const_iterator pos) {
     MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
@@ -760,6 +765,8 @@ class Json {
   void CopyObject(const Json& other) {         // NOLINT(misc-no-recursion)
     Object& object = data_.emplace<Object>();  // NOLINT(*-auto)
     for (const auto& [name, value] : std::get<Object>(other.data_)) {
+      // Object aliases an absl map; map insert: operator[] creates the entry, so there is no range to exceed.
+      // NOLINTNEXTLINE(*-avoid-unchecked-container-access)
       std::unique_ptr<Json>& ref = object[name];
       if (ref == nullptr) {
         ref = std::make_unique<Json>();

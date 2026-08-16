@@ -7,9 +7,9 @@
 # The CppCoreGuidelines bounds/type-safety profile (pro-bounds-*, pro-type-union-
 # access, hicpp-no-array-decay) is off as a group: this library IS the container/
 # hash layer those checks assume code sits above. The one exception is
-# avoid-unchecked-container-access, ON since 2026-08-16: the containers that must
-# not self-check are excluded by class (ExcludeClasses below) or by NOLINT block,
-# and the rest of the repo uses checked access. It found a real bug on enablement.
+# avoid-unchecked-container-access, ON since 2026-08-16. No ExcludeClasses: it
+# misses aliases and absl's inherited operator[], so exemptions live in the code
+# as ranged NOLINTs where they can be seen. It found a real bug.
 #
 # abseil-unchecked-statusor-access: clang-tidy 22.1.8 SEGFAULTS in its dataflow on
 #   this code; re-test on a future LLVM.
@@ -127,8 +127,6 @@ FormatStyle:       '.clang-format'
 CheckOptions:
   - key:             bugprone-signed-char-misuse.CharTypedefsToIgnore
     value:           'int8_t'
-  - key:             cppcoreguidelines-pro-bounds-avoid-unchecked-container-access.ExcludeClasses
-    value:           '::std::map;::std::unordered_map;::std::flat_map;::absl::btree_map;::absl::flat_hash_map;::absl::node_hash_map;::mbo::container::LimitedMap;::mbo::container::LimitedVector;::mbo::json::Json'
   - key:             google-readability-braces-around-statements.ShortStatementLines
     value:           '1'
   - key:             google-readability-function-size.StatementThreshold

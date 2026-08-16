@@ -79,6 +79,8 @@ class IniFile {
 
   void SetKey(const GroupKey& group_key, std::string&& new_value = "") {
     const auto [group, key] = Clean(group_key);
+    // map insert: operator[] creates the entry, so there is no range to exceed.
+    // NOLINTNEXTLINE(*-avoid-unchecked-container-access)
     data_[group][key] = std::move(new_value);
   }
 

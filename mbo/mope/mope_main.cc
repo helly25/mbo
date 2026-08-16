@@ -81,7 +81,9 @@ absl::Status ApplySetFlag(
   }
   section_names.pop_back();
   if (section_names.size() == 1 && section_names.front().empty()) {
-    context_data[key].assign(value);  // Global context_data
+    // Global context_data. map insert: operator[] creates the entry, so there is no range to exceed.
+    // NOLINTNEXTLINE(*-avoid-unchecked-container-access)
+    context_data[key].assign(value);
     return absl::OkStatus();
   }
   auto* section = &mope_template;

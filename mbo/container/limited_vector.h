@@ -520,6 +520,9 @@ class LimitedVector final {
 template<typename... T>
 LimitedVector(T&&... v) -> LimitedVector<std::common_type_t<T...>, sizeof...(T)>;
 
+// NOLINTBEGIN(*-avoid-unchecked-container-access): LimitedVector's own
+// comparison implementation - every index is below min(lhs.size(), rhs.size()),
+// and going through the checked operator[] would re-verify that per element.
 template<std::size_t LN, std::size_t RN, typename LHS, typename RHS>
 requires std::three_way_comparable_with<LHS, RHS>
 constexpr inline auto operator<=>(const LimitedVector<LHS, LN>& lhs, const LimitedVector<RHS, RN>& rhs) noexcept {
@@ -561,6 +564,8 @@ constexpr inline bool operator<(const LimitedVector<LHS, LN>& lhs, const Limited
   }
   return lhs.size() < rhs.size();
 }
+
+// NOLINTEND(*-avoid-unchecked-container-access)
 
 template<typename T, std::size_t N = 0, LimitedOptionsFlag... Flags>
 inline constexpr auto MakeLimitedVector() noexcept {

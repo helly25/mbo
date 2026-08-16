@@ -24,7 +24,11 @@
 #include "mbo/testing/matchers.h"
 #include "mbo/types/typed_view.h"
 
-// NOLINTBEGIN(*-magic-*)
+// NOLINTBEGIN(*-magic-*,*-avoid-unchecked-container-access)
+// The subscript operators ARE the API under test here: Json::at() delegates to
+// operator[], so rewriting these calls would only stop testing what they test.
+// Neither overload can go out of range - the property one inserts, the index one
+// bounds-checks via MBO_CONFIG_REQUIRE.
 
 namespace mbo::json {
 namespace {
@@ -200,4 +204,4 @@ TEST_F(JsonTest, PropertyIteration) {
 }  // namespace
 }  // namespace mbo::json
 
-// NOLINTEND(*-magic-*)
+// NOLINTEND(*-magic-*,*-avoid-unchecked-container-access)
