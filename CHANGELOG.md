@@ -2,6 +2,7 @@
 
 - Fixed `LimitedVector` comparison operators (`==`, `<=>`, `<`), which looped to `min` of the CAPACITIES instead of the sizes: comparing partially-filled vectors read uninitialized slots (or threw in a require-throws build). Found by `pro-bounds-avoid-unchecked-container-access`.
 - Converted unchecked `operator[]` to `.at()`/`std::get` (or a reasoned `NOLINT` in benchmarks' timed loops and compile-time code) across the hash, digest, json, types and container libraries.
+- Converted unchecked `operator[]` to `.front()`/`.at()` (or a reasoned `NOLINT` on hot paths) across the diff, strings, log, mope, file and testing libraries, preparing `pro-bounds-avoid-unchecked-container-access`.
 - Re-measured `pro-bounds-avoid-unchecked-container-access` (task: attempt to enable): 2,953 findings, ~2,500 in hash/digest kernels where indices are in-range by construction; stays disabled with the data recorded in `.clang-tidy`.
 - Enabled `-Wpedantic` (as errors) on all first-party code. Two named carve-outs for absl macros expanding in our translation units (`ABSL_FLAG`'s `__COUNTER__`, `ABSL_CHECK`'s `_Nullable`); the repo's own deliberate GNU extensions (`__int128`, statement expressions in `decompose_count.h`) are annotated `__extension__` in code. The bazel-7/8 compat CI rungs relax it because those bazels half-apply `external_include_paths` and leak external-header findings.
 - Removed the temporary `hash_tembo.h` allowlist entry from the headers-claimed check; #311 lists the header in a target again.

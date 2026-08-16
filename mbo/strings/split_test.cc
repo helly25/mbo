@@ -66,9 +66,9 @@ MATCHER_P(Elements, elements, "") {
     return ::testing::ExplainMatchResult(::testing::UnorderedElementsAreArray(expected_set), arg, result_listener);
   } else if constexpr (mbo::types::IsPair<std::remove_cvref_t<arg_type>>) {
     if (elements.size() == 2) {
-      return elements[0] == arg.first && elements[1] == arg.second;
+      return elements.at(0) == arg.first && elements.at(1) == arg.second;
     } else if (elements.size() == 1) {
-      return elements[0] == arg.first && arg.second.empty();
+      return elements.at(0) == arg.first && arg.second.empty();
     } else if (elements.size() == 0) {
       return arg.first.empty() && arg.second.empty();
     } else {

@@ -100,10 +100,10 @@ std::string MovedBlock(std::size_t count, std::string_view tag, std::size_t from
     if (i >= from && i < from + len) {
       continue;
     }
-    result.push_back(lines[i]);
+    result.push_back(lines.at(i));
     if (i == to_pos) {
       for (std::size_t pos = from; pos < from + len; ++pos) {
-        result.push_back(lines[pos]);
+        result.push_back(lines.at(pos));
       }
     }
   }
@@ -148,7 +148,7 @@ const std::vector<Case>& Cases() {
 }
 
 void BmDiff(benchmark::State& state, DiffOptions::Algorithm algorithm, std::size_t case_idx) {
-  const Case& bm_case = Cases()[case_idx];
+  const Case& bm_case = Cases().at(case_idx);
   const DiffOptions options{
       .algorithm = algorithm,
       .ignore_case = bm_case.ignore_case,
@@ -169,7 +169,7 @@ void RegisterAll() {
     for (const auto& [algo_name, algorithm] :
          {std::pair{"myers", DiffOptions::Algorithm::kMyers}, std::pair{"naive", DiffOptions::Algorithm::kNaive}}) {
       benchmark::RegisterBenchmark(
-          absl::StrCat("BmDiff<", algo_name, ">/", Cases()[idx].name),
+          absl::StrCat("BmDiff<", algo_name, ">/", Cases().at(idx).name),
           [algorithm, idx](benchmark::State& state) { BmDiff(state, algorithm, idx); })
           ->Unit(benchmark::kMillisecond);
     }

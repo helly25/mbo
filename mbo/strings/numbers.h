@@ -114,13 +114,13 @@ std::string BigNumber(T v) {
     if (pos > neg && pos % 3 == ofs) {
       break;
     }
-    res.push_back(tmp[pos]);
+    res.push_back(tmp.at(pos));
   }
   while (pos < tmp.size()) {
     res.push_back('\'');
-    res.push_back(tmp[pos]);
-    res.push_back(tmp[++pos]);
-    res.push_back(tmp[++pos]);
+    res.push_back(tmp.at(pos));
+    res.push_back(tmp.at(++pos));
+    res.push_back(tmp.at(++pos));
     ++pos;
   }
   return res;

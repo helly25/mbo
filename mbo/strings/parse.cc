@@ -34,7 +34,7 @@ absl::StatusOr<char> ParseOctal(char first_char, std::string_view& data) {
   }
   const bool octal_23 = first_char == 'o';
   if (octal_23) {
-    if (data.size() < 3 || data[0] != '{') {
+    if (data.size() < 3 || data.front() != '{') {
       return absl::InvalidArgumentError("ParseString input has bad octal C++23 sequence.");
     }
     data.remove_prefix(1);
@@ -42,14 +42,14 @@ absl::StatusOr<char> ParseOctal(char first_char, std::string_view& data) {
   }
   static constexpr int kOctalDigit = 8;
   int next_chr = first_char - '0';
-  if (!data.empty() && data[0] >= '0' && data[0] <= '7') {
+  if (!data.empty() && data.front() >= '0' && data.front() <= '7') {
     next_chr = (next_chr * kOctalDigit) + (PopChar(data) - '0');
-    if (!data.empty() && data[0] >= '0' && data[0] <= '7') {
+    if (!data.empty() && data.front() >= '0' && data.front() <= '7') {
       next_chr = (next_chr * kOctalDigit) + (PopChar(data) - '0');
     }
   }
   if (octal_23) {
-    if (data.empty() || data[0] != '}') {
+    if (data.empty() || data.front() != '}') {
       return absl::InvalidArgumentError("ParseString input has bad octal C++23 sequence.");
     }
     data.remove_prefix(1);
@@ -62,15 +62,15 @@ bool NextHexChar(std::string_view& data, int& hex) {
     return false;
   }
   static constexpr int kHexDigit = 16;
-  if (data[0] >= '0' && data[0] <= '9') {
+  if (data.front() >= '0' && data.front() <= '9') {
     hex = (hex * kHexDigit) + (PopChar(data) - '0');
     return true;
   }
-  if (data[0] >= 'a' && data[0] <= 'f') {
+  if (data.front() >= 'a' && data.front() <= 'f') {
     hex = (hex * kHexDigit) + (PopChar(data) - 'a');
     return true;
   }
-  if (data[0] >= 'A' && data[0] <= 'F') {
+  if (data.front() >= 'A' && data.front() <= 'F') {
     hex = (hex * kHexDigit) + (PopChar(data) - 'A');
     return true;
   }
@@ -81,7 +81,7 @@ absl::StatusOr<char> ParseHex(std::string_view& data) {
   if (data.empty()) {
     return absl::InvalidArgumentError("ParseString input has bad hex sequence.");
   }
-  const bool hex_23 = data[0] == '{';
+  const bool hex_23 = data.front() == '{';
   if (hex_23) {
     if (data.size() < 3) {
       return absl::InvalidArgumentError("ParseString input has bad hex C++23 sequence.");
@@ -95,7 +95,7 @@ absl::StatusOr<char> ParseHex(std::string_view& data) {
     return absl::InvalidArgumentError("ParseString input has bad hex sequence.");
   }
   if (hex_23) {
-    if (data.empty() || data[0] != '}') {
+    if (data.empty() || data.front() != '}') {
       return absl::InvalidArgumentError("ParseString input has bad hex C++23 sequence.");
     }
     data.remove_prefix(1);
@@ -133,7 +133,7 @@ void HandleQuotes(const ParseOptions& options, char chr, Quotes& quotes, std::st
 }
 
 bool StopParsing(const ParseOptions& options, std::string_view data) {
-  const char chr = data[0];
+  const char chr = data.front();
   return absl::StrContains(options.stop_at_any_of, chr)  //
          || absl::StrContains(options.split_at_any_of, chr)
          || (!options.stop_at_str.empty() && data.starts_with(options.stop_at_str));
@@ -144,7 +144,7 @@ absl::StatusOr<std::string> ParseString(const ParseOptions& options, std::string
   std::string result;
   Quotes quotes = Quotes::kNone;
   while (!data.empty()) {
-    char chr = data[0];  // Cannot use `PopChar`, need the char left in-place
+    char chr = data.front();  // Cannot use `PopChar`, need the char left in-place
     if (quotes == Quotes::kNone
         && (StopParsing(options, data) || (!options.allow_unquoted && chr != '\'' && chr != '"'))) {
       return result;
@@ -227,10 +227,10 @@ absl::StatusOr<std::vector<std::string>> ParseStringList(const ParseOptions& opt
   if (str_options.split_at_any_of.empty()) {
     str_options.split_at_any_of = ",";
   }
-  if (absl::StrContains(options.stop_at_any_of, data[0])) {
+  if (absl::StrContains(options.stop_at_any_of, data.front())) {
     return result;
   }
-  if (data.size() == 1 && absl::StrContains(str_options.split_at_any_of, data[0])) {
+  if (data.size() == 1 && absl::StrContains(str_options.split_at_any_of, data.front())) {
     result.emplace_back("");
     result.emplace_back("");
     data.remove_prefix(1);
@@ -242,10 +242,10 @@ absl::StatusOr<std::vector<std::string>> ParseStringList(const ParseOptions& opt
     if (data.empty()) {
       return result;
     }
-    if (absl::StrContains(options.stop_at_any_of, data[0])) {
+    if (absl::StrContains(options.stop_at_any_of, data.front())) {
       return result;
     }
-    if (data.size() == 1 && absl::StrContains(str_options.split_at_any_of, data[0])) {
+    if (data.size() == 1 && absl::StrContains(str_options.split_at_any_of, data.front())) {
       result.emplace_back("");
       data.remove_prefix(1);
       return result;

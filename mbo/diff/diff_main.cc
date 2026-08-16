@@ -332,5 +332,5 @@ int main(int argc, char* argv[]) {
     std::cerr << "Exactly two files are required. Use: " << fs::path(argv[0]).filename().string() << " --help\n";
     return kExitTrouble;
   }
-  return Diff(args[1], args[2]);
+  return Diff(args.at(1), args.at(2));
 }

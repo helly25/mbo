@@ -102,8 +102,8 @@ bool CopytNextChar(std::string_view& pattern, std::string& re2_pattern) {
   if (pattern.empty()) {
     return false;
   }
-  if (pattern[0] != '\\') {
-    re2_pattern += pattern[0];
+  if (pattern.front() != '\\') {
+    re2_pattern += pattern.front();
     pattern.remove_prefix(1);
     return true;
   }
