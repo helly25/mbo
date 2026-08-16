@@ -1,5 +1,6 @@
 # 0.13.3
 
+- Enabled `cppcoreguidelines-pro-bounds-avoid-unchecked-container-access`: unchecked `operator[]` is now a clang-tidy error. Containers that bounds-check themselves (`LimitedMap`, `LimitedVector`, `Json`) and insert-semantics maps (absl's) are excluded by class; the hash/digest kernels and other in-range-by-construction code carry scoped `NOLINT` blocks.
 - Fixed `LimitedVector` comparison operators (`==`, `<=>`, `<`), which looped to `min` of the CAPACITIES instead of the sizes: comparing partially-filled vectors read uninitialized slots (or threw in a require-throws build). Found by `pro-bounds-avoid-unchecked-container-access`.
 - Converted unchecked `operator[]` to `.at()`/`std::get` (or a reasoned `NOLINT` in benchmarks' timed loops and compile-time code) across the hash, digest, json, types and container libraries.
 - Converted unchecked `operator[]` to `.front()`/`.at()` (or a reasoned `NOLINT` on hot paths) across the diff, strings, log, mope, file and testing libraries, preparing `pro-bounds-avoid-unchecked-container-access`.
