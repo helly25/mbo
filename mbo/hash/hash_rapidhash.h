@@ -38,7 +38,7 @@
 // generated with the reference header.
 namespace mbo::hash::rapidhash {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-avoid-unchecked-container-access)
 
 namespace rapidhash_internal {
 
@@ -164,7 +164,7 @@ struct Algorithm {
   }
 };
 
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::hash::rapidhash
 

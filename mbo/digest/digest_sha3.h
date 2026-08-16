@@ -34,7 +34,7 @@
 // all values are pinned in digest_test.cc.
 namespace mbo::digest {
 
-// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
+// NOLINTBEGIN(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-avoid-unchecked-container-access)
 // NOLINTBEGIN(readability-identifier-length): x/y are the spec's lane coordinates.
 
 namespace sha3_internal {
@@ -234,7 +234,7 @@ constexpr Algorithm::DigestType Digest(std::string_view data) noexcept {
 }  // namespace sha3_512
 
 // NOLINTEND(readability-identifier-length)
-// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index)
+// NOLINTEND(*-magic-numbers,*-pointer-arithmetic,*-constant-array-index,*-avoid-unchecked-container-access)
 
 }  // namespace mbo::digest
 
