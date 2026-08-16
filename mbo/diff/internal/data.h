@@ -48,8 +48,10 @@ class Data {
   Data(Data&&) = delete;
   Data& operator=(Data&&) = delete;
 
+  // NOLINTNEXTLINE(*-avoid-unchecked-container-access): Done() guards; hot line fetch.
   std::string_view Next() noexcept { return Done() ? "" : text_[idx_++].line; }
 
+  // NOLINTNEXTLINE(*-avoid-unchecked-container-access): Done() guards; hot line fetch.
   std::string_view Line() const noexcept { return Done() ? "" : text_[idx_].line; }
 
   const LineCache& GetCache(std::size_t ofs) const noexcept {

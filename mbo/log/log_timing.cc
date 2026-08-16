@@ -53,7 +53,7 @@ std::string_view ReverseFindSpaceSkipPastMatchingBrackets(std::string_view str) 
   std::size_t brackets = 0;
   std::size_t angles = 0;
   for (; pos != 0; --pos) {
-    switch (str[pos]) {
+    switch (str.at(pos)) {
       default: {
         break;
       }
@@ -92,7 +92,7 @@ std::string_view ReverseStripAngleBrackets(std::string_view str) {
   std::string_view::size_type pos = str.length() - 1;
   std::size_t angles = 0;
   for (; pos != 0; --pos) {
-    switch (str[pos]) {
+    switch (str.at(pos)) {
       default: {
         break;
       }
@@ -130,9 +130,9 @@ std::string LogTimingImpl::StripFunctionName(std::string_view function) {
     return std::string(function);
   }
   for (std::size_t level = 0; pos != 0; --pos) {
-    if (function[pos] == ')') {
+    if (function.at(pos) == ')') {
       ++level;
-    } else if (function[pos] == '(') {
+    } else if (function.at(pos) == '(') {
       --level;
       if (level == 0) {
         static constexpr std::string_view kConversion = "operator()";
@@ -141,7 +141,7 @@ std::string LogTimingImpl::StripFunctionName(std::string_view function) {
           pos -= kConversion.length();
           continue;
         }
-        if (pos > 0 && function[pos - 1] == ':') {
+        if (pos > 0 && function.at(pos - 1) == ':') {
           continue;
         }
         break;

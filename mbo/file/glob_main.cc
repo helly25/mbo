@@ -306,11 +306,11 @@ int main(int argc, char** argv) {
   if (absl::GetFlag(FLAGS_sum_every) > 0 || absl::GetFlag(FLAGS_sum_extensions)) {
     absl::SetFlag(&FLAGS_sum, true);
   }
-  const auto root = std::filesystem::path(args[1]).lexically_normal();
+  const auto root = std::filesystem::path(args.at(1)).lexically_normal();
   const absl::StatusOr<mbo::file::RootAndPattern> root_pattern =
       args.size() == 2  // NL
           ? mbo::file::GlobSplit(root)
-          : mbo::file::RootAndPattern{.root = std::string{root}, .pattern = args[2]};
+          : mbo::file::RootAndPattern{.root = std::string{root}, .pattern = args.at(2)};
   EXIT_IF_ERROR(root_pattern);
   Entries entries(root_pattern->root);
 

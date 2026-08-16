@@ -35,11 +35,11 @@ std::vector<std::string_view> DropIndentAndSplit(std::string_view text) {
 
   std::vector<std::string_view> lines = absl::StrSplit(text, '\n');
   if (lines.size() > start) {
-    std::size_t pos = lines[start].find_first_not_of(" \t");
+    std::size_t pos = lines.at(start).find_first_not_of(" \t");
     if (pos == std::string_view::npos) {
-      pos = lines[start].size();
+      pos = lines.at(start).size();
     }
-    const std::string prefix(lines[start], 0, pos);
+    const std::string prefix(lines.at(start), 0, pos);
     // std::cout << "First(" << start << "): <" << lines[start] << ">\n";
     // std::cout << "Prefix: <" << prefix << ">\n";
 
@@ -47,7 +47,7 @@ std::vector<std::string_view> DropIndentAndSplit(std::string_view text) {
       lines.back() = "";
     }
     for (std::size_t i = start; i < lines.size(); ++i) {
-      absl::ConsumePrefix(&lines[i], prefix);
+      absl::ConsumePrefix(&lines.at(i), prefix);
     }
   }
   return lines;
