@@ -26,14 +26,14 @@ checked only after its pull request has been merged.
   - Read in binary mode so byte counts remain consistent across platforms.
   - Add failure-path tests where practical.
   - PR: [#329](https://github.com/helly25/mbo/pull/329).
-- [ ] Make `GetMaxLines` distinguish EOF from an I/O failure.
+- [x] Make `GetMaxLines` distinguish EOF from an I/O failure.
   - Return an error when the underlying read fails.
   - Add regression coverage.
   - PR: [#330](https://github.com/helly25/mbo/pull/330).
 - [ ] Make `NormalizePath` portable across native path character types.
   - Avoid constructing `std::string_view` directly from `path.c_str()`.
   - Add or document Windows-oriented behavior and tests.
-  - PR: pending.
+  - PR: [#331](https://github.com/helly25/mbo/pull/331).
 
 ## Build, CI, and release engineering
 

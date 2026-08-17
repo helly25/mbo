@@ -172,6 +172,14 @@ TEST_F(FileTest, NormalizePath) {
   EXPECT_THAT(NormalizePath("a/"), "a");
 }
 
+TEST_F(FileTest, NormalizePathAcceptsNativeString) {
+  using PathChar = fs::path::value_type;
+  using PathString = fs::path::string_type;
+  const PathString input = {static_cast<PathChar>('a'), static_cast<PathChar>('/'), static_cast<PathChar>('\\')};
+  const PathString expected = {static_cast<PathChar>('a')};
+  EXPECT_EQ(NormalizePath(fs::path(input)).native(), expected);
+}
+
 TEST_F(FileTest, JoinPaths) {
   EXPECT_THAT(JoinPaths(""), "");
   EXPECT_THAT(JoinPaths("a"), "a");
