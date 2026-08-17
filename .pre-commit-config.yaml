@@ -41,7 +41,7 @@ repos:
     rev: v2.4.3
     hooks:
       - id: codespell
-        files: (^|/)(README|CONTRIBUTING)[.]md$
+        files: "[.]md$"
 
   - repo: local
     hooks:
