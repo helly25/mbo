@@ -37,7 +37,7 @@ checked only after its pull request has been merged.
 
 ## Build, CI, and release engineering
 
-- [ ] Reduce external dependency warning noise in default builds.
+- [x] Reduce external dependency warning noise in default builds.
   - Treat external headers consistently as system headers or apply narrowly
     scoped external-warning suppression.
   - Verify project warnings remain errors.
