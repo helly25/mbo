@@ -55,7 +55,7 @@ checked only after its pull request has been merged.
 
 - [ ] Correct existing README and contributing-guide spelling errors and add a
       lightweight documentation spell-checking hook.
-  - PR: pending.
+  - PR: [#335](https://github.com/helly25/mbo/pull/335).
 - [ ] Add fuzz targets for glob conversion, string parsing, INI parsing, diff
       inputs/options, and digest checksum-file parsing.
   - Split into independently reviewable PRs if the targets are not naturally
