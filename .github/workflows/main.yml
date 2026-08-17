@@ -12,9 +12,9 @@ jobs:
   trunk:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@v6
       - name: Trunk Check
-        uses: trunk-io/trunk-action@04ba50e7658c81db7356da96657e6e77f220bfa3 # v1
+        uses: trunk-io/trunk-action@v1
       - name: Trunk must not own git hooks
         run: |
           # Git hooks belong to pre-commit (see .pre-commit-config.yaml); trunk's
@@ -47,11 +47,11 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+      - uses: pre-commit/action@v3.0.1
         env:
           # The `trunk` job runs the full `trunk check`; do not also run trunk
           # from pre-commit in CI (see the trunk-fmt hook). Likewise the
@@ -60,7 +60,7 @@ jobs:
           # [manual]` today, so it is already absent here; naming it keeps that
           # true when the hook is promoted to an automatic gate.
           SKIP: trunk-fmt,clang-tidy
-      - uses: pre-commit-ci/lite-action@9d882e7a565f7008d4faf128f27d1cb6503d4ebf # v1.0.2
+      - uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
 
   clang-tidy:
@@ -70,13 +70,13 @@ jobs:
     # compile DB must gate, so a broken extractor/toolchain fails this job. Only
     # the findings themselves are tolerated, at the step below.
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@v6
         with:
           # Full history so the branch can be diffed against `main` to pick the
           # changed sources below.
           fetch-depth: 0
-      - uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2 # v3
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+      - uses: bazelbuild/setup-bazelisk@v3
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
@@ -105,7 +105,7 @@ jobs:
       # benefit. Every bazel call in this job picks the flag up via .bazelrc.user.
       - name: Route bazel to a disk cache
         run: echo "common --disk_cache=$HOME/.cache/bazel_disk-cache" > .bazelrc.user
-      - uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache/restore@v5
         id: cache_restore
         with:
           path: "~/.cache/bazel_disk-cache"
@@ -169,7 +169,7 @@ jobs:
         # commands parseable by the matching hermetic clang-tidy.
         run: ./compile_commands-update.sh
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@v4
         # Only from `main`, which is the run that lints the whole tree: that DB
         # is the one worth keeping, to reproduce a finding locally against the
         # exact same commands and to inspect flag/toolchain drift. A branch run
@@ -214,14 +214,14 @@ jobs:
         env:
           CDB_ARTIFACT_URL: ${{steps.upload_cdb.outputs.artifact-url}}
 
-      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+      - uses: pre-commit/action@v3.0.1
         with:
           # Only the clang-tidy hook: every other hook already ran in the
           # `pre-commit` job. Scope comes from the step above: changed sources
           # on a branch, the whole tree on main.
           extra_args: clang-tidy ${{env.CLANG_TIDY_SCOPE}}
 
-      - uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache/save@v5
         if: always() && steps.cache_restore.outputs.cache-hit != 'true'
         with:
           path: "~/.cache/bazel_disk-cache"
@@ -330,7 +330,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@v4
       - name: Ensure every job is wired into this gate
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}

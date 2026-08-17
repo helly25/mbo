@@ -10,7 +10,7 @@ permissions: read-all
 
 jobs:
   release:
-    uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@8889dd1e94d2f85d52106c5ebc770b1cb83f4e41 # v7
+    uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7
     permissions:
       contents: write
       id-token: write

@@ -25,5 +25,5 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: helly25/bzl/.github/workflows/trigger_release.yaml@21b13b0068a4b6f0672a95a934c730384323e45e # main
+    uses: helly25/bzl/.github/workflows/trigger_release.yaml@main
     secrets: inherit
