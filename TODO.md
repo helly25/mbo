@@ -33,7 +33,7 @@ checked only after its pull request has been merged.
 - [ ] Make `NormalizePath` portable across native path character types.
   - Avoid constructing `std::string_view` directly from `path.c_str()`.
   - Add or document Windows-oriented behavior and tests.
-  - PR: pending.
+  - PR: [#331](https://github.com/helly25/mbo/pull/331).
 
 ## Build, CI, and release engineering
 
