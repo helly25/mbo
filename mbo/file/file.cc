@@ -18,13 +18,20 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <ios>
 #include <limits>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <system_error>
+
+#ifndef _WIN32
+# include <fcntl.h>
+# include <unistd.h>
+#endif
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -120,31 +127,35 @@ absl::StatusOr<std::string> GetContents(const std::filesystem::path& file_name) 
 }
 
 absl::StatusOr<std::string> GetMaxLines(const std::filesystem::path& file_name, std::size_t max_lines) {
-  std::ifstream ifs;
-  ifs.exceptions(static_cast<std::ios_base::iostate>(0));
-  ifs.open(file_name, std::ios_base::in);
-  if (!ifs) {
+#ifdef _WIN32
+  const std::unique_ptr<std::FILE, decltype(&std::fclose)> file(_wfopen(file_name.c_str(), L"rb"), &std::fclose);
+#else
+  // The two-argument overload does not consume the variadic mode parameter.
+  const int descriptor = ::open(file_name.c_str(), O_RDONLY | O_CLOEXEC);  // NOLINT(cppcoreguidelines-pro-type-vararg)
+  const std::unique_ptr<std::FILE, decltype(&std::fclose)> file(
+      descriptor < 0 ? nullptr : ::fdopen(descriptor, "rb"), &std::fclose);
+  if (!file && descriptor >= 0) {
+    ::close(descriptor);
+  }
+#endif
+  if (!file) {
     return absl::NotFoundError(absl::StrFormat("Unable to read file: '%s'", file_name));
   }
 
   std::string result;
-  std::string line;
-  std::size_t curr_line = 0;
-
-  if (ifs.eof()) {
-    return result;
-  }
-
-  while (curr_line++ < max_lines) {
-    line.clear();
-    if (!std::getline(ifs, line, '\n') && !ifs.eof()) {
-      return absl::UnknownError(absl::StrFormat("Unable to read file: '%s'", file_name));
-    }
-    absl::StrAppend(&result, line);
-    if (ifs.eof()) {
+  std::size_t lines = 0;
+  while (lines < max_lines) {
+    const int character = std::fgetc(file.get());
+    if (character == EOF) {
+      if (std::ferror(file.get()) != 0) {
+        return absl::UnknownError(absl::StrFormat("Unable to read file: '%s'", file_name));
+      }
       break;
     }
-    absl::StrAppend(&result, "\n");
+    result.push_back(static_cast<char>(character));
+    if (character == '\n') {
+      ++lines;
+    }
   }
   return result;
 }

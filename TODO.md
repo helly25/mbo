@@ -27,7 +27,7 @@ checked only after its pull request has been merged.
   - Add failure-path tests where practical.
   - PR: [#329](https://github.com/helly25/mbo/pull/329).
 - [ ] Make `GetMaxLines` distinguish EOF from an I/O failure.
-  - Return an error when the stream enters `badbit`.
+  - Return an error when the underlying read fails.
   - Add regression coverage.
   - PR: [#330](https://github.com/helly25/mbo/pull/330).
 - [ ] Make `NormalizePath` portable across native path character types.
