@@ -44,7 +44,7 @@ checked only after its pull request has been merged.
   - PR: [#332](https://github.com/helly25/mbo/pull/332).
 - [ ] Pin third-party GitHub Actions to immutable commit SHAs.
   - Preserve readable version comments and automated update support.
-  - PR: pending.
+  - PR: [#333](https://github.com/helly25/mbo/pull/333).
 - [ ] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.
