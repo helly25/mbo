@@ -42,14 +42,14 @@ checked only after its pull request has been merged.
     scoped external-warning suppression.
   - Verify project warnings remain errors.
   - PR: [#332](https://github.com/helly25/mbo/pull/332).
-- [ ] Document the repository's GitHub Actions versioning policy.
+- [x] Document the repository's GitHub Actions versioning policy.
   - Prefer readable version references and require a documented reason for any
     commit-SHA pin.
   - PR: [#333](https://github.com/helly25/mbo/pull/333).
 - [ ] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.
-  - PR: pending.
+  - PR: [#334](https://github.com/helly25/mbo/pull/334).
 
 ## Documentation and quality coverage
 
