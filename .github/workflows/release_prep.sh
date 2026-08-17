@@ -90,7 +90,7 @@ EXCLUDES=(
 # worktree into a THROWAWAY index so the real index/checkout is never touched
 # (nothing to undo afterwards), and archive that tree. export-ignore still
 # applies via the staged .gitattributes (+ --worktree-attributes).
-TMP_INDEX_DIR="$(mktemp -d)"
+TMP_INDEX_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mbo-release-index.XXXXXX")"
 TMP_INDEX="${TMP_INDEX_DIR}/index"
 function cleanup() {
   rm -rf -- "${TMP_INDEX_DIR}"
