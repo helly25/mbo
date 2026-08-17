@@ -49,7 +49,7 @@ checked only after its pull request has been merged.
 - [ ] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.
-  - PR: pending.
+  - PR: [#334](https://github.com/helly25/mbo/pull/334).
 
 ## Documentation and quality coverage
 
