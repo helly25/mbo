@@ -45,6 +45,8 @@ namespace {
 
 struct FileCloser final {
   void operator()(std::FILE* file) const noexcept {
+    // This releases the owned stream; it does not remove the filesystem entry.
+    // A unique_ptr deleter cannot report a failure while closing a read-only stream.
     (void)std::fclose(file);  // NOLINT(cppcoreguidelines-owning-memory)
   }
 };
