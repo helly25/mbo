@@ -37,14 +37,15 @@ checked only after its pull request has been merged.
 
 ## Build, CI, and release engineering
 
-- [ ] Reduce external dependency warning noise in default builds.
+- [x] Reduce external dependency warning noise in default builds.
   - Treat external headers consistently as system headers or apply narrowly
     scoped external-warning suppression.
   - Verify project warnings remain errors.
   - PR: [#332](https://github.com/helly25/mbo/pull/332).
-- [ ] Pin third-party GitHub Actions to immutable commit SHAs.
-  - Preserve readable version comments and automated update support.
-  - PR: pending.
+- [ ] Document the repository's GitHub Actions versioning policy.
+  - Prefer readable version references and require a documented reason for any
+    commit-SHA pin.
+  - PR: [#333](https://github.com/helly25/mbo/pull/333).
 - [ ] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.
