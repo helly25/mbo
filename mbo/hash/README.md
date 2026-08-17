@@ -2,18 +2,18 @@
 
 Fast, `constexpr`-safe, non-cryptographic hashing, built around the in-house
 **mumbo/jumbo and dumbo** family: notice-free, pure Apache-2.0, and MUM-based
-(widening multiply). All three algorithm cleanly pass the quality assesment of
+(widening multiply). All three algorithms cleanly pass the quality assessment of
 [SMHasher3](https://gitlab.com/fwojcik/smhasher3) with a rating of 188/188.
 
 The `mumbo` algorithm (64-bit) is the all-round default of this library. It is
-among the fastest hashes offered in the lirbrary on every machine we measured.
-Is is SMHasher3-clean, notice-free Apache-2.0 licensed, and offers both a
+among the fastest hashes offered in the library on every machine we measured.
+It is SMHasher3-clean, notice-free Apache-2.0 licensed, and offers both a
 streaming API and a [Starlark](https://github.com/bazelbuild/starlark) port so
 you can natively use the algorithm in [Bazel](https://bazel.build/) projects.
 Its native 128-bit sibling `jumbo` is the only clean native 128 we measured.
-Last but not least `dumbo` is a compact single-lane companion with a very a
+Last but not least `dumbo` is a compact single-lane companion with a very
 different profile - fastest (here) on tiny keys, slower on bulk, but still
-passing SMHasher2 and thus offering fully prooven hash algorithm quality.
+passing SMHasher2 and thus offering fully proven hash algorithm quality.
 
 This sub-library also ships a **build-seed mangle** (`hash_mangle.h`) wrapper
 which offers restricted/limited, `constexpr`-safe compile-time hash mangling
@@ -60,7 +60,7 @@ Three entry points, split by contract:
 - **Apache-2.0 with clean attribution**: transcription notices live in the
   repository-root [NOTICE](../../NOTICE); [LICENSE](../../LICENSE) stays pure
   Apache-2.0 and are free of crypto-library dependencies. All hash algorithms
-  (and similarily all digest algorithms) are spec-frozen pure functions that we
+  (and similarly all digest algorithms) are spec-frozen pure functions that we
   verify against official vectors instead of trusting an unverifiable supply
   chain (also see [mbo/digest/README.md](../digest/README.md)).
 - **Non-cryptographic hash-table hashes, with one keyed exception**: the
@@ -108,8 +108,8 @@ For the exact score and the failing families see [Quality: SMHasher3](#quality-s
 <!-- END algorithm overview -->
 
 Notes: the **Starlark** column marks the hashes that are also implemented in
-Starlark for direct buil-graph construction-time[`hash.bzl`](hash.bzl) usage.
-Thos are algorithms are (`hash.mumbo`, `hash.dumbo`, `hash.fnv1a`). They are
+Starlark for direct build-graph construction-time [`hash.bzl`](hash.bzl) usage.
+Those algorithms are (`hash.mumbo`, `hash.dumbo`, `hash.fnv1a`). They are
 byte-for-byte identical to the C++ prime and verified against it (`hash_tool`).
 Only the one-shot 64-bit form is ported, so the native 128-bit `jumbo` and
 streaming stay C++-only.
@@ -728,18 +728,18 @@ its restriction to 4 lanes.
   - **mumbo (The High-Quality Heavyweight)**: Natively relies on an 8-lane parallel bulk ingestion tier (a 128-byte window). While this provides exceptional diffusion and statistical guarantees, it demands more architectural registers than a standard x86-64 or ARM64 CPU can comfortably provide without spilling state to the stack (rsp/rbp thrashing). This register starvation effectively stalls the CPU's out-of-order execution engine, limiting the real-world instruction-level parallelism (ILP) you can achieve. The best measured algorithm in the mid/long term
     usually is `rapidhash` which uses 7 lanes. Conventional wisdom suggests that this is not optimal in many ways (due to
     compute-engine layout in concrete CPU architectures) and that it should be possible to take advantage of AVX registers
-    and heavy register renaming capabilities. Non-theless, empirically `rapidhash` demonstrates 7 as a sweetspot.
+    and heavy register renaming capabilities. Nonetheless, empirically `rapidhash` demonstrates 7 as a sweet spot.
 
-  - **fambo (The Lean Speed Demon)**: In the first generation `fambo` intentionally scales the core loop tier down to 4 completely independent lanes, shrinking the bulk window to 64 bytes. This matches standard CPU L1 cache line boundaries perfectly and frees up critical hardware registers. Combined with an explicit read-before-write temporary variable layout, it gives the compiler full clearance to schedule all four Mul128Fold64 pipelines concurrently, maximizing ILP and matching the throughput of ultra-fast hashes like `rapidhash`. However, measurement shows that after 1 KiB of input both `numbo` and `rapidhash` win. Presumably this is the switch from L1 to L2 cache where data fetching takes longer and the higher parallelism wins out. Below 1 KiB `fambo` 1st gen sits between the two, and for some sizes is out right slower anyway. This indicates that a flexible and compile time configurable approach is needed.
+  - **fambo (The Lean Speed Demon)**: In the first generation `fambo` intentionally scales the core loop tier down to 4 completely independent lanes, shrinking the bulk window to 64 bytes. This matches standard CPU L1 cache line boundaries perfectly and frees up critical hardware registers. Combined with an explicit read-before-write temporary variable layout, it gives the compiler full clearance to schedule all four Mul128Fold64 pipelines concurrently, maximizing ILP and matching the throughput of ultra-fast hashes like `rapidhash`. However, measurement shows that after 1 KiB of input both `numbo` and `rapidhash` win. Presumably this is the switch from L1 to L2 cache where data fetching takes longer and the higher parallelism wins out. Below 1 KiB `fambo` 1st gen sits between the two, and for some sizes is outright slower anyway. This indicates that a flexible and compile-time-configurable approach is needed.
 
-  - **tail if-ladder and small finalizer**: At the end of the block we have at most the block size minus one bytes to process. And have at least the tiniy size (16 bytes) to process. So we can use an if-ladder (block count - 1)
-    before the final read (backtracked using remaining legth). And finally we do an actual finalizer that uses the remainder (instead of size, after bulk processing).
+  - **tail if-ladder and small finalizer**: At the end of the block we have at most one byte less than the block size to process. And have at least the tiny size (16 bytes) to process. So we can use an if-ladder (block count - 1)
+    before the final read (backtracked using remaining length). And finally we do an actual finalizer that uses the remainder (instead of size, after bulk processing).
 
-  - **further potential**: While 4 lanes proovingly allows for full ILP, it has to be proven still what the maximum
-    lane count is that modent CPUs can handle (4, 5, 6, or 7). However, this is a compromise:
+  - **further potential**: While 4 lanes provably allow for full ILP, it remains to be proven what maximum
+    lane count is that modern CPUs can handle (4, 5, 6, or 7). However, this is a compromise:
     - More lanes in the bulk block, means faster bulk processing.
-    - More lanes also has a potential for slower processing of the non tiny, non bulk range `[17, N * 64]`.
-    - More lanes likely mean fewer mix-in constants can be used (otherwise they would constantly needing to be fetched from L1 cache.
+    - More lanes also have the potential for slower processing of the non-tiny, non-bulk range `[17, N * 64]`.
+    - More lanes likely mean fewer mix-in constants can be used (otherwise they would constantly need to be fetched from L1 cache).
 
 - **The Finalization & Distribution Trade-off**
 

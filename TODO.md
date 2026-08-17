@@ -46,7 +46,7 @@ checked only after its pull request has been merged.
   - Prefer readable version references and require a documented reason for any
     commit-SHA pin.
   - PR: [#333](https://github.com/helly25/mbo/pull/333).
-- [ ] Replace `mktemp -u` in release preparation with a safely created
+- [x] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.
   - PR: [#334](https://github.com/helly25/mbo/pull/334).
