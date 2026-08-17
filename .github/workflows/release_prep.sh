@@ -90,11 +90,15 @@ EXCLUDES=(
 # worktree into a THROWAWAY index so the real index/checkout is never touched
 # (nothing to undo afterwards), and archive that tree. export-ignore still
 # applies via the staged .gitattributes (+ --worktree-attributes).
-TMP_INDEX="$(mktemp -u)"
+TMP_INDEX_DIR="$(mktemp -d)"
+TMP_INDEX="${TMP_INDEX_DIR}/index"
+function cleanup() {
+  rm -rf -- "${TMP_INDEX_DIR}"
+}
+trap cleanup EXIT
 GIT_INDEX_FILE="${TMP_INDEX}" git read-tree HEAD
 GIT_INDEX_FILE="${TMP_INDEX}" git add --all
 ARCHIVE_TREE="$(GIT_INDEX_FILE="${TMP_INDEX}" git write-tree)"
-rm -f "${TMP_INDEX}"
 git archive --format=tar.gz --prefix="${PREFIX}/" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${TAG}" --worktree-attributes "${ARCHIVE_TREE}"
 
 # Print header
