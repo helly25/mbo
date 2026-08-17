@@ -41,7 +41,7 @@ checked only after its pull request has been merged.
   - Treat external headers consistently as system headers or apply narrowly
     scoped external-warning suppression.
   - Verify project warnings remain errors.
-  - PR: pending.
+  - PR: [#332](https://github.com/helly25/mbo/pull/332).
 - [ ] Pin third-party GitHub Actions to immutable commit SHAs.
   - Preserve readable version comments and automated update support.
   - PR: pending.
