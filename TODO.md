@@ -30,7 +30,7 @@ checked only after its pull request has been merged.
   - Return an error when the underlying read fails.
   - Add regression coverage.
   - PR: [#330](https://github.com/helly25/mbo/pull/330).
-- [ ] Make `NormalizePath` portable across native path character types.
+- [x] Make `NormalizePath` portable across native path character types.
   - Avoid constructing `std::string_view` directly from `path.c_str()`.
   - Add or document Windows-oriented behavior and tests.
   - PR: [#331](https://github.com/helly25/mbo/pull/331).
