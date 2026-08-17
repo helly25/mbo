@@ -41,6 +41,15 @@
 #include "absl/time/time.h"
 
 namespace mbo::file {
+namespace {
+
+struct FileCloser final {
+  void operator()(std::FILE* file) const noexcept {
+    (void)std::fclose(file);  // NOLINT(cppcoreguidelines-owning-memory)
+  }
+};
+
+}  // namespace
 
 std::filesystem::path NormalizePath(const std::filesystem::path& path) {
   std::string_view path_str(path.c_str());
@@ -128,12 +137,11 @@ absl::StatusOr<std::string> GetContents(const std::filesystem::path& file_name) 
 
 absl::StatusOr<std::string> GetMaxLines(const std::filesystem::path& file_name, std::size_t max_lines) {
 #ifdef _WIN32
-  const std::unique_ptr<std::FILE, decltype(&std::fclose)> file(_wfopen(file_name.c_str(), L"rb"), &std::fclose);
+  const std::unique_ptr<std::FILE, FileCloser> file(_wfopen(file_name.c_str(), L"rb"));
 #else
   // The two-argument overload does not consume the variadic mode parameter.
   const int descriptor = ::open(file_name.c_str(), O_RDONLY | O_CLOEXEC);  // NOLINT(cppcoreguidelines-pro-type-vararg)
-  const std::unique_ptr<std::FILE, decltype(&std::fclose)> file(
-      descriptor < 0 ? nullptr : ::fdopen(descriptor, "rb"), &std::fclose);
+  const std::unique_ptr<std::FILE, FileCloser> file(descriptor < 0 ? nullptr : ::fdopen(descriptor, "rb"));
   if (!file && descriptor >= 0) {
     ::close(descriptor);
   }
