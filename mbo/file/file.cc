@@ -37,7 +37,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/strip.h"
 #include "absl/time/time.h"
 
 namespace mbo::file {
@@ -54,8 +53,12 @@ struct FileCloser final {
 }  // namespace
 
 std::filesystem::path NormalizePath(const std::filesystem::path& path) {
-  std::string_view path_str(path.c_str());
-  while (path_str.length() > 1 && (absl::ConsumeSuffix(&path_str, "/") || absl::ConsumeSuffix(&path_str, "\\"))) {}
+  using PathChar = std::filesystem::path::value_type;
+  std::basic_string_view<PathChar> path_str(path.native());
+  while (path_str.length() > 1
+         && (path_str.back() == static_cast<PathChar>('/') || path_str.back() == static_cast<PathChar>('\\'))) {
+    path_str.remove_suffix(1);
+  }
   return std::filesystem::path(path_str).lexically_normal();
 }
 
