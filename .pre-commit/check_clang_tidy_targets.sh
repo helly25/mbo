@@ -49,8 +49,18 @@ if ! TAGGED="$(bazel query 'attr(tags, "clang-tidy", //...)' 2>/dev/null | sed '
   exit 0
 fi
 
-# The list the build actually uses.
-LISTED="$(sed -n 's|^ *"\(//[^"]*\)",$|\1|p' "${TARGETS_BZL}" | sort)"
+# The list the build actually uses. Expand `_fuzz_test_targets` from its source
+# rather than duplicating rules_fuzzing's generated suffixes in this check.
+LISTED="$({
+  sed -n 's|^ *"\(//[^"]*\)",$|\1|p' "${TARGETS_BZL}"
+  while IFS= read -r base; do
+    sed -n '/^def _fuzz_test_targets/,/^CLANG_TIDY_MANUAL_TARGETS/ {
+      s|^ *"\([^"]*\)",$|\1|p
+    }' "${TARGETS_BZL}" | while IFS= read -r suffix; do
+      printf '%s%s\n' "${base}" "${suffix}"
+    done
+  done < <(sed -n 's|.*_fuzz_test_targets("\(//[^"]*\)").*|\1|p' "${TARGETS_BZL}")
+} | sort)"
 
 if [ "${TAGGED}" = "${LISTED}" ]; then
   exit 0
