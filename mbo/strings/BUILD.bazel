@@ -14,6 +14,7 @@
 # limitations under the License.
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_fuzzing//fuzzing:cc_defs.bzl", "cc_fuzz_test")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -102,6 +103,18 @@ cc_test(
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
+)
+
+cc_fuzz_test(
+    name = "parse_fuzz_test",
+    size = "small",
+    srcs = ["parse_fuzz_test.cc"],
+    # Fuzz campaigns are opt-in and do not belong in ordinary wildcard test matrices.
+    tags = [
+        "clang-tidy",
+        "manual",
+    ],
+    deps = [":parse_cc"],
 )
 
 cc_library(

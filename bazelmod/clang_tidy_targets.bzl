@@ -46,5 +46,11 @@ CLANG_TIDY_MANUAL_TARGETS = [
     "//mbo/file:glob_fuzz_test_run",
     "//mbo/hash:hash_benchmark",
     "//mbo/hash:hash_differential_test",
+    "//mbo/strings:parse_fuzz_test",
+    "//mbo/strings:parse_fuzz_test_bin",
+    "//mbo/strings:parse_fuzz_test_corpus",
+    "//mbo/strings:parse_fuzz_test_oss_fuzz",
+    "//mbo/strings:parse_fuzz_test_raw_",
+    "//mbo/strings:parse_fuzz_test_run",
     "//tools:show_compiler",
 ]
