@@ -38,6 +38,12 @@ repository's flags would only produce bogus errors for the SMHasher3 headers
 CLANG_TIDY_MANUAL_TARGETS = [
     "//mbo/container:limited_set_benchmark",
     "//mbo/diff:diff_benchmark",
+    "//mbo/file:glob_fuzz_test",
+    "//mbo/file:glob_fuzz_test_bin",
+    "//mbo/file:glob_fuzz_test_corpus",
+    "//mbo/file:glob_fuzz_test_oss_fuzz",
+    "//mbo/file:glob_fuzz_test_raw_",
+    "//mbo/file:glob_fuzz_test_run",
     "//mbo/hash:hash_benchmark",
     "//mbo/hash:hash_differential_test",
     "//tools:show_compiler",
