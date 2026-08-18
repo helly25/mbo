@@ -507,7 +507,7 @@
     - Option to suppress calling clear in the destructor for cases where that is not a constexpr.
     - Option to require presorted input: Allows much large constexpr `LimitedSet`/`LimitedValue`.
 - Renamed `types::AbslFormat` to `types::AbslStringify` to better reflect its purpose.
-- Changed `types::AbslStringify` to print field names prefixed with a fot '.' (requires Clang).
+- Changed `types::AbslStringify` to print field names prefixed with a dot '.' (requires Clang).
 
 # 0.2.6
 
@@ -531,7 +531,7 @@
 
 # 0.2.3
 
-- For `LimitedVector` add an unused sentinal, so that `end` and other functions do not cause memory issues.
+- For `LimitedVector` add an unused sentinel, so that `end` and other functions do not cause memory issues.
 
 # 0.2.2
 
@@ -593,7 +593,7 @@
   - Added:
     - macro `MBO_ASSERT_OK_AND_ASSIGN`: Simplifies testing with functions that return `absl::StatusOr<T>`.
 - types:
-  - Addded:
+  - Added:
     - concept `ContainerIsForwardIteratable` determines whether a types can be used in forward iteration.
     - concept `ContainerHasEmplace` determines whether a container has `emplace`.
     - concept `ContainerHasEmplaceBack` determines whether a container has `emplace_back`.
