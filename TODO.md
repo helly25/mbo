@@ -69,5 +69,3 @@ also updates this file to the completed state.
 - [ ] Add coverage reporting focused on uninstantiated templates and malformed
       input branches.
   - PR: pending.
-- [ ] Add public-header API compatibility checking before releases.
-  - PR: pending.
