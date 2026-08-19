@@ -259,20 +259,19 @@ jobs:
         # The pinned default toolchain (see bazelmod/llvm.MODULE.bazel).
         llvm_version: [22.1.8]
         bazel_config: [opt]
-        # Bazel-version compatibility rungs: the latest release of each tested
-        # major, crossed with the os/compiler combos below. MODULE.bazel allows
-        # Bazel >=8.0.0; CI uses the latest 8.x as its representative.
-        bazel_version: [8.7.0, 9.2.0]
+        # Bazel-version compatibility rungs: the minimum supported release and
+        # the latest stable release, crossed with the os/compiler combos below.
+        bazel_version: [8.0.0, 9.2.0]
         exclude:
           - os: ubuntu-latest
             compiler: native
           - os: macos-26
             compiler: gcc
           # The 8.x rung is a build-system-compat check (MODULE.bazel
-          # loading, rules resolution) - platform-agnostic, so run them on
+          # loading, rules resolution) - platform-agnostic, so run it on
           # ubuntu only. macOS keeps 9.2.0 for platform coverage.
           - os: macos-26
-            bazel_version: 8.7.0
+            bazel_version: 8.0.0
 
     uses: ./.github/workflows/test.yml
     with:
