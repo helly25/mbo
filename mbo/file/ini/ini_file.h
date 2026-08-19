@@ -47,6 +47,8 @@ class IniFile {
 
   static absl::StatusOr<IniFile> Read(std::string_view filename);
 
+  static IniFile Parse(std::string_view content);
+
   static IniFile NewEmpty() { return {}; }
 
   static GroupKey Clean(const GroupKey& group_key) {

@@ -35,6 +35,10 @@ namespace mbo::file {
 absl::StatusOr<IniFile> IniFile::Read(std::string_view filename) {
   // TODO(helly25): Implement LineReader?
   MBO_ASSIGN_OR_RETURN(const std::string content, GetContents(filename));
+  return Parse(content);
+}
+
+IniFile IniFile::Parse(std::string_view content) {
   const std::vector<std::string_view> lines = absl::StrSplit(content, '\n', absl::SkipEmpty());
   IniFile ini;
   std::string_view group;

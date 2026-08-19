@@ -77,6 +77,13 @@ struct IniFileTest : ::testing::Test {
   }
 };
 
+TEST_F(IniFileTest, Parse) {
+  const IniFile ini = IniFile::Parse("root = value\n[group]\n key = data \n");
+
+  EXPECT_THAT(ini.GetKeyOrDefault({.group = "", .key = "root"}), Eq("value"));
+  EXPECT_THAT(ini.GetKeyOrDefault({.group = "group", .key = "key"}), Eq("data"));
+}
+
 TEST_F(IniFileTest, TestGolden) {
   MBO_ASSERT_OK_AND_MOVE_TO(
       GatherTests(mbo::testing::RunfilesDirOrDie("//mbo/file/ini:tests/test.ini")),
