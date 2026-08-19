@@ -276,17 +276,41 @@ jobs:
       - name: Collect coverage
         if: inputs.bazel_config == 'coverage'
         run: |
+          set -euo pipefail
           bazel ${BAZEL_INIT} coverage ${BAZEL_ARGS} //... \
             --combined_report=lcov \
             --instrumentation_filter='^//mbo/.*' \
             --test_tag_filters=-lfs,-fuzz-test
           cp "$(bazel ${BAZEL_INIT} info output_path)/_coverage/_coverage_report.dat" coverage.lcov
 
+          python3 -m unittest tools/coverage_test.py
+          BASE_ARGS=()
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+              git fetch --quiet --no-tags --unshallow origin
+            fi
+            git fetch --quiet --no-tags origin main
+            BASE_ARGS=(--base-ref origin/main)
+          fi
+          python3 tools/coverage.py \
+            --lcov coverage.lcov \
+            --policy coverage_policy.json \
+            --summary coverage-summary.md \
+            "${BASE_ARGS[@]}"
+          {
+            echo "### Production coverage"
+            echo
+            cat coverage-summary.md
+          } >>"${GITHUB_STEP_SUMMARY}"
+
       - uses: actions/upload-artifact@v4
         if: inputs.bazel_config == 'coverage'
         with:
           name: coverage-lcov
-          path: coverage.lcov
+          path: |
+            coverage.lcov
+            coverage-summary.md
+          retention-days: 14
 
       - uses: actions/cache/save@v5
         if: ${{!startsWith(github.ref, 'refs/tags/')}}

@@ -1,0 +1,62 @@
+{
+  "include": ["mbo/**"],
+  "exclude": [
+    "mbo/**/*_benchmark.cc",
+    "mbo/**/*_fuzz_test.cc",
+    "mbo/**/*_test.cc",
+    "mbo/**/*_test.h"
+  ],
+  "minimum": { "lines": 90, "functions": 90, "branches": 57 },
+  "patch_minimum": { "lines": 95, "branches": 85 },
+  "categories": {
+    "config": { "include": ["mbo/config/**"], "minimum": {} },
+    "container": {
+      "include": ["mbo/container/**"],
+      "minimum": { "lines": 96, "functions": 94, "branches": 59 }
+    },
+    "diff": {
+      "include": ["mbo/diff/**"],
+      "minimum": { "lines": 96, "functions": 99, "branches": 88 }
+    },
+    "digest": {
+      "include": ["mbo/digest/**"],
+      "minimum": { "lines": 98, "functions": 95, "branches": 95 }
+    },
+    "file": {
+      "include": ["mbo/file/**"],
+      "minimum": { "lines": 82, "functions": 94, "branches": 67 }
+    },
+    "hash": {
+      "include": ["mbo/hash/**"],
+      "minimum": { "lines": 98, "functions": 99, "branches": 39 }
+    },
+    "json": {
+      "include": ["mbo/json/**"],
+      "minimum": { "lines": 87, "functions": 54, "branches": 53 }
+    },
+    "log": {
+      "include": ["mbo/log/**"],
+      "minimum": { "lines": 86, "functions": 15, "branches": 75 }
+    },
+    "mope": {
+      "include": ["mbo/mope/**"],
+      "minimum": { "lines": 34, "functions": 44, "branches": 21 }
+    },
+    "status": {
+      "include": ["mbo/status/**"],
+      "minimum": { "lines": 100, "functions": 92, "branches": 75 }
+    },
+    "strings": {
+      "include": ["mbo/strings/**"],
+      "minimum": { "lines": 89, "functions": 100, "branches": 81 }
+    },
+    "testing": {
+      "include": ["mbo/testing/**"],
+      "minimum": { "lines": 89, "functions": 75, "branches": 70 }
+    },
+    "types": {
+      "include": ["mbo/types/**"],
+      "minimum": { "lines": 90, "functions": 91, "branches": 47 }
+    }
+  }
+}
