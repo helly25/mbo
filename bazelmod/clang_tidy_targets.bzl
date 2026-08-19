@@ -49,7 +49,7 @@ def _fuzz_test_targets(target):
 CLANG_TIDY_MANUAL_TARGETS = [
     "//mbo/container:limited_set_benchmark",
     "//mbo/diff:diff_benchmark",
-] + _fuzz_test_targets("//mbo/file:glob_fuzz_test") + [
+] + _fuzz_test_targets("//mbo/file:glob_fuzz_test") + _fuzz_test_targets("//mbo/file/ini:ini_file_fuzz_test") + [
     "//mbo/hash:hash_benchmark",
     "//mbo/hash:hash_differential_test",
 ] + _fuzz_test_targets("//mbo/strings:parse_fuzz_test") + [

@@ -59,7 +59,10 @@ LISTED="$({
     }' "${TARGETS_BZL}" | while IFS= read -r suffix; do
       printf '%s%s\n' "${base}" "${suffix}"
     done
-  done < <(sed -n 's|.*_fuzz_test_targets("\(//[^"]*\)").*|\1|p' "${TARGETS_BZL}")
+  done < <(
+    grep -o '_fuzz_test_targets("//[^"]*")' "${TARGETS_BZL}" \
+      | sed 's|_fuzz_test_targets("\(//[^"]*\)")|\1|'
+  )
 } | sort)"
 
 if [ "${TAGGED}" = "${LISTED}" ]; then

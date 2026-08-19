@@ -59,7 +59,7 @@ checked only after its pull request has been merged.
 - [ ] Add fuzz targets for glob conversion, string parsing, INI parsing, diff
       inputs/options, and digest checksum-file parsing.
   - [x] Glob conversion. PR: [#336](https://github.com/helly25/mbo/pull/336).
-  - [ ] String parsing. PR: [#337](https://github.com/helly25/mbo/pull/337).
+  - [x] String parsing. PR: [#337](https://github.com/helly25/mbo/pull/337).
   - [ ] INI parsing. PR: pending.
   - [ ] Diff inputs/options. PR: pending.
   - [ ] Digest checksum-file parsing. PR: pending.
