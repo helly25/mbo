@@ -63,7 +63,7 @@ also updates this file to the completed state.
   - [x] String parsing. PR: [#337](https://github.com/helly25/mbo/pull/337).
   - [x] INI parsing. PR: [#338](https://github.com/helly25/mbo/pull/338).
   - [x] Diff inputs/options. PR: [#339](https://github.com/helly25/mbo/pull/339).
-  - [x] Digest checksum-file parsing. PR: pending.
+  - [x] Digest checksum-file parsing. PR: [#340](https://github.com/helly25/mbo/pull/340).
 - [ ] Add explicit UBSan coverage alongside ASan in CI.
   - PR: pending.
 - [ ] Add coverage reporting focused on uninstantiated templates and malformed
