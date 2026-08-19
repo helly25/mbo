@@ -260,7 +260,8 @@ jobs:
         llvm_version: [22.1.8]
         bazel_config: [opt]
         # Bazel-version compatibility rungs: the latest release of each tested
-        # major, crossed with the os/compiler combos below.
+        # major, crossed with the os/compiler combos below. MODULE.bazel allows
+        # Bazel >=8.0.0; CI uses the latest 8.x as its representative.
         bazel_version: [8.7.0, 9.2.0]
         exclude:
           - os: ubuntu-latest
