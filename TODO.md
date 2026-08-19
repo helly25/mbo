@@ -2,7 +2,8 @@
 
 This file is the single source of truth for repository fixes and improvements.
 Each change is implemented and reviewed in its own pull request. An item is
-checked only after its pull request has been merged.
+checked in the pull request that completes it, so merging that pull request
+also updates this file to the completed state.
 
 ## Correctness
 
@@ -60,7 +61,7 @@ checked only after its pull request has been merged.
       inputs/options, and digest checksum-file parsing.
   - [x] Glob conversion. PR: [#336](https://github.com/helly25/mbo/pull/336).
   - [x] String parsing. PR: [#337](https://github.com/helly25/mbo/pull/337).
-  - [ ] INI parsing. PR: [#338](https://github.com/helly25/mbo/pull/338).
+  - [x] INI parsing. PR: [#338](https://github.com/helly25/mbo/pull/338).
   - [ ] Diff inputs/options. PR: pending.
   - [ ] Digest checksum-file parsing. PR: pending.
 - [ ] Add explicit UBSan coverage alongside ASan in CI.
