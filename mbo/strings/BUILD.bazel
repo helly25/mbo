@@ -109,11 +109,6 @@ cc_fuzz_test(
     name = "parse_fuzz_test",
     size = "small",
     srcs = ["parse_fuzz_test.cc"],
-    # Fuzz campaigns are opt-in and do not belong in ordinary wildcard test matrices.
-    tags = [
-        "clang-tidy",
-        "manual",
-    ],
     deps = [":parse_cc"],
 )
 

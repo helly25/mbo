@@ -113,11 +113,6 @@ cc_fuzz_test(
     name = "glob_fuzz_test",
     size = "small",
     srcs = ["glob_fuzz_test.cc"],
-    # Fuzz campaigns are opt-in and do not belong in ordinary wildcard test matrices.
-    tags = [
-        "clang-tidy",
-        "manual",
-    ],
     deps = [":glob_cc"],
 )
 

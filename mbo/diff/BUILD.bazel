@@ -157,11 +157,6 @@ cc_fuzz_test(
     name = "diff_fuzz_test",
     size = "small",
     srcs = ["diff_fuzz_test.cc"],
-    # Fuzz campaigns are opt-in and do not belong in ordinary wildcard test matrices.
-    tags = [
-        "clang-tidy",
-        "manual",
-    ],
     deps = [
         ":diff_cc",
         "//mbo/file:artefact_cc",
