@@ -259,24 +259,18 @@ jobs:
         # The pinned default toolchain (see bazelmod/llvm.MODULE.bazel).
         llvm_version: [22.1.8]
         bazel_config: [opt]
-        # Bazel-version compatibility rungs: one per supported major (we test
-        # the last three, 7/8/9), crossed with the os/compiler combos below.
-        # 7.2.1 is the earliest 7.x that works: MODULE.bazel uses `include()`
-        # (added in 7.2.0, so 7.1.x fails with "name 'include' is not defined")
-        # and the dep `depend_on_what_you_use@0.16.0` declares
-        # `bazel_compatibility: [>=7.2.1]` (so 7.2.0 is rejected too). 8.7.0 is
-        # the latest 8.x; 9.1.1 is the latest 9.x and the checked-in default.
-        bazel_version: [7.2.1, 8.7.0, 9.1.1]
+        # Bazel-version compatibility rungs: one per supported major, crossed
+        # with the os/compiler combos below. 8.7.0 is the minimum declared in
+        # MODULE.bazel; 9.1.1 is the checked-in default.
+        bazel_version: [8.7.0, 9.1.1]
         exclude:
           - os: ubuntu-latest
             compiler: native
           - os: macos-26
             compiler: gcc
-          # The 7.x/8.x rungs are a build-system-compat check (MODULE.bazel
+          # The 8.x rung is a build-system-compat check (MODULE.bazel
           # loading, rules resolution) - platform-agnostic, so run them on
           # ubuntu only. macOS keeps the default 9.1.1 for platform coverage.
-          - os: macos-26
-            bazel_version: 7.2.1
           - os: macos-26
             bazel_version: 8.7.0
 

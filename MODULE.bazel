@@ -18,6 +18,7 @@
 module(
     name = "helly25_mbo",
     version = "0.13.3",
+    bazel_compatibility = [">=8.7.0"],
 )
 
 # For local development we include LLVM and Hedron-Compile-Commands.
