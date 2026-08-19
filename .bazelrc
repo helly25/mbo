@@ -90,15 +90,16 @@ common:asan --config=symbolizer
 common:asan --copt -g
 common:asan --copt -fsanitize=address,undefined
 common:asan --copt -fno-sanitize=vptr
+# GCC 14's null sanitizer breaks an Abseil constexpr comparison between a
+# function pointer and nullptr when the header template is instantiated from a
+# first-party translation unit. This cannot be isolated with per_file_copt:
+# the code is in an external header, but compilation belongs to our source.
+common:asan --copt -fno-sanitize=null
 common:asan --copt -fno-omit-frame-pointer
 common:asan --copt -DADDRESS_SANITIZER
-# GCC 14 cannot instrument an Abseil constant-expression function-pointer
-# comparison pulled in while compiling external RE2. Keep UBSan on all
-# first-party translation units while leaving third-party sources untouched.
-common:asan --per_file_copt=external/.*@-fno-sanitize=undefined
-common:asan --host_per_file_copt=external/.*@-fno-sanitize=undefined
 common:asan --linkopt -fsanitize=address,undefined
 common:asan --linkopt -fno-sanitize=vptr
+common:asan --linkopt -fno-sanitize=null
 #common:asan --linkopt -fsanitize-link-c++-runtime
 common:asan --linkopt -ldl
 common:asan --define tcmalloc=disabled
