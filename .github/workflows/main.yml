@@ -259,9 +259,8 @@ jobs:
         # The pinned default toolchain (see bazelmod/llvm.MODULE.bazel).
         llvm_version: [22.1.8]
         bazel_config: [opt]
-        # Bazel-version compatibility rungs: one per supported major, crossed
-        # with the os/compiler combos below. 8.7.0 is the minimum declared in
-        # MODULE.bazel; 9.2.0 is the latest stable release.
+        # Bazel-version compatibility rungs: the latest release of each tested
+        # major, crossed with the os/compiler combos below.
         bazel_version: [8.7.0, 9.2.0]
         exclude:
           - os: ubuntu-latest
