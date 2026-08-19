@@ -261,8 +261,8 @@ jobs:
         bazel_config: [opt]
         # Bazel-version compatibility rungs: one per supported major, crossed
         # with the os/compiler combos below. 8.7.0 is the minimum declared in
-        # MODULE.bazel; 9.1.1 is the checked-in default.
-        bazel_version: [8.7.0, 9.1.1]
+        # MODULE.bazel; 9.2.0 is the latest stable release.
+        bazel_version: [8.7.0, 9.2.0]
         exclude:
           - os: ubuntu-latest
             compiler: native
@@ -270,7 +270,7 @@ jobs:
             compiler: gcc
           # The 8.x rung is a build-system-compat check (MODULE.bazel
           # loading, rules resolution) - platform-agnostic, so run them on
-          # ubuntu only. macOS keeps the default 9.1.1 for platform coverage.
+          # ubuntu only. macOS keeps 9.2.0 for platform coverage.
           - os: macos-26
             bazel_version: 8.7.0
 
