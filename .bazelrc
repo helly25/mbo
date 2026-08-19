@@ -92,6 +92,11 @@ common:asan --copt -fsanitize=address,undefined
 common:asan --copt -fno-sanitize=vptr
 common:asan --copt -fno-omit-frame-pointer
 common:asan --copt -DADDRESS_SANITIZER
+# GCC 14 cannot instrument an Abseil constant-expression function-pointer
+# comparison pulled in while compiling external RE2. Keep UBSan on all
+# first-party translation units while leaving third-party sources untouched.
+common:asan --per_file_copt=external/.*@-fno-sanitize=undefined
+common:asan --host_per_file_copt=external/.*@-fno-sanitize=undefined
 common:asan --linkopt -fsanitize=address,undefined
 common:asan --linkopt -fno-sanitize=vptr
 #common:asan --linkopt -fsanitize-link-c++-runtime
