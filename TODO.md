@@ -57,13 +57,13 @@ also updates this file to the completed state.
 - [x] Correct existing README and contributing-guide spelling errors and add a
       lightweight documentation spell-checking hook.
   - PR: [#335](https://github.com/helly25/mbo/pull/335).
-- [ ] Add fuzz targets for glob conversion, string parsing, INI parsing, diff
+- [x] Add fuzz targets for glob conversion, string parsing, INI parsing, diff
       inputs/options, and digest checksum-file parsing.
   - [x] Glob conversion. PR: [#336](https://github.com/helly25/mbo/pull/336).
   - [x] String parsing. PR: [#337](https://github.com/helly25/mbo/pull/337).
   - [x] INI parsing. PR: [#338](https://github.com/helly25/mbo/pull/338).
   - [x] Diff inputs/options. PR: [#339](https://github.com/helly25/mbo/pull/339).
-  - [ ] Digest checksum-file parsing. PR: pending.
+  - [x] Digest checksum-file parsing. PR: pending.
 - [ ] Add explicit UBSan coverage alongside ASan in CI.
   - PR: pending.
 - [ ] Add coverage reporting focused on uninstantiated templates and malformed

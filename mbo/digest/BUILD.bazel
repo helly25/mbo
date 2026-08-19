@@ -16,6 +16,7 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@helly25_bashtest//bashtest:bashtest.bzl", "bashtest")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("@rules_fuzzing//fuzzing:cc_defs.bzl", "cc_fuzz_test")
 load(":digest.bzl", "verify_digest_test")
 
 package(default_visibility = ["//visibility:private"])
@@ -24,6 +25,29 @@ bzl_library(
     name = "digest_bzl",
     srcs = ["digest.bzl"],
     visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "checksum_cc",
+    srcs = ["checksum.cc"],
+    hdrs = ["checksum.h"],
+)
+
+cc_test(
+    name = "checksum_test",
+    srcs = ["checksum_test.cc"],
+    deps = [
+        ":checksum_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_fuzz_test(
+    name = "checksum_fuzz_test",
+    size = "small",
+    srcs = ["checksum_fuzz_test.cc"],
+    deps = [":checksum_cc"],
 )
 
 cc_library(
@@ -60,6 +84,7 @@ cc_binary(
     srcs = ["digest_main.cc"],
     visibility = ["//visibility:public"],
     deps = [
+        ":checksum_cc",
         ":digest_cc",
         "//mbo/strings:indent_cc",
         "@abseil-cpp//absl/flags:flag",
