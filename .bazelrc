@@ -88,11 +88,11 @@ common:symbolizer --run_under=//tools:run_under_symbolizer
 # Custom --config=asan mode:
 common:asan --config=symbolizer
 common:asan --copt -g
-common:asan --copt -fsanitize=address
+common:asan --copt -fsanitize=address,undefined
 common:asan --copt -fno-sanitize=vptr
 common:asan --copt -fno-omit-frame-pointer
 common:asan --copt -DADDRESS_SANITIZER
-common:asan --linkopt -fsanitize=address
+common:asan --linkopt -fsanitize=address,undefined
 common:asan --linkopt -fno-sanitize=vptr
 #common:asan --linkopt -fsanitize-link-c++-runtime
 common:asan --linkopt -ldl
