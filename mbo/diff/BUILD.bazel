@@ -16,6 +16,7 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@helly25_bashtest//bashtest:bashtest.bzl", "bashtest")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("@rules_fuzzing//fuzzing:cc_defs.bzl", "cc_fuzz_test")
 
 package(
     default_visibility = ["//visibility:private"],
@@ -148,6 +149,23 @@ cc_test(
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@re2",
+    ],
+)
+
+cc_fuzz_test(
+    name = "diff_fuzz_test",
+    size = "small",
+    srcs = ["diff_fuzz_test.cc"],
+    # Fuzz campaigns are opt-in and do not belong in ordinary wildcard test matrices.
+    tags = [
+        "clang-tidy",
+        "manual",
+    ],
+    deps = [
+        ":diff_cc",
+        "//mbo/file:artefact_cc",
+        "//mbo/strings:strip_cc",
         "@re2",
     ],
 )

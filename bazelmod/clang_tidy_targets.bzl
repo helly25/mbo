@@ -53,6 +53,7 @@ CLANG_TIDY_MANUAL_TARGETS = [
     "//mbo/hash:hash_differential_test",
     "//tools:show_compiler",
 ] + _fuzz_test_targets([
+    "//mbo/diff:diff_fuzz_test",
     "//mbo/file:glob_fuzz_test",
     "//mbo/file/ini:ini_file_fuzz_test",
     "//mbo/strings:parse_fuzz_test",
