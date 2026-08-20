@@ -56,18 +56,27 @@ class CoverageTest(unittest.TestCase):
         }
         self.assertEqual(
             ["overall lines: 79.9% < 80.0%"],
-            coverage_tool.failures(measured, {"minimum": {"lines": 80.0}}),
+            coverage_tool.failures(measured, {"overall": {"lines": 80.0}}),
         )
 
-    def test_status_target_overrides_project_minimum(self):
+    def test_category_minimum_overrides_shared_target(self):
         policy = {
-            "minimum": {"lines": 90.0, "functions": 90.0, "branches": 57.0},
-            "status_target": {"lines": 85.0},
+            "minimum": {"lines": 85.0, "functions": 90.0, "branches": 57.0},
+            "categories": {
+                "inherited": {"include": ["mbo/inherited/**"]},
+                "overridden": {
+                    "include": ["mbo/overridden/**"],
+                    "minimum": {"lines": 40.0, "functions": 50.0, "branches": 30.0},
+                },
+            },
         }
+        minimums, targets = coverage_tool.thresholds(policy)
+        self.assertEqual(policy["minimum"], minimums["inherited"])
         self.assertEqual(
-            {"lines": 85.0, "functions": 90.0, "branches": 57.0},
-            coverage_tool.status_target(policy),
+            {"lines": 40.0, "functions": 50.0, "branches": 30.0},
+            minimums["overridden"],
         )
+        self.assertEqual(policy["minimum"], targets["overridden"])
 
     def test_patch_without_coverable_code_is_not_reported(self):
         empty = {
