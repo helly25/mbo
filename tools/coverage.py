@@ -17,7 +17,7 @@ from pathlib import Path
 @dataclass
 class FileCoverage:
     lines: dict[int, int] = field(default_factory=dict)
-    functions: list[int] = field(default_factory=list)
+    functions: list[tuple[int, int]] = field(default_factory=list)
     branches: list[tuple[int, bool]] = field(default_factory=list)
 
 
@@ -34,16 +34,21 @@ def _repo_path(value: str) -> str | None:
 def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCoverage]:
     result: dict[str, FileCoverage] = {}
     current: FileCoverage | None = None
+    function_lines: dict[str, int] = {}
     for raw in path.read_text(encoding="utf-8").splitlines():
         if raw.startswith("SF:"):
             name = _repo_path(raw[3:])
             current = result.setdefault(name, FileCoverage()) if name else None
+            function_lines = {}
+        elif current is not None and raw.startswith("FN:"):
+            definition = raw[3:].split(",")
+            function_lines[definition[-1]] = int(definition[0])
         elif current is not None and raw.startswith("DA:"):
             line, hits, *_ = raw[3:].split(",")
             current.lines[int(line)] = current.lines.get(int(line), 0) + int(hits)
         elif current is not None and raw.startswith("FNDA:"):
-            hits, _ = raw[5:].split(",", 1)
-            current.functions.append(int(hits))
+            hits, name = raw[5:].split(",", 1)
+            current.functions.append((function_lines.get(name, 0), int(hits)))
         elif current is not None and raw.startswith("BRDA:"):
             line, _, _, taken = raw[5:].split(",")
             current.branches.append((int(line), taken not in ("-", "0")))
@@ -64,7 +69,13 @@ def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCover
             for number, line in enumerate(source_lines, start=1)
             if "LCOV_EXCL_BR_LINE" in line
         }
+        excluded_functions = {
+            number
+            for number, line in enumerate(source_lines, start=1)
+            if "LCOV_EXCL_FUNC_LINE" in line
+        }
         data.lines = {line: hits for line, hits in data.lines.items() if line not in excluded_lines}
+        data.functions = [function for function in data.functions if function[0] not in excluded_functions]
         data.branches = [(line, taken) for line, taken in data.branches if line not in excluded_branches]
     return result
 
@@ -93,7 +104,7 @@ def counts(files: dict[str, FileCoverage], changed: dict[str, set[int]] | None =
                 values["lines"][0] += hits > 0
         if changed is None:
             values["functions"][1] += len(data.functions)
-            values["functions"][0] += sum(hits > 0 for hits in data.functions)
+            values["functions"][0] += sum(hits > 0 for _, hits in data.functions)
         for line, taken in data.branches:
             if lines is None or line in lines:
                 values["branches"][1] += 1

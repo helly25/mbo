@@ -16,7 +16,7 @@ class CoverageTest(unittest.TestCase):
             report = Path(directory) / "coverage.lcov"
             report.write_text(
                 "SF:/workspace/mbo/strings/parse.cc\n"
-                "FNDA:1,Good\nFNDA:0,Bad\n"
+                "FN:9,Good\nFN:12,Bad\nFNDA:1,Good\nFNDA:0,Bad\n"
                 "DA:10,1\nDA:11,0\n"
                 "BRDA:10,0,0,1\nBRDA:10,0,1,0\nend_of_record\n"
                 "SF:/workspace/mbo/strings/parse_test.cc\nDA:1,1\nend_of_record\n",
@@ -69,6 +69,27 @@ class CoverageTest(unittest.TestCase):
             files = coverage_tool.parse_lcov(report, root)
             self.assertEqual({1: 1, 3: 1}, files["mbo/a.cc"].lines)
             self.assertEqual([(3, False), (3, True)], files["mbo/a.cc"].branches)
+
+    def test_parse_excludes_functions_at_marked_source_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "mbo/a.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "visit(value);  // LCOV_EXCL_FUNC_LINE: compiler-generated dispatchers\n"
+                "ordinary();\n",
+                encoding="utf-8",
+            )
+            report = root / "coverage.lcov"
+            report.write_text(
+                "SF:mbo/a.cc\n"
+                "FN:1,GeneratedOne\nFN:1,GeneratedTwo\nFN:2,Ordinary\n"
+                "FNDA:1,GeneratedOne\nFNDA:0,GeneratedTwo\nFNDA:1,Ordinary\n"
+                "end_of_record\n",
+                encoding="utf-8",
+            )
+            files = coverage_tool.parse_lcov(report, root)
+            self.assertEqual([(2, 1)], files["mbo/a.cc"].functions)
 
     def test_threshold_failure(self):
         measured = {

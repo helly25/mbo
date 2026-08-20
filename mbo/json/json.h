@@ -301,7 +301,7 @@ class Json {
   Json() noexcept : data_{std::nullopt} {}
 
   Json(const Json& other) : Json() {
-    std::visit(
+    std::visit(  // LCOV_EXCL_FUNC_LINE: GCC attributes generated variant dispatchers to this call site.
         types::Overloaded{
             [&](const Object& /*unused*/) { CopyObject(other); },
             [&]<typename Other>(Other&& other) { Json::operator=(std::forward<Other>(other)); }},
@@ -884,7 +884,9 @@ inline std::strong_ordering Json::Compare(const Json& other) const noexcept {
   if (auto comp = GetKind() <=> other.GetKind(); comp != std::strong_ordering::equal) {
     return comp;
   }
-  return std::visit(json_internal::kJsonComparator, data_, other.data_);
+  // GCC attributes the combinatorial variant dispatchers to this call site rather than to the standard library.
+  return std::visit(  // LCOV_EXCL_FUNC_LINE
+      json_internal::kJsonComparator, data_, other.data_);
 }
 
 template<ConvertibleToJson Value>
@@ -892,7 +894,7 @@ inline std::strong_ordering Json::Compare(const Value& other) const noexcept {
   if (const auto comp = GetKind() <=> Json::GetKind(other); comp != std::strong_ordering::equal) {
     return comp;
   }
-  return std::visit(
+  return std::visit(  // LCOV_EXCL_FUNC_LINE: GCC attributes generated variant dispatchers to this call site.
       [&other]<typename Lhs>(const Lhs& lhs) { return json_internal::kJsonComparator(lhs, other); }, data_);
 }
 

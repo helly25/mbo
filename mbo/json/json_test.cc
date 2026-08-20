@@ -143,6 +143,10 @@ TEST_F(JsonTest, CopyOperationsDeepCopyArraysAndObjects) {
   assigned = *same;
   EXPECT_EQ(original["array"][0], 1);
   EXPECT_EQ(assigned["array"][0], 3);
+
+  const std::unique_ptr<Json> empty;
+  assigned = empty;
+  EXPECT_TRUE(assigned.IsNull());
 }
 
 TEST_F(JsonTest, ContainerModifiersAndAccessors) {
