@@ -20,6 +20,7 @@
 #include <fstream>
 #include <iostream>
 #include <istream>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -28,6 +29,7 @@
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
 #include "absl/log/initialize.h"
+#include "mbo/digest/checksum.h"
 #include "mbo/digest/digest.h"
 #include "mbo/strings/indent.h"
 
@@ -177,29 +179,6 @@ void Print(std::string_view hex, std::string_view file_name) {
   }
 }
 
-// One checksum line: "<hex><space><space-or-*><filename>". Returns false for
-// improperly formatted lines (wrong hex length for the algorithm, non-hex
-// characters, missing separator).
-// NOLINTNEXTLINE(*-easily-swappable-parameters): out-params in output order.
-bool ParseChecksumLine(
-    std::string_view line,
-    std::size_t hex_length,
-    std::string_view& hex,
-    std::string_view& file_name) {
-  if (line.size() < hex_length + 3 || line.at(hex_length) != ' '
-      || (line.at(hex_length + 1) != ' ' && line.at(hex_length + 1) != '*')) {
-    return false;
-  }
-  hex = line.substr(0, hex_length);
-  for (const char chr : hex) {
-    if (std::isxdigit(static_cast<unsigned char>(chr)) == 0) {
-      return false;
-    }
-  }
-  file_name = line.substr(hex_length + 2);
-  return !file_name.empty();
-}
-
 std::string ToLowerHex(std::string_view hex) {
   std::string lower(hex);
   for (char& chr : lower) {
@@ -225,12 +204,12 @@ void CheckStream(const NamedAlgorithm& algorithm, std::istream& sums, CheckStats
     if (line.empty()) {
       continue;
     }
-    std::string_view hex;
-    std::string_view file_name;
-    if (!ParseChecksumLine(line, algorithm.hex_length, hex, file_name)) {
+    const std::optional<internal::ChecksumLine> parsed = internal::ParseChecksumLine(line, algorithm.hex_length);
+    if (!parsed.has_value()) {
       ++stats.malformed;
       continue;
     }
+    const auto [hex, file_name] = *parsed;
     std::ifstream input{fs::path(file_name), std::ios::binary};
     if (!input) {
       if (!ignore_missing) {
