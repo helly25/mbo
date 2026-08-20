@@ -59,6 +59,77 @@ class CoverageTest(unittest.TestCase):
             coverage_tool.failures(measured, {"minimum": {"lines": 80.0}}),
         )
 
+    def test_status_target_overrides_project_minimum(self):
+        policy = {
+            "minimum": {"lines": 90.0, "functions": 90.0, "branches": 57.0},
+            "status_target": {"lines": 85.0},
+        }
+        self.assertEqual(
+            {"lines": 85.0, "functions": 90.0, "branches": 57.0},
+            coverage_tool.status_target(policy),
+        )
+
+    def test_patch_without_coverable_code_is_not_reported(self):
+        empty = {
+            "lines": {"covered": 0, "total": 0, "percent": None},
+            "functions": {"covered": 0, "total": 0, "percent": None},
+            "branches": {"covered": 0, "total": 0, "percent": None},
+        }
+        self.assertFalse(coverage_tool.has_coverage(empty, ("lines", "branches")))
+
+        with_lines = dict(empty)
+        with_lines["lines"] = {"covered": 0, "total": 1, "percent": 0.0}
+        self.assertTrue(coverage_tool.has_coverage(with_lines, ("lines", "branches")))
+
+    def test_markdown_shows_compact_line_coverage(self):
+        measured = {
+            "overall": {
+                "lines": {"covered": 9, "total": 10, "percent": 90.0},
+                "functions": {"covered": 1, "total": 2, "percent": 50.0},
+                "branches": {"covered": 3, "total": 4, "percent": 75.0},
+            },
+            "okay": {
+                "lines": {"covered": 9, "total": 10, "percent": 90.0},
+                "functions": {"covered": 2, "total": 2, "percent": 100.0},
+                "branches": {"covered": 3, "total": 4, "percent": 75.0},
+            },
+            "low": {
+                "lines": {"covered": 9, "total": 10, "percent": 90.0},
+                "functions": {"covered": 1, "total": 2, "percent": 50.0},
+                "branches": {"covered": 3, "total": 4, "percent": 75.0},
+            },
+            "empty": {
+                "lines": {"covered": 0, "total": 0, "percent": None},
+                "functions": {"covered": 0, "total": 0, "percent": None},
+                "branches": {"covered": 0, "total": 0, "percent": None},
+            },
+            "unconfigured": {
+                "lines": {"covered": 0, "total": 0, "percent": None},
+                "functions": {"covered": 0, "total": 0, "percent": None},
+                "branches": {"covered": 0, "total": 0, "percent": None},
+            },
+        }
+        minimums = {
+            "overall": {"lines": 80.0, "functions": 60.0, "branches": 70.0},
+            "okay": {"lines": 80.0, "functions": 60.0, "branches": 70.0},
+            "low": {"lines": 80.0, "functions": 40.0, "branches": 70.0},
+            "empty": {"lines": 80.0, "branches": 70.0},
+        }
+        targets = {
+            category: {"lines": 80.0, "functions": 60.0, "branches": 70.0}
+            for category in minimums
+        }
+        self.assertEqual(
+            "| Category     | Status           |  Lines | Covered | Total | Functions | Covered | Total | Branches | Covered | Total |\n"
+            "| ------------ | ---------------- | -----: | ------: | ----: | --------: | ------: | ----: | -------: | ------: | ----: |\n"
+            "| overall      | **FAIL: F**      | 90.00% |       9 |    10 |    50.00% |       1 |     2 |   75.00% |       3 |     4 |\n"
+            "| okay         | OK               | 90.00% |       9 |    10 |   100.00% |       2 |     2 |   75.00% |       3 |     4 |\n"
+            "| low          | **LOW: F**       | 90.00% |       9 |    10 |    50.00% |       1 |     2 |   75.00% |       3 |     4 |\n"
+            "| empty        | **NO DATA: L/B** |    n/a |       0 |     0 |       n/a |       0 |     0 |      n/a |       0 |     0 |\n"
+            "| unconfigured | N/A              |    n/a |       0 |     0 |       n/a |       0 |     0 |      n/a |       0 |     0 |\n",
+            coverage_tool.markdown(measured, minimums, targets),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
