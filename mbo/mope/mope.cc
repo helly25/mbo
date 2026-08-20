@@ -94,9 +94,12 @@ absl::StatusOr<Template*> Template::AddSection(std::string_view name) {
       .end = absl::StrCat("{{/", name, "}}"),
       .type = TagType::kSection,
   };
-  auto [it, inserted] = data_.emplace(name, TagData<Section>{.tag = std::move(tag), .data = {}});
-  auto& section = std::get<TagData<Section>>(it->second).data;
-  return &section.dictionary.emplace_back();
+  auto it = data_.emplace(name, TagData<Section>{.tag = std::move(tag), .data = {}}).first;
+  auto* section = std::get_if<TagData<Section>>(&it->second);
+  if (section == nullptr) {
+    return absl::AlreadyExistsError(absl::StrCat("A value for '", name, "' already exists with a different type."));
+  }
+  return &section->data.dictionary.emplace_back();
 }
 
 absl::Status Template::SetValueInternal(
