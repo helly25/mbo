@@ -235,6 +235,18 @@ TEST_F(MopeTest, ConfiguredListRejectsMalformedInputAndNameConflicts) {
   EXPECT_EQ(conflicting.Expand(conflict).code(), absl::StatusCode::kInvalidArgument);
 }
 
+TEST_F(MopeTest, EmptyAndUnknownSectionConfigurations) {
+  constexpr std::string_view kEmptyInput = "before{{#item=}}content{{/item}}after";
+  constexpr std::string_view kUnknownInput = "{{#item=unknown}}content{{/item}}";
+  const Template tpl;
+  std::string empty(kEmptyInput);
+  ASSERT_THAT(tpl.Expand(empty), absl::OkStatus());
+  EXPECT_EQ(empty, "beforeafter");
+
+  std::string unknown(kUnknownInput);
+  EXPECT_EQ(tpl.Expand(unknown).code(), absl::StatusCode::kUnimplemented);
+}
+
 TEST_F(MopeTest, ControlTagCannotOverrideATemplateValue) {
   constexpr std::string_view kInput = "{{name=replacement}}{{name}}";
   Template tpl;

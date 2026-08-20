@@ -137,6 +137,9 @@ TEST_F(StatusMatcherTest, StatusIs) {
     EXPECT_THAT(
         MatchAndExplain(matcher, absl::UnknownError("Message")),
         Pair(false, "which has status code UNKNOWN and the message 'Message'"));
+    EXPECT_THAT(
+        MatchAndExplain(StatusIsMatcher(absl::StatusCode::kUnknown, "Wanted"), absl::UnknownError("")),
+        Pair(false, "which has status code UNKNOWN and an empty message"));
   }
   {
     const StatusIsMatcher matcher(absl::StatusCode::kCancelled, "Wanted");
@@ -377,6 +380,11 @@ TEST_F(StatusMatcherTest, MessagesOfStatusPayloads) {
     status.SetPayload("def", absl::Cord("texting"));
     return status;
   }();
+  {
+    const ::testing::Matcher<absl::Status> matcher = StatusPayloads(_);
+    EXPECT_THAT(MatchAndExplain(matcher, status_url_content), Pair(true, "which has 1 payload"));
+    EXPECT_THAT(MatchAndExplain(matcher, status_abc_content), Pair(true, "which has 2 payloads"));
+  }
   {
     const ::testing::Matcher<absl::Status> matcher = StatusPayloads(IsEmpty());
     EXPECT_THAT(Describe(matcher), "has a payloads map that is empty");

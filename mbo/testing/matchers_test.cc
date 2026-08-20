@@ -401,6 +401,9 @@ TEST_F(MatcherTest, IsElementOfHeterogeneousComparable) {
 }
 
 TEST_F(MatcherTest, EqualsText) {
+  const ::testing::Matcher<std::string_view> matcher = EqualsText("abc");
+  EXPECT_THAT(Describe(matcher), "matches text");
+  EXPECT_THAT(DescribeNegation(matcher), "does not match text");
   EXPECT_THAT("", EqualsText(""));
   EXPECT_THAT("", Not(EqualsText("abc")));
   EXPECT_THAT("abc", Not(EqualsText("")));

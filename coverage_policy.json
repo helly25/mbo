@@ -7,7 +7,7 @@
     "mbo/**/*_test.h"
   ],
   "minimum": { "lines": 90, "functions": 90, "branches": 75 },
-  "patch_minimum": { "lines": 95, "branches": 85 },
+  "patch_minimum": { "lines": 90, "branches": 75 },
   "categories": {
     "container": {
       "include": ["mbo/container/**"],

@@ -17,7 +17,6 @@
 
 #include <cstddef>
 #include <optional>
-#include <ostream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -73,10 +72,6 @@ void AbslStringify(Sink& sink, Template::TagType value) {
     }
     return "TagType::UNKNOWN";
   }());
-}
-
-std::ostream& operator<<(std::ostream& os, Template::TagType value) {
-  return os << absl::StrCat(value);
 }
 
 bool Template::IsValidName(std::string_view name) {
