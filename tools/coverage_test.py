@@ -46,6 +46,30 @@ class CoverageTest(unittest.TestCase):
         self.assertEqual({"covered": 1, "total": 2, "percent": 50.0}, result["lines"])
         self.assertEqual({"covered": 1, "total": 2, "percent": 50.0}, result["branches"])
 
+    def test_parse_excludes_marked_compiler_generated_branches(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "mbo/a.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "if (runtime) {}  // LCOV_EXCL_BR_LINE\n"
+                "quick_exit(1);  // LCOV_EXCL_LINE\n"
+                "if (normal) {}\n",
+                encoding="utf-8",
+            )
+            report = root / "coverage.lcov"
+            report.write_text(
+                "SF:mbo/a.cc\n"
+                "BRDA:1,0,0,0\nBRDA:1,0,1,1\n"
+                "DA:1,1\nDA:2,0\nDA:3,1\n"
+                "BRDA:2,0,0,0\nBRDA:2,0,1,1\n"
+                "BRDA:3,0,0,0\nBRDA:3,0,1,1\nend_of_record\n",
+                encoding="utf-8",
+            )
+            files = coverage_tool.parse_lcov(report, root)
+            self.assertEqual({1: 1, 3: 1}, files["mbo/a.cc"].lines)
+            self.assertEqual([(3, False), (3, True)], files["mbo/a.cc"].branches)
+
     def test_threshold_failure(self):
         measured = {
             "overall": {
@@ -77,6 +101,23 @@ class CoverageTest(unittest.TestCase):
             minimums["overridden"],
         )
         self.assertEqual(policy["minimum"], targets["overridden"])
+
+    def test_category_minimum_only_overrides_named_metrics(self):
+        policy = {
+            "minimum": {"lines": 88.0, "functions": 80.0, "branches": 60.0},
+            "categories": {
+                "compile_time": {
+                    "include": ["mbo/types/**"],
+                    "minimum": {"branches": 47.0},
+                },
+            },
+        }
+        minimums, targets = coverage_tool.thresholds(policy)
+        self.assertEqual(
+            {"lines": 88.0, "functions": 80.0, "branches": 47.0},
+            minimums["compile_time"],
+        )
+        self.assertEqual(policy["minimum"], targets["compile_time"])
 
     def test_patch_without_coverable_code_is_not_reported(self):
         empty = {

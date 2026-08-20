@@ -59,7 +59,7 @@ MBO_FORCE_INLINE constexpr uint64_t Fmix64(uint64_t val) noexcept {
 // Both paths produce identical values; the ConstexprMatchesRuntime test guards
 // this equality.
 MBO_FORCE_INLINE constexpr uint64_t Load64(const char* ptr) noexcept {
-  if (!std::is_constant_evaluated()) {
+  if (!std::is_constant_evaluated()) {  // LCOV_EXCL_BR_LINE: Compile-time path cannot execute in coverage.
     if constexpr (std::endian::native == std::endian::little) {
       uint64_t result = 0;
       std::memcpy(&result, ptr, 8);
@@ -67,7 +67,7 @@ MBO_FORCE_INLINE constexpr uint64_t Load64(const char* ptr) noexcept {
     }
   }
   uint64_t result = 0;
-  for (std::size_t i = 0; i < 8; ++i) {
+  for (std::size_t i = 0; i < 8; ++i) {  // LCOV_EXCL_LINE: Compile-time fallback is covered by static assertions.
     result |= static_cast<uint64_t>(static_cast<uint8_t>(ptr[i])) << (i * 8U);
   }
   return result;
@@ -79,7 +79,7 @@ MBO_FORCE_INLINE constexpr uint64_t Load64(const char* ptr) noexcept {
 // dual-path byte-load logic exists exactly once. The runtime path is `memcpy`
 // plus a byteswap on little-endian targets (same rationale as `Load64`).
 MBO_FORCE_INLINE constexpr uint32_t Load32BE(const char* ptr) noexcept {
-  if (!std::is_constant_evaluated()) {
+  if (!std::is_constant_evaluated()) {  // LCOV_EXCL_BR_LINE: Compile-time path cannot execute in coverage.
 #if defined(__GNUC__) || defined(__clang__)
     uint32_t result = 0;
     std::memcpy(&result, ptr, 4);
@@ -125,7 +125,7 @@ MBO_FORCE_INLINE constexpr uint32_t Load32(const char* ptr) noexcept {
     }
   }
   uint32_t result = 0;
-  for (std::size_t i = 0; i < 4; ++i) {
+  for (std::size_t i = 0; i < 4; ++i) {  // LCOV_EXCL_LINE: Compile-time fallback is covered by static assertions.
     result |= static_cast<uint32_t>(static_cast<uint8_t>(ptr[i])) << (i * 8U);
   }
   return result;

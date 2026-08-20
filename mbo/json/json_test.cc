@@ -122,7 +122,7 @@ TEST_F(JsonTest, JsonComparisonsCoverEveryStoredKind) {
   EXPECT_LT(object_lhs, Json{"value"});
 }
 
-TEST_F(JsonTest, CopyConstructionDeepCopiesArraysAndObjects) {
+TEST_F(JsonTest, CopyOperationsDeepCopyArraysAndObjects) {
   Json original;
   original["array"].emplace_back(1);
   original["nested"]["value"] = "before";
@@ -135,6 +135,14 @@ TEST_F(JsonTest, CopyConstructionDeepCopiesArraysAndObjects) {
   EXPECT_EQ(original["nested"]["value"], "before");
   EXPECT_EQ(copy["array"][0], 2);
   EXPECT_EQ(copy["nested"]["value"], "after");
+
+  Json assigned;
+  assigned = original;
+  assigned["array"][0] = 3;
+  const Json* same = &assigned;
+  assigned = *same;
+  EXPECT_EQ(original["array"][0], 1);
+  EXPECT_EQ(assigned["array"][0], 3);
 }
 
 TEST_F(JsonTest, ContainerModifiersAndAccessors) {

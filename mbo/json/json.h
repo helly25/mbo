@@ -308,7 +308,14 @@ class Json {
         other.data_);
   }
 
-  Json& operator=(const Json&) = delete;
+  Json& operator=(const Json& other) {
+    if (this != &other) {
+      Json copy(other);
+      data_ = std::move(copy.data_);
+    }
+    return *this;
+  }
+
   Json(Json&&) noexcept = default;
   Json& operator=(Json&&) noexcept = default;
 

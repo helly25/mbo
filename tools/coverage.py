@@ -31,7 +31,7 @@ def _repo_path(value: str) -> str | None:
     return None
 
 
-def parse_lcov(path: Path) -> dict[str, FileCoverage]:
+def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCoverage]:
     result: dict[str, FileCoverage] = {}
     current: FileCoverage | None = None
     for raw in path.read_text(encoding="utf-8").splitlines():
@@ -49,6 +49,23 @@ def parse_lcov(path: Path) -> dict[str, FileCoverage]:
             current.branches.append((int(line), taken not in ("-", "0")))
         elif raw == "end_of_record":
             current = None
+    for name, data in result.items():
+        source = source_root / name
+        if not source.is_file():
+            continue
+        source_lines = source.read_text(encoding="utf-8").splitlines()
+        excluded_lines = {
+            number
+            for number, line in enumerate(source_lines, start=1)
+            if "LCOV_EXCL_LINE" in line
+        }
+        excluded_branches = excluded_lines | {
+            number
+            for number, line in enumerate(source_lines, start=1)
+            if "LCOV_EXCL_BR_LINE" in line
+        }
+        data.lines = {line: hits for line, hits in data.lines.items() if line not in excluded_lines}
+        data.branches = [(line, taken) for line, taken in data.branches if line not in excluded_branches]
     return result
 
 
@@ -125,7 +142,7 @@ def thresholds(policy: dict) -> tuple[dict, dict]:
     floors = {"overall": overall}
     targets = {"overall": overall}
     for name, category in policy.get("categories", {}).items():
-        floors[name] = category.get("minimum", overall)
+        floors[name] = overall | category.get("minimum", {})
         targets[name] = overall
     return floors, targets
 
