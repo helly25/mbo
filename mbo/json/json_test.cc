@@ -17,7 +17,13 @@
 
 #include <compare>   // IWYU pragma: keep
 #include <concepts>  // IWYU pragma: keep
+#include <cstdint>
+#include <limits>
 #include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -64,6 +70,110 @@ TEST_F(JsonTest, Comparison) {
   EXPECT_THAT(Json{2}, 2);
   EXPECT_THAT(Json{"yes"}, "yes");
   EXPECT_THAT(Json{3}, Not("nope"));
+}
+
+TEST_F(JsonTest, ScalarComparisonsCoverSupportedRepresentations) {
+  EXPECT_EQ(Json{false}, false);
+  EXPECT_EQ(Json{true}, true);
+  EXPECT_EQ(Json{std::int8_t{-8}}, std::int8_t{-8});
+  EXPECT_EQ(Json{std::int16_t{-16}}, std::int16_t{-16});
+  EXPECT_EQ(Json{std::int32_t{-32}}, std::int32_t{-32});
+  EXPECT_EQ(Json{std::int64_t{-64}}, std::int64_t{-64});
+  EXPECT_EQ(Json{std::uint8_t{8}}, std::uint8_t{8});
+  EXPECT_EQ(Json{std::uint16_t{16}}, std::uint16_t{16});
+  EXPECT_EQ(Json{std::uint32_t{32}}, std::uint32_t{32});
+  EXPECT_EQ(Json{std::uint64_t{64}}, std::uint64_t{64});
+  EXPECT_EQ(Json{1.25F}, 1.25F);
+  EXPECT_EQ(Json{2.5}, 2.5);
+  EXPECT_EQ(Json{"text"}, "text");
+  EXPECT_EQ(Json{std::string{"text"}}, std::string{"text"});
+  EXPECT_EQ(Json{std::string_view{"text"}}, std::string_view{"text"});
+
+  EXPECT_LT(Json{-1}, 0U);
+  EXPECT_LT(Json{0U}, 1.0);
+  EXPECT_LT(Json{1.0}, 2);
+  EXPECT_GT(Json{std::numeric_limits<std::uint64_t>::max()}, std::numeric_limits<std::int64_t>::max());
+}
+
+TEST_F(JsonTest, JsonComparisonsCoverEveryStoredKind) {
+  Json array_lhs;
+  array_lhs.MakeArray();
+  array_lhs.emplace_back(1);
+  Json array_rhs;
+  array_rhs.MakeArray();
+  array_rhs.emplace_back(2);
+
+  Json object_lhs;
+  object_lhs["value"] = 1;
+  Json object_rhs;
+  object_rhs["value"] = 2;
+
+  EXPECT_EQ(Json{} <=> Json{}, std::strong_ordering::equal);
+  EXPECT_LT(Json{false}, Json{true});
+  EXPECT_LT(Json{-1}, Json{1U});
+  EXPECT_LT(Json{1U}, Json{2.0});
+  EXPECT_LT(Json{"a"}, Json{"b"});
+  EXPECT_LT(array_lhs, array_rhs);
+  EXPECT_LT(object_lhs, object_rhs);
+  EXPECT_LT(Json{}, array_lhs);
+  EXPECT_LT(array_lhs, Json{false});
+  EXPECT_LT(Json{false}, Json{0});
+  EXPECT_LT(Json{0}, object_lhs);
+  EXPECT_LT(object_lhs, Json{"value"});
+}
+
+TEST_F(JsonTest, CopyConstructionDeepCopiesArraysAndObjects) {
+  Json original;
+  original["array"].emplace_back(1);
+  original["nested"]["value"] = "before";
+
+  Json copy(original);
+  copy["array"][0] = 2;
+  copy["nested"]["value"] = "after";
+
+  EXPECT_EQ(original["array"][0], 1);
+  EXPECT_EQ(original["nested"]["value"], "before");
+  EXPECT_EQ(copy["array"][0], 2);
+  EXPECT_EQ(copy["nested"]["value"], "after");
+}
+
+TEST_F(JsonTest, ContainerModifiersAndAccessors) {
+  Json array;
+  array.MakeArray();
+  array.resize(2, 7);
+  EXPECT_EQ(array.size(), 2);
+  EXPECT_EQ(array.at(0), 7);
+  EXPECT_EQ(array.at(1), 7);
+  array.pop_back();
+  array.push_back(8);
+  array.emplace_back(9);
+  EXPECT_THAT(array, ElementsAre(7, 8, 9));
+  array.erase(array.begin() + 1);
+  EXPECT_THAT(array, ElementsAre(7, 9));
+  array.erase(array.begin(), array.end());
+  EXPECT_THAT(array, IsEmpty());
+  array.resize(2);
+  array.clear();
+  EXPECT_THAT(array, IsEmpty());
+
+  Json object;
+  object.emplace("one", 1);
+  object.emplace("two", 2);
+  EXPECT_TRUE(object.contains("one"));
+  EXPECT_EQ(object.at("one"), 1);
+  EXPECT_EQ(object.erase("missing"), 0);
+  EXPECT_EQ(object.erase("one"), 1);
+  EXPECT_FALSE(object.contains("one"));
+  EXPECT_EQ(object.erase("two"), 1);
+  EXPECT_TRUE(object.empty());
+
+  Json scalar{1};
+  EXPECT_TRUE(scalar);
+  EXPECT_TRUE(scalar.empty());
+  EXPECT_EQ(scalar.size(), 0);
+  EXPECT_EQ(scalar.erase("none"), 0);
+  scalar.clear();
+  EXPECT_TRUE(scalar.IsNull());
 }
 
 TEST_F(JsonTest, BasicsAndSerialize) {

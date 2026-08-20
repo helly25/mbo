@@ -64,7 +64,8 @@ concept JsonUseUnsignedInt =
     std::is_unsigned_v<Value> && std::integral<Value> && std::convertible_to<Value, UnsignedInt>;
 
 template<typename Value>
-concept JsonUseFloat = std::floating_point<Value> || std::convertible_to<Value, Float>;
+concept JsonUseFloat = !std::same_as<std::remove_cvref_t<Value>, bool>
+                       && (std::floating_point<Value> || std::convertible_to<Value, Float>);
 
 }  // namespace json_internal
 
@@ -283,9 +284,9 @@ class Json {
   template<typename Value>
   using ToKind = types::Cases<  // Ordered most precise to least preceise.
       types::IfThen<JsonUseNull<Value>, std::integral_constant<Kind, Kind::kNull>>,
+      types::IfThen<JsonUseBool<Value>, std::integral_constant<Kind, Kind::kBool>>,
       types::IfThen<JsonUseString<Value>, std::integral_constant<Kind, Kind::kString>>,
       types::IfThen<JsonUseNumber<Value>, std::integral_constant<Kind, Kind::kNumber>>,
-      types::IfThen<JsonUseBool<Value>, std::integral_constant<Kind, Kind::kBool>>,
       types::IfThen<JsonUseObject<Value>, std::integral_constant<Kind, Kind::kObject>>,
       types::IfThen<JsonUseArray<Value>, std::integral_constant<Kind, Kind::kArray>>,
       types::IfElse<void>>;
@@ -302,7 +303,7 @@ class Json {
   Json(const Json& other) : Json() {
     std::visit(
         types::Overloaded{
-            [&](const std::unique_ptr<Json>& other) { MakeObject() = *other; },
+            [&](const Object& /*unused*/) { CopyObject(other); },
             [&]<typename Other>(Other&& other) { Json::operator=(std::forward<Other>(other)); }},
         other.data_);
   }
@@ -319,7 +320,11 @@ class Json {
   }
 
   Json& operator=(const std::unique_ptr<Json>& other) {  // NOLINT(misc-no-recursion)
-    CopyObject(*other);
+    if (other == nullptr) {
+      data_.emplace<std::nullopt_t>(std::nullopt);
+    } else {
+      *this = Json(*other);
+    }
     return *this;
   }
 
@@ -566,7 +571,7 @@ class Json {
   template<ConvertibleToJson Value>
   void resize(size_type count, const Value& value) {
     MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
-    std::get<Array>(data_)->resize(count, value);
+    std::get<Array>(data_)->resize(count, Json(value));
   }
 
   iterator begin() {
@@ -734,6 +739,8 @@ class Json {
   void CopyFrom(Value&& value) {
     if constexpr (JsonUseNull<Value>) {
       data_.emplace<std::nullopt_t>(std::nullopt);
+    } else if constexpr (JsonUseBool<Value>) {
+      data_.emplace<bool>(value);
     } else if constexpr (JsonUseString<Value>) {
       data_.emplace<std::string>(std::forward<Value>(value));
     } else if constexpr (json_internal::JsonUseSignedInt<Value>) {
@@ -744,8 +751,6 @@ class Json {
       data_.emplace<Float>(value);
     } else if constexpr (JsonUseArray<Value>) {
       data_.emplace<Array>(std::make_unique<Array::element_type>(*value));
-    } else if constexpr (JsonUseBool<Value>) {
-      data_.emplace<bool>(value);
     } else if constexpr (JsonUseObject<Value>) {
       CopyObject(value);
     } else {
@@ -804,10 +809,10 @@ constexpr auto kJsonComparator = mbo::types::Overloaded{
     [](SignedInt lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },
     [](UnsignedInt lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },
     [](Float lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },
-    [](const std::string& lhs, const std::three_way_comparable_with<std::string> auto& rhs) {
-      return types::WeakToStrong(lhs <=> rhs);
+    [](const std::string& lhs, const JsonUseString auto& rhs) {
+      return types::WeakToStrong(std::string_view(lhs) <=> std::string_view(rhs));
     },
-    [](const Json::Array& lhs, const Json::Array& rhs) { return types::WeakToStrong(lhs <=> rhs); },
+    [](const Json::Array& lhs, const Json::Array& rhs) { return types::WeakToStrong(*lhs <=> *rhs); },
     [](const Json::Object& lhs, const Json::Object& rhs) -> std::strong_ordering {
       auto lhs_it = lhs.begin();
       auto rhs_it = rhs.begin();

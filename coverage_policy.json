@@ -6,10 +6,9 @@
     "mbo/**/*_test.cc",
     "mbo/**/*_test.h"
   ],
-  "minimum": { "lines": 85, "functions": 90, "branches": 57 },
+  "minimum": { "lines": 90, "functions": 90, "branches": 75 },
   "patch_minimum": { "lines": 95, "branches": 85 },
   "categories": {
-    "config": { "include": ["mbo/config/**"], "minimum": {} },
     "container": {
       "include": ["mbo/container/**"],
       "minimum": { "lines": 96, "functions": 94, "branches": 59 }
