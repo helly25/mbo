@@ -119,11 +119,19 @@ def measurements(files: dict[str, FileCoverage], policy: dict) -> dict:
     return result
 
 
+def thresholds(policy: dict) -> dict:
+    result = {"overall": policy.get("minimum", {})}
+    result.update({k: v.get("minimum", {}) for k, v in policy.get("categories", {}).items()})
+    return result
+
+
+def status_target(policy: dict) -> dict:
+    return policy.get("minimum", {}) | policy.get("status_target", {})
+
+
 def failures(measured: dict, policy: dict) -> list[str]:
     result = []
-    thresholds = {"overall": policy.get("minimum", {})}
-    thresholds.update({k: v.get("minimum", {}) for k, v in policy.get("categories", {}).items()})
-    for category, limits in thresholds.items():
+    for category, limits in thresholds(policy).items():
         for metric, minimum in limits.items():
             actual = measured[category][metric]["percent"]
             if actual is None or actual < minimum:
@@ -131,14 +139,76 @@ def failures(measured: dict, policy: dict) -> list[str]:
     return result
 
 
-def markdown(measured: dict) -> str:
-    rows = ["| Category | Lines | Functions | Branches |", "|---|---:|---:|---:|"]
+def coverage_status(metrics: dict, minimum: dict, target: dict) -> str:
+    if not minimum:
+        return "N/A"
+    abbreviations = {"lines": "L", "functions": "F", "branches": "B"}
+    no_data = []
+    failed = []
+    low = []
+    for metric in ("lines", "functions", "branches"):
+        if metric not in minimum:
+            continue
+        actual = metrics[metric]["percent"]
+        if actual is None:
+            no_data.append(abbreviations[metric])
+        elif actual < minimum[metric]:
+            failed.append(abbreviations[metric])
+        elif actual < target.get(metric, minimum[metric]):
+            low.append(abbreviations[metric])
+    problems = []
+    if no_data:
+        problems.append(f'NO DATA: {"/".join(no_data)}')
+    if failed:
+        problems.append(f'FAIL: {"/".join(failed)}')
+    if low:
+        problems.append(f'LOW: {"/".join(low)}')
+    return "OK" if not problems else f'**{"; ".join(problems)}**'
+
+
+def has_coverage(metrics: dict, names: tuple[str, ...]) -> bool:
+    return any(metrics[name]["total"] for name in names)
+
+
+def markdown(measured: dict, minimums: dict, targets: dict | None = None) -> str:
+    targets = minimums if targets is None else targets
+    headers = (
+        "Category",
+        "Status",
+        "Lines",
+        "Covered",
+        "Total",
+        "Functions",
+        "Covered",
+        "Total",
+        "Branches",
+        "Covered",
+        "Total",
+    )
+    values = []
     for category, metrics in measured.items():
-        cells = []
+        cells = [
+            category,
+            coverage_status(metrics, minimums.get(category, {}), targets.get(category, {})),
+        ]
         for metric in ("lines", "functions", "branches"):
             value = metrics[metric]
-            cells.append("n/a" if value["percent"] is None else f'{value["percent"]:.2f}% ({value["covered"]}/{value["total"]})')
-        rows.append(f"| {category} | " + " | ".join(cells) + " |")
+            percent = "n/a" if value["percent"] is None else f'{value["percent"]:.2f}%'
+            cells.extend((percent, str(value["covered"]), str(value["total"])))
+        values.append(tuple(cells))
+    widths = tuple(max(len(header), *(len(row[index]) for row in values)) for index, header in enumerate(headers))
+
+    def row(cells: tuple[str, ...]) -> str:
+        padded = [cell.ljust(width) for cell, width in zip(cells[:2], widths[:2])]
+        padded.extend(cell.rjust(width) for cell, width in zip(cells[2:], widths[2:]))
+        return "| " + " | ".join(padded) + " |"
+
+    separators = (
+        "-" * widths[0],
+        "-" * widths[1],
+        *("-" * (width - 1) + ":" for width in widths[2:]),
+    )
+    rows = [row(headers), row(separators), *(row(value) for value in values)]
     return "\n".join(rows) + "\n"
 
 
@@ -164,16 +234,20 @@ def main(argv: list[str] | None = None) -> int:
             "measurements": measured,
         }
         args.baseline.write_text(json.dumps(baseline, indent=2) + "\n", encoding="utf-8")
-    text = markdown(measured)
+    minimums = thresholds(policy)
+    target = status_target(policy)
+    targets = {category: target for category in minimums}
+    text = markdown(measured, minimums, targets)
     patch_failures: list[str] = []
     if args.base_ref:
         patch = counts(files, changed_lines(args.base_ref))
-        text += "\n### Changed coverable lines\n\n" + markdown({"patch": patch})
         minimum = policy.get("patch_minimum", {})
-        for metric in ("lines", "branches"):
-            actual = patch[metric]["percent"]
-            if patch[metric]["total"] and actual < minimum.get(metric, 0):
-                patch_failures.append(f"patch {metric}: {actual}% < {minimum[metric]}%")
+        if has_coverage(patch, ("lines", "branches")):
+            text += "\n### Changed coverable lines\n\n" + markdown({"patch": patch}, {"patch": minimum})
+            for metric in ("lines", "branches"):
+                actual = patch[metric]["percent"]
+                if patch[metric]["total"] and actual < minimum.get(metric, 0):
+                    patch_failures.append(f"patch {metric}: {actual}% < {minimum[metric]}%")
     print(text, end="")
     if args.summary:
         args.summary.write_text(text, encoding="utf-8")
