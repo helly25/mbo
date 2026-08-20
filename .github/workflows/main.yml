@@ -248,6 +248,17 @@ jobs:
       gcc_version: ${{ matrix.gcc_version }}
       bazel_config: ${{ matrix.bazel_config }}
 
+  coverage:
+    needs: [trunk, pre-commit]
+    secrets: inherit
+    uses: ./.github/workflows/test.yml
+    with:
+      continue-on-error: false
+      os: ubuntu-latest
+      compiler: gcc
+      gcc_version: 14
+      bazel_config: coverage
+
   test-bcr:
     needs: [trunk, pre-commit, test-gcc]
     secrets: inherit
@@ -319,7 +330,8 @@ jobs:
       bazel_config: ${{ matrix.bazel_config }}
 
   done:
-    needs: [trunk, pre-commit, clang-tidy, test-gcc, test-clang, test-bcr]
+    needs:
+      [trunk, pre-commit, clang-tidy, coverage, test-gcc, test-clang, test-bcr]
     if: always()
     runs-on: ubuntu-latest
     steps:

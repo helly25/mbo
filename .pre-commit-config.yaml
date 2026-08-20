@@ -200,6 +200,13 @@ repos:
         entry: python3 -m unittest tools/cache_cleanup_test.py
         files: ^(\.github/workflows/cache_cleanup\.yml|tools/cache_cleanup(_test)?\.py)$
         pass_filenames: false
+      - id: coverage-policy-tests
+        name: coverage policy tests
+        description: Verify LCOV parsing, exclusions, and threshold enforcement.
+        language: system
+        entry: python3 -m unittest tools/coverage_test.py
+        files: ^(coverage_policy\.json|tools/coverage(_test)?\.py)$
+        pass_filenames: false
       - id: clang-tidy
         name: clang-tidy
         description: |

@@ -1,0 +1,244 @@
+{
+  "schema": 1,
+  "description": "Bazel LCOV with GCC 14; scope and exclusions are defined by coverage_policy.json",
+  "measurements": {
+    "overall": {
+      "lines": {
+        "covered": 5876,
+        "total": 6494,
+        "percent": 90.48
+      },
+      "functions": {
+        "covered": 10716,
+        "total": 11877,
+        "percent": 90.22
+      },
+      "branches": {
+        "covered": 10674,
+        "total": 18724,
+        "percent": 57.01
+      }
+    },
+    "config": {
+      "lines": {
+        "covered": 0,
+        "total": 0,
+        "percent": null
+      },
+      "functions": {
+        "covered": 0,
+        "total": 0,
+        "percent": null
+      },
+      "branches": {
+        "covered": 0,
+        "total": 0,
+        "percent": null
+      }
+    },
+    "container": {
+      "lines": {
+        "covered": 703,
+        "total": 732,
+        "percent": 96.04
+      },
+      "functions": {
+        "covered": 6824,
+        "total": 7213,
+        "percent": 94.61
+      },
+      "branches": {
+        "covered": 7097,
+        "total": 11845,
+        "percent": 59.92
+      }
+    },
+    "diff": {
+      "lines": {
+        "covered": 824,
+        "total": 854,
+        "percent": 96.49
+      },
+      "functions": {
+        "covered": 115,
+        "total": 116,
+        "percent": 99.14
+      },
+      "branches": {
+        "covered": 485,
+        "total": 545,
+        "percent": 88.99
+      }
+    },
+    "digest": {
+      "lines": {
+        "covered": 861,
+        "total": 871,
+        "percent": 98.85
+      },
+      "functions": {
+        "covered": 228,
+        "total": 239,
+        "percent": 95.4
+      },
+      "branches": {
+        "covered": 325,
+        "total": 340,
+        "percent": 95.59
+      }
+    },
+    "file": {
+      "lines": {
+        "covered": 609,
+        "total": 734,
+        "percent": 82.97
+      },
+      "functions": {
+        "covered": 123,
+        "total": 130,
+        "percent": 94.62
+      },
+      "branches": {
+        "covered": 383,
+        "total": 566,
+        "percent": 67.67
+      }
+    },
+    "hash": {
+      "lines": {
+        "covered": 1007,
+        "total": 1024,
+        "percent": 98.34
+      },
+      "functions": {
+        "covered": 232,
+        "total": 233,
+        "percent": 99.57
+      },
+      "branches": {
+        "covered": 1395,
+        "total": 3496,
+        "percent": 39.9
+      }
+    },
+    "json": {
+      "lines": {
+        "covered": 183,
+        "total": 208,
+        "percent": 87.98
+      },
+      "functions": {
+        "covered": 121,
+        "total": 224,
+        "percent": 54.02
+      },
+      "branches": {
+        "covered": 72,
+        "total": 134,
+        "percent": 53.73
+      }
+    },
+    "log": {
+      "lines": {
+        "covered": 131,
+        "total": 152,
+        "percent": 86.18
+      },
+      "functions": {
+        "covered": 42,
+        "total": 271,
+        "percent": 15.5
+      },
+      "branches": {
+        "covered": 63,
+        "total": 83,
+        "percent": 75.9
+      }
+    },
+    "mope": {
+      "lines": {
+        "covered": 112,
+        "total": 323,
+        "percent": 34.67
+      },
+      "functions": {
+        "covered": 13,
+        "total": 29,
+        "percent": 44.83
+      },
+      "branches": {
+        "covered": 64,
+        "total": 302,
+        "percent": 21.19
+      }
+    },
+    "status": {
+      "lines": {
+        "covered": 57,
+        "total": 57,
+        "percent": 100.0
+      },
+      "functions": {
+        "covered": 38,
+        "total": 41,
+        "percent": 92.68
+      },
+      "branches": {
+        "covered": 12,
+        "total": 16,
+        "percent": 75.0
+      }
+    },
+    "strings": {
+      "lines": {
+        "covered": 241,
+        "total": 268,
+        "percent": 89.93
+      },
+      "functions": {
+        "covered": 40,
+        "total": 40,
+        "percent": 100.0
+      },
+      "branches": {
+        "covered": 191,
+        "total": 233,
+        "percent": 81.97
+      }
+    },
+    "testing": {
+      "lines": {
+        "covered": 338,
+        "total": 377,
+        "percent": 89.66
+      },
+      "functions": {
+        "covered": 611,
+        "total": 808,
+        "percent": 75.62
+      },
+      "branches": {
+        "covered": 112,
+        "total": 158,
+        "percent": 70.89
+      }
+    },
+    "types": {
+      "lines": {
+        "covered": 810,
+        "total": 894,
+        "percent": 90.6
+      },
+      "functions": {
+        "covered": 2329,
+        "total": 2533,
+        "percent": 91.95
+      },
+      "branches": {
+        "covered": 475,
+        "total": 1006,
+        "percent": 47.22
+      }
+    }
+  }
+}

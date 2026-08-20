@@ -66,6 +66,6 @@ also updates this file to the completed state.
   - [x] Digest checksum-file parsing. PR: [#340](https://github.com/helly25/mbo/pull/340).
 - [x] Add explicit UBSan coverage alongside ASan in CI.
   - PR: [#341](https://github.com/helly25/mbo/pull/341).
-- [ ] Add coverage reporting focused on uninstantiated templates and malformed
+- [x] Add coverage reporting focused on uninstantiated templates and malformed
       input branches.
-  - PR: pending.
+  - PR: [#343](https://github.com/helly25/mbo/pull/343).
