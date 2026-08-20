@@ -301,7 +301,7 @@ class Json {
   Json() noexcept : data_{std::nullopt} {}
 
   Json(const Json& other) : Json() {
-    std::visit(  // LCOV_EXCL_FUNC_LINE: GCC attributes generated variant dispatchers to this call site.
+    std::visit(
         types::Overloaded{
             [&](const Object& /*unused*/) { CopyObject(other); },
             [&]<typename Other>(Other&& other) { Json::operator=(std::forward<Other>(other)); }},
@@ -832,7 +832,9 @@ constexpr auto kJsonComparator = mbo::types::Overloaded{
       }
       return lhs.size() <=> rhs.size();
     },
-    []<typename LhsOther, typename RhsOther>(const LhsOther& lhs, const RhsOther& rhs) -> std::strong_ordering {
+    []<typename LhsOther, typename RhsOther>(  // LCOV_EXCL_FUNC_LINE: unreachable variant cross-products.
+        const LhsOther& lhs,
+        const RhsOther& rhs) -> std::strong_ordering {
       if constexpr (IsNullopt<LhsOther> || IsNullopt<RhsOther>) {
         return NotNullopt<LhsOther> <=> NotNullopt<RhsOther>;
       } else {
@@ -884,9 +886,7 @@ inline std::strong_ordering Json::Compare(const Json& other) const noexcept {
   if (auto comp = GetKind() <=> other.GetKind(); comp != std::strong_ordering::equal) {
     return comp;
   }
-  // GCC attributes the combinatorial variant dispatchers to this call site rather than to the standard library.
-  return std::visit(  // LCOV_EXCL_FUNC_LINE
-      json_internal::kJsonComparator, data_, other.data_);
+  return std::visit(json_internal::kJsonComparator, data_, other.data_);
 }
 
 template<ConvertibleToJson Value>
@@ -894,8 +894,10 @@ inline std::strong_ordering Json::Compare(const Value& other) const noexcept {
   if (const auto comp = GetKind() <=> Json::GetKind(other); comp != std::strong_ordering::equal) {
     return comp;
   }
-  return std::visit(  // LCOV_EXCL_FUNC_LINE: GCC attributes generated variant dispatchers to this call site.
-      [&other]<typename Lhs>(const Lhs& lhs) { return json_internal::kJsonComparator(lhs, other); }, data_);
+  return std::visit(
+      [&other]<typename Lhs>(  // LCOV_EXCL_FUNC_LINE: unreachable variant alternatives for this value type.
+          const Lhs& lhs) { return json_internal::kJsonComparator(lhs, other); },
+      data_);
 }
 
 static_assert(types::HasMboTypesStringifyValueAccess<Json>);
