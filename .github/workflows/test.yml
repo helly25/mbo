@@ -178,6 +178,9 @@ jobs:
           fi
           if [ "${{inputs.bazel_config}}" == "asan" ]; then
             BAZEL_ARGS+=("-c" "dbg" "--config=asan")
+            if [ "${{inputs.compiler}}" == "gcc" ]; then
+              BAZEL_ARGS+=("--config=asan-gcc")
+            fi
           elif [ "${{inputs.bazel_config}}" == "cpp23" ]; then
             BAZEL_ARGS+=("-c" "opt" "--config=cpp23")
           elif [ "${{inputs.bazel_config}}" == "fastbuild" ]; then

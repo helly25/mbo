@@ -88,16 +88,23 @@ common:symbolizer --run_under=//tools:run_under_symbolizer
 # Custom --config=asan mode:
 common:asan --config=symbolizer
 common:asan --copt -g
-common:asan --copt -fsanitize=address
+common:asan --copt -fsanitize=address,undefined
 common:asan --copt -fno-sanitize=vptr
 common:asan --copt -fno-omit-frame-pointer
 common:asan --copt -DADDRESS_SANITIZER
-common:asan --linkopt -fsanitize=address
+common:asan --linkopt -fsanitize=address,undefined
 common:asan --linkopt -fno-sanitize=vptr
 #common:asan --linkopt -fsanitize-link-c++-runtime
 common:asan --linkopt -ldl
 common:asan --define tcmalloc=disabled
 common:asan --define signal_trace=disabled
+
+# GCC 14 cannot compile Abseil's constexpr function-pointer comparison when
+# the UBSan umbrella is enabled, including when an external header template is
+# instantiated by first-party code. Keep GCC's sanitizer cell ASan-only; the
+# Clang sanitizer cells exercise ASan and UBSan together via --config=asan.
+common:asan-gcc --copt -fno-sanitize=undefined
+common:asan-gcc --linkopt -fno-sanitize=undefined
 common:asan --build_tag_filters=-no_san  # skip san targets
 common:asan --test_tag_filters=-no_san  # skip san targets
 common:asan --define san=true  # skip san targets
