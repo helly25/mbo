@@ -76,7 +76,8 @@ jobs:
       # extracted ~4 GB hermetic LLVM, which crowded the 10 GB repo limit for no
       # benefit (LLVM re-downloads quickly, and the symbolizer wrapper resolves via
       # runfiles so a fresh fetch location is fine). Ported from helly25/xff #409+#411.
-      - uses: actions/cache/restore@v5
+      - name: Restore Bazel disk cache
+        uses: actions/cache/restore@v5
         id: cache_restore
         with:
           path: "~/.cache/bazel_disk-cache"
@@ -87,7 +88,8 @@ jobs:
             ${{env.CACHE_KEY_PREFIX}}
       # The repository cache (downloaded archives) is small WITHOUT the hermetic LLVM,
       # so it is cached only for non-clang cells; a clang cell re-fetches LLVM each run.
-      - uses: actions/cache/restore@v5
+      - name: Restore Bazel repository cache
+        uses: actions/cache/restore@v5
         if: inputs.compiler != 'clang'
         id: repo_cache_restore
         with:
@@ -312,13 +314,15 @@ jobs:
             coverage-summary.md
           retention-days: 14
 
-      - uses: actions/cache/save@v5
+      - name: Save Bazel disk cache
+        uses: actions/cache/save@v5
         if: ${{!startsWith(github.ref, 'refs/tags/')}}
         id: cache_save
         with:
           path: "~/.cache/bazel_disk-cache"
           key: ${{env.CACHE_KEY_PREFIX}}-${{github.ref}}-${{github.sha}}
-      - uses: actions/cache/save@v5
+      - name: Save Bazel repository cache
+        uses: actions/cache/save@v5
         if: ${{!startsWith(github.ref, 'refs/tags/') && inputs.compiler != 'clang' && steps.repo_cache_restore.outputs.cache-hit != 'true'}}
         with:
           path: "~/.cache/bazel_repo-cache"
