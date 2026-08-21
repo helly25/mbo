@@ -486,7 +486,7 @@ TYPED_TEST(DigestTest, KnownAnswers) {
   for (const TestVector& vector : Traits::kVectors) {
     EXPECT_THAT(TypeParam::Digest(vector.input), ElementsAreArray(FromHex<TypeParam::kDigestSize>(vector.hex)))
         << Traits::kName << " input of length " << vector.input.size();
-    EXPECT_EQ(ToHexString(TypeParam::Digest(vector.input)), vector.hex);
+    EXPECT_THAT(ToHexString(TypeParam::Digest(vector.input)), vector.hex);
   }
 }
 
@@ -530,7 +530,7 @@ TYPED_TEST(DigestTest, StreamerIsPeekable) {
 TYPED_TEST(DigestTest, MillionA) {
   using Traits = AlgoTraits<TypeParam>;
   const std::string input(1'000'000, 'a');
-  EXPECT_EQ(ToHexString(TypeParam::Digest(input)), Traits::kMillionAHex);
+  EXPECT_THAT(ToHexString(TypeParam::Digest(input)), Traits::kMillionAHex);
 }
 
 // BLAKE3 official test-vector suite (BLAKE3-team/BLAKE3
@@ -702,9 +702,9 @@ std::string Blake3PatternInput(std::size_t len) {
 TEST(Blake3Test, OfficialVectorsAllModes) {
   for (const Blake3OfficialVector& vector : kBlake3OfficialVectors) {
     const std::string input = Blake3PatternInput(vector.input_len);
-    EXPECT_EQ(ToHexString(blake3::Digest(input)), vector.hash32) << "len " << vector.input_len;
-    EXPECT_EQ(ToHexString(blake3::DigestKeyed(kBlake3Key, input)), vector.keyed32) << "len " << vector.input_len;
-    EXPECT_EQ(ToHexString(blake3::DeriveKey(kBlake3Context, input)), vector.derived32) << "len " << vector.input_len;
+    EXPECT_THAT(ToHexString(blake3::Digest(input)), vector.hash32) << "len " << vector.input_len;
+    EXPECT_THAT(ToHexString(blake3::DigestKeyed(kBlake3Key, input)), vector.keyed32) << "len " << vector.input_len;
+    EXPECT_THAT(ToHexString(blake3::DeriveKey(kBlake3Context, input)), vector.derived32) << "len " << vector.input_len;
   }
 }
 
@@ -732,7 +732,7 @@ constexpr auto kBlake3XofVectors = std::to_array<Blake3XofVector>({
 
 TEST(Blake3Test, OfficialVectorsXof) {
   for (const Blake3XofVector& vector : kBlake3XofVectors) {
-    EXPECT_EQ(ToHexString(blake3::DigestXof<131>(Blake3PatternInput(vector.input_len))), vector.hex)
+    EXPECT_THAT(ToHexString(blake3::DigestXof<131>(Blake3PatternInput(vector.input_len))), vector.hex)
         << "len " << vector.input_len;
   }
 }
@@ -757,13 +757,13 @@ static_assert(
 // SHAKE outputs longer than the rate need squeeze-block iteration; 200 bytes
 // crosses it for both rates (168/136). Values from python hashlib.
 TEST(ShakeTest, LongOutputCrossesRate) {
-  EXPECT_EQ(
+  EXPECT_THAT(
       ToHexString(shake128::Digest<200>("")),
       "7f9c2ba4e88f827d616045507605853ed73b8093f6efbc88eb1a6eacfa66ef263cb1eea988004b93103cfb0aeefd2a686e01fa4a58e8a363"
       "9ca8a1e3f9ae57e235b8cc873c23dc62b8d260169afa2f75ab916a58d974918835d25e6a435085b2badfd6dfaac359a5efbb7bcc4b59d538"
       "df9a04302e10c8bc1cbf1a0b3a5120ea17cda7cfad765f5623474d368ccca8af0007cd9f5e4c849f167a580b14aabdefaee7eef47cb0fca9"
       "767be1fda69419dfb927e9df07348b196691abaeb580b32def58538b8d23f877");
-  EXPECT_EQ(
+  EXPECT_THAT(
       ToHexString(shake256::Digest<200>("abc")),
       "483366601360a8771c6863080cc4114d8db44530f8f1e1ee4f94ea37e78b5739d5a15bef186a5386c75744c0527e1faa9f8726e462a12a4f"
       "eb06bd8801e751e41385141204f329979fd3047a13c5657724ada64d2470157b3cdc288620944d78dbcddbd912993f0913f164fb2ce95131"
@@ -823,7 +823,7 @@ TEST(Blake2bTest, KeyedKnownAnswers) {
     const std::string hex = vector.digest_size == 64
                                 ? ToHexString(blake2b::Algorithm::DigestKeyed(vector.key, vector.message))
                                 : ToHexString(blake2b_256::Algorithm::DigestKeyed(vector.key, vector.message));
-    EXPECT_EQ(hex, vector.hex) << "key length " << vector.key.size() << ", message length " << vector.message.size();
+    EXPECT_THAT(hex, vector.hex) << "key length " << vector.key.size() << ", message length " << vector.message.size();
   }
 }
 
@@ -833,7 +833,7 @@ TEST(Blake2bTest, KeyedStreamingMatchesOneShot) {
   for (const char& chr : vector.message) {
     blake2b::Algorithm::StreamUpdate(state, std::string_view(&chr, 1));
   }
-  EXPECT_EQ(ToHexString(blake2b::Algorithm::StreamFinalize(state)), vector.hex);
+  EXPECT_THAT(ToHexString(blake2b::Algorithm::StreamFinalize(state)), vector.hex);
 }
 
 // HMAC known answers (generated with python's hmac module) covering short,
@@ -933,7 +933,7 @@ TYPED_TEST_SUITE(HmacTest, HmacAlgorithms);
 
 TYPED_TEST(HmacTest, KnownAnswers) {
   for (const HmacVector& vector : HmacTraits<TypeParam>::kVectors) {
-    EXPECT_EQ(ToHexString(Hmac<TypeParam>::Digest(vector.key, vector.message)), vector.hex)
+    EXPECT_THAT(ToHexString(Hmac<TypeParam>::Digest(vector.key, vector.message)), vector.hex)
         << "key length " << vector.key.size() << ", message length " << vector.message.size();
   }
 }
@@ -944,19 +944,19 @@ TYPED_TEST(HmacTest, StreamingMatchesOneShotAndPeeks) {
   for (const char& chr : vector.message) {
     stream.Update(std::string_view(&chr, 1));
   }
-  EXPECT_EQ(ToHexString(stream.Finalize()), vector.hex);
+  EXPECT_THAT(ToHexString(stream.Finalize()), vector.hex);
 
   constexpr std::size_t kSplit = 10;
   HmacStreamer<TypeParam> peeking(vector.key);
   peeking.Update(vector.message.substr(0, kSplit));
   (void)peeking.Finalize();  // Peek must not disturb the stream.
   peeking.Update(vector.message.substr(kSplit));
-  EXPECT_EQ(ToHexString(peeking.Finalize()), vector.hex);
+  EXPECT_THAT(ToHexString(peeking.Finalize()), vector.hex);
 }
 
 TEST(DigestTest, ToHexString) {
   constexpr std::array<uint8_t, 4> kBytes = {0x00, 0x0F, 0xA5, 0xFF};
-  EXPECT_EQ(ToHexString(kBytes), "000fa5ff");
+  EXPECT_THAT(ToHexString(kBytes), "000fa5ff");
 }
 
 }  // namespace

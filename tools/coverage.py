@@ -17,7 +17,7 @@ from pathlib import Path
 @dataclass
 class FileCoverage:
     lines: dict[int, int] = field(default_factory=dict)
-    functions: list[int] = field(default_factory=list)
+    functions: list[tuple[int, int]] = field(default_factory=list)
     branches: list[tuple[int, bool]] = field(default_factory=list)
 
 
@@ -31,24 +31,55 @@ def _repo_path(value: str) -> str | None:
     return None
 
 
-def parse_lcov(path: Path) -> dict[str, FileCoverage]:
+def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCoverage]:
     result: dict[str, FileCoverage] = {}
     current: FileCoverage | None = None
+    function_lines: dict[str, int] = {}
     for raw in path.read_text(encoding="utf-8").splitlines():
         if raw.startswith("SF:"):
             name = _repo_path(raw[3:])
             current = result.setdefault(name, FileCoverage()) if name else None
+            function_lines = {}
+        elif current is not None and raw.startswith("FN:"):
+            definition = raw[3:].split(",")
+            function_lines[definition[-1]] = int(definition[0])
         elif current is not None and raw.startswith("DA:"):
             line, hits, *_ = raw[3:].split(",")
             current.lines[int(line)] = current.lines.get(int(line), 0) + int(hits)
         elif current is not None and raw.startswith("FNDA:"):
-            hits, _ = raw[5:].split(",", 1)
-            current.functions.append(int(hits))
+            hits, name = raw[5:].split(",", 1)
+            current.functions.append((function_lines.get(name, 0), int(hits)))
         elif current is not None and raw.startswith("BRDA:"):
             line, _, _, taken = raw[5:].split(",")
             current.branches.append((int(line), taken not in ("-", "0")))
         elif raw == "end_of_record":
             current = None
+    for name, data in result.items():
+        source = source_root / name
+        if not source.is_file():
+            continue
+        source_lines = source.read_text(encoding="utf-8").splitlines()
+        excluded_lines = {
+            number
+            for number, line in enumerate(source_lines, start=1)
+            if "LCOV_EXCL_LINE" in line
+        }
+        excluded_branches = excluded_lines | {
+            number
+            for number, line in enumerate(source_lines, start=1)
+            if "LCOV_EXCL_BR_LINE" in line
+        }
+        excluded_functions: set[int] = set()
+        for index, line in enumerate(source_lines):
+            if "LCOV_EXCL_FUNC_LINE" not in line:
+                continue
+            for continuation in range(index, len(source_lines)):
+                excluded_functions.add(continuation + 1)
+                if "{" in source_lines[continuation]:
+                    break
+        data.lines = {line: hits for line, hits in data.lines.items() if line not in excluded_lines}
+        data.functions = [function for function in data.functions if function[0] not in excluded_functions]
+        data.branches = [(line, taken) for line, taken in data.branches if line not in excluded_branches]
     return result
 
 
@@ -76,7 +107,7 @@ def counts(files: dict[str, FileCoverage], changed: dict[str, set[int]] | None =
                 values["lines"][0] += hits > 0
         if changed is None:
             values["functions"][1] += len(data.functions)
-            values["functions"][0] += sum(hits > 0 for hits in data.functions)
+            values["functions"][0] += sum(hits > 0 for _, hits in data.functions)
         for line, taken in data.branches:
             if lines is None or line in lines:
                 values["branches"][1] += 1
@@ -125,7 +156,7 @@ def thresholds(policy: dict) -> tuple[dict, dict]:
     floors = {"overall": overall}
     targets = {"overall": overall}
     for name, category in policy.get("categories", {}).items():
-        floors[name] = category.get("minimum", overall)
+        floors[name] = overall | category.get("minimum", {})
         targets[name] = overall
     return floors, targets
 
@@ -169,6 +200,20 @@ def coverage_status(metrics: dict, minimum: dict, target: dict) -> str:
 
 def has_coverage(metrics: dict, names: tuple[str, ...]) -> bool:
     return any(metrics[name]["total"] for name in names)
+
+
+def uncovered_patch_locations(
+    files: dict[str, FileCoverage], changed: dict[str, set[int]]
+) -> tuple[list[str], list[str]]:
+    lines = []
+    branches = set()
+    for path, data in files.items():
+        changed_in_file = changed.get(path, set())
+        lines.extend(f"{path}:{line}" for line, hits in data.lines.items() if line in changed_in_file and not hits)
+        branches.update(
+            f"{path}:{line}" for line, taken in data.branches if line in changed_in_file and not taken
+        )
+    return sorted(lines), sorted(branches)
 
 
 def markdown(measured: dict, minimums: dict, targets: dict | None = None) -> str:
@@ -238,8 +283,11 @@ def main(argv: list[str] | None = None) -> int:
     minimums, targets = thresholds(policy)
     text = markdown(measured, minimums, targets)
     patch_failures: list[str] = []
+    uncovered_lines: list[str] = []
+    uncovered_branches: list[str] = []
     if args.base_ref:
-        patch = counts(files, changed_lines(args.base_ref))
+        changed = changed_lines(args.base_ref)
+        patch = counts(files, changed)
         minimum = policy.get("patch_minimum", {})
         if has_coverage(patch, ("lines", "branches")):
             text += "\n### Changed coverable lines\n\n" + markdown({"patch": patch}, {"patch": minimum})
@@ -247,12 +295,18 @@ def main(argv: list[str] | None = None) -> int:
                 actual = patch[metric]["percent"]
                 if patch[metric]["total"] and actual < minimum.get(metric, 0):
                     patch_failures.append(f"patch {metric}: {actual}% < {minimum[metric]}%")
+            if patch_failures:
+                uncovered_lines, uncovered_branches = uncovered_patch_locations(files, changed)
     print(text, end="")
     if args.summary:
         args.summary.write_text(text, encoding="utf-8")
     errors = failures(measured, minimums) + patch_failures
     for error in errors:
         print(f"coverage threshold failed: {error}", file=sys.stderr)
+    for location in uncovered_lines:
+        print(f"uncovered patch line: {location}", file=sys.stderr)
+    for location in uncovered_branches:
+        print(f"uncovered patch branch: {location}", file=sys.stderr)
     return bool(errors)
 
 

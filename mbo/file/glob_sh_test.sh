@@ -82,4 +82,36 @@ function test::select() {
   _test_glob_and_diff select "${BASHTEST_TMPDIR}/**/file[23]"
 }
 
+function test::summary_and_extensions() {
+  local output
+  output="$("${GLOB}" "${BASHTEST_TMPDIR}" --noentries --sum_extensions)"
+  [[ ${output} == *"FileExt():"* ]] || die "Missing extension-less file summary: ${output}"
+  [[ ${output} == *"Files:"* ]] || die "Missing file summary: ${output}"
+  [[ ${output} == *"Total:"* ]] || die "Missing total summary: ${output}"
+}
+
+function test::fast_size_type_and_depth() {
+  local output
+  output="$("${GLOB}" "${BASHTEST_TMPDIR}" "sub/dir/file1" --fast --size --type --depth --sum_every=1)"
+  [[ ${output} == *"0 f 2 sub/dir/file1"* ]] || die "Missing decorated file entry: ${output}"
+  [[ ${output} == *"Files:"* ]] || die "Missing periodic summary: ${output}"
+}
+
+function test::re2() {
+  local output
+  output="$("${GLOB}" "${BASHTEST_TMPDIR}" '.*file[23]' --re2)"
+  [[ ${output} == *"sub/dir/file2"* ]] || die "RE2 did not find file2: ${output}"
+  [[ ${output} == *"sub/two/dir/file3"* ]] || die "RE2 did not find file3: ${output}"
+  [[ ${output} != *"file1"* ]] || die "RE2 unexpectedly found file1: ${output}"
+}
+
+function test::rejects_bad_argument_counts() {
+  if "${GLOB}" >/dev/null 2>&1; then
+    die "glob without a pattern unexpectedly succeeded"
+  fi
+  if "${GLOB}" one two three >/dev/null 2>&1; then
+    die "glob with three positional arguments unexpectedly succeeded"
+  fi
+}
+
 test_runner

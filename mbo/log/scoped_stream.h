@@ -170,11 +170,11 @@ class ScopedStream {
       case ScopedStreamMode::kContinue: break;
       case ScopedStreamMode::kQuickExit: {
         if constexpr (std::same_as<OStreamT, Voidifier>) {
-          OutFlush(std::cerr);
+          OutFlush(std::cerr);  // LCOV_EXCL_LINE: quick_exit prevents the coverage runtime from flushing.
         } else if constexpr (!std::same_as<OStreamT, VoidStream>) {
-          OutFlush(out_);
+          OutFlush(out_);  // LCOV_EXCL_LINE: quick_exit prevents the coverage runtime from flushing.
         }
-        std::quick_exit(1);
+        std::quick_exit(1);  // LCOV_EXCL_LINE: deliberately prevents normal process and coverage shutdown.
       }
     }
   }

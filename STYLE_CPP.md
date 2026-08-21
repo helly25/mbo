@@ -409,13 +409,16 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
   `struct FooTest : ::testing::Test {};` is preferred, so shared setup has a home.
 - One behaviour per test; name the test for the behaviour it asserts.
 
-### Assertions: gmock matchers, not `EXPECT_EQ`
+### Assertions: gmock matchers, never comparison macros
 
-- Assert with **`EXPECT_THAT` / `ASSERT_THAT` + a matcher** rather than the comparison macros
-  `EXPECT_EQ` / `NE` / `GT` / `LT` / `GE` / `LE` (and their `ASSERT_` forms): matchers compose and
-  give far better failure messages. The accepted exception is the boolean `EXPECT_TRUE` /
-  `EXPECT_FALSE` (and `ASSERT_TRUE` / `ASSERT_FALSE`), which read fine on their own. Within a
-  single test keep one style - do not mix, say, `EXPECT_TRUE(x)` and `EXPECT_THAT(y, IsTrue())`.
+- Assert with **`EXPECT_THAT` / `ASSERT_THAT` + a matcher**, never a GoogleTest comparison macro.
+  The prohibited suffixes are `EQ`, `NE`, `LT`, `LE`, `GT`, `GE`, `STREQ`, `STRNE`, `STRCASEEQ`,
+  `STRCASENE`, `FLOAT_EQ`, `DOUBLE_EQ`, and `NEAR`, in both their `EXPECT_` and `ASSERT_` forms.
+  Matchers compose and give far better failure messages. **There are no exceptions, including string,
+  floating-point, and multi-line text comparisons.** The accepted exception is the boolean
+  `EXPECT_TRUE` / `EXPECT_FALSE` (and `ASSERT_TRUE` / `ASSERT_FALSE`), which read fine on their own.
+  Within a single test keep one style - do not mix, say, `EXPECT_TRUE(x)` and
+  `EXPECT_THAT(y, IsTrue())`.
 - **Name matchers unqualified - never the `::testing::` prefix inline.** Bring each matcher in with
   a `using ::testing::Foo;` (or `using ::mbo::testing::Foo;`) in the test file's anonymous namespace
   and use the bare name in the `EXPECT_THAT` / `ASSERT_THAT` expression; a `::testing::Foo(...)`
@@ -434,8 +437,9 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
   (a rendered table, generated `--help`, file contents) prefer
   `EXPECT_THAT(actual, EqualsText(golden))` (`//mbo/testing:matchers_cc`): it compares line by line
   with unified-diff output, so a mismatch points at the offending line instead of dumping the whole
-  blob. A bare `EXPECT_EQ` on a multi-line string is now only the fallback for text that is not
-  line-oriented.
+  blob. Text comparison was the last plausible reason to use `EXPECT_EQ` / `ASSERT_EQ`; `EqualsText`
+  removes that reason. For non-line-oriented strings use `EXPECT_THAT(actual, expected)` or `StrEq`
+  when the subject is a C string.
   - **Write the golden as a `DropIndent`-filtered raw string, not concatenated `"...\n"` literals.**
     `clang-format` shoves adjacent string literals hard against the `EqualsText(` bracket (aligned to
     the open paren, often at column ~35), which is unreadable and drifts with the call length. Instead

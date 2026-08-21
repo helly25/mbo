@@ -16,7 +16,7 @@ class CoverageTest(unittest.TestCase):
             report = Path(directory) / "coverage.lcov"
             report.write_text(
                 "SF:/workspace/mbo/strings/parse.cc\n"
-                "FNDA:1,Good\nFNDA:0,Bad\n"
+                "FN:9,Good\nFN:12,Bad\nFNDA:1,Good\nFNDA:0,Bad\n"
                 "DA:10,1\nDA:11,0\n"
                 "BRDA:10,0,0,1\nBRDA:10,0,1,0\nend_of_record\n"
                 "SF:/workspace/mbo/strings/parse_test.cc\nDA:1,1\nend_of_record\n",
@@ -45,6 +45,52 @@ class CoverageTest(unittest.TestCase):
         result = coverage_tool.counts(files, {"mbo/a.cc": {10, 11, 99}})
         self.assertEqual({"covered": 1, "total": 2, "percent": 50.0}, result["lines"])
         self.assertEqual({"covered": 1, "total": 2, "percent": 50.0}, result["branches"])
+
+    def test_parse_excludes_marked_compiler_generated_branches(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "mbo/a.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "if (runtime) {}  // LCOV_EXCL_BR_LINE\n"
+                "quick_exit(1);  // LCOV_EXCL_LINE\n"
+                "if (normal) {}\n",
+                encoding="utf-8",
+            )
+            report = root / "coverage.lcov"
+            report.write_text(
+                "SF:mbo/a.cc\n"
+                "BRDA:1,0,0,0\nBRDA:1,0,1,1\n"
+                "DA:1,1\nDA:2,0\nDA:3,1\n"
+                "BRDA:2,0,0,0\nBRDA:2,0,1,1\n"
+                "BRDA:3,0,0,0\nBRDA:3,0,1,1\nend_of_record\n",
+                encoding="utf-8",
+            )
+            files = coverage_tool.parse_lcov(report, root)
+            self.assertEqual({1: 1, 3: 1}, files["mbo/a.cc"].lines)
+            self.assertEqual([(3, False), (3, True)], files["mbo/a.cc"].branches)
+
+    def test_parse_excludes_functions_at_marked_source_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "mbo/a.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "auto dispatcher = []<typename Value>(  // LCOV_EXCL_FUNC_LINE: generated dispatchers\n"
+                "    const Value& value) { return value; };\n"
+                "ordinary();\n",
+                encoding="utf-8",
+            )
+            report = root / "coverage.lcov"
+            report.write_text(
+                "SF:mbo/a.cc\n"
+                "FN:1,GeneratedOne\nFN:2,GeneratedTwo\nFN:3,Ordinary\n"
+                "FNDA:1,GeneratedOne\nFNDA:0,GeneratedTwo\nFNDA:1,Ordinary\n"
+                "end_of_record\n",
+                encoding="utf-8",
+            )
+            files = coverage_tool.parse_lcov(report, root)
+            self.assertEqual([(3, 1)], files["mbo/a.cc"].functions)
 
     def test_threshold_failure(self):
         measured = {
@@ -78,6 +124,23 @@ class CoverageTest(unittest.TestCase):
         )
         self.assertEqual(policy["minimum"], targets["overridden"])
 
+    def test_category_minimum_only_overrides_named_metrics(self):
+        policy = {
+            "minimum": {"lines": 88.0, "functions": 80.0, "branches": 60.0},
+            "categories": {
+                "compile_time": {
+                    "include": ["mbo/types/**"],
+                    "minimum": {"branches": 47.0},
+                },
+            },
+        }
+        minimums, targets = coverage_tool.thresholds(policy)
+        self.assertEqual(
+            {"lines": 88.0, "functions": 80.0, "branches": 47.0},
+            minimums["compile_time"],
+        )
+        self.assertEqual(policy["minimum"], targets["compile_time"])
+
     def test_patch_without_coverable_code_is_not_reported(self):
         empty = {
             "lines": {"covered": 0, "total": 0, "percent": None},
@@ -89,6 +152,20 @@ class CoverageTest(unittest.TestCase):
         with_lines = dict(empty)
         with_lines["lines"] = {"covered": 0, "total": 1, "percent": 0.0}
         self.assertTrue(coverage_tool.has_coverage(with_lines, ("lines", "branches")))
+
+    def test_uncovered_patch_locations_are_sorted_and_deduplicated(self):
+        files = {
+            "mbo/b.cc": coverage_tool.FileCoverage(
+                lines={4: 0, 5: 1}, branches=[(4, False), (4, False), (5, True)]
+            ),
+            "mbo/a.cc": coverage_tool.FileCoverage(lines={2: 0}),
+        }
+        self.assertEqual(
+            (["mbo/a.cc:2", "mbo/b.cc:4"], ["mbo/b.cc:4"]),
+            coverage_tool.uncovered_patch_locations(
+                files, {"mbo/a.cc": {2}, "mbo/b.cc": {4, 5}}
+            ),
+        )
 
     def test_markdown_shows_compact_line_coverage(self):
         measured = {

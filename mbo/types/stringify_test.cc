@@ -73,6 +73,7 @@ using ::mbo::types::types_internal::kStructNameSupport;
 using ::mbo::types::types_internal::SupportsFieldNames;
 using ::mbo::types::types_internal::SupportsFieldNamesConstexpr;
 using ::testing::ElementsAre;
+using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 
 // Matcher that checks the field name matches if field names are supported, or verifies that the
@@ -110,6 +111,20 @@ struct StringifyTest : ::testing::Test {
 
   static Tester* tester;
 };
+
+TEST_F(StringifyTest, DebugStringsIdentifyDefaultsAndCustomOptions) {
+  EXPECT_THAT(Stringify::OptionsDefault().DebugStr(), EqualsText("{} // OptionsDefault\n"));
+  EXPECT_THAT(Stringify::OptionsDisabled().DebugStr(), EqualsText("{} // OptionsDisabled\n"));
+  EXPECT_THAT(Stringify::OptionsCpp().DebugStr(), EqualsText("{} // OptionsCpp\n"));
+  EXPECT_THAT(Stringify::OptionsCppPretty().DebugStr(), EqualsText("{} // OptionsCppPretty\n"));
+  EXPECT_THAT(Stringify::OptionsJson().DebugStr(), EqualsText("{} // OptionsJson\n"));
+  EXPECT_THAT(Stringify::OptionsJsonLine().DebugStr(), EqualsText("{} // OptionsJsonLine\n"));
+  EXPECT_THAT(Stringify::OptionsJsonPretty().DebugStr(), EqualsText("{} // OptionsJsonPretty\n"));
+
+  const StringifyOptions custom;
+  EXPECT_THAT(custom.DebugStr(), HasSubstr("false"));
+  EXPECT_THAT((StringifyFieldOptions{custom, custom}.DebugStr()), HasSubstr("Outer: {"));
+}
 
 StringifyTest::Tester* StringifyTest::tester = nullptr;
 

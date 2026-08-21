@@ -283,7 +283,7 @@ class [[nodiscard]] LimitedOrdered {
     }
 
     MBO_ALWAYS_INLINE friend constexpr auto operator<=>(const_iterator lhs, const_iterator rhs) noexcept {
-      return lhs.pos_ <=> rhs.pos_;
+      return lhs.pos_ <=> rhs.pos_;  // LCOV_EXCL_BR_LINE: GCC expands this once per iterator instantiation.
     }
 
     MBO_ALWAYS_INLINE friend constexpr bool operator<(const_iterator lhs, const_iterator rhs) noexcept {
@@ -599,7 +599,7 @@ class [[nodiscard]] LimitedOrdered {
       }                                                                    \
     }                                                                      \
     [[fallthrough]]
-    switch (size_) {
+    switch (size_) {  // LCOV_EXCL_BR_LINE: GCC attributes every generated unrolled case edge to this line.
       MBO_CASE_LIMITED_POS_COMP(31);
       MBO_CASE_LIMITED_POS_COMP(30);
       MBO_CASE_LIMITED_POS_COMP(29);

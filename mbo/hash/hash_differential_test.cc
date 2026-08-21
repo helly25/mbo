@@ -23,6 +23,7 @@
 #include <random>
 #include <string>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/hash/hash.h"
 #include "mbo/hash/hash_test_util.h"
@@ -43,13 +44,13 @@ TEST(DifferentialTest, Xxh64MatchesReference) {
     const std::size_t len = rng() % 300;
     const std::string data = algo::RandomString(rng, len);
     const uint64_t seed = rng();
-    ASSERT_EQ(xxh64::GetHash64(data, seed), XXH64(data.data(), data.size(), seed))
+    ASSERT_THAT(xxh64::GetHash64(data, seed), XXH64(data.data(), data.size(), seed))
         << "len: " << len << ", seed: " << seed << ", trial: " << trial;
   }
   // Long buffers crossing many stripe blocks.
   for (const std::size_t len : {1'000UL, 4'096UL, 100'000UL}) {
     const std::string data = algo::RandomString(rng, len);
-    ASSERT_EQ(xxh64::GetHash64(data, 77), XXH64(data.data(), data.size(), 77)) << "len: " << len;
+    ASSERT_THAT(xxh64::GetHash64(data, 77), XXH64(data.data(), data.size(), 77)) << "len: " << len;
   }
 }
 
@@ -60,17 +61,17 @@ TEST(DifferentialTest, Xxh3MatchesReference) {
     const std::size_t len = rng() % 300;
     const std::string data = algo::RandomString(rng, len);
     const uint64_t seed = rng();
-    ASSERT_EQ(xxh3::GetHash64(data, seed), XXH3_64bits_withSeed(data.data(), data.size(), seed))
+    ASSERT_THAT(xxh3::GetHash64(data, seed), XXH3_64bits_withSeed(data.data(), data.size(), seed))
         << "len: " << len << ", seed: " << seed << ", trial: " << trial;
-    ASSERT_EQ(xxh3::GetHash64(data), XXH3_64bits(data.data(), data.size())) << "len: " << len << " (unseeded)";
+    ASSERT_THAT(xxh3::GetHash64(data), XXH3_64bits(data.data(), data.size())) << "len: " << len << " (unseeded)";
   }
   // Long buffers: block boundaries (1024) and beyond, seeded (custom secret)
   // and unseeded, including the reference's SIMD-accelerated path -- proving
   // our scalar transcription matches the vectorized reference bit-for-bit.
   for (const std::size_t len : {241UL, 1'023UL, 1'024UL, 1'025UL, 2'048UL, 100'000UL}) {
     const std::string data = algo::RandomString(rng, len);
-    ASSERT_EQ(xxh3::GetHash64(data, 77), XXH3_64bits_withSeed(data.data(), data.size(), 77)) << "len: " << len;
-    ASSERT_EQ(xxh3::GetHash64(data), XXH3_64bits(data.data(), data.size())) << "len: " << len;
+    ASSERT_THAT(xxh3::GetHash64(data, 77), XXH3_64bits_withSeed(data.data(), data.size(), 77)) << "len: " << len;
+    ASSERT_THAT(xxh3::GetHash64(data), XXH3_64bits(data.data(), data.size())) << "len: " << len;
   }
 }
 
@@ -79,7 +80,7 @@ TEST(DifferentialTest, Xxh3Hash128MatchesReference) {
   const auto check = [](std::string_view data, uint64_t seed) {
     const XXH128_hash_t ref = XXH3_128bits_withSeed(data.data(), data.size(), seed);
     const Hash128 ours = xxh3::GetHash128(data, seed);
-    ASSERT_EQ(ours, (Hash128{.h1 = ref.low64, .h2 = ref.high64})) << "len: " << data.size() << ", seed: " << seed;
+    ASSERT_THAT(ours, (Hash128{.h1 = ref.low64, .h2 = ref.high64})) << "len: " << data.size() << ", seed: " << seed;
   };
   for (int trial = 0; trial < 20'000; ++trial) {
     const std::string data = algo::RandomString(rng, rng() % 300);

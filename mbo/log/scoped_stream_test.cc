@@ -78,6 +78,15 @@ TEST_F(ScopedStreamTest, TestVoid) {
           Not(HasSubstr("Ignored!"))));
 }
 
+TEST_F(ScopedStreamTest, ErrorStreamContinuesAfterWritingToStderr) {
+  testing::internal::CaptureStderr();
+  {
+    auto str = ScopedStreamErr();
+    str << "StillAlive";
+  }
+  EXPECT_THAT(testing::internal::GetCapturedStderr(), HasSubstr("StillAlive"));
+}
+
 void TestFail() {
   { ScopedStreamErr<ScopedStreamMode::kQuickExit>() << "YouAreDead"; }
   EXPECT_TRUE(false) << "Should not reach here";

@@ -161,7 +161,6 @@ class Template {
 
   template<typename Sink>
   friend void AbslStringify(Sink& /*sink*/, TagType /*tag*/);
-  friend std::ostream& operator<<(std::ostream& /*os*/, TagType /*tag*/);
 
   DataMap data_;
 };
