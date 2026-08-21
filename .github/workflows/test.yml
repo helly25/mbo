@@ -280,6 +280,8 @@ jobs:
 
       - name: Collect coverage
         if: inputs.bazel_config == 'coverage'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           bazel ${BAZEL_INIT} coverage ${BAZEL_ARGS} //... \
@@ -315,7 +317,20 @@ jobs:
           {
             echo "### Production coverage"
             echo
-            echo "[Download the browsable HTML coverage report](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}#artifacts)."
+            coverage_page=""
+            if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+              coverage_page="main"
+            else
+              pr_number="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" --jq '.[0].number // empty')"
+              if [[ "${pr_number}" =~ ^[1-9][0-9]*$ ]]; then
+                coverage_page="pr${pr_number}"
+              fi
+            fi
+            if [ -n "${coverage_page}" ]; then
+              echo "[Browse the HTML coverage report](https://helly25.github.io/mbo/coverage/${coverage_page}/)."
+              echo
+            fi
+            echo "[Download this run's coverage artifact](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}#artifacts)."
             echo
             cat coverage-summary.md
           } >>"${GITHUB_STEP_SUMMARY}"
