@@ -19,6 +19,7 @@
 #include <concepts>  // IWYU pragma: keep
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -147,6 +148,11 @@ TEST_F(JsonTest, CopyOperationsDeepCopyArraysAndObjects) {
   const std::unique_ptr<Json> empty;
   assigned = empty;
   EXPECT_TRUE(assigned.IsNull());
+
+  const auto pointer = std::make_unique<Json>("pointed-to");
+  assigned = pointer;
+  EXPECT_EQ(assigned, "pointed-to");
+  EXPECT_NE(&assigned, pointer.get());
 }
 
 TEST_F(JsonTest, ContainerModifiersAndAccessors) {

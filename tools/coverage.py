@@ -202,6 +202,20 @@ def has_coverage(metrics: dict, names: tuple[str, ...]) -> bool:
     return any(metrics[name]["total"] for name in names)
 
 
+def uncovered_patch_locations(
+    files: dict[str, FileCoverage], changed: dict[str, set[int]]
+) -> tuple[list[str], list[str]]:
+    lines = []
+    branches = set()
+    for path, data in files.items():
+        changed_in_file = changed.get(path, set())
+        lines.extend(f"{path}:{line}" for line, hits in data.lines.items() if line in changed_in_file and not hits)
+        branches.update(
+            f"{path}:{line}" for line, taken in data.branches if line in changed_in_file and not taken
+        )
+    return sorted(lines), sorted(branches)
+
+
 def markdown(measured: dict, minimums: dict, targets: dict | None = None) -> str:
     targets = minimums if targets is None else targets
     headers = (
@@ -269,8 +283,11 @@ def main(argv: list[str] | None = None) -> int:
     minimums, targets = thresholds(policy)
     text = markdown(measured, minimums, targets)
     patch_failures: list[str] = []
+    uncovered_lines: list[str] = []
+    uncovered_branches: list[str] = []
     if args.base_ref:
-        patch = counts(files, changed_lines(args.base_ref))
+        changed = changed_lines(args.base_ref)
+        patch = counts(files, changed)
         minimum = policy.get("patch_minimum", {})
         if has_coverage(patch, ("lines", "branches")):
             text += "\n### Changed coverable lines\n\n" + markdown({"patch": patch}, {"patch": minimum})
@@ -278,12 +295,18 @@ def main(argv: list[str] | None = None) -> int:
                 actual = patch[metric]["percent"]
                 if patch[metric]["total"] and actual < minimum.get(metric, 0):
                     patch_failures.append(f"patch {metric}: {actual}% < {minimum[metric]}%")
+            if patch_failures:
+                uncovered_lines, uncovered_branches = uncovered_patch_locations(files, changed)
     print(text, end="")
     if args.summary:
         args.summary.write_text(text, encoding="utf-8")
     errors = failures(measured, minimums) + patch_failures
     for error in errors:
         print(f"coverage threshold failed: {error}", file=sys.stderr)
+    for location in uncovered_lines:
+        print(f"uncovered patch line: {location}", file=sys.stderr)
+    for location in uncovered_branches:
+        print(f"uncovered patch branch: {location}", file=sys.stderr)
     return bool(errors)
 
 

@@ -153,6 +153,20 @@ class CoverageTest(unittest.TestCase):
         with_lines["lines"] = {"covered": 0, "total": 1, "percent": 0.0}
         self.assertTrue(coverage_tool.has_coverage(with_lines, ("lines", "branches")))
 
+    def test_uncovered_patch_locations_are_sorted_and_deduplicated(self):
+        files = {
+            "mbo/b.cc": coverage_tool.FileCoverage(
+                lines={4: 0, 5: 1}, branches=[(4, False), (4, False), (5, True)]
+            ),
+            "mbo/a.cc": coverage_tool.FileCoverage(lines={2: 0}),
+        }
+        self.assertEqual(
+            (["mbo/a.cc:2", "mbo/b.cc:4"], ["mbo/b.cc:4"]),
+            coverage_tool.uncovered_patch_locations(
+                files, {"mbo/a.cc": {2}, "mbo/b.cc": {4, 5}}
+            ),
+        )
+
     def test_markdown_shows_compact_line_coverage(self):
         measured = {
             "overall": {
