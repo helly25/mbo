@@ -80,7 +80,7 @@ TEST_F(FileTest, GetContentsPreservesBinaryBytes) {
 #ifndef _WIN32
 TEST_F(FileTest, GetContentsRejectsNonSeekableFile) {
   const fs::path fifo = JoinPaths(tmp_dir, "contents.fifo");
-  ASSERT_EQ(::mkfifo(fifo.c_str(), 0600), 0);
+  ASSERT_THAT(::mkfifo(fifo.c_str(), 0600), 0);
   std::atomic_bool reader_done = false;
   const std::jthread writer([&fifo, &reader_done] {
     const std::ofstream output(fifo, std::ios_base::binary);
@@ -177,7 +177,7 @@ TEST_F(FileTest, NormalizePathAcceptsNativeString) {
   using PathString = fs::path::string_type;
   const PathString input = {static_cast<PathChar>('a'), static_cast<PathChar>('/'), static_cast<PathChar>('\\')};
   const PathString expected = {static_cast<PathChar>('a')};
-  EXPECT_EQ(NormalizePath(fs::path(input)).native(), expected);
+  EXPECT_THAT(NormalizePath(fs::path(input)).native(), expected);
 }
 
 TEST_F(FileTest, JoinPaths) {

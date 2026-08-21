@@ -113,13 +113,13 @@ struct StringifyTest : ::testing::Test {
 };
 
 TEST_F(StringifyTest, DebugStringsIdentifyDefaultsAndCustomOptions) {
-  EXPECT_EQ(Stringify::OptionsDefault().DebugStr(), "{} // OptionsDefault\n");
-  EXPECT_EQ(Stringify::OptionsDisabled().DebugStr(), "{} // OptionsDisabled\n");
-  EXPECT_EQ(Stringify::OptionsCpp().DebugStr(), "{} // OptionsCpp\n");
-  EXPECT_EQ(Stringify::OptionsCppPretty().DebugStr(), "{} // OptionsCppPretty\n");
-  EXPECT_EQ(Stringify::OptionsJson().DebugStr(), "{} // OptionsJson\n");
-  EXPECT_EQ(Stringify::OptionsJsonLine().DebugStr(), "{} // OptionsJsonLine\n");
-  EXPECT_EQ(Stringify::OptionsJsonPretty().DebugStr(), "{} // OptionsJsonPretty\n");
+  EXPECT_THAT(Stringify::OptionsDefault().DebugStr(), EqualsText("{} // OptionsDefault\n"));
+  EXPECT_THAT(Stringify::OptionsDisabled().DebugStr(), EqualsText("{} // OptionsDisabled\n"));
+  EXPECT_THAT(Stringify::OptionsCpp().DebugStr(), EqualsText("{} // OptionsCpp\n"));
+  EXPECT_THAT(Stringify::OptionsCppPretty().DebugStr(), EqualsText("{} // OptionsCppPretty\n"));
+  EXPECT_THAT(Stringify::OptionsJson().DebugStr(), EqualsText("{} // OptionsJson\n"));
+  EXPECT_THAT(Stringify::OptionsJsonLine().DebugStr(), EqualsText("{} // OptionsJsonLine\n"));
+  EXPECT_THAT(Stringify::OptionsJsonPretty().DebugStr(), EqualsText("{} // OptionsJsonPretty\n"));
 
   const StringifyOptions custom;
   EXPECT_THAT(custom.DebugStr(), HasSubstr("false"));

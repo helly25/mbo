@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <string>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/hash/hash_internal_util.h"
 
@@ -66,10 +67,10 @@ TEST_F(HashExtraTest, LoadHelpersReadLittleEndian) {
   const volatile std::size_t input_length = 8;
   const std::string input("ABCDEFGH", input_length);
 
-  EXPECT_EQ(hash_internal::Load32(input.data()), 0x44434241U);
-  EXPECT_EQ(hash_internal::Load64(input.data()), 0x4847464544434241ULL);
-  EXPECT_EQ(hash_internal::Load32BE(input.data()), 0x41424344U);
-  EXPECT_EQ(hash_internal::Load64BE(input.data()), 0x4142434445464748ULL);
+  EXPECT_THAT(hash_internal::Load32(input.data()), 0x44434241U);
+  EXPECT_THAT(hash_internal::Load64(input.data()), 0x4847464544434241ULL);
+  EXPECT_THAT(hash_internal::Load32BE(input.data()), 0x41424344U);
+  EXPECT_THAT(hash_internal::Load64BE(input.data()), 0x4142434445464748ULL);
 }
 
 TEST_F(HashExtraTest, LoadSmallCoversItsLengthRanges) {
@@ -79,23 +80,23 @@ TEST_F(HashExtraTest, LoadSmallCoversItsLengthRanges) {
   // len 8: both lanes are the same full load.
   input_length = 8;
   const auto len8 = hash_internal::LoadSmall(input.data(), input_length);
-  EXPECT_EQ(len8.a, hash_internal::Load64(input.data()));
-  EXPECT_EQ(len8.a, len8.b);
+  EXPECT_THAT(len8.a, hash_internal::Load64(input.data()));
+  EXPECT_THAT(len8.a, len8.b);
   // len 9..16: two 64-bit loads overlapping the end.
   input_length = 10;
   const auto len10 = hash_internal::LoadSmall(input.data(), input_length);
-  EXPECT_EQ(len10.a, hash_internal::Load64(input.data()));
-  EXPECT_EQ(len10.b, hash_internal::Load64(input.data() + 2));
+  EXPECT_THAT(len10.a, hash_internal::Load64(input.data()));
+  EXPECT_THAT(len10.b, hash_internal::Load64(input.data() + 2));
   // len 4..7: two 32-bit loads overlapping the end.
   input_length = 5;
   const auto len5 = hash_internal::LoadSmall(input.data(), input_length);
-  EXPECT_EQ(len5.a, hash_internal::Load32(input.data()));
-  EXPECT_EQ(len5.b, hash_internal::Load32(input.data() + 1));
+  EXPECT_THAT(len5.a, hash_internal::Load32(input.data()));
+  EXPECT_THAT(len5.b, hash_internal::Load32(input.data() + 1));
   // len 0: zero.
   input_length = 0;
   const auto len0 = hash_internal::LoadSmall(input.data(), input_length);
-  EXPECT_EQ(len0.a, 0);
-  EXPECT_EQ(len0.b, 0);
+  EXPECT_THAT(len0.a, 0);
+  EXPECT_THAT(len0.b, 0);
 }
 
 }  // namespace

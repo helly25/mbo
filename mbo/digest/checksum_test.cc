@@ -33,11 +33,11 @@ TEST(ParseChecksumLineTest, AcceptsTextAndBinaryMarkers) {
 }
 
 TEST(ParseChecksumLineTest, RejectsMalformedLines) {
-  EXPECT_EQ(ParseChecksumLine("", 4), std::nullopt);
-  EXPECT_EQ(ParseChecksumLine("01ag  file.txt", 4), std::nullopt);
-  EXPECT_EQ(ParseChecksumLine("01ab file.txt", 4), std::nullopt);
-  EXPECT_EQ(ParseChecksumLine("01ab  ", 4), std::nullopt);
-  EXPECT_EQ(ParseChecksumLine("01ab  file.txt", std::numeric_limits<std::size_t>::max()), std::nullopt);
+  EXPECT_THAT(ParseChecksumLine("", 4), std::nullopt);
+  EXPECT_THAT(ParseChecksumLine("01ag  file.txt", 4), std::nullopt);
+  EXPECT_THAT(ParseChecksumLine("01ab file.txt", 4), std::nullopt);
+  EXPECT_THAT(ParseChecksumLine("01ab  ", 4), std::nullopt);
+  EXPECT_THAT(ParseChecksumLine("01ab  file.txt", std::numeric_limits<std::size_t>::max()), std::nullopt);
 }
 
 }  // namespace

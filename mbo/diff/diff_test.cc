@@ -47,6 +47,7 @@ using ::mbo::testing::IsOk;
 using ::mbo::testing::IsOkAndHolds;
 using ::testing::ElementsAreArray;
 using ::testing::IsEmpty;
+using ::testing::Lt;
 using ::testing::Not;
 using ::testing::Optional;
 
@@ -1259,7 +1260,7 @@ TEST_F(DiffTest, MyersMinimalOption) {
   const std::optional<std::string> minimal_applied = ApplyUnifiedDiff(lhs, *minimal);
   EXPECT_THAT(capped_applied, Optional(rhs));
   EXPECT_THAT(minimal_applied, Optional(rhs));
-  EXPECT_LT(count_edits(*minimal), count_edits(*capped));
+  EXPECT_THAT(count_edits(*minimal), Lt(count_edits(*capped)));
 }
 
 TEST_F(DiffTest, RegexReplace) {

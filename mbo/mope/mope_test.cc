@@ -80,20 +80,20 @@ TEST_F(MopeTest, IsValidNameRejectsWhatSetValueWouldChokeOn) {
 
 TEST_F(MopeTest, SetValueAndAddSectionRejectInvalidNames) {
   Template tpl;
-  EXPECT_EQ(tpl.SetValue("not valid", "value").code(), absl::StatusCode::kInvalidArgument);
-  EXPECT_EQ(tpl.AddSection("9invalid").status().code(), absl::StatusCode::kInvalidArgument);
+  EXPECT_THAT(tpl.SetValue("not valid", "value").code(), absl::StatusCode::kInvalidArgument);
+  EXPECT_THAT(tpl.AddSection("9invalid").status().code(), absl::StatusCode::kInvalidArgument);
 }
 
 TEST_F(MopeTest, SetValueCannotReplaceASection) {
   Template tpl;
-  ASSERT_TRUE(tpl.AddSection("item").ok());
-  EXPECT_EQ(tpl.SetValue("item", "value", /*allow_update=*/true).code(), absl::StatusCode::kAlreadyExists);
+  ASSERT_THAT(tpl.AddSection("item").ok(), IsTrue());
+  EXPECT_THAT(tpl.SetValue("item", "value", /*allow_update=*/true).code(), absl::StatusCode::kAlreadyExists);
 }
 
 TEST_F(MopeTest, AddSectionCannotReplaceAValue) {
   Template tpl;
   ASSERT_THAT(tpl.SetValue("item", "value"), absl::OkStatus());
-  EXPECT_EQ(tpl.AddSection("item").status().code(), absl::StatusCode::kAlreadyExists);
+  EXPECT_THAT(tpl.AddSection("item").status().code(), absl::StatusCode::kAlreadyExists);
 }
 
 TEST_F(MopeTest, ExpandUsesContextWithoutChangingTemplateValues) {
@@ -106,7 +106,7 @@ TEST_F(MopeTest, ExpandUsesContextWithoutChangingTemplateValues) {
   };
   std::string output(kInput);
   ASSERT_THAT(tpl.Expand(output, mbo::container::MakeConvertingScan(context)), absl::OkStatus());
-  EXPECT_EQ(output, "template/context");
+  EXPECT_THAT(output, "template/context");
 }
 
 TEST_F(MopeTest, ExpandRejectsDuplicateContextValues) {
@@ -116,7 +116,7 @@ TEST_F(MopeTest, ExpandRejectsDuplicateContextValues) {
       std::pair{"duplicate", "second"},
   };
   std::string output;
-  EXPECT_EQ(tpl.Expand(output, mbo::container::MakeConvertingScan(context)).code(), absl::StatusCode::kAlreadyExists);
+  EXPECT_THAT(tpl.Expand(output, mbo::container::MakeConvertingScan(context)).code(), absl::StatusCode::kAlreadyExists);
 }
 
 TEST_F(MopeTest, ExpandLeavesAnUnknownValueTagUnchanged) {
@@ -124,14 +124,14 @@ TEST_F(MopeTest, ExpandLeavesAnUnknownValueTagUnchanged) {
   const Template tpl;
   std::string output(kInput);
   ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
-  EXPECT_EQ(output, "before {{unknown}} after");
+  EXPECT_THAT(output, "before {{unknown}} after");
 }
 
 TEST_F(MopeTest, ExpandRejectsASectionWithoutAnEndTag) {
   constexpr std::string_view kInput = "{{#item}}content";
   const Template tpl;
   std::string output(kInput);
-  EXPECT_EQ(tpl.Expand(output).code(), absl::StatusCode::kInvalidArgument);
+  EXPECT_THAT(tpl.Expand(output).code(), absl::StatusCode::kInvalidArgument);
 }
 
 TEST_F(MopeTest, StandaloneSectionTagsConsumeTheirLines) {
@@ -139,7 +139,7 @@ TEST_F(MopeTest, StandaloneSectionTagsConsumeTheirLines) {
   const Template tpl;
   std::string output(kInput);
   ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
-  EXPECT_EQ(output, "before\nafter\n");
+  EXPECT_THAT(output, "before\nafter\n");
 }
 
 TEST_F(MopeTest, MissingSectionsDisappearAndAnEmptyDictionaryRendersOnce) {
@@ -148,27 +148,27 @@ TEST_F(MopeTest, MissingSectionsDisappearAndAnEmptyDictionaryRendersOnce) {
   Template tpl;
   std::string missing(kMissingInput);
   ASSERT_THAT(tpl.Expand(missing), absl::OkStatus());
-  EXPECT_EQ(missing, "beforeafter");
+  EXPECT_THAT(missing, "beforeafter");
 
-  ASSERT_TRUE(tpl.AddSection("empty").ok());
+  ASSERT_THAT(tpl.AddSection("empty").ok(), IsTrue());
   std::string empty(kEmptyInput);
   ASSERT_THAT(tpl.Expand(empty), absl::OkStatus());
-  EXPECT_EQ(empty, "beforecontentafter");
+  EXPECT_THAT(empty, "beforecontentafter");
 }
 
 TEST_F(MopeTest, SectionsExpandEveryDictionaryWithAJoiner) {
   constexpr std::string_view kInput = R"({{#item:", "}}{{value}}{{/item}})";
   Template tpl;
   auto first = tpl.AddSection("item");
-  ASSERT_TRUE(first.ok());
+  ASSERT_THAT(first.ok(), IsTrue());
   ASSERT_THAT((*first)->SetValue("value", "one"), absl::OkStatus());
   auto second = tpl.AddSection("item");
-  ASSERT_TRUE(second.ok());
+  ASSERT_THAT(second.ok(), IsTrue());
   ASSERT_THAT((*second)->SetValue("value", "two"), absl::OkStatus());
 
   std::string output(kInput);
   ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
-  EXPECT_EQ(output, "one, two");
+  EXPECT_THAT(output, "one, two");
 }
 
 TEST_F(MopeTest, SectionCannotUseAValueAsADictionary) {
@@ -176,7 +176,7 @@ TEST_F(MopeTest, SectionCannotUseAValueAsADictionary) {
   Template tpl;
   ASSERT_THAT(tpl.SetValue("item", "value"), absl::OkStatus());
   std::string output(kInput);
-  EXPECT_EQ(tpl.Expand(output).code(), absl::StatusCode::kInvalidArgument);
+  EXPECT_THAT(tpl.Expand(output).code(), absl::StatusCode::kInvalidArgument);
 }
 
 TEST_F(MopeTest, RangeExpandsInBothDirections) {
@@ -185,11 +185,11 @@ TEST_F(MopeTest, RangeExpandsInBothDirections) {
   const Template tpl;
   std::string ascending(kAscendingInput);
   ASSERT_THAT(tpl.Expand(ascending), absl::OkStatus());
-  EXPECT_EQ(ascending, "1,2,3");
+  EXPECT_THAT(ascending, "1,2,3");
 
   std::string descending(kDescendingInput);
   ASSERT_THAT(tpl.Expand(descending), absl::OkStatus());
-  EXPECT_EQ(descending, "3:2:1");
+  EXPECT_THAT(descending, "3:2:1");
 }
 
 TEST_F(MopeTest, RangeOperandsCanReferenceTemplateValues) {
@@ -199,7 +199,7 @@ TEST_F(MopeTest, RangeOperandsCanReferenceTemplateValues) {
   ASSERT_THAT(tpl.SetValue("last", "4"), absl::OkStatus());
   std::string output(kInput);
   ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
-  EXPECT_EQ(output, "234");
+  EXPECT_THAT(output, "234");
 }
 
 TEST_F(MopeTest, RangeRejectsZeroAndNonNumericOperands) {
@@ -207,11 +207,11 @@ TEST_F(MopeTest, RangeRejectsZeroAndNonNumericOperands) {
   constexpr std::string_view kBadOperandInput = "{{#index=bad;3}}{{index}}{{/index}}";
   Template tpl;
   std::string zero_step(kZeroStepInput);
-  EXPECT_EQ(tpl.Expand(zero_step).code(), absl::StatusCode::kInvalidArgument);
+  EXPECT_THAT(tpl.Expand(zero_step).code(), absl::StatusCode::kInvalidArgument);
 
   ASSERT_THAT(tpl.SetValue("bad", "not-a-number"), absl::OkStatus());
   std::string bad_operand(kBadOperandInput);
-  EXPECT_EQ(tpl.Expand(bad_operand).code(), absl::StatusCode::kInvalidArgument);
+  EXPECT_THAT(tpl.Expand(bad_operand).code(), absl::StatusCode::kInvalidArgument);
 }
 
 TEST_F(MopeTest, ConfiguredListExpandsValuesAndAJoiner) {
@@ -219,7 +219,7 @@ TEST_F(MopeTest, ConfiguredListExpandsValuesAndAJoiner) {
   const Template tpl;
   std::string output(kInput);
   ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
-  EXPECT_EQ(output, "one / two");
+  EXPECT_THAT(output, "one / two");
 }
 
 TEST_F(MopeTest, ConfiguredListRejectsMalformedInputAndNameConflicts) {
@@ -227,12 +227,12 @@ TEST_F(MopeTest, ConfiguredListRejectsMalformedInputAndNameConflicts) {
   constexpr std::string_view kConflictInput = "{{#item=[one,two]}}{{item}}{{/item}}";
   const Template tpl;
   std::string malformed(kMalformedInput);
-  EXPECT_EQ(tpl.Expand(malformed).code(), absl::StatusCode::kInvalidArgument);
+  EXPECT_THAT(tpl.Expand(malformed).code(), absl::StatusCode::kInvalidArgument);
 
   Template conflicting;
   ASSERT_THAT(conflicting.SetValue("item", "existing"), absl::OkStatus());
   std::string conflict(kConflictInput);
-  EXPECT_EQ(conflicting.Expand(conflict).code(), absl::StatusCode::kInvalidArgument);
+  EXPECT_THAT(conflicting.Expand(conflict).code(), absl::StatusCode::kInvalidArgument);
 }
 
 TEST_F(MopeTest, EmptyAndUnknownSectionConfigurations) {
@@ -241,10 +241,10 @@ TEST_F(MopeTest, EmptyAndUnknownSectionConfigurations) {
   const Template tpl;
   std::string empty(kEmptyInput);
   ASSERT_THAT(tpl.Expand(empty), absl::OkStatus());
-  EXPECT_EQ(empty, "beforeafter");
+  EXPECT_THAT(empty, "beforeafter");
 
   std::string unknown(kUnknownInput);
-  EXPECT_EQ(tpl.Expand(unknown).code(), absl::StatusCode::kUnimplemented);
+  EXPECT_THAT(tpl.Expand(unknown).code(), absl::StatusCode::kUnimplemented);
 }
 
 TEST_F(MopeTest, ControlTagCannotOverrideATemplateValue) {
@@ -252,7 +252,7 @@ TEST_F(MopeTest, ControlTagCannotOverrideATemplateValue) {
   Template tpl;
   ASSERT_THAT(tpl.SetValue("name", "existing"), absl::OkStatus());
   std::string output(kInput);
-  EXPECT_EQ(tpl.Expand(output).code(), absl::StatusCode::kInvalidArgument);
+  EXPECT_THAT(tpl.Expand(output).code(), absl::StatusCode::kInvalidArgument);
 }
 
 TEST_F(MopeTest, ReadIniToTemlateLoadsRootValues) {
@@ -288,7 +288,7 @@ TEST_F(MopeTest, ReadIniToTemlateBuildsRepeatedNestedSections) {
   ASSERT_THAT(ReadIniToTemlate(ini_path.string(), tpl), absl::OkStatus());
   std::string output(kInput);
   ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
-  EXPECT_EQ(output, "top|one:123,two:");
+  EXPECT_THAT(output, "top|one:123,two:");
   fs::remove(ini_path);
 }
 
@@ -299,7 +299,7 @@ TEST_F(MopeTest, ReadIniToTemlateRejectsInvalidSectionNames) {
     out << "[not valid]\nkey=value\n";
   }
   Template tpl;
-  EXPECT_EQ(ReadIniToTemlate(ini_path.string(), tpl).code(), absl::StatusCode::kInvalidArgument);
+  EXPECT_THAT(ReadIniToTemlate(ini_path.string(), tpl).code(), absl::StatusCode::kInvalidArgument);
   fs::remove(ini_path);
 }
 

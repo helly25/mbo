@@ -46,7 +46,9 @@ using ::mbo::types::TypedView;
 using ::testing::AnyOf;
 using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
+using ::testing::Gt;
 using ::testing::IsEmpty;
+using ::testing::Lt;
 using ::testing::Not;
 using ::testing::Pair;
 using ::testing::SizeIs;
@@ -74,26 +76,26 @@ TEST_F(JsonTest, Comparison) {
 }
 
 TEST_F(JsonTest, ScalarComparisonsCoverSupportedRepresentations) {
-  EXPECT_EQ(Json{false}, false);
-  EXPECT_EQ(Json{true}, true);
-  EXPECT_EQ(Json{std::int8_t{-8}}, std::int8_t{-8});
-  EXPECT_EQ(Json{std::int16_t{-16}}, std::int16_t{-16});
-  EXPECT_EQ(Json{std::int32_t{-32}}, std::int32_t{-32});
-  EXPECT_EQ(Json{std::int64_t{-64}}, std::int64_t{-64});
-  EXPECT_EQ(Json{std::uint8_t{8}}, std::uint8_t{8});
-  EXPECT_EQ(Json{std::uint16_t{16}}, std::uint16_t{16});
-  EXPECT_EQ(Json{std::uint32_t{32}}, std::uint32_t{32});
-  EXPECT_EQ(Json{std::uint64_t{64}}, std::uint64_t{64});
-  EXPECT_EQ(Json{1.25F}, 1.25F);
-  EXPECT_EQ(Json{2.5}, 2.5);
-  EXPECT_EQ(Json{"text"}, "text");
-  EXPECT_EQ(Json{std::string{"text"}}, std::string{"text"});
-  EXPECT_EQ(Json{std::string_view{"text"}}, std::string_view{"text"});
+  EXPECT_THAT(Json{false}, false);
+  EXPECT_THAT(Json{true}, true);
+  EXPECT_THAT(Json{std::int8_t{-8}}, std::int8_t{-8});
+  EXPECT_THAT(Json{std::int16_t{-16}}, std::int16_t{-16});
+  EXPECT_THAT(Json{std::int32_t{-32}}, std::int32_t{-32});
+  EXPECT_THAT(Json{std::int64_t{-64}}, std::int64_t{-64});
+  EXPECT_THAT(Json{std::uint8_t{8}}, std::uint8_t{8});
+  EXPECT_THAT(Json{std::uint16_t{16}}, std::uint16_t{16});
+  EXPECT_THAT(Json{std::uint32_t{32}}, std::uint32_t{32});
+  EXPECT_THAT(Json{std::uint64_t{64}}, std::uint64_t{64});
+  EXPECT_THAT(Json{1.25F}, 1.25F);
+  EXPECT_THAT(Json{2.5}, 2.5);
+  EXPECT_THAT(Json{"text"}, "text");
+  EXPECT_THAT(Json{std::string{"text"}}, std::string{"text"});
+  EXPECT_THAT(Json{std::string_view{"text"}}, std::string_view{"text"});
 
-  EXPECT_LT(Json{-1}, 0U);
-  EXPECT_LT(Json{0U}, 1.0);
-  EXPECT_LT(Json{1.0}, 2);
-  EXPECT_GT(Json{std::numeric_limits<std::uint64_t>::max()}, std::numeric_limits<std::int64_t>::max());
+  EXPECT_THAT(Json{-1}, Lt(0U));
+  EXPECT_THAT(Json{0U}, Lt(1.0));
+  EXPECT_THAT(Json{1.0}, Lt(2));
+  EXPECT_THAT(Json{std::numeric_limits<std::uint64_t>::max()}, Gt(std::numeric_limits<std::int64_t>::max()));
 }
 
 TEST_F(JsonTest, JsonComparisonsCoverEveryStoredKind) {
@@ -109,18 +111,18 @@ TEST_F(JsonTest, JsonComparisonsCoverEveryStoredKind) {
   Json object_rhs;
   object_rhs["value"] = 2;
 
-  EXPECT_EQ(Json{} <=> Json{}, std::strong_ordering::equal);
-  EXPECT_LT(Json{false}, Json{true});
-  EXPECT_LT(Json{-1}, Json{1U});
-  EXPECT_LT(Json{1U}, Json{2.0});
-  EXPECT_LT(Json{"a"}, Json{"b"});
-  EXPECT_LT(array_lhs, array_rhs);
-  EXPECT_LT(object_lhs, object_rhs);
-  EXPECT_LT(Json{}, array_lhs);
-  EXPECT_LT(array_lhs, Json{false});
-  EXPECT_LT(Json{false}, Json{0});
-  EXPECT_LT(Json{0}, object_lhs);
-  EXPECT_LT(object_lhs, Json{"value"});
+  EXPECT_THAT(Json{} <=> Json{}, std::strong_ordering::equal);
+  EXPECT_THAT(Json{false}, Lt(Json{true}));
+  EXPECT_THAT(Json{-1}, Lt(Json{1U}));
+  EXPECT_THAT(Json{1U}, Lt(Json{2.0}));
+  EXPECT_THAT(Json{"a"}, Lt(Json{"b"}));
+  EXPECT_THAT(array_lhs, Lt(array_rhs));
+  EXPECT_THAT(object_lhs, Lt(object_rhs));
+  EXPECT_THAT(Json{}, Lt(array_lhs));
+  EXPECT_THAT(array_lhs, Lt(Json{false}));
+  EXPECT_THAT(Json{false}, Lt(Json{0}));
+  EXPECT_THAT(Json{0}, Lt(object_lhs));
+  EXPECT_THAT(object_lhs, Lt(Json{"value"}));
 }
 
 TEST_F(JsonTest, CopyOperationsDeepCopyArraysAndObjects) {
@@ -132,10 +134,10 @@ TEST_F(JsonTest, CopyOperationsDeepCopyArraysAndObjects) {
   copy["array"][0] = 2;
   copy["nested"]["value"] = "after";
 
-  EXPECT_EQ(original["array"][0], 1);
-  EXPECT_EQ(original["nested"]["value"], "before");
-  EXPECT_EQ(copy["array"][0], 2);
-  EXPECT_EQ(copy["nested"]["value"], "after");
+  EXPECT_THAT(original["array"][0], 1);
+  EXPECT_THAT(original["nested"]["value"], "before");
+  EXPECT_THAT(copy["array"][0], 2);
+  EXPECT_THAT(copy["nested"]["value"], "after");
 
   Json assigned;
   const Json& original_ref = original;
@@ -143,26 +145,26 @@ TEST_F(JsonTest, CopyOperationsDeepCopyArraysAndObjects) {
   assigned["array"][0] = 3;
   const Json* same = &assigned;
   assigned = *same;
-  EXPECT_EQ(original["array"][0], 1);
-  EXPECT_EQ(assigned["array"][0], 3);
+  EXPECT_THAT(original["array"][0], 1);
+  EXPECT_THAT(assigned["array"][0], 3);
 
   const std::unique_ptr<Json> empty;
   assigned = empty;
-  EXPECT_TRUE(assigned.IsNull());
+  EXPECT_THAT(assigned.IsNull(), true);
 
   const auto pointer = std::make_unique<Json>("pointed-to");
   assigned = pointer;
-  EXPECT_EQ(assigned, "pointed-to");
-  EXPECT_NE(&assigned, pointer.get());
+  EXPECT_THAT(assigned, "pointed-to");
+  EXPECT_THAT(&assigned, Not(pointer.get()));
 }
 
 TEST_F(JsonTest, ContainerModifiersAndAccessors) {
   Json array;
   array.MakeArray();
   array.resize(2, 7);
-  EXPECT_EQ(array.size(), 2);
-  EXPECT_EQ(array.at(0), 7);
-  EXPECT_EQ(array.at(1), 7);
+  EXPECT_THAT(array, SizeIs(2));
+  EXPECT_THAT(array.at(0), 7);
+  EXPECT_THAT(array.at(1), 7);
   array.pop_back();
   array.push_back(8);
   array.emplace_back(9);
@@ -178,21 +180,21 @@ TEST_F(JsonTest, ContainerModifiersAndAccessors) {
   Json object;
   object.emplace("one", 1);
   object.emplace("two", 2);
-  EXPECT_TRUE(object.contains("one"));
-  EXPECT_EQ(object.at("one"), 1);
-  EXPECT_EQ(object.erase("missing"), 0);
-  EXPECT_EQ(object.erase("one"), 1);
-  EXPECT_FALSE(object.contains("one"));
-  EXPECT_EQ(object.erase("two"), 1);
-  EXPECT_TRUE(object.empty());
+  EXPECT_THAT(object.contains("one"), true);
+  EXPECT_THAT(object.at("one"), 1);
+  EXPECT_THAT(object.erase("missing"), 0);
+  EXPECT_THAT(object.erase("one"), 1);
+  EXPECT_THAT(object.contains("one"), false);
+  EXPECT_THAT(object.erase("two"), 1);
+  EXPECT_THAT(object, IsEmpty());
 
   Json scalar{1};
-  EXPECT_TRUE(scalar);
-  EXPECT_TRUE(scalar.empty());
-  EXPECT_EQ(scalar.size(), 0);
-  EXPECT_EQ(scalar.erase("none"), 0);
+  EXPECT_THAT(static_cast<bool>(scalar), true);
+  EXPECT_THAT(scalar.empty(), true);
+  EXPECT_THAT(scalar, IsEmpty());
+  EXPECT_THAT(scalar.erase("none"), 0);
   scalar.clear();
-  EXPECT_TRUE(scalar.IsNull());
+  EXPECT_THAT(scalar.IsNull(), true);
 }
 
 TEST_F(JsonTest, BasicsAndSerialize) {
