@@ -76,20 +76,21 @@ class CoverageTest(unittest.TestCase):
             source = root / "mbo/a.cc"
             source.parent.mkdir(parents=True)
             source.write_text(
-                "visit(value);  // LCOV_EXCL_FUNC_LINE: compiler-generated dispatchers\n"
+                "auto dispatcher = []<typename Value>(  // LCOV_EXCL_FUNC_LINE: generated dispatchers\n"
+                "    const Value& value) { return value; };\n"
                 "ordinary();\n",
                 encoding="utf-8",
             )
             report = root / "coverage.lcov"
             report.write_text(
                 "SF:mbo/a.cc\n"
-                "FN:1,GeneratedOne\nFN:1,GeneratedTwo\nFN:2,Ordinary\n"
+                "FN:1,GeneratedOne\nFN:2,GeneratedTwo\nFN:3,Ordinary\n"
                 "FNDA:1,GeneratedOne\nFNDA:0,GeneratedTwo\nFNDA:1,Ordinary\n"
                 "end_of_record\n",
                 encoding="utf-8",
             )
             files = coverage_tool.parse_lcov(report, root)
-            self.assertEqual([(2, 1)], files["mbo/a.cc"].functions)
+            self.assertEqual([(3, 1)], files["mbo/a.cc"].functions)
 
     def test_threshold_failure(self):
         measured = {

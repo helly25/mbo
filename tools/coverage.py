@@ -69,11 +69,14 @@ def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCover
             for number, line in enumerate(source_lines, start=1)
             if "LCOV_EXCL_BR_LINE" in line
         }
-        excluded_functions = {
-            number
-            for number, line in enumerate(source_lines, start=1)
-            if "LCOV_EXCL_FUNC_LINE" in line
-        }
+        excluded_functions: set[int] = set()
+        for index, line in enumerate(source_lines):
+            if "LCOV_EXCL_FUNC_LINE" not in line:
+                continue
+            for continuation in range(index, len(source_lines)):
+                excluded_functions.add(continuation + 1)
+                if "{" in source_lines[continuation]:
+                    break
         data.lines = {line: hits for line, hits in data.lines.items() if line not in excluded_lines}
         data.functions = [function for function in data.functions if function[0] not in excluded_functions]
         data.branches = [(line, taken) for line, taken in data.branches if line not in excluded_branches]
