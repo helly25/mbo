@@ -832,7 +832,7 @@ constexpr auto kJsonComparator = mbo::types::Overloaded{
       }
       return lhs.size() <=> rhs.size();
     },
-    []<typename LhsOther, typename RhsOther>(  // LCOV_EXCL_FUNC_LINE: unreachable variant cross-products.
+    []<typename LhsOther, typename RhsOther>(  // LCOV_EXCL_FUNC_LINE, LCOV_EXCL_LINE: generated cross-products.
         const LhsOther& lhs,
         const RhsOther& rhs) -> std::strong_ordering {
       if constexpr (IsNullopt<LhsOther> || IsNullopt<RhsOther>) {

@@ -138,7 +138,8 @@ TEST_F(JsonTest, CopyOperationsDeepCopyArraysAndObjects) {
   EXPECT_EQ(copy["nested"]["value"], "after");
 
   Json assigned;
-  assigned = original;
+  const Json& original_ref = original;
+  assigned = original_ref;
   assigned["array"][0] = 3;
   const Json* same = &assigned;
   assigned = *same;
