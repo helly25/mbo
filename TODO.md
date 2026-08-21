@@ -7,6 +7,9 @@ also updates this file to the completed state.
 
 ## Correctness
 
+- [x] Correct hexadecimal escape parsing for alphabetic digits.
+  - Map lowercase and uppercase `A`-`F` to values 10-15.
+  - Cover mixed-case, C++23 braced, byte-boundary, and overflow inputs.
 - [x] Fix undefined behavior in `mbo/json/json.h` iterator assignment.
   - Replace placement construction over live iterator objects with ordinary
     variant assignment and default same-type special members where possible.
