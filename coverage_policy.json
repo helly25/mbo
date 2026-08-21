@@ -13,7 +13,10 @@
     "diff": { "include": ["mbo/diff/**"] },
     "digest": { "include": ["mbo/digest/**"] },
     "file": { "include": ["mbo/file/**"] },
-    "hash": { "include": ["mbo/hash/**"] },
+    "hash": {
+      "include": ["mbo/hash/**"],
+      "minimum": { "branches": 39 }
+    },
     "json": { "include": ["mbo/json/**"] },
     "log": {
       "include": ["mbo/log/**"],
