@@ -1,0 +1,95 @@
+name: Publish coverage
+
+on:
+  workflow_run:
+    workflows: [Test]
+    types: [completed]
+
+# Updating the retained site and deploying it must be one serial operation: concurrent runs based
+# on the same branch revision would otherwise discard whichever report was pushed first.
+concurrency:
+  group: coverage-pages
+  cancel-in-progress: false
+
+permissions: read-all
+
+jobs:
+  publish:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+      pages: write
+      pull-requests: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # mbo tests branch pushes rather than pull_request events. Resolve every non-main commit
+      # through GitHub's commit-to-PR association; a branch without a PR keeps its downloadable
+      # artifact but does not claim a public PR URL.
+      - name: Select the report destination
+        id: target
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          if [ "${HEAD_BRANCH}" = "main" ]; then
+            target="main"
+          else
+            pr_number="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}/pulls" --jq '.[0].number // empty')"
+            if [[ ! "${pr_number}" =~ ^[1-9][0-9]*$ ]]; then
+              echo "No pull request owns ${HEAD_SHA}; retaining only the run artifact."
+              echo "publish=false" >>"${GITHUB_OUTPUT}"
+              exit 0
+            fi
+            target="pr${pr_number}"
+          fi
+          echo "publish=true" >>"${GITHUB_OUTPUT}"
+          echo "target=${target}" >>"${GITHUB_OUTPUT}"
+      # This workflow always comes from the trusted default branch. PR code never receives the
+      # token that updates the retained report branch or deploys Pages.
+      - uses: actions/checkout@v6
+        if: steps.target.outputs.publish == 'true'
+        with:
+          path: site
+          ref: coverage-pages
+      - uses: actions/download-artifact@v8
+        if: steps.target.outputs.publish == 'true'
+        with:
+          github-token: ${{ github.token }}
+          name: coverage-report
+          path: report
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Stage the report
+        if: steps.target.outputs.publish == 'true'
+        env:
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          TARGET: ${{ steps.target.outputs.target }}
+        run: |
+          set -euo pipefail
+          mkdir -p "site/coverage/${TARGET}"
+          rsync --archive --delete report/coverage-html/ "site/coverage/${TARGET}/"
+          git -C site config user.name 'github-actions[bot]'
+          git -C site config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C site add "coverage/${TARGET}"
+          if git -C site diff --cached --quiet; then
+            echo "Coverage report is unchanged"
+          else
+            git -C site commit -m "coverage: publish ${TARGET} from run ${SOURCE_RUN_ID}"
+            git -C site push
+          fi
+          mkdir -p public
+          rsync --archive site/coverage/ public/coverage/
+      - uses: actions/upload-pages-artifact@v5
+        if: steps.target.outputs.publish == 'true'
+        with:
+          path: public
+      - name: Deploy to GitHub Pages
+        id: deployment
+        if: steps.target.outputs.publish == 'true'
+        uses: actions/deploy-pages@v5
