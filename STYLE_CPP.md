@@ -411,12 +411,14 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
 
 ### Assertions: gmock matchers, never comparison macros
 
-- Assert with **`EXPECT_THAT` / `ASSERT_THAT` + a matcher** rather than the comparison macros
-  `EXPECT_EQ` / `NE` / `GT` / `LT` / `GE` / `LE` (and their `ASSERT_` forms): matchers compose and
-  give far better failure messages. **There are no exceptions for `EXPECT_EQ` / `ASSERT_EQ`, including
-  string and multi-line text comparisons.** The accepted exception is the boolean `EXPECT_TRUE` /
-  `EXPECT_FALSE` (and `ASSERT_TRUE` / `ASSERT_FALSE`), which read fine on their own. Within a
-  single test keep one style - do not mix, say, `EXPECT_TRUE(x)` and `EXPECT_THAT(y, IsTrue())`.
+- Assert with **`EXPECT_THAT` / `ASSERT_THAT` + a matcher**, never a GoogleTest comparison macro.
+  The prohibited suffixes are `EQ`, `NE`, `LT`, `LE`, `GT`, `GE`, `STREQ`, `STRNE`, `STRCASEEQ`,
+  `STRCASENE`, `FLOAT_EQ`, `DOUBLE_EQ`, and `NEAR`, in both their `EXPECT_` and `ASSERT_` forms.
+  Matchers compose and give far better failure messages. **There are no exceptions, including string,
+  floating-point, and multi-line text comparisons.** The accepted exception is the boolean
+  `EXPECT_TRUE` / `EXPECT_FALSE` (and `ASSERT_TRUE` / `ASSERT_FALSE`), which read fine on their own.
+  Within a single test keep one style - do not mix, say, `EXPECT_TRUE(x)` and
+  `EXPECT_THAT(y, IsTrue())`.
 - **Name matchers unqualified - never the `::testing::` prefix inline.** Bring each matcher in with
   a `using ::testing::Foo;` (or `using ::mbo::testing::Foo;`) in the test file's anonymous namespace
   and use the bare name in the `EXPECT_THAT` / `ASSERT_THAT` expression; a `::testing::Foo(...)`

@@ -159,13 +159,15 @@ repos:
         entry: DO([ _]?NOT|N'T)[ _]?(SUBMIT|MERGE)
         exclude: ^.pre-commit-config.yaml$
         types: [text]
-      - id: no-gtest-equality-macros
-        name: No ASSERT_EQ or EXPECT_EQ
+      - id: no-gtest-comparison-macros
+        name: No GoogleTest comparison macros
         description: |
-          Use ASSERT_THAT or EXPECT_THAT with matchers instead. For multi-line text use
-          mbo::testing::EqualsText, which produces a useful unified diff on failure.
+          Do not use EXPECT_/ASSERT_ EQ, NE, LT, LE, GT, GE, STREQ, STRNE, STRCASEEQ,
+          STRCASENE, FLOAT_EQ, DOUBLE_EQ, or NEAR. Use ASSERT_THAT or EXPECT_THAT with
+          matchers instead. For multi-line text use mbo::testing::EqualsText, which
+          produces a useful unified diff on failure.
         language: pygrep
-        entry: \b(ASSERT_EQ|EXPECT_EQ)\s*\(
+        entry: \b(ASSERT|EXPECT)_(EQ|NE|LT|LE|GT|GE|STREQ|STRNE|STRCASEEQ|STRCASENE|FLOAT_EQ|DOUBLE_EQ|NEAR)\s*\(
         files: \.(c|cc|cpp|cxx|h|hh|hpp|hxx)$
       - id: no-todos-without-context
         name: No TODOs without context
