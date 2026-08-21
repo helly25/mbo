@@ -119,19 +119,20 @@ def measurements(files: dict[str, FileCoverage], policy: dict) -> dict:
     return result
 
 
-def thresholds(policy: dict) -> dict:
-    result = {"overall": policy.get("minimum", {})}
-    result.update({k: v.get("minimum", {}) for k, v in policy.get("categories", {}).items()})
-    return result
+def thresholds(policy: dict) -> tuple[dict, dict]:
+    """Returns enforcement floors and health targets for every report row."""
+    overall = policy.get("minimum", {})
+    floors = {"overall": overall}
+    targets = {"overall": overall}
+    for name, category in policy.get("categories", {}).items():
+        floors[name] = category.get("minimum", overall)
+        targets[name] = overall
+    return floors, targets
 
 
-def status_target(policy: dict) -> dict:
-    return policy.get("minimum", {}) | policy.get("status_target", {})
-
-
-def failures(measured: dict, policy: dict) -> list[str]:
+def failures(measured: dict, minimums: dict) -> list[str]:
     result = []
-    for category, limits in thresholds(policy).items():
+    for category, limits in minimums.items():
         for metric, minimum in limits.items():
             actual = measured[category][metric]["percent"]
             if actual is None or actual < minimum:
@@ -234,9 +235,7 @@ def main(argv: list[str] | None = None) -> int:
             "measurements": measured,
         }
         args.baseline.write_text(json.dumps(baseline, indent=2) + "\n", encoding="utf-8")
-    minimums = thresholds(policy)
-    target = status_target(policy)
-    targets = {category: target for category in minimums}
+    minimums, targets = thresholds(policy)
     text = markdown(measured, minimums, targets)
     patch_failures: list[str] = []
     if args.base_ref:
@@ -251,7 +250,7 @@ def main(argv: list[str] | None = None) -> int:
     print(text, end="")
     if args.summary:
         args.summary.write_text(text, encoding="utf-8")
-    errors = failures(measured, policy) + patch_failures
+    errors = failures(measured, minimums) + patch_failures
     for error in errors:
         print(f"coverage threshold failed: {error}", file=sys.stderr)
     return bool(errors)
