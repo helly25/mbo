@@ -70,6 +70,9 @@ jobs:
           sudo apt install gcc-${{inputs.gcc_version}} g++-${{inputs.gcc_version}}
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{inputs.gcc_version}} 100 --slave /usr/bin/g++ g++ /usr/bin/g++-${{inputs.gcc_version}} --slave /usr/bin/gcov gcov /usr/bin/gcov-${{inputs.gcc_version}}
           sudo update-alternatives --set gcc /usr/bin/gcc-${{inputs.gcc_version}}
+      - name: Install coverage report tooling
+        if: inputs.bazel_config == 'coverage'
+        run: sudo apt install lcov
 
       # The DISK cache (compiled action outputs) is what recurs and what pays; the
       # output root is deliberately NOT cached anymore - for clang cells it holds the
@@ -285,6 +288,16 @@ jobs:
             --test_tag_filters=-lfs,-fuzz-test
           cp "$(bazel ${BAZEL_INIT} info output_path)/_coverage/_coverage_report.dat" coverage.lcov
 
+          genhtml coverage.lcov \
+            --branch-coverage \
+            --demangle-cpp \
+            --function-coverage \
+            --ignore-errors negative \
+            --legend \
+            --output-directory coverage-html \
+            --show-details \
+            --title "mbo production coverage"
+
           python3 -m unittest tools/coverage_test.py
           BASE_ARGS=()
           if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
@@ -302,14 +315,18 @@ jobs:
           {
             echo "### Production coverage"
             echo
+            echo "[Download the browsable HTML coverage report](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}#artifacts)."
+            echo
             cat coverage-summary.md
           } >>"${GITHUB_STEP_SUMMARY}"
 
-      - uses: actions/upload-artifact@v4
-        if: inputs.bazel_config == 'coverage'
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always() && inputs.bazel_config == 'coverage'
         with:
-          name: coverage-lcov
+          name: coverage-report
           path: |
+            coverage-html/
             coverage.lcov
             coverage-summary.md
           retention-days: 14
