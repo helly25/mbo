@@ -824,7 +824,10 @@ constexpr auto kJsonComparator = mbo::types::Overloaded{
       auto lhs_it = lhs.begin();
       auto rhs_it = rhs.begin();
       while (lhs_it != lhs.end() && rhs_it != rhs.end()) {
-        if (auto comp = *lhs_it <=> *rhs_it; comp != std::strong_ordering::equal) {
+        if (auto comp = types::WeakToStrong(lhs_it->first <=> rhs_it->first); comp != std::strong_ordering::equal) {
+          return comp;
+        }
+        if (auto comp = lhs_it->second <=> rhs_it->second; comp != std::strong_ordering::equal) {
           return comp;
         }
         ++lhs_it;
