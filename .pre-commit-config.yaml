@@ -168,7 +168,7 @@ repos:
           produces a useful unified diff on failure.
         language: pygrep
         entry: \b(ASSERT|EXPECT)_(EQ|NE|LT|LE|GT|GE|STREQ|STRNE|STRCASEEQ|STRCASENE|FLOAT_EQ|DOUBLE_EQ|NEAR)\s*\(
-        files: \.(c|cc|cpp|cxx|h|hh|hpp|hxx)$
+        types_or: [c, c++]
       - id: no-todos-without-context
         name: No TODOs without context
         description: |
