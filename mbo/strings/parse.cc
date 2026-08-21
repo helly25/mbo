@@ -57,24 +57,31 @@ absl::StatusOr<char> ParseOctal(char first_char, std::string_view& data) {
   return static_cast<char>(next_chr);
 }
 
+constexpr int HexDigitValue(char chr) noexcept {
+  if (chr >= '0' && chr <= '9') {
+    return chr - '0';
+  }
+  if (chr >= 'a' && chr <= 'f') {
+    return chr - 'a' + 10;
+  }
+  if (chr >= 'A' && chr <= 'F') {
+    return chr - 'A' + 10;
+  }
+  return -1;
+}
+
 bool NextHexChar(std::string_view& data, int& hex) {
   if (data.empty()) {
     return false;
   }
+  const int digit = HexDigitValue(data.front());
+  if (digit < 0) {
+    return false;
+  }
   static constexpr int kHexDigit = 16;
-  if (data.front() >= '0' && data.front() <= '9') {
-    hex = (hex * kHexDigit) + (PopChar(data) - '0');
-    return true;
-  }
-  if (data.front() >= 'a' && data.front() <= 'f') {
-    hex = (hex * kHexDigit) + (PopChar(data) - 'a');
-    return true;
-  }
-  if (data.front() >= 'A' && data.front() <= 'F') {
-    hex = (hex * kHexDigit) + (PopChar(data) - 'A');
-    return true;
-  }
-  return false;
+  hex = (hex * kHexDigit) + digit;
+  data.remove_prefix(1);
+  return true;
 }
 
 absl::StatusOr<char> ParseHex(std::string_view& data) {

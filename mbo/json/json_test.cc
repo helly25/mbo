@@ -110,6 +110,11 @@ TEST_F(JsonTest, JsonComparisonsCoverEveryStoredKind) {
   object_lhs["value"] = 1;
   Json object_rhs;
   object_rhs["value"] = 2;
+  const Json object_equal = object_lhs;
+  Json object_key_lhs;
+  object_key_lhs["alpha"] = 1;
+  Json object_key_rhs;
+  object_key_rhs["omega"] = 1;
 
   EXPECT_THAT(Json{} <=> Json{}, std::strong_ordering::equal);
   EXPECT_THAT(Json{false}, Lt(Json{true}));
@@ -117,7 +122,9 @@ TEST_F(JsonTest, JsonComparisonsCoverEveryStoredKind) {
   EXPECT_THAT(Json{1U}, Lt(Json{2.0}));
   EXPECT_THAT(Json{"a"}, Lt(Json{"b"}));
   EXPECT_THAT(array_lhs, Lt(array_rhs));
+  EXPECT_THAT(object_lhs, object_equal);
   EXPECT_THAT(object_lhs, Lt(object_rhs));
+  EXPECT_THAT(object_key_lhs, Lt(object_key_rhs));
   EXPECT_THAT(Json{}, Lt(array_lhs));
   EXPECT_THAT(array_lhs, Lt(Json{false}));
   EXPECT_THAT(Json{false}, Lt(Json{0}));

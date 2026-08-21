@@ -72,13 +72,22 @@ TEST_F(ParseTest, ParseStringOctal) {
 
 TEST_F(ParseTest, ParseStringHex) {
   EXPECT_THAT(ParseString({}, ""), IsOkAndHolds(Pair("", "")));
+  EXPECT_THAT(ParseString({}, "\\x0"), IsOkAndHolds(Pair(std::string(1, '\0'), "")));
   EXPECT_THAT(ParseString({}, "\\x4"), IsOkAndHolds(Pair("\4", "")));
   EXPECT_THAT(ParseString({}, "\\x42"), IsOkAndHolds(Pair("\x42", "")));
+  EXPECT_THAT(ParseString({}, "\\xaf"), IsOkAndHolds(Pair(std::string(1, static_cast<char>(0xAF)), "")));
+  EXPECT_THAT(ParseString({}, "\\xAF"), IsOkAndHolds(Pair(std::string(1, static_cast<char>(0xAF)), "")));
+  EXPECT_THAT(ParseString({}, "\\xaF"), IsOkAndHolds(Pair(std::string(1, static_cast<char>(0xAF)), "")));
+  EXPECT_THAT(ParseString({}, "\\xff"), IsOkAndHolds(Pair(std::string(1, static_cast<char>(0xFF)), "")));
   EXPECT_THAT(ParseString({}, "\\x423"), IsOkAndHolds(Pair(absl::StrCat("\x42", "3"), "")));
   EXPECT_THAT(ParseString({}, "\\x{42}"), IsOkAndHolds(Pair("\x42", "")));
   EXPECT_THAT(ParseString({}, "\\x{4}"), IsOkAndHolds(Pair("\4", "")));
+  EXPECT_THAT(ParseString({}, "\\x{aF}"), IsOkAndHolds(Pair(std::string(1, static_cast<char>(0xAF)), "")));
   EXPECT_THAT(
       ParseString({}, "\\x{423}"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex C++23 sequence."));
+  EXPECT_THAT(
+      ParseString({}, "\\x{100}"),
       StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex C++23 sequence."));
 }
 
