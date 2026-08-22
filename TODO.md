@@ -118,3 +118,9 @@ also updates this file to the completed state.
     duplicated records for compile-time and non-native-endian alternatives.
   - Remove the category-specific branch-coverage override.
   - PR: [#357](https://github.com/helly25/mbo/pull/357).
+- [x] Make `mbo/log` meet the general function-coverage minimum.
+  - Count behaviorally identical template and generic-lambda specializations
+    once per source definition.
+  - Exclude only quick-exit functions whose process cannot flush coverage data.
+  - Remove the category-specific function-coverage override.
+  - PR: [#358](https://github.com/helly25/mbo/pull/358).

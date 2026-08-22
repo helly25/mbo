@@ -23,6 +23,7 @@ namespace mbo::log {
 
 std::string Demangle(const char* mangled_name);
 
+// LCOV_MERGE_FUNC_LINE: GCC emits one record per specialization of this shared definition.
 template<typename T>
 std::string DemangleV(T&& v) {  // NOLINT(*-missing-std-forward)
   return Demangle(typeid(v).name());

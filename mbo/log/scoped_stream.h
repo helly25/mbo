@@ -39,6 +39,7 @@ struct Voidifier {
   ~Voidifier() = default;
   Voidifier() = default;
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared template definition once.
   template<typename... T>
   Voidifier(const T&...) noexcept {}  // NOLINT(*-named-parameter,*-explicit-*)
 
@@ -70,6 +71,7 @@ struct VoidStream {
   // NOLINTNEXTLINE(*-identifier-naming,*-member-functions-to-static)
   constexpr std::string_view str() const noexcept { return {}; }
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared template definition once.
   template<typename T>
   VoidStream& operator<<(const T&) noexcept {  // NOLINT(*-named-parameter)
     return *this;
@@ -156,9 +158,11 @@ class ScopedStream {
 
   ScopedStream() = delete;
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   explicit ScopedStream(const std::source_location& loc, OStreamField out = std::cerr, const MessageField& msg = {})
       : loc_(loc), out_(out), msg_(msg) {}
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   ~ScopedStream() {
     // Technically a compiler could optimize this for `VoidStream`, but we drop this explicitly.
     if constexpr (std::same_as<OStreamT, Voidifier>) {
@@ -185,17 +189,20 @@ class ScopedStream {
   ScopedStream(ScopedStream&&) = delete;
   ScopedStream& operator=(ScopedStream&&) = delete;
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared template definition once.
   template<typename T>
   StringStream& operator<<(const T& val) {
     str_ << val;
     return str_;
   }
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   const StringStream& Stream() const noexcept { return str_; }
 
  private:
   friend struct ScopedStreamTest;
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   void OutPrefix(std::ostream& out) {
     out << "[" << loc_.file_name() << ":" << loc_.line() << "] @" << loc_.function_name();
     if constexpr (!std::same_as<OStreamT, Voidifier> && !std::same_as<MessageT, Voidifier>) {
@@ -209,8 +216,10 @@ class ScopedStream {
     out << "\n";
   }
 
+  // LCOV_EXCL_FUNC_LINE: quick_exit prevents this process from flushing its coverage data.
   void OutFlush(std::ostream& out) { out << std::flush; }
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   std::string TestGetStr() const { return std::string{str_.str()}; }
 
   const std::source_location loc_;  // Must be the actual value.

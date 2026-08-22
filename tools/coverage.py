@@ -70,15 +70,30 @@ def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCover
             if "LCOV_EXCL_BR_LINE" in line
         }
         excluded_functions: set[int] = set()
+        merged_function_groups: dict[int, int] = {}
         for index, line in enumerate(source_lines):
-            if "LCOV_EXCL_FUNC_LINE" not in line:
+            exclude = "LCOV_EXCL_FUNC_LINE" in line
+            merge = "LCOV_MERGE_FUNC_LINE" in line
+            if not exclude and not merge:
                 continue
             for continuation in range(index, len(source_lines)):
-                excluded_functions.add(continuation + 1)
+                if exclude:
+                    excluded_functions.add(continuation + 1)
+                if merge:
+                    merged_function_groups[continuation + 1] = index + 1
                 if "{" in source_lines[continuation]:
                     break
         data.lines = {line: hits for line, hits in data.lines.items() if line not in excluded_lines}
         data.functions = [function for function in data.functions if function[0] not in excluded_functions]
+        merged_hits: dict[int, int] = {}
+        ordinary_functions: list[tuple[int, int]] = []
+        for line, hits in data.functions:
+            if line in merged_function_groups:
+                group = merged_function_groups[line]
+                merged_hits[group] = max(merged_hits.get(group, 0), hits)
+            else:
+                ordinary_functions.append((line, hits))
+        data.functions = ordinary_functions + sorted(merged_hits.items())
         data.branches = [(line, taken) for line, taken in data.branches if line not in excluded_branches]
     return result
 

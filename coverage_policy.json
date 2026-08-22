@@ -15,10 +15,7 @@
     "file": { "include": ["mbo/file/**"] },
     "hash": { "include": ["mbo/hash/**"] },
     "json": { "include": ["mbo/json/**"] },
-    "log": {
-      "include": ["mbo/log/**"],
-      "minimum": { "functions": 15 }
-    },
+    "log": { "include": ["mbo/log/**"] },
     "mope": { "include": ["mbo/mope/**"] },
     "status": { "include": ["mbo/status/**"] },
     "strings": { "include": ["mbo/strings/**"] },

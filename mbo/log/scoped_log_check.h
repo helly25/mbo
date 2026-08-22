@@ -73,6 +73,7 @@ struct ScopedStreamer : ScopedStreamVariants {
 
   explicit ScopedStreamer(VoidStream str) : ScopedStreamVariants(str) {}
 
+  // LCOV_EXCL_FUNC_LINE: quick_exit prevents this process from flushing its coverage data.
   template<typename ScopedStreamType>
   ScopedStreamer(
       std::in_place_type_t<ScopedStreamType> in_place_t,
@@ -86,6 +87,7 @@ struct ScopedStreamer : ScopedStreamVariants {
     return std::move(out);
   }
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared template definition once.
   template<typename T>
   friend ScopedStreamer&& operator<<(ScopedStreamer&& out, const T& val) {
     out.Output(val);
@@ -97,14 +99,17 @@ struct ScopedStreamer : ScopedStreamVariants {
     return out;
   }
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared template definition once.
   template<typename T>
   friend ScopedStreamer& operator<<(ScopedStreamer& out, const T& val) {
     out.Output(val);
     return out;
   }
 
+  // LCOV_MERGE_FUNC_LINE: Count the shared template definition once.
   template<typename T>
   void Output(const T& val) {
+    // LCOV_MERGE_FUNC_LINE: Each variant alternative instantiates this same visitor body.
     std::visit([val]<typename OS>(OS& os) { os << val; }, *this);
   }
 };
