@@ -213,6 +213,7 @@ cc_library(
 cc_test(
     name = "optional_data_or_ref_test",
     srcs = ["optional_data_or_ref_test.cc"],
+    copts = ["-fexceptions"],
     deps = [
         ":optional_data_or_ref_cc",
         "//mbo/testing:matchers_cc",
