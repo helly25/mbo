@@ -104,3 +104,8 @@ also updates this file to the completed state.
     than once for every compiler-generated container specialization.
   - Remove the category-specific function-coverage override.
   - PR: [#353](https://github.com/helly25/mbo/pull/353).
+- [x] Make `mbo/types` meet the general branch-coverage minimum.
+  - Exclude compiler-expanded branch pairs for the behaviorally covered
+    `tstring` search fold expressions.
+  - Remove the category-specific branch-coverage override.
+  - PR: [#355](https://github.com/helly25/mbo/pull/355).

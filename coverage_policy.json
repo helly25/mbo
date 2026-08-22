@@ -26,9 +26,6 @@
     "status": { "include": ["mbo/status/**"] },
     "strings": { "include": ["mbo/strings/**"] },
     "testing": { "include": ["mbo/testing/**"] },
-    "types": {
-      "include": ["mbo/types/**"],
-      "minimum": { "branches": 47 }
-    }
+    "types": { "include": ["mbo/types/**"] }
   }
 }
