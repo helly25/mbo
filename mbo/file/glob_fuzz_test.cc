@@ -13,9 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <initializer_list>
 #include <string_view>
 
 #include "mbo/file/glob.h"
@@ -24,8 +24,9 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
   // libFuzzer exposes bytes as uint8_t; a char view preserves the same object representation.
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const std::string_view pattern(reinterpret_cast<const char*>(data), size);
-  for (const bool allow_star_star : {false, true}) {
-    for (const bool allow_ranges : {false, true}) {
+  static constexpr std::array kBoolOptions = std::to_array<bool>({false, true});
+  for (const bool allow_star_star : kBoolOptions) {
+    for (const bool allow_ranges : kBoolOptions) {
       const mbo::file::Glob2Re2Options options{
           .allow_star_star = allow_star_star,
           .allow_ranges = allow_ranges,

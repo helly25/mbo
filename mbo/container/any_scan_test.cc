@@ -59,6 +59,7 @@ using ::testing::Not;
 using ::testing::Pair;
 using ::testing::Pointee;
 using ::testing::SizeIs;
+using ::testing::StrEq;
 using ::testing::WhenSorted;
 
 static_assert(std::input_iterator<AnyScan<int, std::ptrdiff_t>::iterator>);
@@ -256,7 +257,7 @@ TEST_F(AnyScanTest, MoveOnly) {
   };
   EXPECT_THAT(
       MoveTester<std::unique_ptr<std::string>>(MakeAnyScan(data())),
-      ElementsAre(Pointee(::testing::StrEq("foo")), Pointee(::testing::StrEq("bar"))));
+      ElementsAre(Pointee(StrEq("foo")), Pointee(StrEq("bar"))));
 }
 
 struct ConvertingScanTest : public AnyScanTest {};

@@ -160,15 +160,40 @@ repos:
         exclude: ^.pre-commit-config.yaml$
         types: [text]
       - id: no-gtest-comparison-macros
-        name: No GoogleTest comparison macros
+        name: Enforce GoogleTest matcher style
         description: |
           Do not use EXPECT_/ASSERT_ EQ, NE, LT, LE, GT, GE, STREQ, STRNE, STRCASEEQ,
           STRCASENE, FLOAT_EQ, DOUBLE_EQ, or NEAR. Use ASSERT_THAT or EXPECT_THAT with
           matchers instead. For multi-line text use mbo::testing::EqualsText, which
           produces a useful unified diff on failure.
-        language: pygrep
-        entry: \b(ASSERT|EXPECT)_(EQ|NE|LT|LE|GT|GE|STREQ|STRNE|STRCASEEQ|STRCASENE|FLOAT_EQ|DOUBLE_EQ|NEAR)\s*\(
+        language: script
+        entry: tools/check_test_matchers.sh
         types_or: [c, c++]
+      - id: no-em-dashes
+        name: No em dashes
+        description: Use a spaced hyphen in prose, documentation, and comments.
+        language: pygrep
+        entry: "—"
+        exclude: ^\.pre-commit-config\.yaml$|\.(phar|tar|tgz|gz|bz2|xz|zst|zip|jar|war|ear|apk|aab|whl|egg|7z)$
+        types: [text]
+      - id: no-braced-init-list-loop
+        name: No range-for over an inline braced-init-list
+        description: Iterate a named constexpr std::array so the set has a name and can be reused.
+        language: pygrep
+        entry: 'for\s*\([^)]*:\s*\{'
+        types_or: [c, c++]
+      - id: no-comparison-in-check-macro
+        name: No comparison inside a boolean CHECK
+        description: Use comparison CHECK macros so failures print both operands.
+        language: pygrep
+        entry: '\b(ABSL_)?(D|Q)?CHECK\([^;]*(!=|==|<=|>=)'
+        types_or: [c, c++]
+      - id: no-isok-assert-then-deref
+        name: No ASSERT_THAT(x, IsOk()) followed by dereferencing x
+        description: Bind a StatusOr value once or use IsOkAndHolds.
+        language: python
+        entry: tools/check_status_assert.py
+        files: _test\.cc$
       - id: no-todos-without-context
         name: No TODOs without context
         description: |
@@ -216,6 +241,18 @@ repos:
         language: system
         entry: python3 -m unittest tools/coverage_test.py
         files: ^(coverage_policy\.json|tools/coverage(_test)?\.py)$
+        pass_filenames: false
+      - id: align-markdown-tables
+        name: Align Markdown tables
+        description: Keep Markdown table columns vertically aligned in source files.
+        language: script
+        entry: tools/align_markdown_tables.py
+        types: [markdown]
+      - id: align-markdown-tables-test
+        name: Test the Markdown table aligner
+        language: system
+        entry: python3 -m unittest tools/align_markdown_tables_test.py
+        files: ^tools/align_markdown_tables(_test)?\.py$
         pass_filenames: false
       - id: clang-tidy
         name: clang-tidy

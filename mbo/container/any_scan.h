@@ -422,14 +422,16 @@ class AnyScanImpl {
       // That means we bypass any protection an iterator may have, but we can make this function
       // `noexcept` assuming the iterator is noexcept for access. On the other hand we expect that
       // out of bounds access may actually raise. So we effectively side step such exceptions.
-      ABSL_CHECK(funcs_.curr != nullptr && funcs_.more());  // NOLINT(*-missing-default-case)
+      ABSL_CHECK_NE(funcs_.curr, nullptr);  // NOLINT(*-missing-default-case)
+      ABSL_CHECK(funcs_.more());
       return funcs_.curr();
     }
 
     value_type operator*() const noexcept
     requires(!kAccessByRef)
     {
-      ABSL_CHECK(funcs_.curr != nullptr && funcs_.more());  // NOLINT(*-missing-default-case)
+      ABSL_CHECK_NE(funcs_.curr, nullptr);  // NOLINT(*-missing-default-case)
+      ABSL_CHECK(funcs_.more());
       return value_type(funcs_.curr());
     }
 

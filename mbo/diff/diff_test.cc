@@ -15,6 +15,7 @@
 
 #include "mbo/diff/diff.h"
 
+#include <array>
 #include <cstddef>
 #include <optional>
 #include <random>
@@ -43,7 +44,6 @@ namespace {
 
 using ::mbo::strings::DropIndent;
 using ::mbo::strings::DropIndentAndSplit;
-using ::mbo::testing::IsOk;
 using ::mbo::testing::IsOkAndHolds;
 using ::testing::ElementsAreArray;
 using ::testing::IsEmpty;
@@ -144,8 +144,9 @@ TEST_F(DiffTest, Empty) {
 }
 
 TEST_F(DiffTest, Equal) {
-  for (const std::string txt : {"a", "a\nb", "a\nb\n"}) {
-    EXPECT_THAT(Diff({txt, "lhs"}, {txt, "rhs"}), IsOkAndHolds(IsEmpty()));
+  static constexpr std::array kEqualTexts = std::to_array<std::string_view>({"a", "a\nb", "a\nb\n"});
+  for (const std::string_view txt : kEqualTexts) {
+    EXPECT_THAT(Diff({std::string(txt), "lhs"}, {std::string(txt), "rhs"}), IsOkAndHolds(IsEmpty()));
   }
 }
 
@@ -403,7 +404,8 @@ TEST_F(DiffTest, Multi1) {
           {ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"},
           {.algorithm = Diff::Options::Algorithm::kNaive}),
       IsOkAndHolds(ElementsAreArray(DropIndentAndSplit(kOneChunk))));
-  for (const std::size_t context_size : {2, 3, 5, 50}) {
+  static constexpr std::array kContextSizes = std::to_array<std::size_t>({2, 3, 5, 50});
+  for (const std::size_t context_size : kContextSizes) {
     EXPECT_THAT(
         Diff(
             {ToLines("acbdeacbed"), "lhs"}, {ToLines("acebdabbabed"), "rhs"},
@@ -683,7 +685,8 @@ TEST_F(DiffTest, NormalFormat) {
   // Normal format shows no file headers and no context lines. The default
   // `context_size` merely groups nearby changes into one internal chunk, the
   // rendered a/d/c commands are unaffected by it.
-  for (const std::size_t context_size : {0, 3}) {
+  static constexpr std::array kContextSizes = std::to_array<std::size_t>({0, 3});
+  for (const std::size_t context_size : kContextSizes) {
     const Diff::Options options{
         .output_format = Diff::Options::OutputFormat::kNormal,
         .context_size = context_size,
@@ -854,12 +857,13 @@ TEST_F(DiffTest, NormalFormatSkipLeftDeletions) {
 
 TEST_F(DiffTest, FormatsIgnoreBlankLines) {
   // Chunk suppression happens before rendering, so it applies to all formats.
-  for (const Diff::Options::OutputFormat output_format : {
-           Diff::Options::OutputFormat::kUnified,
-           Diff::Options::OutputFormat::kContext,
-           Diff::Options::OutputFormat::kNormal,
-           Diff::Options::OutputFormat::kSideBySide,
-       }) {
+  static constexpr std::array kOutputFormats = std::to_array<Diff::Options::OutputFormat>({
+      Diff::Options::OutputFormat::kUnified,
+      Diff::Options::OutputFormat::kContext,
+      Diff::Options::OutputFormat::kNormal,
+      Diff::Options::OutputFormat::kSideBySide,
+  });
+  for (const Diff::Options::OutputFormat output_format : kOutputFormats) {
     EXPECT_THAT(
         Diff(
             {"a\n\nb\n", "lhs"}, {"a\nb\n", "rhs"},
@@ -1094,17 +1098,20 @@ TEST_F(DiffTest, MyersRoundTrip) {
   cases.emplace_back("", make_file(50, 5, "x"));
   cases.emplace_back(make_file(50, 5, "x"), "");
   cases.emplace_back(make_file(300, 1, "left"), make_file(300, 1, "right"));  // Disjoint: cap fallback.
-  for (const std::size_t lines : {2U, 5U, 20U, 100U, 250U}) {
-    for (const std::size_t alphabet : {2U, 5U, 40U}) {
+  static constexpr std::array kLineCounts = std::to_array<std::size_t>({2, 5, 20, 100, 250});
+  static constexpr std::array kAlphabetSizes = std::to_array<std::size_t>({2, 5, 40});
+  for (const std::size_t lines : kLineCounts) {
+    for (const std::size_t alphabet : kAlphabetSizes) {
       cases.emplace_back(make_file(lines, alphabet, "l"), make_file(lines + (rng() % 20), alphabet, "l"));
     }
   }
   for (std::size_t idx = 0; idx < cases.size(); ++idx) {
     const auto& [lhs, rhs] = cases.at(idx);
-    const auto result = mbo::diff::Diff::FileDiff({.data = lhs, .name = "lhs"}, {.data = rhs, .name = "rhs"}, options);
-    ASSERT_THAT(result, mbo::testing::IsOk()) << "case: " << idx;
-    const std::optional<std::string> applied = ApplyUnifiedDiff(lhs, *result);
-    EXPECT_THAT(applied, Optional(rhs)) << "case: " << idx << " diff:\n" << *result;
+    MBO_ASSERT_OK_AND_ASSIGN(
+        const std::string result,
+        mbo::diff::Diff::FileDiff({.data = lhs, .name = "lhs"}, {.data = rhs, .name = "rhs"}, options));
+    const std::optional<std::string> applied = ApplyUnifiedDiff(lhs, result);
+    EXPECT_THAT(applied, Optional(rhs)) << "case: " << idx << " diff:\n" << result;
   }
 }
 
@@ -1115,11 +1122,12 @@ TEST_F(DiffTest, AlgorithmFeatureMatrix) {
   // shared, the algorithms only consume the preprocessed comparison results.
   using Algorithm = Diff::Options::Algorithm;
   const auto expect_empty = [](std::string_view name, std::string_view lhs, std::string_view rhs, auto make_options) {
-    for (const auto& [algo_name, algorithm] : {
-             std::pair{"naive", Algorithm::kNaive},
-             std::pair{"myers", Algorithm::kMyers},
-             std::pair{"direct", Algorithm::kDirect},
-         }) {
+    static constexpr std::array kAlgorithms = std::to_array<std::pair<std::string_view, Algorithm>>({
+        {"naive", Algorithm::kNaive},
+        {"myers", Algorithm::kMyers},
+        {"direct", Algorithm::kDirect},
+    });
+    for (const auto& [algo_name, algorithm] : kAlgorithms) {
       const Diff::Options options = make_options(algorithm);
       EXPECT_THAT(Diff({std::string(lhs), "lhs"}, {std::string(rhs), "rhs"}, options), IsOkAndHolds(IsEmpty()))
           << "feature: " << name << " algorithm: " << algo_name;
@@ -1163,7 +1171,9 @@ TEST_F(DiffTest, AlgorithmFeatureMatrix) {
     };
   });
   // Sanity: without the option every algorithm reports the difference.
-  for (const auto algorithm : {Algorithm::kNaive, Algorithm::kMyers, Algorithm::kDirect}) {
+  static constexpr std::array kAlgorithms =
+      std::to_array<Algorithm>({Algorithm::kNaive, Algorithm::kMyers, Algorithm::kDirect});
+  for (const Algorithm algorithm : kAlgorithms) {
     EXPECT_THAT(Diff({"aBc\n", "lhs"}, {"AbC\n", "rhs"}, {.algorithm = algorithm}), IsOkAndHolds(Not(IsEmpty())))
         << "algorithm: " << static_cast<int>(algorithm);
   }
@@ -1207,7 +1217,9 @@ TEST_F(DiffTest, IgnoreCaseWithIgnoreMatchingLines) {
           }),
       IsOkAndHolds(Not(IsEmpty())));
   // With a case-insensitive expression both algorithms agree.
-  for (const auto algorithm : {Diff::Options::Algorithm::kNaive, Diff::Options::Algorithm::kMyers}) {
+  static constexpr std::array kAlgorithms =
+      std::to_array<Diff::Options::Algorithm>({Diff::Options::Algorithm::kNaive, Diff::Options::Algorithm::kMyers});
+  for (const Diff::Options::Algorithm algorithm : kAlgorithms) {
     EXPECT_THAT(
         Diff(
             {lhs, "lhs"}, {rhs, "rhs"},
@@ -1252,15 +1264,13 @@ TEST_F(DiffTest, MyersMinimalOption) {
             .minimal = minimal,
         });
   };
-  const auto capped = run(false);
-  const auto minimal = run(true);
-  ASSERT_THAT(capped, IsOk());
-  ASSERT_THAT(minimal, IsOk());
-  const std::optional<std::string> capped_applied = ApplyUnifiedDiff(lhs, *capped);
-  const std::optional<std::string> minimal_applied = ApplyUnifiedDiff(lhs, *minimal);
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string capped, run(false));
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string minimal, run(true));
+  const std::optional<std::string> capped_applied = ApplyUnifiedDiff(lhs, capped);
+  const std::optional<std::string> minimal_applied = ApplyUnifiedDiff(lhs, minimal);
   EXPECT_THAT(capped_applied, Optional(rhs));
   EXPECT_THAT(minimal_applied, Optional(rhs));
-  EXPECT_THAT(count_edits(*minimal), Lt(count_edits(*capped)));
+  EXPECT_THAT(count_edits(minimal), Lt(count_edits(capped)));
 }
 
 TEST_F(DiffTest, RegexReplace) {

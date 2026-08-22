@@ -174,6 +174,9 @@ clang-format picks a layout per line; these habits steer it toward the readable 
   RANGE-FOR over a literal list; passing a braced list as an argument (`ElementsAre`, a `std::vector`
   initializer, an aggregate) is untouched by the rule.
 
+- **Prefer range-based loops.** Use an index only when the index is part of the operation. Do not
+  scan backward or repeatedly rescan preceding elements; carry the needed state forward.
+
 - **Comparison functions name their parameters `lhs` and `rhs`** - a sort comparator, an
   `operator==`/`operator<=>`, any two-things-of-one-type predicate. Never `a`/`b` (which
   `readability-identifier-length` rejects at under 2 characters) and not `x`/`y` either: `lhs`/`rhs`
@@ -511,6 +514,8 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
   `StatusIs(absl::StatusCode::kInvalidArgument)` to match a specific code.
 - **`IsOkAndHolds(m)`** matches an OK `StatusOr` whose value matches `m` - prefer it over
   `IsOk()` followed by dereferencing: `EXPECT_THAT(Parse(in), IsOkAndHolds(SizeIs(3)))`.
+- Do not `ASSERT_THAT(value, IsOk())` and then dereference the same `StatusOr`; bind it once with
+  `MBO_ASSERT_OK_AND_ASSIGN`, or use `IsOkAndHolds` when it is inspected only once.
 - `MBO_ASSERT_OK_AND_ASSIGN(const auto value, MakeThing())` asserts OK and binds in one step.
 - `MBO_ASSERT_OK_AND_MOVE_TO(MakePair(), auto [a, b])` is the move variant whose target may
   contain commas (so the expression comes first) - the test mirror of `MBO_MOVE_TO_OR_RETURN`,

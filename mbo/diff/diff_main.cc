@@ -236,8 +236,10 @@ Diff::Options MakeDiffOptions() {
   const std::optional<Diff::Options::OutputFormat> output_format =
       Diff::Options::ParseOutputFormatFlag(absl::GetFlag(FLAGS_format));
   ABSL_QCHECK(output_format) << "Unknown format";
-  ABSL_QCHECK(absl::GetFlag(FLAGS_algorithm) != "unified" || output_format == Diff::Options::OutputFormat::kUnified)
-      << "The deprecated '--algorithm=unified' alias implies '--format=unified'.";
+  if (absl::GetFlag(FLAGS_algorithm) == "unified") {
+    ABSL_QCHECK_EQ(output_format, Diff::Options::OutputFormat::kUnified)
+        << "The deprecated '--algorithm=unified' alias implies '--format=unified'.";
+  }
   const std::optional<Diff::Options::FileHeaderUse> file_header_use =
       Diff::Options::ParseFileHeaderUse(absl::GetFlag(FLAGS_file_header_use));
   ABSL_QCHECK(file_header_use) << "Unknown file_header_use";

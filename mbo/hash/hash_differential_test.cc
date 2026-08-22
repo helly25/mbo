@@ -18,6 +18,7 @@
 // for randomized inputs, seeds, and lengths across all dispatch classes --
 // far beyond what fixed known-answer vectors can cover.
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <random>
@@ -48,7 +49,8 @@ TEST(DifferentialTest, Xxh64MatchesReference) {
         << "len: " << len << ", seed: " << seed << ", trial: " << trial;
   }
   // Long buffers crossing many stripe blocks.
-  for (const std::size_t len : {1'000UL, 4'096UL, 100'000UL}) {
+  static constexpr std::array kLongLengths = std::to_array<std::size_t>({1'000, 4'096, 100'000});
+  for (const std::size_t len : kLongLengths) {
     const std::string data = algo::RandomString(rng, len);
     ASSERT_THAT(xxh64::GetHash64(data, 77), XXH64(data.data(), data.size(), 77)) << "len: " << len;
   }
@@ -68,7 +70,8 @@ TEST(DifferentialTest, Xxh3MatchesReference) {
   // Long buffers: block boundaries (1024) and beyond, seeded (custom secret)
   // and unseeded, including the reference's SIMD-accelerated path -- proving
   // our scalar transcription matches the vectorized reference bit-for-bit.
-  for (const std::size_t len : {241UL, 1'023UL, 1'024UL, 1'025UL, 2'048UL, 100'000UL}) {
+  static constexpr std::array kBoundaryLengths = std::to_array<std::size_t>({241, 1'023, 1'024, 1'025, 2'048, 100'000});
+  for (const std::size_t len : kBoundaryLengths) {
     const std::string data = algo::RandomString(rng, len);
     ASSERT_THAT(xxh3::GetHash64(data, 77), XXH3_64bits_withSeed(data.data(), data.size(), 77)) << "len: " << len;
     ASSERT_THAT(xxh3::GetHash64(data), XXH3_64bits(data.data(), data.size())) << "len: " << len;
@@ -87,7 +90,8 @@ TEST(DifferentialTest, Xxh3Hash128MatchesReference) {
     check(data, rng());
     check(data, 0);
   }
-  for (const std::size_t len : {241UL, 1'023UL, 1'024UL, 1'025UL, 2'048UL, 100'000UL}) {
+  static constexpr std::array kBoundaryLengths = std::to_array<std::size_t>({241, 1'023, 1'024, 1'025, 2'048, 100'000});
+  for (const std::size_t len : kBoundaryLengths) {
     const std::string data = algo::RandomString(rng, len);
     check(data, 77);
     check(data, 0);
