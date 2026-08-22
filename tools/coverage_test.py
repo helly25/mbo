@@ -108,6 +108,32 @@ class CoverageTest(unittest.TestCase):
             files = coverage_tool.parse_lcov(report, root)
             self.assertEqual([(3, 1)], files["mbo/a.cc"].functions)
 
+    def test_parse_merges_specializations_at_marked_source_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "mbo/a.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "template<typename T>  // LCOV_MERGE_FUNC_LINE: template specializations\n"
+                "void merged(T value) { use(value); }\n"
+                "void ordinary();\n",
+                encoding="utf-8",
+            )
+            report = root / "coverage.lcov"
+            report.write_text(
+                "SF:mbo/a.cc\n"
+                "FN:1,MergedOne\nFN:2,MergedTwo\nFN:3,Ordinary\n"
+                "FNDA:0,MergedOne\nFNDA:2,MergedTwo\nFNDA:0,Ordinary\n"
+                "end_of_record\n",
+                encoding="utf-8",
+            )
+            files = coverage_tool.parse_lcov(report, root)
+            self.assertEqual([(3, 0), (1, 2)], files["mbo/a.cc"].functions)
+            self.assertEqual(
+                {"covered": 1, "total": 2, "percent": 50.0},
+                coverage_tool.counts(files)["functions"],
+            )
+
     def test_threshold_failure(self):
         measured = {
             "overall": {
