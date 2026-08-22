@@ -68,6 +68,11 @@ also updates this file to the completed state.
   - Adapt the final xff policy set through PR #612 to mbo's human-led workflow.
   - Keep project-specific conventions and omit xff-specific CLI rules.
   - PR: [#350](https://github.com/helly25/mbo/pull/350).
+- [x] Publish durable, indexed coverage reports for main, pull requests, and releases.
+  - Group the detailed LCOV tree by the same module categories as the policy report.
+  - Retain source/run metadata and prevent stale workflow completions from replacing newer reports.
+  - Provide a browsable index with report source, completion time, commit, workflow run, and metrics.
+  - PR: [#351](https://github.com/helly25/mbo/pull/351).
 - [x] Correct existing README and contributing-guide spelling errors and add a
       lightweight documentation spell-checking hook.
   - PR: [#335](https://github.com/helly25/mbo/pull/335).

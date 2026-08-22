@@ -258,6 +258,19 @@ def markdown(measured: dict, minimums: dict, targets: dict | None = None) -> str
     return "\n".join(rows) + "\n"
 
 
+def json_summary(measured: dict, minimums: dict, targets: dict, patch: dict | None = None) -> dict:
+    """Returns the stable machine-readable input consumed by the HTML index."""
+    result = {
+        "schema": 1,
+        "measurements": measured,
+        "minimums": minimums,
+        "targets": targets,
+    }
+    if patch is not None and has_coverage(patch, ("lines", "branches")):
+        result["patch"] = patch
+    return result
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--lcov", type=Path, required=True)
@@ -265,6 +278,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--baseline", type=Path)
     parser.add_argument("--write-baseline", action="store_true")
     parser.add_argument("--base-ref")
+    parser.add_argument("--json-summary", type=Path)
     parser.add_argument("--summary", type=Path)
     args = parser.parse_args(argv)
     policy = json.loads(args.policy.read_text(encoding="utf-8"))
@@ -283,6 +297,7 @@ def main(argv: list[str] | None = None) -> int:
     minimums, targets = thresholds(policy)
     text = markdown(measured, minimums, targets)
     patch_failures: list[str] = []
+    patch: dict | None = None
     uncovered_lines: list[str] = []
     uncovered_branches: list[str] = []
     if args.base_ref:
@@ -300,6 +315,11 @@ def main(argv: list[str] | None = None) -> int:
     print(text, end="")
     if args.summary:
         args.summary.write_text(text, encoding="utf-8")
+    if args.json_summary:
+        args.json_summary.write_text(
+            json.dumps(json_summary(measured, minimums, targets, patch), indent=2) + "\n",
+            encoding="utf-8",
+        )
     errors = failures(measured, minimums) + patch_failures
     for error in errors:
         print(f"coverage threshold failed: {error}", file=sys.stderr)
