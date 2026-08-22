@@ -53,6 +53,7 @@ also updates this file to the completed state.
     internal analysis query and the preceding CI build.
   - Retain the extractor's intentional feature-only transition, which disables
     parameter files, layering checks, and header-parsing actions for `aquery`.
+  - PR: [#354](https://github.com/helly25/mbo/pull/354).
 - [x] Update the compile-command extractor to deduplicate exec actions before source probing.
   - Avoid misleading missing-generated-source warnings on cold-cache clang-tidy runs.
   - Preserve exec-only generated sources while preferring equivalent target-configuration actions.
