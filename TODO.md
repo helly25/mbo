@@ -117,3 +117,4 @@ also updates this file to the completed state.
   - Directly test the hash-internal runtime utilities before excluding GCC's
     duplicated records for compile-time and non-native-endian alternatives.
   - Remove the category-specific branch-coverage override.
+  - PR: [#357](https://github.com/helly25/mbo/pull/357).
