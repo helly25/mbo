@@ -99,6 +99,7 @@ void DoTestConstexprRequireSortedInputThrows() {
 TEST_F(LimitedOrderedTest, ConstexprRequireSortedInputThrows) {
   if constexpr (kRequireThrows) {
 #if __cpp_exceptions
+    using ::testing::HasSubstr;
     try {
       // Passing the value list direvtly into the constructor of `LimitedOrdered` results in a compile time exception.
       // That exception cannot be tested here, so the values are being passed at run-time using a vector. That allows
@@ -106,7 +107,7 @@ TEST_F(LimitedOrderedTest, ConstexprRequireSortedInputThrows) {
       DoTestConstexprRequireSortedInputThrows();
     } catch (const std::runtime_error& error) {
       caught = true;
-      EXPECT_THAT(error.what(), ::testing::HasSubstr("Required (std::is_sorted(first, last, key_comp_))"));
+      EXPECT_THAT(error.what(), HasSubstr("Required (std::is_sorted(first, last, key_comp_))"));
     } catch (...) {
       ADD_FAILURE() << "Wrong exception type.";
     }

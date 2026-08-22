@@ -510,7 +510,8 @@ TYPED_TEST(DigestTest, StreamingMatchesOneShot) {
     all += vector.input;
   }
   const auto expected = TypeParam::Digest(all);
-  for (const std::size_t chunk_size : {1U, 3U, 7U, 13U, 63U, 64U, 65U, 200U}) {
+  static constexpr std::array kChunkSizes = std::to_array<std::size_t>({1, 3, 7, 13, 63, 64, 65, 200});
+  for (const std::size_t chunk_size : kChunkSizes) {
     Streamer<TypeParam> stream;
     for (std::size_t pos = 0; pos < all.size(); pos += chunk_size) {
       stream.Update(std::string_view(all).substr(pos, chunk_size));

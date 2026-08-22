@@ -63,6 +63,11 @@ also updates this file to the completed state.
 
 ## Documentation and quality coverage
 
+- [x] Adopt the shared helly25 contributor and agent guidance, C++ and shell
+      styles, and machine-enforceable style checks.
+  - Adapt the final xff policy set through PR #612 to mbo's human-led workflow.
+  - Keep project-specific conventions and omit xff-specific CLI rules.
+  - PR: [#350](https://github.com/helly25/mbo/pull/350).
 - [x] Correct existing README and contributing-guide spelling errors and add a
       lightweight documentation spell-checking hook.
   - PR: [#335](https://github.com/helly25/mbo/pull/335).

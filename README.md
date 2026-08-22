@@ -181,7 +181,7 @@ The C++ library is organized in functional groups each residing in their own dir
   - mbo/testing:matchers_cc, mbo/testing/matchers.h
     - gmock-matcher `CapacityIs` which checks the capacity of a container.
     - gmock-matcher `EqualsText` which compares text using line by line unified text diff.
-    - gmock-matcher `IsElementOf` which checks that a value equals at least one element of a container — the element-on-the-left orientation of gmock's `Contains`. Subject types do not need to be converted to the container's `value_type`.
+    - gmock-matcher `IsElementOf` which checks that a value equals at least one element of a container - the element-on-the-left orientation of gmock's `Contains`. Subject types do not need to be converted to the container's `value_type`.
     - gmock-matcher `IsKeyOf` which checks that a value equals at least one key of a map (shorthand for "is this key in the map?").
     - gmock-matcher `IsNullopt` which compares its argument against `std::nullopt`.
     - gmock-matcher `IsValueOf` which checks that a value equals at least one mapped value of a map (shorthand for "is this value in the map?").
@@ -322,9 +322,9 @@ The project only comes with a Bazel BUILD.bazel file and can be added to other B
 
 The project is formatted with specific clang-format settings which require clang 16+ (in case of MacOs LLVM 16+ can be installed using brew). For simplicity in dev mode the project pulls the appropriate clang tools and can be compiled with those tools using `bazel [build|test] --config=clang ...`.
 
-Lint and format are driven by [Trunk](https://docs.trunk.io/cli) plus [pre-commit](https://pre-commit.com). Devs are **required** to install both — `curl https://get.trunk.io -fsSL | bash` and `pip install pre-commit` (or your package manager's equivalent) — then run `pre-commit install` **once**. pre-commit is this repo's single git-hook entry point and delegates `trunk fmt` to trunk on every commit; trunk's own git-hook actions are deliberately disabled in `.trunk/trunk.yaml` so the two cannot fight over `.git/hooks` (a CI check fails the build if they are re-enabled). CI runs `pre-commit`, `trunk check` and `clang-tidy` as separate jobs and never auto-fixes; failing lint must be fixed locally and re-pushed.
+Lint and format are driven by [Trunk](https://docs.trunk.io/cli) plus [pre-commit](https://pre-commit.com). Devs are **required** to install both - `curl https://get.trunk.io -fsSL | bash` and `pip install pre-commit` (or your package manager's equivalent) - then run `pre-commit install` **once**. pre-commit is this repo's single git-hook entry point and delegates `trunk fmt` to trunk on every commit; trunk's own git-hook actions are deliberately disabled in `.trunk/trunk.yaml` so the two cannot fight over `.git/hooks` (a CI check fails the build if they are re-enabled). CI runs `pre-commit`, `trunk check` and `clang-tidy` as separate jobs and never auto-fixes; failing lint must be fixed locally and re-pushed.
 
-`clang-tidy` is one of these pre-commit hooks as well — it moved there from trunk, which pinned a version too old to parse this code. It is opt-in for now (`pre-commit run clang-tidy --all-files --hook-stage manual`) and becomes automatic like the rest once the finding sweep lands. See [STYLE_CPP.md](STYLE_CPP.md) for how to run it and how to build the `compile_commands.json` it needs.
+`clang-tidy` is one of these pre-commit hooks as well - it moved there from trunk, which pinned a version too old to parse this code. It is opt-in for now (`pre-commit run clang-tidy --all-files --hook-stage manual`) and becomes automatic like the rest once the finding sweep lands. See [STYLE_CPP.md](STYLE_CPP.md) for how to run it and how to build the `compile_commands.json` it needs.
 
 ### MODULES.bazel
 
@@ -334,7 +334,7 @@ Check [Releases](https://github.com/helly25/mbo/releases) for details. All that 
 bazel_dep(name = "helly25_mbo", version = "0.0.0")
 ```
 
-The [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler — a restriction in how Bazel handles toolchains under bzlmod. To pull in the bundled toolchain, vendor `bazelmod/llvm.MODULE.bazel` as described in the release notes. Nonetheless all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
+The [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler - a restriction in how Bazel handles toolchains under bzlmod. To pull in the bundled toolchain, vendor `bazelmod/llvm.MODULE.bazel` as described in the release notes. Nonetheless all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
 
 ## Presentations
 
