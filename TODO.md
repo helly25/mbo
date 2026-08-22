@@ -74,6 +74,10 @@ also updates this file to the completed state.
 
 ## Documentation and quality coverage
 
+- [x] Exercise the hash-internal runtime utilities directly.
+  - Cover every supported length for `LoadTail` and `LoadSmall` with
+    volatile-derived runtime inputs.
+  - Verify both lanes and the folded result of the 128-bit multiplication helpers.
 - [x] Adopt the shared helly25 contributor and agent guidance, C++ and shell
       styles, and machine-enforceable style checks.
   - Adapt the final xff policy set through PR #612 to mbo's human-led workflow.
