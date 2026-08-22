@@ -48,6 +48,10 @@ on:
         description: "The Bazel version to pin via `.bazelversion` (e.g. 8.0.0, 9.2.0). If empty the checked-in `.bazelversion` is used as-is."
         type: string
         default: ""
+      coverage_target:
+        description: "Retained coverage destination (main, pr/N, or tag/X.Y.Z); inferred when empty."
+        type: string
+        default: ""
 
 env:
   CACHE_KEY_PREFIX: ${{inputs.os}}-bzlmod_${{inputs.compiler}}_${{inputs.compiler == 'clang' && inputs.llvm_version || ''}}_${{inputs.compiler == 'gcc' && inputs.gcc_version || ''}}_${{inputs.bazel_config}}_bazel${{inputs.bazel_version}}
@@ -290,17 +294,35 @@ jobs:
             --test_tag_filters=-lfs,-fuzz-test
           cp "$(bazel ${BAZEL_INIT} info output_path)/_coverage/_coverage_report.dat" coverage.lcov
 
-          genhtml coverage.lcov \
+          coverage_page="${{ inputs.coverage_target }}"
+          if [ -z "${coverage_page}" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            coverage_page="main"
+          elif [ -z "${coverage_page}" ]; then
+            pr_number="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" --jq '.[0].number // empty')"
+            if [[ "${pr_number}" =~ ^[1-9][0-9]*$ ]]; then
+              coverage_page="pr/${pr_number}"
+            fi
+          fi
+          if [ -n "${coverage_page}" ]; then
+            printf '%s\n' "${coverage_page}" >coverage-target.txt
+          fi
+
+          python3 tools/coverage_sources.py coverage.lcov coverage-html.lcov \
+            --policy coverage_policy.json \
+            --source-root coverage-source-tree
+          genhtml coverage-html.lcov \
             --branch-coverage \
             --demangle-cpp \
             --function-coverage \
-            --ignore-errors negative \
+            --hierarchical \
+            --ignore-errors negative,unmapped \
             --legend \
-            --output-directory coverage-html \
+            --output-directory coverage-html/lcov \
+            --prefix "${PWD}/coverage-source-tree" \
             --show-details \
             --title "mbo production coverage"
 
-          python3 -m unittest tools/coverage_test.py
+          python3 -m unittest tools/coverage_test.py tools/coverage_sources_test.py tools/coverage_index_test.py
           BASE_ARGS=()
           if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
             if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
@@ -311,22 +333,16 @@ jobs:
           fi
           python3 tools/coverage.py \
             --lcov coverage.lcov \
+            --json-summary coverage-html/coverage-summary.json \
             --policy coverage_policy.json \
             --summary coverage-summary.md \
             "${BASE_ARGS[@]}"
           {
             echo "### Production coverage"
             echo
-            coverage_page=""
-            if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
-              coverage_page="main"
-            else
-              pr_number="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" --jq '.[0].number // empty')"
-              if [[ "${pr_number}" =~ ^[1-9][0-9]*$ ]]; then
-                coverage_page="pr${pr_number}"
-              fi
-            fi
             if [ -n "${coverage_page}" ]; then
+              python3 tools/coverage_index.py report \
+                coverage-html/coverage-summary.json "${coverage_page}" coverage-html/index.html
               echo "[Browse the HTML coverage report](https://helly25.github.io/mbo/coverage/${coverage_page}/)."
               echo
             fi
@@ -344,7 +360,9 @@ jobs:
             coverage-html/
             coverage.lcov
             coverage-summary.md
+            coverage-target.txt
           retention-days: 14
+          if-no-files-found: error
 
       - name: Save Bazel ${{inputs.bazel_config}} disk cache
         uses: actions/cache/save@v5

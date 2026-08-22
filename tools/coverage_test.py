@@ -11,6 +11,22 @@ import coverage as coverage_tool  # noqa: E402
 
 
 class CoverageTest(unittest.TestCase):
+    def test_json_summary_contains_policy_and_coverable_patch(self):
+        metric = {
+            "lines": {"covered": 9, "total": 10, "percent": 90.0},
+            "functions": {"covered": 1, "total": 1, "percent": 100.0},
+            "branches": {"covered": 3, "total": 4, "percent": 75.0},
+        }
+        summary = coverage_tool.json_summary(
+            {"overall": metric},
+            {"overall": {"lines": 88}},
+            {"overall": {"lines": 90}},
+            metric,
+        )
+        self.assertEqual(summary["schema"], 1)
+        self.assertEqual(summary["measurements"]["overall"], metric)
+        self.assertEqual(summary["patch"], metric)
+
     def test_parse_filter_and_measure(self):
         with tempfile.TemporaryDirectory() as directory:
             report = Path(directory) / "coverage.lcov"

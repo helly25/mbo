@@ -9,7 +9,19 @@ on:
 permissions: read-all
 
 jobs:
+  coverage:
+    secrets: inherit
+    uses: ./.github/workflows/test.yml
+    with:
+      continue-on-error: false
+      os: ubuntu-latest
+      compiler: gcc
+      gcc_version: 14
+      bazel_config: coverage
+      coverage_target: ${{ format('tag/{0}', github.ref_name) }}
+
   release:
+    needs: coverage
     uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7
     permissions:
       contents: write
