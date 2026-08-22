@@ -362,6 +362,7 @@ jobs:
 
       - name: Cleanup old caches
         if: ${{!startsWith(github.ref, 'refs/tags/') && steps.cache_restore.outputs.cache-hit}}
+        continue-on-error: true
         run: |
           set -euo pipefail
           PREFIX="${{env.CACHE_KEY_PREFIX}}-${{github.ref}}"
