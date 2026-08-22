@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "target": "pr/351",
+  "source": {
+    "created_at": "1970-01-01T00:00:00Z",
+    "started_at": "1970-01-01T00:00:00Z",
+    "completed_at": "1970-01-01T00:00:00Z",
+    "run_id": 0,
+    "run_attempt": 0,
+    "head_sha": "legacy"
+  },
+  "coverage": {
+    "lines": {
+      "covered": 6250,
+      "total": 6588,
+      "percent": 94.87
+    },
+    "functions": {
+      "covered": 10909,
+      "total": 11975,
+      "percent": 91.1
+    },
+    "branches": {
+      "covered": 10399,
+      "total": 16419,
+      "percent": 63.34
+    }
+  }
+}
