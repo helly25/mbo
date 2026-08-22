@@ -14,6 +14,8 @@ also updates this file to the completed state.
   - Use operation-dependent exception specifications and leave a valid empty
     state after failed replacement construction.
   - Cover all state transitions, aliasing, and throwing construction.
+  - Document mbo's exception-free builds and exception-enabled public-header
+    compatibility contract.
   - PR: [#359](https://github.com/helly25/mbo/pull/359).
 - [x] Make single- and double-quote parsing options independent.
   - Honor each quote-enable option without coupling it to the other.

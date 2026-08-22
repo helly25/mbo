@@ -13,9 +13,9 @@ The C++ library is organized in functional groups each residing in their own dir
   - `namespace mbo::config`
   - mbo/config:config_cc, mbo/config/config.h
     - Custom Bazel flag `--//mbo/config:limited_ordered_max_unroll_capacity` which controls the maximum unroll size for `LimitedOrdered` and thus `LimitedMap` and `LimitedSet`.
-    - Custom Bazel flag `--//mbo/config:require_throws` which controls whether `MBO_CONFIG_REQUIRE` throw exceptions or use crash logging (the default `False` or `0`). This mostly affects containers.
+    - Custom Bazel flag `--//mbo/config:require_throws` which controls whether `MBO_CONFIG_REQUIRE` throws exceptions or uses crash logging (the default `False` or `0`). The repository itself compiles with `-fno-exceptions`, where requirements always use crash logging; throwing behavior is available to consumers that enable exceptions. This mostly affects containers.
   - mbo/config:require_cc, mbo/config/require.h
-    - Marcos `MBO_CONFIG_REQUIRE(condition, message)` which allows to check a `condition` and either throw an exception or crash with Abseil FATAL logging. The behavior is controlled by `--//mbo/config:require_throws`.
+    - Macro `MBO_CONFIG_REQUIRE(condition, message)` which checks a `condition` and either throws an exception or crashes with Abseil FATAL logging. Throwing requires both `--//mbo/config:require_throws=true` and an exception-enabled consumer build.
 - Container
   - `namespace mbo::container`
   - mbo/container:any_scan_cc, mbo/container/any_scan.h
