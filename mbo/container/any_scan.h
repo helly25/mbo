@@ -422,16 +422,20 @@ class AnyScanImpl {
       // That means we bypass any protection an iterator may have, but we can make this function
       // `noexcept` assuming the iterator is noexcept for access. On the other hand we expect that
       // out of bounds access may actually raise. So we effectively side step such exceptions.
-      ABSL_CHECK_NE(funcs_.curr, nullptr);  // NOLINT(*-missing-default-case)
-      ABSL_CHECK(funcs_.more());
+      // CHECK failures abort before GCC can flush coverage counters, so only the successful guard
+      // path can appear in LCOV. The existing iterator tests exercise that path.
+      ABSL_CHECK_NE(funcs_.curr, nullptr);  // NOLINT(*-missing-default-case) LCOV_EXCL_BR_LINE
+      ABSL_CHECK(funcs_.more());            // LCOV_EXCL_BR_LINE
       return funcs_.curr();
     }
 
     value_type operator*() const noexcept
     requires(!kAccessByRef)
     {
-      ABSL_CHECK_NE(funcs_.curr, nullptr);  // NOLINT(*-missing-default-case)
-      ABSL_CHECK(funcs_.more());
+      // CHECK failures abort before GCC can flush coverage counters, so only the successful guard
+      // path can appear in LCOV. The existing iterator tests exercise that path.
+      ABSL_CHECK_NE(funcs_.curr, nullptr);  // NOLINT(*-missing-default-case) LCOV_EXCL_BR_LINE
+      ABSL_CHECK(funcs_.more());            // LCOV_EXCL_BR_LINE
       return value_type(funcs_.curr());
     }
 

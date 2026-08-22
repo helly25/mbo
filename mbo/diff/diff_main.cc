@@ -237,7 +237,8 @@ Diff::Options MakeDiffOptions() {
       Diff::Options::ParseOutputFormatFlag(absl::GetFlag(FLAGS_format));
   ABSL_QCHECK(output_format) << "Unknown format";
   if (absl::GetFlag(FLAGS_algorithm) == "unified") {
-    ABSL_QCHECK_EQ(output_format, Diff::Options::OutputFormat::kUnified)
+    // The CLI tests exercise both outcomes, but QCHECK failure aborts before GCC flushes counters.
+    ABSL_QCHECK_EQ(output_format, Diff::Options::OutputFormat::kUnified)  // LCOV_EXCL_BR_LINE
         << "The deprecated '--algorithm=unified' alias implies '--format=unified'.";
   }
   const std::optional<Diff::Options::FileHeaderUse> file_header_use =
