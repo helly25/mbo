@@ -150,6 +150,8 @@ TEST_F(ParseTest, ParseStringHonorsEnabledQuoteTypesIndependently) {
   static constexpr ParseOptions kBothEnabled{.split_at_any_of = ","};
   EXPECT_THAT(ParseString(kBothEnabled, R"("a,b")"), IsOkAndHolds(Pair("a,b", "")));
   EXPECT_THAT(ParseString(kBothEnabled, "'a,b'"), IsOkAndHolds(Pair("a,b", "")));
+  EXPECT_THAT(ParseString(kBothEnabled, R"("a'b")"), IsOkAndHolds(Pair("a'b", "")));
+  EXPECT_THAT(ParseString(kBothEnabled, R"('a"b')"), IsOkAndHolds(Pair("a\"b", "")));
 
   static constexpr ParseOptions kDoubleOnly{
       .split_at_any_of = ",",
