@@ -74,7 +74,7 @@ also updates this file to the completed state.
 
 ## Documentation and quality coverage
 
-- [x] Exercise the hash-internal runtime utilities directly.
+- [x] Exercise the hash-internal runtime utilities directly ([PR #356](https://github.com/helly25/mbo/pull/356)).
   - Cover every supported length for `LoadTail` and `LoadSmall` with
     volatile-derived runtime inputs.
   - Verify both lanes and the folded result of the 128-bit multiplication helpers.
