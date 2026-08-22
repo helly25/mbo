@@ -47,6 +47,9 @@ also updates this file to the completed state.
 
 ## Build, CI, and release engineering
 
+- [ ] Update the compile-command extractor to deduplicate exec actions before source probing.
+  - Avoid misleading missing-generated-source warnings on cold-cache clang-tidy runs.
+  - Preserve exec-only generated sources while preferring equivalent target-configuration actions.
 - [x] Reduce external dependency warning noise in default builds.
   - Treat external headers consistently as system headers or apply narrowly
     scoped external-warning suppression.
