@@ -108,3 +108,4 @@ also updates this file to the completed state.
   - Exclude compiler-expanded branch pairs for the behaviorally covered
     `tstring` search fold expressions.
   - Remove the category-specific branch-coverage override.
+  - PR: [#355](https://github.com/helly25/mbo/pull/355).
