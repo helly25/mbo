@@ -83,3 +83,7 @@ also updates this file to the completed state.
 - [x] Add coverage reporting focused on uninstantiated templates and malformed
       input branches.
   - PR: [#343](https://github.com/helly25/mbo/pull/343).
+- [x] Make `mbo/testing` meet the general function-coverage minimum.
+  - Count the behaviorally covered `CapacityIs` description bodies once rather
+    than once for every compiler-generated container specialization.
+  - Remove the category-specific function-coverage override.
