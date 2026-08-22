@@ -19,11 +19,11 @@
 # in the configuration development actually targets.
 #
 # The extraction runs through `//bazelmod:refresh_compile_commands`, whose target
-# list carries `--config=clang-tidy` (`.bazelrc`: `--config=clang` plus an
-# explicit libc++). That is what puts the flags right at the source, so no
-# compiler override is needed: passing `--config=clang` on THIS command line
-# would not work, as it only configures the build of the extractor tool itself
-# and never reaches the `aquery` the tool runs internally.
+# list carries `--config=clang-tidy` (`.bazelrc`: `--config=clang`). That is what
+# puts the flags right at the source, so no compiler override is needed. The
+# outer `bazel run` uses the same config instead of first invalidating the
+# clang-tidy analysis cache to build the extractor in the default config. It
+# does not propagate into the `aquery`, so the target must carry it independently.
 #
 # The runtime `--bcce-*` flags below must follow `--`, or `bazel run` hands them
 # to bazel rather than to the tool.
@@ -51,5 +51,5 @@ if [ "$(uname -s)" = "Darwin" ]; then
   BCCE_ARGS+=("--bcce-copt=-isysroot${SDKROOT_PATH}")
 fi
 
-bazel run //bazelmod:refresh_compile_commands -- "${BCCE_ARGS[@]}"
+bazel run --config=clang-tidy //bazelmod:refresh_compile_commands -- "${BCCE_ARGS[@]}"
 echo "OK"

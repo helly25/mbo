@@ -47,6 +47,12 @@ also updates this file to the completed state.
 
 ## Build, CI, and release engineering
 
+- [x] Avoid an unnecessary Bazel configuration switch while generating the
+      clang-tidy compilation database.
+  - Build the extractor with the same `clang-tidy` configuration used by its
+    internal analysis query and the preceding CI build.
+  - Retain the extractor's intentional feature-only transition, which disables
+    parameter files, layering checks, and header-parsing actions for `aquery`.
 - [x] Update the compile-command extractor to deduplicate exec actions before source probing.
   - Avoid misleading missing-generated-source warnings on cold-cache clang-tidy runs.
   - Preserve exec-only generated sources while preferring equivalent target-configuration actions.
