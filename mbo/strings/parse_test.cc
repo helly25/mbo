@@ -146,6 +146,36 @@ TEST_F(ParseTest, ParseStringRemoveQuotes) {
   EXPECT_THAT(ParseString(kOpts, "'1,2',3"), IsOkAndHolds(Pair("'1,2',3", "")));
 }
 
+TEST_F(ParseTest, ParseStringHonorsEnabledQuoteTypesIndependently) {
+  static constexpr ParseOptions kBothEnabled{.split_at_any_of = ","};
+  EXPECT_THAT(ParseString(kBothEnabled, R"("a,b")"), IsOkAndHolds(Pair("a,b", "")));
+  EXPECT_THAT(ParseString(kBothEnabled, "'a,b'"), IsOkAndHolds(Pair("a,b", "")));
+  EXPECT_THAT(ParseString(kBothEnabled, R"("a'b")"), IsOkAndHolds(Pair("a'b", "")));
+  EXPECT_THAT(ParseString(kBothEnabled, R"('a"b')"), IsOkAndHolds(Pair("a\"b", "")));
+
+  static constexpr ParseOptions kDoubleOnly{
+      .split_at_any_of = ",",
+      .enable_single_quotes = false,
+  };
+  EXPECT_THAT(ParseString(kDoubleOnly, R"("a,b")"), IsOkAndHolds(Pair("a,b", "")));
+  EXPECT_THAT(ParseString(kDoubleOnly, "'a,b'"), IsOkAndHolds(Pair("'a", ",b'")));
+
+  static constexpr ParseOptions kSingleOnly{
+      .split_at_any_of = ",",
+      .enable_double_quotes = false,
+  };
+  EXPECT_THAT(ParseString(kSingleOnly, R"("a,b")"), IsOkAndHolds(Pair("\"a", ",b\"")));
+  EXPECT_THAT(ParseString(kSingleOnly, "'a,b'"), IsOkAndHolds(Pair("a,b", "")));
+
+  static constexpr ParseOptions kNeitherEnabled{
+      .split_at_any_of = ",",
+      .enable_double_quotes = false,
+      .enable_single_quotes = false,
+  };
+  EXPECT_THAT(ParseString(kNeitherEnabled, R"("a,b")"), IsOkAndHolds(Pair("\"a", ",b\"")));
+  EXPECT_THAT(ParseString(kNeitherEnabled, "'a,b'"), IsOkAndHolds(Pair("'a", ",b'")));
+}
+
 TEST_F(ParseTest, ParseStringAllowUnquoted) {
   ASSERT_THAT(ParseOptions().remove_quotes, true);
   ASSERT_THAT(ParseOptions().allow_unquoted, true);

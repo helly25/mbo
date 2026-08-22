@@ -21,27 +21,40 @@ jobs:
         # that would mean that the `test` workflow triggered for the same state will not find any
         # caches. That is because the `cache_cleanup` workflow is much faster and will most
         # likely finish during the initial `pre-commit` job of the `test` workflow.
-        # Not that last version for the head ref means last cache version per cache key prefix.
+        # Note that last version for the head ref means last cache version per cache key prefix.
         run: |
           set -euo pipefail
           echo "Fetching list of cache keys for head ref '${HEAD_REF}' on PR '${PULL_REQUEST}'."
           if [ "${HEAD_REF}" == "refs/heads/main" ]; then
-            cacheKeyPrefixList=$(gh cache list --ref refs/heads/main  --limit 250 --json id,key,ref,createdAt --jq "[map((.ref as \$ref|.key|split(\"-\")|index(\$ref) as \$idx|select(.|\$idx)|.[0:\$idx+1]|join(\"-\")) as \$prefix|.prefix=\$prefix)|.[]|.prefix]|sort|unique|.[]")
+            if ! cacheKeyPrefixList=$(gh cache list --ref refs/heads/main --limit 250 --json id,key,ref,createdAt --jq "[map((.ref as \$ref|.key|split(\"-\")|index(\$ref) as \$idx|select(.|\$idx)|.[0:\$idx+1]|join(\"-\")) as \$prefix|.prefix=\$prefix)|.[]|.prefix]|sort|unique|.[]" 2>&1); then
+              echo "::warning title=Cache cleanup skipped::Unable to list caches: ${cacheKeyPrefixList}"
+              exit 0
+            fi
             echo "Deleting all but last cache per key prefix for 'refs/heads/main'..."
             for cacheKeyPrefix in ${cacheKeyPrefixList}; do
-              cacheKeyList=$(gh cache list --ref "${HEAD_REF}" --limit 250 --json id,key,createdAt |
-                python3 tools/cache_cleanup.py "${cacheKeyPrefix}")
+              if ! cacheJson=$(gh cache list --ref "${HEAD_REF}" --limit 250 --json id,key,createdAt 2>&1); then
+                echo "::warning title=Cache cleanup skipped::Unable to list caches: ${cacheJson}"
+                exit 0
+              fi
+              cacheKeyList=$(printf '%s' "${cacheJson}" | python3 tools/cache_cleanup.py "${cacheKeyPrefix}")
               for cacheKey in ${cacheKeyList}; do
                 echo "Deleting cache: ${cacheKey}"
-                gh cache delete "${cacheKey}" || echo "Error deleting: ${cacheKey}."
+                if ! deleteError=$(gh cache delete "${cacheKey}" 2>&1); then
+                  echo "::warning title=Cache deletion failed::Cache ${cacheKey}: ${deleteError}"
+                fi
               done
             done
           else
-            cacheKeyList=$(gh cache list --ref "${HEAD_REF}" --limit 250 --json id --jq '.[].id')
+            if ! cacheKeyList=$(gh cache list --ref "${HEAD_REF}" --limit 250 --json id --jq '.[].id' 2>&1); then
+              echo "::warning title=Cache cleanup skipped::Unable to list caches: ${cacheKeyList}"
+              exit 0
+            fi
             echo "Deleting all caches for '${HEAD_REF}'..."
             for cacheKey in ${cacheKeyList}; do
               echo "Deleting cache: ${cacheKey}"
-              gh cache delete "${cacheKey}" || echo "Error deleting: ${cacheKey}."
+              if ! deleteError=$(gh cache delete "${cacheKey}" 2>&1); then
+                echo "::warning title=Cache deletion failed::Cache ${cacheKey}: ${deleteError}"
+              fi
             done
           fi
           echo "Done"
@@ -57,13 +70,21 @@ jobs:
           closedBeforeDate="$(date -Iminutes --date=-4hours)"
           closedAfterDate="$(date -Iminutes --date=-14days)"
           echo "Fetching list of branch names for PRs closed before: ${closedBeforeDate}."
-          closedPrList=$(gh pr list -s closed --json headRefName,closedAt --jq "map(select(.closedAt > \"${closedAfterDate}\" and .closedAt < \"${closedBeforeDate}\"))|.[].headRefName")
+          if ! closedPrList=$(gh pr list -s closed --json headRefName,closedAt --jq "map(select(.closedAt > \"${closedAfterDate}\" and .closedAt < \"${closedBeforeDate}\"))|.[].headRefName" 2>&1); then
+            echo "::warning title=Cache cleanup skipped::Unable to list closed pull requests: ${closedPrList}"
+            exit 0
+          fi
           for closedPr in ${closedPrList}; do
             echo "Deleting caches for '${closedPr}'..."
-            cacheKeyList=$(gh cache list --ref "refs/heads/${closedPr}" --limit 250 --json id --jq '.[].id')
+            if ! cacheKeyList=$(gh cache list --ref "refs/heads/${closedPr}" --limit 250 --json id --jq '.[].id' 2>&1); then
+              echo "::warning title=Cache cleanup skipped::Unable to list caches for '${closedPr}': ${cacheKeyList}"
+              continue
+            fi
             for cacheKey in ${cacheKeyList}; do
               echo "Deleting cache: '${cacheKey}'"
-              gh cache delete "${cacheKey}" || echo "Error deleting: '${cacheKey}'."
+              if ! deleteError=$(gh cache delete "${cacheKey}" 2>&1); then
+                echo "::warning title=Cache deletion failed::Cache '${cacheKey}': ${deleteError}"
+              fi
             done
           done
         env:
