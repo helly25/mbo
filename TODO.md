@@ -47,6 +47,10 @@ also updates this file to the completed state.
 
 ## Build, CI, and release engineering
 
+- [x] Update the compile-command extractor to deduplicate exec actions before source probing.
+  - Avoid misleading missing-generated-source warnings on cold-cache clang-tidy runs.
+  - Preserve exec-only generated sources while preferring equivalent target-configuration actions.
+  - PR: [#352](https://github.com/helly25/mbo/pull/352).
 - [x] Reduce external dependency warning noise in default builds.
   - Treat external headers consistently as system headers or apply narrowly
     scoped external-warning suppression.
@@ -68,6 +72,11 @@ also updates this file to the completed state.
   - Adapt the final xff policy set through PR #612 to mbo's human-led workflow.
   - Keep project-specific conventions and omit xff-specific CLI rules.
   - PR: [#350](https://github.com/helly25/mbo/pull/350).
+- [x] Publish durable, indexed coverage reports for main, pull requests, and releases.
+  - Group the detailed LCOV tree by the same module categories as the policy report.
+  - Retain source/run metadata and prevent stale workflow completions from replacing newer reports.
+  - Provide a browsable index with report source, completion time, commit, workflow run, and metrics.
+  - PR: [#351](https://github.com/helly25/mbo/pull/351).
 - [x] Correct existing README and contributing-guide spelling errors and add a
       lightweight documentation spell-checking hook.
   - PR: [#335](https://github.com/helly25/mbo/pull/335).
