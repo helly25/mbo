@@ -236,9 +236,11 @@ struct tstring final {
       return npos;
     } else {
       using OStr = tstring<Other...>;
+      // The tests cover every semantic outcome; GCC expands the fold into one
+      // branch pair per character and template instantiation.
       return [&]<size_type... Is>(std::index_sequence<Is...>) constexpr noexcept {
         size_type pos = 0;
-        return ((++pos, OStr::is(substr<Is, olen>())) || ...) ? pos - 1 : npos;
+        return ((++pos, OStr::is(substr<Is, olen>())) || ...) ? pos - 1 : npos;  // LCOV_EXCL_BR_LINE
       }(std::make_index_sequence<num_chars - olen + 1>{});
     }
   }
@@ -257,7 +259,7 @@ struct tstring final {
       constexpr size_type len = num_chars - olen;
       return [&]<size_type... I>(std::index_sequence<I...>) constexpr noexcept {
         size_type pos = num_chars - olen + 1;
-        return ((--pos, OStr::is(substr<len - I, olen>())) || ...) ? pos : npos;
+        return ((--pos, OStr::is(substr<len - I, olen>())) || ...) ? pos : npos;  // LCOV_EXCL_BR_LINE
       }(std::make_index_sequence<len + 1>{});
     }
   }
@@ -274,7 +276,7 @@ struct tstring final {
       // This could use `find` but the local implementation highlights that
       // no instance of `tstring<Other...>` is being used.
       return [&]<size_type... Is>(std::index_sequence<Is...>) constexpr noexcept {
-        return (tstring<Other...>::is(substr<Is, other_len>()) || ...);
+        return (tstring<Other...>::is(substr<Is, other_len>()) || ...);  // LCOV_EXCL_BR_LINE
       }(std::make_index_sequence<num_chars - other_len + 1>{});
     }
   }
