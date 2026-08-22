@@ -59,7 +59,11 @@ MBO_FORCE_INLINE constexpr uint64_t Fmix64(uint64_t val) noexcept {
 // Both paths produce identical values; the ConstexprMatchesRuntime test guards
 // this equality.
 MBO_FORCE_INLINE constexpr uint64_t Load64(const char* ptr) noexcept {
-  if (!std::is_constant_evaluated()) {
+  // Coverage runs on little-endian machines and cannot observe compile-time
+  // execution. GCC nevertheless emits a branch pair for both alternatives at
+  // every always-inline call site. ConstexprMatchesRuntime and the direct load
+  // tests cover their behavior without counting those unreachable records.
+  if (!std::is_constant_evaluated()) {  // LCOV_EXCL_BR_LINE
     if constexpr (std::endian::native == std::endian::little) {
       uint64_t result = 0;
       std::memcpy(&result, ptr, 8);
@@ -67,7 +71,7 @@ MBO_FORCE_INLINE constexpr uint64_t Load64(const char* ptr) noexcept {
     }
   }
   uint64_t result = 0;
-  for (std::size_t i = 0; i < 8; ++i) {
+  for (std::size_t i = 0; i < 8; ++i) {  // LCOV_EXCL_BR_LINE
     result |= static_cast<uint64_t>(static_cast<uint8_t>(ptr[i])) << (i * 8U);
   }
   return result;
@@ -117,7 +121,9 @@ MBO_FORCE_INLINE constexpr uint64_t Load64BE(const char* ptr) noexcept {
 
 // Loads 4 bytes as a **little-endian** `uint32_t` (same rationale as `Load64`).
 MBO_FORCE_INLINE constexpr uint32_t Load32(const char* ptr) noexcept {
-  if (!std::is_constant_evaluated()) {
+  // See Load64: GCC duplicates these unreachable constexpr/big-endian branch
+  // records for every always-inline call site.
+  if (!std::is_constant_evaluated()) {  // LCOV_EXCL_BR_LINE
     if constexpr (std::endian::native == std::endian::little) {
       uint32_t result = 0;
       std::memcpy(&result, ptr, 4);
@@ -125,7 +131,7 @@ MBO_FORCE_INLINE constexpr uint32_t Load32(const char* ptr) noexcept {
     }
   }
   uint32_t result = 0;
-  for (std::size_t i = 0; i < 4; ++i) {
+  for (std::size_t i = 0; i < 4; ++i) {  // LCOV_EXCL_BR_LINE
     result |= static_cast<uint32_t>(static_cast<uint8_t>(ptr[i])) << (i * 8U);
   }
   return result;
