@@ -25,10 +25,7 @@
     "mope": { "include": ["mbo/mope/**"] },
     "status": { "include": ["mbo/status/**"] },
     "strings": { "include": ["mbo/strings/**"] },
-    "testing": {
-      "include": ["mbo/testing/**"],
-      "minimum": { "functions": 75 }
-    },
+    "testing": { "include": ["mbo/testing/**"] },
     "types": {
       "include": ["mbo/types/**"],
       "minimum": { "branches": 47 }

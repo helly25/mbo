@@ -236,12 +236,15 @@ class CapacityIsMatcher {
     explicit Impl(const CapacityMatcher& capacity_matcher)
         : capacity_matcher_(::testing::MatcherCast<CapacityType>(capacity_matcher)) {}
 
-    void DescribeTo(::std::ostream* os) const override {
+    // The description behavior is covered by CapacityIsDescriptions. GCC emits
+    // another identical function for every matched container type, so counting
+    // those specializations would measure type usage rather than source behavior.
+    void DescribeTo(::std::ostream* os) const override {  // LCOV_EXCL_FUNC_LINE
       *os << "has a capacity that ";
       capacity_matcher_.DescribeTo(os);
     }
 
-    void DescribeNegationTo(::std::ostream* os) const override {
+    void DescribeNegationTo(::std::ostream* os) const override {  // LCOV_EXCL_FUNC_LINE
       *os << "has a capacity that ";
       capacity_matcher_.DescribeNegationTo(os);
     }
