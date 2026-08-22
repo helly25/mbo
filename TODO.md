@@ -123,3 +123,4 @@ also updates this file to the completed state.
     once per source definition.
   - Exclude only quick-exit functions whose process cannot flush coverage data.
   - Remove the category-specific function-coverage override.
+  - PR: [#358](https://github.com/helly25/mbo/pull/358).
