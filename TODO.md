@@ -87,3 +87,4 @@ also updates this file to the completed state.
   - Count the behaviorally covered `CapacityIs` description bodies once rather
     than once for every compiler-generated container specialization.
   - Remove the category-specific function-coverage override.
+  - PR: [#353](https://github.com/helly25/mbo/pull/353).
