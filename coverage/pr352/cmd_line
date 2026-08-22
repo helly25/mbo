@@ -1,0 +1,1 @@
+genhtml coverage.lcov --branch-coverage --demangle-cpp --function-coverage --ignore-errors negative --legend --output-directory coverage-html --show-details --title 'mbo production coverage'
