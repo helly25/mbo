@@ -11,6 +11,7 @@ also updates this file to the completed state.
   - Honor each quote-enable option without coupling it to the other.
   - Treat disabled quote characters as ordinary unquoted input.
   - Cover all four option combinations with separator-sensitive assertions.
+  - PR: [#349](https://github.com/helly25/mbo/pull/349).
 - [x] Correct hexadecimal escape parsing for alphabetic digits.
   - Map lowercase and uppercase `A`-`F` to values 10-15.
   - Cover mixed-case, C++23 braced, byte-boundary, and overflow inputs.
