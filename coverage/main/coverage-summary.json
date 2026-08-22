@@ -4,8 +4,8 @@
     "overall": {
       "lines": {
         "covered": 6250,
-        "total": 6588,
-        "percent": 94.87
+        "total": 6586,
+        "percent": 94.9
       },
       "functions": {
         "covered": 10905,
@@ -13,9 +13,9 @@
         "percent": 91.89
       },
       "branches": {
-        "covered": 10239,
-        "total": 15873,
-        "percent": 64.51
+        "covered": 9550,
+        "total": 13113,
+        "percent": 72.83
       }
     },
     "container": {
@@ -89,8 +89,8 @@
     "hash": {
       "lines": {
         "covered": 1007,
-        "total": 1024,
-        "percent": 98.34
+        "total": 1022,
+        "percent": 98.53
       },
       "functions": {
         "covered": 232,
@@ -98,9 +98,9 @@
         "percent": 99.57
       },
       "branches": {
-        "covered": 1395,
-        "total": 3496,
-        "percent": 39.9
+        "covered": 706,
+        "total": 736,
+        "percent": 95.92
       }
     },
     "json": {
@@ -252,7 +252,7 @@
     "hash": {
       "lines": 88,
       "functions": 80,
-      "branches": 39
+      "branches": 60
     },
     "json": {
       "lines": 88,
