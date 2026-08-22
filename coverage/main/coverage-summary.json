@@ -8,9 +8,9 @@
         "percent": 94.87
       },
       "functions": {
-        "covered": 10909,
-        "total": 11975,
-        "percent": 91.1
+        "covered": 10905,
+        "total": 11867,
+        "percent": 91.89
       },
       "branches": {
         "covered": 10399,
@@ -195,9 +195,9 @@
         "percent": 90.72
       },
       "functions": {
-        "covered": 614,
-        "total": 809,
-        "percent": 75.9
+        "covered": 610,
+        "total": 701,
+        "percent": 87.02
       },
       "branches": {
         "covered": 114,
@@ -281,7 +281,7 @@
     },
     "testing": {
       "lines": 88,
-      "functions": 75,
+      "functions": 80,
       "branches": 60
     },
     "types": {
