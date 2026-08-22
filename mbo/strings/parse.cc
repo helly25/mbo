@@ -112,30 +112,38 @@ absl::StatusOr<char> ParseHex(std::string_view& data) {
 
 enum class Quotes { kNone, kSingle, kDouble };
 
+bool IsEnabledQuote(const ParseOptions& options, char chr) {
+  return (chr == '"' && options.enable_double_quotes) || (chr == '\'' && options.enable_single_quotes);
+}
+
 void HandleQuotes(const ParseOptions& options, char chr, Quotes& quotes, std::string& result) {
-  if (options.enable_double_quotes) {
-    switch (quotes) {
-      case Quotes::kDouble:
-        if (chr == '"') {
-          quotes = Quotes::kNone;
-        } else {
-          result += chr;
-          return;
-        }
-        break;
-      case Quotes::kNone: quotes = chr == '"' ? Quotes::kDouble : Quotes::kSingle; break;
-      case Quotes::kSingle:
-        if (chr == '\'') {
-          quotes = Quotes::kNone;
-        } else {
-          result += chr;
-          return;
-        }
-        break;
-    }
-    if (!options.remove_quotes) {
-      result += chr;
-    }
+  switch (quotes) {
+    case Quotes::kDouble:
+      if (chr == '"') {
+        quotes = Quotes::kNone;
+      } else {
+        result += chr;
+        return;
+      }
+      break;
+    case Quotes::kSingle:
+      if (chr == '\'') {
+        quotes = Quotes::kNone;
+      } else {
+        result += chr;
+        return;
+      }
+      break;
+    case Quotes::kNone:
+      if (!IsEnabledQuote(options, chr)) {
+        result += chr;
+        return;
+      }
+      quotes = chr == '"' ? Quotes::kDouble : Quotes::kSingle;
+      break;
+  }
+  if (!options.remove_quotes) {
+    result += chr;
   }
 }
 
@@ -153,7 +161,7 @@ absl::StatusOr<std::string> ParseString(const ParseOptions& options, std::string
   while (!data.empty()) {
     char chr = data.front();  // Cannot use `PopChar`, need the char left in-place
     if (quotes == Quotes::kNone
-        && (StopParsing(options, data) || (!options.allow_unquoted && chr != '\'' && chr != '"'))) {
+        && (StopParsing(options, data) || (!options.allow_unquoted && !IsEnabledQuote(options, chr)))) {
       return result;
     }
     data.remove_prefix(1);
