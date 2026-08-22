@@ -7,13 +7,14 @@ also updates this file to the completed state.
 
 ## Correctness
 
-- [ ] Make `OptionalDataOrRef` lifetime and exception handling safe.
+- [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.
   - Handle self-move and return `*this` from null assignment.
   - Use operation-dependent exception specifications and leave a valid empty
     state after failed replacement construction.
   - Cover all state transitions, aliasing, and throwing construction.
+  - PR: [#359](https://github.com/helly25/mbo/pull/359).
 - [x] Make single- and double-quote parsing options independent.
   - Honor each quote-enable option without coupling it to the other.
   - Treat disabled quote characters as ordinary unquoted input.
