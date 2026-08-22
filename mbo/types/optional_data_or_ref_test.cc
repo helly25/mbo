@@ -18,7 +18,10 @@
 #include <concepts>  // IWYU pragma: keep
 #include <optional>
 #include <set>
+#include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -36,6 +39,53 @@ using ::testing::Eq;
 using ::testing::Not;
 
 struct OptionalDataOrRefTest : ::testing::Test {};
+
+struct ThrowingValue {
+  explicit ThrowingValue(int new_value) : value(new_value) { MaybeThrow(); }
+
+  ThrowingValue(const ThrowingValue& other) : value(other.value) { MaybeThrow(); }
+
+  ThrowingValue(ThrowingValue&& other) noexcept(false) : value(other.value) { MaybeThrow(); }
+
+  ThrowingValue& operator=(const ThrowingValue&) = default;
+  ThrowingValue& operator=(ThrowingValue&&) = default;
+  ~ThrowingValue() = default;
+
+  static void MaybeThrow() {
+    if (throw_on_construction) {
+      throw std::runtime_error("requested construction failure");
+    }
+  }
+
+  static inline bool throw_on_construction = false;
+  int value;
+};
+
+struct NothrowValue {
+  explicit NothrowValue(int new_value) noexcept : value(new_value) {}
+
+  int value;
+};
+
+template<typename T, typename RefT>
+void MoveAssign(OptionalDataOrRef<T, RefT>& lhs, OptionalDataOrRef<T, RefT>& rhs) {
+  lhs = std::move(rhs);
+}
+
+template<typename Func>
+bool ThrowsRuntimeError(Func&& func) {
+  try {
+    std::forward<Func>(func)();
+  } catch (const std::runtime_error&) {
+    return true;
+  }
+  return false;
+}
+
+static_assert(noexcept(std::declval<OptionalDataOrRef<NothrowValue>&>().emplace(1)));
+static_assert(!noexcept(std::declval<OptionalDataOrRef<ThrowingValue>&>().emplace(1)));
+static_assert(noexcept(OptionalDataOrRef<NothrowValue>(NothrowValue{1})));
+static_assert(!noexcept(OptionalDataOrRef<ThrowingValue>(ThrowingValue{1})));
 
 TEST_F(OptionalDataOrRefTest, Constexpr) {
   {
@@ -309,6 +359,99 @@ TEST_F(OptionalDataOrRefTest, AsData) {
   EXPECT_THAT(ref.HoldsNullopt(), false);
   EXPECT_THAT(ref.HoldsReference(), false);
   EXPECT_THAT(ref.value().one, "Two");
+}
+
+TEST_F(OptionalDataOrRefTest, CopyAndMovePreserveStateSemantics) {
+  OptionalDataOrRef<std::string> owned(std::string("owned"));
+  const OptionalDataOrRef<std::string> owned_copy(owned);
+  EXPECT_THAT(owned_copy.HoldsData(), true);
+  EXPECT_THAT(owned_copy, "owned");
+
+  const OptionalDataOrRef<std::string> moved(std::move(owned));
+  EXPECT_THAT(moved.HoldsData(), true);
+  EXPECT_THAT(moved, "owned");
+  // NOLINTNEXTLINE(bugprone-use-after-move,clang-analyzer-cplusplus.Move): moved-from state is under test.
+  EXPECT_THAT(owned, IsNullopt());
+
+  OptionalDataOrRef<std::string> assigned;
+  assigned = owned_copy;
+  EXPECT_THAT(assigned.HoldsData(), true);
+  OptionalDataOrRef<std::string> move_assigned;
+  move_assigned = std::move(assigned);
+  EXPECT_THAT(move_assigned, "owned");
+  // NOLINTNEXTLINE(bugprone-use-after-move,clang-analyzer-cplusplus.Move): moved-from state is under test.
+  EXPECT_THAT(assigned, IsNullopt());
+
+  std::string borrowed = "borrowed";
+  OptionalDataOrRef<std::string> referenced(borrowed);
+  const OptionalDataOrRef<std::string> reference_copy(referenced);
+  const OptionalDataOrRef<std::string> reference_move(std::move(referenced));
+  EXPECT_THAT(reference_copy.HoldsReference(), true);
+  EXPECT_THAT(reference_move.HoldsReference(), true);
+  // NOLINTNEXTLINE(bugprone-use-after-move,clang-analyzer-cplusplus.Move): borrowed move preserves the source.
+  EXPECT_THAT(referenced.HoldsReference(), true);
+  borrowed = "changed";
+  EXPECT_THAT(reference_copy, "changed");
+  EXPECT_THAT(reference_move, "changed");
+
+  OptionalDataOrRef<std::string> reference_assigned;
+  reference_assigned = reference_copy;
+  OptionalDataOrRef<std::string> reference_move_assigned;
+  reference_move_assigned = std::move(reference_assigned);
+  EXPECT_THAT(reference_move_assigned.HoldsReference(), true);
+  // NOLINTNEXTLINE(bugprone-use-after-move,clang-analyzer-cplusplus.Move): borrowed move preserves the source.
+  EXPECT_THAT(reference_assigned.HoldsReference(), true);
+}
+
+TEST_F(OptionalDataOrRefTest, SelfMoveAndOwnedValueAliasingPreserveData) {
+  OptionalDataOrRef<std::string> ref(std::string("value"));
+  MoveAssign(ref, ref);
+  EXPECT_THAT(ref.HoldsData(), true);
+  EXPECT_THAT(ref, "value");
+
+  ref = std::move(*ref);
+  EXPECT_THAT(ref.HoldsData(), true);
+  EXPECT_THAT(ref, "value");
+}
+
+TEST_F(OptionalDataOrRefTest, NulloptAssignmentReturnsSelf) {
+  OptionalDataOrRef<int> ref(42);
+  OptionalDataOrRef<int>& result = (ref = std::nullopt);
+  EXPECT_THAT(std::addressof(result), Eq(std::addressof(ref)));
+  EXPECT_THAT(ref.HoldsNullopt(), true);
+}
+
+TEST_F(OptionalDataOrRefTest, FailedEmplaceLeavesValidEmptyState) {
+  OptionalDataOrRef<ThrowingValue> ref(ThrowingValue{1});
+  ThrowingValue::throw_on_construction = true;
+  const bool caught = ThrowsRuntimeError([&ref] { ref.emplace(2); });
+  ThrowingValue::throw_on_construction = false;
+
+  EXPECT_THAT(caught, true);
+  EXPECT_THAT(ref.HoldsNullopt(), true);
+  ref.emplace(3);
+  EXPECT_THAT(ref.HoldsData(), true);
+  EXPECT_THAT(ref->value, 3);
+}
+
+TEST_F(OptionalDataOrRefTest, FailedCopyAndReferencePromotionLeaveValidEmptyState) {
+  const OptionalDataOrRef<ThrowingValue> source(ThrowingValue{1});
+  OptionalDataOrRef<ThrowingValue> target(ThrowingValue{2});
+  ThrowingValue::throw_on_construction = true;
+  const bool copy_caught = ThrowsRuntimeError([&source, &target] { target = source; });
+  ThrowingValue::throw_on_construction = false;
+  EXPECT_THAT(copy_caught, true);
+  EXPECT_THAT(source.HoldsData(), true);
+  EXPECT_THAT(target.HoldsNullopt(), true);
+
+  ThrowingValue borrowed(3);
+  OptionalDataOrRef<ThrowingValue> reference(borrowed);
+  ThrowingValue::throw_on_construction = true;
+  const bool promotion_caught = ThrowsRuntimeError([&reference] { reference.as_data(4); });
+  ThrowingValue::throw_on_construction = false;
+  EXPECT_THAT(promotion_caught, true);
+  EXPECT_THAT(reference.HoldsNullopt(), true);
+  EXPECT_THAT(borrowed.value, 3);
 }
 
 // NOLINTEND(*-magic-numbers)

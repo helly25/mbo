@@ -7,6 +7,16 @@ also updates this file to the completed state.
 
 ## Correctness
 
+- [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
+  - Preserve its null, owned-data, and borrowed-reference states with automatic
+    lifetime management.
+  - Handle self-move and return `*this` from null assignment.
+  - Use operation-dependent exception specifications and leave a valid empty
+    state after failed replacement construction.
+  - Cover all state transitions, aliasing, and throwing construction.
+  - Document mbo's exception-free builds and exception-enabled public-header
+    compatibility contract.
+  - PR: [#359](https://github.com/helly25/mbo/pull/359).
 - [x] Make single- and double-quote parsing options independent.
   - Honor each quote-enable option without coupling it to the other.
   - Treat disabled quote characters as ordinary unquoted input.
@@ -74,6 +84,15 @@ also updates this file to the completed state.
 
 ## Documentation and quality coverage
 
+- [ ] Make `coverage_policy.json` the single source of truth for enforcement
+      and LCOV presentation limits, adopting the applicable parts of
+      [xff PR #631](https://github.com/helly25/xff/pull/631).
+  - Generate `genhtml`'s metric-specific high and medium color limits from the
+    authored coverage minima and a policy-owned warning gap.
+  - Use the generated LCOV configuration in both main/PR and release coverage
+    workflows, with validation and unit tests for every metric.
+  - Keep category floors and health targets inherited and composable so an
+    exception names only the metrics it changes.
 - [x] Exercise the hash-internal runtime utilities directly ([PR #356](https://github.com/helly25/mbo/pull/356)).
   - Cover every supported length for `LoadTail` and `LoadSmall` with
     volatile-derived runtime inputs.

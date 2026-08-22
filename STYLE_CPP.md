@@ -290,6 +290,28 @@ clang-format picks a layout per line; these habits steer it toward the readable 
 
 ## Error handling: `absl::Status` and the MBO status macros
 
+### Exception policy
+
+- **mbo's own builds are exception-free.** The repository-wide Bazel configuration
+  compiles C++ with `-fno-exceptions`; production mbo code must not depend on
+  throwing or catching exceptions for its normal control flow. Use
+  `absl::Status` / `absl::StatusOr` and the status macros below for recoverable
+  errors. `MBO_CONFIG_REQUIRE` uses fatal logging in this build.
+- **Public headers must remain compatible with exception-enabled consumers.** A
+  downstream project may compile template code with exceptions enabled, and an
+  operation supplied by its type `T` may throw. Do not hide that behind an
+  unconditional `noexcept`: derive the exception specification from the invoked
+  construction, assignment, comparison, or callable operation. The mbo type must
+  retain a valid state while the exception propagates.
+- **An exception-enabled test target is a narrow compatibility test.** A test may
+  add `copts = ["-fexceptions"]` when it must execute a throwing user operation to
+  verify the public-header contract above. Record that reason next to the target;
+  do not enable exceptions for ordinary tests or use such a target as evidence
+  that mbo production code itself may throw.
+- `--//mbo/config:require_throws=true` selects the throwing
+  `MBO_CONFIG_REQUIRE` behavior only when the consuming compilation also enables
+  exceptions. With `-fno-exceptions`, requirements always use fatal logging.
+
 Propagate errors with the macros from `mbo/status/status_macros.h`
 (`@helly25_mbo//mbo/status:status_macros_cc`), not a hand-written
 `if (!x.ok()) return x.status();`.
