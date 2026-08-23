@@ -14,6 +14,7 @@ also updates this file to the completed state.
     nullable storage.
   - Fix hashing and heterogeneous wrapper comparison when instantiated.
   - Derive comparison exception specifications from the wrapped operation.
+  - PR: [#362](https://github.com/helly25/mbo/pull/362).
 - [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.
