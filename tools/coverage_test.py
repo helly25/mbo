@@ -295,6 +295,29 @@ class CoverageTest(unittest.TestCase):
         with_lines["lines"] = {"covered": 0, "total": 1, "percent": 0.0}
         self.assertTrue(coverage_tool.has_coverage(with_lines, ("lines", "branches")))
 
+    def test_patch_enforces_only_metrics_with_coverable_data(self):
+        metrics = {
+            "lines": {"covered": 1, "total": 1, "percent": 100.0},
+            "functions": {"covered": 0, "total": 0, "percent": None},
+            "branches": {"covered": 0, "total": 0, "percent": None},
+        }
+        policies = {
+            "lines": coverage_tool.coverage_policy.MetricPolicy(95, 98, "medium"),
+            "branches": coverage_tool.coverage_policy.MetricPolicy(85, 90, "medium"),
+        }
+
+        self.assertEqual(
+            {"lines": policies["lines"]},
+            coverage_tool.policies_with_data(metrics, policies),
+        )
+        self.assertEqual(
+            [],
+            coverage_tool.failures(
+                {"patch": metrics},
+                {"patch": coverage_tool.policies_with_data(metrics, policies)},
+            ),
+        )
+
     def test_uncovered_patch_locations_are_sorted_and_deduplicated(self):
         files = {
             "mbo/b.cc": coverage_tool.FileCoverage(

@@ -275,6 +275,11 @@ def has_coverage(metrics: dict, names: tuple[str, ...]) -> bool:
     return any(metrics[name]["total"] for name in names)
 
 
+def policies_with_data(metrics: dict, policies: dict) -> dict:
+    """Returns only policies for metrics represented in a measurement row."""
+    return {metric: value for metric, value in policies.items() if metrics[metric]["total"]}
+
+
 def uncovered_patch_locations(
     files: dict[str, FileCoverage], changed: dict[str, set[int]]
 ) -> tuple[list[str], list[str]]:
@@ -405,10 +410,11 @@ def main(argv: list[str] | None = None) -> int:
         patch_policy = coverage_policy.resolve(policy.get("patch", {}), effective["overall"])
         patch_policy = {metric: patch_policy[metric] for metric in ("lines", "branches")}
         if has_coverage(patch, ("lines", "branches")):
+            enforced_patch_policy = policies_with_data(patch, patch_policy)
             text += "\n### Changed coverable lines\n\n" + markdown(
-                {"patch": patch}, {"patch": patch_policy}
+                {"patch": patch}, {"patch": enforced_patch_policy}
             )
-            patch_failures = failures({"patch": patch}, {"patch": patch_policy})
+            patch_failures = failures({"patch": patch}, {"patch": enforced_patch_policy})
             if patch_failures:
                 uncovered_lines, uncovered_branches = uncovered_patch_locations(files, changed)
     print(text, end="")
