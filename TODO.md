@@ -47,6 +47,7 @@ also updates this file to the completed state.
   - Preserve the historical behavior behind an explicit permissive API and a
     compatibility `Parse()` spelling.
   - Define full-line comments and retain comment characters within values.
+  - PR: [#370](https://github.com/helly25/mbo/pull/370).
 
 - [x] Make `GetContents` handle failed seeks and non-seekable inputs safely.
   - Check `seekg`/`tellg` before converting the size.
