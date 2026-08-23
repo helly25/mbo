@@ -303,7 +303,12 @@ cc_test(
 cc_test(
     name = "required_exception_test",
     srcs = ["required_exception_test.cc"],
-    copts = ["-fexceptions"],
+    # Clang on Darwin cannot unwind caught exceptions when ASan and UBSan are
+    # combined. Keep ASan, but omit UBSan instrumentation for this narrow test.
+    copts = [
+        "-fexceptions",
+        "-fno-sanitize=undefined",
+    ],
     deps = [
         ":required_cc",
         "@googletest//:gtest_main",
