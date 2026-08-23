@@ -103,6 +103,7 @@ also updates this file to the completed state.
     augmentation, status rendering, and every metric.
   - Keep category floors and health targets inherited and composable so an
     exception names only the metrics it changes.
+  - PR: [#360](https://github.com/helly25/mbo/pull/360).
 - [x] Exercise the hash-internal runtime utilities directly ([PR #356](https://github.com/helly25/mbo/pull/356)).
   - Cover every supported length for `LoadTail` and `LoadSmall` with
     volatile-derived runtime inputs.
