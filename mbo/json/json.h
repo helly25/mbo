@@ -531,8 +531,9 @@ class Json {
   const Json& at(std::size_t index) const { return (*this)[index]; }
 
   Json& at(std::string_view property) {
-    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");
-    MBO_CONFIG_REQUIRE(contains(property), "Property not present:") << "'" << property << "'.";
+    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");  // LCOV_EXCL_BR_LINE: fatal path is covered by death tests.
+    MBO_CONFIG_REQUIRE(contains(property), "Property not present:")  // LCOV_EXCL_BR_LINE: see above.
+        << "'" << property << "'.";
     return *std::get<Object>(data_).at(property);
   }
 
