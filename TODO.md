@@ -80,6 +80,7 @@ also updates this file to the completed state.
 - [x] Cancel validation runs superseded by a newer commit.
   - Use one concurrency group per pull request or ref.
   - Preserve every `main` and release run as a durable integration record.
+  - PR: [#374](https://github.com/helly25/mbo/pull/374).
 - [x] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.
