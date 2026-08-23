@@ -135,6 +135,7 @@ also updates this file to the completed state.
   - Promote project header, generated-header template, and `.bzl` changes to a
     full first-party translation-unit sweep.
   - Derive that sweep from the compilation database and test scope selection.
+  - Describe the local and CI checks consistently as enforcing gates.
   - PR: [#368](https://github.com/helly25/mbo/pull/368).
 - [x] Avoid an unnecessary Bazel configuration switch while generating the
       clang-tidy compilation database.

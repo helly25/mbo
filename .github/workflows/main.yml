@@ -56,9 +56,8 @@ jobs:
           # The `trunk` job runs the full `trunk check`; do not also run trunk
           # from pre-commit in CI (see the trunk-fmt hook). Likewise the
           # `clang-tidy` job owns clang-tidy: it needs a compile_commands.json
-          # this job deliberately does not build. `clang-tidy` is `stages:
-          # [manual]` today, so it is already absent here; naming it keeps that
-          # true when the hook is promoted to an automatic gate.
+          # this job deliberately does not build. Skip it here to avoid running
+          # the same enforcing gate without its required compilation database.
           SKIP: trunk-fmt,clang-tidy
       - uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
@@ -66,9 +65,8 @@ jobs:
   clang-tidy:
     needs: [trunk, pre-commit]
     runs-on: ubuntu-latest
-    # Note there is deliberately no job-level `continue-on-error`: building the
-    # compile DB must gate, so a broken extractor/toolchain fails this job. Only
-    # the findings themselves are tolerated, at the step below.
+    # There is deliberately no job-level `continue-on-error`: the compilation
+    # database, toolchain, parsing, and clang-tidy findings all gate the change.
     steps:
       - uses: actions/checkout@v6
         with:
