@@ -8,6 +8,13 @@ on:
 
 permissions: read-all
 
+# A new commit supersedes an older run for the same branch or pull request.
+# Never cancel main: its completed full-matrix result is an integration record,
+# and release tags run in the separate non-cancelling release workflow.
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   trunk:
     runs-on: ubuntu-latest

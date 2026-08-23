@@ -77,6 +77,9 @@ also updates this file to the completed state.
   - Prefer readable version references and require a documented reason for any
     commit-SHA pin.
   - PR: [#333](https://github.com/helly25/mbo/pull/333).
+- [x] Cancel validation runs superseded by a newer commit.
+  - Use one concurrency group per pull request or ref.
+  - Preserve every `main` and release run as a durable integration record.
 - [x] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.
