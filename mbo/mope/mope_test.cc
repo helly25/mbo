@@ -214,12 +214,28 @@ TEST_F(MopeTest, RangeRejectsZeroAndNonNumericOperands) {
   EXPECT_THAT(tpl.Expand(bad_operand).code(), absl::StatusCode::kInvalidArgument);
 }
 
+TEST_F(MopeTest, RangeRejectsSectionOperands) {
+  constexpr std::string_view kInput = "{{#index=section;3}}{{index}}{{/index}}";
+  Template tpl;
+  ASSERT_THAT(tpl.AddSection("section").ok(), IsTrue());
+  std::string output(kInput);
+  EXPECT_THAT(tpl.Expand(output).code(), absl::StatusCode::kInvalidArgument);
+}
+
 TEST_F(MopeTest, ConfiguredListExpandsValuesAndAJoiner) {
   constexpr std::string_view kInput = R"({{#item=["one","two"];" / "}}{{item}}{{/item}})";
   const Template tpl;
   std::string output(kInput);
   ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
   EXPECT_THAT(output, "one / two");
+}
+
+TEST_F(MopeTest, ConfiguredListRejectsASectionJoiner) {
+  constexpr std::string_view kInput = R"({{#item=["one","two"];join}}{{item}}{{/item}})";
+  Template tpl;
+  ASSERT_THAT(tpl.AddSection("join").ok(), IsTrue());
+  std::string output(kInput);
+  EXPECT_THAT(tpl.Expand(output).code(), absl::StatusCode::kInvalidArgument);
 }
 
 TEST_F(MopeTest, ConfiguredListRejectsMalformedInputAndNameConflicts) {

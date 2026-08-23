@@ -192,12 +192,9 @@ absl::Status Template::MaybeLookup(const TagInfo& tag_info, std::string_view dat
     return absl::InvalidArgumentError(absl::StrCat(
         "Tag '", tag_info.name, "' references '", data, "' which has non numeric value '", tag_data->data, "'"));
   } else if (const auto* tag_data = std::get_if<TagData<Range>>(found_data_ptr)) {
-    if (tag_data->data.expanding) {
-      value = tag_data->data.curr;
-      return absl::OkStatus();
-    }
-    return absl::InvalidArgumentError(
-        absl::StrCat("Tag '", tag_info.name, "' references '", data, "' which is not being expanded."));
+    // Range entries exist in a Context only while ExpandRangeTag is active.
+    value = tag_data->data.curr;
+    return absl::OkStatus();
   }
   return absl::InvalidArgumentError(
       absl::StrCat("Tag '", tag_info.name, "' references '", data, "' which has unsupported data type."));
