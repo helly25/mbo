@@ -167,6 +167,58 @@ def measurements(files: dict[str, FileCoverage], policy: dict) -> dict:
     return result
 
 
+def baseline_scope(policy: dict) -> dict:
+    """Returns the measurement scope that must match a recorded baseline."""
+    return {
+        "include": policy.get("include", ["mbo/**"]),
+        "exclude": policy.get("exclude", []),
+        "categories": {
+            name: {"include": category["include"]}
+            for name, category in policy.get("categories", {}).items()
+        },
+    }
+
+
+def baseline_failures(measured: dict, baseline: dict, policy: dict) -> list[str]:
+    """Reports measurement regressions and incompatible baseline data."""
+    if baseline.get("schema") != 2:
+        return ["schema is not 2; regenerate coverage_baseline.json"]
+    if baseline.get("scope") != baseline_scope(policy):
+        return ["measurement scope differs from coverage_policy.json; regenerate the baseline"]
+    recorded = baseline.get("measurements")
+    if not isinstance(recorded, dict):
+        return ["measurements are missing; regenerate coverage_baseline.json"]
+    tolerances = coverage_policy.baseline_tolerances(policy)
+    result = []
+    for category, metrics in measured.items():
+        previous = recorded.get(category)
+        if not isinstance(previous, dict):
+            result.append(f"{category}: category is missing from the baseline")
+            continue
+        for metric in coverage_policy.METRICS:
+            previous_metric = previous.get(metric)
+            if not isinstance(previous_metric, dict) or "percent" not in previous_metric:
+                result.append(f"{category} {metric}: metric is missing from the baseline")
+                continue
+            expected = previous_metric["percent"]
+            actual = metrics[metric]["percent"]
+            if expected is None:
+                continue
+            if not isinstance(expected, (int, float)) or isinstance(expected, bool):
+                result.append(f"{category} {metric}: baseline percentage is not a number")
+                continue
+            if actual is None:
+                result.append(f"{category} {metric}: no data; baseline is {expected:.2f}%")
+                continue
+            tolerance = tolerances[metric]
+            if expected - actual > tolerance + 1e-9:
+                result.append(
+                    f"{category} {metric}: {actual:.2f}% is below the {expected:.2f}% baseline "
+                    f"by more than {tolerance:.2f} percentage points"
+                )
+    return result
+
+
 def thresholds(policy: dict) -> tuple[dict, dict]:
     """Returns effective medium and high boundaries for every report row."""
     resolved = coverage_policy.policies(policy)
@@ -324,6 +376,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json-summary", type=Path)
     parser.add_argument("--summary", type=Path)
     args = parser.parse_args(argv)
+    if args.write_baseline and not args.baseline:
+        parser.error("--write-baseline requires --baseline")
     policy = json.loads(args.policy.read_text(encoding="utf-8"))
     files = select_files(parse_lcov(args.lcov), policy)
     measured = measurements(files, policy)
@@ -332,8 +386,9 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if args.baseline and args.write_baseline:
         baseline = {
-            "schema": 1,
+            "schema": 2,
             "description": "Bazel LCOV with GCC 14; scope and exclusions are defined by coverage_policy.json",
+            "scope": baseline_scope(policy),
             "measurements": measured,
         }
         args.baseline.write_text(json.dumps(baseline, indent=2) + "\n", encoding="utf-8")
@@ -364,14 +419,20 @@ def main(argv: list[str] | None = None) -> int:
             json.dumps(json_summary(measured, effective, policy, patch, patch_policy), indent=2) + "\n",
             encoding="utf-8",
         )
+    baseline_errors = []
+    if args.baseline and not args.write_baseline:
+        baseline = json.loads(args.baseline.read_text(encoding="utf-8"))
+        baseline_errors = baseline_failures(measured, baseline, policy)
     errors = failures(measured, effective) + patch_failures
     for error in errors:
         print(f"coverage threshold failed: {error}", file=sys.stderr)
+    for error in baseline_errors:
+        print(f"coverage baseline failed: {error}", file=sys.stderr)
     for location in uncovered_lines:
         print(f"uncovered patch line: {location}", file=sys.stderr)
     for location in uncovered_branches:
         print(f"uncovered patch branch: {location}", file=sys.stderr)
-    return bool(errors)
+    return bool(errors or baseline_errors)
 
 
 if __name__ == "__main__":

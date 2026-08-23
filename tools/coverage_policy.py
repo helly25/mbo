@@ -96,6 +96,29 @@ def policies(policy: dict[str, Any]) -> dict[str, dict[str, MetricPolicy]]:
     return result
 
 
+def baseline_tolerances(policy: dict[str, Any]) -> dict[str, float]:
+    """Returns the allowed percentage-point regression for each metric."""
+    baseline = policy.get("baseline")
+    if not isinstance(baseline, dict):
+        raise ValueError("coverage policy is missing the baseline configuration")
+    maximum_drop = baseline.get("maximum_drop")
+    if not isinstance(maximum_drop, dict):
+        raise ValueError("coverage baseline maximum_drop must be an object")
+    unknown = set(maximum_drop) - set(METRICS)
+    if unknown:
+        raise ValueError(f"unknown coverage metrics: {', '.join(sorted(unknown))}")
+    missing = set(METRICS) - set(maximum_drop)
+    if missing:
+        raise ValueError(f"coverage baseline is missing metrics: {', '.join(sorted(missing))}")
+    result = {}
+    for metric in METRICS:
+        value = maximum_drop[metric]
+        if not isinstance(value, (int, float)) or isinstance(value, bool) or not 0 <= value <= 100:
+            raise ValueError(f"{metric} coverage baseline maximum drop must be between 0 and 100")
+        result[metric] = float(value)
+    return result
+
+
 def rating(percent: float | None, policy: MetricPolicy) -> str:
     if percent is None or percent < policy.minimum:
         return "low"

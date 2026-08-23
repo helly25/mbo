@@ -345,6 +345,7 @@ jobs:
             BASE_ARGS=(--base-ref origin/main)
           fi
           python3 tools/coverage.py \
+            --baseline coverage_baseline.json \
             --lcov coverage.lcov \
             --json-summary coverage-html/coverage-summary.json \
             --policy coverage_policy.json \
