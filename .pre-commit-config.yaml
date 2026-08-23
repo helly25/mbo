@@ -237,10 +237,10 @@ repos:
         pass_filenames: false
       - id: coverage-policy-tests
         name: coverage policy tests
-        description: Verify LCOV parsing, grouping, indexing, exclusions, and threshold enforcement.
+        description: Verify LCOV parsing, grouping, indexing, presentation, exclusions, and threshold enforcement.
         language: system
-        entry: python3 -m unittest tools/coverage_test.py tools/coverage_sources_test.py tools/coverage_index_test.py
-        files: ^(coverage_policy\.json|tools/coverage(_index|_sources)?(_test)?\.py)$
+        entry: python3 -m unittest tools/coverage_test.py tools/coverage_sources_test.py tools/coverage_html_test.py tools/coverage_index_test.py tools/coverage_lcovrc_test.py
+        files: ^(coverage_policy\.json|tools/coverage(_html|_index|_lcovrc|_sources)?(_test)?\.py)$
         pass_filenames: false
       - id: align-markdown-tables
         name: Align Markdown tables

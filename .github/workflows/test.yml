@@ -76,7 +76,12 @@ jobs:
           sudo update-alternatives --set gcc /usr/bin/gcc-${{inputs.gcc_version}}
       - name: Install coverage report tooling
         if: inputs.bazel_config == 'coverage'
-        run: sudo apt install lcov
+        run: |
+          # Ubuntu supplies LCOV's Perl dependencies, but its old genhtml ignores
+          # metric-specific color thresholds. Overlay the pinned verified release.
+          sudo apt install lcov
+          tools/install_lcov.sh "${RUNNER_TEMP}/lcov"
+          echo "${RUNNER_TEMP}/lcov/bin" >>"${GITHUB_PATH}"
 
       # The DISK cache (compiled action outputs) is what recurs and what pays; the
       # output root is deliberately NOT cached anymore - for clang cells it holds the
@@ -310,19 +315,26 @@ jobs:
           python3 tools/coverage_sources.py coverage.lcov coverage-html.lcov \
             --policy coverage_policy.json \
             --source-root coverage-source-tree
+          python3 tools/coverage_lcovrc.py coverage_policy.json coverage.lcovrc
+          # LLVM can mark a hit line whose branches remain unevaluated, and GCC 14
+          # cannot provide function-end exclusions. LCOV 2.5 classifies these as
+          # inconsistent/corrupt and unsupported; repeated categories also suppress
+          # their expected warning summaries.
           genhtml coverage-html.lcov \
             --branch-coverage \
+            --config-file coverage.lcovrc \
             --demangle-cpp \
             --function-coverage \
             --hierarchical \
-            --ignore-errors negative,unmapped \
-            --legend \
+            --ignore-errors corrupt,inconsistent,inconsistent,negative,unsupported,unsupported \
             --output-directory coverage-html/lcov \
             --prefix "${PWD}/coverage-source-tree" \
             --show-details \
             --title "mbo production coverage"
+          python3 tools/coverage_html.py coverage-html/lcov coverage_policy.json
 
-          python3 -m unittest tools/coverage_test.py tools/coverage_sources_test.py tools/coverage_index_test.py
+          python3 -m unittest tools/coverage_test.py tools/coverage_sources_test.py \
+            tools/coverage_html_test.py tools/coverage_index_test.py tools/coverage_lcovrc_test.py
           BASE_ARGS=()
           if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
             if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then

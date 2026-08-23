@@ -84,7 +84,7 @@ also updates this file to the completed state.
 
 ## Documentation and quality coverage
 
-- [ ] Make `coverage_policy.json` the single source of truth for enforcement
+- [x] Make `coverage_policy.json` the single source of truth for enforcement
       and LCOV presentation, adopting the applicable final state of
       [xff PR #631](https://github.com/helly25/xff/pull/631),
       [xff PR #633](https://github.com/helly25/xff/pull/633), and the

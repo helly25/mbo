@@ -44,13 +44,10 @@ def _percent(value: dict) -> str:
     return "n/a" if value["percent"] is None else f'{value["percent"]:.2f}%'
 
 
-def _status(metrics: dict, minimums: dict, targets: dict) -> str:
+def _status(metrics: dict, minimums: dict) -> str:
     failures = [name for name in _METRICS if metrics[name]["percent"] is None or metrics[name]["percent"] < minimums.get(name, 0)]
-    low = [name for name in _METRICS if name not in failures and metrics[name]["percent"] < targets.get(name, minimums.get(name, 0))]
     if failures:
         return "FAIL: " + "/".join(name[0].upper() for name in failures)
-    if low:
-        return "LOW: " + "/".join(name[0].upper() for name in low)
     return "OK"
 
 
@@ -58,8 +55,7 @@ def _full_table(summary: dict) -> str:
     rows = []
     for category, metrics in summary["measurements"].items():
         minimums = summary["minimums"].get(category, {})
-        targets = summary["targets"].get(category, {})
-        status = _status(metrics, minimums, targets)
+        status = _status(metrics, minimums)
         cells = [html.escape(category), html.escape(status)]
         for metric in _METRICS:
             value = metrics[metric]

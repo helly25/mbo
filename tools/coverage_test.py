@@ -147,14 +147,16 @@ class CoverageTest(unittest.TestCase):
             coverage_tool.failures(measured, {"overall": {"lines": 80.0}}),
         )
 
-    def test_category_minimum_overrides_shared_target(self):
+    def test_category_minimum_and_target_are_independently_composable(self):
         policy = {
             "minimum": {"lines": 85.0, "functions": 90.0, "branches": 57.0},
+            "target": {"lines": 90.0, "functions": 95.0, "branches": 82.0},
             "categories": {
                 "inherited": {"include": ["mbo/inherited/**"]},
                 "overridden": {
                     "include": ["mbo/overridden/**"],
                     "minimum": {"lines": 40.0, "functions": 50.0, "branches": 30.0},
+                    "target": {"branches": 90.0},
                 },
             },
         }
@@ -164,11 +166,16 @@ class CoverageTest(unittest.TestCase):
             {"lines": 40.0, "functions": 50.0, "branches": 30.0},
             minimums["overridden"],
         )
-        self.assertEqual(policy["minimum"], targets["overridden"])
+        self.assertEqual(policy["target"], targets["inherited"])
+        self.assertEqual(
+            {"lines": 90.0, "functions": 95.0, "branches": 90.0},
+            targets["overridden"],
+        )
 
     def test_category_minimum_only_overrides_named_metrics(self):
         policy = {
             "minimum": {"lines": 88.0, "functions": 80.0, "branches": 60.0},
+            "target": {"lines": 90.0, "functions": 95.0, "branches": 82.0},
             "categories": {
                 "compile_time": {
                     "include": ["mbo/types/**"],
@@ -181,7 +188,7 @@ class CoverageTest(unittest.TestCase):
             {"lines": 88.0, "functions": 80.0, "branches": 47.0},
             minimums["compile_time"],
         )
-        self.assertEqual(policy["minimum"], targets["compile_time"])
+        self.assertEqual(policy["target"], targets["compile_time"])
 
     def test_patch_without_coverable_code_is_not_reported(self):
         empty = {
@@ -243,19 +250,15 @@ class CoverageTest(unittest.TestCase):
             "low": {"lines": 80.0, "functions": 40.0, "branches": 70.0},
             "empty": {"lines": 80.0, "branches": 70.0},
         }
-        targets = {
-            category: {"lines": 80.0, "functions": 60.0, "branches": 70.0}
-            for category in minimums
-        }
         self.assertEqual(
             "| Category     | Status           |  Lines | Covered | Total | Functions | Covered | Total | Branches | Covered | Total |\n"
             "| ------------ | ---------------- | -----: | ------: | ----: | --------: | ------: | ----: | -------: | ------: | ----: |\n"
             "| overall      | **FAIL: F**      | 90.00% |       9 |    10 |    50.00% |       1 |     2 |   75.00% |       3 |     4 |\n"
             "| okay         | OK               | 90.00% |       9 |    10 |   100.00% |       2 |     2 |   75.00% |       3 |     4 |\n"
-            "| low          | **LOW: F**       | 90.00% |       9 |    10 |    50.00% |       1 |     2 |   75.00% |       3 |     4 |\n"
+            "| low          | OK               | 90.00% |       9 |    10 |    50.00% |       1 |     2 |   75.00% |       3 |     4 |\n"
             "| empty        | **NO DATA: L/B** |    n/a |       0 |     0 |       n/a |       0 |     0 |      n/a |       0 |     0 |\n"
             "| unconfigured | N/A              |    n/a |       0 |     0 |       n/a |       0 |     0 |      n/a |       0 |     0 |\n",
-            coverage_tool.markdown(measured, minimums, targets),
+            coverage_tool.markdown(measured, minimums),
         )
 
 
