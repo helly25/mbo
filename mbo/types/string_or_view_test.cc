@@ -176,6 +176,25 @@ TEST_F(StringOrViewTest, ProvidesReadOnlyElementAndIteratorAccess) {
   static_assert(value.cend() - value.cbegin() == 6);
   static_assert(value.rend() - value.rbegin() == 6);
   static_assert(value.crend() - value.crbegin() == 6);
+  const std::string_view converted = value;
+  EXPECT_THAT(converted, Eq("abcdef"));
+  EXPECT_THAT(value.size(), Eq(6));
+  EXPECT_THAT(value.length(), Eq(6));
+  EXPECT_THAT(value.empty(), IsFalse());
+  EXPECT_THAT(value[1], Eq('b'));  // NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+  EXPECT_THAT(value.at(2), Eq('c'));
+  EXPECT_THAT(value.front(), Eq('a'));
+  EXPECT_THAT(value.back(), Eq('f'));
+  const char* const data = value.data();
+  EXPECT_THAT(data, Eq(&value.view().front()));
+  EXPECT_THAT(*value.begin(), Eq('a'));
+  EXPECT_THAT(*value.cbegin(), Eq('a'));
+  EXPECT_THAT(*value.rbegin(), Eq('f'));
+  EXPECT_THAT(*value.crbegin(), Eq('f'));
+  EXPECT_THAT(value.end() - value.begin(), Eq(6));
+  EXPECT_THAT(value.cend() - value.cbegin(), Eq(6));
+  EXPECT_THAT(value.rend() - value.rbegin(), Eq(6));
+  EXPECT_THAT(value.crend() - value.crbegin(), Eq(6));
   EXPECT_THAT(value.max_size(), Ge(value.size()));
 }
 
@@ -209,6 +228,15 @@ TEST_F(StringOrViewTest, ProvidesPrefixSuffixAndContainmentQueries) {
   static_assert(value.contains(std::string_view{"cd"}));
   static_assert(value.contains('c'));
   static_assert(value.contains("cd"));
+  EXPECT_THAT(value.starts_with(std::string_view{"abc"}), IsTrue());
+  EXPECT_THAT(value.starts_with('a'), IsTrue());
+  EXPECT_THAT(value.starts_with("abc"), IsTrue());
+  EXPECT_THAT(value.ends_with(std::string_view{"def"}), IsTrue());
+  EXPECT_THAT(value.ends_with('f'), IsTrue());
+  EXPECT_THAT(value.ends_with("def"), IsTrue());
+  EXPECT_THAT(value.contains(std::string_view{"cd"}), IsTrue());
+  EXPECT_THAT(value.contains('c'), IsTrue());
+  EXPECT_THAT(value.contains("cd"), IsTrue());
 }
 
 TEST_F(StringOrViewTest, ProvidesStringViewSearchOperations) {
@@ -223,6 +251,30 @@ TEST_F(StringOrViewTest, ProvidesStringViewSearchOperations) {
   static_assert(value.find_last_of('a') == 4);
   static_assert(value.find_first_not_of(std::string_view{"ab"}) == 2);
   static_assert(value.find_last_not_of("bc") == 4);
+  EXPECT_THAT(value.find(std::string_view{"bc"}), Eq(1));
+  EXPECT_THAT(value.find('a', 1), Eq(3));
+  EXPECT_THAT(value.find("aabb", 0, 2), Eq(3));
+  EXPECT_THAT(value.find("bb"), Eq(5));
+  EXPECT_THAT(value.rfind(std::string_view{"bc"}), Eq(6));
+  EXPECT_THAT(value.rfind('a'), Eq(4));
+  EXPECT_THAT(value.rfind("bc", StringOrView::npos, 2), Eq(6));
+  EXPECT_THAT(value.rfind("bc"), Eq(6));
+  EXPECT_THAT(value.find_first_of(std::string_view{"xyc"}), Eq(2));
+  EXPECT_THAT(value.find_first_of('a', 1), Eq(3));
+  EXPECT_THAT(value.find_first_of("xyc", 0, 3), Eq(2));
+  EXPECT_THAT(value.find_first_of("xyc"), Eq(2));
+  EXPECT_THAT(value.find_last_of(std::string_view{"ay"}), Eq(4));
+  EXPECT_THAT(value.find_last_of('a'), Eq(4));
+  EXPECT_THAT(value.find_last_of("ay", StringOrView::npos, 2), Eq(4));
+  EXPECT_THAT(value.find_last_of("ay"), Eq(4));
+  EXPECT_THAT(value.find_first_not_of(std::string_view{"ab"}), Eq(2));
+  EXPECT_THAT(value.find_first_not_of('a'), Eq(1));
+  EXPECT_THAT(value.find_first_not_of("ab", 0, 2), Eq(2));
+  EXPECT_THAT(value.find_first_not_of("ab"), Eq(2));
+  EXPECT_THAT(value.find_last_not_of(std::string_view{"bc"}), Eq(4));
+  EXPECT_THAT(value.find_last_not_of('c'), Eq(6));
+  EXPECT_THAT(value.find_last_not_of("bc", StringOrView::npos, 2), Eq(4));
+  EXPECT_THAT(value.find_last_not_of("bc"), Eq(4));
 }
 
 TEST_F(StringOrViewTest, SupportsStreamAndStandardFormattingWithoutLosingNulBytes) {
