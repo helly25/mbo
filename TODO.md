@@ -84,25 +84,29 @@ also updates this file to the completed state.
 
 ## Documentation and quality coverage
 
-- [ ] Make `coverage_policy.json` the single source of truth for enforcement
+- [x] Make `coverage_policy.json` the single source of truth for enforcement
       and LCOV presentation, adopting the applicable final state of
       [xff PR #631](https://github.com/helly25/xff/pull/631),
       [xff PR #633](https://github.com/helly25/xff/pull/633), and the
       coverage-related changes from
-      [xff PR #634](https://github.com/helly25/xff/pull/634).
+      [xff PR #634](https://github.com/helly25/xff/pull/634) and
+      [xff PR #636](https://github.com/helly25/xff/pull/636).
   - Define explicit per-metric enforcement minima and health targets, and
     generate `genhtml`'s medium and high limits from them. Equal minimum and
     target values must form one pass/fail boundary without a yellow band.
   - Pin a verified modern LCOV release that honors metric-specific thresholds,
     accepting only the documented GCC/LLVM producer inconsistencies.
   - Replace the generic `genhtml` legend with a policy-derived, metric-specific
-    legend on overview pages. Keep the compact report enforcement-only: values
-    at or above the minimum are `OK`, and values below it fail.
+    legend below the summary table. Add depth-independent navigation from every
+    LCOV page to the report overview and retained-report index. Keep the compact
+    report enforcement-only: values at or above the minimum are `OK`, and values
+    below it fail.
   - Use the generated configuration throughout the reusable main, PR, and
     release coverage path, with validation and unit tests for generation, HTML
     augmentation, status rendering, and every metric.
   - Keep category floors and health targets inherited and composable so an
     exception names only the metrics it changes.
+  - PR: [#360](https://github.com/helly25/mbo/pull/360).
 - [x] Exercise the hash-internal runtime utilities directly ([PR #356](https://github.com/helly25/mbo/pull/356)).
   - Cover every supported length for `LoadTail` and `LoadSmall` with
     volatile-derived runtime inputs.

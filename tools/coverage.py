@@ -168,11 +168,20 @@ def measurements(files: dict[str, FileCoverage], policy: dict) -> dict:
 def thresholds(policy: dict) -> tuple[dict, dict]:
     """Returns enforcement floors and health targets for every report row."""
     overall = policy.get("minimum", {})
+    overall_target = overall | policy.get("target", {})
     floors = {"overall": overall}
-    targets = {"overall": overall}
+    targets = {"overall": overall_target}
     for name, category in policy.get("categories", {}).items():
         floors[name] = overall | category.get("minimum", {})
-        targets[name] = overall
+        category_target = category.get("target", {})
+        targets[name] = {
+            metric: max(
+                floors[name].get(metric, 0),
+                overall_target.get(metric, 0),
+                category_target.get(metric, 0),
+            )
+            for metric in floors[name] | overall_target | category_target
+        }
     return floors, targets
 
 
@@ -186,13 +195,12 @@ def failures(measured: dict, minimums: dict) -> list[str]:
     return result
 
 
-def coverage_status(metrics: dict, minimum: dict, target: dict) -> str:
+def coverage_status(metrics: dict, minimum: dict) -> str:
     if not minimum:
         return "N/A"
     abbreviations = {"lines": "L", "functions": "F", "branches": "B"}
     no_data = []
     failed = []
-    low = []
     for metric in ("lines", "functions", "branches"):
         if metric not in minimum:
             continue
@@ -201,15 +209,11 @@ def coverage_status(metrics: dict, minimum: dict, target: dict) -> str:
             no_data.append(abbreviations[metric])
         elif actual < minimum[metric]:
             failed.append(abbreviations[metric])
-        elif actual < target.get(metric, minimum[metric]):
-            low.append(abbreviations[metric])
     problems = []
     if no_data:
         problems.append(f'NO DATA: {"/".join(no_data)}')
     if failed:
         problems.append(f'FAIL: {"/".join(failed)}')
-    if low:
-        problems.append(f'LOW: {"/".join(low)}')
     return "OK" if not problems else f'**{"; ".join(problems)}**'
 
 
@@ -231,8 +235,7 @@ def uncovered_patch_locations(
     return sorted(lines), sorted(branches)
 
 
-def markdown(measured: dict, minimums: dict, targets: dict | None = None) -> str:
-    targets = minimums if targets is None else targets
+def markdown(measured: dict, minimums: dict) -> str:
     headers = (
         "Category",
         "Status",
@@ -250,7 +253,7 @@ def markdown(measured: dict, minimums: dict, targets: dict | None = None) -> str
     for category, metrics in measured.items():
         cells = [
             category,
-            coverage_status(metrics, minimums.get(category, {}), targets.get(category, {})),
+            coverage_status(metrics, minimums.get(category, {})),
         ]
         for metric in ("lines", "functions", "branches"):
             value = metrics[metric]
@@ -310,7 +313,7 @@ def main(argv: list[str] | None = None) -> int:
         }
         args.baseline.write_text(json.dumps(baseline, indent=2) + "\n", encoding="utf-8")
     minimums, targets = thresholds(policy)
-    text = markdown(measured, minimums, targets)
+    text = markdown(measured, minimums)
     patch_failures: list[str] = []
     patch: dict | None = None
     uncovered_lines: list[str] = []

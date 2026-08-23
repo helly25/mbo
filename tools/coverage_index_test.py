@@ -28,6 +28,11 @@ class CoverageIndexTest(unittest.TestCase):
         self.assertIn('href="lcov/"', rendered)
         self.assertIn('href="../../"', rendered)
 
+    def test_report_status_uses_enforcement_floor_not_health_target(self):
+        rendered = coverage_index.render_report(_summary(85.0), "pr/42")
+        self.assertIn("<td>OK</td>", rendered)
+        self.assertNotIn("LOW:", rendered)
+
     def test_site_shows_all_metrics_with_main_first_and_numeric_sorting(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
