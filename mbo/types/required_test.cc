@@ -91,9 +91,11 @@ TEST_F(RequiredTest, CompareDifferentWrapperTypes) {
   const Required<int> lhs(25);
   const Required<long> equal(25);    // NOLINT(google-runtime-int)
   const Required<long> greater(33);  // NOLINT(google-runtime-int)
+  const Required<long> smaller(11);  // NOLINT(google-runtime-int)
 
   EXPECT_THAT(lhs <=> equal, std::strong_ordering::equal);
   EXPECT_THAT(lhs <=> greater, std::strong_ordering::less);
+  EXPECT_THAT(lhs <=> smaller, std::strong_ordering::greater);
 }
 
 TEST_F(RequiredTest, HashesWrappedValue) {
