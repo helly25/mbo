@@ -27,6 +27,7 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
   // libFuzzer exposes bytes as uint8_t; a char view preserves the same object representation.
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const std::string_view input(reinterpret_cast<const char*>(data), size);
-  (void)mbo::file::IniFile::Parse(input);
+  (void)mbo::file::IniFile::ParsePermissive(input);
+  (void)mbo::file::IniFile::ParseStrict(input);
   return 0;
 }
