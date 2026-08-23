@@ -175,6 +175,7 @@ also updates this file to the completed state.
   - Use pre-commit file-type classification rather than a duplicated extension
     expression.
   - Correct existing public-comment findings instead of adding broad ignores.
+  - PR: [#375](https://github.com/helly25/mbo/pull/375).
 - [x] Unify coverage ratings, enforcement, and presentation, adopting the
       applicable final state of
       [xff PR #639](https://github.com/helly25/xff/pull/639),
