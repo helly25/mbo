@@ -16,11 +16,15 @@
 #include "mbo/types/string_or_view.h"
 
 #include <compare>
+#include <functional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
 
+#include "absl/hash/hash.h"
+#include "absl/hash/hash_testing.h"
 #include "absl/strings/str_format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -29,6 +33,7 @@ namespace mbo {
 namespace {
 
 using ::testing::Eq;
+using ::testing::Ge;
 using ::testing::IsEmpty;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
@@ -42,6 +47,10 @@ static_assert(!kLiteral.owns_string());
 static_assert(std::is_nothrow_move_constructible_v<StringOrView>);
 static_assert(std::is_nothrow_move_assignable_v<StringOrView>);
 static_assert(!std::is_constructible_v<StringOrView, const char*>);
+static_assert(std::is_convertible_v<StringOrView, std::string_view>);
+static_assert(std::is_same_v<StringOrView::iterator, StringOrView::const_iterator>);
+static_assert(std::is_same_v<StringOrView::reference, StringOrView::const_reference>);
+static_assert(StringOrView::npos == std::string_view::npos);
 
 struct StringOrViewTest : ::testing::Test {};
 
@@ -147,6 +156,93 @@ TEST_F(StringOrViewTest, ComparesTextIndependentOfOwnership) {
 TEST_F(StringOrViewTest, SupportsAbslStringify) {
   const StringOrView value{std::string{"formatted"}};
   EXPECT_THAT(absl::StrFormat("%v", value), Eq("formatted"));
+}
+
+TEST_F(StringOrViewTest, ProvidesReadOnlyElementAndIteratorAccess) {
+  constexpr StringOrView value{"abcdef"};
+  static_assert(value.size() == 6);
+  static_assert(value.length() == 6);
+  static_assert(!value.empty());
+  static_assert(value[1] == 'b');  // NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+  static_assert(value.at(2) == 'c');
+  static_assert(value.front() == 'a');
+  static_assert(value.back() == 'f');
+  static_assert(value.data() == value.view().data());
+  static_assert(*value.begin() == 'a');
+  static_assert(*value.cbegin() == 'a');
+  static_assert(*value.rbegin() == 'f');
+  static_assert(*value.crbegin() == 'f');
+  static_assert(value.end() - value.begin() == 6);
+  static_assert(value.cend() - value.cbegin() == 6);
+  static_assert(value.rend() - value.rbegin() == 6);
+  static_assert(value.crend() - value.crbegin() == 6);
+  EXPECT_THAT(value.max_size(), Ge(value.size()));
+}
+
+TEST_F(StringOrViewTest, CopiesAndReturnsSubstringsAsViews) {
+  constexpr StringOrView value{"abcdef"};
+  char copied[4]{};  // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+  EXPECT_THAT(value.copy(copied, 3, 2), Eq(3));
+  EXPECT_THAT(std::string_view(copied, 3), Eq("cde"));
+  EXPECT_THAT(value.substr(2, 3), Eq("cde"));
+  EXPECT_THAT(value.substr(4), Eq("ef"));
+}
+
+TEST_F(StringOrViewTest, ProvidesStringViewComparisonOverloads) {
+  constexpr StringOrView value{"abcdef"};
+  EXPECT_THAT(value.compare("abcdef"), Eq(0));
+  EXPECT_THAT(value.compare(2, 3, std::string_view{"cde"}), Eq(0));
+  EXPECT_THAT(value.compare(2, 3, std::string_view{"-cde-"}, 1, 3), Eq(0));
+  EXPECT_THAT(value.compare(2, 3, "cde"), Eq(0));
+  EXPECT_THAT(value.compare(2, 3, "cde-more", 3), Eq(0));
+  EXPECT_THAT(value.compare("abcdee"), Not(Eq(0)));
+}
+
+TEST_F(StringOrViewTest, ProvidesPrefixSuffixAndContainmentQueries) {
+  constexpr StringOrView value{"abcdef"};
+  static_assert(value.starts_with(std::string_view{"abc"}));
+  static_assert(value.starts_with('a'));
+  static_assert(value.starts_with("abc"));
+  static_assert(value.ends_with(std::string_view{"def"}));
+  static_assert(value.ends_with('f'));
+  static_assert(value.ends_with("def"));
+  static_assert(value.contains(std::string_view{"cd"}));
+  static_assert(value.contains('c'));
+  static_assert(value.contains("cd"));
+}
+
+TEST_F(StringOrViewTest, ProvidesStringViewSearchOperations) {
+  constexpr StringOrView value{"abcaabbcc"};
+  static_assert(value.find(std::string_view{"bc"}) == 1);
+  static_assert(value.find('a', 1) == 3);
+  static_assert(value.find("aabb", 0, 2) == 3);
+  static_assert(value.find("bb") == 5);
+  static_assert(value.rfind(std::string_view{"bc"}) == 6);
+  static_assert(value.rfind('a') == 4);
+  static_assert(value.find_first_of(std::string_view{"xyc"}) == 2);
+  static_assert(value.find_last_of('a') == 4);
+  static_assert(value.find_first_not_of(std::string_view{"ab"}) == 2);
+  static_assert(value.find_last_not_of("bc") == 4);
+}
+
+TEST_F(StringOrViewTest, SupportsStreamAndStandardFormattingWithoutLosingNulBytes) {
+  constexpr StringOrView value{"a\0b"};
+  std::ostringstream out;
+  out << value;
+  EXPECT_THAT(out.str(), Eq(std::string{"a\0b", 3}));
+#if defined(__cpp_lib_format) && __cpp_lib_format >= 201'907L
+  EXPECT_THAT(std::format("{}", value), Eq(std::string{"a\0b", 3}));
+#endif
+}
+
+TEST_F(StringOrViewTest, HashesRepresentedTextIndependentOfOwnership) {
+  const StringOrView borrowed{"same"};
+  const StringOrView owned{std::string{"same"}};
+  const StringOrView other{"other"};
+  EXPECT_THAT(absl::VerifyTypeImplementsAbslHashCorrectly({borrowed, owned, other}), IsTrue());
+  EXPECT_THAT(absl::HashOf(borrowed), Eq(absl::HashOf(owned)));
+  EXPECT_THAT(std::hash<StringOrView>{}(borrowed), Eq(std::hash<StringOrView>{}(owned)));
+  EXPECT_THAT(std::hash<StringOrView>{}(borrowed), Eq(std::hash<std::string_view>{}(borrowed.view())));
 }
 
 }  // namespace
