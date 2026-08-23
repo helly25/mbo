@@ -76,12 +76,11 @@ also updates this file to the completed state.
     later xff dependency-update PR can replace its local `FieldValue` after an
     mbo release contains this type.
   - PR: [#377](https://github.com/helly25/mbo/pull/377).
-- [ ] Complete the read-only string interface and ecosystem integration for
+- [x] Complete the read-only string interface and ecosystem integration for
       `mbo::StringOrView`.
   - Provide the full non-mutating `std::string_view`-style surface, including
-    element access, iterators, size/capacity queries, prefix/suffix removal via
-    returned views where appropriate, copying, substrings, comparisons, search,
-    and prefix/suffix/containment queries.
+    element access, iterators, size/capacity queries, copying, substrings,
+    comparisons, search, and prefix/suffix/containment queries.
   - Preserve the ownership model: operations must not expose mutable storage or
     make a borrowed value appear owned, and returned views retain the documented
     lifetime constraints.
@@ -91,6 +90,7 @@ also updates this file to the completed state.
     the supported C++ versions provide the necessary customization points.
   - Test parity against `std::string_view`, embedded NUL handling, heterogeneous
     formatting and hashing, constexpr use, and owned versus borrowed values.
+  - PR: [#378](https://github.com/helly25/mbo/pull/378).
 
 ## File API robustness and portability
 
