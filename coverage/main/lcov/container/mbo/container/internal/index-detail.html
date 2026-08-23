@@ -7,8 +7,11 @@
   <title>LCOV - mbo production coverage - container/mbo/container/internal</title>
   <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
   <style>
-    .mboNavigation { padding: .35rem 0; text-align: right; }
-    .mboPolicy { margin: .35rem 0 1rem; }
+    .mboNavigation { padding: .35rem 0; text-align: center; }
+    .mboHeaderSummary { margin: 0 auto; width: 80%; }
+    .mboPolicy { border-collapse: collapse; margin: .75rem auto 1rem; width: auto; }
+    .mboPolicy th { padding: .2rem .75rem; text-align: left; }
+    .mboPolicy td { font-size: 100%; padding: .2rem .75rem; text-align: center; }
   </style>
 </head>
 
@@ -22,7 +25,7 @@
 
             <tr>
               <td width="100%">
-                <table cellpadding=1 border=0 width="100%">
+                <table class="mboHeaderSummary" cellpadding=1 border=0>
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
             <td width="10%" class="headerValue"><a href="../../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../../index.html" title="Click to go to directory container">container</a>/<a href="../../index.html" title="Click to go to directory mbo">mbo</a>/<a href="../index.html" title="Click to go to directory container">container</a>/internal</td>
@@ -43,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 10:34:03</td>
+            <td class="headerValue">2026-08-23 15:07:58</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">94.7&nbsp;%</td>
@@ -66,14 +69,6 @@
 
             <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
-
-          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
-            <tr>
-              <td class="headerItem">Coverage policy:</td>
-              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
-            </tr>
-          </table>
-
 
           <center>
           <table width="80%" cellpadding=1 cellspacing=1 border=0>
@@ -139,6 +134,41 @@
           </table>
           </center>
           <br>
+
+          <table class="mboPolicy">
+            <thead>
+              <tr>
+                <th scope="col">Global coverage policy</th>
+                <th scope="col">Low</th>
+                <th scope="col">Medium</th>
+                <th scope="col">High</th>
+                <th scope="col">Enforced</th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <th scope="row">Lines</th>
+              <td class="headerValueLegL">&lt; 88%</td>
+              <td class="headerValueLegM">&ge; 88% and &lt; 90%</td>
+              <td class="headerValueLegH">&ge; 90%</td>
+              <td class="headerValueLegM">Medium</td>
+            </tr>
+            <tr>
+              <th scope="row">Branches</th>
+              <td class="headerValueLegL">&lt; 60%</td>
+              <td class="headerValueLegM">&ge; 60% and &lt; 82%</td>
+              <td class="headerValueLegH">&ge; 82%</td>
+              <td class="headerValueLegM">Medium</td>
+            </tr>
+            <tr>
+              <th scope="row">Functions</th>
+              <td class="headerValueLegL">&lt; 80%</td>
+              <td class="headerValueLegM">&ge; 80% and &lt; 95%</td>
+              <td class="headerValueLegH">&ge; 95%</td>
+              <td class="headerValueLegM">Medium</td>
+            </tr>
+            </tbody>
+          </table>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>

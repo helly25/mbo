@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "measurements": {
     "overall": {
       "lines": {
@@ -225,136 +225,204 @@
   },
   "minimums": {
     "overall": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "container": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "diff": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "digest": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "file": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "hash": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "json": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "log": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "mope": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "status": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "strings": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "testing": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     },
     "types": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 88.0,
+      "functions": 80.0,
+      "branches": 60.0
     }
   },
   "targets": {
     "overall": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "container": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "diff": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "digest": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "file": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "hash": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "json": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "log": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "mope": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "status": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "strings": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "testing": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     },
     "types": {
-      "lines": 90,
-      "functions": 95,
-      "branches": 82
+      "lines": 90.0,
+      "functions": 95.0,
+      "branches": 82.0
     }
-  }
+  },
+  "enforcement": {
+    "overall": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "container": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "diff": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "digest": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "file": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "hash": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "json": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "log": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "mope": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "status": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "strings": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "testing": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    },
+    "types": {
+      "lines": "medium",
+      "functions": "medium",
+      "branches": "medium"
+    }
+  },
+  "reasons": {}
 }
