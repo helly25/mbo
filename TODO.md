@@ -7,6 +7,13 @@ also updates this file to the completed state.
 
 ## Correctness
 
+- [x] Make `Required<T>` replacement and generic operations correct.
+  - Construct replacement values before destroying the current value so a
+    throwing user constructor leaves the wrapper unchanged.
+  - Require non-throwing relocation for replacement without assignment or
+    nullable storage.
+  - Fix hashing and heterogeneous wrapper comparison when instantiated.
+  - Derive comparison exception specifications from the wrapped operation.
 - [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.

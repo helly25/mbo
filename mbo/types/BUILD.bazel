@@ -298,6 +298,18 @@ cc_test(
     ],
 )
 
+# Verifies that throwing operations supplied by exception-enabled consumers do
+# not violate Required's always-engaged invariant.
+cc_test(
+    name = "required_exception_test",
+    srcs = ["required_exception_test.cc"],
+    copts = ["-fexceptions"],
+    deps = [
+        ":required_cc",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "stringify_cc",
     srcs = ["stringify.cc"],
