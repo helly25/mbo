@@ -186,6 +186,7 @@ also updates this file to the completed state.
   - Replace blanket `read-all` grants with explicit read scopes.
   - Default the privileged coverage publisher to no access and retain its
     narrow job-level publishing permissions.
+  - PR: [#373](https://github.com/helly25/mbo/pull/373).
 - [x] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.
