@@ -28,6 +28,7 @@ cc_library(
 
 cc_test(
     name = "demangle_test",
+    size = "small",
     srcs = ["demangle_test.cc"],
     deps = [
         ":demangle_cc",

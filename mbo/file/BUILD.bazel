@@ -33,6 +33,7 @@ cc_library(
 
 cc_test(
     name = "artefact_test",
+    size = "small",
     srcs = ["artefact_test.cc"],
     deps = [
         ":artefact_cc",
@@ -136,6 +137,7 @@ cc_binary(
 
 bashtest(
     name = "glob_sh_test",
+    size = "small",
     srcs = ["glob_sh_test.sh"],
     data = [":glob"] + glob(["testdata/glob_sh_test/**"]),
 )

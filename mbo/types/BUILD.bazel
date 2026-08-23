@@ -44,6 +44,7 @@ cc_library(
 
 cc_test(
     name = "compare_test",
+    size = "small",
     srcs = ["compare_test.cc"],
     deps = [
         ":compare_cc",
@@ -53,6 +54,7 @@ cc_test(
 
 cc_test(
     name = "variant_test",
+    size = "small",
     srcs = ["variant_test.cc"],
     deps = [
         ":variant_cc",
@@ -151,6 +153,7 @@ cc_library(
 
 cc_test(
     name = "no_destruct_test",
+    size = "small",
     srcs = ["no_destruct_test.cc"],
     deps = [
         ":extend_cc",
@@ -227,6 +230,7 @@ cc_library(
 
 cc_test(
     name = "container_proxy_test",
+    size = "small",
     srcs = ["container_proxy_test.cc"],
     deps = [
         ":container_proxy_cc",
@@ -236,6 +240,7 @@ cc_test(
 
 cc_test(
     name = "opaque_test",
+    size = "small",
     srcs = ["opaque_test.cc"],
     deps = [
         ":opaque_cc",
@@ -259,6 +264,7 @@ cc_library(
 
 cc_test(
     name = "optional_data_or_ref_test",
+    size = "small",
     srcs = ["optional_data_or_ref_test.cc"],
     deps = [
         ":optional_data_or_ref_cc",
@@ -270,6 +276,7 @@ cc_test(
 
 cc_test(
     name = "optional_data_or_ref_exception_test",
+    size = "small",
     srcs = ["optional_data_or_ref_exception_test.cc"],
     # mbo itself remains exception-free. This target alone enables exceptions
     # to verify that the public template safely propagates a consumer T's throw.
@@ -301,6 +308,7 @@ cc_library(
 
 cc_test(
     name = "optional_ref_test",
+    size = "small",
     srcs = ["optional_ref_test.cc"],
     deps = [
         ":optional_ref_cc",
@@ -318,6 +326,7 @@ cc_library(
 
 cc_test(
     name = "ref_wrap_test",
+    size = "small",
     srcs = ["ref_wrap_test.cc"],
     deps = [
         ":ref_wrap_cc",
@@ -337,6 +346,7 @@ cc_library(
 
 cc_test(
     name = "required_test",
+    size = "small",
     srcs = ["required_test.cc"],
     deps = [
         ":required_cc",
@@ -442,6 +452,7 @@ cc_library(
 
 cc_test(
     name = "template_search_test",
+    size = "small",
     srcs = ["template_search_test.cc"],
     deps = [
         ":template_search_cc",
@@ -536,6 +547,7 @@ cc_library(
 
 cc_test(
     name = "typed_view_test",
+    size = "small",
     srcs = ["typed_view_test.cc"],
     deps = [
         ":typed_view_cc",

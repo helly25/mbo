@@ -67,6 +67,7 @@ cc_library(
 
 cc_test(
     name = "diff_impl_test",
+    size = "small",
     srcs = ["diff_impl_test.cc"],
     deps = [
         ":diff_direct_cc",

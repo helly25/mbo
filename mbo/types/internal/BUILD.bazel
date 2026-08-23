@@ -25,6 +25,7 @@ cc_library(
 
 cc_test(
     name = "cases_internal_test",
+    size = "small",
     srcs = ["cases_test.cc"],
     deps = [
         ":cases_cc",
@@ -66,6 +67,7 @@ cc_library(
 
 cc_test(
     name = "struct_names_test",
+    size = "small",
     srcs = ["struct_names_test.cc"],
     deps = [
         ":struct_names_cc",
@@ -90,6 +92,7 @@ cc_library(
 
 cc_test(
     name = "traits_internal_test",
+    size = "small",
     srcs = ["traits_test.cc"],
     deps = [
         ":traits_cc",
@@ -123,6 +126,7 @@ mope_test(
 
 cc_test(
     name = "extend_internal_test",
+    size = "small",
     srcs = ["extend_internal_test.cc"],
     deps = [
         ":extend_cc",
