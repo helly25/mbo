@@ -29,6 +29,7 @@ also updates this file to the completed state.
     compatibility test.
   - Keep runtime struct metadata initialization non-throwing by using guarded
     indexing instead of a redundant throwing bounds check.
+  - PR: [#364](https://github.com/helly25/mbo/pull/364).
 - [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.
