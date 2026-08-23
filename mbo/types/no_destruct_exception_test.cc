@@ -10,18 +10,28 @@
 namespace mbo::types {
 namespace {
 
-struct ThrowingValue {
-  explicit ThrowingValue(int /*value*/) { throw std::runtime_error("requested construction failure"); }
+struct ConditionalThrowingValue {
+  ConditionalThrowingValue(int new_value, bool should_throw) : value(new_value) {
+    if (should_throw) {
+      throw std::runtime_error("requested construction failure");
+    }
+  }
+
+  int value;
 };
 
-static_assert(!noexcept(NoDestruct<ThrowingValue>(1)));
+static_assert(!noexcept(NoDestruct<ConditionalThrowingValue>(1, true)));
 
 struct NoDestructExceptionTest : ::testing::Test {};
 
-TEST_F(NoDestructExceptionTest, ConstructionPropagatesException) {
+TEST_F(NoDestructExceptionTest, ConstructionSucceedsOrPropagatesException) {
+  constexpr int kValue = 42;
+  const NoDestruct<ConditionalThrowingValue> value(kValue, false);
+  EXPECT_THAT(value->value, kValue);
+
   bool caught = false;
   try {
-    const NoDestruct<ThrowingValue> value(1);
+    const NoDestruct<ConditionalThrowingValue> throwing_value(kValue, true);
   } catch (const std::runtime_error&) {
     caught = true;
   }
