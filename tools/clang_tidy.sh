@@ -15,14 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Run clang-tidy over the given C++ source files (a report-only pass: no --fix,
-# so it never rewrites the tree). clang-tidy is a LOCAL-ONLY developer aid, not a
-# CI gate: it needs a compile_commands.json (a local artifact, generated with
-# `./compile_commands-update.sh`) and a clang-tidy new enough for this C++23
-# codebase. When either is missing - a fresh checkout, or a CI runner without the
-# compile DB - this SKIPS cleanly (exit 0) rather than failing, so it never blocks
-# a commit or forces the hermetic toolchain download in CI. CI's hard gate stays
-# the compiler -Werror in the bazel matrix.
+# Run clang-tidy as an enforcing, report-only pass over the compilation scope
+# affected by the given files. Source-only changes stay focused. A project
+# header, generated-header template, or .bzl change promotes the scope to every
+# first-party translation unit in compile_commands.json because it can affect
+# sources that did not themselves change.
 #
 # clang-tidy resolution prefers the hermetic toolchains_llvm binary (so it matches
 # the compile DB's clang flags and understands C++23), then a versioned system
@@ -132,9 +129,12 @@ done
 # every other check still applies to tests.
 readonly TEST_DISABLED_CHECKS='-readability-function-cognitive-complexity,-clang-analyzer-cplusplus.NewDeleteLeaks'
 
+PARALLELISM="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
+readonly PARALLELISM
+
 declare -a SOURCES=()
 declare -a TESTS=()
-for FILE in "${@}"; do
+while IFS= read -r FILE; do
   case "${FILE}" in
     # Not built by bazel at all: an SMHasher3 plugin, copied into that project by
     # mbo/hash/measurements/build_smhasher3.sh and compiled by ITS cmake. It has
@@ -144,7 +144,7 @@ for FILE in "${@}"; do
     *_test.cc | *_test.cpp | *_test.cxx) TESTS+=("${FILE}") ;;
     *) SOURCES+=("${FILE}") ;;
   esac
-done
+done < <(python3 tools/clang_tidy_scope.py compile_commands.json "${@}")
 
 # A source file with no entry in the compile DB is NOT linted with the right
 # flags - clang-tidy falls back to guessed defaults, fails to find even <gtest>,
@@ -191,13 +191,18 @@ OUTPUT="$(mktemp "${TMPDIR:-/tmp}/clang_tidy_out.XXXXXX")"
 trap 'rm -f "${OUTPUT}"' EXIT
 
 if [ "${#SOURCES[@]}" -gt 0 ]; then
-  "${CLANG_TIDY}" --header-filter='(^|/)mbo/' -p . "${SOURCES[@]}" 2>&1 | tee -a "${OUTPUT}" || STATUS=1
-  [ "${PIPESTATUS[0]:-0}" -eq 0 ] || STATUS=1
+  if ! printf '%s\0' "${SOURCES[@]}" \
+    | xargs -0 -n 1 -P "${PARALLELISM}" "${CLANG_TIDY}" --header-filter='(^|/)mbo/' -p . 2>&1 \
+    | tee -a "${OUTPUT}"; then
+    STATUS=1
+  fi
 fi
 if [ "${#TESTS[@]}" -gt 0 ]; then
-  "${CLANG_TIDY}" --header-filter='(^|/)mbo/' --checks="${TEST_DISABLED_CHECKS}" -p . "${TESTS[@]}" 2>&1 \
-    | tee -a "${OUTPUT}" || STATUS=1
-  [ "${PIPESTATUS[0]:-0}" -eq 0 ] || STATUS=1
+  if ! printf '%s\0' "${TESTS[@]}" \
+    | xargs -0 -n 1 -P "${PARALLELISM}" "${CLANG_TIDY}" --header-filter='(^|/)mbo/' \
+      --checks="${TEST_DISABLED_CHECKS}" -p . 2>&1 | tee -a "${OUTPUT}"; then
+    STATUS=1
+  fi
 fi
 
 # A `clang-diagnostic-error` means the translation unit did not PARSE - a missing
