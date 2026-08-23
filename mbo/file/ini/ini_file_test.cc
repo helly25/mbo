@@ -15,6 +15,7 @@
 
 #include "mbo/file/ini/ini_file.h"
 
+#include <array>
 #include <cstddef>
 #include <filesystem>
 #include <map>
@@ -37,8 +38,10 @@
 namespace mbo::file {
 namespace {
 
+using ::mbo::testing::StatusIs;
 using ::testing::Eq;
 using ::testing::Gt;
+using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::SizeIs;
@@ -77,11 +80,61 @@ struct IniFileTest : ::testing::Test {
   }
 };
 
-TEST_F(IniFileTest, Parse) {
-  const IniFile ini = IniFile::Parse("root = value\n[group]\n key = data \n");
+TEST_F(IniFileTest, ParseStrictAcceptsGroupsCommentsAndWhitespace) {
+  MBO_ASSERT_OK_AND_ASSIGN(
+      const IniFile ini,
+      IniFile::ParseStrict("  # full-line comment\nroot = value # retained\n[ group ]\n key = data ; retained\n"
+                           "[other]\nkey = same key in another group\n"));
 
-  EXPECT_THAT(ini.GetKeyOrDefault({.group = "", .key = "root"}), Eq("value"));
-  EXPECT_THAT(ini.GetKeyOrDefault({.group = "group", .key = "key"}), Eq("data"));
+  EXPECT_THAT(ini.GetKeyOrDefault({.group = "", .key = "root"}), Eq("value # retained"));
+  EXPECT_THAT(ini.GetKeyOrDefault({.group = "group", .key = "key"}), Eq("data ; retained"));
+  EXPECT_THAT(ini.GetKeyOrDefault({.group = "other", .key = "key"}), Eq("same key in another group"));
+}
+
+TEST_F(IniFileTest, ParseStrictRejectsMalformedInputWithLineNumbers) {
+  struct InvalidCase {
+    std::string_view content;
+    std::string_view message;
+  };
+
+  static constexpr std::array kCases = {
+      InvalidCase{.content = "valid=1\n[group", .message = "line 2: malformed group header"},
+      InvalidCase{.content = "valid=1\ngroup]", .message = "line 2: malformed group header"},
+      InvalidCase{.content = "valid=1\nmissing", .message = "line 2: expected key=value"},
+      InvalidCase{.content = "valid=1\n = empty", .message = "line 2: key must not be empty"},
+      InvalidCase{
+          .content = "key=first\nkey=second",
+          .message = "line 2: duplicate key 'key' in group []; first defined on line 1",
+      },
+      InvalidCase{
+          .content = "[group]\nkey=first\n\nkey=second",
+          .message = "line 4: duplicate key 'key' in group [group]",
+      },
+  };
+
+  for (const auto& test : kCases) {
+    SCOPED_TRACE(test.content);
+    EXPECT_THAT(
+        IniFile::ParseStrict(test.content), StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr(test.message)));
+  }
+}
+
+TEST_F(IniFileTest, PermissiveParserRetainsLegacyMalformedInputBehavior) {
+  const IniFile explicit_permissive = IniFile::ParsePermissive("key=first\nkey=second\nmissing\n");
+  const IniFile compatibility = IniFile::Parse("key=first\nkey=second\n");
+
+  EXPECT_THAT(explicit_permissive.GetKeyOrDefault({.group = "", .key = "key"}), Eq("second"));
+  EXPECT_THAT(explicit_permissive.GetKeyOrDefault({.group = "", .key = "missing"}), IsEmpty());
+  EXPECT_THAT(compatibility.GetKeyOrDefault({.group = "", .key = "key"}), Eq("second"));
+}
+
+TEST_F(IniFileTest, ReadUsesStrictParser) {
+  const std::string filename = JoinPaths(TmpDir(), "invalid.ini");
+  EXPECT_OK(SetContents(filename, "valid=1\ninvalid\n"));
+
+  EXPECT_THAT(
+      IniFile::Read(filename), StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("line 2: expected key=value")));
+  EXPECT_THAT(IniFile::ReadPermissive(filename), StatusIs(absl::StatusCode::kOk));
 }
 
 TEST_F(IniFileTest, TestGolden) {
