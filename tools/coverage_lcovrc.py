@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
-# SPDX-License-Identifier: Apache-2.0
-
 """Generate genhtml color thresholds from mbo's coverage policy."""
 
 import argparse
@@ -9,26 +6,20 @@ import json
 from pathlib import Path
 from typing import Any
 
+import coverage_policy
+
 
 _METRICS = ("line", "function", "branch")
 _POLICY_KEYS = {"line": "lines", "function": "functions", "branch": "branches"}
 
 
 def render(policy: dict[str, Any]) -> str:
-    minimum = policy["minimum"]
-    target = {**minimum, **policy.get("target", {})}
+    overall = coverage_policy.overall(policy)
     lines: list[str] = []
     for metric in _METRICS:
         key = _POLICY_KEYS[metric]
-        medium = int(minimum[key])
-        high = int(target[key])
-        if not 0 <= medium <= high <= 100:
-            raise ValueError(
-                f"{metric} coverage thresholds must satisfy 0 <= minimum <= target <= 100: "
-                f"{medium}, {high}"
-            )
-        lines.append(f"genhtml_{metric}_hi_limit = {high}")
-        lines.append(f"genhtml_{metric}_med_limit = {medium}")
+        lines.append(f"genhtml_{metric}_hi_limit = {overall[key].target:g}")
+        lines.append(f"genhtml_{metric}_med_limit = {overall[key].minimum:g}")
     return "\n".join(lines) + "\n"
 
 

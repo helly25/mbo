@@ -84,6 +84,20 @@ also updates this file to the completed state.
 
 ## Documentation and quality coverage
 
+- [x] Unify coverage ratings, enforcement, and presentation, adopting the
+      applicable final state of
+      [xff PR #639](https://github.com/helly25/xff/pull/639),
+      [xff PR #641](https://github.com/helly25/xff/pull/641), and
+      [xff PR #642](https://github.com/helly25/xff/pull/642).
+  - Derive the low, medium, and high presentation bands and the independently
+    selected enforced rating from one validated policy model.
+  - Preserve justified per-category exceptions and expose every effective
+    policy, reason, and changed-line policy in the published JSON.
+  - Apply metric-specific colours to the detailed LCOV report and render its
+    global policy matrix below the report details.
+  - Render the compact report as a dense, colour-backed measurement and policy
+    matrix with explicit `GOOD`, `OK`, and `BAD` states and JSON links.
+  - PR: [#361](https://github.com/helly25/mbo/pull/361).
 - [x] Make `coverage_policy.json` the single source of truth for enforcement
       and LCOV presentation, adopting the applicable final state of
       [xff PR #631](https://github.com/helly25/xff/pull/631),

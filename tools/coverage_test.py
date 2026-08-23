@@ -19,13 +19,28 @@ class CoverageTest(unittest.TestCase):
         }
         summary = coverage_tool.json_summary(
             {"overall": metric},
-            {"overall": {"lines": 88}},
-            {"overall": {"lines": 90}},
+            {
+                "overall": coverage_tool.coverage_policy.resolve(
+                    {
+                        "minimum": {"lines": 88, "functions": 80, "branches": 60},
+                        "target": {"lines": 90, "functions": 95, "branches": 82},
+                    }
+                )
+            },
+            {},
             metric,
+            coverage_tool.coverage_policy.resolve(
+                {
+                    "minimum": {"lines": 95, "functions": 80, "branches": 85},
+                    "target": {"lines": 98, "functions": 95, "branches": 90},
+                }
+            ),
         )
-        self.assertEqual(summary["schema"], 1)
+        self.assertEqual(summary["schema"], 2)
         self.assertEqual(summary["measurements"]["overall"], metric)
         self.assertEqual(summary["patch"], metric)
+        self.assertEqual(summary["enforcement"]["overall"]["lines"], "medium")
+        self.assertEqual(summary["patch_policy"]["target"]["branches"], 90.0)
 
     def test_parse_filter_and_measure(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -143,8 +158,15 @@ class CoverageTest(unittest.TestCase):
             }
         }
         self.assertEqual(
-            ["overall lines: 79.9% < 80.0%"],
-            coverage_tool.failures(measured, {"overall": {"lines": 80.0}}),
+            ["overall lines: 79.9% is below enforced medium boundary 80%"],
+            coverage_tool.failures(
+                measured,
+                {
+                    "overall": {
+                        "lines": coverage_tool.coverage_policy.MetricPolicy(80, 90, "medium")
+                    }
+                },
+            ),
         )
 
     def test_category_minimum_and_target_are_independently_composable(self):
@@ -157,6 +179,7 @@ class CoverageTest(unittest.TestCase):
                     "include": ["mbo/overridden/**"],
                     "minimum": {"lines": 40.0, "functions": 50.0, "branches": 30.0},
                     "target": {"branches": 90.0},
+                    "reason": "Compile-time alternatives need a lower initial boundary.",
                 },
             },
         }
@@ -180,6 +203,7 @@ class CoverageTest(unittest.TestCase):
                 "compile_time": {
                     "include": ["mbo/types/**"],
                     "minimum": {"branches": 47.0},
+                    "reason": "Compiler-generated branches need a lower initial boundary.",
                 },
             },
         }
@@ -244,21 +268,38 @@ class CoverageTest(unittest.TestCase):
                 "branches": {"covered": 0, "total": 0, "percent": None},
             },
         }
-        minimums = {
-            "overall": {"lines": 80.0, "functions": 60.0, "branches": 70.0},
-            "okay": {"lines": 80.0, "functions": 60.0, "branches": 70.0},
-            "low": {"lines": 80.0, "functions": 40.0, "branches": 70.0},
-            "empty": {"lines": 80.0, "branches": 70.0},
+        def metric_policy(minimum: float, target: float | None = None):
+            return coverage_tool.coverage_policy.MetricPolicy(
+                minimum, minimum if target is None else target, "medium"
+            )
+
+        policies = {
+            "overall": {
+                "lines": metric_policy(80.0),
+                "functions": metric_policy(60.0),
+                "branches": metric_policy(70.0),
+            },
+            "okay": {
+                "lines": metric_policy(80.0),
+                "functions": metric_policy(60.0),
+                "branches": metric_policy(70.0),
+            },
+            "low": {
+                "lines": metric_policy(80.0),
+                "functions": metric_policy(40.0, 60.0),
+                "branches": metric_policy(70.0),
+            },
+            "empty": {"lines": metric_policy(80.0), "branches": metric_policy(70.0)},
         }
         self.assertEqual(
             "| Category     | Status           |  Lines | Covered | Total | Functions | Covered | Total | Branches | Covered | Total |\n"
             "| ------------ | ---------------- | -----: | ------: | ----: | --------: | ------: | ----: | -------: | ------: | ----: |\n"
-            "| overall      | **FAIL: F**      | 90.00% |       9 |    10 |    50.00% |       1 |     2 |   75.00% |       3 |     4 |\n"
-            "| okay         | OK               | 90.00% |       9 |    10 |   100.00% |       2 |     2 |   75.00% |       3 |     4 |\n"
+            "| overall      | **BAD: F**       | 90.00% |       9 |    10 |    50.00% |       1 |     2 |   75.00% |       3 |     4 |\n"
+            "| okay         | GOOD             | 90.00% |       9 |    10 |   100.00% |       2 |     2 |   75.00% |       3 |     4 |\n"
             "| low          | OK               | 90.00% |       9 |    10 |    50.00% |       1 |     2 |   75.00% |       3 |     4 |\n"
             "| empty        | **NO DATA: L/B** |    n/a |       0 |     0 |       n/a |       0 |     0 |      n/a |       0 |     0 |\n"
             "| unconfigured | N/A              |    n/a |       0 |     0 |       n/a |       0 |     0 |      n/a |       0 |     0 |\n",
-            coverage_tool.markdown(measured, minimums),
+            coverage_tool.markdown(measured, policies),
         )
 
 
