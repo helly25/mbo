@@ -34,6 +34,7 @@ also updates this file to the completed state.
   - Preserve insertion semantics in `operator[]`.
   - Require `at()` properties to exist for both mutable and const objects.
   - Verify missing lookup fails without changing the object.
+  - PR: [#365](https://github.com/helly25/mbo/pull/365).
 - [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.
