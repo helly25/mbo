@@ -5,30 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>mbo coverage reports</title>
     <style>
-      body { font: 16px/1.5 system-ui, sans-serif; margin: 2rem auto; max-width: 76rem; padding: 0 1rem; }
+      body { font: 16px/1.5 system-ui, sans-serif; margin: 2rem auto; max-width: 96rem; padding: 0 1rem; }
       a { color: #0969da; }
       table { border-collapse: collapse; margin: 1rem 0 2rem; }
       th, td { border: 1px solid #d0d7de; padding: .35rem .65rem; text-align: right; }
-      th:nth-child(-n+5), td:nth-child(-n+5) { text-align: left; }
-      td:nth-child(n+3) { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
-      .fail { font-weight: bold; color: #cf222e; }
+      .reportTitle { text-align: center; }
+      .coverageTable { border-collapse: separate; border-spacing: 1px; margin-left: auto; margin-right: auto; }
+      .coverageTable th, .coverageTable td { border: 0; }
+      .coverageTable th { background: #6688d4; color: #fff; }
+      .coverageTable thead tr:first-child th { font-size: 120%; text-align: center; }
+      .coverageTable th:first-child, .coverageTable td:first-child,
+      .reportsTable th:nth-child(-n+6), .reportsTable td:nth-child(-n+6) { text-align: left; }
+      .coverageTable td:first-child { background: #dae7fe; color: #284fa8; }
+      .coverageTable td { white-space: nowrap; }
+      .coverageTable td:nth-child(n+3), .patchTable td:nth-child(n+2), .reportsTable td:nth-child(n+7) { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
+      .low { background: #f8cecc; }
+      .medium { background: #fff2cc; }
+      .high { background: #d5e8d4; }
+      .coverageTable .policyGap { background: #fff; min-width: .5rem; padding: 0; }
+      .coverageTable .policyCell { background: #dae7fe; font: 11px/1.25 ui-monospace, SFMono-Regular, Consolas, monospace; text-align: center; }
+      .coverageTable .policy-stricter { background: #a7fc9d; }
+      .coverageTable .policy-weaker { background: #ffea20; }
+      .coverageTable .policy-mixed { background: #ffd580; }
+      .policyNote { font-size: 12px; margin: -1.5rem auto 2rem; max-width: 72rem; text-align: left; }
+      .status-good { background: #d5e8d4; }
+      .status-ok { background: #fff2cc; }
+      .status-bad { background: #f8cecc; color: #cf222e; font-weight: bold; }
     </style>
   </head>
   <body>
     <h1>mbo coverage reports</h1>
-    <table><thead><tr><th>Report</th><th>Source</th><th>Completed</th><th>Commit</th><th>Workflow</th><th>Lines</th><th>Functions</th><th>Branches</th></tr></thead>
+    <table class="reportsTable"><thead><tr><th>Report</th><th>Data</th><th>Source</th><th>Completed</th><th>Commit</th><th>Workflow</th><th>Lines</th><th>Branches</th><th>Functions</th></tr></thead>
       <tbody>
-        <tr><td><a href="main/">main</a></td><td><a href="https://github.com/helly25/mbo/tree/main">main branch</a></td><td>2026-08-23 11:19:52 UTC</td><td><a href="https://github.com/helly25/mbo/commit/18114b16fb7a2c6ff1c75b36aeb4b860db887883"><code>18114b1</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32633497525">run 32633497525</a></td><td>94.89%</td><td>93.72%</td><td>72.83%</td></tr>
-        <tr><td><a href="pr/361/">PR 361</a></td><td><a href="https://github.com/helly25/mbo/pull/361">PR #361</a></td><td>2026-08-23 14:49:47 UTC</td><td><a href="https://github.com/helly25/mbo/commit/b885f9925a8ada208667f96b18d86553a65b1d4b"><code>b885f99</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32644150955">run 32644150955</a></td><td>94.89%</td><td>93.72%</td><td>72.83%</td></tr>
-        <tr><td><a href="pr/360/">PR 360</a></td><td><a href="https://github.com/helly25/mbo/pull/360">PR #360</a></td><td>2026-08-23 10:15:43 UTC</td><td><a href="https://github.com/helly25/mbo/commit/eb65665e119c7cc2d337651ed543f71dff8979ce"><code>eb65665</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32631735603">run 32631735603</a></td><td>94.89%</td><td>93.72%</td><td>72.83%</td></tr>
-        <tr><td><a href="pr/359/">PR 359</a></td><td><a href="https://github.com/helly25/mbo/pull/359">PR #359</a></td><td>2026-08-23 00:54:09 UTC</td><td><a href="https://github.com/helly25/mbo/commit/da01ef81cfd3efcceb6190dd99efc700242d35fe"><code>da01ef8</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32607808207">run 32607808207</a></td><td>94.89%</td><td>93.72%</td><td>72.83%</td></tr>
-        <tr><td><a href="pr/358/">PR 358</a></td><td><a href="https://github.com/helly25/mbo/pull/358">PR #358</a></td><td>2026-08-22 21:53:24 UTC</td><td><a href="https://github.com/helly25/mbo/commit/b5ccea2b4982ace6f6a9b44b880b50a9da0c9fdd"><code>b5ccea2</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32598478333">run 32598478333</a></td><td>94.90%</td><td>93.72%</td><td>72.83%</td></tr>
-        <tr><td><a href="pr/357/">PR 357</a></td><td><a href="https://github.com/helly25/mbo/pull/357">PR #357</a></td><td>2026-08-22 20:52:05 UTC</td><td><a href="https://github.com/helly25/mbo/commit/514e7145bf958283faa15313418ef4e36c99b367"><code>514e714</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32596266452">run 32596266452</a></td><td>94.90%</td><td>91.89%</td><td>72.83%</td></tr>
-        <tr><td><a href="pr/356/">PR 356</a></td><td><a href="https://github.com/helly25/mbo/pull/356">PR #356</a></td><td>2026-08-22 19:48:33 UTC</td><td><a href="https://github.com/helly25/mbo/commit/5916c4912b7c63892910ed2d7c98121d8fa4266d"><code>5916c49</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32592364029">run 32592364029</a></td><td>94.87%</td><td>91.89%</td><td>63.34%</td></tr>
-        <tr><td><a href="pr/355/">PR 355</a></td><td><a href="https://github.com/helly25/mbo/pull/355">PR #355</a></td><td>2026-08-22 19:46:43 UTC</td><td><a href="https://github.com/helly25/mbo/commit/1806c2cccff0ea2a1d2638dbf0f93bd797cf15c1"><code>1806c2c</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32592140963">run 32592140963</a> (attempt 2)</td><td>94.87%</td><td>91.89%</td><td>64.51%</td></tr>
-        <tr><td><a href="pr/354/">PR 354</a></td><td><a href="https://github.com/helly25/mbo/pull/354">PR #354</a></td><td>2026-08-22 18:43:20 UTC</td><td><a href="https://github.com/helly25/mbo/commit/affe5119448a34eac88c0c380108ee4f0d9e9b64"><code>affe511</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32589499263">run 32589499263</a></td><td>94.87%</td><td>91.89%</td><td>63.34%</td></tr>
-        <tr><td><a href="pr/353/">PR 353</a></td><td><a href="https://github.com/helly25/mbo/pull/353">PR #353</a></td><td>2026-08-22 17:45:15 UTC</td><td><a href="https://github.com/helly25/mbo/commit/8d1b4dcdc389f601c82dfb2fecb46bf63a14b72d"><code>8d1b4dc</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32585420318">run 32585420318</a> (attempt 2)</td><td>94.87%</td><td>91.89%</td><td>63.34%</td></tr>
-        <tr><td><a href="pr/351/">PR 351</a></td><td><a href="https://github.com/helly25/mbo/pull/351">PR #351</a></td><td>n/a</td><td>n/a</td><td>n/a</td><td>94.87%</td><td>91.10%</td><td>63.34%</td></tr>
+        <tr><td><a href="main/">main</a></td><td><a href="main/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/tree/main">main branch</a></td><td>2026-08-23 11:19:52 UTC</td><td><a href="https://github.com/helly25/mbo/commit/18114b16fb7a2c6ff1c75b36aeb4b860db887883"><code>18114b1</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32633497525">run 32633497525</a></td><td>94.89%</td><td>72.83%</td><td>93.72%</td></tr>
+        <tr><td><a href="pr/361/">PR 361</a></td><td><a href="pr/361/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/pull/361">PR #361</a></td><td>2026-08-23 14:55:38 UTC</td><td><a href="https://github.com/helly25/mbo/commit/7c47f08bfe219b1a8c7ab873b5935e1c70e0e6b4"><code>7c47f08</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32644187051">run 32644187051</a></td><td>94.89%</td><td>72.83%</td><td>93.72%</td></tr>
+        <tr><td><a href="pr/360/">PR 360</a></td><td><a href="pr/360/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/pull/360">PR #360</a></td><td>2026-08-23 10:15:43 UTC</td><td><a href="https://github.com/helly25/mbo/commit/eb65665e119c7cc2d337651ed543f71dff8979ce"><code>eb65665</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32631735603">run 32631735603</a></td><td>94.89%</td><td>72.83%</td><td>93.72%</td></tr>
+        <tr><td><a href="pr/359/">PR 359</a></td><td><a href="pr/359/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/pull/359">PR #359</a></td><td>2026-08-23 00:54:09 UTC</td><td><a href="https://github.com/helly25/mbo/commit/da01ef81cfd3efcceb6190dd99efc700242d35fe"><code>da01ef8</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32607808207">run 32607808207</a></td><td>94.89%</td><td>72.83%</td><td>93.72%</td></tr>
+        <tr><td><a href="pr/358/">PR 358</a></td><td><a href="pr/358/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/pull/358">PR #358</a></td><td>2026-08-22 21:53:24 UTC</td><td><a href="https://github.com/helly25/mbo/commit/b5ccea2b4982ace6f6a9b44b880b50a9da0c9fdd"><code>b5ccea2</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32598478333">run 32598478333</a></td><td>94.90%</td><td>72.83%</td><td>93.72%</td></tr>
+        <tr><td><a href="pr/357/">PR 357</a></td><td><a href="pr/357/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/pull/357">PR #357</a></td><td>2026-08-22 20:52:05 UTC</td><td><a href="https://github.com/helly25/mbo/commit/514e7145bf958283faa15313418ef4e36c99b367"><code>514e714</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32596266452">run 32596266452</a></td><td>94.90%</td><td>72.83%</td><td>91.89%</td></tr>
+        <tr><td><a href="pr/356/">PR 356</a></td><td><a href="pr/356/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/pull/356">PR #356</a></td><td>2026-08-22 19:48:33 UTC</td><td><a href="https://github.com/helly25/mbo/commit/5916c4912b7c63892910ed2d7c98121d8fa4266d"><code>5916c49</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32592364029">run 32592364029</a></td><td>94.87%</td><td>63.34%</td><td>91.89%</td></tr>
+        <tr><td><a href="pr/355/">PR 355</a></td><td><a href="pr/355/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/pull/355">PR #355</a></td><td>2026-08-22 19:46:43 UTC</td><td><a href="https://github.com/helly25/mbo/commit/1806c2cccff0ea2a1d2638dbf0f93bd797cf15c1"><code>1806c2c</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32592140963">run 32592140963</a> (attempt 2)</td><td>94.87%</td><td>64.51%</td><td>91.89%</td></tr>
+        <tr><td><a href="pr/354/">PR 354</a></td><td><a href="pr/354/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/pull/354">PR #354</a></td><td>2026-08-22 18:43:20 UTC</td><td><a href="https://github.com/helly25/mbo/commit/affe5119448a34eac88c0c380108ee4f0d9e9b64"><code>affe511</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32589499263">run 32589499263</a></td><td>94.87%</td><td>63.34%</td><td>91.89%</td></tr>
+        <tr><td><a href="pr/353/">PR 353</a></td><td><a href="pr/353/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/pull/353">PR #353</a></td><td>2026-08-22 17:45:15 UTC</td><td><a href="https://github.com/helly25/mbo/commit/8d1b4dcdc389f601c82dfb2fecb46bf63a14b72d"><code>8d1b4dc</code></a></td><td><a href="https://github.com/helly25/mbo/actions/runs/32585420318">run 32585420318</a> (attempt 2)</td><td>94.87%</td><td>63.34%</td><td>91.89%</td></tr>
+        <tr><td><a href="pr/351/">PR 351</a></td><td><a href="pr/351/coverage-summary.json">JSON</a></td><td><a href="https://github.com/helly25/mbo/pull/351">PR #351</a></td><td>n/a</td><td>n/a</td><td>n/a</td><td>94.87%</td><td>63.34%</td><td>91.10%</td></tr>
       </tbody>
     </table>
 
