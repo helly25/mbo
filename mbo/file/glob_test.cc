@@ -122,8 +122,14 @@ TEST_F(GlobTest, Glob2Re2Pattern) {
   EXPECT_THAT(Glob2Re2Expression("[a/]"), IsOkAndHolds("[a]"));
   EXPECT_THAT(Glob2Re2Expression("[a\\/]"), IsOkAndHolds("[a]"));
   EXPECT_THAT(Glob2Re2Expression("[.-1]"), IsOkAndHolds("[.0-1]"));
+  EXPECT_THAT(Glob2Re2Expression("[*-1]"), IsOkAndHolds("[*-.0-1]"));
+  EXPECT_THAT(Glob2Re2Expression("[.-0]"), IsOkAndHolds("[.0]"));
   EXPECT_THAT(Glob2Re2Expression("[/-1]"), IsOkAndHolds("[0-1]"));
   EXPECT_THAT(Glob2Re2Expression("[.-/]"), IsOkAndHolds("[.]"));
+  EXPECT_THAT(Glob2Re2Expression("[-/]"), IsOkAndHolds("[-]"));
+  EXPECT_THAT(Glob2Re2Expression("[a\\-]"), IsOkAndHolds("[a\\-]"));
+  EXPECT_THAT(Glob2Re2Expression("[!a/]"), IsOkAndHolds("[^/a]"));
+  EXPECT_THAT(Glob2Re2Expression("[a-z]"), IsOkAndHolds("[a-z]"));
   EXPECT_THAT(Glob2Re2Expression("[:]"), IsOkAndHolds("[:]"));
   EXPECT_THAT(Glob2Re2Expression("[:]"), IsOkAndHolds("[:]"));
   EXPECT_THAT(Glob2Re2Expression("[[:alnum:]]"), IsOkAndHolds("[[:alnum:]]"));
@@ -164,6 +170,7 @@ TEST_F(GlobTest, Glob2Re2PatternErrors) {
   EXPECT_THAT(Glob2Re2Expression("[\\"), no_char_to_escape);
   EXPECT_THAT(Glob2Re2Expression("[a\\"), no_char_to_escape);
   EXPECT_THAT(Glob2Re2Expression("[!a\\"), no_char_to_escape);
+  EXPECT_THAT(Glob2Re2Expression("[a-\\"), no_char_to_escape);
   const auto unterminated_char_class = StatusIs(absl::StatusCode::kInvalidArgument, "Unterminated character-class.");
   EXPECT_THAT(Glob2Re2Expression("[[:]"), unterminated_char_class);
   EXPECT_THAT(Glob2Re2Expression("[[:]]"), unterminated_char_class);
@@ -198,6 +205,17 @@ TEST_F(GlobTest, Glob2Re2) {
   Glob2Re2Match("[.-1]", ".");
   Glob2Re2Match("[.-1]", "0");
   Glob2Re2Match("[.-1]", "1");
+  Glob2Re2Match("[*-1]", "*");
+  Glob2Re2Match("[*-1]", "/", false);
+  Glob2Re2Match("[*-1]", "1");
+  Glob2Re2Match("[.-0]", ".");
+  Glob2Re2Match("[.-0]", "/", false);
+  Glob2Re2Match("[.-0]", "0");
+  Glob2Re2Match("[-/]", "-");
+  Glob2Re2Match("[-/]", "/", false);
+  Glob2Re2Match("[a\\-]", "-");
+  Glob2Re2Match("[!a/]", "/", false);
+  Glob2Re2Match("[a-z]", "m");
   Glob2Re2Match("[![:alpha:]]", "/", false);
   Glob2Re2Match("[![:alpha:]]", "1");
   Glob2Re2Match("[!]]", "]", false);
@@ -236,6 +254,7 @@ TEST_F(GlobTest, GlobSplitParts) {
 }
 
 TEST_F(GlobTest, GlobSplitPartsWithRanges) {
+  EXPECT_THAT(GlobSplitParts("[a-"), StatusIs(absl::StatusCode::kInvalidArgument, "Unterminated range expression."));
   EXPECT_THAT(GlobSplitParts("a[/]b/[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b/[-/]c"), IsOkAndHolds(HasParts("a/b", "[-/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b/[!/]c"), IsOkAndHolds(HasParts("a/b", "[!/]c", false)));

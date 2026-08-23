@@ -98,22 +98,16 @@ MBO_ALWAYS_INLINE bool GlobFindRangePrefix(std::string_view& pattern, std::strin
   return false;
 }
 
-bool TakeNextChar(std::string_view& pattern, std::string& token) {
+// `pattern` is non-empty and normalized, so every escape has a successor.
+void TakeNextChar(std::string_view& pattern, std::string& token) {
   token.clear();
-  if (pattern.empty()) {
-    return false;
-  }
   if (pattern.front() != '\\') {
     token += pattern.front();
     pattern.remove_prefix(1);
-    return true;
-  }
-  if (pattern.size() < 2) {
-    return false;
+    return;
   }
   token.append(pattern.substr(0, 2));
   pattern.remove_prefix(2);
-  return true;
 }
 
 void AppendPositiveRangeWithoutSlash(
@@ -144,17 +138,14 @@ struct GlobRangeState {
   std::size_t last_output_start;
 };
 
-absl::Status ConsumeRangeToken(std::string_view& pattern, std::string& re2_pattern, GlobRangeState& state) {
+void ConsumeRangeToken(std::string_view& pattern, std::string& re2_pattern, GlobRangeState& state) {
   std::string token;
-  if (!TakeNextChar(pattern, token)) {
-    return absl::InvalidArgumentError("Unterminated range expression ending in back-slash.");
-  }
+  TakeNextChar(pattern, token);
   state.last_output_start = re2_pattern.size();
   state.last_token = token;
   if (token.back() != '/') {
     re2_pattern += token;
   }
-  return absl::OkStatus();
 }
 
 absl::StatusOr<bool> ConsumeRangeDash(std::string_view& pattern, std::string& re2_pattern, GlobRangeState& state) {
@@ -168,9 +159,7 @@ absl::StatusOr<bool> ConsumeRangeDash(std::string_view& pattern, std::string& re
     return true;
   }
   std::string token;
-  if (!TakeNextChar(pattern, token)) {
-    return absl::InvalidArgumentError("Unterminated range expression ending in back-slash.");
-  }
+  TakeNextChar(pattern, token);
   if (state.pos == 1) {
     re2_pattern += '-';
     state.last_output_start = re2_pattern.size();
@@ -181,9 +170,8 @@ absl::StatusOr<bool> ConsumeRangeDash(std::string_view& pattern, std::string& re
     return false;
   }
   const char last = token.back();
-  const char first = state.last_token.empty() ? '\0' : state.last_token.back();
-  const bool crosses_slash =
-      !state.negative && !state.last_token.empty() && first < last && first <= '/' && '/' <= last;
+  const char first = state.last_token.back();
+  const bool crosses_slash = !state.negative && first < last && first <= '/' && '/' <= last;
   if (crosses_slash) {
     re2_pattern.erase(state.last_output_start);
     AppendPositiveRangeWithoutSlash(state.last_token, first, token, last, re2_pattern);
@@ -211,7 +199,7 @@ MBO_ALWAYS_INLINE absl::Status GlobFindRange(std::string_view& pattern, std::str
     const char chr = pattern.front();
     switch (chr) {
       default: {
-        MBO_RETURN_IF_ERROR(ConsumeRangeToken(pattern, re2_pattern, state));
+        ConsumeRangeToken(pattern, re2_pattern, state);
         continue;
       }
       case '/':
