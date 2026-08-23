@@ -202,6 +202,14 @@ TEST_F(MopeTest, RangeOperandsCanReferenceTemplateValues) {
   EXPECT_THAT(output, "234");
 }
 
+TEST_F(MopeTest, NestedRangeOperandsCanReferenceTheOuterRange) {
+  constexpr std::string_view kInput = "{{#outer=1;3}}{{#inner=outer;outer}}{{inner}}{{/inner}}{{/outer}}";
+  const Template tpl;
+  std::string output(kInput);
+  ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
+  EXPECT_THAT(output, "123");
+}
+
 TEST_F(MopeTest, RangeRejectsZeroAndNonNumericOperands) {
   constexpr std::string_view kZeroStepInput = "{{#index=1;3;0}}{{index}}{{/index}}";
   constexpr std::string_view kBadOperandInput = "{{#index=bad;3}}{{index}}{{/index}}";
