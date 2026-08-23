@@ -113,10 +113,11 @@ TEST_F(NoDestructTest, Modify) {
 }
 
 TEST_F(NoDestructTest, HashesAndStringifiesStoredValue) {
-  const NoDestruct<std::string> value("Good Morning America!");
+  constexpr int kValue = 123;
+  const NoDestruct<int> value(kValue);
 
   EXPECT_THAT(absl::HashOf(value), absl::HashOf(*value));
-  EXPECT_THAT(absl::StrCat(value), "Good Morning America!");
+  EXPECT_THAT(absl::StrCat(value), "123");
 }
 
 TEST_F(NoDestructTest, DoesNotDestroyStoredValue) {
