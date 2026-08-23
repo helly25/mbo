@@ -3,18 +3,18 @@
   "measurements": {
     "overall": {
       "lines": {
-        "covered": 6261,
-        "total": 6598,
-        "percent": 94.89
+        "covered": 6296,
+        "total": 6638,
+        "percent": 94.85
       },
       "functions": {
-        "covered": 10938,
-        "total": 11671,
+        "covered": 10944,
+        "total": 11677,
         "percent": 93.72
       },
       "branches": {
-        "covered": 9551,
-        "total": 13115,
+        "covered": 9569,
+        "total": 13139,
         "percent": 72.83
       }
     },
@@ -71,19 +71,19 @@
     },
     "file": {
       "lines": {
-        "covered": 649,
-        "total": 734,
-        "percent": 88.42
+        "covered": 684,
+        "total": 774,
+        "percent": 88.37
       },
       "functions": {
-        "covered": 126,
-        "total": 130,
-        "percent": 96.92
+        "covered": 131,
+        "total": 135,
+        "percent": 97.04
       },
       "branches": {
-        "covered": 418,
-        "total": 566,
-        "percent": 73.85
+        "covered": 436,
+        "total": 590,
+        "percent": 73.9
       }
     },
     "hash": {
@@ -195,9 +195,9 @@
         "percent": 90.72
       },
       "functions": {
-        "covered": 610,
-        "total": 701,
-        "percent": 87.02
+        "covered": 611,
+        "total": 702,
+        "percent": 87.04
       },
       "branches": {
         "covered": 114,
