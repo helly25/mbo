@@ -21,6 +21,14 @@ also updates this file to the completed state.
   - Remove the redundant self-reference and its pointer-sized overhead.
   - Instantiate customizations and throwing construction in tests.
   - PR: [#363](https://github.com/helly25/mbo/pull/363).
+- [x] Let allocating `Json` operations propagate failures.
+  - Remove unconditional `noexcept` from generic and string construction.
+  - Remove unconditional `noexcept` from object property access that may
+    allocate or invoke the configured throwing requirement handler.
+  - Exercise a throwing consumer string conversion in an exception-enabled
+    compatibility test.
+  - Keep runtime struct metadata initialization non-throwing by using guarded
+    indexing instead of a redundant throwing bounds check.
 - [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.
