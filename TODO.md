@@ -20,6 +20,7 @@ also updates this file to the completed state.
   - Hash and stringify the stored value rather than the backing union.
   - Remove the redundant self-reference and its pointer-sized overhead.
   - Instantiate customizations and throwing construction in tests.
+  - PR: [#363](https://github.com/helly25/mbo/pull/363).
 - [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.
