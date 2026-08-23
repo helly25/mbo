@@ -57,6 +57,18 @@ using ::testing::NotNull;
 using ::testing::UnorderedElementsAreArray;
 
 struct GlobTest : ::testing::Test {
+  static void Glob2Re2OnlyMatch(
+      std::string_view glob_pattern,
+      std::string_view text,
+      bool expected = true,
+      const std::source_location sloc = std::source_location::current()) {
+    SCOPED_TRACE(absl::StrCat(
+        "\n", sloc.file_name(), ":", sloc.line(), "\n  Pattern: '", glob_pattern, "'\n  Text: '", text, "'"));
+    MBO_ASSERT_OK_AND_MOVE_TO(Glob2Re2(glob_pattern), const std::unique_ptr<const RE2> re2_pattern);
+    ASSERT_THAT(re2_pattern, NotNull());
+    EXPECT_THAT(re2::RE2::FullMatch(text, *re2_pattern), expected);
+  }
+
   static void Glob2Re2Match(
       std::string_view glob_pattern,
       std::string_view text,
@@ -113,6 +125,8 @@ TEST_F(GlobTest, Glob2Re2Pattern) {
   EXPECT_THAT(Glob2Re2Expression("*/*****?/"), IsOkAndHolds("[^/]*/.*[^/]"));
   EXPECT_THAT(Glob2Re2Expression("/*/*****?/"), IsOkAndHolds("/[^/]*/.*[^/]"));
   EXPECT_THAT(Glob2Re2Expression("**/abc/**"), IsOkAndHolds("(.+/)?abc(/.+)?"));
+  EXPECT_THAT(Glob2Re2Expression("foo/**/bar"), IsOkAndHolds("foo(/.+)?/bar"));
+  EXPECT_THAT(Glob2Re2Expression("foo/*/bar"), IsOkAndHolds("foo/[^/]*/bar"));
   EXPECT_THAT(Glob2Re2Expression("abc/**"), IsOkAndHolds("abc(/.+)?"));
   EXPECT_THAT(Glob2Re2Expression("**/abc"), IsOkAndHolds("(.+/)?abc"));
   EXPECT_THAT(Glob2Re2Expression("[]]"), IsOkAndHolds("[\\]]"));
@@ -190,6 +204,12 @@ TEST_F(GlobTest, Glob2Re2PatternErrors) {
 }
 
 TEST_F(GlobTest, Glob2Re2) {
+  Glob2Re2OnlyMatch("foo/**/bar", "foo/bar");
+  Glob2Re2OnlyMatch("foo/**/bar", "foo/a/bar");
+  Glob2Re2OnlyMatch("foo/**/bar", "foo/a/b/bar");
+  Glob2Re2Match("foo/*/bar", "foo/bar", false);
+  Glob2Re2Match("foo/*/bar", "foo/a/bar");
+  Glob2Re2Match("foo/*/bar", "foo/a/b/bar", false);
   Glob2Re2Match("[]]", "]");
   Glob2Re2Match("[]]", "x", false);
   Glob2Re2Match("[]]", "", false);
