@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - hash/mbo/hash/hash_murmur3.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">hash</a>/<a href="../index.html">mbo</a>/<a href="index.html">hash</a> - hash_murmur3.h<span style="font-size: 80%;"> (source / <a href="hash_murmur3.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory hash">hash</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory hash">hash</a> - hash_murmur3.h<span style="font-size: 80%;"> (source / <a href="hash_murmur3.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">4</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -120,7 +127,7 @@
 <span id="L42"><span class="lineNum">      42</span>                 :             : // 128-bit variant, canonical MurmurHash3_x64_128 (default seed 0 as in the</span>
 <span id="L43"><span class="lineNum">      43</span>                 :             : // reference implementation; the reference takes a 32-bit seed -- pass seeds</span>
 <span id="L44"><span class="lineNum">      44</span>                 :             : // within uint32_t range for value compatibility).</span>
-<span id="L45"><span class="lineNum">      45</span>                 :<span class="tlaGNC tlaBgGNC">     2128957 : constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = 0) noexcept {</span></span>
+<span id="L45"><span class="lineNum">      45</span>                 :<span class="tlaGNC">     2128957 : constexpr Hash128 GetHash128(std::string_view str, uint64_t seed = 0) noexcept {</span></span>
 <span id="L46"><span class="lineNum">      46</span>                 :<span class="tlaGNC">     2128957 :   constexpr uint64_t kMul1 = 0x87C37B91114253D5ULL;</span></span>
 <span id="L47"><span class="lineNum">      47</span>                 :<span class="tlaGNC">     2128957 :   constexpr uint64_t kMul2 = 0x4CF5AD432745937FULL;</span></span>
 <span id="L48"><span class="lineNum">      48</span>                 :             : </span>
@@ -131,7 +138,7 @@
 <span id="L53"><span class="lineNum">      53</span>                 :<span class="tlaGNC">     2128957 :   uint64_t hash2 = seed;</span></span>
 <span id="L54"><span class="lineNum">      54</span>                 :             : </span>
 <span id="L55"><span class="lineNum">      55</span>                 :<span class="tlaGNC">     2128957 :   const std::size_t blocks = len / 16;</span></span>
-<span id="L56"><span class="lineNum">      56</span>         [<span class="tlaGBC" title="Branch 0 was taken 2772183 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2128957 times"> + </span>]:<span class="tlaGNC">     4901140 :   for (std::size_t i = 0; i &lt; blocks; ++i) {</span></span>
+<span id="L56"><span class="lineNum">      56</span>         [<span class="tlaGBC" title="branch 0 was taken 2772183 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2128957 times"> + </span>]:<span class="tlaGNC">     4901140 :   for (std::size_t i = 0; i &lt; blocks; ++i) {</span></span>
 <span id="L57"><span class="lineNum">      57</span>                 :<span class="tlaGNC">     2772183 :     uint64_t key1 = hash_internal::Load64(ptr);</span></span>
 <span id="L58"><span class="lineNum">      58</span>                 :<span class="tlaGNC">     2772183 :     uint64_t key2 = hash_internal::Load64(ptr + 8);</span></span>
 <span id="L59"><span class="lineNum">      59</span>                 :<span class="tlaGNC">     2772183 :     ptr += 16;</span></span>
@@ -154,14 +161,14 @@
 <span id="L76"><span class="lineNum">      76</span>                 :             :   }</span>
 <span id="L77"><span class="lineNum">      77</span>                 :             : </span>
 <span id="L78"><span class="lineNum">      78</span>                 :<span class="tlaGNC">     2128957 :   const std::size_t tail = len % 16;</span></span>
-<span id="L79"><span class="lineNum">      79</span>         [<span class="tlaGBC" title="Branch 0 was taken 2064124 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 64833 times"> + </span>]:<span class="tlaGNC">     2128957 :   if (tail &gt; 8) {</span></span>
+<span id="L79"><span class="lineNum">      79</span>         [<span class="tlaGBC" title="branch 0 was taken 2064124 times"> + </span><span class="tlaGBC" title="branch 1 was taken 64833 times"> + </span>]:<span class="tlaGNC">     2128957 :   if (tail &gt; 8) {</span></span>
 <span id="L80"><span class="lineNum">      80</span>                 :<span class="tlaGNC">     2064124 :     uint64_t key2 = hash_internal::LoadTail(ptr + 8, tail - 8);</span></span>
 <span id="L81"><span class="lineNum">      81</span>                 :<span class="tlaGNC">     2064124 :     key2 *= kMul2;</span></span>
 <span id="L82"><span class="lineNum">      82</span>                 :<span class="tlaGNC">     2064124 :     key2 = std::rotl(key2, 33);</span></span>
 <span id="L83"><span class="lineNum">      83</span>                 :<span class="tlaGNC">     2064124 :     key2 *= kMul1;</span></span>
 <span id="L84"><span class="lineNum">      84</span>                 :<span class="tlaGNC">     2064124 :     hash2 ^= key2;</span></span>
 <span id="L85"><span class="lineNum">      85</span>                 :             :   }</span>
-<span id="L86"><span class="lineNum">      86</span>         [<span class="tlaGBC" title="Branch 0 was taken 2128275 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 682 times"> + </span>]:<span class="tlaGNC">     2128957 :   if (tail &gt; 0) {</span></span>
+<span id="L86"><span class="lineNum">      86</span>         [<span class="tlaGBC" title="branch 0 was taken 2128275 times"> + </span><span class="tlaGBC" title="branch 1 was taken 682 times"> + </span>]:<span class="tlaGNC">     2128957 :   if (tail &gt; 0) {</span></span>
 <span id="L87"><span class="lineNum">      87</span>                 :<span class="tlaGNC">     2128275 :     uint64_t key1 = hash_internal::LoadTail(ptr, tail &lt; 8 ? tail : 8);</span></span>
 <span id="L88"><span class="lineNum">      88</span>                 :<span class="tlaGNC">     2128275 :     key1 *= kMul1;</span></span>
 <span id="L89"><span class="lineNum">      89</span>                 :<span class="tlaGNC">     2128275 :     key1 = std::rotl(key1, 31);</span></span>
@@ -211,7 +218,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

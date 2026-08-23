@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - container/mbo/container/convert_container.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">container</a>/<a href="../index.html">mbo</a>/<a href="index.html">container</a> - convert_container.h<span style="font-size: 80%;"> (source / <a href="convert_container.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory container">container</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory container">container</a> - convert_container.h<span style="font-size: 80%;"> (source / <a href="convert_container.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">44</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -108,7 +115,7 @@
 <span id="L30"><span class="lineNum">      30</span>                 :             :   using ValueType =</span>
 <span id="L31"><span class="lineNum">      31</span>                 :             :       mbo::types::types_internal::ValueOrResultT&lt;typename std::remove_reference_t&lt;Container&gt;::value_type, Func&gt;;</span>
 <span id="L32"><span class="lineNum">      32</span>                 :             : </span>
-<span id="L33"><span class="lineNum">      33</span>                 :<span class="tlaGNC tlaBgGNC">          76 :   explicit ConvertContainer(Container&amp;&amp; container) noexcept</span></span>
+<span id="L33"><span class="lineNum">      33</span>                 :<span class="tlaGNC">          76 :   explicit ConvertContainer(Container&amp;&amp; container) noexcept</span></span>
 <span id="L34"><span class="lineNum">      34</span>                 :             :   requires std::same_as&lt;Func, NoFunc&gt;</span>
 <span id="L35"><span class="lineNum">      35</span>                 :<span class="tlaGNC">          76 :       : container_(std::forward&lt;Container&gt;(container)) {}</span></span>
 <span id="L36"><span class="lineNum">      36</span>                 :             : </span>
@@ -126,7 +133,7 @@
 <span id="L48"><span class="lineNum">      48</span>                 :             :   requires mbo::types::ContainerCopyConvertible&lt;Container, ContainerOut, Func&gt;</span>
 <span id="L49"><span class="lineNum">      49</span>                 :<span class="tlaGNC">          80 :   operator ContainerOut() {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)</span></span>
 <span id="L50"><span class="lineNum">      50</span>                 :<span class="tlaGNC">          80 :     ContainerOut result;</span></span>
-<span id="L51"><span class="lineNum">      51</span>         [<span class="tlaGBC" title="Branch 0 was taken 681 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 80 times"> + </span>]:<span class="tlaGNC">         761 :     for (auto&amp;&amp; v : container_) {</span></span>
+<span id="L51"><span class="lineNum">      51</span>         [<span class="tlaGBC" title="branch 0 was taken 681 times"> + </span><span class="tlaGBC" title="branch 1 was taken 80 times"> + </span>]:<span class="tlaGNC">         761 :     for (auto&amp;&amp; v : container_) {</span></span>
 <span id="L52"><span class="lineNum">      52</span>                 :             :       if constexpr (mbo::types::ContainerHasEmplace&lt;ContainerOut, ValueType&gt;) {</span>
 <span id="L53"><span class="lineNum">      53</span>                 :             :         if constexpr (std::same_as&lt;Func, NoFunc&gt;) {</span>
 <span id="L54"><span class="lineNum">      54</span>                 :<span class="tlaGNC">          19 :           result.emplace(std::move(v));</span></span>
@@ -212,7 +219,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

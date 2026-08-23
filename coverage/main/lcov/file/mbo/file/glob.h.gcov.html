@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - file/mbo/file/glob.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">file</a>/<a href="../index.html">mbo</a>/<a href="index.html">file</a> - glob.h<span style="font-size: 80%;"> (source / <a href="glob.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory file">file</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory file">file</a> - glob.h<span style="font-size: 80%;"> (source / <a href="glob.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,23 +43,16 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">92.3&nbsp;%</td>
+            <td class="headerCovTableEntryMed">92.3&nbsp;%</td>
             <td class="headerCovTableEntry">13</td>
             <td class="headerCovTableEntry">12</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryLo">33.3&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -188,7 +195,7 @@
 <span id="L110"><span class="lineNum">     110</span>                 :             : // Splits a pattern into the root part and the actual pattern for use with `Glob`.</span>
 <span id="L111"><span class="lineNum">     111</span>                 :             : template&lt;typename T&gt;</span>
 <span id="L112"><span class="lineNum">     112</span>                 :             : requires(std::same_as&lt;T, std::filesystem::path&gt; || std::convertible_to&lt;T, std::string_view&gt;)</span>
-<span id="L113"><span class="lineNum">     113</span>                 :<span class="tlaGNC tlaBgGNC">          27 : inline absl::StatusOr&lt;RootAndPattern&gt; GlobSplit(const T&amp; pattern, const Glob2Re2Options&amp; options = {}) {</span></span>
+<span id="L113"><span class="lineNum">     113</span>                 :<span class="tlaGNC">          27 : inline absl::StatusOr&lt;RootAndPattern&gt; GlobSplit(const T&amp; pattern, const Glob2Re2Options&amp; options = {}) {</span></span>
 <span id="L114"><span class="lineNum">     114</span>                 :             :   if constexpr (std::same_as&lt;T, std::filesystem::path&gt;) {</span>
 <span id="L115"><span class="lineNum">     115</span>                 :<span class="tlaGNC">           6 :     return file_internal::GlobSplit(pattern.native(), options);</span></span>
 <span id="L116"><span class="lineNum">     116</span>                 :             :   } else {</span>
@@ -209,19 +216,19 @@
 <span id="L131"><span class="lineNum">     131</span>                 :             : </span>
 <span id="L132"><span class="lineNum">     132</span>                 :             :   // Returns the path for the `entry` either as is or relative to `root` if that was requested using</span>
 <span id="L133"><span class="lineNum">     133</span>                 :             :   // `GlobOptions.use_rel_path`.</span>
-<span id="L134"><span class="lineNum">     134</span>                 :<span class="tlaUNC tlaBgUNC">           0 :   const std::filesystem::path&amp; MaybeRelativePath() const noexcept {</span></span>
-<span id="L135"><span class="lineNum">     135</span>         [<span class="tlaUNC" title="Branch 0 was not executed"> # </span><span class="tlaUNC" title="Branch 1 was not executed"> # </span>]:<span class="tlaUNC">           0 :     return rel_path.has_value() ? *rel_path : entry.path();</span></span>
+<span id="L134"><span class="lineNum">     134</span>                 :<span class="tlaUNC">           0 :   const std::filesystem::path&amp; MaybeRelativePath() const noexcept {</span></span>
+<span id="L135"><span class="lineNum">     135</span>         [<span class="tlaUNC" title="branch 0 was not executed"> # </span><span class="tlaUNC" title="branch 1 was not executed"> # </span>]:<span class="tlaUNC">           0 :     return rel_path.has_value() ? *rel_path : entry.path();</span></span>
 <span id="L136"><span class="lineNum">     136</span>                 :             :   }</span>
 <span id="L137"><span class="lineNum">     137</span>                 :             : </span>
 <span id="L138"><span class="lineNum">     138</span>                 :             :   // Returns the file's size or 0 if the entry is not a regular file.</span>
 <span id="L139"><span class="lineNum">     139</span>                 :             :   // If the file size cannot be retrieved, then the function also returns 0.</span>
-<span id="L140"><span class="lineNum">     140</span>                 :<span class="tlaGNC tlaBgGNC">          23 :   std::size_t FileSize() const noexcept {</span></span>
-<span id="L141"><span class="lineNum">     141</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 23 times"> + </span>]:<span class="tlaGNC">          23 :     if (!entry.is_regular_file()) {</span></span>
-<span id="L142"><span class="lineNum">     142</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       return 0;</span></span>
+<span id="L140"><span class="lineNum">     140</span>                 :<span class="tlaGNC">          23 :   std::size_t FileSize() const noexcept {</span></span>
+<span id="L141"><span class="lineNum">     141</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 23 times"> + </span>]:<span class="tlaGNC">          23 :     if (!entry.is_regular_file()) {</span></span>
+<span id="L142"><span class="lineNum">     142</span>                 :<span class="tlaUNC">           0 :       return 0;</span></span>
 <span id="L143"><span class="lineNum">     143</span>                 :             :     }</span>
-<span id="L144"><span class="lineNum">     144</span>                 :<span class="tlaGNC tlaBgGNC">          23 :     std::error_code error;</span></span>
+<span id="L144"><span class="lineNum">     144</span>                 :<span class="tlaGNC">          23 :     std::error_code error;</span></span>
 <span id="L145"><span class="lineNum">     145</span>                 :<span class="tlaGNC">          23 :     const std::size_t result = entry.file_size(error);</span></span>
-<span id="L146"><span class="lineNum">     146</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 23 times"> + </span>]:<span class="tlaGNC">          23 :     return error ? 0 : result;</span></span>
+<span id="L146"><span class="lineNum">     146</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 23 times"> + </span>]:<span class="tlaGNC">          23 :     return error ? 0 : result;</span></span>
 <span id="L147"><span class="lineNum">     147</span>                 :             :   }</span>
 <span id="L148"><span class="lineNum">     148</span>                 :             : };</span>
 <span id="L149"><span class="lineNum">     149</span>                 :             : </span>
@@ -290,7 +297,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

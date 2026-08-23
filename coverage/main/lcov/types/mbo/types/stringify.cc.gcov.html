@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - types/mbo/types/stringify.cc</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">types</a>/<a href="../index.html">mbo</a>/<a href="index.html">types</a> - stringify.cc<span style="font-size: 80%;"> (source / <a href="stringify.cc.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory types">types</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory types">types</a> - stringify.cc<span style="font-size: 80%;"> (source / <a href="stringify.cc.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">9</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryHi">93.8&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -98,19 +105,19 @@
 <span id="L20"><span class="lineNum">      20</span>                 :             : </span>
 <span id="L21"><span class="lineNum">      21</span>                 :             : namespace mbo::types {</span>
 <span id="L22"><span class="lineNum">      22</span>                 :             : </span>
-<span id="L23"><span class="lineNum">      23</span>                 :<span class="tlaGNC tlaBgGNC">          10 : std::string StringifyOptions::DebugStr() const {</span></span>
+<span id="L23"><span class="lineNum">      23</span>                 :<span class="tlaGNC">          10 : std::string StringifyOptions::DebugStr() const {</span></span>
 <span id="L24"><span class="lineNum">      24</span>                 :             : // NOLINTNEXTLINE(*-macro-usage)</span>
 <span id="L25"><span class="lineNum">      25</span>                 :             : #define SHOW_DEFAULT(name)        \</span>
 <span id="L26"><span class="lineNum">      26</span>                 :             :   if (this == &amp;Stringify::name()) \</span>
 <span id="L27"><span class="lineNum">      27</span>                 :             :   return &quot;{} // &quot; #name &quot;\n&quot;</span>
-<span id="L28"><span class="lineNum">      28</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          12 :   SHOW_DEFAULT(OptionsDefault);</span></span>
-<span id="L29"><span class="lineNum">      29</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">           9 :   SHOW_DEFAULT(OptionsDefault);</span></span>
-<span id="L30"><span class="lineNum">      30</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">          11 :   SHOW_DEFAULT(OptionsDisabled);</span></span>
-<span id="L31"><span class="lineNum">      31</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 7 times"> + </span>]:<span class="tlaGNC">          10 :   SHOW_DEFAULT(OptionsCpp);</span></span>
-<span id="L32"><span class="lineNum">      32</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">           9 :   SHOW_DEFAULT(OptionsCppPretty);</span></span>
-<span id="L33"><span class="lineNum">      33</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           8 :   SHOW_DEFAULT(OptionsJson);</span></span>
-<span id="L34"><span class="lineNum">      34</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           7 :   SHOW_DEFAULT(OptionsJsonLine);</span></span>
-<span id="L35"><span class="lineNum">      35</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           6 :   SHOW_DEFAULT(OptionsJsonPretty);</span></span>
+<span id="L28"><span class="lineNum">      28</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          12 :   SHOW_DEFAULT(OptionsDefault);</span></span>
+<span id="L29"><span class="lineNum">      29</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">           9 :   SHOW_DEFAULT(OptionsDefault);</span></span>
+<span id="L30"><span class="lineNum">      30</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">          11 :   SHOW_DEFAULT(OptionsDisabled);</span></span>
+<span id="L31"><span class="lineNum">      31</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 7 times"> + </span>]:<span class="tlaGNC">          10 :   SHOW_DEFAULT(OptionsCpp);</span></span>
+<span id="L32"><span class="lineNum">      32</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">           9 :   SHOW_DEFAULT(OptionsCppPretty);</span></span>
+<span id="L33"><span class="lineNum">      33</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           8 :   SHOW_DEFAULT(OptionsJson);</span></span>
+<span id="L34"><span class="lineNum">      34</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           7 :   SHOW_DEFAULT(OptionsJsonLine);</span></span>
+<span id="L35"><span class="lineNum">      35</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           6 :   SHOW_DEFAULT(OptionsJsonPretty);</span></span>
 <span id="L36"><span class="lineNum">      36</span>                 :             : #undef SHOW_DEFAULT</span>
 <span id="L37"><span class="lineNum">      37</span>                 :             : </span>
 <span id="L38"><span class="lineNum">      38</span>                 :<span class="tlaGNC">           3 :   std::ostringstream out;</span></span>
@@ -136,7 +143,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

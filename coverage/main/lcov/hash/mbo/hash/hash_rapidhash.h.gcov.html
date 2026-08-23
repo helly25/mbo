@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - hash/mbo/hash/hash_rapidhash.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">hash</a>/<a href="../index.html">mbo</a>/<a href="index.html">hash</a> - hash_rapidhash.h<span style="font-size: 80%;"> (source / <a href="hash_rapidhash.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory hash">hash</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory hash">hash</a> - hash_rapidhash.h<span style="font-size: 80%;"> (source / <a href="hash_rapidhash.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">3</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -126,7 +133,7 @@
 <span id="L48"><span class="lineNum">      48</span>                 :             : };</span>
 <span id="L49"><span class="lineNum">      49</span>                 :             : </span>
 <span id="L50"><span class="lineNum">      50</span>                 :             : // rapid_mix: 64x64-&gt;128 multiply folded by XOR (the &quot;FAST&quot; variant).</span>
-<span id="L51"><span class="lineNum">      51</span>                 :<span class="tlaGNC tlaBgGNC">     7030079 : constexpr uint64_t Mix(uint64_t lhs, uint64_t rhs) noexcept {</span></span>
+<span id="L51"><span class="lineNum">      51</span>                 :<span class="tlaGNC">     7030079 : constexpr uint64_t Mix(uint64_t lhs, uint64_t rhs) noexcept {</span></span>
 <span id="L52"><span class="lineNum">      52</span>                 :<span class="tlaGNC">     7030079 :   return hash_internal::Mul128Fold64(lhs, rhs);</span></span>
 <span id="L53"><span class="lineNum">      53</span>                 :             : }</span>
 <span id="L54"><span class="lineNum">      54</span>                 :             : </span>
@@ -147,30 +154,30 @@
 <span id="L69"><span class="lineNum">      69</span>                 :<span class="tlaGNC">     2128968 :   uint64_t val_b = 0;</span></span>
 <span id="L70"><span class="lineNum">      70</span>                 :<span class="tlaGNC">     2128968 :   std::size_t remaining = len;</span></span>
 <span id="L71"><span class="lineNum">      71</span>                 :             : </span>
-<span id="L72"><span class="lineNum">      72</span>         [<span class="tlaGBC" title="Branch 0 was taken 64176 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2064792 times"> + </span>]:<span class="tlaGNC">     2128968 :   if (len &lt;= 16) {</span></span>
-<span id="L73"><span class="lineNum">      73</span>         [<span class="tlaGBC" title="Branch 0 was taken 64162 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 14 times"> + </span>]:<span class="tlaGNC">       64176 :     if (len &gt;= 4) {</span></span>
+<span id="L72"><span class="lineNum">      72</span>         [<span class="tlaGBC" title="branch 0 was taken 64176 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2064792 times"> + </span>]:<span class="tlaGNC">     2128968 :   if (len &lt;= 16) {</span></span>
+<span id="L73"><span class="lineNum">      73</span>         [<span class="tlaGBC" title="branch 0 was taken 64162 times"> + </span><span class="tlaGBC" title="branch 1 was taken 14 times"> + </span>]:<span class="tlaGNC">       64176 :     if (len &gt;= 4) {</span></span>
 <span id="L74"><span class="lineNum">      74</span>                 :<span class="tlaGNC">       64162 :       seed ^= len;</span></span>
-<span id="L75"><span class="lineNum">      75</span>         [<span class="tlaGBC" title="Branch 0 was taken 32149 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 32013 times"> + </span>]:<span class="tlaGNC">       64162 :       if (len &gt;= 8) {</span></span>
+<span id="L75"><span class="lineNum">      75</span>         [<span class="tlaGBC" title="branch 0 was taken 32149 times"> + </span><span class="tlaGBC" title="branch 1 was taken 32013 times"> + </span>]:<span class="tlaGNC">       64162 :       if (len &gt;= 8) {</span></span>
 <span id="L76"><span class="lineNum">      76</span>                 :<span class="tlaGNC">       32149 :         val_a = hash_internal::Load64(ptr);</span></span>
 <span id="L77"><span class="lineNum">      77</span>                 :<span class="tlaGNC">       64298 :         val_b = hash_internal::Load64(ptr + len - 8);</span></span>
 <span id="L78"><span class="lineNum">      78</span>                 :             :       } else {</span>
 <span id="L79"><span class="lineNum">      79</span>                 :<span class="tlaGNC">       32013 :         val_a = hash_internal::Load32(ptr);</span></span>
 <span id="L80"><span class="lineNum">      80</span>                 :<span class="tlaGNC">       64026 :         val_b = hash_internal::Load32(ptr + len - 4);</span></span>
 <span id="L81"><span class="lineNum">      81</span>                 :             :       }</span>
-<span id="L82"><span class="lineNum">      82</span>         [<span class="tlaGBC" title="Branch 0 was taken 11 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">          14 :     } else if (len &gt; 0) {</span></span>
+<span id="L82"><span class="lineNum">      82</span>         [<span class="tlaGBC" title="branch 0 was taken 11 times"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">          14 :     } else if (len &gt; 0) {</span></span>
 <span id="L83"><span class="lineNum">      83</span>                 :<span class="tlaGNC">          11 :       val_a = (static_cast&lt;uint64_t&gt;(static_cast&lt;uint8_t&gt;(ptr[0])) &lt;&lt; 45U)</span></span>
 <span id="L84"><span class="lineNum">      84</span>                 :<span class="tlaGNC">          11 :               | static_cast&lt;uint64_t&gt;(static_cast&lt;uint8_t&gt;(ptr[len - 1]));</span></span>
 <span id="L85"><span class="lineNum">      85</span>                 :<span class="tlaGNC">          11 :       val_b = static_cast&lt;uint64_t&gt;(static_cast&lt;uint8_t&gt;(ptr[len &gt;&gt; 1U]));</span></span>
 <span id="L86"><span class="lineNum">      86</span>                 :             :     }</span>
 <span id="L87"><span class="lineNum">      87</span>                 :             :   } else {</span>
-<span id="L88"><span class="lineNum">      88</span>         [<span class="tlaGBC" title="Branch 0 was taken 32156 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2032636 times"> + </span>]:<span class="tlaGNC">     2064792 :     if (len &gt; 112) {</span></span>
+<span id="L88"><span class="lineNum">      88</span>         [<span class="tlaGBC" title="branch 0 was taken 32156 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2032636 times"> + </span>]:<span class="tlaGNC">     2064792 :     if (len &gt; 112) {</span></span>
 <span id="L89"><span class="lineNum">      89</span>                 :<span class="tlaGNC">       32156 :       uint64_t see1 = seed;</span></span>
 <span id="L90"><span class="lineNum">      90</span>                 :<span class="tlaGNC">       32156 :       uint64_t see2 = seed;</span></span>
 <span id="L91"><span class="lineNum">      91</span>                 :<span class="tlaGNC">       32156 :       uint64_t see3 = seed;</span></span>
 <span id="L92"><span class="lineNum">      92</span>                 :<span class="tlaGNC">       32156 :       uint64_t see4 = seed;</span></span>
 <span id="L93"><span class="lineNum">      93</span>                 :<span class="tlaGNC">       32156 :       uint64_t see5 = seed;</span></span>
 <span id="L94"><span class="lineNum">      94</span>                 :<span class="tlaGNC">       32156 :       uint64_t see6 = seed;</span></span>
-<span id="L95"><span class="lineNum">      95</span>         [<span class="tlaGBC" title="Branch 0 was taken 32070 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 32156 times"> + </span>]:<span class="tlaGNC">       64226 :       while (remaining &gt; 224) {</span></span>
+<span id="L95"><span class="lineNum">      95</span>         [<span class="tlaGBC" title="branch 0 was taken 32070 times"> + </span><span class="tlaGBC" title="branch 1 was taken 32156 times"> + </span>]:<span class="tlaGNC">       64226 :       while (remaining &gt; 224) {</span></span>
 <span id="L96"><span class="lineNum">      96</span>                 :<span class="tlaGNC">       96210 :         seed = Mix(hash_internal::Load64(ptr) ^ kSecret[0], hash_internal::Load64(ptr + 8) ^ seed);</span></span>
 <span id="L97"><span class="lineNum">      97</span>                 :<span class="tlaGNC">       96210 :         see1 = Mix(hash_internal::Load64(ptr + 16) ^ kSecret[1], hash_internal::Load64(ptr + 24) ^ see1);</span></span>
 <span id="L98"><span class="lineNum">      98</span>                 :<span class="tlaGNC">       96210 :         see2 = Mix(hash_internal::Load64(ptr + 32) ^ kSecret[2], hash_internal::Load64(ptr + 40) ^ see2);</span></span>
@@ -188,7 +195,7 @@
 <span id="L110"><span class="lineNum">     110</span>                 :<span class="tlaGNC">       32070 :         ptr += 224;</span></span>
 <span id="L111"><span class="lineNum">     111</span>                 :<span class="tlaGNC">       32070 :         remaining -= 224;</span></span>
 <span id="L112"><span class="lineNum">     112</span>                 :             :       }</span>
-<span id="L113"><span class="lineNum">     113</span>         [<span class="tlaGBC" title="Branch 0 was taken 120 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 32036 times"> + </span>]:<span class="tlaGNC">       32156 :       if (remaining &gt; 112) {</span></span>
+<span id="L113"><span class="lineNum">     113</span>         [<span class="tlaGBC" title="branch 0 was taken 120 times"> + </span><span class="tlaGBC" title="branch 1 was taken 32036 times"> + </span>]:<span class="tlaGNC">       32156 :       if (remaining &gt; 112) {</span></span>
 <span id="L114"><span class="lineNum">     114</span>                 :<span class="tlaGNC">         360 :         seed = Mix(hash_internal::Load64(ptr) ^ kSecret[0], hash_internal::Load64(ptr + 8) ^ seed);</span></span>
 <span id="L115"><span class="lineNum">     115</span>                 :<span class="tlaGNC">         360 :         see1 = Mix(hash_internal::Load64(ptr + 16) ^ kSecret[1], hash_internal::Load64(ptr + 24) ^ see1);</span></span>
 <span id="L116"><span class="lineNum">     116</span>                 :<span class="tlaGNC">         360 :         see2 = Mix(hash_internal::Load64(ptr + 32) ^ kSecret[2], hash_internal::Load64(ptr + 40) ^ see2);</span></span>
@@ -206,17 +213,17 @@
 <span id="L128"><span class="lineNum">     128</span>                 :<span class="tlaGNC">       32156 :       see2 ^= see4;</span></span>
 <span id="L129"><span class="lineNum">     129</span>                 :<span class="tlaGNC">       32156 :       seed ^= see2;</span></span>
 <span id="L130"><span class="lineNum">     130</span>                 :             :     }</span>
-<span id="L131"><span class="lineNum">     131</span>         [<span class="tlaGBC" title="Branch 0 was taken 2064754 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 38 times"> + </span>]:<span class="tlaGNC">     2064792 :     if (remaining &gt; 16) {</span></span>
+<span id="L131"><span class="lineNum">     131</span>         [<span class="tlaGBC" title="branch 0 was taken 2064754 times"> + </span><span class="tlaGBC" title="branch 1 was taken 38 times"> + </span>]:<span class="tlaGNC">     2064792 :     if (remaining &gt; 16) {</span></span>
 <span id="L132"><span class="lineNum">     132</span>                 :<span class="tlaGNC">     6194262 :       seed = Mix(hash_internal::Load64(ptr) ^ kSecret[2], hash_internal::Load64(ptr + 8) ^ seed);</span></span>
-<span id="L133"><span class="lineNum">     133</span>         [<span class="tlaGBC" title="Branch 0 was taken 64701 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2000053 times"> + </span>]:<span class="tlaGNC">     2064754 :       if (remaining &gt; 32) {</span></span>
+<span id="L133"><span class="lineNum">     133</span>         [<span class="tlaGBC" title="branch 0 was taken 64701 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2000053 times"> + </span>]:<span class="tlaGNC">     2064754 :       if (remaining &gt; 32) {</span></span>
 <span id="L134"><span class="lineNum">     134</span>                 :<span class="tlaGNC">      194103 :         seed = Mix(hash_internal::Load64(ptr + 16) ^ kSecret[2], hash_internal::Load64(ptr + 24) ^ seed);</span></span>
-<span id="L135"><span class="lineNum">     135</span>         [<span class="tlaGBC" title="Branch 0 was taken 64651 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 50 times"> + </span>]:<span class="tlaGNC">       64701 :         if (remaining &gt; 48) {</span></span>
+<span id="L135"><span class="lineNum">     135</span>         [<span class="tlaGBC" title="branch 0 was taken 64651 times"> + </span><span class="tlaGBC" title="branch 1 was taken 50 times"> + </span>]:<span class="tlaGNC">       64701 :         if (remaining &gt; 48) {</span></span>
 <span id="L136"><span class="lineNum">     136</span>                 :<span class="tlaGNC">      193953 :           seed = Mix(hash_internal::Load64(ptr + 32) ^ kSecret[1], hash_internal::Load64(ptr + 40) ^ seed);</span></span>
-<span id="L137"><span class="lineNum">     137</span>         [<span class="tlaGBC" title="Branch 0 was taken 64107 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 544 times"> + </span>]:<span class="tlaGNC">       64651 :           if (remaining &gt; 64) {</span></span>
+<span id="L137"><span class="lineNum">     137</span>         [<span class="tlaGBC" title="branch 0 was taken 64107 times"> + </span><span class="tlaGBC" title="branch 1 was taken 544 times"> + </span>]:<span class="tlaGNC">       64651 :           if (remaining &gt; 64) {</span></span>
 <span id="L138"><span class="lineNum">     138</span>                 :<span class="tlaGNC">      192321 :             seed = Mix(hash_internal::Load64(ptr + 48) ^ kSecret[1], hash_internal::Load64(ptr + 56) ^ seed);</span></span>
-<span id="L139"><span class="lineNum">     139</span>         [<span class="tlaGBC" title="Branch 0 was taken 32072 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 32035 times"> + </span>]:<span class="tlaGNC">       64107 :             if (remaining &gt; 80) {</span></span>
+<span id="L139"><span class="lineNum">     139</span>         [<span class="tlaGBC" title="branch 0 was taken 32072 times"> + </span><span class="tlaGBC" title="branch 1 was taken 32035 times"> + </span>]:<span class="tlaGNC">       64107 :             if (remaining &gt; 80) {</span></span>
 <span id="L140"><span class="lineNum">     140</span>                 :<span class="tlaGNC">       96216 :               seed = Mix(hash_internal::Load64(ptr + 64) ^ kSecret[2], hash_internal::Load64(ptr + 72) ^ seed);</span></span>
-<span id="L141"><span class="lineNum">     141</span>         [<span class="tlaGBC" title="Branch 0 was taken 32038 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 34 times"> + </span>]:<span class="tlaGNC">       32072 :               if (remaining &gt; 96) {</span></span>
+<span id="L141"><span class="lineNum">     141</span>         [<span class="tlaGBC" title="branch 0 was taken 32038 times"> + </span><span class="tlaGBC" title="branch 1 was taken 34 times"> + </span>]:<span class="tlaGNC">       32072 :               if (remaining &gt; 96) {</span></span>
 <span id="L142"><span class="lineNum">     142</span>                 :<span class="tlaGNC">       96114 :                 seed = Mix(hash_internal::Load64(ptr + 80) ^ kSecret[1], hash_internal::Load64(ptr + 88) ^ seed);</span></span>
 <span id="L143"><span class="lineNum">     143</span>                 :             :               }</span>
 <span id="L144"><span class="lineNum">     144</span>                 :             :             }</span>
@@ -255,7 +262,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

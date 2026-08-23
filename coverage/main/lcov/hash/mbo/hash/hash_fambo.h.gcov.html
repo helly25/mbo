@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - hash/mbo/hash/hash_fambo.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">hash</a>/<a href="../index.html">mbo</a>/<a href="index.html">hash</a> - hash_fambo.h<span style="font-size: 80%;"> (source / <a href="hash_fambo.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory hash">hash</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory hash">hash</a> - hash_fambo.h<span style="font-size: 80%;"> (source / <a href="hash_fambo.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">1</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryHi">95.8&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -153,7 +160,7 @@
 <span id="L75"><span class="lineNum">      75</span>                 :             :   using namespace fambo_internal;</span>
 <span id="L76"><span class="lineNum">      76</span>                 :             :   using namespace hash_internal;</span>
 <span id="L77"><span class="lineNum">      77</span>                 :             : </span>
-<span id="L78"><span class="lineNum">      78</span>                 :<span class="tlaGNC tlaBgGNC">          31 :   size_t len = str.size();</span></span>
+<span id="L78"><span class="lineNum">      78</span>                 :<span class="tlaGNC">          31 :   size_t len = str.size();</span></span>
 <span id="L79"><span class="lineNum">      79</span>                 :             : </span>
 <span id="L80"><span class="lineNum">      80</span>                 :<span class="tlaGNC">     2128957 :   const char* ptr = str.data();</span></span>
 <span id="L81"><span class="lineNum">      81</span>                 :             : </span>
@@ -161,7 +168,7 @@
 <span id="L83"><span class="lineNum">      83</span>                 :             :   // Every bit of the seed reliably permutes the state without length-based cancellation.</span>
 <span id="L84"><span class="lineNum">      84</span>                 :<span class="tlaGNC">     2128957 :   seed ^= Mul128Fold64(seed ^ kSecret[0], kSecret[1]);</span></span>
 <span id="L85"><span class="lineNum">      85</span>                 :             : </span>
-<span id="L86"><span class="lineNum">      86</span>   [<span class="tlaGBC" title="Branch 0 was taken 19 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 12 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 64156 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 2064770 times"> + </span>]:<span class="tlaGNC">     2128957 :   if (len &lt;= 16) {</span></span>
+<span id="L86"><span class="lineNum">      86</span>   [<span class="tlaGBC" title="branch 0 was taken 19 times"> + </span><span class="tlaGBC" title="branch 1 was taken 12 times"> + </span><span class="tlaGBC" title="branch 2 was taken 64156 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2064770 times"> + </span>]:<span class="tlaGNC">     2128957 :   if (len &lt;= 16) {</span></span>
 <span id="L87"><span class="lineNum">      87</span>                 :             :     const SmallInput input = LoadSmall(ptr, len);</span>
 <span id="L88"><span class="lineNum">      88</span>                 :<span class="tlaGNC">       64175 :     const Hash128 product = Mult128(input.a ^ kSecret[2], input.b ^ seed);</span></span>
 <span id="L89"><span class="lineNum">      89</span>                 :             :     // Length is injected exactly once here at the very end to protect</span>
@@ -173,7 +180,7 @@
 <span id="L95"><span class="lineNum">      95</span>                 :<span class="tlaGNC">     2064782 :   constexpr std::size_t kBulkWindow = 64;</span></span>
 <span id="L96"><span class="lineNum">      96</span>                 :             : </span>
 <span id="L97"><span class="lineNum">      97</span>                 :             :   // Bulk tier entry</span>
-<span id="L98"><span class="lineNum">      98</span>   [<span class="tlaGBC" title="Branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 64706 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 2000064 times"> + </span>]:<span class="tlaGNC">     2064782 :   if (len &gt;= kBulkWindow) {</span></span>
+<span id="L98"><span class="lineNum">      98</span>   [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span><span class="tlaGBC" title="branch 2 was taken 64706 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2000064 times"> + </span>]:<span class="tlaGNC">     2064782 :   if (len &gt;= kBulkWindow) {</span></span>
 <span id="L99"><span class="lineNum">      99</span>                 :             :     // Each lane is independent, so the compiler can schedule the four Mul128Fold64 operations concurrently, allowing</span>
 <span id="L100"><span class="lineNum">     100</span>                 :             :     // for better instruction-level parallelism and throughput. This works due to the temp vars.</span>
 <span id="L101"><span class="lineNum">     101</span>                 :<span class="tlaGNC">       64712 :     uint64_t lane0 = seed ^ len;  // kSecret[0] ^ len;  // Must use length at least once.</span></span>
@@ -188,16 +195,16 @@
 <span id="L110"><span class="lineNum">     110</span>                 :<span class="tlaGNC">      482745 :       lane3 = Mul128Fold64(Load64(ptr + 48) ^ kSecret[3], Load64(ptr + 56) ^ lane3);</span></span>
 <span id="L111"><span class="lineNum">     111</span>                 :<span class="tlaGNC">      160915 :       ptr += kBulkWindow;</span></span>
 <span id="L112"><span class="lineNum">     112</span>                 :<span class="tlaGNC">      160915 :       len -= kBulkWindow;</span></span>
-<span id="L113"><span class="lineNum">     113</span>   [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 96195 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 64706 times"> + </span>]:<span class="tlaGNC">      160915 :     } while (len &gt;= kBulkWindow);</span></span>
+<span id="L113"><span class="lineNum">     113</span>   [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span><span class="tlaGBC" title="branch 2 was taken 96195 times"> + </span><span class="tlaGBC" title="branch 3 was taken 64706 times"> + </span>]:<span class="tlaGNC">      160915 :     } while (len &gt;= kBulkWindow);</span></span>
 <span id="L114"><span class="lineNum">     114</span>                 :<span class="tlaGNC">      129424 :     seed = Mul128Fold64(lane0 ^ lane1, lane2 ^ lane3);</span></span>
 <span id="L115"><span class="lineNum">     115</span>                 :             :   }</span>
 <span id="L116"><span class="lineNum">     116</span>                 :             : </span>
 <span id="L117"><span class="lineNum">     117</span>                 :             :   // No longer update `ptr` or `len`. Limited to the length excluded at the top of the function (16).</span>
-<span id="L118"><span class="lineNum">     118</span>   [<span class="tlaGBC" title="Branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 2064205 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 565 times"> + </span>]:<span class="tlaGNC">     2064782 :   if (len &gt; 16) {</span></span>
+<span id="L118"><span class="lineNum">     118</span>   [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2064205 times"> + </span><span class="tlaGBC" title="branch 3 was taken 565 times"> + </span>]:<span class="tlaGNC">     2064782 :   if (len &gt; 16) {</span></span>
 <span id="L119"><span class="lineNum">     119</span>                 :<span class="tlaGNC">     6192633 :     seed = Mul128Fold64(Load64(ptr) ^ kSecret[2], Load64(ptr + 8) ^ seed);</span></span>
-<span id="L120"><span class="lineNum">     120</span>   [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 64140 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 2000065 times"> + </span>]:<span class="tlaGNC">     2064211 :     if (len &gt; 32) {</span></span>
+<span id="L120"><span class="lineNum">     120</span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span><span class="tlaGBC" title="branch 2 was taken 64140 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2000065 times"> + </span>]:<span class="tlaGNC">     2064211 :     if (len &gt; 32) {</span></span>
 <span id="L121"><span class="lineNum">     121</span>                 :<span class="tlaGNC">      192426 :       seed = Mul128Fold64(Load64(ptr + 16) ^ kSecret[1], Load64(ptr + 24) ^ seed);</span></span>
-<span id="L122"><span class="lineNum">     122</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 60 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 64080 times"> + </span>]:<span class="tlaGNC">       64142 :       if (len &gt; 48) {</span></span>
+<span id="L122"><span class="lineNum">     122</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span><span class="tlaGBC" title="branch 2 was taken 60 times"> + </span><span class="tlaGBC" title="branch 3 was taken 64080 times"> + </span>]:<span class="tlaGNC">       64142 :       if (len &gt; 48) {</span></span>
 <span id="L123"><span class="lineNum">     123</span>                 :<span class="tlaGNC">         240 :         seed = Mul128Fold64(Load64(ptr + 32) ^ kSecret[2], Load64(ptr + 40) ^ seed);</span></span>
 <span id="L124"><span class="lineNum">     124</span>                 :             :       }</span>
 <span id="L125"><span class="lineNum">     125</span>                 :             :     }</span>
@@ -234,7 +241,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

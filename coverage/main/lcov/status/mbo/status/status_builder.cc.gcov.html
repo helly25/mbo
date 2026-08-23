@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - status/mbo/status/status_builder.cc</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">status</a>/<a href="../index.html">mbo</a>/<a href="index.html">status</a> - status_builder.cc<span style="font-size: 80%;"> (source / <a href="status_builder.cc.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory status">status</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory status">status</a> - status_builder.cc<span style="font-size: 80%;"> (source / <a href="status_builder.cc.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">6</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryMed">80.0&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -102,7 +109,7 @@
 <span id="L24"><span class="lineNum">      24</span>                 :             : </span>
 <span id="L25"><span class="lineNum">      25</span>                 :             : namespace mbo::status {</span>
 <span id="L26"><span class="lineNum">      26</span>                 :             : </span>
-<span id="L27"><span class="lineNum">      27</span>                 :<span class="tlaGNC tlaBgGNC">           2 : StatusBuilder&amp; StatusBuilder::SetPrepend() &amp; {</span></span>
+<span id="L27"><span class="lineNum">      27</span>                 :<span class="tlaGNC">           2 : StatusBuilder&amp; StatusBuilder::SetPrepend() &amp; {</span></span>
 <span id="L28"><span class="lineNum">      28</span>                 :<span class="tlaGNC">           2 :   return *this;</span></span>
 <span id="L29"><span class="lineNum">      29</span>                 :             : }</span>
 <span id="L30"><span class="lineNum">      30</span>                 :             : </span>
@@ -112,8 +119,8 @@
 <span id="L34"><span class="lineNum">      34</span>                 :             : }</span>
 <span id="L35"><span class="lineNum">      35</span>                 :             : </span>
 <span id="L36"><span class="lineNum">      36</span>                 :<span class="tlaGNC">           3 : StatusBuilder&amp; StatusBuilder::SetAppend() &amp; {</span></span>
-<span id="L37"><span class="lineNum">      37</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           3 :   if (data_) {</span></span>
-<span id="L38"><span class="lineNum">      38</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           3 :     if (!data_-&gt;appended) {</span></span>
+<span id="L37"><span class="lineNum">      37</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           3 :   if (data_) {</span></span>
+<span id="L38"><span class="lineNum">      38</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           3 :     if (!data_-&gt;appended) {</span></span>
 <span id="L39"><span class="lineNum">      39</span>                 :<span class="tlaGNC">           3 :       data_-&gt;stream &lt;&lt; data_-&gt;status.message();</span></span>
 <span id="L40"><span class="lineNum">      40</span>                 :             :     }</span>
 <span id="L41"><span class="lineNum">      41</span>                 :<span class="tlaGNC">           3 :     data_-&gt;appended = true;</span></span>
@@ -127,12 +134,12 @@
 <span id="L49"><span class="lineNum">      49</span>                 :             : }</span>
 <span id="L50"><span class="lineNum">      50</span>                 :             : </span>
 <span id="L51"><span class="lineNum">      51</span>                 :<span class="tlaGNC">          42 : StatusBuilder::operator absl::Status() const &amp; {</span></span>
-<span id="L52"><span class="lineNum">      52</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 39 times"> + </span>]:<span class="tlaGNC">          42 :   if (!data_) {</span></span>
+<span id="L52"><span class="lineNum">      52</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 39 times"> + </span>]:<span class="tlaGNC">          42 :   if (!data_) {</span></span>
 <span id="L53"><span class="lineNum">      53</span>                 :<span class="tlaGNC">           3 :     return absl::OkStatus();</span></span>
 <span id="L54"><span class="lineNum">      54</span>                 :             :   }</span>
 <span id="L55"><span class="lineNum">      55</span>                 :             :   absl::Status result(</span>
 <span id="L56"><span class="lineNum">      56</span>                 :<span class="tlaGNC">          39 :       data_-&gt;status.code(),</span></span>
-<span id="L57"><span class="lineNum">      57</span>   [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 36 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 36 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">          78 :       data_-&gt;appended ? data_-&gt;stream.str() : absl::StrCat(data_-&gt;status.message(), data_-&gt;stream.str()));</span></span>
+<span id="L57"><span class="lineNum">      57</span>   [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 36 times"> + </span><span class="tlaGBC" title="branch 2 was taken 36 times"> + </span><span class="tlaGBC" title="branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">          78 :       data_-&gt;appended ? data_-&gt;stream.str() : absl::StrCat(data_-&gt;status.message(), data_-&gt;stream.str()));</span></span>
 <span id="L58"><span class="lineNum">      58</span>                 :<span class="tlaGNC">          78 :   data_-&gt;status.ForEachPayload(</span></span>
 <span id="L59"><span class="lineNum">      59</span>                 :<span class="tlaGNC">          40 :       [&amp;result](std::string_view url, const absl::Cord&amp; payload) { result.SetPayload(url, payload); });</span></span>
 <span id="L60"><span class="lineNum">      60</span>                 :<span class="tlaGNC">          39 :   return result;</span></span>
@@ -147,7 +154,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - log/mbo/log/scoped_log_check.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">log</a>/<a href="../index.html">mbo</a>/<a href="index.html">log</a> - scoped_log_check.h<span style="font-size: 80%;"> (source / <a href="scoped_log_check.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory log">log</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory log">log</a> - scoped_log_check.h<span style="font-size: 80%;"> (source / <a href="scoped_log_check.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -31,13 +37,13 @@
             <td class="headerValue">mbo production coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryMed">75.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">75.0&nbsp;%</td>
             <td class="headerCovTableEntry">12</td>
             <td class="headerCovTableEntry">9</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">4.7&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">4</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryLo">10.0&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -149,11 +156,11 @@
 <span id="L71"><span class="lineNum">      71</span>                 :             : struct ScopedStreamer : ScopedStreamVariants {</span>
 <span id="L72"><span class="lineNum">      72</span>                 :             :   ScopedStreamer() = delete;</span>
 <span id="L73"><span class="lineNum">      73</span>                 :             : </span>
-<span id="L74"><span class="lineNum">      74</span>                 :<span class="tlaGNC tlaBgGNC">           1 :   explicit ScopedStreamer(VoidStream str) : ScopedStreamVariants(str) {}</span></span>
+<span id="L74"><span class="lineNum">      74</span>                 :<span class="tlaGNC">           1 :   explicit ScopedStreamer(VoidStream str) : ScopedStreamVariants(str) {}</span></span>
 <span id="L75"><span class="lineNum">      75</span>                 :             : </span>
 <span id="L76"><span class="lineNum">      76</span>                 :             :   // LCOV_EXCL_FUNC_LINE: quick_exit prevents this process from flushing its coverage data.</span>
 <span id="L77"><span class="lineNum">      77</span>                 :             :   template&lt;typename ScopedStreamType&gt;</span>
-<span id="L78"><span class="lineNum">      78</span>                 :<span class="tlaUNC tlaBgUNC">           0 :   ScopedStreamer(</span></span>
+<span id="L78"><span class="lineNum">      78</span>                 :<span class="tlaUNC">           0 :   ScopedStreamer(</span></span>
 <span id="L79"><span class="lineNum">      79</span>                 :             :       std::in_place_type_t&lt;ScopedStreamType&gt; in_place_t,</span>
 <span id="L80"><span class="lineNum">      80</span>                 :             :       const std::source_location&amp; loc,</span>
 <span id="L81"><span class="lineNum">      81</span>                 :             :       ScopedStreamType::OStreamField out,</span>
@@ -167,7 +174,7 @@
 <span id="L89"><span class="lineNum">      89</span>                 :             : </span>
 <span id="L90"><span class="lineNum">      90</span>                 :             :   // LCOV_MERGE_FUNC_LINE: Count the shared template definition once.</span>
 <span id="L91"><span class="lineNum">      91</span>                 :             :   template&lt;typename T&gt;</span>
-<span id="L92"><span class="lineNum">      92</span>                 :<span class="tlaGNC tlaBgGNC">           1 :   friend ScopedStreamer&amp;&amp; operator&lt;&lt;(ScopedStreamer&amp;&amp; out, const T&amp; val) {</span></span>
+<span id="L92"><span class="lineNum">      92</span>                 :<span class="tlaGNC">           1 :   friend ScopedStreamer&amp;&amp; operator&lt;&lt;(ScopedStreamer&amp;&amp; out, const T&amp; val) {</span></span>
 <span id="L93"><span class="lineNum">      93</span>                 :<span class="tlaGNC">           1 :     out.Output(val);</span></span>
 <span id="L94"><span class="lineNum">      94</span>                 :<span class="tlaGNC">           1 :     return std::move(out);</span></span>
 <span id="L95"><span class="lineNum">      95</span>                 :             :   }</span>
@@ -198,15 +205,15 @@
 <span id="L120"><span class="lineNum">     120</span>                 :             :     bool check,</span>
 <span id="L121"><span class="lineNum">     121</span>                 :             :     std::string_view what,</span>
 <span id="L122"><span class="lineNum">     122</span>                 :             :     const std::source_location&amp; loc = std::source_location::current()) {</span>
-<span id="L123"><span class="lineNum">     123</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">           1 :   if (check) {</span></span>
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 4 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 5 was not taken"> - </span><span class="tlaUNC" title="Branch 6 was not taken"> - </span><span class="tlaUNC" title="Branch 7 was not taken"> - </span><span class="tlaUNC" title="Branch 8 was not taken"> - </span> 
-<span class="lineNum">        </span>             <span class="tlaUNC" title="Branch 9 was not taken"> - </span>]
+<span id="L123"><span class="lineNum">     123</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           1 :   if (check) {</span></span>
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaUNC" title="branch 6 was not taken"> - </span><span class="tlaUNC" title="branch 7 was not taken"> - </span><span class="tlaUNC" title="branch 8 was not taken"> - </span> 
+<span class="lineNum">        </span>             <span class="tlaUNC" title="branch 9 was not taken"> - </span>]
 <span id="L124"><span class="lineNum">     124</span>                 :<span class="tlaGNC">           1 :     return log_internal::ScopedStreamer{VoidStream{}};</span></span>
 <span id="L125"><span class="lineNum">     125</span>                 :             :   }</span>
 <span id="L126"><span class="lineNum">     126</span>                 :             :   return {</span>
 <span id="L127"><span class="lineNum">     127</span>                 :             :       std::in_place_type_t&lt;</span>
 <span id="L128"><span class="lineNum">     128</span>                 :             :           ScopedStream&lt;ScopedStreamMode::kQuickExit, std::stringstream, std::ostream, std::string_view&gt;&gt;{},</span>
-<span id="L129"><span class="lineNum">     129</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       loc, std::cerr, what};</span></span>
+<span id="L129"><span class="lineNum">     129</span>                 :<span class="tlaUNC">           0 :       loc, std::cerr, what};</span></span>
 <span id="L130"><span class="lineNum">     130</span>                 :             : }</span>
 <span id="L131"><span class="lineNum">     131</span>                 :             : </span>
 <span id="L132"><span class="lineNum">     132</span>                 :             : // *** Only use for depnstration putpose! ***</span>
@@ -234,7 +241,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

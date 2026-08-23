@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - testing/mbo/testing/matchers.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">testing</a>/<a href="../index.html">mbo</a>/<a href="index.html">testing</a> - matchers.h<span style="font-size: 80%;"> (source / <a href="matchers.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory testing">testing</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory testing">testing</a> - matchers.h<span style="font-size: 80%;"> (source / <a href="matchers.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">68.2&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">348</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryHi">97.1&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -109,7 +116,7 @@
 <span id="L31"><span class="lineNum">      31</span>                 :             : </span>
 <span id="L32"><span class="lineNum">      32</span>                 :             : namespace mbo::testing {</span>
 <span id="L33"><span class="lineNum">      33</span>                 :             : </span>
-<span id="L34"><span class="lineNum">      34</span>                 :<span class="tlaGNC tlaBgGNC">          25 : inline auto IsNullopt() {</span></span>
+<span id="L34"><span class="lineNum">      34</span>                 :<span class="tlaGNC">          25 : inline auto IsNullopt() {</span></span>
 <span id="L35"><span class="lineNum">      35</span>                 :<span class="tlaGNC">          25 :   return ::testing::Eq(std::nullopt);</span></span>
 <span id="L36"><span class="lineNum">      36</span>                 :             : }</span>
 <span id="L37"><span class="lineNum">      37</span>                 :             : </span>
@@ -175,9 +182,9 @@
 <span id="L97"><span class="lineNum">      97</span>                 :             : </span>
 <span id="L98"><span class="lineNum">      98</span>                 :<span class="tlaGNC">          56 :     bool MatchAndExplain(Value value, ::testing::MatchResultListener* listener) const override {</span></span>
 <span id="L99"><span class="lineNum">      99</span>                 :<span class="tlaGNC">          56 :       std::size_t index = 0;</span></span>
-<span id="L100"><span class="lineNum">     100</span>         [<span class="tlaGBC" title="Branch 0 was taken 95 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 27 times"> + </span>]:<span class="tlaGNC">         122 :       for (const auto&amp; element : container_) {</span></span>
-<span id="L101"><span class="lineNum">     101</span>         [<span class="tlaGBC" title="Branch 0 was taken 29 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 66 times"> + </span>]:<span class="tlaGNC">          95 :         if (ElementEqual(value, element)) {</span></span>
-<span id="L102"><span class="lineNum">     102</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 26 times"> + </span>]:<span class="tlaGNC">          29 :           if (listener-&gt;IsInterested()) {</span></span>
+<span id="L100"><span class="lineNum">     100</span>         [<span class="tlaGBC" title="branch 0 was taken 95 times"> + </span><span class="tlaGBC" title="branch 1 was taken 27 times"> + </span>]:<span class="tlaGNC">         122 :       for (const auto&amp; element : container_) {</span></span>
+<span id="L101"><span class="lineNum">     101</span>         [<span class="tlaGBC" title="branch 0 was taken 29 times"> + </span><span class="tlaGBC" title="branch 1 was taken 66 times"> + </span>]:<span class="tlaGNC">          95 :         if (ElementEqual(value, element)) {</span></span>
+<span id="L102"><span class="lineNum">     102</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 26 times"> + </span>]:<span class="tlaGNC">          29 :           if (listener-&gt;IsInterested()) {</span></span>
 <span id="L103"><span class="lineNum">     103</span>                 :<span class="tlaGNC">           3 :             *listener &lt;&lt; &quot;which equals element #&quot; &lt;&lt; index &lt;&lt; &quot; (&quot; &lt;&lt; ::testing::PrintToString(element) &lt;&lt; &quot;)&quot;;</span></span>
 <span id="L104"><span class="lineNum">     104</span>                 :             :           }</span>
 <span id="L105"><span class="lineNum">     105</span>                 :<span class="tlaGNC">          29 :           return true;</span></span>
@@ -191,8 +198,8 @@
 <span id="L113"><span class="lineNum">     113</span>                 :<span class="tlaGNC">          12 :     void DescribeContents(::std::ostream&amp; os, std::string_view lead) const {</span></span>
 <span id="L114"><span class="lineNum">     114</span>                 :<span class="tlaGNC">          12 :       os &lt;&lt; lead &lt;&lt; &quot; {&quot;;</span></span>
 <span id="L115"><span class="lineNum">     115</span>                 :<span class="tlaGNC">          12 :       bool first = true;</span></span>
-<span id="L116"><span class="lineNum">     116</span>         [<span class="tlaGBC" title="Branch 0 was taken 14 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 12 times"> + </span>]:<span class="tlaGNC">          26 :       for (const auto&amp; element : container_) {</span></span>
-<span id="L117"><span class="lineNum">     117</span>         [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">          14 :         if (!first) {</span></span>
+<span id="L116"><span class="lineNum">     116</span>         [<span class="tlaGBC" title="branch 0 was taken 14 times"> + </span><span class="tlaGBC" title="branch 1 was taken 12 times"> + </span>]:<span class="tlaGNC">          26 :       for (const auto&amp; element : container_) {</span></span>
+<span id="L117"><span class="lineNum">     117</span>         [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">          14 :         if (!first) {</span></span>
 <span id="L118"><span class="lineNum">     118</span>                 :<span class="tlaGNC">           8 :           os &lt;&lt; &quot;, &quot;;</span></span>
 <span id="L119"><span class="lineNum">     119</span>                 :             :         }</span>
 <span id="L120"><span class="lineNum">     120</span>                 :<span class="tlaGNC">          14 :         first = false;</span></span>
@@ -249,7 +256,7 @@
 <span id="L171"><span class="lineNum">     171</span>                 :<span class="tlaGNC">          19 : inline std::vector&lt;typename Map::key_type&gt; AllKeys(const Map&amp; map) {</span></span>
 <span id="L172"><span class="lineNum">     172</span>                 :<span class="tlaGNC">          19 :   std::vector&lt;typename Map::key_type&gt; keys;</span></span>
 <span id="L173"><span class="lineNum">     173</span>                 :<span class="tlaGNC">          19 :   keys.reserve(map.size());</span></span>
-<span id="L174"><span class="lineNum">     174</span>         [<span class="tlaGBC" title="Branch 0 was taken 35 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 19 times"> + </span>]:<span class="tlaGNC">          54 :   for (const auto&amp; kv : map) {</span></span>
+<span id="L174"><span class="lineNum">     174</span>         [<span class="tlaGBC" title="branch 0 was taken 35 times"> + </span><span class="tlaGBC" title="branch 1 was taken 19 times"> + </span>]:<span class="tlaGNC">          54 :   for (const auto&amp; kv : map) {</span></span>
 <span id="L175"><span class="lineNum">     175</span>                 :<span class="tlaGNC">          35 :     keys.push_back(kv.first);</span></span>
 <span id="L176"><span class="lineNum">     176</span>                 :             :   }</span>
 <span id="L177"><span class="lineNum">     177</span>                 :<span class="tlaGNC">          19 :   return keys;</span></span>
@@ -261,7 +268,7 @@
 <span id="L183"><span class="lineNum">     183</span>                 :<span class="tlaGNC">          14 : inline std::vector&lt;typename Map::mapped_type&gt; AllValues(const Map&amp; map) {</span></span>
 <span id="L184"><span class="lineNum">     184</span>                 :<span class="tlaGNC">          14 :   std::vector&lt;typename Map::mapped_type&gt; values;</span></span>
 <span id="L185"><span class="lineNum">     185</span>                 :<span class="tlaGNC">          14 :   values.reserve(map.size());</span></span>
-<span id="L186"><span class="lineNum">     186</span>         [<span class="tlaGBC" title="Branch 0 was taken 26 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 14 times"> + </span>]:<span class="tlaGNC">          40 :   for (const auto&amp; kv : map) {</span></span>
+<span id="L186"><span class="lineNum">     186</span>         [<span class="tlaGBC" title="branch 0 was taken 26 times"> + </span><span class="tlaGBC" title="branch 1 was taken 14 times"> + </span>]:<span class="tlaGNC">          40 :   for (const auto&amp; kv : map) {</span></span>
 <span id="L187"><span class="lineNum">     187</span>                 :<span class="tlaGNC">          26 :     values.push_back(kv.second);</span></span>
 <span id="L188"><span class="lineNum">     188</span>                 :             :   }</span>
 <span id="L189"><span class="lineNum">     189</span>                 :<span class="tlaGNC">          14 :   return values;</span></span>
@@ -331,7 +338,7 @@
 <span id="L253"><span class="lineNum">     253</span>                 :<span class="tlaGNC">          76 :       const CapacityType capacity = container.capacity();</span></span>
 <span id="L254"><span class="lineNum">     254</span>                 :<span class="tlaGNC">          76 :       ::testing::StringMatchResultListener capacity_listener;</span></span>
 <span id="L255"><span class="lineNum">     255</span>                 :<span class="tlaGNC">          76 :       const bool result = capacity_matcher_.MatchAndExplain(capacity, &amp;capacity_listener);</span></span>
-<span id="L256"><span class="lineNum">     256</span>         [<span class="tlaGBC" title="Branch 0 was taken 75 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">          76 :       *listener &lt;&lt; &quot;whose capacity &quot; &lt;&lt; capacity &lt;&lt; (result ? &quot; matches&quot; : &quot; doesn't match&quot;);</span></span>
+<span id="L256"><span class="lineNum">     256</span>         [<span class="tlaGBC" title="branch 0 was taken 75 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">          76 :       *listener &lt;&lt; &quot;whose capacity &quot; &lt;&lt; capacity &lt;&lt; (result ? &quot; matches&quot; : &quot; doesn't match&quot;);</span></span>
 <span id="L257"><span class="lineNum">     257</span>                 :<span class="tlaGNC">          76 :       ::testing::internal::PrintIfNotEmpty(capacity_listener.str(), listener-&gt;stream());</span></span>
 <span id="L258"><span class="lineNum">     258</span>                 :<span class="tlaGNC">         152 :       return result;</span></span>
 <span id="L259"><span class="lineNum">     259</span>                 :<span class="tlaGNC">          76 :     }</span></span>
@@ -398,7 +405,7 @@
 <span id="L320"><span class="lineNum">     320</span>                 :<span class="tlaGNC">          22 :     bool MatchAndExplain(const Container&amp; container, ::testing::MatchResultListener* listener) const override {</span></span>
 <span id="L321"><span class="lineNum">     321</span>                 :<span class="tlaGNC">          22 :       TransformedContainerType transformed;</span></span>
 <span id="L322"><span class="lineNum">     322</span>                 :<span class="tlaGNC">          22 :       transformed.reserve(container.size());</span></span>
-<span id="L323"><span class="lineNum">     323</span>         [<span class="tlaGBC" title="Branch 0 was taken 47 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 22 times"> + </span>]:<span class="tlaGNC">          69 :       for (const auto&amp; v : container) {</span></span>
+<span id="L323"><span class="lineNum">     323</span>         [<span class="tlaGBC" title="branch 0 was taken 47 times"> + </span><span class="tlaGBC" title="branch 1 was taken 22 times"> + </span>]:<span class="tlaGNC">          69 :       for (const auto&amp; v : container) {</span></span>
 <span id="L324"><span class="lineNum">     324</span>                 :<span class="tlaGNC">          47 :         transformed.emplace_back(transformer_(v));</span></span>
 <span id="L325"><span class="lineNum">     325</span>                 :             :       }</span>
 <span id="L326"><span class="lineNum">     326</span>                 :<span class="tlaGNC">          22 :       ::testing::StringMatchResultListener container_listener;</span></span>
@@ -420,7 +427,7 @@
 <span id="L342"><span class="lineNum">     342</span>                 :             :         }</span>
 <span id="L343"><span class="lineNum">     343</span>                 :             :         *listener &lt;&lt; &quot;}&quot;;</span>
 <span id="L344"><span class="lineNum">     344</span>                 :             :       }</span>
-<span id="L345"><span class="lineNum">     345</span>         [<span class="tlaGBC" title="Branch 0 was taken 17 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">          22 :       *listener &lt;&lt; &quot;) &quot; &lt;&lt; (result ? &quot;matches&quot; : &quot;doesn't match&quot;);</span></span>
+<span id="L345"><span class="lineNum">     345</span>         [<span class="tlaGBC" title="branch 0 was taken 17 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">          22 :       *listener &lt;&lt; &quot;) &quot; &lt;&lt; (result ? &quot;matches&quot; : &quot;doesn't match&quot;);</span></span>
 <span id="L346"><span class="lineNum">     346</span>                 :<span class="tlaGNC">          22 :       ::testing::internal::PrintIfNotEmpty(container_listener.str(), listener-&gt;stream());</span></span>
 <span id="L347"><span class="lineNum">     347</span>                 :<span class="tlaGNC">          44 :       return result;</span></span>
 <span id="L348"><span class="lineNum">     348</span>                 :<span class="tlaGNC">          22 :     }</span></span>
@@ -480,20 +487,20 @@
 <span id="L402"><span class="lineNum">     402</span>                 :<span class="tlaGNC">           1 :   void DescribeNegationTo(::std::ostream* os) const override { *os &lt;&lt; &quot;does not match text&quot;; }</span></span>
 <span id="L403"><span class="lineNum">     403</span>                 :             : </span>
 <span id="L404"><span class="lineNum">     404</span>                 :<span class="tlaGNC">          37 :   bool MatchAndExplain(std::string_view other, ::testing::MatchResultListener* listener) const override {</span></span>
-<span id="L405"><span class="lineNum">     405</span>   [<span class="tlaGBC" title="Branch 0 was taken 36 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 2 was taken 31 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 5 times"> + </span> :<span class="tlaGNC">          37 :     if (!options_.drop_indent &amp;&amp; text_ == other) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 31 times"> + </span><span class="tlaGBC" title="Branch 5 was taken 6 times"> + </span>]
+<span id="L405"><span class="lineNum">     405</span>   [<span class="tlaGBC" title="branch 0 was taken 36 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 31 times"> + </span><span class="tlaGBC" title="branch 3 was taken 5 times"> + </span> :<span class="tlaGNC">          37 :     if (!options_.drop_indent &amp;&amp; text_ == other) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 31 times"> + </span><span class="tlaGBC" title="branch 5 was taken 6 times"> + </span>]
 <span id="L406"><span class="lineNum">     406</span>                 :<span class="tlaGNC">          31 :       return true;</span></span>
 <span id="L407"><span class="lineNum">     407</span>                 :             :     }</span>
 <span id="L408"><span class="lineNum">     408</span>                 :<span class="tlaGNC">          18 :     const auto wants_lines = [&amp;]() -&gt; std::vector&lt;std::string&gt; {</span></span>
-<span id="L409"><span class="lineNum">     409</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           6 :       if (options_.drop_indent) {</span></span>
+<span id="L409"><span class="lineNum">     409</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           6 :       if (options_.drop_indent) {</span></span>
 <span id="L410"><span class="lineNum">     410</span>                 :<span class="tlaGNC">           1 :         *listener &lt;&lt; &quot;[&quot; &lt;&lt; mbo::strings::DropIndent(text_) &lt;&lt; &quot;]\n&quot;;</span></span>
 <span id="L411"><span class="lineNum">     411</span>                 :<span class="tlaGNC">           1 :         return absl::StrSplit(mbo::strings::DropIndent(text_), '\n');</span></span>
 <span id="L412"><span class="lineNum">     412</span>                 :             :       }</span>
 <span id="L413"><span class="lineNum">     413</span>                 :<span class="tlaGNC">           5 :       return absl::StrSplit(text_, '\n');</span></span>
 <span id="L414"><span class="lineNum">     414</span>                 :<span class="tlaGNC">           6 :     }();</span></span>
 <span id="L415"><span class="lineNum">     415</span>                 :<span class="tlaGNC">           6 :     const std::vector&lt;std::string&gt; other_lines = absl::StrSplit(other, '\n');</span></span>
-<span id="L416"><span class="lineNum">     416</span>   [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">           6 :     if (options_.drop_indent &amp;&amp; wants_lines == other_lines) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 5 was taken 5 times"> + </span>]
+<span id="L416"><span class="lineNum">     416</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           6 :     if (options_.drop_indent &amp;&amp; wants_lines == other_lines) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="branch 5 was taken 5 times"> + </span>]
 <span id="L417"><span class="lineNum">     417</span>                 :<span class="tlaGNC">           1 :       return true;</span></span>
 <span id="L418"><span class="lineNum">     418</span>                 :             :     }</span>
 <span id="L419"><span class="lineNum">     419</span>                 :<span class="tlaGNC">           5 :     *listener &lt;&lt; &quot;Text differene:\n&quot; &lt;&lt; ::testing::internal::edit_distance::CreateUnifiedDiff(wants_lines, other_lines);</span></span>
@@ -549,7 +556,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

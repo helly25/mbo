@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - file/mbo/file/file.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">file</a>/<a href="../index.html">mbo</a>/<a href="index.html">file</a> - file.h<span style="font-size: 80%;"> (source / <a href="file.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory file">file</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory file">file</a> - file.h<span style="font-size: 80%;"> (source / <a href="file.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,18 +51,11 @@
             <td class="headerCovTableEntry">53</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryLo">64.8&nbsp;%</td>
+            <td class="headerCovTableEntryMed">64.8&nbsp;%</td>
             <td class="headerCovTableEntry">88</td>
             <td class="headerCovTableEntry">57</td>
           </tr>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -109,7 +116,7 @@
 <span id="L31"><span class="lineNum">      31</span>                 :             : std::filesystem::path NormalizePath(const std::filesystem::path&amp; path);</span>
 <span id="L32"><span class="lineNum">      32</span>                 :             : </span>
 <span id="L33"><span class="lineNum">      33</span>                 :             : // Return true if path is an absolute path.</span>
-<span id="L34"><span class="lineNum">      34</span>                 :<span class="tlaGNC tlaBgGNC">           1 : inline bool IsAbsolutePath(const std::filesystem::path&amp; path) {</span></span>
+<span id="L34"><span class="lineNum">      34</span>                 :<span class="tlaGNC">           1 : inline bool IsAbsolutePath(const std::filesystem::path&amp; path) {</span></span>
 <span id="L35"><span class="lineNum">      35</span>                 :<span class="tlaGNC">           1 :   return path.is_absolute();</span></span>
 <span id="L36"><span class="lineNum">      36</span>                 :             : }</span>
 <span id="L37"><span class="lineNum">      37</span>                 :             : </span>
@@ -121,21 +128,23 @@
 <span id="L43"><span class="lineNum">      43</span>                 :<span class="tlaGNC">         396 :   return NormalizePath([&amp;] {</span></span>
 <span id="L44"><span class="lineNum">      44</span>                 :             :     if constexpr (sizeof...(paths) == 0) {</span>
 <span id="L45"><span class="lineNum">      45</span>                 :<span class="tlaGNC">          61 :       return std::filesystem::path(first_path);</span></span>
-<span id="L46"><span class="lineNum">      46</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 13 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">          71 :     } else if (first_path.empty()) {</span></span>
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 4 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 5 was not taken"> - </span><span class="tlaGBC" title="Branch 6 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 7 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 8 was taken 1 time"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 9 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 10 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 11 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 12 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 13 was taken 1 time"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 14 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 15 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 16 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 17 was taken 7 times"> + </span><span class="tlaUNC" title="Branch 18 was not taken"> - </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 19 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 20 was not taken"> - </span><span class="tlaGBC" title="Branch 21 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 22 was not taken"> - </span><span class="tlaGBC" title="Branch 23 was taken 5 times"> + </span> 
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 24 was not taken"> - </span><span class="tlaGBC" title="Branch 25 was taken 13 times"> + </span>]
+<span id="L46"><span class="lineNum">      46</span>                 :<span class="tlaGNC">          71 :     } else if (first_path.empty()) {</span></span>
+<span class="lineNum">        </span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 13 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaGBC" title="branch 6 was taken 1 time"> + </span><span class="tlaGBC" title="branch 7 was taken 3 times"> + </span><span class="tlaGBC" title="branch 8 was taken 1 time"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 1 time"> + </span><span class="tlaGBC" title="branch 10 was taken 2 times"> + </span><span class="tlaGBC" title="branch 11 was taken 2 times"> + </span><span class="tlaGBC" title="branch 12 was taken 1 time"> + </span><span class="tlaGBC" title="branch 13 was taken 1 time"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 14 was taken 4 times"> + </span><span class="tlaGBC" title="branch 15 was taken 8 times"> + </span><span class="tlaGBC" title="branch 16 was taken 4 times"> + </span><span class="tlaGBC" title="branch 17 was taken 7 times"> + </span><span class="tlaUNC" title="branch 18 was not taken"> - </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 19 was taken 1 time"> + </span><span class="tlaUNC" title="branch 20 was not taken"> - </span><span class="tlaGBC" title="branch 21 was taken 1 time"> + </span><span class="tlaUNC" title="branch 22 was not taken"> - </span><span class="tlaGBC" title="branch 23 was taken 5 times"> + </span> 
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 24 was not taken"> - </span><span class="tlaGBC" title="branch 25 was taken 13 times"> + </span>]
 <span id="L47"><span class="lineNum">      47</span>                 :<span class="tlaGNC">          14 :       return JoinPaths(paths...);</span></span>
 <span id="L48"><span class="lineNum">      48</span>                 :             :     } else {</span>
 <span id="L49"><span class="lineNum">      49</span>                 :<span class="tlaGNC">          57 :       auto joined = JoinPaths(paths...);</span></span>
-<span id="L50"><span class="lineNum">      50</span>   [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 11 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">          57 :       if (joined.is_absolute()) {</span></span>
-<span class="lineNum">        </span> <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaUNC" title="Branch 5 was not taken"> - </span><span class="tlaGBC" title="Branch 6 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 7 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 8 was not taken"> - </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 9 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 10 was not taken"> - </span><span class="tlaGBC" title="Branch 11 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 12 was not taken"> - </span><span class="tlaGBC" title="Branch 13 was taken 1 time"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 14 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 15 was taken 6 times"> + </span><span class="tlaUNC" title="Branch 16 was not taken"> - </span><span class="tlaGBC" title="Branch 17 was taken 7 times"> + </span><span class="tlaUNC" title="Branch 18 was not taken"> - </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 19 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 20 was not taken"> - </span><span class="tlaGBC" title="Branch 21 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 22 was not taken"> - </span><span class="tlaGBC" title="Branch 23 was taken 5 times"> + </span> 
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 24 was not taken"> - </span><span class="tlaGBC" title="Branch 25 was taken 13 times"> + </span>]
+<span id="L50"><span class="lineNum">      50</span>                 :<span class="tlaGNC">          57 :       if (joined.is_absolute()) {</span></span>
+<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 11 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> 
+<span class="lineNum">        </span> <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaGBC" title="branch 6 was taken 2 times"> + </span><span class="tlaGBC" title="branch 7 was taken 1 time"> + </span><span class="tlaUNC" title="branch 8 was not taken"> - </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 1 time"> + </span><span class="tlaUNC" title="branch 10 was not taken"> - </span><span class="tlaGBC" title="branch 11 was taken 2 times"> + </span><span class="tlaUNC" title="branch 12 was not taken"> - </span><span class="tlaGBC" title="branch 13 was taken 1 time"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 14 was taken 2 times"> + </span><span class="tlaGBC" title="branch 15 was taken 6 times"> + </span><span class="tlaUNC" title="branch 16 was not taken"> - </span><span class="tlaGBC" title="branch 17 was taken 7 times"> + </span><span class="tlaUNC" title="branch 18 was not taken"> - </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 19 was taken 1 time"> + </span><span class="tlaUNC" title="branch 20 was not taken"> - </span><span class="tlaGBC" title="branch 21 was taken 1 time"> + </span><span class="tlaUNC" title="branch 22 was not taken"> - </span><span class="tlaGBC" title="branch 23 was taken 5 times"> + </span> 
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 24 was not taken"> - </span><span class="tlaGBC" title="branch 25 was taken 13 times"> + </span>]
 <span id="L51"><span class="lineNum">      51</span>                 :<span class="tlaGNC">           8 :         return first_path / joined.relative_path();</span></span>
 <span id="L52"><span class="lineNum">      52</span>                 :             :       } else {</span>
 <span id="L53"><span class="lineNum">      53</span>                 :<span class="tlaGNC">          49 :         return first_path / joined;</span></span>
@@ -152,18 +161,20 @@
 <span id="L64"><span class="lineNum">      64</span>                 :<span class="tlaGNC">         108 :   return NormalizePath([&amp;] {</span></span>
 <span id="L65"><span class="lineNum">      65</span>                 :             :     if constexpr (sizeof...(paths) == 0) {</span>
 <span id="L66"><span class="lineNum">      66</span>                 :<span class="tlaGNC">          10 :       return std::filesystem::path(first_path);</span></span>
-<span id="L67"><span class="lineNum">      67</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">          26 :     } else if (first_path.empty()) {</span></span>
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 4 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 5 was not taken"> - </span><span class="tlaGBC" title="Branch 6 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 7 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 8 was taken 1 time"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 9 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 10 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 11 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 12 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 13 was taken 1 time"> + </span> 
-<span class="lineNum">        </span>    <span class="tlaGBC" title="Branch 14 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 15 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 16 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 17 was taken 3 times"> + </span>]
+<span id="L67"><span class="lineNum">      67</span>                 :<span class="tlaGNC">          26 :     } else if (first_path.empty()) {</span></span>
+<span class="lineNum">        </span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaGBC" title="branch 6 was taken 1 time"> + </span><span class="tlaGBC" title="branch 7 was taken 1 time"> + </span><span class="tlaGBC" title="branch 8 was taken 1 time"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 1 time"> + </span><span class="tlaGBC" title="branch 10 was taken 2 times"> + </span><span class="tlaGBC" title="branch 11 was taken 2 times"> + </span><span class="tlaGBC" title="branch 12 was taken 1 time"> + </span><span class="tlaGBC" title="branch 13 was taken 1 time"> + </span> 
+<span class="lineNum">        </span>    <span class="tlaGBC" title="branch 14 was taken 2 times"> + </span><span class="tlaGBC" title="branch 15 was taken 4 times"> + </span><span class="tlaGBC" title="branch 16 was taken 2 times"> + </span><span class="tlaGBC" title="branch 17 was taken 3 times"> + </span>]
 <span id="L68"><span class="lineNum">      68</span>                 :<span class="tlaGNC">          10 :       return JoinPaths(paths...);</span></span>
 <span id="L69"><span class="lineNum">      69</span>                 :             :     } else {</span>
 <span id="L70"><span class="lineNum">      70</span>                 :             :       // In theory this is what `fs::path /=` should do. But then it does way more.</span>
 <span id="L71"><span class="lineNum">      71</span>                 :<span class="tlaGNC">          16 :       auto joined = JoinPathsRespectAbsolute(paths...);</span></span>
-<span id="L72"><span class="lineNum">      72</span>   [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">          16 :       if (joined.is_absolute()) {</span></span>
-<span class="lineNum">        </span> <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaUNC" title="Branch 5 was not taken"> - </span><span class="tlaUNC" title="Branch 6 was not taken"> - </span><span class="tlaGBC" title="Branch 7 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 8 was not taken"> - </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 9 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 10 was not taken"> - </span><span class="tlaGBC" title="Branch 11 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 12 was not taken"> - </span><span class="tlaGBC" title="Branch 13 was taken 1 time"> + </span> 
-<span class="lineNum">        </span>    <span class="tlaUNC" title="Branch 14 was not taken"> - </span><span class="tlaGBC" title="Branch 15 was taken 4 times"> + </span><span class="tlaUNC" title="Branch 16 was not taken"> - </span><span class="tlaGBC" title="Branch 17 was taken 3 times"> + </span>]
+<span id="L72"><span class="lineNum">      72</span>                 :<span class="tlaGNC">          16 :       if (joined.is_absolute()) {</span></span>
+<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> 
+<span class="lineNum">        </span> <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaUNC" title="branch 6 was not taken"> - </span><span class="tlaGBC" title="branch 7 was taken 1 time"> + </span><span class="tlaUNC" title="branch 8 was not taken"> - </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 1 time"> + </span><span class="tlaUNC" title="branch 10 was not taken"> - </span><span class="tlaGBC" title="branch 11 was taken 2 times"> + </span><span class="tlaUNC" title="branch 12 was not taken"> - </span><span class="tlaGBC" title="branch 13 was taken 1 time"> + </span> 
+<span class="lineNum">        </span>    <span class="tlaUNC" title="branch 14 was not taken"> - </span><span class="tlaGBC" title="branch 15 was taken 4 times"> + </span><span class="tlaUNC" title="branch 16 was not taken"> - </span><span class="tlaGBC" title="branch 17 was taken 3 times"> + </span>]
 <span id="L73"><span class="lineNum">      73</span>                 :<span class="tlaGNC">           4 :         return joined;</span></span>
 <span id="L74"><span class="lineNum">      74</span>                 :             :       } else {</span>
 <span id="L75"><span class="lineNum">      75</span>                 :<span class="tlaGNC">          12 :         return first_path / joined;</span></span>
@@ -231,7 +242,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

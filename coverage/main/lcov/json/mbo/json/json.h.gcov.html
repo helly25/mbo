@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - json/mbo/json/json.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">json</a>/<a href="../index.html">mbo</a>/<a href="index.html">json</a> - json.h<span style="font-size: 80%;"> (source / <a href="json.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory json">json</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory json">json</a> - json.h<span style="font-size: 80%;"> (source / <a href="json.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">55.3&nbsp;%</td>
@@ -45,18 +51,11 @@
             <td class="headerCovTableEntry">259</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryLo">63.8&nbsp;%</td>
+            <td class="headerCovTableEntryMed">63.8&nbsp;%</td>
             <td class="headerCovTableEntry">188</td>
             <td class="headerCovTableEntry">120</td>
           </tr>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -208,7 +215,7 @@
 <span id="L130"><span class="lineNum">     130</span>                 :             :     ~value_iterator_t() noexcept = default;</span>
 <span id="L131"><span class="lineNum">     131</span>                 :             :     value_iterator_t() noexcept = default;  // Sadly needed for `std::forward_iterator`</span>
 <span id="L132"><span class="lineNum">     132</span>                 :             : </span>
-<span id="L133"><span class="lineNum">     133</span>                 :<span class="tlaGNC tlaBgGNC">           8 :     explicit value_iterator_t(array_iterator arr_it) noexcept : it_(arr_it) {}</span></span>
+<span id="L133"><span class="lineNum">     133</span>                 :<span class="tlaGNC">           8 :     explicit value_iterator_t(array_iterator arr_it) noexcept : it_(arr_it) {}</span></span>
 <span id="L134"><span class="lineNum">     134</span>                 :             : </span>
 <span id="L135"><span class="lineNum">     135</span>                 :<span class="tlaGNC">           2 :     explicit value_iterator_t(object_iterator obj_it) noexcept : it_(obj_it) {}</span></span>
 <span id="L136"><span class="lineNum">     136</span>                 :             : </span>
@@ -252,7 +259,7 @@
 <span id="L174"><span class="lineNum">     174</span>                 :             :     // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved,*explicit-*)</span>
 <span id="L175"><span class="lineNum">     175</span>                 :             : </span>
 <span id="L176"><span class="lineNum">     176</span>                 :<span class="tlaGNC">          14 :     reference operator*() const noexcept {</span></span>
-<span id="L177"><span class="lineNum">     177</span>         [<span class="tlaGBC" title="Branch 0 was taken 12 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">          14 :       return IsArray() ? *std::get&lt;array_iterator&gt;(it_) : *std::get&lt;object_iterator&gt;(it_)-&gt;second;</span></span>
+<span id="L177"><span class="lineNum">     177</span>         [<span class="tlaGBC" title="branch 0 was taken 12 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">          14 :       return IsArray() ? *std::get&lt;array_iterator&gt;(it_) : *std::get&lt;object_iterator&gt;(it_)-&gt;second;</span></span>
 <span id="L178"><span class="lineNum">     178</span>                 :             :     }</span>
 <span id="L179"><span class="lineNum">     179</span>                 :             : </span>
 <span id="L180"><span class="lineNum">     180</span>                 :             :     pointer operator-&gt;() const noexcept { return &amp;**this; }</span>
@@ -260,12 +267,12 @@
 <span id="L182"><span class="lineNum">     182</span>                 :             :     explicit operator reference() const noexcept { return **this; }</span>
 <span id="L183"><span class="lineNum">     183</span>                 :             : </span>
 <span id="L184"><span class="lineNum">     184</span>                 :<span class="tlaGNC">           6 :     value_iterator_t&amp; operator++() noexcept {</span></span>
-<span id="L185"><span class="lineNum">     185</span>         [<span class="tlaGBC" title="Branch 0 was taken 6 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           6 :       if (IsArray()) {</span></span>
+<span id="L185"><span class="lineNum">     185</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           6 :       if (IsArray()) {</span></span>
 <span id="L186"><span class="lineNum">     186</span>                 :<span class="tlaGNC">           6 :         ++std::get&lt;array_iterator&gt;(it_);</span></span>
 <span id="L187"><span class="lineNum">     187</span>                 :             :       } else {</span>
-<span id="L188"><span class="lineNum">     188</span>                 :<span class="tlaUNC tlaBgUNC">           0 :         ++std::get&lt;object_iterator&gt;(it_);</span></span>
+<span id="L188"><span class="lineNum">     188</span>                 :<span class="tlaUNC">           0 :         ++std::get&lt;object_iterator&gt;(it_);</span></span>
 <span id="L189"><span class="lineNum">     189</span>                 :             :       }</span>
-<span id="L190"><span class="lineNum">     190</span>                 :<span class="tlaGNC tlaBgGNC">           6 :       return *this;</span></span>
+<span id="L190"><span class="lineNum">     190</span>                 :<span class="tlaGNC">           6 :       return *this;</span></span>
 <span id="L191"><span class="lineNum">     191</span>                 :             :     }</span>
 <span id="L192"><span class="lineNum">     192</span>                 :             : </span>
 <span id="L193"><span class="lineNum">     193</span>                 :             :     value_iterator_t operator++(int) noexcept {  // NOLINT(cert-dcl21-cpp)</span>
@@ -387,7 +394,7 @@
 <span id="L309"><span class="lineNum">     309</span>                 :<span class="tlaGNC">         197 :   }</span></span>
 <span id="L310"><span class="lineNum">     310</span>                 :             : </span>
 <span id="L311"><span class="lineNum">     311</span>                 :<span class="tlaGNC">           2 :   Json&amp; operator=(const Json&amp; other) {</span></span>
-<span id="L312"><span class="lineNum">     312</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :     if (this != &amp;other) {</span></span>
+<span id="L312"><span class="lineNum">     312</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :     if (this != &amp;other) {</span></span>
 <span id="L313"><span class="lineNum">     313</span>                 :<span class="tlaGNC">           1 :       Json copy(other);</span></span>
 <span id="L314"><span class="lineNum">     314</span>                 :<span class="tlaGNC">           1 :       data_ = std::move(copy.data_);</span></span>
 <span id="L315"><span class="lineNum">     315</span>                 :<span class="tlaGNC">           1 :     }</span></span>
@@ -405,7 +412,7 @@
 <span id="L327"><span class="lineNum">     327</span>                 :<span class="tlaGNC">          60 :   }</span></span>
 <span id="L328"><span class="lineNum">     328</span>                 :             : </span>
 <span id="L329"><span class="lineNum">     329</span>                 :<span class="tlaGNC">          21 :   Json&amp; operator=(const std::unique_ptr&lt;Json&gt;&amp; other) {  // NOLINT(misc-no-recursion)</span></span>
-<span id="L330"><span class="lineNum">     330</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 20 times"> + </span>]:<span class="tlaGNC">          21 :     if (other == nullptr) {</span></span>
+<span id="L330"><span class="lineNum">     330</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 20 times"> + </span>]:<span class="tlaGNC">          21 :     if (other == nullptr) {</span></span>
 <span id="L331"><span class="lineNum">     331</span>                 :<span class="tlaGNC">           1 :       data_.emplace&lt;std::nullopt_t&gt;(std::nullopt);</span></span>
 <span id="L332"><span class="lineNum">     332</span>                 :             :     } else {</span>
 <span id="L333"><span class="lineNum">     333</span>                 :<span class="tlaGNC">          20 :       *this = Json(*other);</span></span>
@@ -435,11 +442,11 @@
 <span id="L357"><span class="lineNum">     357</span>                 :             : </span>
 <span id="L358"><span class="lineNum">     358</span>                 :<span class="tlaGNC">          61 :   bool IsUnsignedInt() const noexcept { return std::holds_alternative&lt;UnsignedInt&gt;(data_); }</span></span>
 <span id="L359"><span class="lineNum">     359</span>                 :             : </span>
-<span id="L360"><span class="lineNum">     360</span>   [<span class="tlaGBC" title="Branch 0 was taken 61 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 44 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 7 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 54 times"> + </span>]:<span class="tlaGNC">         105 :   bool IsInteger() const noexcept { return IsSignedInt() || IsUnsignedInt(); }</span></span>
+<span id="L360"><span class="lineNum">     360</span>   [<span class="tlaGBC" title="branch 0 was taken 61 times"> + </span><span class="tlaGBC" title="branch 1 was taken 44 times"> + </span><span class="tlaGBC" title="branch 2 was taken 7 times"> + </span><span class="tlaGBC" title="branch 3 was taken 54 times"> + </span>]:<span class="tlaGNC">         105 :   bool IsInteger() const noexcept { return IsSignedInt() || IsUnsignedInt(); }</span></span>
 <span id="L361"><span class="lineNum">     361</span>                 :             : </span>
 <span id="L362"><span class="lineNum">     362</span>                 :<span class="tlaGNC">          54 :   bool IsFloat() const noexcept { return std::holds_alternative&lt;Float&gt;(data_); }</span></span>
 <span id="L363"><span class="lineNum">     363</span>                 :             : </span>
-<span id="L364"><span class="lineNum">     364</span>   [<span class="tlaGBC" title="Branch 0 was taken 54 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 51 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 18 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 36 times"> + </span>]:<span class="tlaGNC">         105 :   bool IsNumber() const noexcept { return IsInteger() || IsFloat(); }</span></span>
+<span id="L364"><span class="lineNum">     364</span>   [<span class="tlaGBC" title="branch 0 was taken 54 times"> + </span><span class="tlaGBC" title="branch 1 was taken 51 times"> + </span><span class="tlaGBC" title="branch 2 was taken 18 times"> + </span><span class="tlaGBC" title="branch 3 was taken 36 times"> + </span>]:<span class="tlaGNC">         105 :   bool IsNumber() const noexcept { return IsInteger() || IsFloat(); }</span></span>
 <span id="L365"><span class="lineNum">     365</span>                 :             : </span>
 <span id="L366"><span class="lineNum">     366</span>                 :<span class="tlaGNC">          29 :   bool IsString() const noexcept { return std::holds_alternative&lt;std::string&gt;(data_); }</span></span>
 <span id="L367"><span class="lineNum">     367</span>                 :             : </span>
@@ -448,34 +455,34 @@
 <span id="L370"><span class="lineNum">     370</span>                 :<span class="tlaGNC">          67 :   bool IsObject() const noexcept { return std::holds_alternative&lt;Object&gt;(data_); }</span></span>
 <span id="L371"><span class="lineNum">     371</span>                 :             : </span>
 <span id="L372"><span class="lineNum">     372</span>                 :<span class="tlaGNC">         144 :   Kind GetKind() const noexcept {</span></span>
-<span id="L373"><span class="lineNum">     373</span>         [<span class="tlaGBC" title="Branch 0 was taken 11 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 133 times"> + </span>]:<span class="tlaGNC">         144 :     if (IsNull()) {</span></span>
+<span id="L373"><span class="lineNum">     373</span>         [<span class="tlaGBC" title="branch 0 was taken 11 times"> + </span><span class="tlaGBC" title="branch 1 was taken 133 times"> + </span>]:<span class="tlaGNC">         144 :     if (IsNull()) {</span></span>
 <span id="L374"><span class="lineNum">     374</span>                 :<span class="tlaGNC">          11 :       return Kind::kNull;</span></span>
-<span id="L375"><span class="lineNum">     375</span>         [<span class="tlaGBC" title="Branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 129 times"> + </span>]:<span class="tlaGNC">         133 :     } else if (IsArray()) {</span></span>
+<span id="L375"><span class="lineNum">     375</span>         [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 129 times"> + </span>]:<span class="tlaGNC">         133 :     } else if (IsArray()) {</span></span>
 <span id="L376"><span class="lineNum">     376</span>                 :<span class="tlaGNC">           4 :       return Kind::kArray;</span></span>
-<span id="L377"><span class="lineNum">     377</span>         [<span class="tlaGBC" title="Branch 0 was taken 24 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 105 times"> + </span>]:<span class="tlaGNC">         129 :     } else if (IsBool()) {</span></span>
+<span id="L377"><span class="lineNum">     377</span>         [<span class="tlaGBC" title="branch 0 was taken 24 times"> + </span><span class="tlaGBC" title="branch 1 was taken 105 times"> + </span>]:<span class="tlaGNC">         129 :     } else if (IsBool()) {</span></span>
 <span id="L378"><span class="lineNum">     378</span>                 :<span class="tlaGNC">          24 :       return Kind::kBool;</span></span>
-<span id="L379"><span class="lineNum">     379</span>         [<span class="tlaGBC" title="Branch 0 was taken 69 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 36 times"> + </span>]:<span class="tlaGNC">         105 :     } else if (IsNumber()) {</span></span>
+<span id="L379"><span class="lineNum">     379</span>         [<span class="tlaGBC" title="branch 0 was taken 69 times"> + </span><span class="tlaGBC" title="branch 1 was taken 36 times"> + </span>]:<span class="tlaGNC">         105 :     } else if (IsNumber()) {</span></span>
 <span id="L380"><span class="lineNum">     380</span>                 :<span class="tlaGNC">          69 :       return Kind::kNumber;</span></span>
-<span id="L381"><span class="lineNum">     381</span>         [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 28 times"> + </span>]:<span class="tlaGNC">          36 :     } else if (IsObject()) {</span></span>
+<span id="L381"><span class="lineNum">     381</span>         [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 28 times"> + </span>]:<span class="tlaGNC">          36 :     } else if (IsObject()) {</span></span>
 <span id="L382"><span class="lineNum">     382</span>                 :<span class="tlaGNC">           8 :       return Kind::kObject;</span></span>
-<span id="L383"><span class="lineNum">     383</span>         [<span class="tlaGBC" title="Branch 0 was taken 28 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">          28 :     } else if (IsString()) {</span></span>
+<span id="L383"><span class="lineNum">     383</span>         [<span class="tlaGBC" title="branch 0 was taken 28 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          28 :     } else if (IsString()) {</span></span>
 <span id="L384"><span class="lineNum">     384</span>                 :<span class="tlaGNC">          28 :       return Kind::kString;</span></span>
 <span id="L385"><span class="lineNum">     385</span>                 :             :     }</span>
-<span id="L386"><span class="lineNum">     386</span>                 :<span class="tlaUNC tlaBgUNC">           0 :     MBO_CONFIG_REQUIRE(false, &quot;Bad type&quot;);</span></span>
+<span id="L386"><span class="lineNum">     386</span>                 :<span class="tlaUNC">           0 :     MBO_CONFIG_REQUIRE(false, &quot;Bad type&quot;);</span></span>
 <span id="L387"><span class="lineNum">     387</span>                 :             :     return Kind::kNull;</span>
 <span id="L388"><span class="lineNum">     388</span>                 :             :   }</span>
 <span id="L389"><span class="lineNum">     389</span>                 :             : </span>
-<span id="L390"><span class="lineNum">     390</span>                 :<span class="tlaGNC tlaBgGNC">          10 :   std::ostream&amp; Stream(</span></span>
+<span id="L390"><span class="lineNum">     390</span>                 :<span class="tlaGNC">          10 :   std::ostream&amp; Stream(</span></span>
 <span id="L391"><span class="lineNum">     391</span>                 :             :       std::ostream&amp; os,</span>
 <span id="L392"><span class="lineNum">     392</span>                 :             :       SerializeMode mode = SerializeMode::kCompact,</span>
 <span id="L393"><span class="lineNum">     393</span>                 :             :       const types::StringifyRootOptions&amp; root_options = types::StringifyRootOptions{}) const {</span>
 <span id="L394"><span class="lineNum">     394</span>                 :<span class="tlaGNC">          10 :     const ::mbo::types::Stringify stringify{static_cast&lt;types::Stringify::OutputMode&gt;(mode), root_options};</span></span>
-<span id="L395"><span class="lineNum">     395</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          10 :     if (IsNull()) {</span></span>
+<span id="L395"><span class="lineNum">     395</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          10 :     if (IsNull()) {</span></span>
 <span id="L396"><span class="lineNum">     396</span>                 :             :       struct Null {};</span>
 <span id="L397"><span class="lineNum">     397</span>                 :             : </span>
 <span id="L398"><span class="lineNum">     398</span>                 :<span class="tlaGNC">           1 :       stringify.Stream(os, Null{});</span></span>
 <span id="L399"><span class="lineNum">     399</span>                 :             :     } else {</span>
-<span id="L400"><span class="lineNum">     400</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 9 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 9 times"> + </span>]:<span class="tlaGNC">           9 :       MBO_CONFIG_REQUIRE(IsObject(), &quot;Only Objects can be serialized.&quot;);</span></span>
+<span id="L400"><span class="lineNum">     400</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 9 times"> + </span>]:<span class="tlaGNC">           9 :       MBO_CONFIG_REQUIRE(IsObject(), &quot;Only Objects can be serialized.&quot;);</span></span>
 <span id="L401"><span class="lineNum">     401</span>                 :<span class="tlaGNC">           9 :       stringify.Stream(os, std::get&lt;Object&gt;(data_));</span></span>
 <span id="L402"><span class="lineNum">     402</span>                 :             :     }</span>
 <span id="L403"><span class="lineNum">     403</span>                 :<span class="tlaGNC">          10 :     return os;</span></span>
@@ -507,37 +514,37 @@
 <span id="L429"><span class="lineNum">     429</span>                 :             :   }</span>
 <span id="L430"><span class="lineNum">     430</span>                 :             : </span>
 <span id="L431"><span class="lineNum">     431</span>                 :<span class="tlaGNC">          11 :   bool empty() const noexcept {</span></span>
-<span id="L432"><span class="lineNum">     432</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">          11 :     if (IsArray()) {</span></span>
+<span id="L432"><span class="lineNum">     432</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">          11 :     if (IsArray()) {</span></span>
 <span id="L433"><span class="lineNum">     433</span>                 :<span class="tlaGNC">           3 :       return std::get&lt;Array&gt;(data_)-&gt;empty();</span></span>
 <span id="L434"><span class="lineNum">     434</span>                 :             :     }</span>
-<span id="L435"><span class="lineNum">     435</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           8 :     if (IsObject()) {</span></span>
+<span id="L435"><span class="lineNum">     435</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           8 :     if (IsObject()) {</span></span>
 <span id="L436"><span class="lineNum">     436</span>                 :<span class="tlaGNC">           3 :       return std::get&lt;Object&gt;(data_).empty();</span></span>
 <span id="L437"><span class="lineNum">     437</span>                 :             :     }</span>
 <span id="L438"><span class="lineNum">     438</span>                 :<span class="tlaGNC">           5 :     return true;</span></span>
 <span id="L439"><span class="lineNum">     439</span>                 :             :   }</span>
 <span id="L440"><span class="lineNum">     440</span>                 :             : </span>
 <span id="L441"><span class="lineNum">     441</span>                 :<span class="tlaGNC">          12 :   std::size_t size() const noexcept {</span></span>
-<span id="L442"><span class="lineNum">     442</span>         [<span class="tlaGBC" title="Branch 0 was taken 11 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">          12 :     if (IsArray()) {</span></span>
+<span id="L442"><span class="lineNum">     442</span>         [<span class="tlaGBC" title="branch 0 was taken 11 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">          12 :     if (IsArray()) {</span></span>
 <span id="L443"><span class="lineNum">     443</span>                 :<span class="tlaGNC">          11 :       return std::get&lt;Array&gt;(data_)-&gt;size();</span></span>
 <span id="L444"><span class="lineNum">     444</span>                 :             :     }</span>
-<span id="L445"><span class="lineNum">     445</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           1 :     if (IsObject()) {</span></span>
+<span id="L445"><span class="lineNum">     445</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           1 :     if (IsObject()) {</span></span>
 <span id="L446"><span class="lineNum">     446</span>                 :<span class="tlaGNC">           1 :       return std::get&lt;Object&gt;(data_).size();</span></span>
 <span id="L447"><span class="lineNum">     447</span>                 :             :     }</span>
-<span id="L448"><span class="lineNum">     448</span>                 :<span class="tlaUNC tlaBgUNC">           0 :     return 0;</span></span>
+<span id="L448"><span class="lineNum">     448</span>                 :<span class="tlaUNC">           0 :     return 0;</span></span>
 <span id="L449"><span class="lineNum">     449</span>                 :             :   }</span>
 <span id="L450"><span class="lineNum">     450</span>                 :             : </span>
-<span id="L451"><span class="lineNum">     451</span>                 :<span class="tlaGNC tlaBgGNC">           2 :   void clear() {</span></span>
-<span id="L452"><span class="lineNum">     452</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :     if (IsArray()) {</span></span>
+<span id="L451"><span class="lineNum">     451</span>                 :<span class="tlaGNC">           2 :   void clear() {</span></span>
+<span id="L452"><span class="lineNum">     452</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :     if (IsArray()) {</span></span>
 <span id="L453"><span class="lineNum">     453</span>                 :<span class="tlaGNC">           1 :       std::get&lt;Array&gt;(data_)-&gt;clear();</span></span>
-<span id="L454"><span class="lineNum">     454</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     } else if (IsObject()) {</span></span>
-<span id="L455"><span class="lineNum">     455</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       std::get&lt;Object&gt;(data_).clear();</span></span>
+<span id="L454"><span class="lineNum">     454</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     } else if (IsObject()) {</span></span>
+<span id="L455"><span class="lineNum">     455</span>                 :<span class="tlaUNC">           0 :       std::get&lt;Object&gt;(data_).clear();</span></span>
 <span id="L456"><span class="lineNum">     456</span>                 :             :     } else {</span>
-<span id="L457"><span class="lineNum">     457</span>                 :<span class="tlaGNC tlaBgGNC">           1 :       Reset();</span></span>
+<span id="L457"><span class="lineNum">     457</span>                 :<span class="tlaGNC">           1 :       Reset();</span></span>
 <span id="L458"><span class="lineNum">     458</span>                 :             :     }</span>
 <span id="L459"><span class="lineNum">     459</span>                 :<span class="tlaGNC">           2 :   }</span></span>
 <span id="L460"><span class="lineNum">     460</span>                 :             : </span>
 <span id="L461"><span class="lineNum">     461</span>                 :<span class="tlaGNC">           2 :   bool contains(std::string_view property) const noexcept {</span></span>
-<span id="L462"><span class="lineNum">     462</span>   [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :     return IsObject() &amp;&amp; std::get&lt;Object&gt;(data_).contains(property);</span></span>
+<span id="L462"><span class="lineNum">     462</span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :     return IsObject() &amp;&amp; std::get&lt;Object&gt;(data_).contains(property);</span></span>
 <span id="L463"><span class="lineNum">     463</span>                 :             :   }</span>
 <span id="L464"><span class="lineNum">     464</span>                 :             : </span>
 <span id="L465"><span class="lineNum">     465</span>                 :             :   template&lt;typename Arg&gt;</span>
@@ -566,20 +573,20 @@
 <span id="L488"><span class="lineNum">     488</span>                 :<span class="tlaGNC">           3 :   }</span></span>
 <span id="L489"><span class="lineNum">     489</span>                 :             : </span>
 <span id="L490"><span class="lineNum">     490</span>                 :<span class="tlaGNC">           1 :   void pop_back() {</span></span>
-<span id="L491"><span class="lineNum">     491</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           1 :     if (IsArray()) {</span></span>
+<span id="L491"><span class="lineNum">     491</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           1 :     if (IsArray()) {</span></span>
 <span id="L492"><span class="lineNum">     492</span>                 :<span class="tlaGNC">           1 :       auto&amp; values = std::get&lt;Array&gt;(data_);</span></span>
 <span id="L493"><span class="lineNum">     493</span>                 :<span class="tlaGNC">           1 :       values-&gt;pop_back();</span></span>
 <span id="L494"><span class="lineNum">     494</span>                 :             :     } else {</span>
-<span id="L495"><span class="lineNum">     495</span>   [<span class="tlaUNC" title="Branch 0 was not executed"> # </span><span class="tlaUNC" title="Branch 1 was not executed"> # </span><span class="tlaUNC" title="Branch 2 was not executed"> # </span><span class="tlaUNC" title="Branch 3 was not executed"> # </span>]:<span class="tlaUNC tlaBgUNC">           0 :       MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array or Null.&quot;);</span></span>
+<span id="L495"><span class="lineNum">     495</span>   [<span class="tlaUNC" title="branch 0 was not executed"> # </span><span class="tlaUNC" title="branch 1 was not executed"> # </span><span class="tlaUNC" title="branch 2 was not executed"> # </span><span class="tlaUNC" title="branch 3 was not executed"> # </span>]:<span class="tlaUNC">           0 :       MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array or Null.&quot;);</span></span>
 <span id="L496"><span class="lineNum">     496</span>                 :             :     }</span>
-<span id="L497"><span class="lineNum">     497</span>                 :<span class="tlaGNC tlaBgGNC">           1 :   }</span></span>
+<span id="L497"><span class="lineNum">     497</span>                 :<span class="tlaGNC">           1 :   }</span></span>
 <span id="L498"><span class="lineNum">     498</span>                 :             : </span>
 <span id="L499"><span class="lineNum">     499</span>                 :             :   // NOLINTBEGIN(*-avoid-unchecked-container-access): Json's own accessors. Each</span>
 <span id="L500"><span class="lineNum">     500</span>                 :             :   // either bounds-checks first (MBO_CONFIG_REQUIRE) or inserts; the subscripts</span>
 <span id="L501"><span class="lineNum">     501</span>                 :             :   // below are the checked implementation, not unchecked use of it.</span>
 <span id="L502"><span class="lineNum">     502</span>                 :<span class="tlaGNC">           8 :   Json&amp; operator[](std::size_t index) {</span></span>
 <span id="L503"><span class="lineNum">     503</span>                 :<span class="tlaGNC">           8 :     MakeArray();</span></span>
-<span id="L504"><span class="lineNum">     504</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 8 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 8 times"> + </span>]:<span class="tlaGNC">           8 :     MBO_CONFIG_REQUIRE(index &lt; size(), &quot;Out of range.&quot;);</span></span>
+<span id="L504"><span class="lineNum">     504</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 8 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 8 times"> + </span>]:<span class="tlaGNC">           8 :     MBO_CONFIG_REQUIRE(index &lt; size(), &quot;Out of range.&quot;);</span></span>
 <span id="L505"><span class="lineNum">     505</span>                 :<span class="tlaGNC">           8 :     return (*std::get&lt;Array&gt;(data_))[index];</span></span>
 <span id="L506"><span class="lineNum">     506</span>                 :             :   }</span>
 <span id="L507"><span class="lineNum">     507</span>                 :             : </span>
@@ -592,7 +599,7 @@
 <span id="L514"><span class="lineNum">     514</span>                 :<span class="tlaGNC">          49 :   Json&amp; operator[](std::string_view property) noexcept {</span></span>
 <span id="L515"><span class="lineNum">     515</span>                 :<span class="tlaGNC">          49 :     MakeObject();</span></span>
 <span id="L516"><span class="lineNum">     516</span>                 :<span class="tlaGNC">          49 :     auto [it, inserted] = std::get&lt;Object&gt;(data_).emplace(property, nullptr);</span></span>
-<span id="L517"><span class="lineNum">     517</span>         [<span class="tlaGBC" title="Branch 0 was taken 18 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 31 times"> + </span>]:<span class="tlaGNC">          49 :     if (inserted) {</span></span>
+<span id="L517"><span class="lineNum">     517</span>         [<span class="tlaGBC" title="branch 0 was taken 18 times"> + </span><span class="tlaGBC" title="branch 1 was taken 31 times"> + </span>]:<span class="tlaGNC">          49 :     if (inserted) {</span></span>
 <span id="L518"><span class="lineNum">     518</span>                 :<span class="tlaGNC">          18 :       it-&gt;second = std::make_unique&lt;Json&gt;();</span></span>
 <span id="L519"><span class="lineNum">     519</span>                 :             :     }</span>
 <span id="L520"><span class="lineNum">     520</span>                 :<span class="tlaGNC">          49 :     return *it-&gt;second;</span></span>
@@ -615,12 +622,12 @@
 <span id="L537"><span class="lineNum">     537</span>                 :             :   // NOLINTEND(*-avoid-unchecked-container-access)</span>
 <span id="L538"><span class="lineNum">     538</span>                 :             : </span>
 <span id="L539"><span class="lineNum">     539</span>                 :<span class="tlaGNC">           1 :   iterator erase(const_iterator pos) {</span></span>
-<span id="L540"><span class="lineNum">     540</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
+<span id="L540"><span class="lineNum">     540</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
 <span id="L541"><span class="lineNum">     541</span>                 :<span class="tlaGNC">           1 :     return std::get&lt;Array&gt;(data_)-&gt;erase(pos);</span></span>
 <span id="L542"><span class="lineNum">     542</span>                 :             :   }</span>
 <span id="L543"><span class="lineNum">     543</span>                 :             : </span>
 <span id="L544"><span class="lineNum">     544</span>                 :<span class="tlaGNC">           1 :   iterator erase(const_iterator first, const_iterator last) {</span></span>
-<span id="L545"><span class="lineNum">     545</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
+<span id="L545"><span class="lineNum">     545</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
 <span id="L546"><span class="lineNum">     546</span>                 :<span class="tlaGNC">           1 :     return std::get&lt;Array&gt;(data_)-&gt;erase(first, last);</span></span>
 <span id="L547"><span class="lineNum">     547</span>                 :             :   }</span>
 <span id="L548"><span class="lineNum">     548</span>                 :             : </span>
@@ -642,30 +649,30 @@
 <span id="L564"><span class="lineNum">     564</span>                 :             :   }</span>
 <span id="L565"><span class="lineNum">     565</span>                 :             : </span>
 <span id="L566"><span class="lineNum">     566</span>                 :<span class="tlaGNC">           4 :   size_type erase(std::string_view property) {</span></span>
-<span id="L567"><span class="lineNum">     567</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :     if (IsObject()) {</span></span>
+<span id="L567"><span class="lineNum">     567</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :     if (IsObject()) {</span></span>
 <span id="L568"><span class="lineNum">     568</span>                 :<span class="tlaGNC">           3 :       return std::get&lt;Object&gt;(data_).erase(property);</span></span>
 <span id="L569"><span class="lineNum">     569</span>                 :             :     }</span>
 <span id="L570"><span class="lineNum">     570</span>                 :<span class="tlaGNC">           1 :     return 0;</span></span>
 <span id="L571"><span class="lineNum">     571</span>                 :             :   }</span>
 <span id="L572"><span class="lineNum">     572</span>                 :             : </span>
 <span id="L573"><span class="lineNum">     573</span>                 :<span class="tlaGNC">           1 :   void resize(size_type count) {</span></span>
-<span id="L574"><span class="lineNum">     574</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
+<span id="L574"><span class="lineNum">     574</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
 <span id="L575"><span class="lineNum">     575</span>                 :<span class="tlaGNC">           1 :     std::get&lt;Array&gt;(data_)-&gt;resize(count);</span></span>
 <span id="L576"><span class="lineNum">     576</span>                 :<span class="tlaGNC">           1 :   }</span></span>
 <span id="L577"><span class="lineNum">     577</span>                 :             : </span>
 <span id="L578"><span class="lineNum">     578</span>                 :             :   template&lt;ConvertibleToJson Value&gt;</span>
 <span id="L579"><span class="lineNum">     579</span>                 :<span class="tlaGNC">           1 :   void resize(size_type count, const Value&amp; value) {</span></span>
-<span id="L580"><span class="lineNum">     580</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
+<span id="L580"><span class="lineNum">     580</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
 <span id="L581"><span class="lineNum">     581</span>                 :<span class="tlaGNC">           1 :     std::get&lt;Array&gt;(data_)-&gt;resize(count, Json(value));</span></span>
 <span id="L582"><span class="lineNum">     582</span>                 :<span class="tlaGNC">           1 :   }</span></span>
 <span id="L583"><span class="lineNum">     583</span>                 :             : </span>
 <span id="L584"><span class="lineNum">     584</span>                 :<span class="tlaGNC">           3 :   iterator begin() {</span></span>
-<span id="L585"><span class="lineNum">     585</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">           3 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
+<span id="L585"><span class="lineNum">     585</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">           3 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
 <span id="L586"><span class="lineNum">     586</span>                 :<span class="tlaGNC">           3 :     return std::get&lt;Array&gt;(data_)-&gt;begin();</span></span>
 <span id="L587"><span class="lineNum">     587</span>                 :             :   }</span>
 <span id="L588"><span class="lineNum">     588</span>                 :             : </span>
 <span id="L589"><span class="lineNum">     589</span>                 :<span class="tlaGNC">           3 :   const_iterator begin() const {</span></span>
-<span id="L590"><span class="lineNum">     590</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">           3 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
+<span id="L590"><span class="lineNum">     590</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">           3 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
 <span id="L591"><span class="lineNum">     591</span>                 :<span class="tlaGNC">           3 :     return std::get&lt;Array&gt;(data_)-&gt;begin();</span></span>
 <span id="L592"><span class="lineNum">     592</span>                 :             :   }</span>
 <span id="L593"><span class="lineNum">     593</span>                 :             : </span>
@@ -675,12 +682,12 @@
 <span id="L597"><span class="lineNum">     597</span>                 :             :   }</span>
 <span id="L598"><span class="lineNum">     598</span>                 :             : </span>
 <span id="L599"><span class="lineNum">     599</span>                 :<span class="tlaGNC">           2 :   iterator end() {</span></span>
-<span id="L600"><span class="lineNum">     600</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">           2 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
+<span id="L600"><span class="lineNum">     600</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">           2 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
 <span id="L601"><span class="lineNum">     601</span>                 :<span class="tlaGNC">           2 :     return std::get&lt;Array&gt;(data_)-&gt;end();</span></span>
 <span id="L602"><span class="lineNum">     602</span>                 :             :   }</span>
 <span id="L603"><span class="lineNum">     603</span>                 :             : </span>
 <span id="L604"><span class="lineNum">     604</span>                 :<span class="tlaGNC">          17 :   const_iterator end() const {</span></span>
-<span id="L605"><span class="lineNum">     605</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 17 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 17 times"> + </span>]:<span class="tlaGNC">          17 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
+<span id="L605"><span class="lineNum">     605</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 17 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 17 times"> + </span>]:<span class="tlaGNC">          17 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
 <span id="L606"><span class="lineNum">     606</span>                 :<span class="tlaGNC">          17 :     return std::get&lt;Array&gt;(data_)-&gt;end();</span></span>
 <span id="L607"><span class="lineNum">     607</span>                 :             :   }</span>
 <span id="L608"><span class="lineNum">     608</span>                 :             : </span>
@@ -720,13 +727,13 @@
 <span id="L642"><span class="lineNum">     642</span>                 :             :   }</span>
 <span id="L643"><span class="lineNum">     643</span>                 :             : </span>
 <span id="L644"><span class="lineNum">     644</span>                 :<span class="tlaGNC">           5 :   auto values() -&gt; values_view {</span></span>
-<span id="L645"><span class="lineNum">     645</span>         [<span class="tlaGBC" title="Branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           5 :     if (IsArray()) {</span></span>
+<span id="L645"><span class="lineNum">     645</span>         [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           5 :     if (IsArray()) {</span></span>
 <span id="L646"><span class="lineNum">     646</span>                 :<span class="tlaGNC">           4 :       auto&amp; array = std::get&lt;Array&gt;(data_);</span></span>
-<span id="L647"><span class="lineNum">     647</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 4 times"> + </span>]:<span class="tlaGNC">           4 :       MBO_CONFIG_REQUIRE_DEBUG(array != nullptr, &quot;May not be nulltr.&quot;);</span></span>
+<span id="L647"><span class="lineNum">     647</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 4 times"> + </span>]:<span class="tlaGNC">           4 :       MBO_CONFIG_REQUIRE_DEBUG(array != nullptr, &quot;May not be nulltr.&quot;);</span></span>
 <span id="L648"><span class="lineNum">     648</span>                 :<span class="tlaGNC">           4 :       std::cout &lt;&lt; &quot;Array Size: &quot; &lt;&lt; array-&gt;size() &lt;&lt; &quot;\n&quot; &lt;&lt; std::flush;</span></span>
 <span id="L649"><span class="lineNum">     649</span>                 :<span class="tlaGNC">           4 :       return {*this, array-&gt;begin(), array-&gt;end()};</span></span>
 <span id="L650"><span class="lineNum">     650</span>                 :             :     }</span>
-<span id="L651"><span class="lineNum">     651</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsObject(), &quot;Is neither Array nor Object.&quot;);</span></span>
+<span id="L651"><span class="lineNum">     651</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsObject(), &quot;Is neither Array nor Object.&quot;);</span></span>
 <span id="L652"><span class="lineNum">     652</span>                 :<span class="tlaGNC">           1 :     auto&amp; object = std::get&lt;Object&gt;(data_);</span></span>
 <span id="L653"><span class="lineNum">     653</span>                 :<span class="tlaGNC">           1 :     std::cout &lt;&lt; &quot;Object Size: &quot; &lt;&lt; object.size() &lt;&lt; &quot;\n&quot; &lt;&lt; std::flush;</span></span>
 <span id="L654"><span class="lineNum">     654</span>                 :<span class="tlaGNC">           1 :     return {*this, object.begin(), object.end()};</span></span>
@@ -743,7 +750,7 @@
 <span id="L665"><span class="lineNum">     665</span>                 :             :   }</span>
 <span id="L666"><span class="lineNum">     666</span>                 :             : </span>
 <span id="L667"><span class="lineNum">     667</span>                 :<span class="tlaGNC">           2 :   auto array_values() {</span></span>
-<span id="L668"><span class="lineNum">     668</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">           2 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
+<span id="L668"><span class="lineNum">     668</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">           2 :     MBO_CONFIG_REQUIRE(IsArray(), &quot;Is not an Array.&quot;);</span></span>
 <span id="L669"><span class="lineNum">     669</span>                 :<span class="tlaGNC">           2 :     return std::views::all(*std::get&lt;Array&gt;(data_));</span></span>
 <span id="L670"><span class="lineNum">     670</span>                 :             :   }</span>
 <span id="L671"><span class="lineNum">     671</span>                 :             : </span>
@@ -753,12 +760,12 @@
 <span id="L675"><span class="lineNum">     675</span>                 :             :   }</span>
 <span id="L676"><span class="lineNum">     676</span>                 :             : </span>
 <span id="L677"><span class="lineNum">     677</span>                 :<span class="tlaGNC">           1 :   auto property_names() const {</span></span>
-<span id="L678"><span class="lineNum">     678</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsObject(), &quot;Is not an Object.&quot;);</span></span>
+<span id="L678"><span class="lineNum">     678</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsObject(), &quot;Is not an Object.&quot;);</span></span>
 <span id="L679"><span class="lineNum">     679</span>                 :<span class="tlaGNC">           1 :     return std::views::keys(std::get&lt;Object&gt;(data_));</span></span>
 <span id="L680"><span class="lineNum">     680</span>                 :             :   }</span>
 <span id="L681"><span class="lineNum">     681</span>                 :             : </span>
 <span id="L682"><span class="lineNum">     682</span>                 :<span class="tlaGNC">           1 :   auto property_pairs() {</span></span>
-<span id="L683"><span class="lineNum">     683</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsObject(), &quot;Is not an Object.&quot;);</span></span>
+<span id="L683"><span class="lineNum">     683</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsObject(), &quot;Is not an Object.&quot;);</span></span>
 <span id="L684"><span class="lineNum">     684</span>                 :<span class="tlaGNC">           1 :     return std::views::transform(</span></span>
 <span id="L685"><span class="lineNum">     685</span>                 :<span class="tlaGNC">           1 :         std::get&lt;Object&gt;(data_),</span></span>
 <span id="L686"><span class="lineNum">     686</span>                 :<span class="tlaGNC">          10 :         [](Object::reference v) -&gt; std::pair&lt;const std::string&amp;, Json&amp;&gt; { return {v.first, *v.second}; });</span></span>
@@ -772,7 +779,7 @@
 <span id="L694"><span class="lineNum">     694</span>                 :             :   }</span>
 <span id="L695"><span class="lineNum">     695</span>                 :             : </span>
 <span id="L696"><span class="lineNum">     696</span>                 :<span class="tlaGNC">           1 :   auto property_values() {</span></span>
-<span id="L697"><span class="lineNum">     697</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsObject(), &quot;Is not an Object.&quot;);</span></span>
+<span id="L697"><span class="lineNum">     697</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsObject(), &quot;Is not an Object.&quot;);</span></span>
 <span id="L698"><span class="lineNum">     698</span>                 :<span class="tlaGNC">          10 :     return std::views::transform(std::get&lt;Object&gt;(data_), [](Object::const_reference v) -&gt; Json&amp; { return *v.second; });</span></span>
 <span id="L699"><span class="lineNum">     699</span>                 :             :   }</span>
 <span id="L700"><span class="lineNum">     700</span>                 :             : </span>
@@ -845,11 +852,11 @@
 <span id="L767"><span class="lineNum">     767</span>                 :             : </span>
 <span id="L768"><span class="lineNum">     768</span>                 :<span class="tlaGNC">          17 :   void CopyObject(const Json&amp; other) {         // NOLINT(misc-no-recursion)</span></span>
 <span id="L769"><span class="lineNum">     769</span>                 :<span class="tlaGNC">          17 :     Object&amp; object = data_.emplace&lt;Object&gt;();  // NOLINT(*-auto)</span></span>
-<span id="L770"><span class="lineNum">     770</span>         [<span class="tlaGBC" title="Branch 0 was taken 19 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 17 times"> + </span>]:<span class="tlaGNC">          36 :     for (const auto&amp; [name, value] : std::get&lt;Object&gt;(other.data_)) {</span></span>
+<span id="L770"><span class="lineNum">     770</span>         [<span class="tlaGBC" title="branch 0 was taken 19 times"> + </span><span class="tlaGBC" title="branch 1 was taken 17 times"> + </span>]:<span class="tlaGNC">          36 :     for (const auto&amp; [name, value] : std::get&lt;Object&gt;(other.data_)) {</span></span>
 <span id="L771"><span class="lineNum">     771</span>                 :             :       // Object aliases an absl map; map insert: operator[] creates the entry, so there is no range to exceed.</span>
 <span id="L772"><span class="lineNum">     772</span>                 :             :       // NOLINTNEXTLINE(*-avoid-unchecked-container-access)</span>
 <span id="L773"><span class="lineNum">     773</span>                 :<span class="tlaGNC">          19 :       std::unique_ptr&lt;Json&gt;&amp; ref = object[name];</span></span>
-<span id="L774"><span class="lineNum">     774</span>         [<span class="tlaGBC" title="Branch 0 was taken 19 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">          19 :       if (ref == nullptr) {</span></span>
+<span id="L774"><span class="lineNum">     774</span>         [<span class="tlaGBC" title="branch 0 was taken 19 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          19 :       if (ref == nullptr) {</span></span>
 <span id="L775"><span class="lineNum">     775</span>                 :<span class="tlaGNC">          19 :         ref = std::make_unique&lt;Json&gt;();</span></span>
 <span id="L776"><span class="lineNum">     776</span>                 :             :       }</span>
 <span id="L777"><span class="lineNum">     777</span>                 :<span class="tlaGNC">          19 :       *ref = value;</span></span>
@@ -871,14 +878,14 @@
 <span id="L793"><span class="lineNum">     793</span>                 :             : </span>
 <span id="L794"><span class="lineNum">     794</span>                 :<span class="tlaGNC">           2 : inline std::strong_ordering operator&lt;=&gt;(const std::unique_ptr&lt;Json&gt;&amp; lhs, const std::unique_ptr&lt;Json&gt;&amp; rhs) {</span></span>
 <span id="L795"><span class="lineNum">     795</span>                 :             :   // Uses `!= nullptr` so that the `nullptr &lt; non-nullptr`. NOLINTNEXTLINE(readability-implicit-bool-conversion)</span>
-<span id="L796"><span class="lineNum">     796</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">           2 :   if (const auto comp = (lhs != nullptr) &lt;=&gt; (rhs != nullptr); comp != std::strong_ordering::equal) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 2 times"> + </span>]
-<span id="L797"><span class="lineNum">     797</span>                 :<span class="tlaUNC tlaBgUNC">           0 :     return comp;</span></span>
+<span id="L796"><span class="lineNum">     796</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           2 :   if (const auto comp = (lhs != nullptr) &lt;=&gt; (rhs != nullptr); comp != std::strong_ordering::equal) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 2 times"> + </span>]
+<span id="L797"><span class="lineNum">     797</span>                 :<span class="tlaUNC">           0 :     return comp;</span></span>
 <span id="L798"><span class="lineNum">     798</span>                 :             :   }</span>
-<span id="L799"><span class="lineNum">     799</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC tlaBgGNC">           2 :   if (lhs == nullptr) {</span></span>
-<span id="L800"><span class="lineNum">     800</span>                 :<span class="tlaUNC tlaBgUNC">           0 :     return std::strong_ordering::equal;</span></span>
+<span id="L799"><span class="lineNum">     799</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           2 :   if (lhs == nullptr) {</span></span>
+<span id="L800"><span class="lineNum">     800</span>                 :<span class="tlaUNC">           0 :     return std::strong_ordering::equal;</span></span>
 <span id="L801"><span class="lineNum">     801</span>                 :             :   }</span>
-<span id="L802"><span class="lineNum">     802</span>                 :<span class="tlaGNC tlaBgGNC">           2 :   return types::WeakToStrong(*lhs &lt;=&gt; *rhs);</span></span>
+<span id="L802"><span class="lineNum">     802</span>                 :<span class="tlaGNC">           2 :   return types::WeakToStrong(*lhs &lt;=&gt; *rhs);</span></span>
 <span id="L803"><span class="lineNum">     803</span>                 :             : }</span>
 <span id="L804"><span class="lineNum">     804</span>                 :             : </span>
 <span id="L805"><span class="lineNum">     805</span>                 :             : template&lt;typename T&gt;</span>
@@ -891,7 +898,7 @@
 <span id="L812"><span class="lineNum">     812</span>                 :             :     // NOLINTBEGIN(*-implicit-bool-conversion,*-narrowing-conversions)</span>
 <span id="L813"><span class="lineNum">     813</span>                 :             :     // The left hand side is always a variant-member of `Json::Variant`.</span>
 <span id="L814"><span class="lineNum">     814</span>                 :<span class="tlaGNC">           5 :     [](const std::nullopt_t /*unused*/, const std::nullopt_t /*unused*/) { return std::strong_ordering::equal; },</span></span>
-<span id="L815"><span class="lineNum">     815</span>   [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 12 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span>]:<span class="tlaGNC">          13 :     [](bool lhs, bool rhs) -&gt; std::strong_ordering { return lhs &lt;=&gt; rhs; },</span></span>
+<span id="L815"><span class="lineNum">     815</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 12 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">          13 :     [](bool lhs, bool rhs) -&gt; std::strong_ordering { return lhs &lt;=&gt; rhs; },</span></span>
 <span id="L816"><span class="lineNum">     816</span>                 :<span class="tlaGNC">          42 :     [](SignedInt lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },</span></span>
 <span id="L817"><span class="lineNum">     817</span>                 :<span class="tlaGNC">           7 :     [](UnsignedInt lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },</span></span>
 <span id="L818"><span class="lineNum">     818</span>                 :<span class="tlaGNC">           8 :     [](Float lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },</span></span>
@@ -902,24 +909,24 @@
 <span id="L823"><span class="lineNum">     823</span>                 :<span class="tlaGNC">           3 :     [](const Json::Object&amp; lhs, const Json::Object&amp; rhs) -&gt; std::strong_ordering {</span></span>
 <span id="L824"><span class="lineNum">     824</span>                 :<span class="tlaGNC">           3 :       auto lhs_it = lhs.begin();</span></span>
 <span id="L825"><span class="lineNum">     825</span>                 :<span class="tlaGNC">           3 :       auto rhs_it = rhs.begin();</span></span>
-<span id="L826"><span class="lineNum">     826</span>   [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">           4 :       while (lhs_it != lhs.end() &amp;&amp; rhs_it != rhs.end()) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 5 was taken 1 time"> + </span>]
-<span id="L827"><span class="lineNum">     827</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           3 :         if (auto comp = types::WeakToStrong(lhs_it-&gt;first &lt;=&gt; rhs_it-&gt;first); comp != std::strong_ordering::equal) {</span></span>
+<span id="L826"><span class="lineNum">     826</span>   [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           4 :       while (lhs_it != lhs.end() &amp;&amp; rhs_it != rhs.end()) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 3 times"> + </span><span class="tlaGBC" title="branch 5 was taken 1 time"> + </span>]
+<span id="L827"><span class="lineNum">     827</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           3 :         if (auto comp = types::WeakToStrong(lhs_it-&gt;first &lt;=&gt; rhs_it-&gt;first); comp != std::strong_ordering::equal) {</span></span>
 <span id="L828"><span class="lineNum">     828</span>                 :<span class="tlaGNC">           1 :           return comp;</span></span>
 <span id="L829"><span class="lineNum">     829</span>                 :             :         }</span>
-<span id="L830"><span class="lineNum">     830</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :         if (auto comp = lhs_it-&gt;second &lt;=&gt; rhs_it-&gt;second; comp != std::strong_ordering::equal) {</span></span>
+<span id="L830"><span class="lineNum">     830</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :         if (auto comp = lhs_it-&gt;second &lt;=&gt; rhs_it-&gt;second; comp != std::strong_ordering::equal) {</span></span>
 <span id="L831"><span class="lineNum">     831</span>                 :<span class="tlaGNC">           1 :           return comp;</span></span>
 <span id="L832"><span class="lineNum">     832</span>                 :             :         }</span>
 <span id="L833"><span class="lineNum">     833</span>                 :<span class="tlaGNC">           1 :         ++lhs_it;</span></span>
 <span id="L834"><span class="lineNum">     834</span>                 :<span class="tlaGNC">           1 :         ++rhs_it;</span></span>
 <span id="L835"><span class="lineNum">     835</span>                 :             :       }</span>
-<span id="L836"><span class="lineNum">     836</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span>]:<span class="tlaGNC">           1 :       return lhs.size() &lt;=&gt; rhs.size();</span></span>
+<span id="L836"><span class="lineNum">     836</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">           1 :       return lhs.size() &lt;=&gt; rhs.size();</span></span>
 <span id="L837"><span class="lineNum">     837</span>                 :             :     },</span>
-<span id="L838"><span class="lineNum">     838</span>                 :<span class="tlaUNC tlaBgUNC">           0 :     []&lt;typename LhsOther, typename RhsOther&gt;(  // LCOV_EXCL_FUNC_LINE, LCOV_EXCL_LINE: generated cross-products.</span></span>
+<span id="L838"><span class="lineNum">     838</span>                 :<span class="tlaUNC">           0 :     []&lt;typename LhsOther, typename RhsOther&gt;(  // LCOV_EXCL_FUNC_LINE, LCOV_EXCL_LINE: generated cross-products.</span></span>
 <span id="L839"><span class="lineNum">     839</span>                 :             :         const LhsOther&amp; lhs,</span>
 <span id="L840"><span class="lineNum">     840</span>                 :             :         const RhsOther&amp; rhs) -&gt; std::strong_ordering {</span>
 <span id="L841"><span class="lineNum">     841</span>                 :             :       if constexpr (IsNullopt&lt;LhsOther&gt; || IsNullopt&lt;RhsOther&gt;) {</span>
-<span id="L842"><span class="lineNum">     842</span>   [<span class="tlaUNC" title="Branch 0 was not executed"> # </span><span class="tlaUNC" title="Branch 1 was not executed"> # </span><span class="tlaUNC" title="Branch 2 was not executed"> # </span><span class="tlaUNC" title="Branch 3 was not executed"> # </span>]:<span class="tlaUNC">           0 :         return NotNullopt&lt;LhsOther&gt; &lt;=&gt; NotNullopt&lt;RhsOther&gt;;</span></span>
+<span id="L842"><span class="lineNum">     842</span>   [<span class="tlaUNC" title="branch 0 was not executed"> # </span><span class="tlaUNC" title="branch 1 was not executed"> # </span><span class="tlaUNC" title="branch 2 was not executed"> # </span><span class="tlaUNC" title="branch 3 was not executed"> # </span>]:<span class="tlaUNC">           0 :         return NotNullopt&lt;LhsOther&gt; &lt;=&gt; NotNullopt&lt;RhsOther&gt;;</span></span>
 <span id="L843"><span class="lineNum">     843</span>                 :             :       } else {</span>
 <span id="L844"><span class="lineNum">     844</span>                 :<span class="tlaUNC">           0 :         MBO_CONFIG_REQUIRE(false, &quot;Missing explicit comparison implementation: &quot;)</span></span>
 <span id="L845"><span class="lineNum">     845</span>                 :<span class="tlaUNC">           0 :             &lt;&lt; log::DemangleV(lhs) &lt;&lt; &quot; &lt;=&gt; &quot; &lt;&lt; log::DemangleV(rhs);</span></span>
@@ -932,23 +939,23 @@
 <span id="L852"><span class="lineNum">     852</span>                 :             : }  // namespace json_internal</span>
 <span id="L853"><span class="lineNum">     853</span>                 :             : </span>
 <span id="L854"><span class="lineNum">     854</span>                 :             : template&lt;typename T&gt;</span>
-<span id="L855"><span class="lineNum">     855</span>                 :<span class="tlaGNC tlaBgGNC">          82 : inline Json&amp; Json::MakeType(T&amp;&amp; value) {  // NOLINT(*-function-cognitive-complexity)</span></span>
+<span id="L855"><span class="lineNum">     855</span>                 :<span class="tlaGNC">          82 : inline Json&amp; Json::MakeType(T&amp;&amp; value) {  // NOLINT(*-function-cognitive-complexity)</span></span>
 <span id="L856"><span class="lineNum">     856</span>                 :             :   if constexpr (types::ConstructibleFrom&lt;std::string, T&gt;) {</span>
-<span id="L857"><span class="lineNum">     857</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     if (IsString()) {</span></span>
-<span id="L858"><span class="lineNum">     858</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       return *this;</span></span>
+<span id="L857"><span class="lineNum">     857</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     if (IsString()) {</span></span>
+<span id="L858"><span class="lineNum">     858</span>                 :<span class="tlaUNC">           0 :       return *this;</span></span>
 <span id="L859"><span class="lineNum">     859</span>                 :             :     }</span>
-<span id="L860"><span class="lineNum">     860</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC tlaBgGNC">           1 :     MBO_CONFIG_REQUIRE(IsNull(), &quot;Is not an std::string or Null.&quot;);</span></span>
+<span id="L860"><span class="lineNum">     860</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(IsNull(), &quot;Is not an std::string or Null.&quot;);</span></span>
 <span id="L861"><span class="lineNum">     861</span>                 :<span class="tlaGNC">           1 :     data_.emplace&lt;std::string&gt;(std::forward&lt;T&gt;(value));</span></span>
 <span id="L862"><span class="lineNum">     862</span>                 :             :   } else {</span>
-<span id="L863"><span class="lineNum">     863</span>         [<span class="tlaGBC" title="Branch 0 was taken 62 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 19 times"> + </span>]:<span class="tlaGNC">          81 :     if (IsType&lt;T&gt;()) {</span></span>
+<span id="L863"><span class="lineNum">     863</span>         [<span class="tlaGBC" title="branch 0 was taken 62 times"> + </span><span class="tlaGBC" title="branch 1 was taken 19 times"> + </span>]:<span class="tlaGNC">          81 :     if (IsType&lt;T&gt;()) {</span></span>
 <span id="L864"><span class="lineNum">     864</span>                 :<span class="tlaGNC">          62 :       return *this;</span></span>
 <span id="L865"><span class="lineNum">     865</span>                 :             :     }</span>
 <span id="L866"><span class="lineNum">     866</span>                 :             :     using RawT = std::remove_cvref_t&lt;T&gt;;</span>
 <span id="L867"><span class="lineNum">     867</span>                 :             :     if constexpr (std::same_as&lt;RawT, std::nullopt_t&gt;) {</span>
 <span id="L868"><span class="lineNum">     868</span>                 :             :       MBO_CONFIG_REQUIRE(IsNull(), &quot;Is not Null.&quot;);</span>
 <span id="L869"><span class="lineNum">     869</span>                 :             :     } else if constexpr (std::same_as&lt;RawT, Array&gt;) {</span>
-<span id="L870"><span class="lineNum">     870</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 7 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 7 times"> + </span>]:<span class="tlaGNC">           7 :       MBO_CONFIG_REQUIRE(IsNull(), &quot;Is not an Array or Null.&quot;);</span></span>
-<span id="L871"><span class="lineNum">     871</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 7 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 7 times"> + </span>]:<span class="tlaGNC">           7 :       MBO_CONFIG_REQUIRE(value != nullptr, &quot;May not be a nullptr.&quot;);</span></span>
+<span id="L870"><span class="lineNum">     870</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 7 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 7 times"> + </span>]:<span class="tlaGNC">           7 :       MBO_CONFIG_REQUIRE(IsNull(), &quot;Is not an Array or Null.&quot;);</span></span>
+<span id="L871"><span class="lineNum">     871</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 7 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 7 times"> + </span>]:<span class="tlaGNC">           7 :       MBO_CONFIG_REQUIRE(value != nullptr, &quot;May not be a nullptr.&quot;);</span></span>
 <span id="L872"><span class="lineNum">     872</span>                 :             :     } else if constexpr (std::same_as&lt;RawT, bool&gt;) {</span>
 <span id="L873"><span class="lineNum">     873</span>                 :             :       MBO_CONFIG_REQUIRE(IsNull(), &quot;Is not a bool or Null.&quot;);</span>
 <span id="L874"><span class="lineNum">     874</span>                 :             :     } else if constexpr (std::same_as&lt;RawT, Float&gt;) {</span>
@@ -958,7 +965,7 @@
 <span id="L878"><span class="lineNum">     878</span>                 :             :     } else if constexpr (std::same_as&lt;RawT, UnsignedInt&gt;) {</span>
 <span id="L879"><span class="lineNum">     879</span>                 :             :       MBO_CONFIG_REQUIRE(IsNull(), &quot;Is not an UnsignedInt or Null.&quot;);</span>
 <span id="L880"><span class="lineNum">     880</span>                 :             :     } else if constexpr (std::same_as&lt;RawT, Object&gt;) {</span>
-<span id="L881"><span class="lineNum">     881</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 12 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 12 times"> + </span>]:<span class="tlaGNC">          12 :       MBO_CONFIG_REQUIRE(IsNull(), &quot;Is not an Object or Null.&quot;);</span></span>
+<span id="L881"><span class="lineNum">     881</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 12 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 12 times"> + </span>]:<span class="tlaGNC">          12 :       MBO_CONFIG_REQUIRE(IsNull(), &quot;Is not an Object or Null.&quot;);</span></span>
 <span id="L882"><span class="lineNum">     882</span>                 :             :     }</span>
 <span id="L883"><span class="lineNum">     883</span>                 :<span class="tlaGNC">          19 :     data_.emplace&lt;RawT&gt;(std::forward&lt;T&gt;(value));</span></span>
 <span id="L884"><span class="lineNum">     884</span>                 :             :   }</span>
@@ -966,8 +973,8 @@
 <span id="L886"><span class="lineNum">     886</span>                 :             : }</span>
 <span id="L887"><span class="lineNum">     887</span>                 :             : </span>
 <span id="L888"><span class="lineNum">     888</span>                 :<span class="tlaGNC">          41 : inline std::strong_ordering Json::Compare(const Json&amp; other) const noexcept {</span></span>
-<span id="L889"><span class="lineNum">     889</span>   [<span class="tlaGBC" title="Branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 36 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 5 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">          41 :   if (auto comp = GetKind() &lt;=&gt; other.GetKind(); comp != std::strong_ordering::equal) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 5 times"> + </span><span class="tlaGBC" title="Branch 5 was taken 36 times"> + </span>]
+<span id="L889"><span class="lineNum">     889</span>   [<span class="tlaGBC" title="branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="branch 1 was taken 36 times"> + </span><span class="tlaGBC" title="branch 2 was taken 5 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">          41 :   if (auto comp = GetKind() &lt;=&gt; other.GetKind(); comp != std::strong_ordering::equal) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 5 times"> + </span><span class="tlaGBC" title="branch 5 was taken 36 times"> + </span>]
 <span id="L890"><span class="lineNum">     890</span>                 :<span class="tlaGNC">           5 :     return comp;</span></span>
 <span id="L891"><span class="lineNum">     891</span>                 :             :   }</span>
 <span id="L892"><span class="lineNum">     892</span>                 :<span class="tlaGNC">          36 :   return std::visit(json_internal::kJsonComparator, data_, other.data_);</span></span>
@@ -975,8 +982,8 @@
 <span id="L894"><span class="lineNum">     894</span>                 :             : </span>
 <span id="L895"><span class="lineNum">     895</span>                 :             : template&lt;ConvertibleToJson Value&gt;</span>
 <span id="L896"><span class="lineNum">     896</span>                 :<span class="tlaGNC">          62 : inline std::strong_ordering Json::Compare(const Value&amp; other) const noexcept {</span></span>
-<span id="L897"><span class="lineNum">     897</span>   [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 61 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">          62 :   if (const auto comp = GetKind() &lt;=&gt; Json::GetKind(other); comp != std::strong_ordering::equal) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 5 was taken 61 times"> + </span>]
+<span id="L897"><span class="lineNum">     897</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 61 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">          62 :   if (const auto comp = GetKind() &lt;=&gt; Json::GetKind(other); comp != std::strong_ordering::equal) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="branch 5 was taken 61 times"> + </span>]
 <span id="L898"><span class="lineNum">     898</span>                 :<span class="tlaGNC">           1 :     return comp;</span></span>
 <span id="L899"><span class="lineNum">     899</span>                 :             :   }</span>
 <span id="L900"><span class="lineNum">     900</span>                 :<span class="tlaGNC">          61 :   return std::visit(</span></span>
@@ -1002,7 +1009,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

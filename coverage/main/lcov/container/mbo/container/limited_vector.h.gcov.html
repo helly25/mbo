@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - container/mbo/container/limited_vector.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">container</a>/<a href="../index.html">mbo</a>/<a href="index.html">container</a> - limited_vector.h<span style="font-size: 80%;"> (source / <a href="limited_vector.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory container">container</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory container">container</a> - limited_vector.h<span style="font-size: 80%;"> (source / <a href="limited_vector.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">95.3&nbsp;%</td>
@@ -45,18 +51,11 @@
             <td class="headerCovTableEntry">321</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryLo">74.1&nbsp;%</td>
+            <td class="headerCovTableEntryMed">74.1&nbsp;%</td>
             <td class="headerCovTableEntry">158</td>
             <td class="headerCovTableEntry">117</td>
           </tr>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -166,7 +173,7 @@
 <span id="L88"><span class="lineNum">      88</span>                 :             :     requires(std::is_trivially_destructible_v&lt;T&gt;)</span>
 <span id="L89"><span class="lineNum">      89</span>                 :             :     = default;</span>
 <span id="L90"><span class="lineNum">      90</span>                 :             : </span>
-<span id="L91"><span class="lineNum">      91</span>                 :<span class="tlaGNC tlaBgGNC">         134 :     constexpr ~Data() noexcept</span></span>
+<span id="L91"><span class="lineNum">      91</span>                 :<span class="tlaGNC">         134 :     constexpr ~Data() noexcept</span></span>
 <span id="L92"><span class="lineNum">      92</span>                 :             :     requires(!std::is_trivially_destructible_v&lt;T&gt;)</span>
 <span id="L93"><span class="lineNum">      93</span>                 :<span class="tlaGNC">         134 :     {}</span></span>
 <span id="L94"><span class="lineNum">      94</span>                 :             : </span>
@@ -197,7 +204,7 @@
 <span id="L119"><span class="lineNum">     119</span>                 :             :   using const_reverse_iterator = std::reverse_iterator&lt;const_iterator&gt;;</span>
 <span id="L120"><span class="lineNum">     120</span>                 :             : </span>
 <span id="L121"><span class="lineNum">     121</span>                 :             :   // Destructor and constructors from same type.</span>
-<span id="L122"><span class="lineNum">     122</span>   [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :   constexpr ~LimitedVector() noexcept</span></span>
+<span id="L122"><span class="lineNum">     122</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 3 times"> + </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :   constexpr ~LimitedVector() noexcept</span></span>
 <span id="L123"><span class="lineNum">     123</span>                 :             :   requires(Options::Has(LimitedOptionsFlag::kEmptyDestructor))</span>
 <span id="L124"><span class="lineNum">     124</span>                 :             :   = default;</span>
 <span id="L125"><span class="lineNum">     125</span>                 :             : </span>
@@ -211,12 +218,12 @@
 <span id="L133"><span class="lineNum">     133</span>                 :             :   requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) &amp;&amp; !std::is_trivially_destructible_v&lt;T&gt;)</span>
 <span id="L134"><span class="lineNum">     134</span>                 :             :   {</span>
 <span id="L135"><span class="lineNum">     135</span>                 :<span class="tlaGNC">          36 :     clear();</span></span>
-<span id="L136"><span class="lineNum">     136</span>   [<span class="tlaGBC" title="Branch 0 was taken 36 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 131 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 36 times"> + </span>]:<span class="tlaGNC">         167 :   }</span></span>
+<span id="L136"><span class="lineNum">     136</span>   [<span class="tlaGBC" title="branch 0 was taken 36 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 131 times"> + </span><span class="tlaGBC" title="branch 3 was taken 36 times"> + </span>]:<span class="tlaGNC">         167 :   }</span></span>
 <span id="L137"><span class="lineNum">     137</span>                 :             : </span>
 <span id="L138"><span class="lineNum">     138</span>                 :<span class="tlaGNC">           5 :   constexpr LimitedVector() noexcept = default;</span></span>
 <span id="L139"><span class="lineNum">     139</span>                 :             : </span>
 <span id="L140"><span class="lineNum">     140</span>                 :<span class="tlaGNC">         114 :   constexpr LimitedVector(const LimitedVector&amp; other) noexcept {</span></span>
-<span id="L141"><span class="lineNum">     141</span>         [<span class="tlaGBC" title="Branch 0 was taken 192 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 114 times"> + </span>]:<span class="tlaGNC">         306 :     for (; size_ &lt; other.size_; ++size_) {</span></span>
+<span id="L141"><span class="lineNum">     141</span>         [<span class="tlaGBC" title="branch 0 was taken 192 times"> + </span><span class="tlaGBC" title="branch 1 was taken 114 times"> + </span>]:<span class="tlaGNC">         306 :     for (; size_ &lt; other.size_; ++size_) {</span></span>
 <span id="L142"><span class="lineNum">     142</span>                 :<span class="tlaGNC">         192 :       std::construct_at(const_cast&lt;std::remove_const_t&lt;T&gt;*&gt;(&amp;values_[size_].data), other.values_[size_].data);</span></span>
 <span id="L143"><span class="lineNum">     143</span>                 :             :     }</span>
 <span id="L144"><span class="lineNum">     144</span>                 :<span class="tlaGNC">         114 :   }</span></span>
@@ -231,7 +238,7 @@
 <span id="L153"><span class="lineNum">     153</span>                 :             :   }</span>
 <span id="L154"><span class="lineNum">     154</span>                 :             : </span>
 <span id="L155"><span class="lineNum">     155</span>                 :<span class="tlaGNC">          80 :   constexpr LimitedVector(LimitedVector&amp;&amp; other) noexcept {</span></span>
-<span id="L156"><span class="lineNum">     156</span>         [<span class="tlaGBC" title="Branch 0 was taken 148 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 80 times"> + </span>]:<span class="tlaGNC">         228 :     for (; size_ &lt; other.size_; ++size_) {</span></span>
+<span id="L156"><span class="lineNum">     156</span>         [<span class="tlaGBC" title="branch 0 was taken 148 times"> + </span><span class="tlaGBC" title="branch 1 was taken 80 times"> + </span>]:<span class="tlaGNC">         228 :     for (; size_ &lt; other.size_; ++size_) {</span></span>
 <span id="L157"><span class="lineNum">     157</span>                 :<span class="tlaGNC">         148 :       std::construct_at(</span></span>
 <span id="L158"><span class="lineNum">     158</span>                 :<span class="tlaGNC">         148 :           const_cast&lt;std::remove_const_t&lt;T&gt;*&gt;(&amp;values_[size_].data), std::move(other.values_[size_].data));</span></span>
 <span id="L159"><span class="lineNum">     159</span>                 :             :     }</span>
@@ -253,14 +260,14 @@
 <span id="L175"><span class="lineNum">     175</span>                 :             :   template&lt;std::forward_iterator It&gt;</span>
 <span id="L176"><span class="lineNum">     176</span>                 :             :   requires types::ConstructibleFrom&lt;T, mbo::types::ForwardIteratorValueType&lt;It&gt;&gt;</span>
 <span id="L177"><span class="lineNum">     177</span>                 :<span class="tlaGNC">           3 :   constexpr LimitedVector(It begin, It end) noexcept {</span></span>
-<span id="L178"><span class="lineNum">     178</span>         [<span class="tlaGBC" title="Branch 0 was taken 10 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">          13 :     while (begin &lt; end) {</span></span>
+<span id="L178"><span class="lineNum">     178</span>         [<span class="tlaGBC" title="branch 0 was taken 10 times"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">          13 :     while (begin &lt; end) {</span></span>
 <span id="L179"><span class="lineNum">     179</span>                 :<span class="tlaGNC">          10 :       emplace_back(*begin++);</span></span>
 <span id="L180"><span class="lineNum">     180</span>                 :             :     }</span>
 <span id="L181"><span class="lineNum">     181</span>                 :<span class="tlaGNC">           3 :   }</span></span>
 <span id="L182"><span class="lineNum">     182</span>                 :             : </span>
 <span id="L183"><span class="lineNum">     183</span>                 :<span class="tlaGNC">           6 :   constexpr LimitedVector(const std::initializer_list&lt;T&gt;&amp; list) noexcept {</span></span>
 <span id="L184"><span class="lineNum">     184</span>                 :<span class="tlaGNC">           6 :     auto it = list.begin();</span></span>
-<span id="L185"><span class="lineNum">     185</span>         [<span class="tlaGBC" title="Branch 0 was taken 14 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">          20 :     while (it &lt; list.end()) {</span></span>
+<span id="L185"><span class="lineNum">     185</span>         [<span class="tlaGBC" title="branch 0 was taken 14 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">          20 :     while (it &lt; list.end()) {</span></span>
 <span id="L186"><span class="lineNum">     186</span>                 :<span class="tlaGNC">          14 :       emplace_back(*it++);</span></span>
 <span id="L187"><span class="lineNum">     187</span>                 :             :     }</span>
 <span id="L188"><span class="lineNum">     188</span>                 :<span class="tlaGNC">           6 :   }</span></span>
@@ -268,7 +275,7 @@
 <span id="L190"><span class="lineNum">     190</span>                 :             :   template&lt;types::ConstructibleInto&lt;T&gt; U&gt;</span>
 <span id="L191"><span class="lineNum">     191</span>                 :<span class="tlaGNC">           3 :   constexpr LimitedVector(const std::initializer_list&lt;U&gt;&amp; list) noexcept {</span></span>
 <span id="L192"><span class="lineNum">     192</span>                 :<span class="tlaGNC">           3 :     auto it = list.begin();</span></span>
-<span id="L193"><span class="lineNum">     193</span>         [<span class="tlaGBC" title="Branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           9 :     while (it &lt; list.end()) {</span></span>
+<span id="L193"><span class="lineNum">     193</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           9 :     while (it &lt; list.end()) {</span></span>
 <span id="L194"><span class="lineNum">     194</span>                 :<span class="tlaGNC">           6 :       emplace_back(*it++);</span></span>
 <span id="L195"><span class="lineNum">     195</span>                 :             :     }</span>
 <span id="L196"><span class="lineNum">     196</span>                 :<span class="tlaGNC">           3 :   }</span></span>
@@ -292,7 +299,7 @@
 <span id="L214"><span class="lineNum">     214</span>                 :             :   requires(MakeLimitedOptions&lt;OtherN&gt;().kCapacity &lt;= Capacity)</span>
 <span id="L215"><span class="lineNum">     215</span>                 :<span class="tlaGNC">           1 :   constexpr LimitedVector&amp; operator=(const LimitedVector&lt;U, OtherN&gt;&amp; other) noexcept {</span></span>
 <span id="L216"><span class="lineNum">     216</span>                 :<span class="tlaGNC">           1 :     clear();</span></span>
-<span id="L217"><span class="lineNum">     217</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :     for (; size_ &lt; other.size(); ++size_) {</span></span>
+<span id="L217"><span class="lineNum">     217</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :     for (; size_ &lt; other.size(); ++size_) {</span></span>
 <span id="L218"><span class="lineNum">     218</span>                 :<span class="tlaGNC">           3 :       std::construct_at(const_cast&lt;std::remove_const_t&lt;T&gt;*&gt;(&amp;values_[size_].data), other.at(size_));</span></span>
 <span id="L219"><span class="lineNum">     219</span>                 :             :     }</span>
 <span id="L220"><span class="lineNum">     220</span>                 :<span class="tlaGNC">           1 :     return *this;</span></span>
@@ -303,7 +310,7 @@
 <span id="L225"><span class="lineNum">     225</span>                 :             :   // Moved element-wise below; `other` has a different type, so it cannot be moved as a whole.</span>
 <span id="L226"><span class="lineNum">     226</span>                 :             :   // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)</span>
 <span id="L227"><span class="lineNum">     227</span>                 :<span class="tlaGNC">           1 :   constexpr explicit LimitedVector(LimitedVector&lt;U, OtherN&gt;&amp;&amp; other) noexcept {</span></span>
-<span id="L228"><span class="lineNum">     228</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :     for (; size_ &lt; other.size(); ++size_) {</span></span>
+<span id="L228"><span class="lineNum">     228</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :     for (; size_ &lt; other.size(); ++size_) {</span></span>
 <span id="L229"><span class="lineNum">     229</span>                 :<span class="tlaGNC">           3 :       std::construct_at(const_cast&lt;std::remove_const_t&lt;T&gt;*&gt;(&amp;values_[size_].data), std::move(other.at(size_)));</span></span>
 <span id="L230"><span class="lineNum">     230</span>                 :             :     }</span>
 <span id="L231"><span class="lineNum">     231</span>                 :<span class="tlaGNC">           1 :     other.size_ = 0;</span></span>
@@ -315,7 +322,7 @@
 <span id="L237"><span class="lineNum">     237</span>                 :             :   // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)</span>
 <span id="L238"><span class="lineNum">     238</span>                 :<span class="tlaGNC">           1 :   constexpr LimitedVector&amp; operator=(LimitedVector&lt;U, OtherN&gt;&amp;&amp; other) noexcept {</span></span>
 <span id="L239"><span class="lineNum">     239</span>                 :<span class="tlaGNC">           1 :     clear();</span></span>
-<span id="L240"><span class="lineNum">     240</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :     for (; size_ &lt; other.size(); ++size_) {</span></span>
+<span id="L240"><span class="lineNum">     240</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :     for (; size_ &lt; other.size(); ++size_) {</span></span>
 <span id="L241"><span class="lineNum">     241</span>                 :<span class="tlaGNC">           3 :       std::construct_at(const_cast&lt;std::remove_const_t&lt;T&gt;*&gt;(&amp;values_[size_].data), std::move(other.at(size_)));</span></span>
 <span id="L242"><span class="lineNum">     242</span>                 :             :     }</span>
 <span id="L243"><span class="lineNum">     243</span>                 :<span class="tlaGNC">           1 :     other.size_ = 0;</span></span>
@@ -325,7 +332,7 @@
 <span id="L247"><span class="lineNum">     247</span>                 :             :   // Mofification: clear, resize, reserve, explace_back, push_back, pop_back, assign, insert</span>
 <span id="L248"><span class="lineNum">     248</span>                 :             : </span>
 <span id="L249"><span class="lineNum">     249</span>                 :<span class="tlaGNC">         235 :   constexpr void clear() noexcept {</span></span>
-<span id="L250"><span class="lineNum">     250</span>         [<span class="tlaGBC" title="Branch 0 was taken 284 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 235 times"> + </span>]:<span class="tlaGNC">         519 :     while (!empty()) {</span></span>
+<span id="L250"><span class="lineNum">     250</span>         [<span class="tlaGBC" title="branch 0 was taken 284 times"> + </span><span class="tlaGBC" title="branch 1 was taken 235 times"> + </span>]:<span class="tlaGNC">         519 :     while (!empty()) {</span></span>
 <span id="L251"><span class="lineNum">     251</span>                 :<span class="tlaGNC">         284 :       pop_back();</span></span>
 <span id="L252"><span class="lineNum">     252</span>                 :             :     }</span>
 <span id="L253"><span class="lineNum">     253</span>                 :<span class="tlaGNC">         235 :   }</span></span>
@@ -351,16 +358,16 @@
 <span id="L273"><span class="lineNum">     273</span>                 :             :   requires(std::same_as&lt;T, U&gt; &amp;&amp; MakeLimitedOptions&lt;OtherN&gt;().kCapacity &lt;= Capacity)</span>
 <span id="L274"><span class="lineNum">     274</span>                 :<span class="tlaGNC">           4 :   constexpr void swap(LimitedVector&lt;U, OtherN&gt;&amp; other) noexcept {</span></span>
 <span id="L275"><span class="lineNum">     275</span>                 :<span class="tlaGNC">           4 :     std::size_t pos = 0;</span></span>
-<span id="L276"><span class="lineNum">     276</span>   [<span class="tlaGBC" title="Branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">           6 :     for (; pos &lt; size_ &amp;&amp; pos &lt; other.size(); ++pos) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 5 was taken 4 times"> + </span>]
+<span id="L276"><span class="lineNum">     276</span>   [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">           6 :     for (; pos &lt; size_ &amp;&amp; pos &lt; other.size(); ++pos) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 2 times"> + </span><span class="tlaGBC" title="branch 5 was taken 4 times"> + </span>]
 <span id="L277"><span class="lineNum">     277</span>                 :<span class="tlaGNC">           2 :       std::swap(values_[pos].data, other.at(pos));</span></span>
 <span id="L278"><span class="lineNum">     278</span>                 :             :     }</span>
 <span id="L279"><span class="lineNum">     279</span>                 :<span class="tlaGNC">           4 :     const std::size_t other_size = other.size_;</span></span>
 <span id="L280"><span class="lineNum">     280</span>                 :<span class="tlaGNC">           4 :     const std::size_t this_size = size_;</span></span>
-<span id="L281"><span class="lineNum">     281</span>         [<span class="tlaGBC" title="Branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           9 :     for (; pos &lt; size_; ++pos) {</span></span>
+<span id="L281"><span class="lineNum">     281</span>         [<span class="tlaGBC" title="branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           9 :     for (; pos &lt; size_; ++pos) {</span></span>
 <span id="L282"><span class="lineNum">     282</span>                 :<span class="tlaGNC">           5 :       other.emplace_back(std::move(values_[pos].data));</span></span>
 <span id="L283"><span class="lineNum">     283</span>                 :             :     }</span>
-<span id="L284"><span class="lineNum">     284</span>         [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           6 :     for (; pos &lt; other.size(); ++pos) {</span></span>
+<span id="L284"><span class="lineNum">     284</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           6 :     for (; pos &lt; other.size(); ++pos) {</span></span>
 <span id="L285"><span class="lineNum">     285</span>                 :<span class="tlaGNC">           2 :       emplace_back(std::move(other.at(pos)));</span></span>
 <span id="L286"><span class="lineNum">     286</span>                 :             :     }</span>
 <span id="L287"><span class="lineNum">     287</span>                 :<span class="tlaGNC">           4 :     size_ = other_size;</span></span>
@@ -369,11 +376,11 @@
 <span id="L290"><span class="lineNum">     290</span>                 :             : </span>
 <span id="L291"><span class="lineNum">     291</span>                 :             :   template&lt;typename... Args&gt;</span>
 <span id="L292"><span class="lineNum">     292</span>                 :<span class="tlaGNC">           3 :   constexpr iterator emplace(const_iterator pos, Args&amp;&amp;... args) noexcept(!kRequireThrows) {</span></span>
-<span id="L293"><span class="lineNum">     293</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">           3 :     MBO_CONFIG_REQUIRE(size_ &lt; Capacity, &quot;Called `emplace` at capacity.&quot;);</span></span>
-<span id="L294"><span class="lineNum">     294</span>   [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">           3 :     MBO_CONFIG_REQUIRE(&amp;values_[0].data &lt;= pos &amp;&amp; pos &lt;= &amp;values_[size_].data, &quot;Invalid `pos`.&quot;);</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 3 times"> + </span>]
+<span id="L293"><span class="lineNum">     293</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">           3 :     MBO_CONFIG_REQUIRE(size_ &lt; Capacity, &quot;Called `emplace` at capacity.&quot;);</span></span>
+<span id="L294"><span class="lineNum">     294</span>   [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           3 :     MBO_CONFIG_REQUIRE(&amp;values_[0].data &lt;= pos &amp;&amp; pos &lt;= &amp;values_[size_].data, &quot;Invalid `pos`.&quot;);</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 3 times"> + </span>]
 <span id="L295"><span class="lineNum">     295</span>                 :<span class="tlaGNC">           3 :     iterator dst = end();</span></span>
-<span id="L296"><span class="lineNum">     296</span>         [<span class="tlaGBC" title="Branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           8 :     for (; dst &gt; pos; --dst) {</span></span>
+<span id="L296"><span class="lineNum">     296</span>         [<span class="tlaGBC" title="branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           8 :     for (; dst &gt; pos; --dst) {</span></span>
 <span id="L297"><span class="lineNum">     297</span>                 :<span class="tlaGNC">           5 :       *dst = std::move(*std::prev(dst));</span></span>
 <span id="L298"><span class="lineNum">     298</span>                 :             :     }</span>
 <span id="L299"><span class="lineNum">     299</span>                 :<span class="tlaGNC">           3 :     std::construct_at(const_cast&lt;std::remove_const_t&lt;T&gt;*&gt;(dst), std::forward&lt;Args&gt;(args)...);</span></span>
@@ -383,31 +390,31 @@
 <span id="L303"><span class="lineNum">     303</span>                 :             : </span>
 <span id="L304"><span class="lineNum">     304</span>                 :<span class="tlaGNC">           5 :   constexpr iterator erase(const_iterator pos) noexcept(!kRequireThrows) {</span></span>
 <span id="L305"><span class="lineNum">     305</span>                 :             :     // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)</span>
-<span id="L306"><span class="lineNum">     306</span>   [<span class="tlaGBC" title="Branch 0 was taken 5 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 5 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">           5 :     MBO_CONFIG_REQUIRE(&amp;values_[0].data &lt;= pos &amp;&amp; pos &lt; &amp;values_[size_].data, &quot;Invalid `pos`.&quot;);</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 5 times"> + </span>]
+<span id="L306"><span class="lineNum">     306</span>   [<span class="tlaGBC" title="branch 0 was taken 5 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 5 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           5 :     MBO_CONFIG_REQUIRE(&amp;values_[0].data &lt;= pos &amp;&amp; pos &lt; &amp;values_[size_].data, &quot;Invalid `pos`.&quot;);</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 5 times"> + </span>]
 <span id="L307"><span class="lineNum">     307</span>                 :<span class="tlaGNC">           5 :     auto dst = const_cast&lt;iterator&gt;(pos);</span></span>
 <span id="L308"><span class="lineNum">     308</span>                 :<span class="tlaGNC">           5 :     --size_;</span></span>
 <span id="L309"><span class="lineNum">     309</span>                 :<span class="tlaGNC">           5 :     std::destroy_at(dst);</span></span>
-<span id="L310"><span class="lineNum">     310</span>         [<span class="tlaGBC" title="Branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">          10 :     for (; dst &lt; end(); ++dst) {</span></span>
+<span id="L310"><span class="lineNum">     310</span>         [<span class="tlaGBC" title="branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">          10 :     for (; dst &lt; end(); ++dst) {</span></span>
 <span id="L311"><span class="lineNum">     311</span>                 :<span class="tlaGNC">           5 :       *dst = std::move(*std::next(dst));</span></span>
 <span id="L312"><span class="lineNum">     312</span>                 :             :     }</span>
-<span id="L313"><span class="lineNum">     313</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           5 :     return pos &gt; end() ? end() : const_cast&lt;iterator&gt;(pos);</span></span>
+<span id="L313"><span class="lineNum">     313</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           5 :     return pos &gt; end() ? end() : const_cast&lt;iterator&gt;(pos);</span></span>
 <span id="L314"><span class="lineNum">     314</span>                 :             :     // NOLINTEND(cppcoreguidelines-pro-type-const-cast)</span>
 <span id="L315"><span class="lineNum">     315</span>                 :             :   }</span>
 <span id="L316"><span class="lineNum">     316</span>                 :             : </span>
 <span id="L317"><span class="lineNum">     317</span>                 :<span class="tlaGNC">           3 :   constexpr iterator erase(const_iterator first, const_iterator last) noexcept(!kRequireThrows) {</span></span>
 <span id="L318"><span class="lineNum">     318</span>                 :             :     // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)</span>
-<span id="L319"><span class="lineNum">     319</span>   [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">           3 :     MBO_CONFIG_REQUIRE(</span></span>
-<span class="lineNum">        </span>    <span class="tlaGBC" title="Branch 4 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 5 was not taken"> - </span><span class="tlaUNC" title="Branch 6 was not taken"> - </span><span class="tlaGBC" title="Branch 7 was taken 3 times"> + </span>]
+<span id="L319"><span class="lineNum">     319</span>   [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           3 :     MBO_CONFIG_REQUIRE(</span></span>
+<span class="lineNum">        </span>    <span class="tlaGBC" title="branch 4 was taken 3 times"> + </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaUNC" title="branch 6 was not taken"> - </span><span class="tlaGBC" title="branch 7 was taken 3 times"> + </span>]
 <span id="L320"><span class="lineNum">     320</span>                 :             :         &amp;values_[0].data &lt;= first &amp;&amp; first &lt;= last &amp;&amp; last &lt;= &amp;values_[size_].data, &quot;Invalid `first` or `last`.&quot;);</span>
 <span id="L321"><span class="lineNum">     321</span>                 :<span class="tlaGNC">           3 :     std::size_t deleted = 0;</span></span>
-<span id="L322"><span class="lineNum">     322</span>         [<span class="tlaGBC" title="Branch 0 was taken 10 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">          13 :     for (const_iterator it = first; it &lt; last; ++it) {</span></span>
+<span id="L322"><span class="lineNum">     322</span>         [<span class="tlaGBC" title="branch 0 was taken 10 times"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">          13 :     for (const_iterator it = first; it &lt; last; ++it) {</span></span>
 <span id="L323"><span class="lineNum">     323</span>                 :<span class="tlaGNC">          10 :       std::destroy_at(it);</span></span>
 <span id="L324"><span class="lineNum">     324</span>                 :<span class="tlaGNC">          10 :       ++deleted;</span></span>
 <span id="L325"><span class="lineNum">     325</span>                 :             :     }</span>
 <span id="L326"><span class="lineNum">     326</span>                 :<span class="tlaGNC">           3 :     auto dst = const_cast&lt;iterator&gt;(first);</span></span>
 <span id="L327"><span class="lineNum">     327</span>                 :<span class="tlaGNC">           3 :     auto src = const_cast&lt;iterator&gt;(last);</span></span>
-<span id="L328"><span class="lineNum">     328</span>         [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           5 :     for (; src &lt; end(); ++src, ++dst) {</span></span>
+<span id="L328"><span class="lineNum">     328</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           5 :     for (; src &lt; end(); ++src, ++dst) {</span></span>
 <span id="L329"><span class="lineNum">     329</span>                 :<span class="tlaGNC">           2 :       *dst = std::move(*src);</span></span>
 <span id="L330"><span class="lineNum">     330</span>                 :             :     }</span>
 <span id="L331"><span class="lineNum">     331</span>                 :<span class="tlaGNC">           3 :     size_ -= deleted;</span></span>
@@ -417,7 +424,7 @@
 <span id="L335"><span class="lineNum">     335</span>                 :             : </span>
 <span id="L336"><span class="lineNum">     336</span>                 :             :   template&lt;typename... Args&gt;</span>
 <span id="L337"><span class="lineNum">     337</span>                 :<span class="tlaGNC">          57 :   constexpr reference emplace_back(Args&amp;&amp;... args) noexcept(!kRequireThrows) {</span></span>
-<span id="L338"><span class="lineNum">     338</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 57 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 57 times"> + </span>]:<span class="tlaGNC">          57 :     MBO_CONFIG_REQUIRE(size_ &lt; Capacity, &quot;Called `emplace_back` at capacity.&quot;);</span></span>
+<span id="L338"><span class="lineNum">     338</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 57 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 57 times"> + </span>]:<span class="tlaGNC">          57 :     MBO_CONFIG_REQUIRE(size_ &lt; Capacity, &quot;Called `emplace_back` at capacity.&quot;);</span></span>
 <span id="L339"><span class="lineNum">     339</span>                 :<span class="tlaGNC">          57 :     auto&amp; data_ref{values_[size_++]};</span></span>
 <span id="L340"><span class="lineNum">     340</span>                 :<span class="tlaGNC">          57 :     std::construct_at(const_cast&lt;std::remove_const_t&lt;T&gt;*&gt;(&amp;data_ref.data), std::forward&lt;Args&gt;(args)...);</span></span>
 <span id="L341"><span class="lineNum">     341</span>                 :<span class="tlaGNC">          57 :     return data_ref.data;</span></span>
@@ -438,7 +445,7 @@
 <span id="L356"><span class="lineNum">     356</span>                 :             :   }</span>
 <span id="L357"><span class="lineNum">     357</span>                 :             : </span>
 <span id="L358"><span class="lineNum">     358</span>                 :<span class="tlaGNC">         286 :   constexpr void pop_back() noexcept(!kRequireThrows) {</span></span>
-<span id="L359"><span class="lineNum">     359</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 286 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 286 times"> + </span>]:<span class="tlaGNC">         286 :     MBO_CONFIG_REQUIRE(size_ &gt; 0, &quot;No element to pop.&quot;);</span></span>
+<span id="L359"><span class="lineNum">     359</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 286 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 286 times"> + </span>]:<span class="tlaGNC">         286 :     MBO_CONFIG_REQUIRE(size_ &gt; 0, &quot;No element to pop.&quot;);</span></span>
 <span id="L360"><span class="lineNum">     360</span>                 :<span class="tlaGNC">         286 :     std::destroy_at(&amp;values_[--size_].data);</span></span>
 <span id="L361"><span class="lineNum">     361</span>                 :<span class="tlaGNC">         286 :   }</span></span>
 <span id="L362"><span class="lineNum">     362</span>                 :             : </span>
@@ -468,9 +475,9 @@
 <span id="L386"><span class="lineNum">     386</span>                 :             : </span>
 <span id="L387"><span class="lineNum">     387</span>                 :             :   template&lt;types::ConstructibleInto&lt;T&gt; U&gt;</span>
 <span id="L388"><span class="lineNum">     388</span>                 :<span class="tlaGNC">           5 :   constexpr iterator insert(const_iterator pos, U&amp;&amp; value) {</span></span>
-<span id="L389"><span class="lineNum">     389</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 5 times"> + </span>]:<span class="tlaGNC">           5 :     MBO_CONFIG_REQUIRE(size_ &lt; Capacity, &quot;Called `insert` at capacity.&quot;);</span></span>
-<span id="L390"><span class="lineNum">     390</span>   [<span class="tlaGBC" title="Branch 0 was taken 5 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 5 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">           5 :     MBO_CONFIG_REQUIRE(begin() &lt;= pos &amp;&amp; pos &lt;= end(), &quot;Invalid `pos`.&quot;);</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 5 times"> + </span>]
+<span id="L389"><span class="lineNum">     389</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 5 times"> + </span>]:<span class="tlaGNC">           5 :     MBO_CONFIG_REQUIRE(size_ &lt; Capacity, &quot;Called `insert` at capacity.&quot;);</span></span>
+<span id="L390"><span class="lineNum">     390</span>   [<span class="tlaGBC" title="branch 0 was taken 5 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 5 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           5 :     MBO_CONFIG_REQUIRE(begin() &lt;= pos &amp;&amp; pos &lt;= end(), &quot;Invalid `pos`.&quot;);</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 5 times"> + </span>]
 <span id="L391"><span class="lineNum">     391</span>                 :             :     // Clang does not like `std::distance`. The issue is that the iterators point into the union.</span>
 <span id="L392"><span class="lineNum">     392</span>                 :             :     // That makes them technically not point into an array AND that is indeed not allowed by C++.</span>
 <span id="L393"><span class="lineNum">     393</span>                 :<span class="tlaGNC">           5 :     const auto dst = const_cast&lt;iterator&gt;(pos);  // NOLINT(cppcoreguidelines-pro-type-const-cast)</span></span>
@@ -500,17 +507,17 @@
 <span id="L417"><span class="lineNum">     417</span>                 :             :   template&lt;typename InputIt&gt;</span>
 <span id="L418"><span class="lineNum">     418</span>                 :             :   requires(types::ConstructibleFrom&lt;T, decltype(*std::declval&lt;InputIt&gt;())&gt;)</span>
 <span id="L419"><span class="lineNum">     419</span>                 :<span class="tlaGNC">           1 :   constexpr iterator insert(const_iterator pos, InputIt first, InputIt last) {</span></span>
-<span id="L420"><span class="lineNum">     420</span>   [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(begin() &lt;= pos &amp;&amp; pos &lt;= end(), &quot;Invalid `pos`.&quot;);</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 1 time"> + </span>]
-<span id="L421"><span class="lineNum">     421</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(first &lt;= last, &quot;First &gt; Last.&quot;);</span></span>
+<span id="L420"><span class="lineNum">     420</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(begin() &lt;= pos &amp;&amp; pos &lt;= end(), &quot;Invalid `pos`.&quot;);</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 1 time"> + </span>]
+<span id="L421"><span class="lineNum">     421</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(first &lt;= last, &quot;First &gt; Last.&quot;);</span></span>
 <span id="L422"><span class="lineNum">     422</span>                 :<span class="tlaGNC">           1 :     std::size_t count = std::distance(first, last);</span></span>
-<span id="L423"><span class="lineNum">     423</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(size_ + count &lt;= Capacity, &quot;Called `insert` at capacity.&quot;);</span></span>
+<span id="L423"><span class="lineNum">     423</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     MBO_CONFIG_REQUIRE(size_ + count &lt;= Capacity, &quot;Called `insert` at capacity.&quot;);</span></span>
 <span id="L424"><span class="lineNum">     424</span>                 :<span class="tlaGNC">           1 :     const auto dst = const_cast&lt;iterator&gt;(pos);  // NOLINT(*-pro-type-const-cast)</span></span>
-<span id="L425"><span class="lineNum">     425</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     if (count == 0) {</span></span>
-<span id="L426"><span class="lineNum">     426</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       return dst;</span></span>
+<span id="L425"><span class="lineNum">     425</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     if (count == 0) {</span></span>
+<span id="L426"><span class="lineNum">     426</span>                 :<span class="tlaUNC">           0 :       return dst;</span></span>
 <span id="L427"><span class="lineNum">     427</span>                 :             :     }</span>
-<span id="L428"><span class="lineNum">     428</span>                 :<span class="tlaGNC tlaBgGNC">           1 :     std::size_t index = move_backward(dst, count);</span></span>
-<span id="L429"><span class="lineNum">     429</span>         [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           3 :     while (count) {</span></span>
+<span id="L428"><span class="lineNum">     428</span>                 :<span class="tlaGNC">           1 :     std::size_t index = move_backward(dst, count);</span></span>
+<span id="L429"><span class="lineNum">     429</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           3 :     while (count) {</span></span>
 <span id="L430"><span class="lineNum">     430</span>                 :<span class="tlaGNC">           2 :       std::construct_at(const_cast&lt;std::remove_const_t&lt;T&gt;*&gt;(&amp;values_[index].data), *first);</span></span>
 <span id="L431"><span class="lineNum">     431</span>                 :<span class="tlaGNC">           2 :       ++index;</span></span>
 <span id="L432"><span class="lineNum">     432</span>                 :<span class="tlaGNC">           2 :       --count;</span></span>
@@ -538,9 +545,9 @@
 <span id="L454"><span class="lineNum">     454</span>                 :             : </span>
 <span id="L455"><span class="lineNum">     455</span>                 :<span class="tlaGNC">           1 :   constexpr const_reference front() const noexcept { return values_[0].data; }</span></span>
 <span id="L456"><span class="lineNum">     456</span>                 :             : </span>
-<span id="L457"><span class="lineNum">     457</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           1 :   constexpr reference back() noexcept { return values_[size_ &gt; 0 ? size_ - 1 : 0].data; }</span></span>
+<span id="L457"><span class="lineNum">     457</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           1 :   constexpr reference back() noexcept { return values_[size_ &gt; 0 ? size_ - 1 : 0].data; }</span></span>
 <span id="L458"><span class="lineNum">     458</span>                 :             : </span>
-<span id="L459"><span class="lineNum">     459</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           1 :   constexpr const_reference back() const noexcept { return values_[size_ &gt; 0 ? size_ - 1 : 0].data; }</span></span>
+<span id="L459"><span class="lineNum">     459</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           1 :   constexpr const_reference back() const noexcept { return values_[size_ &gt; 0 ? size_ - 1 : 0].data; }</span></span>
 <span id="L460"><span class="lineNum">     460</span>                 :             : </span>
 <span id="L461"><span class="lineNum">     461</span>                 :<span class="tlaGNC">          43 :   constexpr iterator begin() noexcept { return &amp;values_[0].data; }</span></span>
 <span id="L462"><span class="lineNum">     462</span>                 :             : </span>
@@ -572,17 +579,17 @@
 <span id="L488"><span class="lineNum">     488</span>                 :             :   }</span>
 <span id="L489"><span class="lineNum">     489</span>                 :             : </span>
 <span id="L490"><span class="lineNum">     490</span>                 :<span class="tlaGNC">          13 :   constexpr reference at(std::size_t index) noexcept(!kRequireThrows) {</span></span>
-<span id="L491"><span class="lineNum">     491</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 13 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 13 times"> + </span>]:<span class="tlaGNC">          13 :     MBO_CONFIG_REQUIRE(index &lt; size_, &quot;Access past size.&quot;);</span></span>
+<span id="L491"><span class="lineNum">     491</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 13 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 13 times"> + </span>]:<span class="tlaGNC">          13 :     MBO_CONFIG_REQUIRE(index &lt; size_, &quot;Access past size.&quot;);</span></span>
 <span id="L492"><span class="lineNum">     492</span>                 :<span class="tlaGNC">          13 :     return values_[index].data;</span></span>
 <span id="L493"><span class="lineNum">     493</span>                 :             :   }</span>
 <span id="L494"><span class="lineNum">     494</span>                 :             : </span>
 <span id="L495"><span class="lineNum">     495</span>                 :<span class="tlaGNC">         182 :   constexpr const_reference operator[](std::size_t index) const noexcept(!kRequireThrows) {</span></span>
-<span id="L496"><span class="lineNum">     496</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 182 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 182 times"> + </span>]:<span class="tlaGNC">         182 :     MBO_CONFIG_REQUIRE(index &lt; size_, &quot;Access past size.&quot;);</span></span>
+<span id="L496"><span class="lineNum">     496</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 182 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 182 times"> + </span>]:<span class="tlaGNC">         182 :     MBO_CONFIG_REQUIRE(index &lt; size_, &quot;Access past size.&quot;);</span></span>
 <span id="L497"><span class="lineNum">     497</span>                 :<span class="tlaGNC">         182 :     return values_[index].data;</span></span>
 <span id="L498"><span class="lineNum">     498</span>                 :             :   }</span>
 <span id="L499"><span class="lineNum">     499</span>                 :             : </span>
 <span id="L500"><span class="lineNum">     500</span>                 :<span class="tlaGNC">           5 :   constexpr const_reference at(std::size_t index) const noexcept(!kRequireThrows) {</span></span>
-<span id="L501"><span class="lineNum">     501</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 5 times"> + </span>]:<span class="tlaGNC">           5 :     MBO_CONFIG_REQUIRE(index &lt; size_, &quot;Access past size.&quot;);</span></span>
+<span id="L501"><span class="lineNum">     501</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 5 times"> + </span>]:<span class="tlaGNC">           5 :     MBO_CONFIG_REQUIRE(index &lt; size_, &quot;Access past size.&quot;);</span></span>
 <span id="L502"><span class="lineNum">     502</span>                 :<span class="tlaGNC">           5 :     return values_[index].data;</span></span>
 <span id="L503"><span class="lineNum">     503</span>                 :             :   }</span>
 <span id="L504"><span class="lineNum">     504</span>                 :             : </span>
@@ -591,7 +598,7 @@
 <span id="L507"><span class="lineNum">     507</span>                 :             :  private:</span>
 <span id="L508"><span class="lineNum">     508</span>                 :<span class="tlaGNC">           6 :   constexpr std::size_t move_backward(iterator dst, std::size_t count) {</span></span>
 <span id="L509"><span class="lineNum">     509</span>                 :<span class="tlaGNC">           6 :     std::size_t pos = size_;</span></span>
-<span id="L510"><span class="lineNum">     510</span>         [<span class="tlaGBC" title="Branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">          12 :     while (dst &lt; &amp;values_[pos].data) {</span></span>
+<span id="L510"><span class="lineNum">     510</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">          12 :     while (dst &lt; &amp;values_[pos].data) {</span></span>
 <span id="L511"><span class="lineNum">     511</span>                 :<span class="tlaGNC">           6 :       --pos;</span></span>
 <span id="L512"><span class="lineNum">     512</span>                 :<span class="tlaGNC">           6 :       std::construct_at(const_cast&lt;std::remove_const_t&lt;T&gt;*&gt;(&amp;values_[pos + count].data), std::move(values_[pos].data));</span></span>
 <span id="L513"><span class="lineNum">     513</span>                 :             :     }</span>
@@ -616,25 +623,25 @@
 <span id="L532"><span class="lineNum">     532</span>                 :             : requires std::three_way_comparable_with&lt;LHS, RHS&gt;</span>
 <span id="L533"><span class="lineNum">     533</span>                 :<span class="tlaGNC">          22 : constexpr inline auto operator&lt;=&gt;(const LimitedVector&lt;LHS, LN&gt;&amp; lhs, const LimitedVector&lt;RHS, RN&gt;&amp; rhs) noexcept {</span></span>
 <span id="L534"><span class="lineNum">     534</span>                 :<span class="tlaGNC">          22 :   const std::size_t minsize = std::min(lhs.size(), rhs.size());</span></span>
-<span id="L535"><span class="lineNum">     535</span>         [<span class="tlaGBC" title="Branch 0 was taken 34 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 14 times"> + </span>]:<span class="tlaGNC">          48 :   for (std::size_t index = 0; index &lt; minsize; ++index) {</span></span>
-<span id="L536"><span class="lineNum">     536</span>   [<span class="tlaGBC" title="Branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 14 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">          34 :     const auto comp = lhs[index] &lt;=&gt; rhs[index];</span></span>
-<span id="L537"><span class="lineNum">     537</span>         [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 26 times"> + </span>]:<span class="tlaGNC">          34 :     if (comp != 0) {</span></span>
+<span id="L535"><span class="lineNum">     535</span>         [<span class="tlaGBC" title="branch 0 was taken 34 times"> + </span><span class="tlaGBC" title="branch 1 was taken 14 times"> + </span>]:<span class="tlaGNC">          48 :   for (std::size_t index = 0; index &lt; minsize; ++index) {</span></span>
+<span id="L536"><span class="lineNum">     536</span>   [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 14 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">          34 :     const auto comp = lhs[index] &lt;=&gt; rhs[index];</span></span>
+<span id="L537"><span class="lineNum">     537</span>         [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 26 times"> + </span>]:<span class="tlaGNC">          34 :     if (comp != 0) {</span></span>
 <span id="L538"><span class="lineNum">     538</span>                 :<span class="tlaGNC">           8 :       return comp;</span></span>
 <span id="L539"><span class="lineNum">     539</span>                 :             :     }</span>
 <span id="L540"><span class="lineNum">     540</span>                 :             :   }</span>
-<span id="L541"><span class="lineNum">     541</span>   [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 4 times"> + </span>]:<span class="tlaGNC">          14 :   return lhs.size() &lt;=&gt; rhs.size();</span></span>
+<span id="L541"><span class="lineNum">     541</span>   [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span><span class="tlaGBC" title="branch 2 was taken 4 times"> + </span><span class="tlaGBC" title="branch 3 was taken 4 times"> + </span>]:<span class="tlaGNC">          14 :   return lhs.size() &lt;=&gt; rhs.size();</span></span>
 <span id="L542"><span class="lineNum">     542</span>                 :             : }</span>
 <span id="L543"><span class="lineNum">     543</span>                 :             : </span>
 <span id="L544"><span class="lineNum">     544</span>                 :             : template&lt;auto LN, auto RN, typename LHS, typename RHS&gt;</span>
 <span id="L545"><span class="lineNum">     545</span>                 :             : requires std::three_way_comparable_with&lt;LHS, RHS&gt;</span>
 <span id="L546"><span class="lineNum">     546</span>                 :<span class="tlaGNC">          23 : constexpr inline bool operator==(const LimitedVector&lt;LHS, LN&gt;&amp; lhs, const LimitedVector&lt;RHS, RN&gt;&amp; rhs) noexcept {</span></span>
-<span id="L547"><span class="lineNum">     547</span>         [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 15 times"> + </span>]:<span class="tlaGNC">          23 :   if (lhs.size() != rhs.size()) {</span></span>
+<span id="L547"><span class="lineNum">     547</span>         [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 15 times"> + </span>]:<span class="tlaGNC">          23 :   if (lhs.size() != rhs.size()) {</span></span>
 <span id="L548"><span class="lineNum">     548</span>                 :<span class="tlaGNC">           8 :     return false;</span></span>
 <span id="L549"><span class="lineNum">     549</span>                 :             :   }</span>
 <span id="L550"><span class="lineNum">     550</span>                 :<span class="tlaGNC">          15 :   const std::size_t minsize = std::min(lhs.size(), rhs.size());</span></span>
-<span id="L551"><span class="lineNum">     551</span>         [<span class="tlaGBC" title="Branch 0 was taken 28 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          37 :   for (std::size_t index = 0; index &lt; minsize; ++index) {</span></span>
-<span id="L552"><span class="lineNum">     552</span>   [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 13 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span>]:<span class="tlaGNC">          28 :     const auto comp = lhs[index] &lt;=&gt; rhs[index];</span></span>
-<span id="L553"><span class="lineNum">     553</span>         [<span class="tlaGBC" title="Branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 22 times"> + </span>]:<span class="tlaGNC">          28 :     if (comp != 0) {</span></span>
+<span id="L551"><span class="lineNum">     551</span>         [<span class="tlaGBC" title="branch 0 was taken 28 times"> + </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          37 :   for (std::size_t index = 0; index &lt; minsize; ++index) {</span></span>
+<span id="L552"><span class="lineNum">     552</span>   [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 13 times"> + </span><span class="tlaGBC" title="branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">          28 :     const auto comp = lhs[index] &lt;=&gt; rhs[index];</span></span>
+<span id="L553"><span class="lineNum">     553</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 22 times"> + </span>]:<span class="tlaGNC">          28 :     if (comp != 0) {</span></span>
 <span id="L554"><span class="lineNum">     554</span>                 :<span class="tlaGNC">           6 :       return false;</span></span>
 <span id="L555"><span class="lineNum">     555</span>                 :             :     }</span>
 <span id="L556"><span class="lineNum">     556</span>                 :             :   }</span>
@@ -645,9 +652,9 @@
 <span id="L561"><span class="lineNum">     561</span>                 :             : requires std::three_way_comparable_with&lt;LHS, RHS&gt;</span>
 <span id="L562"><span class="lineNum">     562</span>                 :<span class="tlaGNC">          21 : constexpr inline bool operator&lt;(const LimitedVector&lt;LHS, LN&gt;&amp; lhs, const LimitedVector&lt;RHS, RN&gt;&amp; rhs) noexcept {</span></span>
 <span id="L563"><span class="lineNum">     563</span>                 :<span class="tlaGNC">          21 :   const std::size_t minsize = std::min(lhs.size(), rhs.size());</span></span>
-<span id="L564"><span class="lineNum">     564</span>         [<span class="tlaGBC" title="Branch 0 was taken 29 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 13 times"> + </span>]:<span class="tlaGNC">          42 :   for (std::size_t index = 0; index &lt; minsize; ++index) {</span></span>
-<span id="L565"><span class="lineNum">     565</span>   [<span class="tlaGBC" title="Branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 13 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">          29 :     const auto comp = lhs[index] &lt;=&gt; rhs[index];</span></span>
-<span id="L566"><span class="lineNum">     566</span>         [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 21 times"> + </span>]:<span class="tlaGNC">          29 :     if (comp != 0) {</span></span>
+<span id="L564"><span class="lineNum">     564</span>         [<span class="tlaGBC" title="branch 0 was taken 29 times"> + </span><span class="tlaGBC" title="branch 1 was taken 13 times"> + </span>]:<span class="tlaGNC">          42 :   for (std::size_t index = 0; index &lt; minsize; ++index) {</span></span>
+<span id="L565"><span class="lineNum">     565</span>   [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 13 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">          29 :     const auto comp = lhs[index] &lt;=&gt; rhs[index];</span></span>
+<span id="L566"><span class="lineNum">     566</span>         [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 21 times"> + </span>]:<span class="tlaGNC">          29 :     if (comp != 0) {</span></span>
 <span id="L567"><span class="lineNum">     567</span>                 :<span class="tlaGNC">           8 :       return comp &lt; 0;</span></span>
 <span id="L568"><span class="lineNum">     568</span>                 :             :     }</span>
 <span id="L569"><span class="lineNum">     569</span>                 :             :   }</span>
@@ -710,7 +717,7 @@
 <span id="L626"><span class="lineNum">     626</span>                 :             : template&lt;typename T, LimitedOptionsFlag... Flags, int&amp;..., std::size_t N&gt;</span>
 <span id="L627"><span class="lineNum">     627</span>                 :<span class="tlaGNC">           1 : constexpr LimitedVector&lt;std::remove_cvref_t&lt;T&gt;, LimitedOptions&lt;N, Flags...&gt;{}&gt; ToLimitedVector(T (&amp;array)[N]) {</span></span>
 <span id="L628"><span class="lineNum">     628</span>                 :<span class="tlaGNC">           1 :   LimitedVector&lt;std::remove_cvref_t&lt;T&gt;, LimitedOptions&lt;N, Flags...&gt;{}&gt; result;</span></span>
-<span id="L629"><span class="lineNum">     629</span>         [<span class="tlaGBC" title="Branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           5 :   for (std::size_t idx = 0; idx &lt; N; ++idx) {</span></span>
+<span id="L629"><span class="lineNum">     629</span>         [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           5 :   for (std::size_t idx = 0; idx &lt; N; ++idx) {</span></span>
 <span id="L630"><span class="lineNum">     630</span>                 :<span class="tlaGNC">           4 :     result.emplace_back(array[idx]);</span></span>
 <span id="L631"><span class="lineNum">     631</span>                 :             :   }</span>
 <span id="L632"><span class="lineNum">     632</span>                 :<span class="tlaGNC">           1 :   return result;</span></span>
@@ -720,7 +727,7 @@
 <span id="L636"><span class="lineNum">     636</span>                 :             : // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved): an array is moved element-wise.</span>
 <span id="L637"><span class="lineNum">     637</span>                 :<span class="tlaGNC">           1 : constexpr LimitedVector&lt;std::remove_cvref_t&lt;T&gt;, LimitedOptions&lt;N, Flags...&gt;{}&gt; ToLimitedVector(T (&amp;&amp;array)[N]) {</span></span>
 <span id="L638"><span class="lineNum">     638</span>                 :<span class="tlaGNC">           1 :   LimitedVector&lt;std::remove_cvref_t&lt;T&gt;, LimitedOptions&lt;N, Flags...&gt;{}&gt; result;</span></span>
-<span id="L639"><span class="lineNum">     639</span>         [<span class="tlaGBC" title="Branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           5 :   for (std::size_t idx = 0; idx &lt; N; ++idx) {</span></span>
+<span id="L639"><span class="lineNum">     639</span>         [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           5 :   for (std::size_t idx = 0; idx &lt; N; ++idx) {</span></span>
 <span id="L640"><span class="lineNum">     640</span>                 :<span class="tlaGNC">           4 :     result.emplace_back(std::move(array[idx]));</span></span>
 <span id="L641"><span class="lineNum">     641</span>                 :             :   }</span>
 <span id="L642"><span class="lineNum">     642</span>                 :<span class="tlaGNC">           1 :   return result;</span></span>
@@ -743,7 +750,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

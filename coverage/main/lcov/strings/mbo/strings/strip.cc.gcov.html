@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - strings/mbo/strings/strip.cc</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">strings</a>/<a href="../index.html">mbo</a>/<a href="index.html">strings</a> - strip.cc<span style="font-size: 80%;"> (source / <a href="strip.cc.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory strings">strings</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory strings">strings</a> - strip.cc<span style="font-size: 80%;"> (source / <a href="strip.cc.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -31,13 +37,13 @@
             <td class="headerValue">mbo production coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryMed">85.7&nbsp;%</td>
+            <td class="headerCovTableEntryLo">85.7&nbsp;%</td>
             <td class="headerCovTableEntry">35</td>
             <td class="headerCovTableEntry">30</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,18 +51,11 @@
             <td class="headerCovTableEntry">6</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryLo">68.8&nbsp;%</td>
+            <td class="headerCovTableEntryMed">68.8&nbsp;%</td>
             <td class="headerCovTableEntry">16</td>
             <td class="headerCovTableEntry">11</td>
           </tr>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -106,11 +113,11 @@
 <span id="L28"><span class="lineNum">      28</span>                 :             : </span>
 <span id="L29"><span class="lineNum">      29</span>                 :             : namespace mbo::strings {</span>
 <span id="L30"><span class="lineNum">      30</span>                 :             : </span>
-<span id="L31"><span class="lineNum">      31</span>                 :<span class="tlaGNC tlaBgGNC">          28 : std::string_view StripLineComments(std::string_view line, const StripCommentArgs&amp; args) {</span></span>
+<span id="L31"><span class="lineNum">      31</span>                 :<span class="tlaGNC">          28 : std::string_view StripLineComments(std::string_view line, const StripCommentArgs&amp; args) {</span></span>
 <span id="L32"><span class="lineNum">      32</span>                 :<span class="tlaGNC">          28 :   const auto pos = line.find(args.comment_start);</span></span>
-<span id="L33"><span class="lineNum">      33</span>         [<span class="tlaGBC" title="Branch 0 was taken 16 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 12 times"> + </span>]:<span class="tlaGNC">          28 :   if (pos != std::string_view::npos) {</span></span>
+<span id="L33"><span class="lineNum">      33</span>         [<span class="tlaGBC" title="branch 0 was taken 16 times"> + </span><span class="tlaGBC" title="branch 1 was taken 12 times"> + </span>]:<span class="tlaGNC">          28 :   if (pos != std::string_view::npos) {</span></span>
 <span id="L34"><span class="lineNum">      34</span>                 :<span class="tlaGNC">          16 :     line = line.substr(0, pos);</span></span>
-<span id="L35"><span class="lineNum">      35</span>         [<span class="tlaGBC" title="Branch 0 was taken 12 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">          16 :     if (args.strip_trailing_whitespace) {</span></span>
+<span id="L35"><span class="lineNum">      35</span>         [<span class="tlaGBC" title="branch 0 was taken 12 times"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">          16 :     if (args.strip_trailing_whitespace) {</span></span>
 <span id="L36"><span class="lineNum">      36</span>                 :<span class="tlaGNC">          12 :       line = absl::StripTrailingAsciiWhitespace(line);</span></span>
 <span id="L37"><span class="lineNum">      37</span>                 :             :     }</span>
 <span id="L38"><span class="lineNum">      38</span>                 :             :   }</span>
@@ -125,11 +132,11 @@
 <span id="L47"><span class="lineNum">      47</span>                 :             : </span>
 <span id="L48"><span class="lineNum">      48</span>                 :<span class="tlaGNC">          15 : absl::StatusOr&lt;std::string&gt; StripParsedLineComments(std::string_view line, const StripParsedCommentArgs&amp; args) {</span></span>
 <span id="L49"><span class="lineNum">      49</span>                 :<span class="tlaGNC">          15 :   auto line_or = ParseString(args.parse, line);</span></span>
-<span id="L50"><span class="lineNum">      50</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 15 times"> + </span>]:<span class="tlaGNC">          15 :   if (!line_or.ok()) {</span></span>
-<span id="L51"><span class="lineNum">      51</span>                 :<span class="tlaUNC tlaBgUNC">           0 :     return absl::InvalidArgumentError(absl::StrCat(&quot;Cannot parse input.&quot;));</span></span>
+<span id="L50"><span class="lineNum">      50</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 15 times"> + </span>]:<span class="tlaGNC">          15 :   if (!line_or.ok()) {</span></span>
+<span id="L51"><span class="lineNum">      51</span>                 :<span class="tlaUNC">           0 :     return absl::InvalidArgumentError(absl::StrCat(&quot;Cannot parse input.&quot;));</span></span>
 <span id="L52"><span class="lineNum">      52</span>                 :             :   }</span>
-<span id="L53"><span class="lineNum">      53</span>                 :<span class="tlaGNC tlaBgGNC">          15 :   line = *line_or;</span></span>
-<span id="L54"><span class="lineNum">      54</span>         [<span class="tlaGBC" title="Branch 0 was taken 9 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">          15 :   if (args.strip_trailing_whitespace) {</span></span>
+<span id="L53"><span class="lineNum">      53</span>                 :<span class="tlaGNC">          15 :   line = *line_or;</span></span>
+<span id="L54"><span class="lineNum">      54</span>         [<span class="tlaGBC" title="branch 0 was taken 9 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">          15 :   if (args.strip_trailing_whitespace) {</span></span>
 <span id="L55"><span class="lineNum">      55</span>                 :<span class="tlaGNC">           9 :     line = absl::StripTrailingAsciiWhitespace(line);</span></span>
 <span id="L56"><span class="lineNum">      56</span>                 :             :   }</span>
 <span id="L57"><span class="lineNum">      57</span>                 :<span class="tlaGNC">          30 :   return std::string(line);</span></span>
@@ -139,22 +146,22 @@
 <span id="L61"><span class="lineNum">      61</span>                 :<span class="tlaGNC">           7 :   absl::Status error = absl::OkStatus();</span></span>
 <span id="L62"><span class="lineNum">      62</span>                 :             :   std::string result_str =</span>
 <span id="L63"><span class="lineNum">      63</span>                 :<span class="tlaGNC">           7 :       absl::StrJoin(absl::StrSplit(input, '\n'), &quot;\n&quot;, [&amp;](std::string* out, std::string_view line) {</span></span>
-<span id="L64"><span class="lineNum">      64</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 15 times"> + </span>]:<span class="tlaGNC">          15 :         if (!error.ok()) {</span></span>
-<span id="L65"><span class="lineNum">      65</span>                 :<span class="tlaUNC tlaBgUNC">           0 :           return;</span></span>
+<span id="L64"><span class="lineNum">      64</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 15 times"> + </span>]:<span class="tlaGNC">          15 :         if (!error.ok()) {</span></span>
+<span id="L65"><span class="lineNum">      65</span>                 :<span class="tlaUNC">           0 :           return;</span></span>
 <span id="L66"><span class="lineNum">      66</span>                 :             :         }</span>
-<span id="L67"><span class="lineNum">      67</span>                 :<span class="tlaGNC tlaBgGNC">          15 :         auto line_or = StripParsedLineComments(line, args);</span></span>
-<span id="L68"><span class="lineNum">      68</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 15 times"> + </span>]:<span class="tlaGNC">          15 :         if (!line_or.ok()) {</span></span>
-<span id="L69"><span class="lineNum">      69</span>                 :<span class="tlaUNC tlaBgUNC">           0 :           error = line_or.status();</span></span>
+<span id="L67"><span class="lineNum">      67</span>                 :<span class="tlaGNC">          15 :         auto line_or = StripParsedLineComments(line, args);</span></span>
+<span id="L68"><span class="lineNum">      68</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 15 times"> + </span>]:<span class="tlaGNC">          15 :         if (!line_or.ok()) {</span></span>
+<span id="L69"><span class="lineNum">      69</span>                 :<span class="tlaUNC">           0 :           error = line_or.status();</span></span>
 <span id="L70"><span class="lineNum">      70</span>                 :<span class="tlaUNC">           0 :           return;</span></span>
 <span id="L71"><span class="lineNum">      71</span>                 :             :         }</span>
-<span id="L72"><span class="lineNum">      72</span>                 :<span class="tlaGNC tlaBgGNC">          15 :         absl::StrAppend(out, *line_or);</span></span>
-<span id="L73"><span class="lineNum">      73</span>         [<span class="tlaGBC" title="Branch 0 was taken 15 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">          22 :       });</span></span>
-<span id="L74"><span class="lineNum">      74</span>         [<span class="tlaGBC" title="Branch 0 was taken 7 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           7 :   if (error.ok()) {</span></span>
+<span id="L72"><span class="lineNum">      72</span>                 :<span class="tlaGNC">          15 :         absl::StrAppend(out, *line_or);</span></span>
+<span id="L73"><span class="lineNum">      73</span>         [<span class="tlaGBC" title="branch 0 was taken 15 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          22 :       });</span></span>
+<span id="L74"><span class="lineNum">      74</span>         [<span class="tlaGBC" title="branch 0 was taken 7 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           7 :   if (error.ok()) {</span></span>
 <span id="L75"><span class="lineNum">      75</span>                 :<span class="tlaGNC">           7 :     return result_str;</span></span>
 <span id="L76"><span class="lineNum">      76</span>                 :             :   } else {</span>
-<span id="L77"><span class="lineNum">      77</span>                 :<span class="tlaUNC tlaBgUNC">           0 :     return error;</span></span>
+<span id="L77"><span class="lineNum">      77</span>                 :<span class="tlaUNC">           0 :     return error;</span></span>
 <span id="L78"><span class="lineNum">      78</span>                 :             :   }</span>
-<span id="L79"><span class="lineNum">      79</span>                 :<span class="tlaGNC tlaBgGNC">           7 : }</span></span>
+<span id="L79"><span class="lineNum">      79</span>                 :<span class="tlaGNC">           7 : }</span></span>
 <span id="L80"><span class="lineNum">      80</span>                 :             : </span>
 <span id="L81"><span class="lineNum">      81</span>                 :             : }  // namespace mbo::strings</span>
         </pre>
@@ -165,7 +172,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

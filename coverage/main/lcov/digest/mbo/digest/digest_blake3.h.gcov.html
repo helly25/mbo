@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - digest/mbo/digest/digest_blake3.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">digest</a>/<a href="../index.html">mbo</a>/<a href="index.html">digest</a> - digest_blake3.h<span style="font-size: 80%;"> (source / <a href="digest_blake3.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory digest">digest</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory digest">digest</a> - digest_blake3.h<span style="font-size: 80%;"> (source / <a href="digest_blake3.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">22</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryHi">97.5&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -152,7 +159,7 @@
 <span id="L74"><span class="lineNum">      74</span>                 :             : // The G mixing function (spec section 2.2; BLAKE2s rotations 16/12/8/7).</span>
 <span id="L75"><span class="lineNum">      75</span>                 :             : // NOLINTBEGIN(readability-identifier-length): parameters mirror the spec's</span>
 <span id="L76"><span class="lineNum">      76</span>                 :             : // a/b/c/d state indices and x/y message words.</span>
-<span id="L77"><span class="lineNum">      77</span>                 :<span class="tlaGNC tlaBgGNC">     1671544 : constexpr void MixG(</span></span>
+<span id="L77"><span class="lineNum">      77</span>                 :<span class="tlaGNC">     1671544 : constexpr void MixG(</span></span>
 <span id="L78"><span class="lineNum">      78</span>                 :             :     std::array&lt;uint32_t, 16&gt;&amp; state,</span>
 <span id="L79"><span class="lineNum">      79</span>                 :             :     std::size_t ia,</span>
 <span id="L80"><span class="lineNum">      80</span>                 :             :     std::size_t ib,</span>
@@ -209,16 +216,16 @@
 <span id="L131"><span class="lineNum">     131</span>                 :<span class="tlaGNC">      208943 :     MixG(state, 1, 6, 11, 12, message[10], message[11]);</span></span>
 <span id="L132"><span class="lineNum">     132</span>                 :<span class="tlaGNC">      208943 :     MixG(state, 2, 7, 8, 13, message[12], message[13]);</span></span>
 <span id="L133"><span class="lineNum">     133</span>                 :<span class="tlaGNC">      208943 :     MixG(state, 3, 4, 9, 14, message[14], message[15]);</span></span>
-<span id="L134"><span class="lineNum">     134</span>         [<span class="tlaGBC" title="Branch 0 was taken 29849 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 179094 times"> + </span>]:<span class="tlaGNC">      208943 :     if (round == 6) {</span></span>
+<span id="L134"><span class="lineNum">     134</span>         [<span class="tlaGBC" title="branch 0 was taken 29849 times"> + </span><span class="tlaGBC" title="branch 1 was taken 179094 times"> + </span>]:<span class="tlaGNC">      208943 :     if (round == 6) {</span></span>
 <span id="L135"><span class="lineNum">     135</span>                 :<span class="tlaGNC">       29849 :       break;</span></span>
 <span id="L136"><span class="lineNum">     136</span>                 :             :     }</span>
 <span id="L137"><span class="lineNum">     137</span>                 :<span class="tlaGNC">      179094 :     std::array&lt;uint32_t, 16&gt; permuted = {};</span></span>
-<span id="L138"><span class="lineNum">     138</span>         [<span class="tlaGBC" title="Branch 0 was taken 2865504 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 179094 times"> + </span>]:<span class="tlaGNC">     3044598 :     for (std::size_t i = 0; i &lt; 16; ++i) {</span></span>
+<span id="L138"><span class="lineNum">     138</span>         [<span class="tlaGBC" title="branch 0 was taken 2865504 times"> + </span><span class="tlaGBC" title="branch 1 was taken 179094 times"> + </span>]:<span class="tlaGNC">     3044598 :     for (std::size_t i = 0; i &lt; 16; ++i) {</span></span>
 <span id="L139"><span class="lineNum">     139</span>                 :<span class="tlaGNC">     2865504 :       permuted[i] = message[kMsgPermutation[i]];</span></span>
 <span id="L140"><span class="lineNum">     140</span>                 :             :     }</span>
 <span id="L141"><span class="lineNum">     141</span>                 :<span class="tlaGNC">      179094 :     message = permuted;</span></span>
 <span id="L142"><span class="lineNum">     142</span>                 :<span class="tlaGNC">      179094 :   }</span></span>
-<span id="L143"><span class="lineNum">     143</span>         [<span class="tlaGBC" title="Branch 0 was taken 238792 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 29849 times"> + </span>]:<span class="tlaGNC">      268641 :   for (std::size_t i = 0; i &lt; 8; ++i) {</span></span>
+<span id="L143"><span class="lineNum">     143</span>         [<span class="tlaGBC" title="branch 0 was taken 238792 times"> + </span><span class="tlaGBC" title="branch 1 was taken 29849 times"> + </span>]:<span class="tlaGNC">      268641 :   for (std::size_t i = 0; i &lt; 8; ++i) {</span></span>
 <span id="L144"><span class="lineNum">     144</span>                 :<span class="tlaGNC">      238792 :     state[i] ^= state[i + 8];</span></span>
 <span id="L145"><span class="lineNum">     145</span>                 :<span class="tlaGNC">      238792 :     state[i + 8] ^= chaining[i];</span></span>
 <span id="L146"><span class="lineNum">     146</span>                 :             :   }</span>
@@ -228,7 +235,7 @@
 <span id="L150"><span class="lineNum">     150</span>                 :             : // Loads a (possibly zero-padded) 64-byte block as 16 little-endian words.</span>
 <span id="L151"><span class="lineNum">     151</span>                 :<span class="tlaGNC">       28138 : constexpr std::array&lt;uint32_t, 16&gt; BlockWords(const std::array&lt;char, kBlockSize&gt;&amp; block) noexcept {</span></span>
 <span id="L152"><span class="lineNum">     152</span>                 :<span class="tlaGNC">       28138 :   std::array&lt;uint32_t, 16&gt; words = {};</span></span>
-<span id="L153"><span class="lineNum">     153</span>         [<span class="tlaGBC" title="Branch 0 was taken 450208 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 28138 times"> + </span>]:<span class="tlaGNC">      478346 :   for (std::size_t i = 0; i &lt; 16; ++i) {</span></span>
+<span id="L153"><span class="lineNum">     153</span>         [<span class="tlaGBC" title="branch 0 was taken 450208 times"> + </span><span class="tlaGBC" title="branch 1 was taken 28138 times"> + </span>]:<span class="tlaGNC">      478346 :   for (std::size_t i = 0; i &lt; 16; ++i) {</span></span>
 <span id="L154"><span class="lineNum">     154</span>                 :<span class="tlaGNC">      900416 :     words[i] = ::mbo::hash::hash_internal::Load32(block.data() + (4 * i));  // little-endian</span></span>
 <span id="L155"><span class="lineNum">     155</span>                 :             :   }</span>
 <span id="L156"><span class="lineNum">     156</span>                 :<span class="tlaGNC">       28138 :   return words;</span></span>
@@ -277,7 +284,7 @@
 <span id="L199"><span class="lineNum">     199</span>                 :             : }</span>
 <span id="L200"><span class="lineNum">     200</span>                 :             : </span>
 <span id="L201"><span class="lineNum">     201</span>                 :<span class="tlaGNC">       28138 : constexpr uint32_t ChunkStartFlag(const State&amp; state) noexcept {</span></span>
-<span id="L202"><span class="lineNum">     202</span>         [<span class="tlaGBC" title="Branch 0 was taken 1901 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 26237 times"> + </span>]:<span class="tlaGNC">       28138 :   return state.blocks_compressed == 0 ? kChunkStart : 0;</span></span>
+<span id="L202"><span class="lineNum">     202</span>         [<span class="tlaGBC" title="branch 0 was taken 1901 times"> + </span><span class="tlaGBC" title="branch 1 was taken 26237 times"> + </span>]:<span class="tlaGNC">       28138 :   return state.blocks_compressed == 0 ? kChunkStart : 0;</span></span>
 <span id="L203"><span class="lineNum">     203</span>                 :             : }</span>
 <span id="L204"><span class="lineNum">     204</span>                 :             : </span>
 <span id="L205"><span class="lineNum">     205</span>                 :             : // The pending output node for the current (final) chunk.</span>
@@ -298,7 +305,7 @@
 <span id="L220"><span class="lineNum">     220</span>                 :             :     uint32_t flags) noexcept {</span>
 <span id="L221"><span class="lineNum">     221</span>                 :<span class="tlaGNC">        1705 :   Output output = {</span></span>
 <span id="L222"><span class="lineNum">     222</span>                 :<span class="tlaGNC">        1705 :       .input_chaining = key, .block_words = {}, .counter = 0, .block_len = kBlockSize, .flags = flags | kParent};</span></span>
-<span id="L223"><span class="lineNum">     223</span>         [<span class="tlaGBC" title="Branch 0 was taken 13640 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1705 times"> + </span>]:<span class="tlaGNC">       15345 :   for (std::size_t i = 0; i &lt; 8; ++i) {</span></span>
+<span id="L223"><span class="lineNum">     223</span>         [<span class="tlaGBC" title="branch 0 was taken 13640 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1705 times"> + </span>]:<span class="tlaGNC">       15345 :   for (std::size_t i = 0; i &lt; 8; ++i) {</span></span>
 <span id="L224"><span class="lineNum">     224</span>                 :<span class="tlaGNC">       13640 :     output.block_words[i] = left[i];</span></span>
 <span id="L225"><span class="lineNum">     225</span>                 :<span class="tlaGNC">       13640 :     output.block_words[i + 8] = right[i];</span></span>
 <span id="L226"><span class="lineNum">     226</span>                 :             :   }</span>
@@ -309,7 +316,7 @@
 <span id="L231"><span class="lineNum">     231</span>                 :             : // trailing zero bit of the completed-chunk count merges one stack level</span>
 <span id="L232"><span class="lineNum">     232</span>                 :             : // (spec section 5.1.2).</span>
 <span id="L233"><span class="lineNum">     233</span>                 :<span class="tlaGNC">        1705 : constexpr void PushChunkChaining(State&amp; state, std::array&lt;uint32_t, 8&gt; chaining, uint64_t total_chunks) noexcept {</span></span>
-<span id="L234"><span class="lineNum">     234</span>         [<span class="tlaGBC" title="Branch 0 was taken 1581 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1705 times"> + </span>]:<span class="tlaGNC">        3286 :   while ((total_chunks &amp; 1U) == 0) {</span></span>
+<span id="L234"><span class="lineNum">     234</span>         [<span class="tlaGBC" title="branch 0 was taken 1581 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1705 times"> + </span>]:<span class="tlaGNC">        3286 :   while ((total_chunks &amp; 1U) == 0) {</span></span>
 <span id="L235"><span class="lineNum">     235</span>                 :<span class="tlaGNC">        1581 :     --state.stack_len;</span></span>
 <span id="L236"><span class="lineNum">     236</span>                 :<span class="tlaGNC">        1581 :     chaining = ChainingValue(ParentOutput(state.stack[state.stack_len], chaining, state.key, state.flags));</span></span>
 <span id="L237"><span class="lineNum">     237</span>                 :<span class="tlaGNC">        1581 :     total_chunks &gt;&gt;= 1U;</span></span>
@@ -321,10 +328,10 @@
 <span id="L243"><span class="lineNum">     243</span>                 :<span class="tlaGNC">         984 : constexpr void Update(State&amp; state, std::string_view data) noexcept {</span></span>
 <span id="L244"><span class="lineNum">     244</span>                 :<span class="tlaGNC">         984 :   const char* ptr = data.data();</span></span>
 <span id="L245"><span class="lineNum">     245</span>                 :<span class="tlaGNC">         984 :   std::size_t remaining = data.size();</span></span>
-<span id="L246"><span class="lineNum">     246</span>         [<span class="tlaGBC" title="Branch 0 was taken 28901 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 984 times"> + </span>]:<span class="tlaGNC">       29885 :   while (remaining &gt; 0) {</span></span>
+<span id="L246"><span class="lineNum">     246</span>         [<span class="tlaGBC" title="branch 0 was taken 28901 times"> + </span><span class="tlaGBC" title="branch 1 was taken 984 times"> + </span>]:<span class="tlaGNC">       29885 :   while (remaining &gt; 0) {</span></span>
 <span id="L247"><span class="lineNum">     247</span>                 :             :     // A full chunk is only closed once more input arrives, so the final</span>
 <span id="L248"><span class="lineNum">     248</span>                 :             :     // chunk (even a full one) stays pending for ChunkOutput at finalize.</span>
-<span id="L249"><span class="lineNum">     249</span>         [<span class="tlaGBC" title="Branch 0 was taken 1705 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 27196 times"> + </span>]:<span class="tlaGNC">       28901 :     if (state.chunk_len == kChunkSize) {</span></span>
+<span id="L249"><span class="lineNum">     249</span>         [<span class="tlaGBC" title="branch 0 was taken 1705 times"> + </span><span class="tlaGBC" title="branch 1 was taken 27196 times"> + </span>]:<span class="tlaGNC">       28901 :     if (state.chunk_len == kChunkSize) {</span></span>
 <span id="L250"><span class="lineNum">     250</span>                 :<span class="tlaGNC">        1705 :       const std::array&lt;uint32_t, 8&gt; chunk_chaining = ChainingValue(ChunkOutput(state));</span></span>
 <span id="L251"><span class="lineNum">     251</span>                 :<span class="tlaGNC">        1705 :       PushChunkChaining(state, chunk_chaining, state.chunk_counter + 1);</span></span>
 <span id="L252"><span class="lineNum">     252</span>                 :<span class="tlaGNC">        1705 :       ++state.chunk_counter;</span></span>
@@ -336,7 +343,7 @@
 <span id="L258"><span class="lineNum">     258</span>                 :             :     }</span>
 <span id="L259"><span class="lineNum">     259</span>                 :             :     // Same one level down: a full block is only compressed once more input</span>
 <span id="L260"><span class="lineNum">     260</span>                 :             :     // arrives within the chunk.</span>
-<span id="L261"><span class="lineNum">     261</span>         [<span class="tlaGBC" title="Branch 0 was taken 26237 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2664 times"> + </span>]:<span class="tlaGNC">       28901 :     if (state.block_len == kBlockSize) {</span></span>
+<span id="L261"><span class="lineNum">     261</span>         [<span class="tlaGBC" title="branch 0 was taken 26237 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2664 times"> + </span>]:<span class="tlaGNC">       28901 :     if (state.block_len == kBlockSize) {</span></span>
 <span id="L262"><span class="lineNum">     262</span>                 :<span class="tlaGNC">       52474 :       const std::array&lt;uint32_t, 16&gt; state16 = Compress(</span></span>
 <span id="L263"><span class="lineNum">     263</span>                 :<span class="tlaGNC">       26237 :           state.chunk_chaining, BlockWords(state.block), state.chunk_counter, kBlockSize,</span></span>
 <span id="L264"><span class="lineNum">     264</span>                 :<span class="tlaGNC">       26237 :           state.flags | ChunkStartFlag(state));</span></span>
@@ -348,9 +355,9 @@
 <span id="L270"><span class="lineNum">     270</span>                 :             :     }</span>
 <span id="L271"><span class="lineNum">     271</span>                 :<span class="tlaGNC">       28901 :     const std::size_t block_space = kBlockSize - state.block_len;</span></span>
 <span id="L272"><span class="lineNum">     272</span>                 :<span class="tlaGNC">       28901 :     const std::size_t chunk_space = kChunkSize - state.chunk_len;</span></span>
-<span id="L273"><span class="lineNum">     273</span>         [<span class="tlaGBC" title="Branch 0 was taken 27156 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1745 times"> + </span>]:<span class="tlaGNC">       28901 :     const std::size_t space = block_space &lt; chunk_space ? block_space : chunk_space;</span></span>
-<span id="L274"><span class="lineNum">     274</span>         [<span class="tlaGBC" title="Branch 0 was taken 914 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 27987 times"> + </span>]:<span class="tlaGNC">       28901 :     const std::size_t take = remaining &lt; space ? remaining : space;</span></span>
-<span id="L275"><span class="lineNum">     275</span>         [<span class="tlaGBC" title="Branch 0 was taken 1794654 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 28901 times"> + </span>]:<span class="tlaGNC">     1823555 :     for (std::size_t i = 0; i &lt; take; ++i) {</span></span>
+<span id="L273"><span class="lineNum">     273</span>         [<span class="tlaGBC" title="branch 0 was taken 27156 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1745 times"> + </span>]:<span class="tlaGNC">       28901 :     const std::size_t space = block_space &lt; chunk_space ? block_space : chunk_space;</span></span>
+<span id="L274"><span class="lineNum">     274</span>         [<span class="tlaGBC" title="branch 0 was taken 914 times"> + </span><span class="tlaGBC" title="branch 1 was taken 27987 times"> + </span>]:<span class="tlaGNC">       28901 :     const std::size_t take = remaining &lt; space ? remaining : space;</span></span>
+<span id="L275"><span class="lineNum">     275</span>         [<span class="tlaGBC" title="branch 0 was taken 1794654 times"> + </span><span class="tlaGBC" title="branch 1 was taken 28901 times"> + </span>]:<span class="tlaGNC">     1823555 :     for (std::size_t i = 0; i &lt; take; ++i) {</span></span>
 <span id="L276"><span class="lineNum">     276</span>                 :<span class="tlaGNC">     1794654 :       state.block[state.block_len + i] = ptr[i];</span></span>
 <span id="L277"><span class="lineNum">     277</span>                 :             :     }</span>
 <span id="L278"><span class="lineNum">     278</span>                 :<span class="tlaGNC">       28901 :     state.block_len += take;</span></span>
@@ -369,17 +376,17 @@
 <span id="L291"><span class="lineNum">     291</span>                 :<span class="tlaGNC">         196 : constexpr std::array&lt;uint8_t, OutputSize&gt; Finalize(const State&amp; state) noexcept {</span></span>
 <span id="L292"><span class="lineNum">     292</span>                 :<span class="tlaGNC">         196 :   Output output = ChunkOutput(state);</span></span>
 <span id="L293"><span class="lineNum">     293</span>                 :<span class="tlaGNC">         196 :   std::size_t remaining_parents = state.stack_len;</span></span>
-<span id="L294"><span class="lineNum">     294</span>         [<span class="tlaGBC" title="Branch 0 was taken 124 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 196 times"> + </span>]:<span class="tlaGNC">         320 :   while (remaining_parents &gt; 0) {</span></span>
+<span id="L294"><span class="lineNum">     294</span>         [<span class="tlaGBC" title="branch 0 was taken 124 times"> + </span><span class="tlaGBC" title="branch 1 was taken 196 times"> + </span>]:<span class="tlaGNC">         320 :   while (remaining_parents &gt; 0) {</span></span>
 <span id="L295"><span class="lineNum">     295</span>                 :<span class="tlaGNC">         124 :     --remaining_parents;</span></span>
 <span id="L296"><span class="lineNum">     296</span>                 :<span class="tlaGNC">         124 :     output = ParentOutput(state.stack[remaining_parents], ChainingValue(output), state.key, state.flags);</span></span>
 <span id="L297"><span class="lineNum">     297</span>                 :             :   }</span>
 <span id="L298"><span class="lineNum">     298</span>                 :<span class="tlaGNC">         196 :   std::array&lt;uint8_t, OutputSize&gt; digest = {};</span></span>
 <span id="L299"><span class="lineNum">     299</span>                 :<span class="tlaGNC">         196 :   std::size_t written = 0;</span></span>
-<span id="L300"><span class="lineNum">     300</span>         [<span class="tlaGBC" title="Branch 0 was taken 202 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 196 times"> + </span>]:<span class="tlaGNC">         398 :   for (uint64_t block_counter = 0; written &lt; OutputSize; ++block_counter) {</span></span>
+<span id="L300"><span class="lineNum">     300</span>         [<span class="tlaGBC" title="branch 0 was taken 202 times"> + </span><span class="tlaGBC" title="branch 1 was taken 196 times"> + </span>]:<span class="tlaGNC">         398 :   for (uint64_t block_counter = 0; written &lt; OutputSize; ++block_counter) {</span></span>
 <span id="L301"><span class="lineNum">     301</span>                 :             :     const std::array&lt;uint32_t, 16&gt; words =</span>
 <span id="L302"><span class="lineNum">     302</span>                 :<span class="tlaGNC">         202 :         Compress(output.input_chaining, output.block_words, block_counter, output.block_len, output.flags | kRoot);</span></span>
 <span id="L303"><span class="lineNum">     303</span>                 :<span class="tlaGNC">         202 :     const std::size_t take = OutputSize - written &lt; kBlockSize ? OutputSize - written : kBlockSize;</span></span>
-<span id="L304"><span class="lineNum">     304</span>         [<span class="tlaGBC" title="Branch 0 was taken 6569 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 202 times"> + </span>]:<span class="tlaGNC">        6771 :     for (std::size_t i = 0; i &lt; take; ++i) {</span></span>
+<span id="L304"><span class="lineNum">     304</span>         [<span class="tlaGBC" title="branch 0 was taken 6569 times"> + </span><span class="tlaGBC" title="branch 1 was taken 202 times"> + </span>]:<span class="tlaGNC">        6771 :     for (std::size_t i = 0; i &lt; take; ++i) {</span></span>
 <span id="L305"><span class="lineNum">     305</span>                 :<span class="tlaGNC">        6569 :       digest[written + i] = static_cast&lt;uint8_t&gt;(words[i / 4] &gt;&gt; (8 * (i % 4)));  // little-endian</span></span>
 <span id="L306"><span class="lineNum">     306</span>                 :             :     }</span>
 <span id="L307"><span class="lineNum">     307</span>                 :<span class="tlaGNC">         202 :     written += take;</span></span>
@@ -390,12 +397,12 @@
 <span id="L312"><span class="lineNum">     312</span>                 :             : // Converts a 32-byte key to the 8 little-endian key words.</span>
 <span id="L313"><span class="lineNum">     313</span>                 :<span class="tlaGNC">          72 : constexpr std::array&lt;uint32_t, 8&gt; KeyWords(std::string_view key) noexcept {</span></span>
 <span id="L314"><span class="lineNum">     314</span>                 :<span class="tlaGNC">          72 :   std::array&lt;uint32_t, 8&gt; words = {};</span></span>
-<span id="L315"><span class="lineNum">     315</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 72 times"> + </span>]:<span class="tlaGNC">          72 :   const std::size_t key_len = key.size() &lt; kKeySize ? key.size() : kKeySize;</span></span>
+<span id="L315"><span class="lineNum">     315</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 72 times"> + </span>]:<span class="tlaGNC">          72 :   const std::size_t key_len = key.size() &lt; kKeySize ? key.size() : kKeySize;</span></span>
 <span id="L316"><span class="lineNum">     316</span>                 :<span class="tlaGNC">          72 :   std::array&lt;char, kKeySize&gt; padded = {};</span></span>
-<span id="L317"><span class="lineNum">     317</span>         [<span class="tlaGBC" title="Branch 0 was taken 2304 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 72 times"> + </span>]:<span class="tlaGNC">        2376 :   for (std::size_t i = 0; i &lt; key_len; ++i) {</span></span>
+<span id="L317"><span class="lineNum">     317</span>         [<span class="tlaGBC" title="branch 0 was taken 2304 times"> + </span><span class="tlaGBC" title="branch 1 was taken 72 times"> + </span>]:<span class="tlaGNC">        2376 :   for (std::size_t i = 0; i &lt; key_len; ++i) {</span></span>
 <span id="L318"><span class="lineNum">     318</span>                 :<span class="tlaGNC">        2304 :     padded[i] = key[i];</span></span>
 <span id="L319"><span class="lineNum">     319</span>                 :             :   }</span>
-<span id="L320"><span class="lineNum">     320</span>         [<span class="tlaGBC" title="Branch 0 was taken 576 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 72 times"> + </span>]:<span class="tlaGNC">         648 :   for (std::size_t i = 0; i &lt; 8; ++i) {</span></span>
+<span id="L320"><span class="lineNum">     320</span>         [<span class="tlaGBC" title="branch 0 was taken 576 times"> + </span><span class="tlaGBC" title="branch 1 was taken 72 times"> + </span>]:<span class="tlaGNC">         648 :   for (std::size_t i = 0; i &lt; 8; ++i) {</span></span>
 <span id="L321"><span class="lineNum">     321</span>                 :<span class="tlaGNC">        1152 :     words[i] = ::mbo::hash::hash_internal::Load32(padded.data() + (4 * i));</span></span>
 <span id="L322"><span class="lineNum">     322</span>                 :             :   }</span>
 <span id="L323"><span class="lineNum">     323</span>                 :<span class="tlaGNC">          72 :   return words;</span></span>
@@ -443,7 +450,7 @@
 <span id="L365"><span class="lineNum">     365</span>                 :<span class="tlaGNC">          35 :   blake3_internal::Update(context_state, context);</span></span>
 <span id="L366"><span class="lineNum">     366</span>                 :<span class="tlaGNC">          35 :   const std::array&lt;uint8_t, kKeySize&gt; context_key = blake3_internal::Finalize&lt;kKeySize&gt;(context_state);</span></span>
 <span id="L367"><span class="lineNum">     367</span>                 :<span class="tlaGNC">          35 :   std::array&lt;char, kKeySize&gt; context_key_chars = {};</span></span>
-<span id="L368"><span class="lineNum">     368</span>         [<span class="tlaGBC" title="Branch 0 was taken 1120 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 35 times"> + </span>]:<span class="tlaGNC">        1155 :   for (std::size_t i = 0; i &lt; kKeySize; ++i) {</span></span>
+<span id="L368"><span class="lineNum">     368</span>         [<span class="tlaGBC" title="branch 0 was taken 1120 times"> + </span><span class="tlaGBC" title="branch 1 was taken 35 times"> + </span>]:<span class="tlaGNC">        1155 :   for (std::size_t i = 0; i &lt; kKeySize; ++i) {</span></span>
 <span id="L369"><span class="lineNum">     369</span>                 :<span class="tlaGNC">        1120 :     context_key_chars[i] = static_cast&lt;char&gt;(context_key[i]);</span></span>
 <span id="L370"><span class="lineNum">     370</span>                 :             :   }</span>
 <span id="L371"><span class="lineNum">     371</span>                 :<span class="tlaGNC">          35 :   blake3_internal::State state = blake3_internal::Init(</span></span>
@@ -493,7 +500,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

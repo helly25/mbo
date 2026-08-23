@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - digest/mbo/digest/digest_sha1.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">digest</a>/<a href="../index.html">mbo</a>/<a href="index.html">digest</a> - digest_sha1.h<span style="font-size: 80%;"> (source / <a href="digest_sha1.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory digest">digest</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory digest">digest</a> - digest_sha1.h<span style="font-size: 80%;"> (source / <a href="digest_sha1.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">9</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -125,12 +132,12 @@
 <span id="L47"><span class="lineNum">      47</span>                 :             : };</span>
 <span id="L48"><span class="lineNum">      48</span>                 :             : </span>
 <span id="L49"><span class="lineNum">      49</span>                 :             : // Compression function: absorbs one 64-byte block (FIPS 180-4, section 6.1.2).</span>
-<span id="L50"><span class="lineNum">      50</span>                 :<span class="tlaGNC tlaBgGNC">       15780 : constexpr void Compress(std::array&lt;uint32_t, 5&gt;&amp; hash, const char* block) noexcept {</span></span>
+<span id="L50"><span class="lineNum">      50</span>                 :<span class="tlaGNC">       15780 : constexpr void Compress(std::array&lt;uint32_t, 5&gt;&amp; hash, const char* block) noexcept {</span></span>
 <span id="L51"><span class="lineNum">      51</span>                 :<span class="tlaGNC">       15780 :   std::array&lt;uint32_t, 80&gt; schedule = {};</span></span>
-<span id="L52"><span class="lineNum">      52</span>         [<span class="tlaGBC" title="Branch 0 was taken 252480 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 15780 times"> + </span>]:<span class="tlaGNC">      268260 :   for (std::size_t i = 0; i &lt; 16; ++i) {</span></span>
+<span id="L52"><span class="lineNum">      52</span>         [<span class="tlaGBC" title="branch 0 was taken 252480 times"> + </span><span class="tlaGBC" title="branch 1 was taken 15780 times"> + </span>]:<span class="tlaGNC">      268260 :   for (std::size_t i = 0; i &lt; 16; ++i) {</span></span>
 <span id="L53"><span class="lineNum">      53</span>                 :<span class="tlaGNC">      504960 :     schedule[i] = ::mbo::hash::hash_internal::Load32BE(block + (4 * i));</span></span>
 <span id="L54"><span class="lineNum">      54</span>                 :             :   }</span>
-<span id="L55"><span class="lineNum">      55</span>         [<span class="tlaGBC" title="Branch 0 was taken 1009920 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 15780 times"> + </span>]:<span class="tlaGNC">     1025700 :   for (std::size_t i = 16; i &lt; 80; ++i) {</span></span>
+<span id="L55"><span class="lineNum">      55</span>         [<span class="tlaGBC" title="branch 0 was taken 1009920 times"> + </span><span class="tlaGBC" title="branch 1 was taken 15780 times"> + </span>]:<span class="tlaGNC">     1025700 :   for (std::size_t i = 16; i &lt; 80; ++i) {</span></span>
 <span id="L56"><span class="lineNum">      56</span>                 :<span class="tlaGNC">     1009920 :     schedule[i] = std::rotl(schedule[i - 3] ^ schedule[i - 8] ^ schedule[i - 14] ^ schedule[i - 16], 1);</span></span>
 <span id="L57"><span class="lineNum">      57</span>                 :             :   }</span>
 <span id="L58"><span class="lineNum">      58</span>                 :             : </span>
@@ -139,16 +146,16 @@
 <span id="L61"><span class="lineNum">      61</span>                 :<span class="tlaGNC">       15780 :   uint32_t vc = hash[2];</span></span>
 <span id="L62"><span class="lineNum">      62</span>                 :<span class="tlaGNC">       15780 :   uint32_t vd = hash[3];</span></span>
 <span id="L63"><span class="lineNum">      63</span>                 :<span class="tlaGNC">       15780 :   uint32_t ve = hash[4];</span></span>
-<span id="L64"><span class="lineNum">      64</span>         [<span class="tlaGBC" title="Branch 0 was taken 1262400 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 15780 times"> + </span>]:<span class="tlaGNC">     1278180 :   for (std::size_t i = 0; i &lt; 80; ++i) {</span></span>
+<span id="L64"><span class="lineNum">      64</span>         [<span class="tlaGBC" title="branch 0 was taken 1262400 times"> + </span><span class="tlaGBC" title="branch 1 was taken 15780 times"> + </span>]:<span class="tlaGNC">     1278180 :   for (std::size_t i = 0; i &lt; 80; ++i) {</span></span>
 <span id="L65"><span class="lineNum">      65</span>                 :<span class="tlaGNC">     1262400 :     uint32_t func = 0;</span></span>
 <span id="L66"><span class="lineNum">      66</span>                 :<span class="tlaGNC">     1262400 :     uint32_t round_k = 0;</span></span>
-<span id="L67"><span class="lineNum">      67</span>         [<span class="tlaGBC" title="Branch 0 was taken 315600 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 946800 times"> + </span>]:<span class="tlaGNC">     1262400 :     if (i &lt; 20) {</span></span>
+<span id="L67"><span class="lineNum">      67</span>         [<span class="tlaGBC" title="branch 0 was taken 315600 times"> + </span><span class="tlaGBC" title="branch 1 was taken 946800 times"> + </span>]:<span class="tlaGNC">     1262400 :     if (i &lt; 20) {</span></span>
 <span id="L68"><span class="lineNum">      68</span>                 :<span class="tlaGNC">      315600 :       func = (vb &amp; vc) | (~vb &amp; vd);</span></span>
 <span id="L69"><span class="lineNum">      69</span>                 :<span class="tlaGNC">      315600 :       round_k = 0x5A827999;</span></span>
-<span id="L70"><span class="lineNum">      70</span>         [<span class="tlaGBC" title="Branch 0 was taken 315600 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 631200 times"> + </span>]:<span class="tlaGNC">      946800 :     } else if (i &lt; 40) {</span></span>
+<span id="L70"><span class="lineNum">      70</span>         [<span class="tlaGBC" title="branch 0 was taken 315600 times"> + </span><span class="tlaGBC" title="branch 1 was taken 631200 times"> + </span>]:<span class="tlaGNC">      946800 :     } else if (i &lt; 40) {</span></span>
 <span id="L71"><span class="lineNum">      71</span>                 :<span class="tlaGNC">      315600 :       func = vb ^ vc ^ vd;</span></span>
 <span id="L72"><span class="lineNum">      72</span>                 :<span class="tlaGNC">      315600 :       round_k = 0x6ED9EBA1;</span></span>
-<span id="L73"><span class="lineNum">      73</span>         [<span class="tlaGBC" title="Branch 0 was taken 315600 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 315600 times"> + </span>]:<span class="tlaGNC">      631200 :     } else if (i &lt; 60) {</span></span>
+<span id="L73"><span class="lineNum">      73</span>         [<span class="tlaGBC" title="branch 0 was taken 315600 times"> + </span><span class="tlaGBC" title="branch 1 was taken 315600 times"> + </span>]:<span class="tlaGNC">      631200 :     } else if (i &lt; 60) {</span></span>
 <span id="L74"><span class="lineNum">      74</span>                 :<span class="tlaGNC">      315600 :       func = (vb &amp; vc) | (vb &amp; vd) | (vc &amp; vd);</span></span>
 <span id="L75"><span class="lineNum">      75</span>                 :<span class="tlaGNC">      315600 :       round_k = 0x8F1BBCDC;</span></span>
 <span id="L76"><span class="lineNum">      76</span>                 :             :     } else {</span>
@@ -185,24 +192,24 @@
 <span id="L107"><span class="lineNum">     107</span>                 :<span class="tlaGNC">         873 :   state.total_len += data.size();</span></span>
 <span id="L108"><span class="lineNum">     108</span>                 :<span class="tlaGNC">         873 :   const char* ptr = data.data();</span></span>
 <span id="L109"><span class="lineNum">     109</span>                 :<span class="tlaGNC">         873 :   std::size_t remaining = data.size();</span></span>
-<span id="L110"><span class="lineNum">     110</span>         [<span class="tlaGBC" title="Branch 0 was taken 785 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 88 times"> + </span>]:<span class="tlaGNC">         873 :   if (fill != 0) {</span></span>
+<span id="L110"><span class="lineNum">     110</span>         [<span class="tlaGBC" title="branch 0 was taken 785 times"> + </span><span class="tlaGBC" title="branch 1 was taken 88 times"> + </span>]:<span class="tlaGNC">         873 :   if (fill != 0) {</span></span>
 <span id="L111"><span class="lineNum">     111</span>                 :<span class="tlaGNC">         785 :     const std::size_t take = remaining &lt; kBlockSize - fill ? remaining : kBlockSize - fill;</span></span>
-<span id="L112"><span class="lineNum">     112</span>         [<span class="tlaGBC" title="Branch 0 was taken 2392 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 785 times"> + </span>]:<span class="tlaGNC">        3177 :     for (std::size_t i = 0; i &lt; take; ++i) {</span></span>
+<span id="L112"><span class="lineNum">     112</span>         [<span class="tlaGBC" title="branch 0 was taken 2392 times"> + </span><span class="tlaGBC" title="branch 1 was taken 785 times"> + </span>]:<span class="tlaGNC">        3177 :     for (std::size_t i = 0; i &lt; take; ++i) {</span></span>
 <span id="L113"><span class="lineNum">     113</span>                 :<span class="tlaGNC">        2392 :       state.buffer[fill + i] = ptr[i];</span></span>
 <span id="L114"><span class="lineNum">     114</span>                 :             :     }</span>
 <span id="L115"><span class="lineNum">     115</span>                 :<span class="tlaGNC">         785 :     ptr += take;</span></span>
 <span id="L116"><span class="lineNum">     116</span>                 :<span class="tlaGNC">         785 :     remaining -= take;</span></span>
-<span id="L117"><span class="lineNum">     117</span>         [<span class="tlaGBC" title="Branch 0 was taken 742 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 43 times"> + </span>]:<span class="tlaGNC">         785 :     if (fill + take &lt; kBlockSize) {</span></span>
+<span id="L117"><span class="lineNum">     117</span>         [<span class="tlaGBC" title="branch 0 was taken 742 times"> + </span><span class="tlaGBC" title="branch 1 was taken 43 times"> + </span>]:<span class="tlaGNC">         785 :     if (fill + take &lt; kBlockSize) {</span></span>
 <span id="L118"><span class="lineNum">     118</span>                 :<span class="tlaGNC">         742 :       return;</span></span>
 <span id="L119"><span class="lineNum">     119</span>                 :             :     }</span>
 <span id="L120"><span class="lineNum">     120</span>                 :<span class="tlaGNC">          86 :     Compress(state.hash, state.buffer.data());</span></span>
 <span id="L121"><span class="lineNum">     121</span>                 :             :   }</span>
-<span id="L122"><span class="lineNum">     122</span>         [<span class="tlaGBC" title="Branch 0 was taken 15668 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 131 times"> + </span>]:<span class="tlaGNC">       15799 :   while (remaining &gt;= kBlockSize) {</span></span>
+<span id="L122"><span class="lineNum">     122</span>         [<span class="tlaGBC" title="branch 0 was taken 15668 times"> + </span><span class="tlaGBC" title="branch 1 was taken 131 times"> + </span>]:<span class="tlaGNC">       15799 :   while (remaining &gt;= kBlockSize) {</span></span>
 <span id="L123"><span class="lineNum">     123</span>                 :<span class="tlaGNC">       15668 :     Compress(state.hash, ptr);</span></span>
 <span id="L124"><span class="lineNum">     124</span>                 :<span class="tlaGNC">       15668 :     ptr += kBlockSize;</span></span>
 <span id="L125"><span class="lineNum">     125</span>                 :<span class="tlaGNC">       15668 :     remaining -= kBlockSize;</span></span>
 <span id="L126"><span class="lineNum">     126</span>                 :             :   }</span>
-<span id="L127"><span class="lineNum">     127</span>         [<span class="tlaGBC" title="Branch 0 was taken 1822 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 131 times"> + </span>]:<span class="tlaGNC">        1953 :   for (std::size_t i = 0; i &lt; remaining; ++i) {</span></span>
+<span id="L127"><span class="lineNum">     127</span>         [<span class="tlaGBC" title="branch 0 was taken 1822 times"> + </span><span class="tlaGBC" title="branch 1 was taken 131 times"> + </span>]:<span class="tlaGNC">        1953 :   for (std::size_t i = 0; i &lt; remaining; ++i) {</span></span>
 <span id="L128"><span class="lineNum">     128</span>                 :<span class="tlaGNC">        1822 :     state.buffer[i] = ptr[i];</span></span>
 <span id="L129"><span class="lineNum">     129</span>                 :             :   }</span>
 <span id="L130"><span class="lineNum">     130</span>                 :             : }</span>
@@ -213,23 +220,23 @@
 <span id="L135"><span class="lineNum">     135</span>                 :<span class="tlaGNC">          60 :   const uint64_t total_bits = state.total_len * 8;</span></span>
 <span id="L136"><span class="lineNum">     136</span>                 :<span class="tlaGNC">          60 :   std::size_t fill = state.total_len % kBlockSize;</span></span>
 <span id="L137"><span class="lineNum">     137</span>                 :<span class="tlaGNC">          60 :   state.buffer[fill++] = static_cast&lt;char&gt;(0x80);</span></span>
-<span id="L138"><span class="lineNum">     138</span>         [<span class="tlaGBC" title="Branch 0 was taken 9 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 51 times"> + </span>]:<span class="tlaGNC">          60 :   if (fill &gt; kBlockSize - 8) {</span></span>
-<span id="L139"><span class="lineNum">     139</span>         [<span class="tlaGBC" title="Branch 0 was taken 42 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          51 :     for (; fill &lt; kBlockSize; ++fill) {</span></span>
+<span id="L138"><span class="lineNum">     138</span>         [<span class="tlaGBC" title="branch 0 was taken 9 times"> + </span><span class="tlaGBC" title="branch 1 was taken 51 times"> + </span>]:<span class="tlaGNC">          60 :   if (fill &gt; kBlockSize - 8) {</span></span>
+<span id="L139"><span class="lineNum">     139</span>         [<span class="tlaGBC" title="branch 0 was taken 42 times"> + </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          51 :     for (; fill &lt; kBlockSize; ++fill) {</span></span>
 <span id="L140"><span class="lineNum">     140</span>                 :<span class="tlaGNC">          42 :       state.buffer[fill] = 0;</span></span>
 <span id="L141"><span class="lineNum">     141</span>                 :             :     }</span>
 <span id="L142"><span class="lineNum">     142</span>                 :<span class="tlaGNC">           9 :     Compress(state.hash, state.buffer.data());</span></span>
 <span id="L143"><span class="lineNum">     143</span>                 :<span class="tlaGNC">           9 :     fill = 0;</span></span>
 <span id="L144"><span class="lineNum">     144</span>                 :             :   }</span>
-<span id="L145"><span class="lineNum">     145</span>         [<span class="tlaGBC" title="Branch 0 was taken 2359 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 60 times"> + </span>]:<span class="tlaGNC">        2419 :   for (; fill &lt; kBlockSize - 8; ++fill) {</span></span>
+<span id="L145"><span class="lineNum">     145</span>         [<span class="tlaGBC" title="branch 0 was taken 2359 times"> + </span><span class="tlaGBC" title="branch 1 was taken 60 times"> + </span>]:<span class="tlaGNC">        2419 :   for (; fill &lt; kBlockSize - 8; ++fill) {</span></span>
 <span id="L146"><span class="lineNum">     146</span>                 :<span class="tlaGNC">        2359 :     state.buffer[fill] = 0;</span></span>
 <span id="L147"><span class="lineNum">     147</span>                 :             :   }</span>
-<span id="L148"><span class="lineNum">     148</span>         [<span class="tlaGBC" title="Branch 0 was taken 480 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 60 times"> + </span>]:<span class="tlaGNC">         540 :   for (std::size_t i = 0; i &lt; 8; ++i) {</span></span>
+<span id="L148"><span class="lineNum">     148</span>         [<span class="tlaGBC" title="branch 0 was taken 480 times"> + </span><span class="tlaGBC" title="branch 1 was taken 60 times"> + </span>]:<span class="tlaGNC">         540 :   for (std::size_t i = 0; i &lt; 8; ++i) {</span></span>
 <span id="L149"><span class="lineNum">     149</span>                 :<span class="tlaGNC">         480 :     state.buffer[(kBlockSize - 8) + i] = static_cast&lt;char&gt;(total_bits &gt;&gt; (56 - (8 * i)));</span></span>
 <span id="L150"><span class="lineNum">     150</span>                 :             :   }</span>
 <span id="L151"><span class="lineNum">     151</span>                 :<span class="tlaGNC">          60 :   Compress(state.hash, state.buffer.data());</span></span>
 <span id="L152"><span class="lineNum">     152</span>                 :             : </span>
 <span id="L153"><span class="lineNum">     153</span>                 :<span class="tlaGNC">          60 :   std::array&lt;uint8_t, 20&gt; digest = {};</span></span>
-<span id="L154"><span class="lineNum">     154</span>         [<span class="tlaGBC" title="Branch 0 was taken 1200 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 60 times"> + </span>]:<span class="tlaGNC">        1260 :   for (std::size_t i = 0; i &lt; 20; ++i) {</span></span>
+<span id="L154"><span class="lineNum">     154</span>         [<span class="tlaGBC" title="branch 0 was taken 1200 times"> + </span><span class="tlaGBC" title="branch 1 was taken 60 times"> + </span>]:<span class="tlaGNC">        1260 :   for (std::size_t i = 0; i &lt; 20; ++i) {</span></span>
 <span id="L155"><span class="lineNum">     155</span>                 :<span class="tlaGNC">        1200 :     digest[i] = static_cast&lt;uint8_t&gt;(state.hash[i / 4] &gt;&gt; (24 - (8 * (i % 4))));</span></span>
 <span id="L156"><span class="lineNum">     156</span>                 :             :   }</span>
 <span id="L157"><span class="lineNum">     157</span>                 :<span class="tlaGNC">          60 :   return digest;</span></span>
@@ -282,7 +289,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

@@ -292,69 +292,69 @@
   },
   "targets": {
     "overall": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "container": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "diff": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "digest": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "file": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "hash": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "json": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "log": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "mope": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "status": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "strings": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "testing": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     },
     "types": {
-      "lines": 88,
-      "functions": 80,
-      "branches": 60
+      "lines": 90,
+      "functions": 95,
+      "branches": 82
     }
   }
 }

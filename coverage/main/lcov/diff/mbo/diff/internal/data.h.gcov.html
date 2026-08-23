@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - diff/mbo/diff/internal/data.h</title>
   <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../../index.html">Report overview</a> &middot; <a href="../../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="../../../index.html">diff</a>/<a href="../../index.html">mbo</a>/<a href="../index.html">diff</a>/<a href="index.html">internal</a> - data.h<span style="font-size: 80%;"> (source / <a href="data.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../../index.html" title="Click to go to directory diff">diff</a>/<a href="../../index.html" title="Click to go to directory mbo">mbo</a>/<a href="../index.html" title="Click to go to directory diff">diff</a>/<a href="index.html" title="Click to go to directory internal">internal</a> - data.h<span style="font-size: 80%;"> (source / <a href="data.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,18 +51,11 @@
             <td class="headerCovTableEntry">8</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
+            <td class="headerCovTableEntryMed">66.7&nbsp;%</td>
             <td class="headerCovTableEntry">6</td>
             <td class="headerCovTableEntry">4</td>
           </tr>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -114,7 +121,7 @@
 <span id="L36"><span class="lineNum">      36</span>                 :             :   };</span>
 <span id="L37"><span class="lineNum">      37</span>                 :             : </span>
 <span id="L38"><span class="lineNum">      38</span>                 :             :   Data() = delete;</span>
-<span id="L39"><span class="lineNum">      39</span>                 :<span class="tlaGNC tlaBgGNC">         345 :   ~Data() = default;</span></span>
+<span id="L39"><span class="lineNum">      39</span>                 :<span class="tlaGNC">         345 :   ~Data() = default;</span></span>
 <span id="L40"><span class="lineNum">      40</span>                 :             : </span>
 <span id="L41"><span class="lineNum">      41</span>                 :             :   Data(</span>
 <span id="L42"><span class="lineNum">      42</span>                 :             :       const DiffOptions&amp; options,</span>
@@ -127,14 +134,14 @@
 <span id="L49"><span class="lineNum">      49</span>                 :             :   Data&amp; operator=(Data&amp;&amp;) = delete;</span>
 <span id="L50"><span class="lineNum">      50</span>                 :             : </span>
 <span id="L51"><span class="lineNum">      51</span>                 :             :   // NOLINTNEXTLINE(*-avoid-unchecked-container-access): Done() guards; hot line fetch.</span>
-<span id="L52"><span class="lineNum">      52</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 5483 times"> + </span>]:<span class="tlaGNC">        5484 :   std::string_view Next() noexcept { return Done() ? &quot;&quot; : text_[idx_++].line; }</span></span>
+<span id="L52"><span class="lineNum">      52</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5483 times"> + </span>]:<span class="tlaGNC">        5484 :   std::string_view Next() noexcept { return Done() ? &quot;&quot; : text_[idx_++].line; }</span></span>
 <span id="L53"><span class="lineNum">      53</span>                 :             : </span>
 <span id="L54"><span class="lineNum">      54</span>                 :             :   // NOLINTNEXTLINE(*-avoid-unchecked-container-access): Done() guards; hot line fetch.</span>
-<span id="L55"><span class="lineNum">      55</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 4301 times"> + </span>]:<span class="tlaGNC">        4301 :   std::string_view Line() const noexcept { return Done() ? &quot;&quot; : text_[idx_].line; }</span></span>
+<span id="L55"><span class="lineNum">      55</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 4301 times"> + </span>]:<span class="tlaGNC">        4301 :   std::string_view Line() const noexcept { return Done() ? &quot;&quot; : text_[idx_].line; }</span></span>
 <span id="L56"><span class="lineNum">      56</span>                 :             : </span>
 <span id="L57"><span class="lineNum">      57</span>                 :<span class="tlaGNC">        5880 :   const LineCache&amp; GetCache(std::size_t ofs) const noexcept {</span></span>
 <span id="L58"><span class="lineNum">      58</span>                 :<span class="tlaGNC">        5880 :     ofs += idx_;</span></span>
-<span id="L59"><span class="lineNum">      59</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 5880 times"> + </span>]:<span class="tlaGNC">        5880 :     ABSL_CHECK_LT(ofs, Size());</span></span>
+<span id="L59"><span class="lineNum">      59</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 5880 times"> + </span>]:<span class="tlaGNC">        5880 :     ABSL_CHECK_LT(ofs, Size());</span></span>
 <span id="L60"><span class="lineNum">      60</span>                 :<span class="tlaGNC">        5880 :     return text_.at(ofs);</span></span>
 <span id="L61"><span class="lineNum">      61</span>                 :             :   }</span>
 <span id="L62"><span class="lineNum">      62</span>                 :             : </span>
@@ -186,7 +193,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - digest/mbo/digest/digest_hmac.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">digest</a>/<a href="../index.html">mbo</a>/<a href="index.html">digest</a> - digest_hmac.h<span style="font-size: 80%;"> (source / <a href="digest_hmac.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory digest">digest</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory digest">digest</a> - digest_hmac.h<span style="font-size: 80%;"> (source / <a href="digest_hmac.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">35</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -139,21 +146,21 @@
 <span id="L61"><span class="lineNum">      61</span>                 :             :     std::array&lt;char, kBlockSize&gt; opad = {};</span>
 <span id="L62"><span class="lineNum">      62</span>                 :             :   };</span>
 <span id="L63"><span class="lineNum">      63</span>                 :             : </span>
-<span id="L64"><span class="lineNum">      64</span>                 :<span class="tlaGNC tlaBgGNC">          30 :   static constexpr StreamState StreamInit(std::string_view key) noexcept {</span></span>
+<span id="L64"><span class="lineNum">      64</span>                 :<span class="tlaGNC">          30 :   static constexpr StreamState StreamInit(std::string_view key) noexcept {</span></span>
 <span id="L65"><span class="lineNum">      65</span>                 :<span class="tlaGNC">          30 :     std::array&lt;char, kBlockSize&gt; key_block = {};</span></span>
-<span id="L66"><span class="lineNum">      66</span>         [<span class="tlaGBC" title="Branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 25 times"> + </span>]:<span class="tlaGNC">          30 :     if (key.size() &gt; kBlockSize) {</span></span>
+<span id="L66"><span class="lineNum">      66</span>         [<span class="tlaGBC" title="branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="branch 1 was taken 25 times"> + </span>]:<span class="tlaGNC">          30 :     if (key.size() &gt; kBlockSize) {</span></span>
 <span id="L67"><span class="lineNum">      67</span>                 :<span class="tlaGNC">           5 :       const DigestType key_digest = Algo::Digest(key);</span></span>
-<span id="L68"><span class="lineNum">      68</span>         [<span class="tlaGBC" title="Branch 0 was taken 164 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">         169 :       for (std::size_t i = 0; i &lt; kDigestSize; ++i) {</span></span>
+<span id="L68"><span class="lineNum">      68</span>         [<span class="tlaGBC" title="branch 0 was taken 164 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">         169 :       for (std::size_t i = 0; i &lt; kDigestSize; ++i) {</span></span>
 <span id="L69"><span class="lineNum">      69</span>                 :<span class="tlaGNC">         164 :         key_block[i] = static_cast&lt;char&gt;(key_digest[i]);</span></span>
 <span id="L70"><span class="lineNum">      70</span>                 :             :       }</span>
 <span id="L71"><span class="lineNum">      71</span>                 :             :     } else {</span>
-<span id="L72"><span class="lineNum">      72</span>         [<span class="tlaGBC" title="Branch 0 was taken 501 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 25 times"> + </span>]:<span class="tlaGNC">         526 :       for (std::size_t i = 0; i &lt; key.size(); ++i) {</span></span>
+<span id="L72"><span class="lineNum">      72</span>         [<span class="tlaGBC" title="branch 0 was taken 501 times"> + </span><span class="tlaGBC" title="branch 1 was taken 25 times"> + </span>]:<span class="tlaGNC">         526 :       for (std::size_t i = 0; i &lt; key.size(); ++i) {</span></span>
 <span id="L73"><span class="lineNum">      73</span>                 :<span class="tlaGNC">         501 :         key_block[i] = key[i];</span></span>
 <span id="L74"><span class="lineNum">      74</span>                 :             :       }</span>
 <span id="L75"><span class="lineNum">      75</span>                 :             :     }</span>
 <span id="L76"><span class="lineNum">      76</span>                 :<span class="tlaGNC">          30 :     StreamState state = {.inner = Algo::StreamInit(), .opad = {}};</span></span>
 <span id="L77"><span class="lineNum">      77</span>                 :<span class="tlaGNC">          30 :     std::array&lt;char, kBlockSize&gt; ipad = {};</span></span>
-<span id="L78"><span class="lineNum">      78</span>         [<span class="tlaGBC" title="Branch 0 was taken 2736 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 30 times"> + </span>]:<span class="tlaGNC">        2766 :     for (std::size_t i = 0; i &lt; kBlockSize; ++i) {</span></span>
+<span id="L78"><span class="lineNum">      78</span>         [<span class="tlaGBC" title="branch 0 was taken 2736 times"> + </span><span class="tlaGBC" title="branch 1 was taken 30 times"> + </span>]:<span class="tlaGNC">        2766 :     for (std::size_t i = 0; i &lt; kBlockSize; ++i) {</span></span>
 <span id="L79"><span class="lineNum">      79</span>                 :<span class="tlaGNC">        2736 :       ipad[i] = static_cast&lt;char&gt;(static_cast&lt;uint8_t&gt;(key_block[i]) ^ 0x36U);</span></span>
 <span id="L80"><span class="lineNum">      80</span>                 :<span class="tlaGNC">        2736 :       state.opad[i] = static_cast&lt;char&gt;(static_cast&lt;uint8_t&gt;(key_block[i]) ^ 0x5CU);</span></span>
 <span id="L81"><span class="lineNum">      81</span>                 :             :     }</span>
@@ -169,7 +176,7 @@
 <span id="L91"><span class="lineNum">      91</span>                 :<span class="tlaGNC">          35 :   static constexpr DigestType StreamFinalize(StreamState state) noexcept {</span></span>
 <span id="L92"><span class="lineNum">      92</span>                 :<span class="tlaGNC">          35 :     const DigestType inner_digest = Algo::StreamFinalize(state.inner);</span></span>
 <span id="L93"><span class="lineNum">      93</span>                 :<span class="tlaGNC">          35 :     std::array&lt;char, kDigestSize&gt; inner_chars = {};</span></span>
-<span id="L94"><span class="lineNum">      94</span>         [<span class="tlaGBC" title="Branch 0 was taken 1148 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 35 times"> + </span>]:<span class="tlaGNC">        1183 :     for (std::size_t i = 0; i &lt; kDigestSize; ++i) {</span></span>
+<span id="L94"><span class="lineNum">      94</span>         [<span class="tlaGBC" title="branch 0 was taken 1148 times"> + </span><span class="tlaGBC" title="branch 1 was taken 35 times"> + </span>]:<span class="tlaGNC">        1183 :     for (std::size_t i = 0; i &lt; kDigestSize; ++i) {</span></span>
 <span id="L95"><span class="lineNum">      95</span>                 :<span class="tlaGNC">        1148 :       inner_chars[i] = static_cast&lt;char&gt;(inner_digest[i]);</span></span>
 <span id="L96"><span class="lineNum">      96</span>                 :             :     }</span>
 <span id="L97"><span class="lineNum">      97</span>                 :<span class="tlaGNC">          35 :     typename Algo::StreamState outer = Algo::StreamInit();</span></span>
@@ -222,7 +229,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

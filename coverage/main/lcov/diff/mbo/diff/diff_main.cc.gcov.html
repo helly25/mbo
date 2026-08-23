@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - diff/mbo/diff/diff_main.cc</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">diff</a>/<a href="../index.html">mbo</a>/<a href="index.html">diff</a> - diff_main.cc<span style="font-size: 80%;"> (source / <a href="diff_main.cc.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory diff">diff</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory diff">diff</a> - diff_main.cc<span style="font-size: 80%;"> (source / <a href="diff_main.cc.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,18 +51,11 @@
             <td class="headerCovTableEntry">16</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryLo">72.0&nbsp;%</td>
+            <td class="headerCovTableEntryMed">72.0&nbsp;%</td>
             <td class="headerCovTableEntry">50</td>
             <td class="headerCovTableEntry">36</td>
           </tr>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -115,7 +122,7 @@
 <span id="L37"><span class="lineNum">      37</span>                 :             : </span>
 <span id="L38"><span class="lineNum">      38</span>                 :             : // NOLINTBEGIN(*avoid-non-const-global-variables,*abseil-no-namespace)</span>
 <span id="L39"><span class="lineNum">      39</span>                 :             : </span>
-<span id="L40"><span class="lineNum">      40</span>                 :<span class="tlaGNC tlaBgGNC">         114 : ABSL_FLAG(  //</span></span>
+<span id="L40"><span class="lineNum">      40</span>                 :<span class="tlaGNC">         114 : ABSL_FLAG(  //</span></span>
 <span id="L41"><span class="lineNum">      41</span>                 :             :     std::string,</span>
 <span id="L42"><span class="lineNum">      42</span>                 :             :     algorithm,</span>
 <span id="L43"><span class="lineNum">      43</span>                 :             :     &quot;myers&quot;,</span>
@@ -281,8 +288,8 @@
 <span id="L203"><span class="lineNum">     203</span>                 :<span class="tlaGNC">          60 :   const Artefact::Options options{.skip_time = absl::GetFlag(FLAGS_skip_time)};</span></span>
 <span id="L204"><span class="lineNum">     204</span>                 :<span class="tlaGNC">          60 :   const std::size_t max_lines = absl::GetFlag(FLAGS_max_lines);</span></span>
 <span id="L205"><span class="lineNum">     205</span>                 :             :   auto result =</span>
-<span id="L206"><span class="lineNum">     206</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 60 times"> + </span>]:<span class="tlaGNC">          60 :       max_lines &gt; 0 ? Artefact::ReadMaxLines(file_name, max_lines, options) : Artefact::Read(file_name, options);</span></span>
-<span id="L207"><span class="lineNum">     207</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 59 times"> + </span>]:<span class="tlaGNC">          60 :   if (!result.ok()) {</span></span>
+<span id="L206"><span class="lineNum">     206</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 60 times"> + </span>]:<span class="tlaGNC">          60 :       max_lines &gt; 0 ? Artefact::ReadMaxLines(file_name, max_lines, options) : Artefact::Read(file_name, options);</span></span>
+<span id="L207"><span class="lineNum">     207</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 59 times"> + </span>]:<span class="tlaGNC">          60 :   if (!result.ok()) {</span></span>
 <span id="L208"><span class="lineNum">     208</span>                 :<span class="tlaGNC">           1 :     ABSL_LOG(ERROR) &lt;&lt; &quot;ERROR: &quot; &lt;&lt; result.status();</span></span>
 <span id="L209"><span class="lineNum">     209</span>                 :             :   }</span>
 <span id="L210"><span class="lineNum">     210</span>                 :<span class="tlaGNC">          60 :   return result;</span></span>
@@ -290,8 +297,8 @@
 <span id="L212"><span class="lineNum">     212</span>                 :             : </span>
 <span id="L213"><span class="lineNum">     213</span>                 :             : template&lt;typename T, typename U&gt;</span>
 <span id="L214"><span class="lineNum">     214</span>                 :<span class="tlaGNC">          58 : T GetFlagOrDefault(const absl::Flag&lt;T&gt;&amp; flag, bool override_default, const U&amp; new_default) {</span></span>
-<span id="L215"><span class="lineNum">     215</span>   [<span class="tlaGBC" title="Branch 0 was taken 45 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 13 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 28 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 17 times"> + </span> :<span class="tlaGNC">          58 :   if (flag.IsSpecifiedOnCommandLine() || !override_default) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 41 times"> + </span><span class="tlaGBC" title="Branch 5 was taken 17 times"> + </span>]
+<span id="L215"><span class="lineNum">     215</span>   [<span class="tlaGBC" title="branch 0 was taken 45 times"> + </span><span class="tlaGBC" title="branch 1 was taken 13 times"> + </span><span class="tlaGBC" title="branch 2 was taken 28 times"> + </span><span class="tlaGBC" title="branch 3 was taken 17 times"> + </span> :<span class="tlaGNC">          58 :   if (flag.IsSpecifiedOnCommandLine() || !override_default) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 41 times"> + </span><span class="tlaGBC" title="branch 5 was taken 17 times"> + </span>]
 <span id="L216"><span class="lineNum">     216</span>                 :<span class="tlaGNC">          41 :     return absl::GetFlag(flag);</span></span>
 <span id="L217"><span class="lineNum">     217</span>                 :             :   } else {</span>
 <span id="L218"><span class="lineNum">     218</span>                 :<span class="tlaGNC">          17 :     return new_default;</span></span>
@@ -311,28 +318,28 @@
 <span id="L232"><span class="lineNum">     232</span>                 :<span class="tlaGNC">          29 :   const std::string strip_comments = absl::GetFlag(FLAGS_strip_comments);</span></span>
 <span id="L233"><span class="lineNum">     233</span>                 :             :   const std::optional&lt;Diff::Options::Algorithm&gt; algorithm =</span>
 <span id="L234"><span class="lineNum">     234</span>                 :<span class="tlaGNC">          29 :       Diff::Options::ParseAlgorithmFlag(absl::GetFlag(FLAGS_algorithm));</span></span>
-<span id="L235"><span class="lineNum">     235</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 29 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 29 times"> + </span>]:<span class="tlaGNC">          29 :   ABSL_QCHECK(algorithm) &lt;&lt; &quot;Unknown algorithm&quot;;</span></span>
+<span id="L235"><span class="lineNum">     235</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 29 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 29 times"> + </span>]:<span class="tlaGNC">          29 :   ABSL_QCHECK(algorithm) &lt;&lt; &quot;Unknown algorithm&quot;;</span></span>
 <span id="L236"><span class="lineNum">     236</span>                 :             :   const std::optional&lt;Diff::Options::OutputFormat&gt; output_format =</span>
 <span id="L237"><span class="lineNum">     237</span>                 :<span class="tlaGNC">          29 :       Diff::Options::ParseOutputFormatFlag(absl::GetFlag(FLAGS_format));</span></span>
-<span id="L238"><span class="lineNum">     238</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 29 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 29 times"> + </span>]:<span class="tlaGNC">          29 :   ABSL_QCHECK(output_format) &lt;&lt; &quot;Unknown format&quot;;</span></span>
-<span id="L239"><span class="lineNum">     239</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 28 times"> + </span>]:<span class="tlaGNC">          29 :   if (absl::GetFlag(FLAGS_algorithm) == &quot;unified&quot;) {</span></span>
+<span id="L238"><span class="lineNum">     238</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 29 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 29 times"> + </span>]:<span class="tlaGNC">          29 :   ABSL_QCHECK(output_format) &lt;&lt; &quot;Unknown format&quot;;</span></span>
+<span id="L239"><span class="lineNum">     239</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 28 times"> + </span>]:<span class="tlaGNC">          29 :   if (absl::GetFlag(FLAGS_algorithm) == &quot;unified&quot;) {</span></span>
 <span id="L240"><span class="lineNum">     240</span>                 :             :     // The CLI tests exercise both outcomes, but QCHECK failure aborts before GCC flushes counters.</span>
-<span id="L241"><span class="lineNum">     241</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     ABSL_QCHECK_EQ(output_format, Diff::Options::OutputFormat::kUnified)  // LCOV_EXCL_BR_LINE</span></span>
+<span id="L241"><span class="lineNum">     241</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     ABSL_QCHECK_EQ(output_format, Diff::Options::OutputFormat::kUnified)  // LCOV_EXCL_BR_LINE</span></span>
 <span id="L242"><span class="lineNum">     242</span>                 :             :         &lt;&lt; &quot;The deprecated '--algorithm=unified' alias implies '--format=unified'.&quot;;</span>
 <span id="L243"><span class="lineNum">     243</span>                 :             :   }</span>
 <span id="L244"><span class="lineNum">     244</span>                 :             :   const std::optional&lt;Diff::Options::FileHeaderUse&gt; file_header_use =</span>
 <span id="L245"><span class="lineNum">     245</span>                 :<span class="tlaGNC">          29 :       Diff::Options::ParseFileHeaderUse(absl::GetFlag(FLAGS_file_header_use));</span></span>
-<span id="L246"><span class="lineNum">     246</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 29 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 29 times"> + </span>]:<span class="tlaGNC">          29 :   ABSL_QCHECK(file_header_use) &lt;&lt; &quot;Unknown file_header_use&quot;;</span></span>
+<span id="L246"><span class="lineNum">     246</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 29 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 29 times"> + </span>]:<span class="tlaGNC">          29 :   ABSL_QCHECK(file_header_use) &lt;&lt; &quot;Unknown file_header_use&quot;;</span></span>
 <span id="L247"><span class="lineNum">     247</span>                 :<span class="tlaGNC">          29 :   const bool is_direct = algorithm == Diff::Options::Algorithm::kDirect;</span></span>
 <span id="L248"><span class="lineNum">     248</span>                 :<span class="tlaGNC">          29 :   const bool is_normal = output_format == Diff::Options::OutputFormat::kNormal;</span></span>
 <span id="L249"><span class="lineNum">     249</span>                 :<span class="tlaGNC">          29 :   const bool is_side_by_side = output_format == Diff::Options::OutputFormat::kSideBySide;</span></span>
 <span id="L250"><span class="lineNum">     250</span>                 :             :   // Side-by-side shows the full files by default (halved to keep the context</span>
 <span id="L251"><span class="lineNum">     251</span>                 :             :   // size arithmetic overflow free); direct and normal formats show none.</span>
-<span id="L252"><span class="lineNum">     252</span>         [<span class="tlaGBC" title="Branch 0 was taken 7 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 22 times"> + </span>]:<span class="tlaGNC">          29 :   const std::size_t default_context = is_side_by_side ? std::numeric_limits&lt;std::size_t&gt;::max() / 2 : 0;</span></span>
+<span id="L252"><span class="lineNum">     252</span>         [<span class="tlaGBC" title="branch 0 was taken 7 times"> + </span><span class="tlaGBC" title="branch 1 was taken 22 times"> + </span>]:<span class="tlaGNC">          29 :   const std::size_t default_context = is_side_by_side ? std::numeric_limits&lt;std::size_t&gt;::max() / 2 : 0;</span></span>
 <span id="L253"><span class="lineNum">     253</span>                 :             :   return Diff::Options{</span>
 <span id="L254"><span class="lineNum">     254</span>                 :<span class="tlaGNC">          29 :       .algorithm = *algorithm,</span></span>
 <span id="L255"><span class="lineNum">     255</span>                 :<span class="tlaGNC">          58 :       .output_format = *output_format,</span></span>
-<span id="L256"><span class="lineNum">     256</span>   [<span class="tlaGBC" title="Branch 0 was taken 17 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 5 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 12 times"> + </span>]:<span class="tlaGNC">          29 :       .context_size = GetFlagOrDefault(FLAGS_context, is_direct || is_normal || is_side_by_side, default_context),</span></span>
+<span id="L256"><span class="lineNum">     256</span>   [<span class="tlaGBC" title="branch 0 was taken 17 times"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span><span class="tlaGBC" title="branch 2 was taken 5 times"> + </span><span class="tlaGBC" title="branch 3 was taken 12 times"> + </span>]:<span class="tlaGNC">          29 :       .context_size = GetFlagOrDefault(FLAGS_context, is_direct || is_normal || is_side_by_side, default_context),</span></span>
 <span id="L257"><span class="lineNum">     257</span>                 :<span class="tlaGNC">          29 :       .side_by_side_width = absl::GetFlag(FLAGS_width),</span></span>
 <span id="L258"><span class="lineNum">     258</span>                 :<span class="tlaGNC">          58 :       .file_header_use = *file_header_use,</span></span>
 <span id="L259"><span class="lineNum">     259</span>                 :<span class="tlaGNC">          29 :       .ignore_blank_lines = absl::GetFlag(FLAGS_ignore_blank_lines),</span></span>
@@ -346,15 +353,15 @@
 <span id="L267"><span class="lineNum">     267</span>                 :<span class="tlaGNC">          29 :       .skip_left_deletions = absl::GetFlag(FLAGS_skip_left_deletions),</span></span>
 <span id="L268"><span class="lineNum">     268</span>                 :<span class="tlaGNC">          58 :       .ignore_matching_lines = [&amp;]() -&gt; std::optional&lt;RE2&gt; {</span></span>
 <span id="L269"><span class="lineNum">     269</span>                 :<span class="tlaGNC">          29 :         std::string regex = absl::GetFlag(FLAGS_ignore_matching_lines);</span></span>
-<span id="L270"><span class="lineNum">     270</span>         [<span class="tlaGBC" title="Branch 0 was taken 29 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">          29 :         if (regex.empty()) {</span></span>
+<span id="L270"><span class="lineNum">     270</span>         [<span class="tlaGBC" title="branch 0 was taken 29 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          29 :         if (regex.empty()) {</span></span>
 <span id="L271"><span class="lineNum">     271</span>                 :<span class="tlaGNC">          29 :           return std::nullopt;</span></span>
 <span id="L272"><span class="lineNum">     272</span>                 :             :         }</span>
-<span id="L273"><span class="lineNum">     273</span>                 :<span class="tlaUNC tlaBgUNC">           0 :         return std::make_optional&lt;RE2&gt;(regex);</span></span>
-<span id="L274"><span class="lineNum">     274</span>                 :<span class="tlaGNC tlaBgGNC">          29 :       }(),</span></span>
+<span id="L273"><span class="lineNum">     273</span>                 :<span class="tlaUNC">           0 :         return std::make_optional&lt;RE2&gt;(regex);</span></span>
+<span id="L274"><span class="lineNum">     274</span>                 :<span class="tlaGNC">          29 :       }(),</span></span>
 <span id="L275"><span class="lineNum">     275</span>                 :<span class="tlaGNC">          87 :       .strip_comments = [&amp;]() -&gt; Diff::Options::StripCommentOptions {</span></span>
-<span id="L276"><span class="lineNum">     276</span>         [<span class="tlaGBC" title="Branch 0 was taken 29 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">          29 :         if (strip_comments.empty()) {</span></span>
+<span id="L276"><span class="lineNum">     276</span>         [<span class="tlaGBC" title="branch 0 was taken 29 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          29 :         if (strip_comments.empty()) {</span></span>
 <span id="L277"><span class="lineNum">     277</span>                 :<span class="tlaGNC">          29 :           return Diff::Options::NoCommentStripping{};</span></span>
-<span id="L278"><span class="lineNum">     278</span>         [<span class="tlaUNC" title="Branch 0 was not executed"> # </span><span class="tlaUNC" title="Branch 1 was not executed"> # </span>]:<span class="tlaUNC tlaBgUNC">           0 :         } else if (absl::GetFlag(FLAGS_strip_parsed_comments)) {</span></span>
+<span id="L278"><span class="lineNum">     278</span>         [<span class="tlaUNC" title="branch 0 was not executed"> # </span><span class="tlaUNC" title="branch 1 was not executed"> # </span>]:<span class="tlaUNC">           0 :         } else if (absl::GetFlag(FLAGS_strip_parsed_comments)) {</span></span>
 <span id="L279"><span class="lineNum">     279</span>                 :<span class="tlaUNC">           0 :           return mbo::strings::StripParsedCommentArgs{</span></span>
 <span id="L280"><span class="lineNum">     280</span>                 :             :               .parse = {</span>
 <span id="L281"><span class="lineNum">     281</span>                 :<span class="tlaUNC">           0 :                   .stop_at_str = strip_comments,</span></span>
@@ -365,29 +372,29 @@
 <span id="L286"><span class="lineNum">     286</span>                 :<span class="tlaUNC">           0 :               .comment_start = strip_comments,</span></span>
 <span id="L287"><span class="lineNum">     287</span>                 :<span class="tlaUNC">           0 :           };</span></span>
 <span id="L288"><span class="lineNum">     288</span>                 :             :         }</span>
-<span id="L289"><span class="lineNum">     289</span>                 :<span class="tlaGNC tlaBgGNC">          29 :       }(),</span></span>
+<span id="L289"><span class="lineNum">     289</span>                 :<span class="tlaGNC">          29 :       }(),</span></span>
 <span id="L290"><span class="lineNum">     290</span>                 :<span class="tlaGNC">          29 :       .regex_replace_lhs{Diff::Options::ParseRegexReplaceFlag(absl::GetFlag(FLAGS_regex_replace_lhs))},</span></span>
 <span id="L291"><span class="lineNum">     291</span>                 :<span class="tlaGNC">          58 :       .regex_replace_rhs{Diff::Options::ParseRegexReplaceFlag(absl::GetFlag(FLAGS_regex_replace_rhs))},</span></span>
 <span id="L292"><span class="lineNum">     292</span>                 :             :       .strip_file_header_prefix = absl::GetFlag(FLAGS_strip_file_header_prefix),</span>
-<span id="L293"><span class="lineNum">     293</span>         [<span class="tlaGBC" title="Branch 0 was taken 21 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">         174 :   };</span></span>
+<span id="L293"><span class="lineNum">     293</span>         [<span class="tlaGBC" title="branch 0 was taken 21 times"> + </span><span class="tlaGBC" title="branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">         174 :   };</span></span>
 <span id="L294"><span class="lineNum">     294</span>                 :<span class="tlaGNC">          29 : }</span></span>
 <span id="L295"><span class="lineNum">     295</span>                 :             : </span>
 <span id="L296"><span class="lineNum">     296</span>                 :<span class="tlaGNC">          30 : int Diff(std::string_view lhs_name, std::string_view rhs_name) {</span></span>
 <span id="L297"><span class="lineNum">     297</span>                 :<span class="tlaGNC">          30 :   const auto lhs = Read(lhs_name);</span></span>
-<span id="L298"><span class="lineNum">     298</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 30 times"> + </span>]:<span class="tlaGNC">          30 :   if (!lhs.ok()) {</span></span>
-<span id="L299"><span class="lineNum">     299</span>                 :<span class="tlaUNC tlaBgUNC">           0 :     return kExitTrouble;</span></span>
+<span id="L298"><span class="lineNum">     298</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 30 times"> + </span>]:<span class="tlaGNC">          30 :   if (!lhs.ok()) {</span></span>
+<span id="L299"><span class="lineNum">     299</span>                 :<span class="tlaUNC">           0 :     return kExitTrouble;</span></span>
 <span id="L300"><span class="lineNum">     300</span>                 :             :   }</span>
-<span id="L301"><span class="lineNum">     301</span>                 :<span class="tlaGNC tlaBgGNC">          30 :   const auto rhs = Read(rhs_name);</span></span>
-<span id="L302"><span class="lineNum">     302</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 29 times"> + </span>]:<span class="tlaGNC">          30 :   if (!rhs.ok()) {</span></span>
+<span id="L301"><span class="lineNum">     301</span>                 :<span class="tlaGNC">          30 :   const auto rhs = Read(rhs_name);</span></span>
+<span id="L302"><span class="lineNum">     302</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 29 times"> + </span>]:<span class="tlaGNC">          30 :   if (!rhs.ok()) {</span></span>
 <span id="L303"><span class="lineNum">     303</span>                 :<span class="tlaGNC">           1 :     return kExitTrouble;</span></span>
 <span id="L304"><span class="lineNum">     304</span>                 :             :   }</span>
 <span id="L305"><span class="lineNum">     305</span>                 :<span class="tlaGNC">          29 :   const Diff::Options diff_options = MakeDiffOptions();</span></span>
 <span id="L306"><span class="lineNum">     306</span>                 :<span class="tlaGNC">          29 :   const auto result = Diff::FileDiff(*lhs, *rhs, diff_options);</span></span>
-<span id="L307"><span class="lineNum">     307</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 29 times"> + </span>]:<span class="tlaGNC">          29 :   if (!result.ok()) {</span></span>
-<span id="L308"><span class="lineNum">     308</span>                 :<span class="tlaUNC tlaBgUNC">           0 :     ABSL_LOG(ERROR) &lt;&lt; &quot;ERROR: &quot; &lt;&lt; result.status();</span></span>
+<span id="L307"><span class="lineNum">     307</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 29 times"> + </span>]:<span class="tlaGNC">          29 :   if (!result.ok()) {</span></span>
+<span id="L308"><span class="lineNum">     308</span>                 :<span class="tlaUNC">           0 :     ABSL_LOG(ERROR) &lt;&lt; &quot;ERROR: &quot; &lt;&lt; result.status();</span></span>
 <span id="L309"><span class="lineNum">     309</span>                 :<span class="tlaUNC">           0 :     return kExitTrouble;</span></span>
 <span id="L310"><span class="lineNum">     310</span>                 :             :   }</span>
-<span id="L311"><span class="lineNum">     311</span>         [<span class="tlaGBC" title="Branch 0 was taken 16 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 13 times"> + </span>]:<span class="tlaGNC tlaBgGNC">          29 :   if (!result-&gt;empty()) {</span></span>
+<span id="L311"><span class="lineNum">     311</span>         [<span class="tlaGBC" title="branch 0 was taken 16 times"> + </span><span class="tlaGBC" title="branch 1 was taken 13 times"> + </span>]:<span class="tlaGNC">          29 :   if (!result-&gt;empty()) {</span></span>
 <span id="L312"><span class="lineNum">     312</span>                 :<span class="tlaGNC">          16 :     std::cout &lt;&lt; *result;</span></span>
 <span id="L313"><span class="lineNum">     313</span>                 :<span class="tlaGNC">          16 :     return kExitDifferent;</span></span>
 <span id="L314"><span class="lineNum">     314</span>                 :             :   }</span>
@@ -409,7 +416,7 @@
 <span id="L330"><span class="lineNum">     330</span>                 :<span class="tlaGNC">          32 :   absl::InitializeLog();</span></span>
 <span id="L331"><span class="lineNum">     331</span>                 :<span class="tlaGNC">          32 :   const std::vector&lt;char*&gt; args = absl::ParseCommandLine(argc, argv);</span></span>
 <span id="L332"><span class="lineNum">     332</span>                 :<span class="tlaGNC">          31 :   mbo::diff::diff_internal::UpdateAbslLogFlags();</span></span>
-<span id="L333"><span class="lineNum">     333</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 30 times"> + </span>]:<span class="tlaGNC">          31 :   if (args.size() != 3) {  // [0] = program</span></span>
+<span id="L333"><span class="lineNum">     333</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 30 times"> + </span>]:<span class="tlaGNC">          31 :   if (args.size() != 3) {  // [0] = program</span></span>
 <span id="L334"><span class="lineNum">     334</span>                 :             :     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)</span>
 <span id="L335"><span class="lineNum">     335</span>                 :<span class="tlaGNC">           1 :     std::cerr &lt;&lt; &quot;Exactly two files are required. Use: &quot; &lt;&lt; fs::path(argv[0]).filename().string() &lt;&lt; &quot; --help\n&quot;;</span></span>
 <span id="L336"><span class="lineNum">     336</span>                 :<span class="tlaGNC">           1 :     return kExitTrouble;</span></span>
@@ -424,7 +431,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

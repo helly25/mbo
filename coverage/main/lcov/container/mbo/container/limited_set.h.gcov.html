@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - container/mbo/container/limited_set.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">container</a>/<a href="../index.html">mbo</a>/<a href="index.html">container</a> - limited_set.h<span style="font-size: 80%;"> (source / <a href="limited_set.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory container">container</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory container">container</a> - limited_set.h<span style="font-size: 80%;"> (source / <a href="limited_set.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -45,15 +51,8 @@
             <td class="headerCovTableEntry">270</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
             <td class="headerCovTableEntryHi">95.5&nbsp;%</td>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -145,7 +152,7 @@
 <span id="L67"><span class="lineNum">      67</span>                 :             :  public:</span>
 <span id="L68"><span class="lineNum">      68</span>                 :             :   using container_internal::LimitedOrdered&lt;Key, Key, Key, CapacityOrOptions, Compare&gt;::LimitedOrdered;</span>
 <span id="L69"><span class="lineNum">      69</span>                 :             : </span>
-<span id="L70"><span class="lineNum">      70</span>                 :<span class="tlaGNC tlaBgGNC">         428 :   constexpr ~LimitedSet() noexcept = default;</span></span>
+<span id="L70"><span class="lineNum">      70</span>                 :<span class="tlaGNC">         428 :   constexpr ~LimitedSet() noexcept = default;</span></span>
 <span id="L71"><span class="lineNum">      71</span>                 :             : </span>
 <span id="L72"><span class="lineNum">      72</span>                 :<span class="tlaGNC">           2 :   constexpr explicit LimitedSet(const Compare&amp; key_comp) noexcept : LimitedBase(key_comp) {}</span></span>
 <span id="L73"><span class="lineNum">      73</span>                 :             : </span>
@@ -266,16 +273,16 @@
 <span id="L188"><span class="lineNum">     188</span>                 :             :     const LimitedSet&lt;RHS, RN, RCompare&gt;&amp; rhs) noexcept {</span>
 <span id="L189"><span class="lineNum">     189</span>                 :<span class="tlaGNC">          20 :   auto lhs_it = lhs.begin();</span></span>
 <span id="L190"><span class="lineNum">     190</span>                 :<span class="tlaGNC">          20 :   auto rhs_it = rhs.begin();</span></span>
-<span id="L191"><span class="lineNum">     191</span>   [<span class="tlaGBC" title="Branch 0 was taken 36 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 32 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 4 times"> + </span> :<span class="tlaGNC">         124 :   while (lhs_it != lhs.end() &amp;&amp; rhs_it != rhs.end()) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 32 times"> + </span><span class="tlaGBC" title="Branch 5 was taken 12 times"> + </span>]
-<span id="L192"><span class="lineNum">     192</span>   [<span class="tlaGBC" title="Branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 12 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">          64 :     const auto comp = *lhs_it &lt;=&gt; *rhs_it;</span></span>
-<span id="L193"><span class="lineNum">     193</span>         [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 24 times"> + </span>]:<span class="tlaGNC">          32 :     if (comp != 0) {</span></span>
+<span id="L191"><span class="lineNum">     191</span>   [<span class="tlaGBC" title="branch 0 was taken 36 times"> + </span><span class="tlaGBC" title="branch 1 was taken 8 times"> + </span><span class="tlaGBC" title="branch 2 was taken 32 times"> + </span><span class="tlaGBC" title="branch 3 was taken 4 times"> + </span> :<span class="tlaGNC">         124 :   while (lhs_it != lhs.end() &amp;&amp; rhs_it != rhs.end()) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 32 times"> + </span><span class="tlaGBC" title="branch 5 was taken 12 times"> + </span>]
+<span id="L192"><span class="lineNum">     192</span>   [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 12 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">          64 :     const auto comp = *lhs_it &lt;=&gt; *rhs_it;</span></span>
+<span id="L193"><span class="lineNum">     193</span>         [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 24 times"> + </span>]:<span class="tlaGNC">          32 :     if (comp != 0) {</span></span>
 <span id="L194"><span class="lineNum">     194</span>                 :<span class="tlaGNC">           8 :       return comp;</span></span>
 <span id="L195"><span class="lineNum">     195</span>                 :             :     }</span>
 <span id="L196"><span class="lineNum">     196</span>                 :<span class="tlaGNC">          24 :     ++lhs_it;</span></span>
 <span id="L197"><span class="lineNum">     197</span>                 :<span class="tlaGNC">          24 :     ++rhs_it;</span></span>
 <span id="L198"><span class="lineNum">     198</span>                 :             :   }</span>
-<span id="L199"><span class="lineNum">     199</span>   [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 4 times"> + </span>]:<span class="tlaGNC">          12 :   return lhs.size() &lt;=&gt; rhs.size();</span></span>
+<span id="L199"><span class="lineNum">     199</span>   [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span><span class="tlaGBC" title="branch 2 was taken 4 times"> + </span><span class="tlaGBC" title="branch 3 was taken 4 times"> + </span>]:<span class="tlaGNC">          12 :   return lhs.size() &lt;=&gt; rhs.size();</span></span>
 <span id="L200"><span class="lineNum">     200</span>                 :             : }</span>
 <span id="L201"><span class="lineNum">     201</span>                 :             : </span>
 <span id="L202"><span class="lineNum">     202</span>                 :             : template&lt;auto LN, auto RN, typename LHS, typename RHS, typename LCompare, typename RCompare&gt;</span>
@@ -283,15 +290,15 @@
 <span id="L204"><span class="lineNum">     204</span>                 :<span class="tlaGNC">          18 : constexpr inline bool operator==(</span></span>
 <span id="L205"><span class="lineNum">     205</span>                 :             :     const LimitedSet&lt;LHS, LN, LCompare&gt;&amp; lhs,</span>
 <span id="L206"><span class="lineNum">     206</span>                 :             :     const LimitedSet&lt;RHS, RN, RCompare&gt;&amp; rhs) noexcept {</span>
-<span id="L207"><span class="lineNum">     207</span>         [<span class="tlaGBC" title="Branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 12 times"> + </span>]:<span class="tlaGNC">          18 :   if (lhs.size() != rhs.size()) {</span></span>
+<span id="L207"><span class="lineNum">     207</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 12 times"> + </span>]:<span class="tlaGNC">          18 :   if (lhs.size() != rhs.size()) {</span></span>
 <span id="L208"><span class="lineNum">     208</span>                 :<span class="tlaGNC">           6 :     return false;</span></span>
 <span id="L209"><span class="lineNum">     209</span>                 :             :   }</span>
 <span id="L210"><span class="lineNum">     210</span>                 :<span class="tlaGNC">          12 :   auto lhs_it = lhs.begin();</span></span>
 <span id="L211"><span class="lineNum">     211</span>                 :<span class="tlaGNC">          12 :   auto rhs_it = rhs.begin();</span></span>
-<span id="L212"><span class="lineNum">     212</span>   [<span class="tlaGBC" title="Branch 0 was taken 24 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 24 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">          84 :   while (lhs_it != lhs.end() &amp;&amp; rhs_it != rhs.end()) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 24 times"> + </span><span class="tlaGBC" title="Branch 5 was taken 6 times"> + </span>]
-<span id="L213"><span class="lineNum">     213</span>   [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 9 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span>]:<span class="tlaGNC">          48 :     const auto comp = *lhs_it &lt;=&gt; *rhs_it;</span></span>
-<span id="L214"><span class="lineNum">     214</span>         [<span class="tlaGBC" title="Branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 18 times"> + </span>]:<span class="tlaGNC">          24 :     if (comp != 0) {</span></span>
+<span id="L212"><span class="lineNum">     212</span>   [<span class="tlaGBC" title="branch 0 was taken 24 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span><span class="tlaGBC" title="branch 2 was taken 24 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">          84 :   while (lhs_it != lhs.end() &amp;&amp; rhs_it != rhs.end()) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 24 times"> + </span><span class="tlaGBC" title="branch 5 was taken 6 times"> + </span>]
+<span id="L213"><span class="lineNum">     213</span>   [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span><span class="tlaGBC" title="branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">          48 :     const auto comp = *lhs_it &lt;=&gt; *rhs_it;</span></span>
+<span id="L214"><span class="lineNum">     214</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 18 times"> + </span>]:<span class="tlaGNC">          24 :     if (comp != 0) {</span></span>
 <span id="L215"><span class="lineNum">     215</span>                 :<span class="tlaGNC">           6 :       return false;</span></span>
 <span id="L216"><span class="lineNum">     216</span>                 :             :     }</span>
 <span id="L217"><span class="lineNum">     217</span>                 :<span class="tlaGNC">          18 :     ++lhs_it;</span></span>
@@ -307,10 +314,10 @@
 <span id="L227"><span class="lineNum">     227</span>                 :             :     const LimitedSet&lt;RHS, RN, RCompare&gt;&amp; rhs) noexcept {</span>
 <span id="L228"><span class="lineNum">     228</span>                 :<span class="tlaGNC">          16 :   auto lhs_it = lhs.begin();</span></span>
 <span id="L229"><span class="lineNum">     229</span>                 :<span class="tlaGNC">          16 :   auto rhs_it = rhs.begin();</span></span>
-<span id="L230"><span class="lineNum">     230</span>   [<span class="tlaGBC" title="Branch 0 was taken 28 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 24 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 4 times"> + </span> :<span class="tlaGNC">          92 :   while (lhs_it != lhs.end() &amp;&amp; rhs_it != rhs.end()) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 24 times"> + </span><span class="tlaGBC" title="Branch 5 was taken 8 times"> + </span>]
-<span id="L231"><span class="lineNum">     231</span>   [<span class="tlaGBC" title="Branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">          48 :     const auto comp = *lhs_it &lt;=&gt; *rhs_it;</span></span>
-<span id="L232"><span class="lineNum">     232</span>         [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 16 times"> + </span>]:<span class="tlaGNC">          24 :     if (comp != 0) {</span></span>
+<span id="L230"><span class="lineNum">     230</span>   [<span class="tlaGBC" title="branch 0 was taken 28 times"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span><span class="tlaGBC" title="branch 2 was taken 24 times"> + </span><span class="tlaGBC" title="branch 3 was taken 4 times"> + </span> :<span class="tlaGNC">          92 :   while (lhs_it != lhs.end() &amp;&amp; rhs_it != rhs.end()) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 24 times"> + </span><span class="tlaGBC" title="branch 5 was taken 8 times"> + </span>]
+<span id="L231"><span class="lineNum">     231</span>   [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 8 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">          48 :     const auto comp = *lhs_it &lt;=&gt; *rhs_it;</span></span>
+<span id="L232"><span class="lineNum">     232</span>         [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 16 times"> + </span>]:<span class="tlaGNC">          24 :     if (comp != 0) {</span></span>
 <span id="L233"><span class="lineNum">     233</span>                 :<span class="tlaGNC">           8 :       return comp &lt; 0;</span></span>
 <span id="L234"><span class="lineNum">     234</span>                 :             :     }</span>
 <span id="L235"><span class="lineNum">     235</span>                 :<span class="tlaGNC">          16 :     ++lhs_it;</span></span>
@@ -373,7 +380,7 @@
 <span id="L292"><span class="lineNum">     292</span>                 :             :     Key (&amp;array)[N],</span>
 <span id="L293"><span class="lineNum">     293</span>                 :             :     const Compare&amp; key_comp = Compare()) {</span>
 <span id="L294"><span class="lineNum">     294</span>                 :<span class="tlaGNC">           2 :   LimitedSet&lt;std::remove_cvref_t&lt;Key&gt;, N, Compare&gt; result(key_comp);</span></span>
-<span id="L295"><span class="lineNum">     295</span>         [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">          10 :   for (std::size_t idx = 0; idx &lt; N; ++idx) {</span></span>
+<span id="L295"><span class="lineNum">     295</span>         [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">          10 :   for (std::size_t idx = 0; idx &lt; N; ++idx) {</span></span>
 <span id="L296"><span class="lineNum">     296</span>                 :<span class="tlaGNC">           8 :     result.emplace(array[idx]);</span></span>
 <span id="L297"><span class="lineNum">     297</span>                 :             :   }</span>
 <span id="L298"><span class="lineNum">     298</span>                 :<span class="tlaGNC">           2 :   return result;</span></span>
@@ -394,7 +401,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 

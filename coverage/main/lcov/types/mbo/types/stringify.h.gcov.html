@@ -6,12 +6,18 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>LCOV - mbo production coverage - types/mbo/types/stringify.h</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+  <style>
+    .mboNavigation { padding: .35rem 0; text-align: right; }
+    .mboPolicy { margin: .35rem 0 1rem; }
+  </style>
 </head>
 
 <body>
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="mboNavigation"><a href="../../../../index.html">Report overview</a> &middot; <a href="../../../../../index.html">All coverage reports</a></td></tr>
+
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
 
             <tr>
@@ -19,7 +25,7 @@
                 <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="../../index.html">types</a>/<a href="../index.html">mbo</a>/<a href="index.html">types</a> - stringify.h<span style="font-size: 80%;"> (source / <a href="stringify.h.func-c.html">functions</a>)</span></td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="../../index.html" title="Click to go to directory types">types</a>/<a href="../index.html" title="Click to go to directory mbo">mbo</a>/<a href="index.html" title="Click to go to directory types">types</a> - stringify.h<span style="font-size: 80%;"> (source / <a href="stringify.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="5%"></td>
             <td width="5%" class="headerCovTableHead">Coverage</td>
@@ -37,7 +43,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 07:51:28</td>
+            <td class="headerValue">2026-08-23 10:34:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">97.5&nbsp;%</td>
@@ -45,18 +51,11 @@
             <td class="headerCovTableEntry">1074</td>
           </tr>
           <tr>
-            <td class="headerItem">Legend:</td>
-            <td class="headerValueLeg">            Lines:
-            <span class="coverLegendCov">hit</span>
-            <span class="coverLegendNoCov">not hit</span>
-            | Branches:
-            <span class="coverLegendCov">+</span> taken
-            <span class="coverLegendNoCov">-</span> not taken
-            <span class="coverLegendNoCov">#</span> not executed
-</td>
+            <td></td>
+            <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryLo">67.2&nbsp;%</td>
+            <td class="headerCovTableEntryMed">67.2&nbsp;%</td>
             <td class="headerCovTableEntry">238</td>
             <td class="headerCovTableEntry">160</td>
           </tr>
@@ -67,6 +66,14 @@
 
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
           </table>
+
+          <table class="mboPolicy" width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td class="headerItem">Coverage policy:</td>
+              <td class="headerValue"><b>Lines:</b> <span class="coverLegendCovLo">low: &lt; 88 %</span> <span class="coverLegendCovMed">medium: &gt;= 88 % and &lt; 90 %</span> <span class="coverLegendCovHi">high: &gt;= 90 %</span> &middot; <b>Functions:</b> <span class="coverLegendCovLo">low: &lt; 80 %</span> <span class="coverLegendCovMed">medium: &gt;= 80 % and &lt; 95 %</span> <span class="coverLegendCovHi">high: &gt;= 95 %</span> &middot; <b>Branches:</b> <span class="coverLegendCovLo">low: &lt; 60 %</span> <span class="coverLegendCovMed">medium: &gt;= 60 % and &lt; 82 %</span> <span class="coverLegendCovHi">high: &gt;= 82 %</span></td>
+            </tr>
+          </table>
+
 
           <table cellpadding=0 cellspacing=0 border=0>
             <tr>
@@ -332,7 +339,7 @@
 <span id="L254"><span class="lineNum">     254</span>                 :             : </span>
 <span id="L255"><span class="lineNum">     255</span>                 :             :   template&lt;typename T&gt;</span>
 <span id="L256"><span class="lineNum">     256</span>                 :             :   requires IsSameAsAnyOf&lt;T, Format, FieldControl, KeyControl, KeyOverrides, ValueControl, ValueOverrides, Special&gt;</span>
-<span id="L257"><span class="lineNum">     257</span>                 :<span class="tlaGNC tlaBgGNC">         132 :   constexpr const auto&amp; Access() const noexcept {</span></span>
+<span id="L257"><span class="lineNum">     257</span>                 :<span class="tlaGNC">         132 :   constexpr const auto&amp; Access() const noexcept {</span></span>
 <span id="L258"><span class="lineNum">     258</span>                 :             :     if constexpr (std::same_as&lt;T, Format&gt;) {</span>
 <span id="L259"><span class="lineNum">     259</span>                 :<span class="tlaGNC">           8 :       return format;</span></span>
 <span id="L260"><span class="lineNum">     260</span>                 :             :     } else if constexpr (std::same_as&lt;T, FieldControl&gt;) {</span>
@@ -373,10 +380,11 @@
 <span id="L295"><span class="lineNum">     295</span>                 :             :   std::string DebugStr() const;</span>
 <span id="L296"><span class="lineNum">     296</span>                 :             : </span>
 <span id="L297"><span class="lineNum">     297</span>                 :<span class="tlaGNC">         731 :   constexpr bool AllDataSet() const noexcept {</span></span>
-<span id="L298"><span class="lineNum">     298</span>   [<span class="tlaGBC" title="Branch 0 was taken 729 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 729 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">         731 :     return format &amp;&amp; field_control &amp;&amp; key_control &amp;&amp; key_overrides &amp;&amp; value_control &amp;&amp; value_overrides &amp;&amp; special;</span></span>
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 4 was taken 729 times"> + </span><span class="tlaUNC" title="Branch 5 was not taken"> - </span><span class="tlaGBC" title="Branch 6 was taken 729 times"> + </span><span class="tlaUNC" title="Branch 7 was not taken"> - </span><span class="tlaGBC" title="Branch 8 was taken 729 times"> + </span> 
-<span class="lineNum">        </span>    <span class="tlaUNC" title="Branch 9 was not taken"> - </span><span class="tlaGBC" title="Branch 10 was taken 729 times"> + </span><span class="tlaUNC" title="Branch 11 was not taken"> - </span><span class="tlaGBC" title="Branch 12 was taken 729 times"> + </span> 
-<span class="lineNum">        </span>             <span class="tlaUNC" title="Branch 13 was not taken"> - </span>]
+<span id="L298"><span class="lineNum">     298</span>                 :<span class="tlaGNC">         731 :     return format &amp;&amp; field_control &amp;&amp; key_control &amp;&amp; key_overrides &amp;&amp; value_control &amp;&amp; value_overrides &amp;&amp; special;</span></span>
+<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 729 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span><span class="tlaGBC" title="branch 2 was taken 729 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 729 times"> + </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaGBC" title="branch 6 was taken 729 times"> + </span><span class="tlaUNC" title="branch 7 was not taken"> - </span><span class="tlaGBC" title="branch 8 was taken 729 times"> + </span> 
+<span class="lineNum">        </span>    <span class="tlaUNC" title="branch 9 was not taken"> - </span><span class="tlaGBC" title="branch 10 was taken 729 times"> + </span><span class="tlaUNC" title="branch 11 was not taken"> - </span><span class="tlaGBC" title="branch 12 was taken 729 times"> + </span> 
+<span class="lineNum">        </span>             <span class="tlaUNC" title="branch 13 was not taken"> - </span>]
 <span id="L299"><span class="lineNum">     299</span>                 :             :   }</span>
 <span id="L300"><span class="lineNum">     300</span>                 :             : </span>
 <span id="L301"><span class="lineNum">     301</span>                 :<span class="tlaGNC">         128 :   constexpr explicit operator bool() const noexcept { return AllDataSet(); }</span></span>
@@ -384,10 +392,10 @@
 <span id="L303"><span class="lineNum">     303</span>                 :             :   template&lt;typename Opts, typename Func, typename... Args&gt;</span>
 <span id="L304"><span class="lineNum">     304</span>                 :             :   requires(std::same_as&lt;std::remove_const_t&lt;Opts&gt;, StringifyOptions&gt;)</span>
 <span id="L305"><span class="lineNum">     305</span>                 :<span class="tlaGNC">         131 :   static constexpr bool ApplyAll(Opts&amp; opts, const Func&amp; func, const Args&amp;... args) {</span></span>
-<span id="L306"><span class="lineNum">     306</span>   [<span class="tlaGBC" title="Branch 0 was taken 131 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 131 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span>]:<span class="tlaGNC">         262 :     return func(opts.format, args...) &amp;&amp; func(opts.field_control, args...) &amp;&amp; func(opts.key_control, args...)</span></span>
-<span id="L307"><span class="lineNum">     307</span>   [<span class="tlaGBC" title="Branch 0 was taken 131 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 131 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span>]:<span class="tlaGNC">         131 :            &amp;&amp; func(opts.key_overrides, args...) &amp;&amp; func(opts.value_control, args...)</span></span>
-<span id="L308"><span class="lineNum">     308</span>   [<span class="tlaGBC" title="Branch 0 was taken 131 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 131 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">         262 :            &amp;&amp; func(opts.value_overrides, args...) &amp;&amp; func(opts.special, args...);</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 131 times"> + </span><span class="tlaUNC" title="Branch 5 was not taken"> - </span>]
+<span id="L306"><span class="lineNum">     306</span>   [<span class="tlaGBC" title="branch 0 was taken 131 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 131 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">         262 :     return func(opts.format, args...) &amp;&amp; func(opts.field_control, args...) &amp;&amp; func(opts.key_control, args...)</span></span>
+<span id="L307"><span class="lineNum">     307</span>   [<span class="tlaGBC" title="branch 0 was taken 131 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 131 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">         131 :            &amp;&amp; func(opts.key_overrides, args...) &amp;&amp; func(opts.value_control, args...)</span></span>
+<span id="L308"><span class="lineNum">     308</span>   [<span class="tlaGBC" title="branch 0 was taken 131 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 131 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">         262 :            &amp;&amp; func(opts.value_overrides, args...) &amp;&amp; func(opts.special, args...);</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 131 times"> + </span><span class="tlaUNC" title="branch 5 was not taken"> - </span>]
 <span id="L309"><span class="lineNum">     309</span>                 :             :   }</span>
 <span id="L310"><span class="lineNum">     310</span>                 :             : </span>
 <span id="L311"><span class="lineNum">     311</span>                 :             :   static constexpr StringifyOptions WithAllData(StringifyOptions&amp;&amp; options, const StringifyOptions&amp; defaults = {}) {</span>
@@ -401,12 +409,12 @@
 <span id="L319"><span class="lineNum">     319</span>                 :             : </span>
 <span id="L320"><span class="lineNum">     320</span>                 :<span class="tlaGNC">         128 :   static constexpr StringifyOptions WithAllRefs(StringifyOptions&amp;&amp; options, const StringifyOptions&amp; defaults = {}) {</span></span>
 <span id="L321"><span class="lineNum">     321</span>                 :<span class="tlaGNC">        1024 :     ApplyAll(options, [&amp;defaults]&lt;typename T&gt;(T&amp; v) constexpr {</span></span>
-<span id="L322"><span class="lineNum">     322</span>         [<span class="tlaGBC" title="Branch 0 was taken 132 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 764 times"> + </span>]:<span class="tlaGNC">         896 :       if (!v.has_value()) {</span></span>
+<span id="L322"><span class="lineNum">     322</span>         [<span class="tlaGBC" title="branch 0 was taken 132 times"> + </span><span class="tlaGBC" title="branch 1 was taken 764 times"> + </span>]:<span class="tlaGNC">         896 :       if (!v.has_value()) {</span></span>
 <span id="L323"><span class="lineNum">     323</span>                 :<span class="tlaGNC">         132 :         v.set_ref(defaults.Access&lt;typename T::value_type&gt;().get({}));</span></span>
 <span id="L324"><span class="lineNum">     324</span>                 :             :       }</span>
 <span id="L325"><span class="lineNum">     325</span>                 :<span class="tlaGNC">         896 :       return true;</span></span>
 <span id="L326"><span class="lineNum">     326</span>                 :             :     });</span>
-<span id="L327"><span class="lineNum">     327</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 128 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 128 times"> + </span>]:<span class="tlaGNC">         128 :     MBO_CONFIG_REQUIRE_DEBUG(options, &quot;Not all data set.&quot;);</span></span>
+<span id="L327"><span class="lineNum">     327</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 128 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 128 times"> + </span>]:<span class="tlaGNC">         128 :     MBO_CONFIG_REQUIRE_DEBUG(options, &quot;Not all data set.&quot;);</span></span>
 <span id="L328"><span class="lineNum">     328</span>                 :<span class="tlaGNC">         128 :     return std::move(options);</span></span>
 <span id="L329"><span class="lineNum">     329</span>                 :             :   }</span>
 <span id="L330"><span class="lineNum">     330</span>                 :             : </span>
@@ -452,7 +460,7 @@
 <span id="L370"><span class="lineNum">     370</span>                 :             : </span>
 <span id="L371"><span class="lineNum">     371</span>                 :             :   std::string DebugStr() const;</span>
 <span id="L372"><span class="lineNum">     372</span>                 :             : </span>
-<span id="L373"><span class="lineNum">     373</span>   [<span class="tlaGBC" title="Branch 0 was taken 182 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 182 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span>]:<span class="tlaGNC">         182 :   constexpr bool AllDataSet() const noexcept { return outer.AllDataSet() &amp;&amp; inner.AllDataSet(); }</span></span>
+<span id="L373"><span class="lineNum">     373</span>   [<span class="tlaGBC" title="branch 0 was taken 182 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 182 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">         182 :   constexpr bool AllDataSet() const noexcept { return outer.AllDataSet() &amp;&amp; inner.AllDataSet(); }</span></span>
 <span id="L374"><span class="lineNum">     374</span>                 :             : </span>
 <span id="L375"><span class="lineNum">     375</span>                 :             :   constexpr explicit operator bool() const noexcept { return AllDataSet(); }</span>
 <span id="L376"><span class="lineNum">     376</span>                 :             : </span>
@@ -734,43 +742,43 @@
 <span id="L652"><span class="lineNum">     652</span>                 :             :   }</span>
 <span id="L653"><span class="lineNum">     653</span>                 :             : </span>
 <span id="L654"><span class="lineNum">     654</span>                 :<span class="tlaGNC">          12 :   static constexpr const StringifyOptions&amp; OptionsAs(OutputMode mode) noexcept {</span></span>
-<span id="L655"><span class="lineNum">     655</span>   [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">          12 :     switch (mode) {</span></span>
-<span class="lineNum">        </span>       <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 8 times"> + </span><span class="tlaUNC" title="Branch 6 was not taken"> - </span>]
+<span id="L655"><span class="lineNum">     655</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">          12 :     switch (mode) {</span></span>
+<span class="lineNum">        </span>       <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 8 times"> + </span><span class="tlaUNC" title="branch 6 was not taken"> - </span>]
 <span id="L656"><span class="lineNum">     656</span>                 :<span class="tlaGNC">           1 :       case OutputMode::kDefault: break;</span></span>
-<span id="L657"><span class="lineNum">     657</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       case OutputMode::kCpp: return OptionsCpp();</span></span>
-<span id="L658"><span class="lineNum">     658</span>                 :<span class="tlaGNC tlaBgGNC">           1 :       case OutputMode::kCppPretty: return OptionsCppPretty();</span></span>
+<span id="L657"><span class="lineNum">     657</span>                 :<span class="tlaUNC">           0 :       case OutputMode::kCpp: return OptionsCpp();</span></span>
+<span id="L658"><span class="lineNum">     658</span>                 :<span class="tlaGNC">           1 :       case OutputMode::kCppPretty: return OptionsCppPretty();</span></span>
 <span id="L659"><span class="lineNum">     659</span>                 :<span class="tlaGNC">           2 :       case OutputMode::kJson: return OptionsJson();</span></span>
-<span id="L660"><span class="lineNum">     660</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       case OutputMode::kJsonLine: return OptionsJsonLine();</span></span>
-<span id="L661"><span class="lineNum">     661</span>                 :<span class="tlaGNC tlaBgGNC">           8 :       case OutputMode::kJsonPretty: return OptionsJsonPretty();</span></span>
+<span id="L660"><span class="lineNum">     660</span>                 :<span class="tlaUNC">           0 :       case OutputMode::kJsonLine: return OptionsJsonLine();</span></span>
+<span id="L661"><span class="lineNum">     661</span>                 :<span class="tlaGNC">           8 :       case OutputMode::kJsonPretty: return OptionsJsonPretty();</span></span>
 <span id="L662"><span class="lineNum">     662</span>                 :             :     }</span>
 <span id="L663"><span class="lineNum">     663</span>                 :<span class="tlaGNC">           1 :     return OptionsDefault();</span></span>
 <span id="L664"><span class="lineNum">     664</span>                 :             :   }</span>
 <span id="L665"><span class="lineNum">     665</span>                 :             : </span>
 <span id="L666"><span class="lineNum">     666</span>                 :             :   // Arbirary default value.</span>
 <span id="L667"><span class="lineNum">     667</span>                 :<span class="tlaGNC">         138 :   static constexpr const StringifyOptions&amp; OptionsDefault() noexcept {</span></span>
-<span id="L668"><span class="lineNum">     668</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 138 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 138 times"> + </span> :<span class="tlaGNC">         138 :     MBO_CONFIG_REQUIRE(kOptionsDefaults.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsDefaults.DebugStr();</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 138 times"> + </span>]
+<span id="L668"><span class="lineNum">     668</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 138 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 138 times"> + </span> :<span class="tlaGNC">         138 :     MBO_CONFIG_REQUIRE(kOptionsDefaults.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsDefaults.DebugStr();</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 138 times"> + </span>]
 <span id="L669"><span class="lineNum">     669</span>                 :<span class="tlaGNC">         138 :     return kOptionsDefaults;</span></span>
 <span id="L670"><span class="lineNum">     670</span>                 :             :   }</span>
 <span id="L671"><span class="lineNum">     671</span>                 :             : </span>
 <span id="L672"><span class="lineNum">     672</span>                 :             :   // Formatting control that disables all fields.</span>
 <span id="L673"><span class="lineNum">     673</span>                 :<span class="tlaGNC">          10 :   static constexpr const StringifyOptions&amp; OptionsDisabled() noexcept {</span></span>
-<span id="L674"><span class="lineNum">     674</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 10 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 10 times"> + </span> :<span class="tlaGNC">          10 :     MBO_CONFIG_REQUIRE(kOptionsDisabled.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsDisabled.DebugStr();</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 10 times"> + </span>]
+<span id="L674"><span class="lineNum">     674</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 10 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 10 times"> + </span> :<span class="tlaGNC">          10 :     MBO_CONFIG_REQUIRE(kOptionsDisabled.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsDisabled.DebugStr();</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 10 times"> + </span>]
 <span id="L675"><span class="lineNum">     675</span>                 :<span class="tlaGNC">          10 :     return kOptionsDisabled;</span></span>
 <span id="L676"><span class="lineNum">     676</span>                 :             :   }</span>
 <span id="L677"><span class="lineNum">     677</span>                 :             : </span>
 <span id="L678"><span class="lineNum">     678</span>                 :             :   // Formatting control that mostly produces (very dense) C++ code.</span>
 <span id="L679"><span class="lineNum">     679</span>                 :<span class="tlaGNC">          23 :   static constexpr const StringifyOptions&amp; OptionsCpp() noexcept {</span></span>
-<span id="L680"><span class="lineNum">     680</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 23 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 23 times"> + </span> :<span class="tlaGNC">          23 :     MBO_CONFIG_REQUIRE(kOptionsCpp.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsCpp.DebugStr();</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 23 times"> + </span>]
+<span id="L680"><span class="lineNum">     680</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 23 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 23 times"> + </span> :<span class="tlaGNC">          23 :     MBO_CONFIG_REQUIRE(kOptionsCpp.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsCpp.DebugStr();</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 23 times"> + </span>]
 <span id="L681"><span class="lineNum">     681</span>                 :<span class="tlaGNC">          23 :     return kOptionsCpp;</span></span>
 <span id="L682"><span class="lineNum">     682</span>                 :             :   }</span>
 <span id="L683"><span class="lineNum">     683</span>                 :             : </span>
 <span id="L684"><span class="lineNum">     684</span>                 :             :   // Formatting control that mostly produces multi-line formatted C++ code.</span>
 <span id="L685"><span class="lineNum">     685</span>                 :<span class="tlaGNC">           9 :   static constexpr const StringifyOptions&amp; OptionsCppPretty() noexcept {</span></span>
-<span id="L686"><span class="lineNum">     686</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 9 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 9 times"> + </span> :<span class="tlaGNC">           9 :     MBO_CONFIG_REQUIRE(kOptionsCppPretty.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsCppPretty.DebugStr();</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 9 times"> + </span>]
+<span id="L686"><span class="lineNum">     686</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 9 times"> + </span> :<span class="tlaGNC">           9 :     MBO_CONFIG_REQUIRE(kOptionsCppPretty.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsCppPretty.DebugStr();</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 9 times"> + </span>]
 <span id="L687"><span class="lineNum">     687</span>                 :<span class="tlaGNC">           9 :     return kOptionsCppPretty;</span></span>
 <span id="L688"><span class="lineNum">     688</span>                 :             :   }</span>
 <span id="L689"><span class="lineNum">     689</span>                 :             : </span>
@@ -782,22 +790,22 @@
 <span id="L695"><span class="lineNum">     695</span>                 :             :   // latter possibly with the `StringifyWithFieldNames` adapter. Alternatively,</span>
 <span id="L696"><span class="lineNum">     696</span>                 :             :   // numeric field names will be generated as a last resort.</span>
 <span id="L697"><span class="lineNum">     697</span>                 :<span class="tlaGNC">          26 :   static constexpr const StringifyOptions&amp; OptionsJson() noexcept {</span></span>
-<span id="L698"><span class="lineNum">     698</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 26 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 26 times"> + </span> :<span class="tlaGNC">          26 :     MBO_CONFIG_REQUIRE(kOptionsJson.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsJson.DebugStr();</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 26 times"> + </span>]
+<span id="L698"><span class="lineNum">     698</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 26 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 26 times"> + </span> :<span class="tlaGNC">          26 :     MBO_CONFIG_REQUIRE(kOptionsJson.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsJson.DebugStr();</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 26 times"> + </span>]
 <span id="L699"><span class="lineNum">     699</span>                 :<span class="tlaGNC">          26 :     return kOptionsJson;</span></span>
 <span id="L700"><span class="lineNum">     700</span>                 :             :   }</span>
 <span id="L701"><span class="lineNum">     701</span>                 :             : </span>
 <span id="L702"><span class="lineNum">     702</span>                 :             :   // Formatting control that mostly produces single-line formatted JSON data (new-line terminated).</span>
 <span id="L703"><span class="lineNum">     703</span>                 :<span class="tlaGNC">           7 :   static constexpr const StringifyOptions&amp; OptionsJsonLine() noexcept {</span></span>
-<span id="L704"><span class="lineNum">     704</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 7 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 7 times"> + </span> :<span class="tlaGNC">           7 :     MBO_CONFIG_REQUIRE(kOptionsJsonLine.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsJsonLine.DebugStr();</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 7 times"> + </span>]
+<span id="L704"><span class="lineNum">     704</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 7 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 7 times"> + </span> :<span class="tlaGNC">           7 :     MBO_CONFIG_REQUIRE(kOptionsJsonLine.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsJsonLine.DebugStr();</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 7 times"> + </span>]
 <span id="L705"><span class="lineNum">     705</span>                 :<span class="tlaGNC">           7 :     return kOptionsJsonLine;</span></span>
 <span id="L706"><span class="lineNum">     706</span>                 :             :   }</span>
 <span id="L707"><span class="lineNum">     707</span>                 :             : </span>
 <span id="L708"><span class="lineNum">     708</span>                 :             :   // Formatting control that mostly produces multi-line formatted JSON data (new-line terminated).</span>
 <span id="L709"><span class="lineNum">     709</span>                 :<span class="tlaGNC">          21 :   static constexpr const StringifyOptions&amp; OptionsJsonPretty() noexcept {</span></span>
-<span id="L710"><span class="lineNum">     710</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 21 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 21 times"> + </span> :<span class="tlaGNC">          21 :     MBO_CONFIG_REQUIRE(kOptionsJsonPretty.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsJsonPretty.DebugStr();</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 21 times"> + </span>]
+<span id="L710"><span class="lineNum">     710</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 21 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 21 times"> + </span> :<span class="tlaGNC">          21 :     MBO_CONFIG_REQUIRE(kOptionsJsonPretty.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsJsonPretty.DebugStr();</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 21 times"> + </span>]
 <span id="L711"><span class="lineNum">     711</span>                 :<span class="tlaGNC">          21 :     return kOptionsJsonPretty;</span></span>
 <span id="L712"><span class="lineNum">     712</span>                 :             :   }</span>
 <span id="L713"><span class="lineNum">     713</span>                 :             : </span>
@@ -838,8 +846,8 @@
 <span id="L748"><span class="lineNum">     748</span>                 :             :       const StringifyOptions&amp; default_options = OptionsDefault(),</span>
 <span id="L749"><span class="lineNum">     749</span>                 :             :       const StringifyRootOptions&amp; root_options = kRootOptionDefaults) noexcept</span>
 <span id="L750"><span class="lineNum">     750</span>                 :<span class="tlaGNC">         162 :       : default_root_options_(root_options), default_field_options_(default_options) {</span></span>
-<span id="L751"><span class="lineNum">     751</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 162 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 162 times"> + </span> :<span class="tlaGNC">         162 :     MBO_CONFIG_REQUIRE(default_field_options_.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; default_field_options_.DebugStr();</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 162 times"> + </span>]
+<span id="L751"><span class="lineNum">     751</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 162 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 162 times"> + </span> :<span class="tlaGNC">         162 :     MBO_CONFIG_REQUIRE(default_field_options_.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; default_field_options_.DebugStr();</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 162 times"> + </span>]
 <span id="L752"><span class="lineNum">     752</span>                 :<span class="tlaGNC">         162 :   }</span></span>
 <span id="L753"><span class="lineNum">     753</span>                 :             : </span>
 <span id="L754"><span class="lineNum">     754</span>                 :<span class="tlaGNC">          12 :   explicit constexpr Stringify(</span></span>
@@ -858,7 +866,7 @@
 <span id="L767"><span class="lineNum">     767</span>                 :             :   template&lt;typename T&gt;</span>
 <span id="L768"><span class="lineNum">     768</span>                 :             :   requires(IsAggregate&lt;T&gt; || IsEmptyType&lt;T&gt; || IsStringKeyedContainer&lt;T&gt;)</span>
 <span id="L769"><span class="lineNum">     769</span>                 :<span class="tlaGNC">         166 :   void Stream(std::ostream&amp; out, const T&amp; value, OptionalRef&lt;const StringifyRootOptions&gt; opt_root_options = {}) const {</span></span>
-<span id="L770"><span class="lineNum">     770</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 166 times"> + </span>]:<span class="tlaGNC">         166 :     const StringifyRootOptions&amp; root_options = opt_root_options ? *opt_root_options : default_root_options_;</span></span>
+<span id="L770"><span class="lineNum">     770</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 166 times"> + </span>]:<span class="tlaGNC">         166 :     const StringifyRootOptions&amp; root_options = opt_root_options ? *opt_root_options : default_root_options_;</span></span>
 <span id="L771"><span class="lineNum">     771</span>                 :<span class="tlaGNC">         166 :     OStream os(!default_field_options_.outer.format.get({}).field_indent.empty(), out, root_options);</span></span>
 <span id="L772"><span class="lineNum">     772</span>                 :<span class="tlaGNC">         166 :     os &lt;&lt; root_options.root_prefix;</span></span>
 <span id="L773"><span class="lineNum">     773</span>                 :<span class="tlaGNC">         166 :     os &lt;&lt; default_field_options_.outer.format.get({}).message_prefix;</span></span>
@@ -905,7 +913,7 @@
 <span id="L814"><span class="lineNum">     814</span>                 :<span class="tlaGNC">          64 :       level_.pop_back();</span></span>
 <span id="L815"><span class="lineNum">     815</span>                 :<span class="tlaGNC">          64 :       StreamIndent();</span></span>
 <span id="L816"><span class="lineNum">     816</span>                 :<span class="tlaGNC">          64 :       os_ &lt;&lt; format.container_suffix;</span></span>
-<span id="L817"><span class="lineNum">     817</span>   [<span class="tlaGBC" title="Branch 0 was taken 64 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 19 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 45 times"> + </span>]:<span class="tlaGNC">          64 :       enable_indent_ = level_.empty() || !level_.back().empty();</span></span>
+<span id="L817"><span class="lineNum">     817</span>   [<span class="tlaGBC" title="branch 0 was taken 64 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 19 times"> + </span><span class="tlaGBC" title="branch 3 was taken 45 times"> + </span>]:<span class="tlaGNC">          64 :       enable_indent_ = level_.empty() || !level_.back().empty();</span></span>
 <span id="L818"><span class="lineNum">     818</span>                 :<span class="tlaGNC">          64 :     }</span></span>
 <span id="L819"><span class="lineNum">     819</span>                 :             : </span>
 <span id="L820"><span class="lineNum">     820</span>                 :<span class="tlaGNC">         259 :     void IncStruct(const StringifyOptions::Format&amp; format) {</span></span>
@@ -918,22 +926,22 @@
 <span id="L827"><span class="lineNum">     827</span>                 :<span class="tlaGNC">         259 :       level_.pop_back();</span></span>
 <span id="L828"><span class="lineNum">     828</span>                 :<span class="tlaGNC">         259 :       StreamIndent();</span></span>
 <span id="L829"><span class="lineNum">     829</span>                 :<span class="tlaGNC">         259 :       os_ &lt;&lt; format.structure_suffix;</span></span>
-<span id="L830"><span class="lineNum">     830</span>   [<span class="tlaGBC" title="Branch 0 was taken 98 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 161 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 26 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 72 times"> + </span>]:<span class="tlaGNC">         259 :       enable_indent_ = level_.empty() || !level_.back().empty();</span></span>
+<span id="L830"><span class="lineNum">     830</span>   [<span class="tlaGBC" title="branch 0 was taken 98 times"> + </span><span class="tlaGBC" title="branch 1 was taken 161 times"> + </span><span class="tlaGBC" title="branch 2 was taken 26 times"> + </span><span class="tlaGBC" title="branch 3 was taken 72 times"> + </span>]:<span class="tlaGNC">         259 :       enable_indent_ = level_.empty() || !level_.back().empty();</span></span>
 <span id="L831"><span class="lineNum">     831</span>                 :<span class="tlaGNC">         259 :     }</span></span>
 <span id="L832"><span class="lineNum">     832</span>                 :             : </span>
 <span id="L833"><span class="lineNum">     833</span>                 :<span class="tlaGNC">        1050 :     void StreamIndent() {</span></span>
-<span id="L834"><span class="lineNum">     834</span>         [<span class="tlaGBC" title="Branch 0 was taken 896 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 154 times"> + </span>]:<span class="tlaGNC">        1050 :       if (!enable_indent_) {</span></span>
+<span id="L834"><span class="lineNum">     834</span>         [<span class="tlaGBC" title="branch 0 was taken 896 times"> + </span><span class="tlaGBC" title="branch 1 was taken 154 times"> + </span>]:<span class="tlaGNC">        1050 :       if (!enable_indent_) {</span></span>
 <span id="L835"><span class="lineNum">     835</span>                 :<span class="tlaGNC">         896 :         return;</span></span>
 <span id="L836"><span class="lineNum">     836</span>                 :             :       }</span>
 <span id="L837"><span class="lineNum">     837</span>                 :<span class="tlaGNC">         154 :       os_ &lt;&lt; &quot;\n&quot;;</span></span>
-<span id="L838"><span class="lineNum">     838</span>         [<span class="tlaGBC" title="Branch 0 was taken 238 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 154 times"> + </span>]:<span class="tlaGNC">         392 :       for (const std::string_view level : level_) {</span></span>
+<span id="L838"><span class="lineNum">     838</span>         [<span class="tlaGBC" title="branch 0 was taken 238 times"> + </span><span class="tlaGBC" title="branch 1 was taken 154 times"> + </span>]:<span class="tlaGNC">         392 :       for (const std::string_view level : level_) {</span></span>
 <span id="L839"><span class="lineNum">     839</span>                 :<span class="tlaGNC">         238 :         os_ &lt;&lt; level;</span></span>
 <span id="L840"><span class="lineNum">     840</span>                 :             :       }</span>
 <span id="L841"><span class="lineNum">     841</span>                 :             :     }</span>
 <span id="L842"><span class="lineNum">     842</span>                 :             : </span>
 <span id="L843"><span class="lineNum">     843</span>                 :             :    private:</span>
 <span id="L844"><span class="lineNum">     844</span>                 :<span class="tlaGNC">         166 :     void RootIndent(const StringifyRootOptions&amp; root_options) {</span></span>
-<span id="L845"><span class="lineNum">     845</span>         [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 164 times"> + </span>]:<span class="tlaGNC">         166 :       if (!root_options.root_indent.empty()) {</span></span>
+<span id="L845"><span class="lineNum">     845</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 164 times"> + </span>]:<span class="tlaGNC">         166 :       if (!root_options.root_indent.empty()) {</span></span>
 <span id="L846"><span class="lineNum">     846</span>                 :<span class="tlaGNC">           2 :         level_.push_back(root_options.root_indent);</span></span>
 <span id="L847"><span class="lineNum">     847</span>                 :             :       }</span>
 <span id="L848"><span class="lineNum">     848</span>                 :<span class="tlaGNC">         166 :     }</span></span>
@@ -969,7 +977,7 @@
 <span id="L878"><span class="lineNum">     878</span>                 :             :       const T&amp; /*value*/,</span>
 <span id="L879"><span class="lineNum">     879</span>                 :             :       bool /*allow_field_names*/ = !HasMboTypesStringifyDoNotPrintFieldNames&lt;T&gt;) const {</span>
 <span id="L880"><span class="lineNum">     880</span>                 :<span class="tlaGNC">           3 :     const SO::FieldControl&amp; field_control = *options.outer.field_control;</span></span>
-<span id="L881"><span class="lineNum">     881</span>         [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           3 :     if (!field_control.suppress_disabled) {</span></span>
+<span id="L881"><span class="lineNum">     881</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           3 :     if (!field_control.suppress_disabled) {</span></span>
 <span id="L882"><span class="lineNum">     882</span>                 :<span class="tlaGNC">           2 :       os &lt;&lt; field_control.field_disabled;</span></span>
 <span id="L883"><span class="lineNum">     883</span>                 :             :     }</span>
 <span id="L884"><span class="lineNum">     884</span>                 :             :     // Otherwise no output! Streaming `&quot;{}&quot;` would also be possible, but not streaming anything is</span>
@@ -1050,11 +1058,11 @@
 <span id="L959"><span class="lineNum">     959</span>                 :             :     using RawField = std::remove_cvref_t&lt;Field&gt;;</span>
 <span id="L960"><span class="lineNum">     960</span>                 :             :     (void)field;</span>
 <span id="L961"><span class="lineNum">     961</span>                 :             :     if constexpr (std::is_pointer_v&lt;RawField&gt; || IsSmartPtr&lt;RawField&gt;) {</span>
-<span id="L962"><span class="lineNum">     962</span>         [<span class="tlaGBC" title="Branch 0 was taken 11 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          20 :       return field == nullptr ? SpecialFieldValue::kIsNullptr : SpecialFieldValue::kNoSuppress;</span></span>
+<span id="L962"><span class="lineNum">     962</span>         [<span class="tlaGBC" title="branch 0 was taken 11 times"> + </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          20 :       return field == nullptr ? SpecialFieldValue::kIsNullptr : SpecialFieldValue::kNoSuppress;</span></span>
 <span id="L963"><span class="lineNum">     963</span>                 :             :     } else if constexpr (std::is_same_v&lt;RawField, std::nullptr_t&gt;) {</span>
 <span id="L964"><span class="lineNum">     964</span>                 :<span class="tlaGNC">           4 :       return SpecialFieldValue::kIsNullptr;</span></span>
 <span id="L965"><span class="lineNum">     965</span>                 :             :     } else if constexpr (IsOptional&lt;RawField&gt;) {</span>
-<span id="L966"><span class="lineNum">     966</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           6 :       return field == std::nullopt ? SpecialFieldValue::kIsNullopt : SpecialFieldValue::kNoSuppress;</span></span>
+<span id="L966"><span class="lineNum">     966</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           6 :       return field == std::nullopt ? SpecialFieldValue::kIsNullopt : SpecialFieldValue::kNoSuppress;</span></span>
 <span id="L967"><span class="lineNum">     967</span>                 :             :     } else if constexpr (HasMboTypesStringifyDisable&lt;RawField&gt;) {</span>
 <span id="L968"><span class="lineNum">     968</span>                 :<span class="tlaGNC">           3 :       return SpecialFieldValue::kStringifyDisabled;</span></span>
 <span id="L969"><span class="lineNum">     969</span>                 :             :     }</span>
@@ -1072,8 +1080,8 @@
 <span id="L981"><span class="lineNum">     981</span>                 :             :       const FieldNames&amp; field_names,</span>
 <span id="L982"><span class="lineNum">     982</span>                 :             :       bool allow_field_names) const {</span>
 <span id="L983"><span class="lineNum">     983</span>                 :<span class="tlaGNC">         593 :     std::string_view field_name;</span></span>
-<span id="L984"><span class="lineNum">     984</span>   [<span class="tlaGBC" title="Branch 0 was taken 552 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 41 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 221 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 331 times"> + </span> :<span class="tlaGNC">        1145 :     if (allow_field_names &amp;&amp; idx &lt; std::size(field_names)) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 221 times"> + </span><span class="tlaGBC" title="Branch 5 was taken 372 times"> + </span>]
+<span id="L984"><span class="lineNum">     984</span>   [<span class="tlaGBC" title="branch 0 was taken 552 times"> + </span><span class="tlaGBC" title="branch 1 was taken 41 times"> + </span><span class="tlaGBC" title="branch 2 was taken 221 times"> + </span><span class="tlaGBC" title="branch 3 was taken 331 times"> + </span> :<span class="tlaGNC">        1145 :     if (allow_field_names &amp;&amp; idx &lt; std::size(field_names)) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 221 times"> + </span><span class="tlaGBC" title="branch 5 was taken 372 times"> + </span>]
 <span id="L985"><span class="lineNum">     985</span>                 :<span class="tlaGNC">         221 :       field_name = std::data(field_names)[idx];</span></span>
 <span id="L986"><span class="lineNum">     986</span>                 :             :     }</span>
 <span id="L987"><span class="lineNum">     987</span>                 :             :     static_assert(!BadMboTypesStringifyOptions&lt;T&gt;, &quot;Provided `BadMboTypesStringifyOptions` has a bad signature.&quot;);</span>
@@ -1102,14 +1110,14 @@
 <span id="L1010"><span class="lineNum">    1010</span>                 :             :     // The custom handling is expensive only if we have to cache the data. So hand that over to specific functions.</span>
 <span id="L1011"><span class="lineNum">    1011</span>                 :             :     if constexpr (std::same_as&lt;std::remove_cvref_t&lt;CustomT&gt;, StringifyFieldOptions&gt;) {</span>
 <span id="L1012"><span class="lineNum">    1012</span>                 :             :       if constexpr (std::is_reference_v&lt;CustomT&gt;) {</span>
-<span id="L1013"><span class="lineNum">    1013</span>         [<span class="tlaGBC" title="Branch 0 was taken 20 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">          20 :         if (custom.AllDataSet()) {</span></span>
+<span id="L1013"><span class="lineNum">    1013</span>         [<span class="tlaGBC" title="branch 0 was taken 20 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          20 :         if (custom.AllDataSet()) {</span></span>
 <span id="L1014"><span class="lineNum">    1014</span>                 :             :           // No caching needed for `custom` since we use the reference as is.</span>
 <span id="L1015"><span class="lineNum">    1015</span>                 :<span class="tlaGNC">          20 :           const StringifyFieldInfo field_info{.options{std::forward&lt;CustomT&gt;(custom)}, .idx = idx, .name = field_name};</span></span>
 <span id="L1016"><span class="lineNum">    1016</span>                 :<span class="tlaGNC">          20 :           StreamFieldDo(os, outer_options, field_info, use_seperator, field, allow_field_names);</span></span>
 <span id="L1017"><span class="lineNum">    1017</span>                 :<span class="tlaGNC">          20 :           return;</span></span>
 <span id="L1018"><span class="lineNum">    1018</span>                 :             :         }</span>
 <span id="L1019"><span class="lineNum">    1019</span>                 :             :       }</span>
-<span id="L1020"><span class="lineNum">    1020</span>         [<span class="tlaUNC" title="Branch 0 was not executed"> # </span><span class="tlaUNC" title="Branch 1 was not executed"> # </span>]:<span class="tlaUNC tlaBgUNC">           0 :       if (&amp;custom.outer == &amp;custom.inner) {</span></span>
+<span id="L1020"><span class="lineNum">    1020</span>         [<span class="tlaUNC" title="branch 0 was not executed"> # </span><span class="tlaUNC" title="branch 1 was not executed"> # </span>]:<span class="tlaUNC">           0 :       if (&amp;custom.outer == &amp;custom.inner) {</span></span>
 <span id="L1021"><span class="lineNum">    1021</span>                 :<span class="tlaUNC">           0 :         StreamFieldCustomCache(  // Using StringifyOptions</span></span>
 <span id="L1022"><span class="lineNum">    1022</span>                 :             :             os, outer_options, custom.outer, use_seperator, field, idx, field_name, allow_field_names);</span>
 <span id="L1023"><span class="lineNum">    1023</span>                 :             :       } else {</span>
@@ -1118,7 +1126,7 @@
 <span id="L1026"><span class="lineNum">    1026</span>                 :             :       }</span>
 <span id="L1027"><span class="lineNum">    1027</span>                 :             :     } else {</span>
 <span id="L1028"><span class="lineNum">    1028</span>                 :             :       if constexpr (std::is_reference_v&lt;CustomT&gt;) {</span>
-<span id="L1029"><span class="lineNum">    1029</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC tlaBgGNC">           3 :         if (custom.AllDataSet()) {</span></span>
+<span id="L1029"><span class="lineNum">    1029</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           3 :         if (custom.AllDataSet()) {</span></span>
 <span id="L1030"><span class="lineNum">    1030</span>                 :             :           // No caching needed for `custom` since we use the reference as is.</span>
 <span id="L1031"><span class="lineNum">    1031</span>                 :<span class="tlaGNC">           1 :           const StringifyFieldInfo field_info{.options{custom}, .idx = idx, .name = field_name};</span></span>
 <span id="L1032"><span class="lineNum">    1032</span>                 :<span class="tlaGNC">           1 :           StreamFieldDo(os, outer_options, field_info, use_seperator, field, allow_field_names);</span></span>
@@ -1172,41 +1180,41 @@
 <span id="L1080"><span class="lineNum">    1080</span>                 :             :       const Field&amp; field,</span>
 <span id="L1081"><span class="lineNum">    1081</span>                 :             :       bool allow_field_names) const {</span>
 <span id="L1082"><span class="lineNum">    1082</span>                 :<span class="tlaGNC">         593 :     const SpecialFieldValue is_special = IsSpecial(field);</span></span>
-<span id="L1083"><span class="lineNum">    1083</span>         [<span class="tlaGBC" title="Branch 0 was taken 23 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 570 times"> + </span>]:<span class="tlaGNC">         593 :     if (!StreamFieldKeyEnabled(field_info.options.outer, is_special)) {</span></span>
+<span id="L1083"><span class="lineNum">    1083</span>         [<span class="tlaGBC" title="branch 0 was taken 23 times"> + </span><span class="tlaGBC" title="branch 1 was taken 570 times"> + </span>]:<span class="tlaGNC">         593 :     if (!StreamFieldKeyEnabled(field_info.options.outer, is_special)) {</span></span>
 <span id="L1084"><span class="lineNum">    1084</span>                 :<span class="tlaGNC">          23 :       return;</span></span>
 <span id="L1085"><span class="lineNum">    1085</span>                 :             :     }</span>
-<span id="L1086"><span class="lineNum">    1086</span>         [<span class="tlaGBC" title="Branch 0 was taken 329 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 241 times"> + </span>]:<span class="tlaGNC">         570 :     if (use_seperator) {</span></span>
+<span id="L1086"><span class="lineNum">    1086</span>         [<span class="tlaGBC" title="branch 0 was taken 329 times"> + </span><span class="tlaGBC" title="branch 1 was taken 241 times"> + </span>]:<span class="tlaGNC">         570 :     if (use_seperator) {</span></span>
 <span id="L1087"><span class="lineNum">    1087</span>                 :<span class="tlaGNC">         329 :       os &lt;&lt; outer_options.outer.format-&gt;field_separator;</span></span>
 <span id="L1088"><span class="lineNum">    1088</span>                 :             :     }</span>
 <span id="L1089"><span class="lineNum">    1089</span>                 :<span class="tlaGNC">         570 :     use_seperator = true;</span></span>
 <span id="L1090"><span class="lineNum">    1090</span>                 :<span class="tlaGNC">         570 :     os.StreamIndent();</span></span>
-<span id="L1091"><span class="lineNum">    1091</span>         [<span class="tlaGBC" title="Branch 0 was taken 531 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 39 times"> + </span>]:<span class="tlaGNC">         570 :     if (allow_field_names) {</span></span>
+<span id="L1091"><span class="lineNum">    1091</span>         [<span class="tlaGBC" title="branch 0 was taken 531 times"> + </span><span class="tlaGBC" title="branch 1 was taken 39 times"> + </span>]:<span class="tlaGNC">         570 :     if (allow_field_names) {</span></span>
 <span id="L1092"><span class="lineNum">    1092</span>                 :<span class="tlaGNC">         531 :       StreamFieldName(os, field_info);</span></span>
 <span id="L1093"><span class="lineNum">    1093</span>                 :             :     }</span>
 <span id="L1094"><span class="lineNum">    1094</span>                 :<span class="tlaGNC">         570 :     StreamValue(os, field_info.options, field, allow_field_names);</span></span>
 <span id="L1095"><span class="lineNum">    1095</span>                 :             :   }</span>
 <span id="L1096"><span class="lineNum">    1096</span>                 :             : </span>
 <span id="L1097"><span class="lineNum">    1097</span>                 :<span class="tlaGNC">         593 :   static bool StreamFieldKeyEnabled(const StringifyOptions&amp; options, SpecialFieldValue is_special) {</span></span>
-<span id="L1098"><span class="lineNum">    1098</span>   [<span class="tlaGBC" title="Branch 0 was taken 12 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 560 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 15 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 3 times"> + </span> :<span class="tlaGNC">         593 :     switch (is_special) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 5 was not taken"> - </span>]
+<span id="L1098"><span class="lineNum">    1098</span>   [<span class="tlaGBC" title="branch 0 was taken 12 times"> + </span><span class="tlaGBC" title="branch 1 was taken 560 times"> + </span><span class="tlaGBC" title="branch 2 was taken 15 times"> + </span><span class="tlaGBC" title="branch 3 was taken 3 times"> + </span> :<span class="tlaGNC">         593 :     switch (is_special) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 3 times"> + </span><span class="tlaUNC" title="branch 5 was not taken"> - </span>]
 <span id="L1099"><span class="lineNum">    1099</span>                 :<span class="tlaGNC">          12 :       case SpecialFieldValue::kNoSuppress: break;</span></span>
 <span id="L1100"><span class="lineNum">    1100</span>                 :<span class="tlaGNC">         560 :       case SpecialFieldValue::kNormal:</span></span>
-<span id="L1101"><span class="lineNum">    1101</span>         [<span class="tlaGBC" title="Branch 0 was taken 14 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 546 times"> + </span>]:<span class="tlaGNC">         560 :         if (options.field_control-&gt;suppress) {</span></span>
+<span id="L1101"><span class="lineNum">    1101</span>         [<span class="tlaGBC" title="branch 0 was taken 14 times"> + </span><span class="tlaGBC" title="branch 1 was taken 546 times"> + </span>]:<span class="tlaGNC">         560 :         if (options.field_control-&gt;suppress) {</span></span>
 <span id="L1102"><span class="lineNum">    1102</span>                 :<span class="tlaGNC">          14 :           return false;</span></span>
 <span id="L1103"><span class="lineNum">    1103</span>                 :             :         }</span>
 <span id="L1104"><span class="lineNum">    1104</span>                 :<span class="tlaGNC">         546 :         break;</span></span>
 <span id="L1105"><span class="lineNum">    1105</span>                 :<span class="tlaGNC">          15 :       case SpecialFieldValue::kIsNullptr:</span></span>
-<span id="L1106"><span class="lineNum">    1106</span>         [<span class="tlaGBC" title="Branch 0 was taken 7 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">          15 :         if (options.field_control-&gt;suppress_nullptr) {</span></span>
+<span id="L1106"><span class="lineNum">    1106</span>         [<span class="tlaGBC" title="branch 0 was taken 7 times"> + </span><span class="tlaGBC" title="branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">          15 :         if (options.field_control-&gt;suppress_nullptr) {</span></span>
 <span id="L1107"><span class="lineNum">    1107</span>                 :<span class="tlaGNC">           7 :           return false;</span></span>
 <span id="L1108"><span class="lineNum">    1108</span>                 :             :         }</span>
 <span id="L1109"><span class="lineNum">    1109</span>                 :<span class="tlaGNC">           8 :         break;</span></span>
 <span id="L1110"><span class="lineNum">    1110</span>                 :<span class="tlaGNC">           3 :       case SpecialFieldValue::kIsNullopt:</span></span>
-<span id="L1111"><span class="lineNum">    1111</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           3 :         if (options.field_control-&gt;suppress_nullopt) {</span></span>
+<span id="L1111"><span class="lineNum">    1111</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           3 :         if (options.field_control-&gt;suppress_nullopt) {</span></span>
 <span id="L1112"><span class="lineNum">    1112</span>                 :<span class="tlaGNC">           1 :           return false;</span></span>
 <span id="L1113"><span class="lineNum">    1113</span>                 :             :         }</span>
 <span id="L1114"><span class="lineNum">    1114</span>                 :<span class="tlaGNC">           2 :         break;</span></span>
 <span id="L1115"><span class="lineNum">    1115</span>                 :<span class="tlaGNC">           3 :       case SpecialFieldValue::kStringifyDisabled:</span></span>
-<span id="L1116"><span class="lineNum">    1116</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           3 :         if (options.field_control-&gt;suppress_disabled) {</span></span>
+<span id="L1116"><span class="lineNum">    1116</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           3 :         if (options.field_control-&gt;suppress_disabled) {</span></span>
 <span id="L1117"><span class="lineNum">    1117</span>                 :<span class="tlaGNC">           1 :           return false;</span></span>
 <span id="L1118"><span class="lineNum">    1118</span>                 :             :         }</span>
 <span id="L1119"><span class="lineNum">    1119</span>                 :<span class="tlaGNC">           2 :         break;</span></span>
@@ -1217,49 +1225,49 @@
 <span id="L1124"><span class="lineNum">    1124</span>                 :<span class="tlaGNC">         572 :   static void StreamFieldName(OStream&amp; os, const StringifyFieldInfo&amp; field, bool allow_key_override = true) {</span></span>
 <span id="L1125"><span class="lineNum">    1125</span>                 :<span class="tlaGNC">         572 :     const SO::Format&amp; format = *field.options.outer.format;</span></span>
 <span id="L1126"><span class="lineNum">    1126</span>                 :<span class="tlaGNC">         572 :     const SO::KeyControl&amp; key_control = *field.options.outer.key_control;</span></span>
-<span id="L1127"><span class="lineNum">    1127</span>      [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 572 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span>]:<span class="tlaGNC">         572 :     switch (key_control.key_mode) {</span></span>
-<span id="L1128"><span class="lineNum">    1128</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       case StringifyOptions::KeyMode::kNone: return;</span></span>
-<span id="L1129"><span class="lineNum">    1129</span>                 :<span class="tlaGNC tlaBgGNC">         572 :       case StringifyOptions::KeyMode::kNormal:</span></span>
+<span id="L1127"><span class="lineNum">    1127</span>      [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 572 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span>]:<span class="tlaGNC">         572 :     switch (key_control.key_mode) {</span></span>
+<span id="L1128"><span class="lineNum">    1128</span>                 :<span class="tlaUNC">           0 :       case StringifyOptions::KeyMode::kNone: return;</span></span>
+<span id="L1129"><span class="lineNum">    1129</span>                 :<span class="tlaGNC">         572 :       case StringifyOptions::KeyMode::kNormal:</span></span>
 <span id="L1130"><span class="lineNum">    1130</span>                 :<span class="tlaGNC">         572 :       case StringifyOptions::KeyMode::kNumericFallback: break;</span></span>
 <span id="L1131"><span class="lineNum">    1131</span>                 :             :     }</span>
 <span id="L1132"><span class="lineNum">    1132</span>                 :<span class="tlaGNC">         572 :     std::string_view field_name;</span></span>
-<span id="L1133"><span class="lineNum">    1133</span>   [<span class="tlaGBC" title="Branch 0 was taken 531 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 41 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 102 times"> + </span><span class="tlaGBC" title="Branch 3 was taken 429 times"> + </span> :<span class="tlaGNC">         572 :     if (allow_key_override &amp;&amp; field.options.outer.key_overrides-&gt;key_use_name.has_value()) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 102 times"> + </span><span class="tlaGBC" title="Branch 5 was taken 470 times"> + </span>]
+<span id="L1133"><span class="lineNum">    1133</span>   [<span class="tlaGBC" title="branch 0 was taken 531 times"> + </span><span class="tlaGBC" title="branch 1 was taken 41 times"> + </span><span class="tlaGBC" title="branch 2 was taken 102 times"> + </span><span class="tlaGBC" title="branch 3 was taken 429 times"> + </span> :<span class="tlaGNC">         572 :     if (allow_key_override &amp;&amp; field.options.outer.key_overrides-&gt;key_use_name.has_value()) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 102 times"> + </span><span class="tlaGBC" title="branch 5 was taken 470 times"> + </span>]
 <span id="L1134"><span class="lineNum">    1134</span>                 :<span class="tlaGNC">         102 :       const auto&amp; key_use_name = *field.options.outer.key_overrides-&gt;key_use_name;</span></span>
-<span id="L1135"><span class="lineNum">    1135</span>         [<span class="tlaGBC" title="Branch 0 was taken 97 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">         102 :       if (std::holds_alternative&lt;std::string_view&gt;(key_use_name)) {</span></span>
+<span id="L1135"><span class="lineNum">    1135</span>         [<span class="tlaGBC" title="branch 0 was taken 97 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">         102 :       if (std::holds_alternative&lt;std::string_view&gt;(key_use_name)) {</span></span>
 <span id="L1136"><span class="lineNum">    1136</span>                 :<span class="tlaGNC">          97 :         field_name = std::get&lt;std::string_view&gt;(key_use_name);</span></span>
-<span id="L1137"><span class="lineNum">    1137</span>         [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           5 :       } else if (std::holds_alternative&lt;const StringifyFieldInfoString*&gt;(key_use_name)) {</span></span>
+<span id="L1137"><span class="lineNum">    1137</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           5 :       } else if (std::holds_alternative&lt;const StringifyFieldInfoString*&gt;(key_use_name)) {</span></span>
 <span id="L1138"><span class="lineNum">    1138</span>                 :<span class="tlaGNC">           2 :         const auto* func = std::get&lt;const StringifyFieldInfoString*&gt;(key_use_name);</span></span>
-<span id="L1139"><span class="lineNum">    1139</span>   [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span><span class="tlaGBC" title="Branch 2 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span> :<span class="tlaGNC">           2 :         if (func != nullptr &amp;&amp; *func) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="Branch 4 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 5 was not taken"> - </span>]
+<span id="L1139"><span class="lineNum">    1139</span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           2 :         if (func != nullptr &amp;&amp; *func) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 2 times"> + </span><span class="tlaUNC" title="branch 5 was not taken"> - </span>]
 <span id="L1140"><span class="lineNum">    1140</span>                 :<span class="tlaGNC">           2 :           field_name = (*func)(field);</span></span>
 <span id="L1141"><span class="lineNum">    1141</span>                 :             :         }</span>
 <span id="L1142"><span class="lineNum">    1142</span>                 :             : #ifdef MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION</span>
-<span id="L1143"><span class="lineNum">    1143</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           3 :       } else if (std::holds_alternative&lt;const StringifyFieldInfoString&gt;(key_use_name)) {</span></span>
+<span id="L1143"><span class="lineNum">    1143</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           3 :       } else if (std::holds_alternative&lt;const StringifyFieldInfoString&gt;(key_use_name)) {</span></span>
 <span id="L1144"><span class="lineNum">    1144</span>                 :<span class="tlaGNC">           3 :         const auto&amp; func = std::get&lt;const StringifyFieldInfoString&gt;(key_use_name);</span></span>
-<span id="L1145"><span class="lineNum">    1145</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           3 :         if (func) {</span></span>
+<span id="L1145"><span class="lineNum">    1145</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           3 :         if (func) {</span></span>
 <span id="L1146"><span class="lineNum">    1146</span>                 :<span class="tlaGNC">           3 :           field_name = func(field);</span></span>
 <span id="L1147"><span class="lineNum">    1147</span>                 :             :         }</span>
 <span id="L1148"><span class="lineNum">    1148</span>                 :             : #endif  // MBO_TYPES_STRINGIFY_LITERAL_OPTIONAL_FUNCTION</span>
 <span id="L1149"><span class="lineNum">    1149</span>                 :             :       } else {</span>
-<span id="L1150"><span class="lineNum">    1150</span>                 :<span class="tlaUNC tlaBgUNC">           0 :         ABSL_LOG(FATAL) &lt;&lt; &quot;Bad field name override: variant type not handled.&quot;;</span></span>
+<span id="L1150"><span class="lineNum">    1150</span>                 :<span class="tlaUNC">           0 :         ABSL_LOG(FATAL) &lt;&lt; &quot;Bad field name override: variant type not handled.&quot;;</span></span>
 <span id="L1151"><span class="lineNum">    1151</span>                 :             :       }</span>
 <span id="L1152"><span class="lineNum">    1152</span>                 :             :     }</span>
-<span id="L1153"><span class="lineNum">    1153</span>         [<span class="tlaGBC" title="Branch 0 was taken 470 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 102 times"> + </span>]:<span class="tlaGNC tlaBgGNC">         572 :     if (field_name.empty()) {</span></span>
+<span id="L1153"><span class="lineNum">    1153</span>         [<span class="tlaGBC" title="branch 0 was taken 470 times"> + </span><span class="tlaGBC" title="branch 1 was taken 102 times"> + </span>]:<span class="tlaGNC">         572 :     if (field_name.empty()) {</span></span>
 <span id="L1154"><span class="lineNum">    1154</span>                 :<span class="tlaGNC">         470 :       field_name = field.name;</span></span>
 <span id="L1155"><span class="lineNum">    1155</span>                 :             :     }</span>
-<span id="L1156"><span class="lineNum">    1156</span>         [<span class="tlaGBC" title="Branch 0 was taken 345 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 227 times"> + </span>]:<span class="tlaGNC">         572 :     if (!field_name.empty()) {</span></span>
+<span id="L1156"><span class="lineNum">    1156</span>         [<span class="tlaGBC" title="branch 0 was taken 345 times"> + </span><span class="tlaGBC" title="branch 1 was taken 227 times"> + </span>]:<span class="tlaGNC">         572 :     if (!field_name.empty()) {</span></span>
 <span id="L1157"><span class="lineNum">    1157</span>                 :<span class="tlaGNC">         345 :       os &lt;&lt; key_control.key_prefix &lt;&lt; field_name &lt;&lt; key_control.key_suffix &lt;&lt; format.key_value_separator;</span></span>
-<span id="L1158"><span class="lineNum">    1158</span>         [<span class="tlaGBC" title="Branch 0 was taken 23 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 204 times"> + </span>]:<span class="tlaGNC">         227 :     } else if (key_control.key_mode == StringifyOptions::KeyMode::kNumericFallback) {</span></span>
+<span id="L1158"><span class="lineNum">    1158</span>         [<span class="tlaGBC" title="branch 0 was taken 23 times"> + </span><span class="tlaGBC" title="branch 1 was taken 204 times"> + </span>]:<span class="tlaGNC">         227 :     } else if (key_control.key_mode == StringifyOptions::KeyMode::kNumericFallback) {</span></span>
 <span id="L1159"><span class="lineNum">    1159</span>                 :<span class="tlaGNC">          23 :       os &lt;&lt; key_control.key_prefix &lt;&lt; field.idx &lt;&lt; key_control.key_suffix &lt;&lt; format.key_value_separator;</span></span>
 <span id="L1160"><span class="lineNum">    1160</span>                 :             :     }</span>
 <span id="L1161"><span class="lineNum">    1161</span>                 :             :   }</span>
 <span id="L1162"><span class="lineNum">    1162</span>                 :             : </span>
 <span id="L1163"><span class="lineNum">    1163</span>                 :             :   template&lt;IsStringKeyedContainer C&gt;</span>
 <span id="L1164"><span class="lineNum">    1164</span>                 :<span class="tlaGNC">          16 :   void StreamValue(OStream&amp; os, const StringifyFieldOptions&amp; options, const C&amp; vs, bool allow_field_names) const {</span></span>
-<span id="L1165"><span class="lineNum">    1165</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 5 times"> + </span><span class="tlaGBC" title="Branch 2 was taken 11 times"> + </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span>]:<span class="tlaGNC">          16 :     switch (options.outer.special-&gt;str_keyed) {</span></span>
-<span id="L1166"><span class="lineNum">    1166</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       case SO::StrKeyed::kNormal: break;</span></span>
-<span id="L1167"><span class="lineNum">    1167</span>                 :<span class="tlaGNC tlaBgGNC">           5 :       case SO::StrKeyed::kFirstIsName:</span></span>
+<span id="L1165"><span class="lineNum">    1165</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span><span class="tlaGBC" title="branch 2 was taken 11 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">          16 :     switch (options.outer.special-&gt;str_keyed) {</span></span>
+<span id="L1166"><span class="lineNum">    1166</span>                 :<span class="tlaUNC">           0 :       case SO::StrKeyed::kNormal: break;</span></span>
+<span id="L1167"><span class="lineNum">    1167</span>                 :<span class="tlaGNC">           5 :       case SO::StrKeyed::kFirstIsName:</span></span>
 <span id="L1168"><span class="lineNum">    1168</span>                 :             :         // Each pair element of the container `vs` is an element whose key is the `first` member and</span>
 <span id="L1169"><span class="lineNum">    1169</span>                 :             :         // whose value is the `second` member.</span>
 <span id="L1170"><span class="lineNum">    1170</span>                 :<span class="tlaGNC">           5 :         StreamStringKeyedContainer(os, options, vs, allow_field_names);</span></span>
@@ -1267,21 +1275,21 @@
 <span id="L1172"><span class="lineNum">    1172</span>                 :<span class="tlaGNC">          11 :       case SO::StrKeyed::kFirstIsNameOrdered: {</span></span>
 <span id="L1173"><span class="lineNum">    1173</span>                 :<span class="tlaGNC">          11 :         absl::btree_map&lt;std::string_view, std::reference_wrapper&lt;const typename C::value_type::second_type&gt;&gt; ordered;</span></span>
 <span id="L1174"><span class="lineNum">    1174</span>                 :<span class="tlaGNC">          11 :         std::size_t index = 0;</span></span>
-<span id="L1175"><span class="lineNum">    1175</span>         [<span class="tlaGBC" title="Branch 0 was taken 31 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 11 times"> + </span>]:<span class="tlaGNC">          42 :         for (const auto&amp; [key, val] : vs) {</span></span>
-<span id="L1176"><span class="lineNum">    1176</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 31 times"> + </span>]:<span class="tlaGNC">          31 :           if (++index &gt; options.outer.value_control-&gt;container_max_len) {</span></span>
-<span id="L1177"><span class="lineNum">    1177</span>                 :<span class="tlaUNC tlaBgUNC">           0 :             break;</span></span>
+<span id="L1175"><span class="lineNum">    1175</span>         [<span class="tlaGBC" title="branch 0 was taken 31 times"> + </span><span class="tlaGBC" title="branch 1 was taken 11 times"> + </span>]:<span class="tlaGNC">          42 :         for (const auto&amp; [key, val] : vs) {</span></span>
+<span id="L1176"><span class="lineNum">    1176</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 31 times"> + </span>]:<span class="tlaGNC">          31 :           if (++index &gt; options.outer.value_control-&gt;container_max_len) {</span></span>
+<span id="L1177"><span class="lineNum">    1177</span>                 :<span class="tlaUNC">           0 :             break;</span></span>
 <span id="L1178"><span class="lineNum">    1178</span>                 :             :           }</span>
-<span id="L1179"><span class="lineNum">    1179</span>                 :<span class="tlaGNC tlaBgGNC">          31 :           ordered.emplace(key, val);</span></span>
+<span id="L1179"><span class="lineNum">    1179</span>                 :<span class="tlaGNC">          31 :           ordered.emplace(key, val);</span></span>
 <span id="L1180"><span class="lineNum">    1180</span>                 :             :         }</span>
 <span id="L1181"><span class="lineNum">    1181</span>                 :<span class="tlaGNC">          11 :         StreamStringKeyedContainer(os, options, ordered, allow_field_names);</span></span>
 <span id="L1182"><span class="lineNum">    1182</span>                 :<span class="tlaGNC">          11 :         return;</span></span>
 <span id="L1183"><span class="lineNum">    1183</span>                 :<span class="tlaGNC">          11 :       }</span></span>
 <span id="L1184"><span class="lineNum">    1184</span>                 :             :     }</span>
-<span id="L1185"><span class="lineNum">    1185</span>                 :<span class="tlaUNC tlaBgUNC">           0 :     StreamContainer(os, options, vs, allow_field_names);</span></span>
+<span id="L1185"><span class="lineNum">    1185</span>                 :<span class="tlaUNC">           0 :     StreamContainer(os, options, vs, allow_field_names);</span></span>
 <span id="L1186"><span class="lineNum">    1186</span>                 :             :   }</span>
 <span id="L1187"><span class="lineNum">    1187</span>                 :             : </span>
 <span id="L1188"><span class="lineNum">    1188</span>                 :             :   template&lt;IsStringKeyedContainer C&gt;</span>
-<span id="L1189"><span class="lineNum">    1189</span>                 :<span class="tlaGNC tlaBgGNC">          16 :   void StreamStringKeyedContainer(</span></span>
+<span id="L1189"><span class="lineNum">    1189</span>                 :<span class="tlaGNC">          16 :   void StreamStringKeyedContainer(</span></span>
 <span id="L1190"><span class="lineNum">    1190</span>                 :             :       OStream&amp; os,</span>
 <span id="L1191"><span class="lineNum">    1191</span>                 :             :       const StringifyFieldOptions&amp; options,</span>
 <span id="L1192"><span class="lineNum">    1192</span>                 :             :       const C&amp; vs,</span>
@@ -1290,14 +1298,14 @@
 <span id="L1195"><span class="lineNum">    1195</span>                 :<span class="tlaGNC">          16 :     os.IncStruct(format);</span></span>
 <span id="L1196"><span class="lineNum">    1196</span>                 :<span class="tlaGNC">          16 :     std::string_view sep;</span></span>
 <span id="L1197"><span class="lineNum">    1197</span>                 :<span class="tlaGNC">          16 :     std::size_t index = 0;</span></span>
-<span id="L1198"><span class="lineNum">    1198</span>         [<span class="tlaGBC" title="Branch 0 was taken 41 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 16 times"> + </span>]:<span class="tlaGNC">          57 :     for (const auto&amp; v : vs) {</span></span>
-<span id="L1199"><span class="lineNum">    1199</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 41 times"> + </span>]:<span class="tlaGNC">          41 :       if (index &gt;= options.outer.value_control-&gt;container_max_len) {</span></span>
-<span id="L1200"><span class="lineNum">    1200</span>                 :<span class="tlaUNC tlaBgUNC">           0 :         break;</span></span>
+<span id="L1198"><span class="lineNum">    1198</span>         [<span class="tlaGBC" title="branch 0 was taken 41 times"> + </span><span class="tlaGBC" title="branch 1 was taken 16 times"> + </span>]:<span class="tlaGNC">          57 :     for (const auto&amp; v : vs) {</span></span>
+<span id="L1199"><span class="lineNum">    1199</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 41 times"> + </span>]:<span class="tlaGNC">          41 :       if (index &gt;= options.outer.value_control-&gt;container_max_len) {</span></span>
+<span id="L1200"><span class="lineNum">    1200</span>                 :<span class="tlaUNC">           0 :         break;</span></span>
 <span id="L1201"><span class="lineNum">    1201</span>                 :             :       }</span>
-<span id="L1202"><span class="lineNum">    1202</span>                 :<span class="tlaGNC tlaBgGNC">          41 :       os &lt;&lt; sep;</span></span>
+<span id="L1202"><span class="lineNum">    1202</span>                 :<span class="tlaGNC">          41 :       os &lt;&lt; sep;</span></span>
 <span id="L1203"><span class="lineNum">    1203</span>                 :<span class="tlaGNC">          41 :       os.StreamIndent();</span></span>
 <span id="L1204"><span class="lineNum">    1204</span>                 :<span class="tlaGNC">          41 :       sep = options.outer.format-&gt;field_separator;</span></span>
-<span id="L1205"><span class="lineNum">    1205</span>         [<span class="tlaGBC" title="Branch 0 was taken 41 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">          41 :       if (allow_field_names) {</span></span>
+<span id="L1205"><span class="lineNum">    1205</span>         [<span class="tlaGBC" title="branch 0 was taken 41 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          41 :       if (allow_field_names) {</span></span>
 <span id="L1206"><span class="lineNum">    1206</span>                 :<span class="tlaGNC">          41 :         const StringifyFieldInfo field_info{.options = options, .idx = index, .name = v.first};</span></span>
 <span id="L1207"><span class="lineNum">    1207</span>                 :<span class="tlaGNC">          41 :         StreamFieldName(os, field_info, /*allow_key_override=*/false);</span></span>
 <span id="L1208"><span class="lineNum">    1208</span>                 :             :       }</span>
@@ -1323,8 +1331,8 @@
 <span id="L1228"><span class="lineNum">    1228</span>                 :<span class="tlaGNC">          64 :     os.IncContainer(format);</span></span>
 <span id="L1229"><span class="lineNum">    1229</span>                 :<span class="tlaGNC">          64 :     std::string_view sep;</span></span>
 <span id="L1230"><span class="lineNum">    1230</span>                 :<span class="tlaGNC">          64 :     std::size_t index = 0;</span></span>
-<span id="L1231"><span class="lineNum">    1231</span>         [<span class="tlaGBC" title="Branch 0 was taken 120 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 60 times"> + </span>]:<span class="tlaGNC">         180 :     for (const auto&amp; v : vs) {</span></span>
-<span id="L1232"><span class="lineNum">    1232</span>         [<span class="tlaGBC" title="Branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 116 times"> + </span>]:<span class="tlaGNC">         120 :       if (++index &gt; options.outer.value_control-&gt;container_max_len) {</span></span>
+<span id="L1231"><span class="lineNum">    1231</span>         [<span class="tlaGBC" title="branch 0 was taken 120 times"> + </span><span class="tlaGBC" title="branch 1 was taken 60 times"> + </span>]:<span class="tlaGNC">         180 :     for (const auto&amp; v : vs) {</span></span>
+<span id="L1232"><span class="lineNum">    1232</span>         [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 116 times"> + </span>]:<span class="tlaGNC">         120 :       if (++index &gt; options.outer.value_control-&gt;container_max_len) {</span></span>
 <span id="L1233"><span class="lineNum">    1233</span>                 :<span class="tlaGNC">           4 :         break;</span></span>
 <span id="L1234"><span class="lineNum">    1234</span>                 :             :       }</span>
 <span id="L1235"><span class="lineNum">    1235</span>                 :<span class="tlaGNC">         116 :       os &lt;&lt; sep;</span></span>
@@ -1391,20 +1399,20 @@
 <span id="L1296"><span class="lineNum">    1296</span>                 :             :     } else if constexpr (IsPair&lt;RawV&gt;) {</span>
 <span id="L1297"><span class="lineNum">    1297</span>                 :<span class="tlaGNC">          68 :       StreamValuePair(os, options, v, allow_field_names);</span></span>
 <span id="L1298"><span class="lineNum">    1298</span>                 :             :     } else if constexpr (std::is_same_v&lt;RawV, char&gt; || std::is_same_v&lt;RawV, unsigned char&gt;) {</span>
-<span id="L1299"><span class="lineNum">    1299</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           4 :       if (options.outer.format-&gt;char_delim.empty()) {</span></span>
-<span id="L1300"><span class="lineNum">    1300</span>                 :<span class="tlaUNC tlaBgUNC">           0 :         os &lt;&lt; absl::StreamFormat(&quot;%v&quot;, int(v));</span></span>
+<span id="L1299"><span class="lineNum">    1299</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           4 :       if (options.outer.format-&gt;char_delim.empty()) {</span></span>
+<span id="L1300"><span class="lineNum">    1300</span>                 :<span class="tlaUNC">           0 :         os &lt;&lt; absl::StreamFormat(&quot;%v&quot;, int(v));</span></span>
 <span id="L1301"><span class="lineNum">    1301</span>                 :             :       } else {</span>
-<span id="L1302"><span class="lineNum">    1302</span>                 :<span class="tlaGNC tlaBgGNC">           4 :         os &lt;&lt; options.outer.format-&gt;char_delim;</span></span>
-<span id="L1303"><span class="lineNum">    1303</span>         [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           4 :         if (v == '\'') {</span></span>
-<span id="L1304"><span class="lineNum">    1304</span>                 :<span class="tlaUNC tlaBgUNC">           0 :           StreamValueStr(os, options.outer, &quot;\\'&quot;);</span></span>
+<span id="L1302"><span class="lineNum">    1302</span>                 :<span class="tlaGNC">           4 :         os &lt;&lt; options.outer.format-&gt;char_delim;</span></span>
+<span id="L1303"><span class="lineNum">    1303</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           4 :         if (v == '\'') {</span></span>
+<span id="L1304"><span class="lineNum">    1304</span>                 :<span class="tlaUNC">           0 :           StreamValueStr(os, options.outer, &quot;\\'&quot;);</span></span>
 <span id="L1305"><span class="lineNum">    1305</span>                 :             :         } else {</span>
-<span id="L1306"><span class="lineNum">    1306</span>                 :<span class="tlaGNC tlaBgGNC">           4 :           const std::string_view vv{reinterpret_cast&lt;const char*&gt;(&amp;v), 1};  // NOLINT(*-type-reinterpret-cast)</span></span>
+<span id="L1306"><span class="lineNum">    1306</span>                 :<span class="tlaGNC">           4 :           const std::string_view vv{reinterpret_cast&lt;const char*&gt;(&amp;v), 1};  // NOLINT(*-type-reinterpret-cast)</span></span>
 <span id="L1307"><span class="lineNum">    1307</span>                 :<span class="tlaGNC">           4 :           StreamValueStr(os, options.outer, vv);</span></span>
 <span id="L1308"><span class="lineNum">    1308</span>                 :             :         }</span>
 <span id="L1309"><span class="lineNum">    1309</span>                 :<span class="tlaGNC">           4 :         os &lt;&lt; options.outer.format-&gt;char_delim;</span></span>
 <span id="L1310"><span class="lineNum">    1310</span>                 :             :       }</span>
 <span id="L1311"><span class="lineNum">    1311</span>                 :             :     } else if constexpr (std::is_arithmetic_v&lt;RawV&gt;) {</span>
-<span id="L1312"><span class="lineNum">    1312</span>         [<span class="tlaGBC" title="Branch 0 was taken 314 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">         322 :       if (options.outer.value_overrides-&gt;replacement_other.empty()) {</span></span>
+<span id="L1312"><span class="lineNum">    1312</span>         [<span class="tlaGBC" title="branch 0 was taken 314 times"> + </span><span class="tlaGBC" title="branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">         322 :       if (options.outer.value_overrides-&gt;replacement_other.empty()) {</span></span>
 <span id="L1313"><span class="lineNum">    1313</span>                 :<span class="tlaGNC">         314 :         os &lt;&lt; absl::StreamFormat(&quot;%v&quot;, v);</span></span>
 <span id="L1314"><span class="lineNum">    1314</span>                 :             :       } else {</span>
 <span id="L1315"><span class="lineNum">    1315</span>                 :<span class="tlaGNC">           8 :         os &lt;&lt; options.outer.value_overrides-&gt;replacement_other;</span></span>
@@ -1427,14 +1435,14 @@
 <span id="L1332"><span class="lineNum">    1332</span>                 :             :     using RawV = std::remove_cvref_t&lt;V&gt;;</span>
 <span id="L1333"><span class="lineNum">    1333</span>                 :             :     if constexpr (!HasMboTypesStringifyFieldNames&lt;RawV&gt; &amp;&amp; !HasMboTypesStringifyOptions&lt;RawV&gt;) {</span>
 <span id="L1334"><span class="lineNum">    1334</span>                 :<span class="tlaGNC">          68 :       std::array&lt;std::string_view, 2&gt; field_names;</span></span>
-<span id="L1335"><span class="lineNum">    1335</span>         [<span class="tlaGBC" title="Branch 0 was taken 68 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">          68 :       if (options.outer.special-&gt;pair_keys.has_value()) {</span></span>
+<span id="L1335"><span class="lineNum">    1335</span>         [<span class="tlaGBC" title="branch 0 was taken 68 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          68 :       if (options.outer.special-&gt;pair_keys.has_value()) {</span></span>
 <span id="L1336"><span class="lineNum">    1336</span>                 :<span class="tlaGNC">          68 :         std::get&lt;0&gt;(field_names) = options.outer.special-&gt;pair_keys-&gt;first;</span></span>
 <span id="L1337"><span class="lineNum">    1337</span>                 :<span class="tlaGNC">          68 :         std::get&lt;1&gt;(field_names) = options.outer.special-&gt;pair_keys-&gt;second;</span></span>
 <span id="L1338"><span class="lineNum">    1338</span>                 :             :       } else {</span>
-<span id="L1339"><span class="lineNum">    1339</span>                 :<span class="tlaUNC tlaBgUNC">           0 :         std::get&lt;0&gt;(field_names) = &quot;first&quot;;</span></span>
+<span id="L1339"><span class="lineNum">    1339</span>                 :<span class="tlaUNC">           0 :         std::get&lt;0&gt;(field_names) = &quot;first&quot;;</span></span>
 <span id="L1340"><span class="lineNum">    1340</span>                 :<span class="tlaUNC">           0 :         std::get&lt;1&gt;(field_names) = &quot;second&quot;;</span></span>
 <span id="L1341"><span class="lineNum">    1341</span>                 :             :       }</span>
-<span id="L1342"><span class="lineNum">    1342</span>                 :<span class="tlaGNC tlaBgGNC">          68 :       bool use_seperator = false;</span></span>
+<span id="L1342"><span class="lineNum">    1342</span>                 :<span class="tlaGNC">          68 :       bool use_seperator = false;</span></span>
 <span id="L1343"><span class="lineNum">    1343</span>                 :<span class="tlaGNC">          68 :       os.IncStruct(*options.outer.format);</span></span>
 <span id="L1344"><span class="lineNum">    1344</span>                 :<span class="tlaGNC">          68 :       StreamField(os, options.ToInner(), use_seperator, v, v.first, 0, field_names, allow_field_names);</span></span>
 <span id="L1345"><span class="lineNum">    1345</span>                 :<span class="tlaGNC">          68 :       StreamField(os, options.ToInner(), use_seperator, v, v.second, 1, field_names, allow_field_names);</span></span>
@@ -1447,7 +1455,7 @@
 <span id="L1352"><span class="lineNum">    1352</span>                 :             :   template&lt;typename V&gt;</span>
 <span id="L1353"><span class="lineNum">    1353</span>                 :<span class="tlaGNC">          42 :   void StreamValueSmartPtr(OStream&amp; os, const StringifyFieldOptions&amp; options, const V&amp; v, bool allow_field_names)</span></span>
 <span id="L1354"><span class="lineNum">    1354</span>                 :             :       const {</span>
-<span id="L1355"><span class="lineNum">    1355</span>         [<span class="tlaGBC" title="Branch 0 was taken 40 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">          42 :     if (v) {</span></span>
+<span id="L1355"><span class="lineNum">    1355</span>         [<span class="tlaGBC" title="branch 0 was taken 40 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">          42 :     if (v) {</span></span>
 <span id="L1356"><span class="lineNum">    1356</span>                 :<span class="tlaGNC">          40 :       os &lt;&lt; options.outer.format-&gt;smart_ptr_prefix;</span></span>
 <span id="L1357"><span class="lineNum">    1357</span>                 :<span class="tlaGNC">          40 :       StreamValue(os, options.ToInner(), *v, allow_field_names);</span></span>
 <span id="L1358"><span class="lineNum">    1358</span>                 :<span class="tlaGNC">          40 :       os &lt;&lt; options.outer.format-&gt;smart_ptr_suffix;</span></span>
@@ -1458,7 +1466,7 @@
 <span id="L1363"><span class="lineNum">    1363</span>                 :             : </span>
 <span id="L1364"><span class="lineNum">    1364</span>                 :             :   template&lt;typename V&gt;</span>
 <span id="L1365"><span class="lineNum">    1365</span>                 :<span class="tlaGNC">          10 :   void StreamValuePointer(OStream&amp; os, const StringifyFieldOptions&amp; options, const V&amp; v, bool allow_field_names) const {</span></span>
-<span id="L1366"><span class="lineNum">    1366</span>         [<span class="tlaGBC" title="Branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">          10 :     if (v) {</span></span>
+<span id="L1366"><span class="lineNum">    1366</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">          10 :     if (v) {</span></span>
 <span id="L1367"><span class="lineNum">    1367</span>                 :<span class="tlaGNC">           6 :       os &lt;&lt; options.outer.format-&gt;pointer_prefix;</span></span>
 <span id="L1368"><span class="lineNum">    1368</span>                 :<span class="tlaGNC">           6 :       StreamValue(os, options.ToInner(), *v, allow_field_names);</span></span>
 <span id="L1369"><span class="lineNum">    1369</span>                 :<span class="tlaGNC">           6 :       os &lt;&lt; options.outer.format-&gt;pointer_suffix;</span></span>
@@ -1470,7 +1478,7 @@
 <span id="L1375"><span class="lineNum">    1375</span>                 :             :   template&lt;typename V&gt;</span>
 <span id="L1376"><span class="lineNum">    1376</span>                 :<span class="tlaGNC">           5 :   void StreamValueOptional(OStream&amp; os, const StringifyFieldOptions&amp; options, const V&amp; v, bool allow_field_names)</span></span>
 <span id="L1377"><span class="lineNum">    1377</span>                 :             :       const {</span>
-<span id="L1378"><span class="lineNum">    1378</span>         [<span class="tlaGBC" title="Branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           5 :     if (v.has_value()) {</span></span>
+<span id="L1378"><span class="lineNum">    1378</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           5 :     if (v.has_value()) {</span></span>
 <span id="L1379"><span class="lineNum">    1379</span>                 :<span class="tlaGNC">           3 :       os &lt;&lt; options.outer.format-&gt;optional_prefix;</span></span>
 <span id="L1380"><span class="lineNum">    1380</span>                 :<span class="tlaGNC">           3 :       StreamValue(os, options.ToInner(), *v, allow_field_names);</span></span>
 <span id="L1381"><span class="lineNum">    1381</span>                 :<span class="tlaGNC">           3 :       os &lt;&lt; options.outer.format-&gt;optional_suffix;</span></span>
@@ -1481,33 +1489,33 @@
 <span id="L1386"><span class="lineNum">    1386</span>                 :             : </span>
 <span id="L1387"><span class="lineNum">    1387</span>                 :             :   template&lt;typename V&gt;</span>
 <span id="L1388"><span class="lineNum">    1388</span>                 :<span class="tlaGNC">           2 :   static void StreamValueFallback(OStream&amp; os, const StringifyOptions&amp; options, const V&amp; v) {</span></span>
-<span id="L1389"><span class="lineNum">    1389</span>         [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           2 :     if (options.value_control-&gt;other_types_direct) {</span></span>
-<span id="L1390"><span class="lineNum">    1390</span>         [<span class="tlaGBC" title="Branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="Branch 1 was not taken"> - </span>]:<span class="tlaGNC">           2 :       if (options.value_overrides-&gt;replacement_other.empty()) {</span></span>
+<span id="L1389"><span class="lineNum">    1389</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           2 :     if (options.value_control-&gt;other_types_direct) {</span></span>
+<span id="L1390"><span class="lineNum">    1390</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           2 :       if (options.value_overrides-&gt;replacement_other.empty()) {</span></span>
 <span id="L1391"><span class="lineNum">    1391</span>                 :<span class="tlaGNC">           2 :         os &lt;&lt; absl::StreamFormat(&quot;%v&quot;, v);</span></span>
 <span id="L1392"><span class="lineNum">    1392</span>                 :             :       } else {</span>
-<span id="L1393"><span class="lineNum">    1393</span>                 :<span class="tlaUNC tlaBgUNC">           0 :         os &lt;&lt; options.value_overrides-&gt;replacement_other;</span></span>
+<span id="L1393"><span class="lineNum">    1393</span>                 :<span class="tlaUNC">           0 :         os &lt;&lt; options.value_overrides-&gt;replacement_other;</span></span>
 <span id="L1394"><span class="lineNum">    1394</span>                 :             :       }</span>
 <span id="L1395"><span class="lineNum">    1395</span>                 :             :     } else {</span>
 <span id="L1396"><span class="lineNum">    1396</span>                 :<span class="tlaUNC">           0 :       const std::string vv = absl::StrFormat(&quot;%v&quot;, v);</span></span>
 <span id="L1397"><span class="lineNum">    1397</span>                 :<span class="tlaUNC">           0 :       StreamValueStr(os, options, vv);</span></span>
 <span id="L1398"><span class="lineNum">    1398</span>                 :<span class="tlaUNC">           0 :     }</span></span>
-<span id="L1399"><span class="lineNum">    1399</span>                 :<span class="tlaGNC tlaBgGNC">           2 :   }</span></span>
+<span id="L1399"><span class="lineNum">    1399</span>                 :<span class="tlaGNC">           2 :   }</span></span>
 <span id="L1400"><span class="lineNum">    1400</span>                 :             : </span>
 <span id="L1401"><span class="lineNum">    1401</span>                 :<span class="tlaGNC">         225 :   static void StreamValueStr(OStream&amp; os, const StringifyOptions&amp; options, std::string_view v) {</span></span>
-<span id="L1402"><span class="lineNum">    1402</span>         [<span class="tlaGBC" title="Branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 217 times"> + </span>]:<span class="tlaGNC">         225 :     if (!options.value_overrides-&gt;replacement_str.empty()) {</span></span>
+<span id="L1402"><span class="lineNum">    1402</span>         [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 217 times"> + </span>]:<span class="tlaGNC">         225 :     if (!options.value_overrides-&gt;replacement_str.empty()) {</span></span>
 <span id="L1403"><span class="lineNum">    1403</span>                 :<span class="tlaGNC">           8 :       os &lt;&lt; options.value_overrides-&gt;replacement_str;</span></span>
 <span id="L1404"><span class="lineNum">    1404</span>                 :<span class="tlaGNC">           8 :       return;</span></span>
 <span id="L1405"><span class="lineNum">    1405</span>                 :             :     }</span>
 <span id="L1406"><span class="lineNum">    1406</span>                 :<span class="tlaGNC">         217 :     std::string_view vvv{v};</span></span>
-<span id="L1407"><span class="lineNum">    1407</span>         [<span class="tlaGBC" title="Branch 0 was taken 10 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 207 times"> + </span>]:<span class="tlaGNC">         217 :     if (options.value_control-&gt;str_max_length != std::string_view::npos) {</span></span>
+<span id="L1407"><span class="lineNum">    1407</span>         [<span class="tlaGBC" title="branch 0 was taken 10 times"> + </span><span class="tlaGBC" title="branch 1 was taken 207 times"> + </span>]:<span class="tlaGNC">         217 :     if (options.value_control-&gt;str_max_length != std::string_view::npos) {</span></span>
 <span id="L1408"><span class="lineNum">    1408</span>                 :<span class="tlaGNC">          10 :       vvv = vvv.substr(0, options.value_control-&gt;str_max_length);</span></span>
 <span id="L1409"><span class="lineNum">    1409</span>                 :             :     }</span>
-<span id="L1410"><span class="lineNum">    1410</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 217 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaUNC" title="Branch 3 was not taken"> - </span>]:<span class="tlaGNC">         217 :     switch (options.value_control-&gt;escape_mode) {</span></span>
-<span id="L1411"><span class="lineNum">    1411</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       case StringifyOptions::EscapeMode::kNone: os &lt;&lt; vvv; break;</span></span>
-<span id="L1412"><span class="lineNum">    1412</span>                 :<span class="tlaGNC tlaBgGNC">         217 :       case StringifyOptions::EscapeMode::kCEscape: os &lt;&lt; absl::CEscape(vvv); break;</span></span>
-<span id="L1413"><span class="lineNum">    1413</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       case StringifyOptions::EscapeMode::kCHexEscape: os &lt;&lt; absl::CHexEscape(vvv); break;</span></span>
+<span id="L1410"><span class="lineNum">    1410</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 217 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">         217 :     switch (options.value_control-&gt;escape_mode) {</span></span>
+<span id="L1411"><span class="lineNum">    1411</span>                 :<span class="tlaUNC">           0 :       case StringifyOptions::EscapeMode::kNone: os &lt;&lt; vvv; break;</span></span>
+<span id="L1412"><span class="lineNum">    1412</span>                 :<span class="tlaGNC">         217 :       case StringifyOptions::EscapeMode::kCEscape: os &lt;&lt; absl::CEscape(vvv); break;</span></span>
+<span id="L1413"><span class="lineNum">    1413</span>                 :<span class="tlaUNC">           0 :       case StringifyOptions::EscapeMode::kCHexEscape: os &lt;&lt; absl::CHexEscape(vvv); break;</span></span>
 <span id="L1414"><span class="lineNum">    1414</span>                 :             :     }</span>
-<span id="L1415"><span class="lineNum">    1415</span>         [<span class="tlaGBC" title="Branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="Branch 1 was taken 211 times"> + </span>]:<span class="tlaGNC tlaBgGNC">         217 :     if (vvv.length() &lt; v.length()) {</span></span>
+<span id="L1415"><span class="lineNum">    1415</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 211 times"> + </span>]:<span class="tlaGNC">         217 :     if (vvv.length() &lt; v.length()) {</span></span>
 <span id="L1416"><span class="lineNum">    1416</span>                 :<span class="tlaGNC">           6 :       os &lt;&lt; options.value_control-&gt;str_cutoff_suffix;</span></span>
 <span id="L1417"><span class="lineNum">    1417</span>                 :             :     }</span>
 <span id="L1418"><span class="lineNum">    1418</span>                 :             :   }</span>
@@ -1650,13 +1658,14 @@
 <span id="L1555"><span class="lineNum">    1555</span>                 :             :   // In order to provide overrides, the actual target `options` have to be created.</span>
 <span id="L1556"><span class="lineNum">    1556</span>                 :             :   // Once those are available, the overrides can be applied.</span>
 <span id="L1557"><span class="lineNum">    1557</span>                 :<span class="tlaGNC">          91 :   return [&amp;field_names, name_handling]&lt;typename T&gt;(const T&amp;, const StringifyFieldInfo&amp; field) -&gt; StringifyOptions {</span></span>
-<span id="L1558"><span class="lineNum">    1558</span>   [<span class="tlaUNC" title="Branch 0 was not taken"> - </span><span class="tlaGBC" title="Branch 1 was taken 9 times"> + </span><span class="tlaUNC" title="Branch 2 was not taken"> - </span><span class="tlaGBC" title="Branch 3 was taken 20 times"> + </span> :<span class="tlaGNC">         182 :     if (field.idx &gt;= std::size(field_names)) {</span></span>
-<span class="lineNum">        </span> <span class="tlaUNC" title="Branch 4 was not taken"> - </span><span class="tlaGBC" title="Branch 5 was taken 16 times"> + </span><span class="tlaUNC" title="Branch 6 was not taken"> - </span><span class="tlaGBC" title="Branch 7 was taken 4 times"> + </span><span class="tlaUNC" title="Branch 8 was not taken"> - </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="Branch 9 was taken 18 times"> + </span><span class="tlaUNC" title="Branch 10 was not taken"> - </span><span class="tlaGBC" title="Branch 11 was taken 6 times"> + </span><span class="tlaUNC" title="Branch 12 was not taken"> - </span><span class="tlaGBC" title="Branch 13 was taken 8 times"> + </span> 
-<span class="lineNum">        </span>          <span class="tlaUNC" title="Branch 14 was not taken"> - </span><span class="tlaGBC" title="Branch 15 was taken 10 times"> + </span>]
-<span id="L1559"><span class="lineNum">    1559</span>                 :<span class="tlaUNC tlaBgUNC">           0 :       return field.options.outer;</span></span>
+<span id="L1558"><span class="lineNum">    1558</span>                 :<span class="tlaGNC">         182 :     if (field.idx &gt;= std::size(field_names)) {</span></span>
+<span class="lineNum">        </span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 20 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 16 times"> + </span><span class="tlaUNC" title="branch 6 was not taken"> - </span><span class="tlaGBC" title="branch 7 was taken 4 times"> + </span><span class="tlaUNC" title="branch 8 was not taken"> - </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 18 times"> + </span><span class="tlaUNC" title="branch 10 was not taken"> - </span><span class="tlaGBC" title="branch 11 was taken 6 times"> + </span><span class="tlaUNC" title="branch 12 was not taken"> - </span><span class="tlaGBC" title="branch 13 was taken 8 times"> + </span> 
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 14 was not taken"> - </span><span class="tlaGBC" title="branch 15 was taken 10 times"> + </span>]
+<span id="L1559"><span class="lineNum">    1559</span>                 :<span class="tlaUNC">           0 :       return field.options.outer;</span></span>
 <span id="L1560"><span class="lineNum">    1560</span>                 :             :     }</span>
-<span id="L1561"><span class="lineNum">    1561</span>                 :<span class="tlaGNC tlaBgGNC">          91 :     StringifyOptions options = field.options.outer;</span></span>
+<span id="L1561"><span class="lineNum">    1561</span>                 :<span class="tlaGNC">          91 :     StringifyOptions options = field.options.outer;</span></span>
 <span id="L1562"><span class="lineNum">    1562</span>                 :<span class="tlaGNC">          91 :     std::string_view field_name = std::data(field_names)[field.idx];  // NOLINT(*-pointer-arithmetic)</span></span>
 <span id="L1563"><span class="lineNum">    1563</span>                 :<span class="tlaGNC">          91 :     options.key_overrides.as_data().key_use_name = field_name;</span></span>
 <span id="L1564"><span class="lineNum">    1564</span>                 :             :     if (types_internal::SupportsFieldNames&lt;T&gt; &amp;&amp; name_handling == StringifyNameHandling::kVerify) {</span>
@@ -1677,7 +1686,7 @@
 
           <table width="100%" border=0 cellspacing=0 cellpadding=0>
             <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
-            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 2.5-0</a></td></tr>
           </table>
           <br>
 
