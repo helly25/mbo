@@ -182,6 +182,10 @@ also updates this file to the completed state.
   - Preserve stable pull-request coverage destinations without relying on the
     synthetic merge commit's API association.
   - PR: [#372](https://github.com/helly25/mbo/pull/372).
+- [x] Give every GitHub Actions workflow only the token permissions it needs.
+  - Replace blanket `read-all` grants with explicit read scopes.
+  - Default the privileged coverage publisher to no access and retain its
+    narrow job-level publishing permissions.
 - [x] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.

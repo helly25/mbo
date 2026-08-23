@@ -7,7 +7,8 @@ on:
     branches: [main]
   pull_request: {}
 
-permissions: read-all
+permissions:
+  contents: read
 
 # A new commit supersedes an older run for the same branch or pull request.
 # Never cancel main: its completed full-matrix result is an integration record,

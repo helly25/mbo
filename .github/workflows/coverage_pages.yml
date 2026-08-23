@@ -11,7 +11,9 @@ concurrency:
   group: coverage-pages
   cancel-in-progress: false
 
-permissions: read-all
+# The publishing job below declares its exact elevated scopes. Default to no
+# token access so any future job must opt in deliberately.
+permissions: {}
 
 jobs:
   publish:

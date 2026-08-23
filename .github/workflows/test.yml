@@ -15,7 +15,10 @@
 
 name: Reusable Test Runner
 
-permissions: read-all
+permissions:
+  contents: read
+  # The coverage target fallback associates a commit with its pull request.
+  pull-requests: read
 
 on:
   workflow_call:

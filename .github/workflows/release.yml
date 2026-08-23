@@ -6,7 +6,8 @@ on:
       # is stricter than "*.*.*", which also matches things like "v1.2.x".
       - "[0-9]+.[0-9]+.[0-9]+"
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   coverage:
@@ -37,7 +38,7 @@ jobs:
   publish:
     needs: release
     # Grant what publish.yaml's job requests; overrides the workflow-level
-    # read-all, and a called workflow cannot exceed the caller's permissions.
+    # read permission, and a called workflow cannot exceed the caller's permissions.
     permissions:
       contents: write
     uses: ./.github/workflows/publish.yaml
