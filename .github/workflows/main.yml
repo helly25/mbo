@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: read
+  # The reusable coverage job can associate branch commits with a PR.
+  pull-requests: read
 
 # A new commit supersedes an older run for the same branch or pull request.
 # Never cancel main: its completed full-matrix result is an integration record,

@@ -8,6 +8,10 @@ on:
 
 permissions:
   contents: read
+  # test.yml declares this for its coverage association fallback. The release
+  # supplies an explicit tag target, but a reusable workflow cannot request a
+  # scope its caller omitted.
+  pull-requests: read
 
 jobs:
   coverage:
