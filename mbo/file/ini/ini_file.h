@@ -16,14 +16,17 @@
 #ifndef MBO_FILE_INI_INI_FILE_H_
 #define MBO_FILE_INI_INI_FILE_H_
 
+#include <cstddef>
+#include <string>
 #include <string_view>
 #include <type_traits>
-#include <vector>
+#include <utility>
 
 #include "absl/container/btree_map.h"
 #include "absl/container/btree_set.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
+#include "absl/strings/str_cat.h"
 
 namespace mbo::file {
 
@@ -31,12 +34,12 @@ namespace mbo::file {
 //
 // See https://en.wikipedia.org/wiki/INI_file
 //
-// Comments start with a ';' or a '#' and can only be preceeded by whitespace.
+// Comments start with a ';' or a '#' and can only be preceded by whitespace.
 //
 // Groups consist of plain strings. Anything is allowed (including whitespace), but outer whitespace
 // will be removed and group lines must start with '[' and end with ']'.
 //
-// Keys and values have their outer whitespace stipped.
+// Keys and values have their outer whitespace stripped.
 //
 class IniFile {
  public:
@@ -45,9 +48,25 @@ class IniFile {
     std::string_view key;
   };
 
+  // Reads and strictly parses an INI file. Malformed section headers, missing
+  // separators, empty keys, and duplicate keys return InvalidArgument with the
+  // source line number.
   static absl::StatusOr<IniFile> Read(std::string_view filename);
 
+  // Reads a file using the legacy permissive parser.
+  static absl::StatusOr<IniFile> ReadPermissive(std::string_view filename);
+
+  // Strictly parses content using the same validation as Read(). Full-line
+  // comments start with ';' or '#'; comment characters inside a value are data.
+  static absl::StatusOr<IniFile> ParseStrict(std::string_view content);
+
+  // Compatibility spelling for the original permissive parser. New callers
+  // should select ParseStrict() or ParsePermissive() explicitly.
   static IniFile Parse(std::string_view content);
+
+  // Parses using the historical behavior, including last-value-wins duplicate
+  // keys and treating a line without '=' as a key with an empty value.
+  static IniFile ParsePermissive(std::string_view content);
 
   static IniFile NewEmpty() { return {}; }
 
