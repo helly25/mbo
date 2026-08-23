@@ -1,10 +1,11 @@
 name: Test
-# Branches only - release tags are handled by release.yml. Running this on tag
-# pushes fired the full matrix needlessly and broke `trunk check`, which diffs
-# against `github.event.before` (the prior tag object, gone after a tag move).
+# Validate pull requests, including forks, in pull-request context. Pushes run
+# only on main so a same-repository PR does not duplicate the full matrix.
+# Release tags are handled by release.yml.
 on:
   push:
-    branches: ["**"]
+    branches: [main]
+  pull_request:
 
 permissions: read-all
 
