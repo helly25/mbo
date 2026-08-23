@@ -62,6 +62,7 @@ also updates this file to the completed state.
   - Enable ordinary auto-merge and leave maintainer approval explicit.
   - Protect the exact `gh` command sequence with a fake-client integration
     test.
+  - PR: [#367](https://github.com/helly25/mbo/pull/367).
 - [x] Avoid an unnecessary Bazel configuration switch while generating the
       clang-tidy compilation database.
   - Build the extractor with the same `clang-tidy` configuration used by its
