@@ -17,6 +17,11 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+# shellcheck source=tools/release_git.sh
+source "${SCRIPT_DIR}/release_git.sh"
+
 function die() {
   echo "ERROR: ${*}" 1>&2
   exit 1
@@ -71,7 +76,9 @@ if [[ -z "${NEXT_VERSION}" ]]; then
   die "Could not determine next version from input (${VERSION})."
 fi
 
-grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
+if release_tag_exists "${VERSION}"; then
+  die "Version tag is already in use."
+fi
 
 # Pre-flight: release_prep.sh applies .github/workflows/bazelmod.patch to the
 # worktree before archiving (it shapes the released MODULE.bazel/mope.bzl). If it
@@ -83,7 +90,7 @@ patch -p1 --dry-run -f -i .github/workflows/bazelmod.patch >/dev/null 2>&1 \
 git tag -s -a "${VERSION}" \
   -m "New release tag version: '${VERSION}'." \
   -m "$(awk '/^#/{if(NR>1)exit}/^[^#]/{print}' <CHANGELOG.md)"
-git push origin --tags
+push_release_tag "${VERSION}"
 
 echo "Next version: ${NEXT_VERSION}"
 
