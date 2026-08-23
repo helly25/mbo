@@ -21,6 +21,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
 # shellcheck source=tools/release_git.sh
 source "${SCRIPT_DIR}/release_git.sh"
+# shellcheck source=tools/release_pr.sh
+source "${SCRIPT_DIR}/release_pr.sh"
 
 function die() {
   echo "ERROR: ${*}" 1>&2
@@ -121,7 +123,7 @@ if which gh; then
   BUMP_TEXT="Bump version from ${VERSION} to ${NEXT_VERSION}"
   MERGE_TITLE="${BUMP_TEXT}"
   MERGE_SUBJECT="${BUMP_TEXT}"
-  MERGE_BODY="Auto approved version bump from ${VERSION} to ${NEXT_VERSION} by trigger script."
+  MERGE_BODY="Automated version bump from ${VERSION} to ${NEXT_VERSION} by trigger script."
   if gh pr create --title "${MERGE_TITLE}" -b "Created by ${0}." 2>&1 | tee pr_create_output.txt; then
     PRNUM="$(sed -rne 's,https?://github.com/[^/]+/[^/]+/pull/([0-9]+)$,\1,p' <pr_create_output.txt)"
     PRURL="$(sed -rne 's,https?://github.com/[^/]+/[^/]+/pull/([0-9]+)$,\0,p' <pr_create_output.txt)"
@@ -130,18 +132,12 @@ if which gh; then
     cat pr_create_output.txt
   fi
   if [[ "${PRNUM}" -gt 1 ]]; then
-    gh pr ready "${NEXT_BRANCH}"
-    gh pr review "${NEXT_BRANCH}" -a -b "${MERGE_BODY}" || true
-    if gh pr merge "${NEXT_BRANCH}" --admin -d -s -b "${MERGE_BODY}" -t "${MERGE_SUBJECT}"; then
+    if enable_version_bump_auto_merge "${NEXT_BRANCH}" "${MERGE_BODY}" "${MERGE_SUBJECT}"; then
       git checkout main
-      git branch -d "${NEXT_BRANCH}"
-      echo "PR ${PRNUM} was merged via admin override. See: ${PRURL}."
+      echo "Auto-merge is enabled for PR ${PRNUM}."
+      echo "Please review and approve it at ${PRURL}."
     else
-      gh pr merge "${NEXT_BRANCH}" --auto -d -s -b "${MERGE_BODY}" -t "${MERGE_SUBJECT}"
-      git checkout main
-      git branch -d "${NEXT_BRANCH}" || true
-      echo "PR ${PRNUM} cannot be merged via admin override."
-      echo "Please approve it at ${PRURL}."
+      die "Could not enable auto-merge for PR ${PRNUM}. See: ${PRURL}."
     fi
   fi
 fi

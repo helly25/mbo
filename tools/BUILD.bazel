@@ -27,6 +27,15 @@ bashtest(
     data = ["release_git.sh"],
 )
 
+bashtest(
+    name = "release_pr_sh_test",
+    srcs = ["release_pr_sh_test.sh"],
+    data = [
+        "release_pr.sh",
+        "testdata/fake_gh.sh",
+    ],
+)
+
 _SYMBOLIZER = "@llvm_toolchain_llvm//:llvm-symbolizer"
 
 # Bake the hermetic llvm-symbolizer's RUNFILES path (an rlocation string) into the
