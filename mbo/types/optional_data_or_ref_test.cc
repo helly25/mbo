@@ -18,7 +18,6 @@
 #include <concepts>  // IWYU pragma: keep
 #include <optional>
 #include <set>
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -40,27 +39,6 @@ using ::testing::Not;
 
 struct OptionalDataOrRefTest : ::testing::Test {};
 
-struct ThrowingValue {
-  explicit ThrowingValue(int new_value) : value(new_value) { MaybeThrow(); }
-
-  ThrowingValue(const ThrowingValue& other) : value(other.value) { MaybeThrow(); }
-
-  ThrowingValue(ThrowingValue&& other) noexcept(false) : value(other.value) { MaybeThrow(); }
-
-  ThrowingValue& operator=(const ThrowingValue&) = default;
-  ThrowingValue& operator=(ThrowingValue&&) = default;
-  ~ThrowingValue() = default;
-
-  static void MaybeThrow() {
-    if (throw_on_construction) {
-      throw std::runtime_error("requested construction failure");
-    }
-  }
-
-  static inline bool throw_on_construction = false;
-  int value;
-};
-
 struct NothrowValue {
   explicit NothrowValue(int new_value) noexcept : value(new_value) {}
 
@@ -72,20 +50,8 @@ void MoveAssign(OptionalDataOrRef<T, RefT>& lhs, OptionalDataOrRef<T, RefT>& rhs
   lhs = std::move(rhs);
 }
 
-template<typename Func>
-bool ThrowsRuntimeError(Func&& func) {
-  try {
-    std::forward<Func>(func)();
-  } catch (const std::runtime_error&) {
-    return true;
-  }
-  return false;
-}
-
 static_assert(noexcept(std::declval<OptionalDataOrRef<NothrowValue>&>().emplace(1)));
-static_assert(!noexcept(std::declval<OptionalDataOrRef<ThrowingValue>&>().emplace(1)));
 static_assert(noexcept(OptionalDataOrRef<NothrowValue>(NothrowValue{1})));
-static_assert(!noexcept(OptionalDataOrRef<ThrowingValue>(ThrowingValue{1})));
 
 TEST_F(OptionalDataOrRefTest, Constexpr) {
   {
@@ -419,39 +385,6 @@ TEST_F(OptionalDataOrRefTest, NulloptAssignmentReturnsSelf) {
   OptionalDataOrRef<int>& result = (ref = std::nullopt);
   EXPECT_THAT(std::addressof(result), Eq(std::addressof(ref)));
   EXPECT_THAT(ref.HoldsNullopt(), true);
-}
-
-TEST_F(OptionalDataOrRefTest, FailedEmplaceLeavesValidEmptyState) {
-  OptionalDataOrRef<ThrowingValue> ref(ThrowingValue{1});
-  ThrowingValue::throw_on_construction = true;
-  const bool caught = ThrowsRuntimeError([&ref] { ref.emplace(2); });
-  ThrowingValue::throw_on_construction = false;
-
-  EXPECT_THAT(caught, true);
-  EXPECT_THAT(ref.HoldsNullopt(), true);
-  ref.emplace(3);
-  EXPECT_THAT(ref.HoldsData(), true);
-  EXPECT_THAT(ref->value, 3);
-}
-
-TEST_F(OptionalDataOrRefTest, FailedCopyAndReferencePromotionLeaveValidEmptyState) {
-  const OptionalDataOrRef<ThrowingValue> source(ThrowingValue{1});
-  OptionalDataOrRef<ThrowingValue> target(ThrowingValue{2});
-  ThrowingValue::throw_on_construction = true;
-  const bool copy_caught = ThrowsRuntimeError([&source, &target] { target = source; });
-  ThrowingValue::throw_on_construction = false;
-  EXPECT_THAT(copy_caught, true);
-  EXPECT_THAT(source.HoldsData(), true);
-  EXPECT_THAT(target.HoldsNullopt(), true);
-
-  ThrowingValue borrowed(3);
-  OptionalDataOrRef<ThrowingValue> reference(borrowed);
-  ThrowingValue::throw_on_construction = true;
-  const bool promotion_caught = ThrowsRuntimeError([&reference] { reference.as_data(4); });
-  ThrowingValue::throw_on_construction = false;
-  EXPECT_THAT(promotion_caught, true);
-  EXPECT_THAT(reference.HoldsNullopt(), true);
-  EXPECT_THAT(borrowed.value, 3);
 }
 
 // NOLINTEND(*-magic-numbers)

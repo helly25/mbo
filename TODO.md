@@ -85,12 +85,22 @@ also updates this file to the completed state.
 ## Documentation and quality coverage
 
 - [ ] Make `coverage_policy.json` the single source of truth for enforcement
-      and LCOV presentation limits, adopting the applicable parts of
-      [xff PR #631](https://github.com/helly25/xff/pull/631).
-  - Generate `genhtml`'s metric-specific high and medium color limits from the
-    authored coverage minima and a policy-owned warning gap.
-  - Use the generated LCOV configuration in both main/PR and release coverage
-    workflows, with validation and unit tests for every metric.
+      and LCOV presentation, adopting the applicable final state of
+      [xff PR #631](https://github.com/helly25/xff/pull/631),
+      [xff PR #633](https://github.com/helly25/xff/pull/633), and the
+      coverage-related changes from
+      [xff PR #634](https://github.com/helly25/xff/pull/634).
+  - Define explicit per-metric enforcement minima and health targets, and
+    generate `genhtml`'s medium and high limits from them. Equal minimum and
+    target values must form one pass/fail boundary without a yellow band.
+  - Pin a verified modern LCOV release that honors metric-specific thresholds,
+    accepting only the documented GCC/LLVM producer inconsistencies.
+  - Replace the generic `genhtml` legend with a policy-derived, metric-specific
+    legend on overview pages. Keep the compact report enforcement-only: values
+    at or above the minimum are `OK`, and values below it fail.
+  - Use the generated configuration throughout the reusable main, PR, and
+    release coverage path, with validation and unit tests for generation, HTML
+    augmentation, status rendering, and every metric.
   - Keep category floors and health targets inherited and composable so an
     exception names only the metrics it changes.
 - [x] Exercise the hash-internal runtime utilities directly ([PR #356](https://github.com/helly25/mbo/pull/356)).
