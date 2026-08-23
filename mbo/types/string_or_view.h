@@ -141,6 +141,10 @@ class StringOrView {
     return view().substr(pos, count);
   }
 
+  [[nodiscard]] constexpr std::string_view subview(size_type pos = 0, size_type count = npos) const {
+    return view().substr(pos, count);
+  }
+
   [[nodiscard]] constexpr int compare(std::string_view other) const noexcept { return view().compare(other); }
 
   [[nodiscard]] constexpr int compare(size_type pos, size_type count, std::string_view other) const {

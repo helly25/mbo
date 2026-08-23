@@ -205,6 +205,10 @@ TEST_F(StringOrViewTest, CopiesAndReturnsSubstringsAsViews) {
   EXPECT_THAT(std::string_view(copied, 3), Eq("cde"));
   EXPECT_THAT(value.substr(2, 3), Eq("cde"));
   EXPECT_THAT(value.substr(4), Eq("ef"));
+  static_assert(value.subview(2, 3) == "cde");
+  static_assert(value.subview(4) == "ef");
+  EXPECT_THAT(value.subview(2, 3), Eq("cde"));
+  EXPECT_THAT(value.subview(4), Eq("ef"));
 }
 
 TEST_F(StringOrViewTest, ProvidesStringViewComparisonOverloads) {
