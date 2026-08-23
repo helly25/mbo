@@ -61,6 +61,11 @@ cc_test(
         "-fexceptions",
         "-fno-sanitize=undefined",
     ],
+    # Exception-enabled compilation adds unwind branches to every inline Json
+    # template instantiated by this test, including unrelated comparators. The
+    # compatibility test remains in every ordinary matrix but must not distort
+    # the production coverage report.
+    tags = ["no-coverage"],
     deps = [
         ":json_cc",
         "@googletest//:gtest_main",
