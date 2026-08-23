@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-23 15:07:58</td>
+            <td class="headerValue">2026-08-23 19:56:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">68.2&nbsp;%</td>
@@ -481,26 +481,26 @@
 <span id="L401"><span class="lineNum">     401</span>                 :             : </span>
 <span id="L402"><span class="lineNum">     402</span>                 :<span class="tlaGNC">           1 :   void DescribeNegationTo(::std::ostream* os) const override { *os &lt;&lt; &quot;does not match text&quot;; }</span></span>
 <span id="L403"><span class="lineNum">     403</span>                 :             : </span>
-<span id="L404"><span class="lineNum">     404</span>                 :<span class="tlaGNC">          36 :   bool MatchAndExplain(std::string_view other, ::testing::MatchResultListener* listener) const override {</span></span>
-<span id="L405"><span class="lineNum">     405</span>   [<span class="tlaGBC" title="branch 0 was taken 35 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 31 times"> + </span><span class="tlaGBC" title="branch 3 was taken 4 times"> + </span> :<span class="tlaGNC">          36 :     if (!options_.drop_indent &amp;&amp; text_ == other) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 31 times"> + </span><span class="tlaGBC" title="branch 5 was taken 5 times"> + </span>]
+<span id="L404"><span class="lineNum">     404</span>                 :<span class="tlaGNC">          37 :   bool MatchAndExplain(std::string_view other, ::testing::MatchResultListener* listener) const override {</span></span>
+<span id="L405"><span class="lineNum">     405</span>   [<span class="tlaGBC" title="branch 0 was taken 36 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 31 times"> + </span><span class="tlaGBC" title="branch 3 was taken 5 times"> + </span> :<span class="tlaGNC">          37 :     if (!options_.drop_indent &amp;&amp; text_ == other) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 31 times"> + </span><span class="tlaGBC" title="branch 5 was taken 6 times"> + </span>]
 <span id="L406"><span class="lineNum">     406</span>                 :<span class="tlaGNC">          31 :       return true;</span></span>
 <span id="L407"><span class="lineNum">     407</span>                 :             :     }</span>
-<span id="L408"><span class="lineNum">     408</span>                 :<span class="tlaGNC">          15 :     const auto wants_lines = [&amp;]() -&gt; std::vector&lt;std::string&gt; {</span></span>
-<span id="L409"><span class="lineNum">     409</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           5 :       if (options_.drop_indent) {</span></span>
+<span id="L408"><span class="lineNum">     408</span>                 :<span class="tlaGNC">          18 :     const auto wants_lines = [&amp;]() -&gt; std::vector&lt;std::string&gt; {</span></span>
+<span id="L409"><span class="lineNum">     409</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           6 :       if (options_.drop_indent) {</span></span>
 <span id="L410"><span class="lineNum">     410</span>                 :<span class="tlaGNC">           1 :         *listener &lt;&lt; &quot;[&quot; &lt;&lt; mbo::strings::DropIndent(text_) &lt;&lt; &quot;]\n&quot;;</span></span>
 <span id="L411"><span class="lineNum">     411</span>                 :<span class="tlaGNC">           1 :         return absl::StrSplit(mbo::strings::DropIndent(text_), '\n');</span></span>
 <span id="L412"><span class="lineNum">     412</span>                 :             :       }</span>
-<span id="L413"><span class="lineNum">     413</span>                 :<span class="tlaGNC">           4 :       return absl::StrSplit(text_, '\n');</span></span>
-<span id="L414"><span class="lineNum">     414</span>                 :<span class="tlaGNC">           5 :     }();</span></span>
-<span id="L415"><span class="lineNum">     415</span>                 :<span class="tlaGNC">           5 :     const std::vector&lt;std::string&gt; other_lines = absl::StrSplit(other, '\n');</span></span>
-<span id="L416"><span class="lineNum">     416</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           5 :     if (options_.drop_indent &amp;&amp; wants_lines == other_lines) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="branch 5 was taken 4 times"> + </span>]
+<span id="L413"><span class="lineNum">     413</span>                 :<span class="tlaGNC">           5 :       return absl::StrSplit(text_, '\n');</span></span>
+<span id="L414"><span class="lineNum">     414</span>                 :<span class="tlaGNC">           6 :     }();</span></span>
+<span id="L415"><span class="lineNum">     415</span>                 :<span class="tlaGNC">           6 :     const std::vector&lt;std::string&gt; other_lines = absl::StrSplit(other, '\n');</span></span>
+<span id="L416"><span class="lineNum">     416</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           6 :     if (options_.drop_indent &amp;&amp; wants_lines == other_lines) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="branch 5 was taken 5 times"> + </span>]
 <span id="L417"><span class="lineNum">     417</span>                 :<span class="tlaGNC">           1 :       return true;</span></span>
 <span id="L418"><span class="lineNum">     418</span>                 :             :     }</span>
-<span id="L419"><span class="lineNum">     419</span>                 :<span class="tlaGNC">           4 :     *listener &lt;&lt; &quot;Text differene:\n&quot; &lt;&lt; ::testing::internal::edit_distance::CreateUnifiedDiff(wants_lines, other_lines);</span></span>
-<span id="L420"><span class="lineNum">     420</span>                 :<span class="tlaGNC">           4 :     return false;</span></span>
-<span id="L421"><span class="lineNum">     421</span>                 :<span class="tlaGNC">           5 :   }</span></span>
+<span id="L419"><span class="lineNum">     419</span>                 :<span class="tlaGNC">           5 :     *listener &lt;&lt; &quot;Text differene:\n&quot; &lt;&lt; ::testing::internal::edit_distance::CreateUnifiedDiff(wants_lines, other_lines);</span></span>
+<span id="L420"><span class="lineNum">     420</span>                 :<span class="tlaGNC">           5 :     return false;</span></span>
+<span id="L421"><span class="lineNum">     421</span>                 :<span class="tlaGNC">           6 :   }</span></span>
 <span id="L422"><span class="lineNum">     422</span>                 :             : </span>
 <span id="L423"><span class="lineNum">     423</span>                 :<span class="tlaGNC">           1 :   void SetDropIndent(bool drop_indent = true) { options_.drop_indent = drop_indent; }</span></span>
 <span id="L424"><span class="lineNum">     424</span>                 :             : </span>
