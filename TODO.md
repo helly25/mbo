@@ -30,6 +30,10 @@ also updates this file to the completed state.
   - Keep runtime struct metadata initialization non-throwing by using guarded
     indexing instead of a redundant throwing bounds check.
   - PR: [#364](https://github.com/helly25/mbo/pull/364).
+- [x] Make mutable `Json::at(property)` lookup-only.
+  - Preserve insertion semantics in `operator[]`.
+  - Require `at()` properties to exist for both mutable and const objects.
+  - Verify missing lookup fails without changing the object.
 - [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.
