@@ -41,7 +41,7 @@ also updates this file to the completed state.
 
 ## API additions
 
-- [ ] Add `mbo::StringOrView`, a read-only owning-or-borrowing string wrapper.
+- [x] Add `mbo::StringOrView`, a read-only owning-or-borrowing string wrapper.
   - Add `mbo/types/string_or_view.h` with default-empty, owning `std::string`,
     borrowing `std::string_view`, and borrowing string-literal construction.
     Avoid ambiguous or accidentally unsafe runtime `const char*` construction.
@@ -67,6 +67,7 @@ also updates this file to the completed state.
     or stable registry/context/database views without forcing allocation. A
     later xff dependency-update PR can replace its local `FieldValue` after an
     mbo release contains this type.
+  - PR: [#377](https://github.com/helly25/mbo/pull/377).
 
 ## File API robustness and portability
 
