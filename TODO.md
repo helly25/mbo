@@ -90,6 +90,7 @@ also updates this file to the completed state.
   - Record the measurement scope in the baseline so policy scope changes require
     an explicit, reviewed regeneration.
   - Keep baseline updates as a deliberate `--write-baseline` operation.
+  - PR: [#369](https://github.com/helly25/mbo/pull/369).
 
 - [x] Unify coverage ratings, enforcement, and presentation, adopting the
       applicable final state of
