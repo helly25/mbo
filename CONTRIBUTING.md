@@ -21,3 +21,9 @@ pre-commit run -a
 ```
 
 Without the `-a` only the modified and staged files will be checked.
+
+# Coverage policy
+
+[`coverage_policy.json`](coverage_policy.json) is the single source of truth for production-code
+coverage scope, ratings, and enforcement. See [`docs/coverage.md`](docs/coverage.md) before changing
+coverage thresholds or adding a module-specific exception.
