@@ -532,8 +532,9 @@ class Json {
 
   Json& at(std::string_view property) {
     MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");  // LCOV_EXCL_BR_LINE: fatal path is covered by death tests.
-    MBO_CONFIG_REQUIRE(contains(property), "Property not present:")  // LCOV_EXCL_BR_LINE: see above.
-        << "'" << property << "'.";
+    MBO_CONFIG_REQUIRE(
+        contains(property), "Property not present:")  // LCOV_EXCL_BR_LINE: fatal path is covered by death tests.
+        << "'" << property << "'.";                   // LCOV_EXCL_LINE: death-test subprocess profiles are not merged.
     return *std::get<Object>(data_).at(property);
   }
 
