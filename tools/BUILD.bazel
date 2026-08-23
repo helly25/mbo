@@ -29,6 +29,7 @@ bashtest(
 
 bashtest(
     name = "release_pr_sh_test",
+    size = "small",
     srcs = ["release_pr_sh_test.sh"],
     data = [
         "release_pr.sh",
