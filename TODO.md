@@ -41,6 +41,11 @@ also updates this file to the completed state.
 
 ## File API robustness and portability
 
+- [x] Keep glob ranges within a single path component.
+  - Preserve exact `[/]` as a normalized path separator.
+  - Exclude `/` from positive, negative, escaped, and range-spanning character
+    classes so ranges cannot consume path separators.
+
 - [x] Make `GetContents` handle failed seeks and non-seekable inputs safely.
   - Check `seekg`/`tellg` before converting the size.
   - Read in binary mode so byte counts remain consistent across platforms.

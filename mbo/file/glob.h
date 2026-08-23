@@ -40,7 +40,7 @@ struct GlobOptions {
   bool use_rel_path : 1 = false;
 
   // By default the globbing is done in recursive fashion. But that can be disabled in which case
-  // only the given root directory will be iteratoed.
+  // only the given root directory will be iterated.
   // This is only useful if '**' is not meant to actually be recursive and thus allows fast testing.
   bool recursive : 1 = true;
 
@@ -73,10 +73,8 @@ struct GlobParts : mbo::types::Extend<GlobParts> {
 
 // Split a glob expression into its path and filename components.
 //
-// The function is "incomplete" in its ability to identify ranges that can accept slashes.
-// - while a range `[/]` is normalized to a single `/` and handled as such,
-// - any other range that can accept a slash can either be a path or file name component. Those cases will
-//   be reported as just a path component with the `mixed = true`.
+// The exact range `[/]` is normalized to a path separator. All other positive
+// and negative ranges exclude '/', so they remain within one path component.
 absl::StatusOr<GlobParts> GlobSplitParts(std::string_view pattern, const Glob2Re2Options& options = {});
 
 // Convert `pattern` into a RE2 expression.
@@ -92,11 +90,12 @@ absl::StatusOr<GlobParts> GlobSplitParts(std::string_view pattern, const Glob2Re
 //   - '[...]': '...' may not be empty. The result is a matching positive range.
 //   - '[!...]': '...' may not be empty. The result is a matching negative range.
 //   - '[]]' -> '[\\]]' which matches the ']'.
-//   - '[!]]' -> '[^\\]]' which matches everythign but ']'.
-//   - ranges may incorrectly match against '/' as that is not handled.
+//   - '[!]]' -> '[^/\\]]' which matches everything but ']' or '/'.
+//   - positive ranges crossing '/' are split around it; negative ranges always
+//     add '/' to their excluded characters.
 // Character classes (Posix extension):
 //   Character classes are translated directly. However, they require to be supported in RE2 as
-//   documneted in https://github.com/google/re2/wiki/Syntax.
+//   documented in https://github.com/google/re2/wiki/Syntax.
 absl::StatusOr<std::string> Glob2Re2Expression(std::string_view pattern, const Glob2Re2Options& options = {});
 
 // Convert `pattern` into a RE2 instance.

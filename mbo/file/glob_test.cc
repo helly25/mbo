@@ -68,7 +68,7 @@ struct GlobTest : ::testing::Test {
     ASSERT_THAT(re2_pattern, NotNull());
     EXPECT_THAT(re2::RE2::FullMatch(text, *re2_pattern), expected);
 #ifdef TEST_FNMATCH
-    EXPECT_THAT(fnmatch(std::string(glob_pattern).c_str(), std::string(text).c_str(), 0) == 0, expected);
+    EXPECT_THAT(fnmatch(std::string(glob_pattern).c_str(), std::string(text).c_str(), FNM_PATHNAME) == 0, expected);
 #endif  // TEST_FNMATCH
   }
 
@@ -116,7 +116,14 @@ TEST_F(GlobTest, Glob2Re2Pattern) {
   EXPECT_THAT(Glob2Re2Expression("abc/**"), IsOkAndHolds("abc(/.+)?"));
   EXPECT_THAT(Glob2Re2Expression("**/abc"), IsOkAndHolds("(.+/)?abc"));
   EXPECT_THAT(Glob2Re2Expression("[]]"), IsOkAndHolds("[\\]]"));
-  EXPECT_THAT(Glob2Re2Expression("[!]]"), IsOkAndHolds("[^\\]]"));
+  EXPECT_THAT(Glob2Re2Expression("[/]"), IsOkAndHolds("/"));
+  EXPECT_THAT(Glob2Re2Expression("[!]]"), IsOkAndHolds("[^/\\]]"));
+  EXPECT_THAT(Glob2Re2Expression("[!a]"), IsOkAndHolds("[^/a]"));
+  EXPECT_THAT(Glob2Re2Expression("[a/]"), IsOkAndHolds("[a]"));
+  EXPECT_THAT(Glob2Re2Expression("[a\\/]"), IsOkAndHolds("[a]"));
+  EXPECT_THAT(Glob2Re2Expression("[.-1]"), IsOkAndHolds("[.0-1]"));
+  EXPECT_THAT(Glob2Re2Expression("[/-1]"), IsOkAndHolds("[0-1]"));
+  EXPECT_THAT(Glob2Re2Expression("[.-/]"), IsOkAndHolds("[.]"));
   EXPECT_THAT(Glob2Re2Expression("[:]"), IsOkAndHolds("[:]"));
   EXPECT_THAT(Glob2Re2Expression("[:]"), IsOkAndHolds("[:]"));
   EXPECT_THAT(Glob2Re2Expression("[[:alnum:]]"), IsOkAndHolds("[[:alnum:]]"));
@@ -182,6 +189,17 @@ TEST_F(GlobTest, Glob2Re2) {
   Glob2Re2Match("[!]]", "]", false);
   Glob2Re2Match("[!]]", "", false);
   Glob2Re2Match("[!]]", "x");
+  Glob2Re2Match("[!a]", "/", false);
+  Glob2Re2Match("[!a]", "b");
+  Glob2Re2Match("[a/]", "/", false);
+  Glob2Re2Match("[a/]", "a");
+  Glob2Re2Match("[a\\/]", "/", false);
+  Glob2Re2Match("[.-1]", "/", false);
+  Glob2Re2Match("[.-1]", ".");
+  Glob2Re2Match("[.-1]", "0");
+  Glob2Re2Match("[.-1]", "1");
+  Glob2Re2Match("[![:alpha:]]", "/", false);
+  Glob2Re2Match("[![:alpha:]]", "1");
   Glob2Re2Match("[!]]", "]", false);
   Glob2Re2Match("[!]]", "x]", false);
   Glob2Re2Match("[!]]", "!]", false);
@@ -219,26 +237,26 @@ TEST_F(GlobTest, GlobSplitParts) {
 
 TEST_F(GlobTest, GlobSplitPartsWithRanges) {
   EXPECT_THAT(GlobSplitParts("a[/]b/[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplitParts("a[/]b/[-/]c"), IsOkAndHolds(HasParts("a/b/[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]b/[-/]c"), IsOkAndHolds(HasParts("a/b", "[-/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b/[!/]c"), IsOkAndHolds(HasParts("a/b", "[!/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b/[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b/[-/]/c"), IsOkAndHolds(HasParts("a/b/[-/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b/[!/]/c"), IsOkAndHolds(HasParts("a/b/[!/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b/[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplitParts("a[/]/b/[-/]c"), IsOkAndHolds(HasParts("a/b/[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b/[-/]c"), IsOkAndHolds(HasParts("a/b", "[-/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b/[!/]c"), IsOkAndHolds(HasParts("a/b", "[!/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b/[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b/[-/]/c"), IsOkAndHolds(HasParts("a/b/[-/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b/[!/]/c"), IsOkAndHolds(HasParts("a/b/[!/]", "c", false)));
 
   EXPECT_THAT(GlobSplitParts("a[/]b[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplitParts("a[/]b[-/]c"), IsOkAndHolds(HasParts("a/b[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]b[-/]c"), IsOkAndHolds(HasParts("a", "b[-/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b[!/]c"), IsOkAndHolds(HasParts("a", "b[!/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b[-/]/c"), IsOkAndHolds(HasParts("a/b[-/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b[!/]/c"), IsOkAndHolds(HasParts("a/b[!/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplitParts("a[/]/b[-/]c"), IsOkAndHolds(HasParts("a/b[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b[-/]c"), IsOkAndHolds(HasParts("a", "b[-/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b[!/]c"), IsOkAndHolds(HasParts("a", "b[!/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b[-/]/c"), IsOkAndHolds(HasParts("a/b[-/]", "c", false)));
@@ -246,7 +264,7 @@ TEST_F(GlobTest, GlobSplitPartsWithRanges) {
 
   EXPECT_THAT(GlobSplitParts("a/b[-1]c"), IsOkAndHolds(HasParts("a", "b[-1]c", false)));
   EXPECT_THAT(GlobSplitParts("a/b[.-]c"), IsOkAndHolds(HasParts("a", "b[.-]c", false)));
-  EXPECT_THAT(GlobSplitParts("a/b[.-1]c"), IsOkAndHolds(HasParts("a/b[.-1]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a/b[.-1]c"), IsOkAndHolds(HasParts("a", "b[.-1]c", false)));
   EXPECT_THAT(GlobSplitParts("a/b[0-1]c"), IsOkAndHolds(HasParts("a", "b[0-1]c", false)));
 }
 

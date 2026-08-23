@@ -78,11 +78,11 @@ MBO_ALWAYS_INLINE absl::Status MaybeCharacterClass(std::string_view& glob_patter
 // Handles special case characters at the beginning.
 MBO_ALWAYS_INLINE bool GlobFindRangePrefix(std::string_view& pattern, std::string& re2_pattern) {
   if (pattern.starts_with("[!]")) {
-    absl::StrAppend(&re2_pattern, "[^\\]");
+    absl::StrAppend(&re2_pattern, "[^/\\]");
     pattern.remove_prefix(3);
     return true;
   } else if (pattern.starts_with("[!")) {
-    absl::StrAppend(&re2_pattern, "[^");
+    absl::StrAppend(&re2_pattern, "[^/");
     pattern.remove_prefix(2);
     return true;
   } else if (pattern.starts_with("[]")) {
@@ -98,88 +98,142 @@ MBO_ALWAYS_INLINE bool GlobFindRangePrefix(std::string_view& pattern, std::strin
   return false;
 }
 
-bool CopytNextChar(std::string_view& pattern, std::string& re2_pattern) {
+bool TakeNextChar(std::string_view& pattern, std::string& token) {
+  token.clear();
   if (pattern.empty()) {
     return false;
   }
   if (pattern.front() != '\\') {
-    re2_pattern += pattern.front();
+    token += pattern.front();
     pattern.remove_prefix(1);
     return true;
   }
   if (pattern.size() < 2) {
     return false;
   }
-  re2_pattern.append(pattern.substr(0, 2));
+  token.append(pattern.substr(0, 2));
   pattern.remove_prefix(2);
   return true;
 }
 
-bool RangeRangeContainsSlash(char last, char next) {
-  return last < next && last <= '/' && '/' <= next;
+void AppendPositiveRangeWithoutSlash(
+    std::string_view first_token,
+    char first,
+    std::string_view last_token,
+    char last,
+    std::string& re2_pattern) {
+  if (first < '/') {
+    re2_pattern += first_token;
+    if (first != '.') {
+      re2_pattern += "-.";
+    }
+  }
+  if (last > '/') {
+    re2_pattern += '0';
+    if (last != '0') {
+      re2_pattern += '-';
+      re2_pattern += last_token;
+    }
+  }
 }
 
-struct GlobRangeInfo {
-  bool negative = false;
-  bool has_slash = false;
+struct GlobRangeState {
+  bool negative;
+  std::size_t pos = 0;
+  std::string last_token;
+  std::size_t last_output_start;
 };
+
+absl::Status ConsumeRangeToken(std::string_view& pattern, std::string& re2_pattern, GlobRangeState& state) {
+  std::string token;
+  if (!TakeNextChar(pattern, token)) {
+    return absl::InvalidArgumentError("Unterminated range expression ending in back-slash.");
+  }
+  state.last_output_start = re2_pattern.size();
+  state.last_token = token;
+  if (token.back() != '/') {
+    re2_pattern += token;
+  }
+  return absl::OkStatus();
+}
+
+absl::StatusOr<bool> ConsumeRangeDash(std::string_view& pattern, std::string& re2_pattern, GlobRangeState& state) {
+  pattern.remove_prefix(1);
+  if (pattern.empty()) {
+    return absl::InvalidArgumentError("Unterminated range expression.");
+  }
+  if (pattern.front() == ']') {
+    re2_pattern += "-]";
+    pattern.remove_prefix(1);
+    return true;
+  }
+  std::string token;
+  if (!TakeNextChar(pattern, token)) {
+    return absl::InvalidArgumentError("Unterminated range expression ending in back-slash.");
+  }
+  if (state.pos == 1) {
+    re2_pattern += '-';
+    state.last_output_start = re2_pattern.size();
+    state.last_token = token;
+    if (token.back() != '/') {
+      re2_pattern += token;
+    }
+    return false;
+  }
+  const char last = token.back();
+  const char first = state.last_token.empty() ? '\0' : state.last_token.back();
+  const bool crosses_slash =
+      !state.negative && !state.last_token.empty() && first < last && first <= '/' && '/' <= last;
+  if (crosses_slash) {
+    re2_pattern.erase(state.last_output_start);
+    AppendPositiveRangeWithoutSlash(state.last_token, first, token, last, re2_pattern);
+  } else {
+    re2_pattern += '-';
+    if (state.negative || token.back() != '/') {
+      re2_pattern += token;
+    }
+  }
+  const bool last_emitted = crosses_slash ? last > '/' : state.negative || token.back() != '/';
+  state.last_output_start = re2_pattern.size() - (last_emitted ? token.size() : 0);
+  state.last_token = token;
+  return false;
+}
 
 // Find the range pattern end (including ']') and remove it from pattern.
 // Convert it into a RE2 pattern and append that to `re2_pattern`.
-// On success return whether the pattern is a negative pattern.
-MBO_ALWAYS_INLINE absl::StatusOr<GlobRangeInfo> GlobFindRange(std::string_view& pattern, std::string& re2_pattern) {
-  GlobRangeInfo result{
+MBO_ALWAYS_INLINE absl::Status GlobFindRange(std::string_view& pattern, std::string& re2_pattern) {
+  GlobRangeState state{
       .negative = GlobFindRangePrefix(pattern, re2_pattern),
-      .has_slash = false,
+      .last_output_start = re2_pattern.size(),
   };
-  std::size_t pos = 0;
   while (!pattern.empty()) {
-    ++pos;
+    ++state.pos;
     const char chr = pattern.front();
     switch (chr) {
       default: {
-        if (!CopytNextChar(pattern, re2_pattern)) {
-          return absl::InvalidArgumentError("Unterminated range expression ending in back-slash.");
-        }
+        MBO_RETURN_IF_ERROR(ConsumeRangeToken(pattern, re2_pattern, state));
         continue;
       }
       case '/':
-        re2_pattern += chr;
         pattern.remove_prefix(1);
-        result.has_slash = true;
+        state.last_output_start = re2_pattern.size();
+        state.last_token = "/";
         continue;
       case '-': {
-        const char last = re2_pattern.back();
-        re2_pattern += chr;
-        pattern.remove_prefix(1);
-        if (pattern.empty()) {
-          return absl::InvalidArgumentError("Unterminated range expression.");
-        }
-        if (pattern.front() == ']') {
-          re2_pattern += ']';
-          pattern.remove_prefix(1);
-          return result;
-        }
-        if (!CopytNextChar(pattern, re2_pattern)) {
-          return absl::InvalidArgumentError("Unterminated range expression ending in back-slash.");
-        }
-        if (pos > 1) {
-          result.has_slash |= RangeRangeContainsSlash(last, re2_pattern.back());
-        } else {
-          // Case [-X].
-          result.has_slash |= re2_pattern.back() == '/';
+        MBO_ASSIGN_OR_RETURN(const bool finished, ConsumeRangeDash(pattern, re2_pattern, state));
+        if (finished) {
+          return absl::OkStatus();
         }
         continue;
       }
       case '[': {
         MBO_RETURN_IF_ERROR(MaybeCharacterClass(pattern, re2_pattern));
-        // TODO(helly25): Does it contain a '/'?
         continue;
       }
       case ']':
         re2_pattern += chr;
         pattern.remove_prefix(1);
-        return result;
+        return absl::OkStatus();
     }
   }
   return absl::InvalidArgumentError("Unterminated range expression.");
@@ -272,7 +326,6 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
   std::size_t slash_0 = std::string_view::npos;
   std::size_t slash_1 = std::string_view::npos;
   bool found_pattern = false;
-  bool range_with_slash = false;
   glob_pattern = pattern;  // Operate on the normalized pattern
   GlobData result{
       .pattern = pattern,
@@ -295,13 +348,11 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
           glob_pattern.remove_prefix(1);
           continue;
         }
-        std::string tmp_re2;  //  Here we only care whether a slash is allowed.
-        MBO_ASSIGN_OR_RETURN(const GlobRangeInfo info, GlobFindRange(glob_pattern, tmp_re2));
-        range_with_slash |= !info.negative && info.has_slash;
+        std::string tmp_re2;
+        MBO_RETURN_IF_ERROR(GlobFindRange(glob_pattern, tmp_re2));
         continue;
       }
       case '/':
-        range_with_slash = false;
         slash_0 = slash_1;
         slash_1 = result.pattern.size() - glob_pattern.size();
         if (!found_pattern) {
@@ -314,11 +365,6 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
   }
   if (!found_pattern) {
     result.root_len = result.pattern.size();
-  }
-  if (range_with_slash) {
-    result.path_len = result.pattern.size();
-    result.mixed = true;
-    return result;
   }
   if (result.pattern.size() > 1 && result.pattern.ends_with('/')) {
     result.pattern.pop_back();
