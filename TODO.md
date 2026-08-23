@@ -45,6 +45,7 @@ also updates this file to the completed state.
   - Preserve exact `[/]` as a normalized path separator.
   - Exclude `/` from positive, negative, escaped, and range-spanning character
     classes so ranges cannot consume path separators.
+  - PR: [#371](https://github.com/helly25/mbo/pull/371).
 
 - [x] Make `GetContents` handle failed seeks and non-seekable inputs safely.
   - Check `seekg`/`tellg` before converting the size.
