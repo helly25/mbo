@@ -31,7 +31,7 @@ namespace mbo::diff::diff_internal {
 
 void UpdateAbslLogFlags() {
   // Unfortunately we cannot call `absl::InitializeLog()` as `IsIntialized()`
-  // cannot be called to prevent duplicate initalization which triggers
+  // cannot be called to prevent duplicate initialization which triggers
   // `absl::log_internal::SetTimeZone() has already been called`.
   {
     const absl::CommandLineFlag* flag = absl::FindCommandLineFlag("minloglevel");

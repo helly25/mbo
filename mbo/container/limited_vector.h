@@ -244,7 +244,7 @@ class LimitedVector final {
     return *this;
   }
 
-  // Mofification: clear, resize, reserve, explace_back, push_back, pop_back, assign, insert
+  // Modification: clear, resize, reserve, explace_back, push_back, pop_back, assign, insert
 
   constexpr void clear() noexcept {
     while (!empty()) {

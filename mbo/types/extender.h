@@ -20,7 +20,7 @@
 // * Printable (default)
 //
 //   * Provides method `std::string ToString()` which generates a string
-//     represenation of the fields of the extended class as `"{value, value}"`.
+//     representation of the fields of the extended class as `"{value, value}"`.
 //   * This is a default extender.
 //   * Requires `AbslStringify`
 //
@@ -183,7 +183,7 @@ struct Comparable_ : ExtenderBase {  // NOLINT(readability-identifier-naming)
   // comparisons for the intended type `T`. So we cannot simply default the
   // operator.
   // Also provide backing `==` and `<` operators.
-  // Further this has to be consistend so all provided operators are on type 'T'
+  // Further this has to be consistent so all provided operators are on type 'T'
   // and implemented as friends. Otherwise this would trigger warning: ISO C++20
   // considers use of overloaded operator '==' (with operand types 'const
   // TestComparable' and 'const TestComparable') to be ambiguous despite there
@@ -274,17 +274,17 @@ namespace extender {
 // Once presnet, the compiler will no longer generate code to fetch field names.
 //
 // Note that even if field names are disabled using the above type injection,
-// supporting field names is still manually possible, and thus indepedent of
+// supporting field names is still manually possible, and thus independent of
 // compiler support if necessary using `StringifyOptions`, see below.
 //
 // Field names are automatically provided if the active compiler supports this
-// (e.g. Clang). In absence (or to override them) the field names can be provied
+// (e.g. Clang). In absence (or to override them) the field names can be provided
 // using the ADL extension point `void MboTypesStringifyFieldNames(const Type&)`.
 //
 // The implementation allows for complex formatting control by implementing the
 // ADL fiend method  `StringifyOptions(self, field_index, field_name)`
 // which must return `struct mbo::types::StringifyOptions`. That struct
-// contains the full documenation. While the function must technically be static
+// contains the full documentation. While the function must technically be static
 // its first parameter is the object itself. Not that the correct type for
 // the first parameter `self` in the absence of C++23 is `Type` as provided by
 // `Extend`.

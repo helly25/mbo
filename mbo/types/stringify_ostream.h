@@ -37,13 +37,13 @@ std::shared_ptr<const Stringify> GetStringifyForOstream();
 // Set the global Stringify stream options by mode.
 //
 // While this is thread-safe, there is no guarantee that the same options will be used.
-// That is becasue the options could be changed before the intended stream call.
+// That is because the options could be changed before the intended stream call.
 void SetStringifyOstreamOutputMode(Stringify::OutputMode output_mode);
 
 // Set the global Stringify stream options by `StringifyOptions`.
 //
 // While this is thread-safe, there is no guarantee that the same options will be used.
-// That is becasue the options could be changed before the intended stream call.
+// That is because the options could be changed before the intended stream call.
 void SetStringifyOstreamOptions(const StringifyOptions& options);
 void SetStringifyOstreamOptions(const StringifyOptions&& options) = delete;
 

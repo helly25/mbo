@@ -35,10 +35,10 @@
 
 namespace mbo::log {
 
-// *** Only use for depnstration putpose! ***
+// *** Only use for depnstration purpose! ***
 namespace log_internal {
 
-// *** Only use for depnstration putpose! ***
+// *** Only use for depnstration purpose! ***
 using ScopedStreamVariants = std::variant<
     std::ostream,
     ScopedStream<ScopedStreamMode::kContinue, std::stringstream, std::ostream, std::string_view>,
@@ -67,7 +67,7 @@ using ScopedStreamVariants = std::variant<
     ScopedStream<ScopedStreamMode::kQuickExit, VoidStream, Voidifier, Voidifier>,
     VoidStream>;
 
-// *** Only use for depnstration putpose! ***
+// *** Only use for depnstration purpose! ***
 struct ScopedStreamer : ScopedStreamVariants {
   ScopedStreamer() = delete;
 
@@ -115,7 +115,7 @@ struct ScopedStreamer : ScopedStreamVariants {
 };
 }  // namespace log_internal
 
-// *** Only use for depnstration putpose! ***
+// *** Only use for depnstration purpose! ***
 MBO_FORCE_INLINE log_internal::ScopedStreamer ScopedLogCheck(
     bool check,
     std::string_view what,
@@ -129,7 +129,7 @@ MBO_FORCE_INLINE log_internal::ScopedStreamer ScopedLogCheck(
       loc, std::cerr, what};
 }
 
-// *** Only use for depnstration putpose! ***
+// *** Only use for depnstration purpose! ***
 template<typename Disallowed>
 void ScopedLogCheck(bool, std::string_view, const Disallowed&&) {  // NOLINT(*-named-parameter)
   static_assert(false, "Must call ScopedStreamVoid with exactly two arguments");

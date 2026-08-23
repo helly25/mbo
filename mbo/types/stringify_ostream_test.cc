@@ -151,7 +151,7 @@ TEST_F(StringifyOstreamTest, ExistingAbslStringify) {
   os << TestStruct{};
   EXPECT_THAT(
       os.str(), Conditional(kStructNameSupport, R"({.one: 11, .two: TestSub{sub=77}})", R"({11, TestSub{sub=77}})"))
-      << "  Note: AbslStringify in TestStruct ignored since Stringify has higher precendence.";
+      << "  Note: AbslStringify in TestStruct ignored since Stringify has higher precedence.";
 }
 }  // namespace existing_absl_stringify
 

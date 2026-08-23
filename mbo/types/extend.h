@@ -26,9 +26,9 @@ namespace mbo::types {
 
 // The meta type `Extend` provides a convenience injection mechanism for structs
 // and classes, so that the actual definitions can stay simple while providing
-// general functionality out of the box in a consistant manner.
+// general functionality out of the box in a consistent manner.
 //
-// For exmaple:
+// For example:
 //
 // ```c++
 // template<typename T, typename... Extender>

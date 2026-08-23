@@ -23,7 +23,7 @@
 
 namespace mbo::types {
 
-// Template `BinarySearch` - find higest value in `[Start, End[` for which `Predicate` is true.
+// Template `BinarySearch` - find highest value in `[Start, End[` for which `Predicate` is true.
 // Returns `NotFound` otherwise.
 // The `Predicate` must provide a boolean constant `value`.
 template<template<std::size_t> typename Predicate, std::size_t Start, std::size_t End, std::size_t NotFound>

@@ -30,7 +30,7 @@
 namespace mbo::status {
 
 // Helper to construct modified `absl::Status`.
-// Mainly this allows to stream text onto the message of a satus.
+// Mainly this allows to stream text onto the message of a status.
 //
 // Example:
 // ```

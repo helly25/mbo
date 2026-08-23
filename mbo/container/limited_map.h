@@ -199,7 +199,7 @@ class LimitedMap final
   using LimitedBase::lower_bound;
   using LimitedBase::upper_bound;
 
-  // Mofification: clear, swap, emplace, insert
+  // Modification: clear, swap, emplace, insert
 
   using LimitedBase::clear;
   using LimitedBase::emplace;

@@ -51,7 +51,7 @@ class Template {
   // Add a sub-dictionary under `name`.
   // The purpose of a sub-dictionary is to be filled, which can be done by calling `SetValue` or `AddSubDictionary`, on
   // the returned value (so it must be used to do so).
-  // If the function is called repetedly with the same `name`, then each time a new dictionary for that `name` will be
+  // If the function is called repeatedly with the same `name`, then each time a new dictionary for that `name` will be
   // added.
   absl::StatusOr<Template*> AddSection(std::string_view name);
 

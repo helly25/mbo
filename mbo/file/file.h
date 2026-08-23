@@ -37,7 +37,7 @@ inline bool IsAbsolutePath(const std::filesystem::path& path) {
 
 // Combine all parameters as if they were path elements.
 // Normalizes the result using `NormalizePath`.
-// Any path component that is absolute will simply be treated as realtive and concatenated.
+// Any path component that is absolute will simply be treated as relative and concatenated.
 template<typename... T>
 inline std::filesystem::path JoinPaths(const std::filesystem::path& first_path, const T&... paths) {
   return NormalizePath([&] {

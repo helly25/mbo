@@ -228,7 +228,7 @@ TEST_F(StringifyTest, AddFieldNamesLimitedVector) {
 struct TestStructFieldOptions {
   int one = 11;
   std::pair<int, int> two = {25, 27};
-  int tre = 33;
+  int three = 33;
 
   friend StringifyOptions MboTypesStringifyOptions(const TestStructFieldOptions&, const StringifyFieldInfo& field) {
     return StringifyTest::tester->GetFieldOptions(field.idx, field.name);
@@ -240,7 +240,7 @@ TEST_F(StringifyTest, GetFieldOptions) {
   // The test verifies that:
   // * based on field index (or name if available) different control can be returned.
   // * fields `one` and `two` have different key control, including field name overriding.
-  // * field `tre` will be fully suppressed.
+  // * field `three` will be fully suppressed.
   ASSERT_FALSE(HasMboTypesStringifyDoNotPrintFieldNames<TestStructFieldOptions>);
   ASSERT_FALSE(HasMboTypesStringifyFieldNames<TestStructFieldOptions>);
   ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructFieldOptions>);
@@ -280,7 +280,7 @@ TEST_F(StringifyTest, GetFieldOptions) {
               .key_use_name = "second",
           }},
       }));
-  EXPECT_CALL(*tester, GetFieldOptions(2, HasFieldName("tre")))
+  EXPECT_CALL(*tester, GetFieldOptions(2, HasFieldName("three")))
       .WillOnce(::testing::Return(StringifyOptions{
           .field_control{StringifyOptions::FieldControl{
               .suppress = true,
@@ -294,7 +294,7 @@ TEST_F(StringifyTest, GetFieldOptions) {
 struct TestStructFieldNames {
   int one = 11;
   std::pair<int, int> two = {25, 27};
-  int tre = 33;
+  int three = 33;
 
   friend std::vector<std::string> MboTypesStringifyFieldNames(const TestStructFieldNames&) {
     return StringifyTest::tester->FieldNames();
@@ -403,7 +403,7 @@ TEST_F(StringifyTest, FieldNames) {
 struct TestStructKeyUseName {
   int one = 11;
   int two = 25;
-  int tre = 33;
+  int three = 33;
 
   friend StringifyOptions MboTypesStringifyOptions(const TestStructKeyUseName&, const StringifyFieldInfo& field) {
     StringifyOptions options = field.options.outer;
@@ -444,7 +444,7 @@ TEST_F(StringifyTest, StaticKeyNameFunction) {
 struct TestStructDoNotPrintFieldNames {
   int one = 11;
   std::pair<int, int> two = {25, 27};
-  int tre = 33;
+  int three = 33;
 
   using MboTypesStringifyDoNotPrintFieldNames = void;
 
@@ -571,7 +571,7 @@ TEST_F(StringifyTest, ValueReplacement) {
 struct TestStructContainer {
   std::vector<int> one = {1, 2, 3};
   std::vector<int> two;
-  std::vector<int> tre = {1, 2, 3};
+  std::vector<int> three = {1, 2, 3};
 
   friend StringifyOptions MboTypesStringifyOptions(const TestStructContainer& v, const StringifyFieldInfo& field) {
     StringifyOptions opts =
@@ -636,7 +636,7 @@ TEST_F(StringifyTest, MoreContainers) {
   EXPECT_THAT(
       Stringify().ToString(TestStructMoreContainers{}),
       R"({"one": [1, 2], "two": [{.first: 1, .second: 2}, {.first: 3, .second: 4}], "three": [{.Key: 5, .Val: 6}]})")
-      << "  NOTE: Here we are not providing the defualt Json options down do the pairs. However, in `three` we have "
+      << "  NOTE: Here we are not providing the default Json options down do the pairs. However, in `three` we have "
          "the provided key/value names.";
   EXPECT_THAT(
       Stringify::AsJson().ToString(TestStructMoreContainers{}),

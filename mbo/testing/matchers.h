@@ -416,7 +416,8 @@ class EqualsTextMatcher : public ::testing::MatcherInterface<std::string_view> {
     if (options_.drop_indent && wants_lines == other_lines) {
       return true;
     }
-    *listener << "Text differene:\n" << ::testing::internal::edit_distance::CreateUnifiedDiff(wants_lines, other_lines);
+    *listener << "Text difference:\n"
+              << ::testing::internal::edit_distance::CreateUnifiedDiff(wants_lines, other_lines);
     return false;
   }
 

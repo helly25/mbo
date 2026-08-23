@@ -171,6 +171,10 @@ also updates this file to the completed state.
   - Keep baseline updates as a deliberate `--write-baseline` operation.
   - PR: [#369](https://github.com/helly25/mbo/pull/369).
 
+- [x] Enforce spelling in C and C++ sources as well as Markdown.
+  - Use pre-commit file-type classification rather than a duplicated extension
+    expression.
+  - Correct existing public-comment findings instead of adding broad ignores.
 - [x] Unify coverage ratings, enforcement, and presentation, adopting the
       applicable final state of
       [xff PR #639](https://github.com/helly25/xff/pull/639),
