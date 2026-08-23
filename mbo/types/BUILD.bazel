@@ -221,6 +221,25 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "optional_data_or_ref_exception_test",
+    srcs = ["optional_data_or_ref_exception_test.cc"],
+    # mbo itself remains exception-free. This target alone enables exceptions
+    # to verify that the public template safely propagates a consumer T's throw.
+    # Clang on Darwin cannot unwind caught exceptions when ASan and UBSan are
+    # combined. Keep ASan, but omit UBSan instrumentation for this narrow test.
+    copts = [
+        "-fexceptions",
+        "-fno-sanitize=undefined",
+    ],
+    deps = [
+        ":optional_data_or_ref_cc",
+        "//mbo/testing:matchers_cc",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "optional_ref_cc",
     hdrs = ["optional_ref.h"],

@@ -19,6 +19,8 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -36,6 +38,20 @@ using ::testing::Eq;
 using ::testing::Not;
 
 struct OptionalDataOrRefTest : ::testing::Test {};
+
+struct NothrowValue {
+  explicit NothrowValue(int new_value) noexcept : value(new_value) {}
+
+  int value;
+};
+
+template<typename T, typename RefT>
+void MoveAssign(OptionalDataOrRef<T, RefT>& lhs, OptionalDataOrRef<T, RefT>& rhs) {
+  lhs = std::move(rhs);
+}
+
+static_assert(noexcept(std::declval<OptionalDataOrRef<NothrowValue>&>().emplace(1)));
+static_assert(noexcept(OptionalDataOrRef<NothrowValue>(NothrowValue{1})));
 
 TEST_F(OptionalDataOrRefTest, Constexpr) {
   {
@@ -309,6 +325,66 @@ TEST_F(OptionalDataOrRefTest, AsData) {
   EXPECT_THAT(ref.HoldsNullopt(), false);
   EXPECT_THAT(ref.HoldsReference(), false);
   EXPECT_THAT(ref.value().one, "Two");
+}
+
+TEST_F(OptionalDataOrRefTest, CopyAndMovePreserveStateSemantics) {
+  OptionalDataOrRef<std::string> owned(std::string("owned"));
+  const OptionalDataOrRef<std::string> owned_copy(owned);
+  EXPECT_THAT(owned_copy.HoldsData(), true);
+  EXPECT_THAT(owned_copy, "owned");
+
+  const OptionalDataOrRef<std::string> moved(std::move(owned));
+  EXPECT_THAT(moved.HoldsData(), true);
+  EXPECT_THAT(moved, "owned");
+  // NOLINTNEXTLINE(bugprone-use-after-move,clang-analyzer-cplusplus.Move): moved-from state is under test.
+  EXPECT_THAT(owned, IsNullopt());
+
+  OptionalDataOrRef<std::string> assigned;
+  assigned = owned_copy;
+  EXPECT_THAT(assigned.HoldsData(), true);
+  OptionalDataOrRef<std::string> move_assigned;
+  move_assigned = std::move(assigned);
+  EXPECT_THAT(move_assigned, "owned");
+  // NOLINTNEXTLINE(bugprone-use-after-move,clang-analyzer-cplusplus.Move): moved-from state is under test.
+  EXPECT_THAT(assigned, IsNullopt());
+
+  std::string borrowed = "borrowed";
+  OptionalDataOrRef<std::string> referenced(borrowed);
+  const OptionalDataOrRef<std::string> reference_copy(referenced);
+  const OptionalDataOrRef<std::string> reference_move(std::move(referenced));
+  EXPECT_THAT(reference_copy.HoldsReference(), true);
+  EXPECT_THAT(reference_move.HoldsReference(), true);
+  // NOLINTNEXTLINE(bugprone-use-after-move,clang-analyzer-cplusplus.Move): borrowed move preserves the source.
+  EXPECT_THAT(referenced.HoldsReference(), true);
+  borrowed = "changed";
+  EXPECT_THAT(reference_copy, "changed");
+  EXPECT_THAT(reference_move, "changed");
+
+  OptionalDataOrRef<std::string> reference_assigned;
+  reference_assigned = reference_copy;
+  OptionalDataOrRef<std::string> reference_move_assigned;
+  reference_move_assigned = std::move(reference_assigned);
+  EXPECT_THAT(reference_move_assigned.HoldsReference(), true);
+  // NOLINTNEXTLINE(bugprone-use-after-move,clang-analyzer-cplusplus.Move): borrowed move preserves the source.
+  EXPECT_THAT(reference_assigned.HoldsReference(), true);
+}
+
+TEST_F(OptionalDataOrRefTest, SelfMoveAndOwnedValueAliasingPreserveData) {
+  OptionalDataOrRef<std::string> ref(std::string("value"));
+  MoveAssign(ref, ref);
+  EXPECT_THAT(ref.HoldsData(), true);
+  EXPECT_THAT(ref, "value");
+
+  ref = std::move(*ref);
+  EXPECT_THAT(ref.HoldsData(), true);
+  EXPECT_THAT(ref, "value");
+}
+
+TEST_F(OptionalDataOrRefTest, NulloptAssignmentReturnsSelf) {
+  OptionalDataOrRef<int> ref(42);
+  OptionalDataOrRef<int>& result = (ref = std::nullopt);
+  EXPECT_THAT(std::addressof(result), Eq(std::addressof(ref)));
+  EXPECT_THAT(ref.HoldsNullopt(), true);
 }
 
 // NOLINTEND(*-magic-numbers)
