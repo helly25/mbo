@@ -57,6 +57,11 @@ also updates this file to the completed state.
 
 ## Build, CI, and release engineering
 
+- [x] Preserve review and branch protection for release version bumps.
+  - Never approve the script's own pull request or use an admin merge.
+  - Enable ordinary auto-merge and leave maintainer approval explicit.
+  - Protect the exact `gh` command sequence with a fake-client integration
+    test.
 - [x] Avoid an unnecessary Bazel configuration switch while generating the
       clang-tidy compilation database.
   - Build the extractor with the same `clang-tidy` configuration used by its

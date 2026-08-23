@@ -15,10 +15,20 @@
 
 """helly25_mbo/tools"""
 
+load("@helly25_bashtest//bashtest:bashtest.bzl", "bashtest")
 load("@rules_cc//cc:defs.bzl", "cc_binary")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 package(default_visibility = ["//visibility:private"])
+
+bashtest(
+    name = "release_pr_sh_test",
+    srcs = ["release_pr_sh_test.sh"],
+    data = [
+        "release_pr.sh",
+        "testdata/fake_gh.sh",
+    ],
+)
 
 _SYMBOLIZER = "@llvm_toolchain_llvm//:llvm-symbolizer"
 
