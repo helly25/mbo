@@ -157,6 +157,7 @@ also updates this file to the completed state.
     tests `small` while retaining `medium` for the measured long-running hash suite.
   - Give project test macros a documented `small` default.
   - Enforce explicit sizing on direct test rules in pre-commit.
+  - PR: [#376](https://github.com/helly25/mbo/pull/376).
 - [x] Avoid an unnecessary Bazel configuration switch while generating the
       clang-tidy compilation database.
   - Build the extractor with the same `clang-tidy` configuration used by its
