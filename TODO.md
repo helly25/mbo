@@ -97,6 +97,7 @@ also updates this file to the completed state.
     global policy matrix below the report details.
   - Render the compact report as a dense, colour-backed measurement and policy
     matrix with explicit `GOOD`, `OK`, and `BAD` states and JSON links.
+  - PR: [#361](https://github.com/helly25/mbo/pull/361).
 - [x] Make `coverage_policy.json` the single source of truth for enforcement
       and LCOV presentation, adopting the applicable final state of
       [xff PR #631](https://github.com/helly25/xff/pull/631),
