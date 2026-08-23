@@ -62,6 +62,7 @@ also updates this file to the completed state.
     matching.
   - Push only the newly created tag instead of every local tag.
   - Cover exact lookup and selective publication with temporary repositories.
+  - PR: [#366](https://github.com/helly25/mbo/pull/366).
 - [x] Avoid an unnecessary Bazel configuration switch while generating the
       clang-tidy compilation database.
   - Build the extractor with the same `clang-tidy` configuration used by its
