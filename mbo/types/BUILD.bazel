@@ -160,6 +160,25 @@ cc_test(
 )
 
 cc_library(
+    name = "string_or_view_cc",
+    hdrs = ["string_or_view.h"],
+    visibility = ["//visibility:public"],
+    deps = ["@abseil-cpp//absl/strings:str_format"],
+)
+
+cc_test(
+    name = "string_or_view_test",
+    size = "small",
+    srcs = ["string_or_view_test.cc"],
+    deps = [
+        ":string_or_view_cc",
+        "@abseil-cpp//absl/strings:str_format",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "container_proxy_cc",
     hdrs = ["container_proxy.h"],
     deps = [
