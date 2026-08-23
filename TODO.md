@@ -39,6 +39,35 @@ also updates this file to the completed state.
   - Add a regression test with representative cache keys.
   - PR: [#328](https://github.com/helly25/mbo/pull/328).
 
+## API additions
+
+- [ ] Add `mbo::StringOrView`, a read-only owning-or-borrowing string wrapper.
+  - Add `mbo/types/string_or_view.h` with default-empty, owning `std::string`,
+    borrowing `std::string_view`, and borrowing string-literal construction.
+    Avoid ambiguous or accidentally unsafe runtime `const char*` construction.
+  - Preserve ownership and represented text across copy and move construction
+    and assignment. Owning copies must be independent; borrowed copies must
+    retain the same view; moves must be nothrow where promised.
+  - Expose only `view()` and `owns_string()` as the core read-only API, and
+    explicitly document that borrowed storage must outlive the wrapper.
+  - Add comparison against `StringOrView`, `std::string_view`, `std::string`,
+    and literals, operating solely on `view()`, plus `AbslStringify` support
+    consistent with comparable mbo value wrappers.
+  - Add a conventionally named Bazel `cc_library` and same-package test target,
+    exporting the short name as `mbo::StringOrView` even though the header is
+    under `mbo/types/`.
+  - Cover default and distinctly owned/borrowed empty values, lvalue copies,
+    rvalue moves, pointer preservation for borrowed copies, independent owned
+    copies, copy/move assignment for both representations, embedded NUL bytes,
+    comparisons, stringification, compile-time empty/non-empty literals, and
+    promised type traits.
+  - Keep the representation suitable for a future shared immutable ownership
+    option if measurements justify it, but do not implement copy-on-write now.
+  - Motivation: let downstream xff field rendering return computed owned text
+    or stable registry/context/database views without forcing allocation. A
+    later xff dependency-update PR can replace its local `FieldValue` after an
+    mbo release contains this type.
+
 ## File API robustness and portability
 
 - [x] Make `GetContents` handle failed seeks and non-seekable inputs safely.
