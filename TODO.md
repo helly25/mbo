@@ -15,6 +15,11 @@ also updates this file to the completed state.
   - Fix hashing and heterogeneous wrapper comparison when instantiated.
   - Derive comparison exception specifications from the wrapped operation.
   - PR: [#362](https://github.com/helly25/mbo/pull/362).
+- [x] Make `NoDestruct<T>` construction and customizations correct.
+  - Derive constructor exception specifications from construction of `T`.
+  - Hash and stringify the stored value rather than the backing union.
+  - Remove the redundant self-reference and its pointer-sized overhead.
+  - Instantiate customizations and throwing construction in tests.
 - [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.

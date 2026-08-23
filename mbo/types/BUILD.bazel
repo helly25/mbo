@@ -143,6 +143,10 @@ cc_library(
     name = "no_destruct_cc",
     hdrs = ["no_destruct.h"],
     visibility = ["//visibility:public"],
+    deps = [
+        "@abseil-cpp//absl/hash",
+        "@abseil-cpp//absl/strings:str_format",
+    ],
 )
 
 cc_test(
@@ -153,8 +157,27 @@ cc_test(
         ":extender_cc",
         ":no_destruct_cc",
         ":traits_cc",
+        "@abseil-cpp//absl/hash",
         "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# Verifies that throwing operations supplied by exception-enabled consumers
+# propagate through NoDestruct construction.
+cc_test(
+    name = "no_destruct_exception_test",
+    srcs = ["no_destruct_exception_test.cc"],
+    # Clang on Darwin cannot unwind caught exceptions when ASan and UBSan are
+    # combined. Keep ASan, but omit UBSan instrumentation for this narrow test.
+    copts = [
+        "-fexceptions",
+        "-fno-sanitize=undefined",
+    ],
+    deps = [
+        ":no_destruct_cc",
         "@googletest//:gtest_main",
     ],
 )

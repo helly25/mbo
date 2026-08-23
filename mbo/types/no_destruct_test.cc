@@ -17,7 +17,9 @@
 
 #include <string>
 
+#include "absl/hash/hash.h"
 #include "absl/log/absl_check.h"
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/types/extend.h"
@@ -44,6 +46,19 @@ struct TestSimple : Extend<TestSimple> {
 struct TestString : Extend<TestString> {
   std::string a = "25";
   std::string b = "42";
+};
+
+struct CountsDestruction {
+  explicit CountsDestruction(int& new_count) noexcept : count(&new_count) {}
+
+  ~CountsDestruction() { ++*count; }
+
+  CountsDestruction(const CountsDestruction&) = delete;
+  CountsDestruction& operator=(const CountsDestruction&) = delete;
+  CountsDestruction(CountsDestruction&&) = delete;
+  CountsDestruction& operator=(CountsDestruction&&) = delete;
+
+  int* count;
 };
 
 static_assert(IsAggregate<TestSimple>, "Must be aggregate");
@@ -77,6 +92,8 @@ TEST_F(NoDestructTest, Test) {
 
 static constexpr NoDestruct<TestSimple> kConstexprTest;  // NOLINT(readability-static-definition-in-anonymous-namespace)
 
+static_assert(sizeof(NoDestruct<int>) == sizeof(int));
+
 TEST_F(NoDestructTest, ConstExpr) {
   EXPECT_THAT(kConstexprTest->a, kValueA);
   EXPECT_THAT(kConstexprTest->b, kValueB);
@@ -93,6 +110,23 @@ TEST_F(NoDestructTest, Modify) {
   test->a = kValueA;
   EXPECT_THAT(test->a, kValueA);
   EXPECT_THAT(test->b, kValueB);
+}
+
+TEST_F(NoDestructTest, HashesAndStringifiesStoredValue) {
+  const NoDestruct<std::string> value("Good Morning America!");
+
+  EXPECT_THAT(absl::HashOf(value), absl::HashOf(*value));
+  EXPECT_THAT(absl::StrCat(value), "Good Morning America!");
+}
+
+TEST_F(NoDestructTest, DoesNotDestroyStoredValue) {
+  int destruction_count = 0;
+  {
+    const NoDestruct<CountsDestruction> value(destruction_count);
+    EXPECT_THAT(value->count, &destruction_count);
+  }
+
+  EXPECT_THAT(destruction_count, 0);
 }
 
 TEST_F(NoDestructTest, NoDtorNoCopyNoMove) {
