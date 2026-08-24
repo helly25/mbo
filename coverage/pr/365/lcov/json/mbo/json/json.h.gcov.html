@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:57:36</td>
+            <td class="headerValue">2026-08-24 12:42:44</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">55.3&nbsp;%</td>
@@ -402,7 +402,7 @@
 <span id="L322"><span class="lineNum">     322</span>                 :<span class="tlaGNC">           2 :   explicit Json(std::nullopt_t /*value*/) noexcept : data_{std::nullopt} {}</span></span>
 <span id="L323"><span class="lineNum">     323</span>                 :             : </span>
 <span id="L324"><span class="lineNum">     324</span>                 :             :   template&lt;ConvertibleToJson Value&gt;</span>
-<span id="L325"><span class="lineNum">     325</span>                 :<span class="tlaGNC">          60 :   explicit Json(Value&amp;&amp; value) noexcept : data_{std::nullopt} {</span></span>
+<span id="L325"><span class="lineNum">     325</span>                 :<span class="tlaGNC">          60 :   explicit Json(Value&amp;&amp; value) : data_{std::nullopt} {</span></span>
 <span id="L326"><span class="lineNum">     326</span>                 :<span class="tlaGNC">          60 :     *this = std::forward&lt;Value&gt;(value);</span></span>
 <span id="L327"><span class="lineNum">     327</span>                 :<span class="tlaGNC">          60 :   }</span></span>
 <span id="L328"><span class="lineNum">     328</span>                 :             : </span>
@@ -421,7 +421,7 @@
 <span id="L341"><span class="lineNum">     341</span>                 :<span class="tlaGNC">         256 :     return *this;</span></span>
 <span id="L342"><span class="lineNum">     342</span>                 :             :   }</span>
 <span id="L343"><span class="lineNum">     343</span>                 :             : </span>
-<span id="L344"><span class="lineNum">     344</span>                 :<span class="tlaGNC">           1 :   explicit Json(std::string_view value) noexcept : data_{std::nullopt} { data_.emplace&lt;std::string&gt;(value); }</span></span>
+<span id="L344"><span class="lineNum">     344</span>                 :<span class="tlaGNC">           1 :   explicit Json(std::string_view value) : data_{std::nullopt} { data_.emplace&lt;std::string&gt;(value); }</span></span>
 <span id="L345"><span class="lineNum">     345</span>                 :             : </span>
 <span id="L346"><span class="lineNum">     346</span>                 :<span class="tlaGNC">           1 :   explicit operator bool() const noexcept { return !IsNull(); }</span></span>
 <span id="L347"><span class="lineNum">     347</span>                 :             : </span>
@@ -591,7 +591,7 @@
 <span id="L511"><span class="lineNum">     511</span>                 :             :     return (*std::get&lt;Array&gt;(data_))[index];</span>
 <span id="L512"><span class="lineNum">     512</span>                 :             :   }</span>
 <span id="L513"><span class="lineNum">     513</span>                 :             : </span>
-<span id="L514"><span class="lineNum">     514</span>                 :<span class="tlaGNC">          48 :   Json&amp; operator[](std::string_view property) noexcept {</span></span>
+<span id="L514"><span class="lineNum">     514</span>                 :<span class="tlaGNC">          48 :   Json&amp; operator[](std::string_view property) {</span></span>
 <span id="L515"><span class="lineNum">     515</span>                 :<span class="tlaGNC">          48 :     MakeObject();</span></span>
 <span id="L516"><span class="lineNum">     516</span>                 :<span class="tlaGNC">          48 :     auto [it, inserted] = std::get&lt;Object&gt;(data_).emplace(property, nullptr);</span></span>
 <span id="L517"><span class="lineNum">     517</span>         [<span class="tlaGBC" title="branch 0 was taken 18 times"> + </span><span class="tlaGBC" title="branch 1 was taken 30 times"> + </span>]:<span class="tlaGNC">          48 :     if (inserted) {</span></span>
@@ -600,7 +600,7 @@
 <span id="L520"><span class="lineNum">     520</span>                 :<span class="tlaGNC">          48 :     return *it-&gt;second;</span></span>
 <span id="L521"><span class="lineNum">     521</span>                 :             :   }</span>
 <span id="L522"><span class="lineNum">     522</span>                 :             : </span>
-<span id="L523"><span class="lineNum">     523</span>                 :             :   const Json&amp; operator[](std::string_view property) const noexcept {</span>
+<span id="L523"><span class="lineNum">     523</span>                 :             :   const Json&amp; operator[](std::string_view property) const {</span>
 <span id="L524"><span class="lineNum">     524</span>                 :             :     MBO_CONFIG_REQUIRE(IsObject(), &quot;Is not an Object.&quot;);</span>
 <span id="L525"><span class="lineNum">     525</span>                 :             :     MBO_CONFIG_REQUIRE(contains(property), &quot;Property not present:&quot;) &lt;&lt; &quot;'&quot; &lt;&lt; property &lt;&lt; &quot;'.&quot;;</span>
 <span id="L526"><span class="lineNum">     526</span>                 :             :     return *(std::get&lt;Object&gt;(data_)).at(property);</span>

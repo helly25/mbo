@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:57:36</td>
+            <td class="headerValue">2026-08-24 12:42:44</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">4.7&nbsp;%</td>
@@ -115,10 +115,10 @@
 <span id="L35"><span class="lineNum">      35</span>                 :             : </span>
 <span id="L36"><span class="lineNum">      36</span>                 :             : namespace mbo::log {</span>
 <span id="L37"><span class="lineNum">      37</span>                 :             : </span>
-<span id="L38"><span class="lineNum">      38</span>                 :             : // *** Only use for depnstration putpose! ***</span>
+<span id="L38"><span class="lineNum">      38</span>                 :             : // *** Only use for depnstration purpose! ***</span>
 <span id="L39"><span class="lineNum">      39</span>                 :             : namespace log_internal {</span>
 <span id="L40"><span class="lineNum">      40</span>                 :             : </span>
-<span id="L41"><span class="lineNum">      41</span>                 :             : // *** Only use for depnstration putpose! ***</span>
+<span id="L41"><span class="lineNum">      41</span>                 :             : // *** Only use for depnstration purpose! ***</span>
 <span id="L42"><span class="lineNum">      42</span>                 :             : using ScopedStreamVariants = std::variant&lt;</span>
 <span id="L43"><span class="lineNum">      43</span>                 :             :     std::ostream,</span>
 <span id="L44"><span class="lineNum">      44</span>                 :             :     ScopedStream&lt;ScopedStreamMode::kContinue, std::stringstream, std::ostream, std::string_view&gt;,</span>
@@ -147,7 +147,7 @@
 <span id="L67"><span class="lineNum">      67</span>                 :             :     ScopedStream&lt;ScopedStreamMode::kQuickExit, VoidStream, Voidifier, Voidifier&gt;,</span>
 <span id="L68"><span class="lineNum">      68</span>                 :             :     VoidStream&gt;;</span>
 <span id="L69"><span class="lineNum">      69</span>                 :             : </span>
-<span id="L70"><span class="lineNum">      70</span>                 :             : // *** Only use for depnstration putpose! ***</span>
+<span id="L70"><span class="lineNum">      70</span>                 :             : // *** Only use for depnstration purpose! ***</span>
 <span id="L71"><span class="lineNum">      71</span>                 :             : struct ScopedStreamer : ScopedStreamVariants {</span>
 <span id="L72"><span class="lineNum">      72</span>                 :             :   ScopedStreamer() = delete;</span>
 <span id="L73"><span class="lineNum">      73</span>                 :             : </span>
@@ -195,7 +195,7 @@
 <span id="L115"><span class="lineNum">     115</span>                 :             : };</span>
 <span id="L116"><span class="lineNum">     116</span>                 :             : }  // namespace log_internal</span>
 <span id="L117"><span class="lineNum">     117</span>                 :             : </span>
-<span id="L118"><span class="lineNum">     118</span>                 :             : // *** Only use for depnstration putpose! ***</span>
+<span id="L118"><span class="lineNum">     118</span>                 :             : // *** Only use for depnstration purpose! ***</span>
 <span id="L119"><span class="lineNum">     119</span>                 :             : MBO_FORCE_INLINE log_internal::ScopedStreamer ScopedLogCheck(</span>
 <span id="L120"><span class="lineNum">     120</span>                 :             :     bool check,</span>
 <span id="L121"><span class="lineNum">     121</span>                 :             :     std::string_view what,</span>
@@ -211,7 +211,7 @@
 <span id="L129"><span class="lineNum">     129</span>                 :<span class="tlaUNC">           0 :       loc, std::cerr, what};</span></span>
 <span id="L130"><span class="lineNum">     130</span>                 :             : }</span>
 <span id="L131"><span class="lineNum">     131</span>                 :             : </span>
-<span id="L132"><span class="lineNum">     132</span>                 :             : // *** Only use for depnstration putpose! ***</span>
+<span id="L132"><span class="lineNum">     132</span>                 :             : // *** Only use for depnstration purpose! ***</span>
 <span id="L133"><span class="lineNum">     133</span>                 :             : template&lt;typename Disallowed&gt;</span>
 <span id="L134"><span class="lineNum">     134</span>                 :             : void ScopedLogCheck(bool, std::string_view, const Disallowed&amp;&amp;) {  // NOLINT(*-named-parameter)</span>
 <span id="L135"><span class="lineNum">     135</span>                 :             :   static_assert(false, &quot;Must call ScopedStreamVoid with exactly two arguments&quot;);</span>

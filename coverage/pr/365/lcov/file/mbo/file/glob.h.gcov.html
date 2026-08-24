@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:57:36</td>
+            <td class="headerValue">2026-08-24 12:42:44</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">92.3&nbsp;%</td>
@@ -172,11 +172,11 @@
 <span id="L92"><span class="lineNum">      92</span>                 :             : //   - '[...]': '...' may not be empty. The result is a matching positive range.</span>
 <span id="L93"><span class="lineNum">      93</span>                 :             : //   - '[!...]': '...' may not be empty. The result is a matching negative range.</span>
 <span id="L94"><span class="lineNum">      94</span>                 :             : //   - '[]]' -&gt; '[\\]]' which matches the ']'.</span>
-<span id="L95"><span class="lineNum">      95</span>                 :             : //   - '[!]]' -&gt; '[^\\]]' which matches everythign but ']'.</span>
+<span id="L95"><span class="lineNum">      95</span>                 :             : //   - '[!]]' -&gt; '[^\\]]' which matches everything but ']'.</span>
 <span id="L96"><span class="lineNum">      96</span>                 :             : //   - ranges may incorrectly match against '/' as that is not handled.</span>
 <span id="L97"><span class="lineNum">      97</span>                 :             : // Character classes (Posix extension):</span>
 <span id="L98"><span class="lineNum">      98</span>                 :             : //   Character classes are translated directly. However, they require to be supported in RE2 as</span>
-<span id="L99"><span class="lineNum">      99</span>                 :             : //   documneted in https://github.com/google/re2/wiki/Syntax.</span>
+<span id="L99"><span class="lineNum">      99</span>                 :             : //   documented in https://github.com/google/re2/wiki/Syntax.</span>
 <span id="L100"><span class="lineNum">     100</span>                 :             : absl::StatusOr&lt;std::string&gt; Glob2Re2Expression(std::string_view pattern, const Glob2Re2Options&amp; options = {});</span>
 <span id="L101"><span class="lineNum">     101</span>                 :             : </span>
 <span id="L102"><span class="lineNum">     102</span>                 :             : // Convert `pattern` into a RE2 instance.</span>
