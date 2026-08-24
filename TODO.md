@@ -114,18 +114,24 @@ also updates this file to the completed state.
 
 ## File API robustness and portability
 
- - [x] Add strict INI parsing with line-numbered diagnostics.
-  - Make file reads reject malformed group headers, missing separators, empty
-    keys, and duplicate keys.
-  - Preserve the historical behavior behind an explicit permissive API and a
-    compatibility `Parse()` spelling.
-   - Define full-line comments and retain comment characters within values.
-   - PR: [#370](https://github.com/helly25/mbo/pull/370).
+- [x] Add strict INI parsing with line-numbered diagnostics.
+- Make file reads reject malformed group headers, missing separators, empty
+  keys, and duplicate keys.
+- Preserve the historical behavior behind an explicit permissive API and a
+  compatibility `Parse()` spelling.
+- Define full-line comments and retain comment characters within values.
+- PR: [#370](https://github.com/helly25/mbo/pull/370).
 
-- [x] Keep glob ranges within a single path component.
-  - Preserve exact `[/]` as a normalized path separator.
-  - Exclude `/` from positive, negative, escaped, and range-spanning character
-    classes so ranges cannot consume path separators.
+- [ ] Provide the canonical fast, locale-independent, RE2-native GLOB and
+      SHGLOB implementation for mbo and xff.
+  - Implement the complete contract and acceptance criteria in
+    [`mbo/file/GLOB.md`](mbo/file/GLOB.md) in this single PR.
+  - Keep component wildcards and bracket expressions within one path component,
+    and make complete-component `**` match zero or more directory levels.
+  - Expose the translator publicly so xff can replace its parallel parser in one
+    follow-up dependency-update PR without losing GLOB, SHGLOB, or gitignore
+    behavior.
+  - Prove the adoption path with a local xff override and its complete test suite.
   - PR: [#371](https://github.com/helly25/mbo/pull/371).
 
 - [x] Make `GetContents` handle failed seeks and non-seekable inputs safely.
