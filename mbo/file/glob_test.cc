@@ -183,6 +183,13 @@ TEST_F(GlobTest, ShGlobBraceAlternatives) {
   EXPECT_THAT(Glob2Re2Expression("{src,test}/**/x", kShGlob), IsOkAndHolds("(?:src|test)(?:/[^/]+)*/x"));
   EXPECT_THAT(Glob2Re2Expression("{a}", kShGlob), IsOkAndHolds("\\{a\\}"));
   EXPECT_THAT(Glob2Re2Expression("*.{cc,h}"), IsOkAndHolds("[^/]*\\.\\{cc,h\\}"));
+  EXPECT_THAT(Glob2Re2Expression("{[!,}],tail}", kShGlob), IsOkAndHolds("(?:[^,/}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression("{[]},],tail}", kShGlob), IsOkAndHolds("(?:[,\\]}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression("{[[:alpha:],}],tail}", kShGlob), IsOkAndHolds("(?:[,A-Za-z}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression(R"({[a\,}],tail})", kShGlob), IsOkAndHolds("(?:[,a}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression(R"({left\,middle,right})", kShGlob), IsOkAndHolds("(?:left,middle|right)"));
+  EXPECT_THAT(Glob2Re2Expression(R"({left\}middle,right})", kShGlob), IsOkAndHolds("(?:left\\}middle|right)"));
+  EXPECT_THAT(Glob2Re2Expression("a{bc", kShGlob), IsOkAndHolds("a\\{bc"));
 }
 
 TEST_F(GlobTest, Glob2Re2PatternErrors) {
@@ -219,6 +226,12 @@ TEST_F(GlobTest, Glob2Re2PatternErrors) {
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           "Negative extglob is unsupported because RE2 cannot express subexpression complement."));
+  EXPECT_THAT(
+      Glob2Re2Expression("[z-a]"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "Descending range 'z-a' is unsupported."));
+  EXPECT_THAT(
+      Glob2Re2Expression("[\\/]"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "Range expression matches only the path separator."));
   const Glob2Re2Options disable_ranges{.allow_ranges = false};
   constexpr std::array<std::string_view, 6> kRangeIssues{
       "[]", "[!]", "[[:]", "[[:]]", "[[::]]", "[[::]][[:alpha:]]",
@@ -277,6 +290,31 @@ TEST_F(GlobTest, Glob2Re2) {
   Glob2Re2Match("[[:print:]]", "/", false);
   Glob2Re2Match("[[:punct:]]", "/", false);
   Glob2Re2Match("[![:ascii:]]", "/", false);
+}
+
+TEST_F(GlobTest, AllNamedCharacterClassesAreLocaleIndependentAndComponentLocal) {
+  static constexpr std::array<std::pair<std::string_view, std::string_view>, 14> kCases{{
+      {"alnum", "A"},
+      {"alpha", "z"},
+      {"ascii", "\x01"},
+      {"blank", "\t"},
+      {"cntrl", "\n"},
+      {"digit", "7"},
+      {"graph", "!"},
+      {"lower", "m"},
+      {"print", " "},
+      {"punct", "!"},
+      {"space", "\r"},
+      {"upper", "Q"},
+      {"word", "_"},
+      {"xdigit", "F"},
+  }};
+  for (const auto& [name, matching] : kCases) {
+    const std::string pattern = absl::StrCat("[[:", name, ":]]");
+    SCOPED_TRACE(pattern);
+    Glob2Re2OnlyMatch(pattern, matching);
+    Glob2Re2OnlyMatch(pattern, "/", false);
+  }
 }
 
 MATCHER_P3(HasParts, path_matcher, file_matcher, is_mixed, "") {

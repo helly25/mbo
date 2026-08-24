@@ -85,9 +85,7 @@ absl::Status ValidateCharacterClass(std::string_view name) {
 }
 
 absl::StatusOr<unsigned char> TakeRangeCharacter(std::string_view& pattern) {
-  if (pattern.empty()) {
-    return absl::InvalidArgumentError("Unterminated range expression.");
-  }
+  // Callers only enter with a member available; a trailing escape is diagnosed below.
   if (pattern.front() != '\\') {
     const unsigned char result = static_cast<unsigned char>(pattern.front());
     pattern.remove_prefix(1);
@@ -143,11 +141,9 @@ absl::Status GlobFindRange(std::string_view& pattern, std::string& re2_pattern) 
     pattern.remove_prefix(1);
   }
   CharacterSet chars{};
-  bool any = false;
   if (pattern.starts_with(']')) {
     chars[static_cast<unsigned char>(']')] = true;
     pattern.remove_prefix(1);
-    any = true;
   }
   while (!pattern.empty() && !pattern.starts_with(']')) {
     if (pattern.starts_with("[.") || pattern.starts_with("[=")) {
@@ -162,7 +158,6 @@ absl::Status GlobFindRange(std::string_view& pattern, std::string& re2_pattern) 
       MBO_RETURN_IF_ERROR(ValidateCharacterClass(name));
       AddCharacterClass(name, chars);
       pattern.remove_prefix(end + 2);
-      any = true;
       continue;
     }
     MBO_ASSIGN_OR_RETURN(const unsigned char first, TakeRangeCharacter(pattern));
@@ -178,15 +173,11 @@ absl::Status GlobFindRange(std::string_view& pattern, std::string& re2_pattern) 
     } else {
       chars[first] = true;
     }
-    any = true;
   }
   if (pattern.empty()) {
     return absl::InvalidArgumentError("Unterminated range expression.");
   }
   pattern.remove_prefix(1);
-  if (!any) {
-    return absl::InvalidArgumentError("Empty range expression.");
-  }
   chars[static_cast<unsigned char>('/')] = false;
   if (negative) {
     chars[static_cast<unsigned char>('/')] = true;
