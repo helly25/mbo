@@ -172,6 +172,7 @@ cc_test(
 # propagate through NoDestruct construction.
 cc_test(
     name = "no_destruct_exception_test",
+    size = "small",
     srcs = ["no_destruct_exception_test.cc"],
     # Clang on Darwin cannot unwind caught exceptions when ASan and UBSan are
     # combined. Keep ASan, but omit UBSan instrumentation for this narrow test.
