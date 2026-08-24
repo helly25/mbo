@@ -47,6 +47,51 @@ also updates this file to the completed state.
   - Add a regression test with representative cache keys.
   - PR: [#328](https://github.com/helly25/mbo/pull/328).
 
+## API additions
+
+- [x] Add `mbo::StringOrView`, a read-only owning-or-borrowing string wrapper.
+  - Add `mbo/types/string_or_view.h` with default-empty, owning `std::string`,
+    borrowing `std::string_view`, and borrowing string-literal construction.
+    Avoid ambiguous or accidentally unsafe runtime `const char*` construction.
+  - Preserve ownership and represented text across copy and move construction
+    and assignment. Owning copies must be independent; borrowed copies must
+    retain the same view; moves must be nothrow where promised.
+  - Expose only `view()` and `owns_string()` as the core read-only API, and
+    explicitly document that borrowed storage must outlive the wrapper.
+  - Add comparison against `StringOrView`, `std::string_view`, `std::string`,
+    and literals, operating solely on `view()`, plus `AbslStringify` support
+    consistent with comparable mbo value wrappers.
+  - Add a conventionally named Bazel `cc_library` and same-package test target,
+    exporting the short name as `mbo::StringOrView` even though the header is
+    under `mbo/types/`.
+  - Cover default and distinctly owned/borrowed empty values, lvalue copies,
+    rvalue moves, pointer preservation for borrowed copies, independent owned
+    copies, copy/move assignment for both representations, embedded NUL bytes,
+    comparisons, stringification, compile-time empty/non-empty literals, and
+    promised type traits.
+  - Keep the representation suitable for a future shared immutable ownership
+    option if measurements justify it, but do not implement copy-on-write now.
+  - Motivation: let downstream xff field rendering return computed owned text
+    or stable registry/context/database views without forcing allocation. A
+    later xff dependency-update PR can replace its local `FieldValue` after an
+    mbo release contains this type.
+  - PR: [#377](https://github.com/helly25/mbo/pull/377).
+- [ ] Complete the read-only string interface and ecosystem integration for
+      `mbo::StringOrView`.
+  - Provide the full non-mutating `std::string_view`-style surface, including
+    element access, iterators, size/capacity queries, prefix/suffix removal via
+    returned views where appropriate, copying, substrings, comparisons, search,
+    and prefix/suffix/containment queries.
+  - Preserve the ownership model: operations must not expose mutable storage or
+    make a borrowed value appear owned, and returned views retain the documented
+    lifetime constraints.
+  - Integrate with Abseil formatting and hashing through `AbslStringify` and
+    `AbslHashValue`.
+  - Integrate with standard-library text output, formatting, and hashing where
+    the supported C++ versions provide the necessary customization points.
+  - Test parity against `std::string_view`, embedded NUL handling, heterogeneous
+    formatting and hashing, constexpr use, and owned versus borrowed values.
+
 ## File API robustness and portability
 
 - [x] Add strict INI parsing with line-numbered diagnostics.
