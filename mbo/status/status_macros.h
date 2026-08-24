@@ -50,7 +50,7 @@
     return mbo::status::StatusBuilder(var)
 
 // Similar to MBO_RETURN_IF_ERROR but this assigns the result of an `absl::StatusOr<T>`, to a target
-// which can be an existing variable or a new variable declaration. The asignment is by move.
+// which can be an existing variable or a new variable declaration. The assignment is by move.
 //
 // Instead of:
 //

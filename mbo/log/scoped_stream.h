@@ -135,9 +135,9 @@ concept IsStringViewOrVoidifier = std::same_as<T, std::string_view> || std::same
 // `Voidifier` types. The default types are chosen to be the most common use case and provide a good
 // balance between functionality and storage size.
 //
-// The reson to use `std::string_view` for `MessageT` is that it is a non-owning type which does not
+// The reason to use `std::string_view` for `MessageT` is that it is a non-owning type which does not
 // require any additional storage. It is also a very common type to use for messages. That message
-// con be a geneated `constexpr` and will be output even if the `StringStreamT` is `VoidStream`.
+// con be a generated `constexpr` and will be output even if the `StringStreamT` is `VoidStream`.
 // The `ScopedStream` will not take ownership of the message and will not copy it. It will only
 // store a reference to it. The user must ensure that the message is valid for the lifetime of the
 // `ScopedStream`.

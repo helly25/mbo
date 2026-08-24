@@ -92,11 +92,11 @@ absl::StatusOr<GlobParts> GlobSplitParts(std::string_view pattern, const Glob2Re
 //   - '[...]': '...' may not be empty. The result is a matching positive range.
 //   - '[!...]': '...' may not be empty. The result is a matching negative range.
 //   - '[]]' -> '[\\]]' which matches the ']'.
-//   - '[!]]' -> '[^\\]]' which matches everythign but ']'.
+//   - '[!]]' -> '[^\\]]' which matches everything but ']'.
 //   - ranges may incorrectly match against '/' as that is not handled.
 // Character classes (Posix extension):
 //   Character classes are translated directly. However, they require to be supported in RE2 as
-//   documneted in https://github.com/google/re2/wiki/Syntax.
+//   documented in https://github.com/google/re2/wiki/Syntax.
 absl::StatusOr<std::string> Glob2Re2Expression(std::string_view pattern, const Glob2Re2Options& options = {});
 
 // Convert `pattern` into a RE2 instance.

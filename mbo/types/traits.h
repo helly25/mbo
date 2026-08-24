@@ -140,7 +140,7 @@ concept IsForwardIteratableRaw = requires(Container container, const Container c
 };
 }  // namespace types_internal
 
-// Identifies `Container` types that are at least forward iteratable (this include `std::initializer_list`).
+// Identifies `Container` types that are at least forward iterable (this include `std::initializer_list`).
 template<typename Container>
 concept IsForwardIteratable = types_internal::IsForwardIteratableRaw<std::remove_cvref_t<Container>>;
 
@@ -189,7 +189,7 @@ concept ContainerHasForwardIteratorImpl = requires(Container container, const Co
 };
 }  // namespace types_internal
 
-// Identifies STL like `Container` types that are at least iteratable.
+// Identifies STL like `Container` types that are at least iterable.
 template<typename Container>
 concept ContainerIsForwardIteratable = types_internal::ContainerIsForwardIteratableRaw<std::remove_cvref_t<Container>>;
 
@@ -495,7 +495,7 @@ concept ComparesAs = std::same_as<std::common_comparison_category_t<T, Cat>, Cat
 // presented argument order.
 //
 // This means there is no need for a common reference - which usually effectively means one side needs to be converted.
-// There is further no requirement for `L <=> L`, `R <=> R` or odering requirements for `L` or `R`.
+// There is further no requirement for `L <=> L`, `R <=> R` or ordering requirements for `L` or `R`.
 //
 // It also means that there is no guaranteed that `R <=> L` is valid.
 template<typename Lhs, typename Rhs, typename Cat = std::partial_ordering>

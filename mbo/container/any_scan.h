@@ -47,7 +47,7 @@ namespace mbo::container {
 // single functions that can take containers of any container type without needing further templates
 // or overloads.
 //
-// HOWEVER: This type is possibly slower as the aformentioned wrappers, as it need mores abstraction
+// HOWEVER: This type is possibly slower as the aforementioned wrappers, as it need mores abstraction
 // layers to accomplish the independence of the container type.
 //
 // The type `AnyScan` can only be instantiated/created through `MakeAnyScan` or directly from a

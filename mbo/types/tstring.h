@@ -81,7 +81,7 @@ namespace mbo::types {
 // The type can be accessed as a `std::string_view` using static function `str`.
 //
 // Instances can be compared against anything that can be compared against a
-// `std::string_view`. They can be (eplicitly) converted into `std::string_view`.
+// `std::string_view`. They can be (explicitly) converted into `std::string_view`.
 //
 // All access functions are `static constexpr`. Using them may require disabling
 // a lint warning ("readability-static-accessed-through-instance") or access
@@ -450,12 +450,12 @@ class MakeTstringHelper {
 };
 
 #if !defined(__clang__) && !defined(__GNUC__)
-// This helper is neccessary for some compilers, e.g. MSVC.
+// This helper is necessary for some compilers, e.g. MSVC.
 // It is not needed for Clang, GCC or compilers derived from these such as ICC.
-// This is not default availabel as it introduces a type that has a public
-// conversion constructor. This cannot be prevented with a freind declaration
+// This is not default available as it introduces a type that has a public
+// conversion constructor. This cannot be prevented with a friend declaration
 // as the type will be initiated by the compiler as a template parameter, and
-// therefor declaring the `operator"" _ts` as a friend is not enough.
+// therefore declaring the `operator"" _ts` as a friend is not enough.
 template<std::size_t N>
 struct MakeTstringLiteralHelper {
   MakeTstringLiteralHelper() = delete;

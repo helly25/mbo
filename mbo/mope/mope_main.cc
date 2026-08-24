@@ -199,7 +199,7 @@ enable the section `section`.
 
 The section tags can have additional configurations as explained below. However,
 there is a special configuration, the empty one, which is otherwise illegal. It
-functions as a comment becasue it replaces the whole section with nothing.
+functions as a comment because it replaces the whole section with nothing.
 
 4) The template supports for-loops:
 
@@ -208,7 +208,7 @@ functions as a comment becasue it replaces the whole section with nothing.
 * The values <start>, <end> and <step> can either be a number or a name of
   an existing section dictionary value.
 * <step>:     Is the optional step-difference between iterations and defaults
-              to 1. It canot be set to zero.
+              to 1. It cannot be set to zero.
 * <step> > 0: Iteration ends when the current value > <end>.
 * <step> < 0: Iteration ends when the current value < <end>.
 * <join>:     Optional value that functions as a joiner. The value can be a

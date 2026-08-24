@@ -31,7 +31,7 @@ concept IsIfThen = requires(T) {
   typename T::type;
 };
 
-// Concrete implmentation for the front case being `false`.
+// Concrete implementation for the front case being `false`.
 // This will simply strip the first two types and replac with the next type
 // expanded and then increase the `Index`.
 // So this will effectively never terminate but rather fail the compiler.
@@ -39,7 +39,7 @@ concept IsIfThen = requires(T) {
 template<bool IfThen0Value, std::size_t Index, typename IfThen0Type, typename IfThen1, typename... OtherCases>
 struct CasesForwardImpl : CasesForwardImpl<IfThen1::value, Index + 1, typename IfThen1::type, OtherCases...> {};
 
-// Concrete implmentation for the front case being `true`.
+// Concrete implementation for the front case being `true`.
 // Will set the struct with `type` and `index` and then terminate unpacking.
 template<std::size_t Index, typename IfThen0Type, typename IfThen1, typename... OtherCases>
 struct CasesForwardImpl<true, Index, IfThen0Type, IfThen1, OtherCases...> {

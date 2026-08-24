@@ -70,8 +70,8 @@ static_assert(__is_literal_type(std::optional<std::variant<int, const StringifyF
 //
 // However, the objects support sparness, that is the data is grouped into several aspects that can
 // each be unset (nullopt), a const reference or actual materialized data. That enables fast
-// creation and copying beyond the size. Nontheless, the data is large and will impact CPU caches.
-// So creating the options upfront and not specializing structs as much as neccessary is best.
+// creation and copying beyond the size. Nonetheless, the data is large and will impact CPU caches.
+// So creating the options upfront and not specializing structs as much as necessary is best.
 //
 // The implicit constructor create objects that are fully unset, meaning all fields are nullopt.
 // The `Stringify` class provides pre-determined named constexpr factories (e.g. example 3).
@@ -115,7 +115,7 @@ struct StringifyOptions {
     std::string_view message_suffix;
 
     std::string_view field_indent;                // Indent for fields.
-    std::string_view key_value_separator = ": ";  // Seperator between key and value.
+    std::string_view key_value_separator = ": ";  // Separator between key and value.
     std::string_view field_separator = ", ";      // Separator between two field (in front of field).
 
     std::string_view pointer_prefix = "*{";   // Prefix for pointer types.
@@ -578,7 +578,7 @@ concept HasMboTypesStringifyValueAccess = !IsVariant<T> && requires(const T& v, 
 // Whether Stringify should automatically take affect if `T` is used as a sub field in a Stringify invocation.
 // Otherwise the subfield needs its own support for printing (e.g. Abseil stringify support).
 //
-// Note that this takes precendence and thus disables Abseil stringify support in `Stringify`.
+// Note that this takes precedence and thus disables Abseil stringify support in `Stringify`.
 //
 // This gets triggered by:
 // * Presence of a type named `MboTypesStringifySupport`,
@@ -595,7 +595,7 @@ concept HasMboTypesStringifySupport =               //
 
 enum class StringifyNameHandling {
   kOverwrite = 0,  // Use the provided names to override automatically determined names.
-  kVerify = 1,     // Verify that the provided name matches the detrmined if possible.
+  kVerify = 1,     // Verify that the provided name matches the determined if possible.
 };
 
 template<typename T, typename ObjectType = types_internal::AnyType>
@@ -611,7 +611,7 @@ concept CanProduceStringifyOptions = std::is_assignable_v<
 // like `WithFieldNames` does. However, all concrete calls will verify their
 // factual object type.
 //
-// Read more about producing `StringifyOptions` in the documnetation for
+// Read more about producing `StringifyOptions` in the documentation for
 // `MboTypesStringifyOptions` and `HasMboTypesStringifyOptions`.
 template<typename T, typename ObjectType = types_internal::AnyType>
 concept IsOrCanProduceStringifyOptions =
@@ -663,7 +663,7 @@ class Stringify {
     return OptionsDefault();
   }
 
-  // Arbirary default value.
+  // Arbitrary default value.
   static constexpr const StringifyOptions& OptionsDefault() noexcept {
     MBO_CONFIG_REQUIRE(kOptionsDefaults.AllDataSet(), "Not all data set: ") << kOptionsDefaults.DebugStr();
     return kOptionsDefaults;

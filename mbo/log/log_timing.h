@@ -101,7 +101,7 @@ class LogTimingImpl final {
 //
 // An optional aggregate parameter allows to control the exact behavior. That aggregate should not
 // be used by its type name and instead, be used only via direct (unnamed) aggregate initialization.
-// For example it is possble to set `min_duration` to suppress fast scopes from being logged:
+// For example it is possible to set `min_duration` to suppress fast scopes from being logged:
 //
 //   auto done  = LogTiming({.min_duration = absl::Seconds(10)});
 //

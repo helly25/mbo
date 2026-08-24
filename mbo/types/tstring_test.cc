@@ -456,7 +456,7 @@ using MyTypes = ::testing::Types<
     TestInfo<make_tstring<kGsv3>(), 3>,
     TestInfo<make_tstring<kGsv4>(), 4>,
     TestInfo<make_tstring<kGsv5>(), 5>,
-    TestInfo<make_tstring<kGsv6>(), 5>,  // \0 not considerd.
+    TestInfo<make_tstring<kGsv6>(), 5>,  // \0 not considered.
     TestInfo<tstring<>{}, 0>,
     TestInfo<tstring<'A'>{}, 1>,
     TestInfo<tstring<'A', 'B'>{}, 2>,

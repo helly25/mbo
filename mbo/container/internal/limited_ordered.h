@@ -863,7 +863,7 @@ class [[nodiscard]] LimitedOrdered {
     return last - first;
   }
 
-  // Mofification: clear, swap, emplace, insert
+  // Modification: clear, swap, emplace, insert
 
   constexpr void clear() noexcept {
     while (size_ > 0) {

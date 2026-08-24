@@ -195,7 +195,7 @@ struct GlobData : mbo::types::Extend<GlobData> {
 bool AllowApendStar(std::string_view pattern, std::size_t past_last_escape, const Glob2Re2Options& options) {
   // We consider whether the previous chars were stars, but they could have been escaped.
   // The escape char itself could be escaped, so we forward search for escape chars and drop those
-  // nad the next charater. What remains is an unescaped sequence.
+  // nad the next character. What remains is an unescaped sequence.
   pattern.remove_prefix(past_last_escape);
   if (options.allow_star_star) {
     return !pattern.ends_with("**");
@@ -342,7 +342,7 @@ MBO_ALWAYS_INLINE void Glob2Re2ExpressionImplStar(std::string& re2_pattern, std:
   }
   pattern.remove_prefix(2);
   if (re2_pattern.ends_with('/') && (pattern.starts_with('/') || pattern.empty())) {
-    // We have '/\*\*(/|$)' so the preceeding '/'s are optional.
+    // We have '/\*\*(/|$)' so the preceding '/'s are optional.
     re2_pattern.pop_back();  // Drop the last '/'.
     absl::StrAppend(&re2_pattern, "(/.+)?");
     return;
