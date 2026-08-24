@@ -11,6 +11,75 @@ import coverage as coverage_tool  # noqa: E402
 
 
 class CoverageTest(unittest.TestCase):
+    def test_baseline_rejects_regressions_beyond_tolerance(self):
+        metric = lambda percent: {  # noqa: E731
+            "covered": 1,
+            "total": 1,
+            "percent": percent,
+        }
+        measured = {
+            "overall": {
+                "lines": metric(89.89),
+                "functions": metric(80.0),
+                "branches": metric(None),
+            }
+        }
+        policy = {
+            "include": ["mbo/**"],
+            "exclude": ["mbo/**/*_test.cc"],
+            "categories": {},
+            "baseline": {
+                "maximum_drop": {"lines": 0.1, "functions": 0.1, "branches": 0.1}
+            },
+        }
+        baseline = {
+            "schema": 2,
+            "scope": coverage_tool.baseline_scope(policy),
+            "measurements": {
+                "overall": {
+                    "lines": metric(90.0),
+                    "functions": metric(80.1),
+                    "branches": metric(75.0),
+                }
+            },
+        }
+        self.assertEqual(
+            [
+                "overall lines: 89.89% is below the 90.00% baseline by more than 0.10 percentage points",
+                "overall branches: no data; baseline is 75.00%",
+            ],
+            coverage_tool.baseline_failures(measured, baseline, policy),
+        )
+
+    def test_baseline_rejects_scope_and_category_mismatches(self):
+        metric = {
+            "lines": {"covered": 1, "total": 1, "percent": 100.0},
+            "functions": {"covered": 1, "total": 1, "percent": 100.0},
+            "branches": {"covered": 1, "total": 1, "percent": 100.0},
+        }
+        policy = {
+            "categories": {"types": {"include": ["mbo/types/**"]}},
+            "baseline": {
+                "maximum_drop": {"lines": 0.1, "functions": 0.1, "branches": 0.1}
+            },
+        }
+        baseline = {
+            "schema": 2,
+            "scope": coverage_tool.baseline_scope(policy),
+            "measurements": {"overall": metric},
+        }
+        self.assertEqual(
+            ["types: category is missing from the baseline"],
+            coverage_tool.baseline_failures(
+                {"overall": metric, "types": metric}, baseline, policy
+            ),
+        )
+        baseline["scope"] = {"include": ["different/**"]}
+        self.assertEqual(
+            ["measurement scope differs from coverage_policy.json; regenerate the baseline"],
+            coverage_tool.baseline_failures({"overall": metric}, baseline, policy),
+        )
+
     def test_json_summary_contains_policy_and_coverable_patch(self):
         metric = {
             "lines": {"covered": 9, "total": 10, "percent": 90.0},
@@ -225,6 +294,29 @@ class CoverageTest(unittest.TestCase):
         with_lines = dict(empty)
         with_lines["lines"] = {"covered": 0, "total": 1, "percent": 0.0}
         self.assertTrue(coverage_tool.has_coverage(with_lines, ("lines", "branches")))
+
+    def test_patch_enforces_only_metrics_with_coverable_data(self):
+        metrics = {
+            "lines": {"covered": 1, "total": 1, "percent": 100.0},
+            "functions": {"covered": 0, "total": 0, "percent": None},
+            "branches": {"covered": 0, "total": 0, "percent": None},
+        }
+        policies = {
+            "lines": coverage_tool.coverage_policy.MetricPolicy(95, 98, "medium"),
+            "branches": coverage_tool.coverage_policy.MetricPolicy(85, 90, "medium"),
+        }
+
+        self.assertEqual(
+            {"lines": policies["lines"]},
+            coverage_tool.policies_with_data(metrics, policies),
+        )
+        self.assertEqual(
+            [],
+            coverage_tool.failures(
+                {"patch": metrics},
+                {"patch": coverage_tool.policies_with_data(metrics, policies)},
+            ),
+        )
 
     def test_uncovered_patch_locations_are_sorted_and_deduplicated(self):
         files = {

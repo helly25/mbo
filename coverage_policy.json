@@ -9,6 +9,9 @@
   "minimum": { "lines": 88, "functions": 80, "branches": 60 },
   "target": { "lines": 90, "functions": 95, "branches": 82 },
   "enforce": "medium",
+  "baseline": {
+    "maximum_drop": { "lines": 0.1, "functions": 0.1, "branches": 0.1 }
+  },
   "patch": {
     "minimum": { "lines": 95, "branches": 85 },
     "target": { "lines": 98, "branches": 90 },

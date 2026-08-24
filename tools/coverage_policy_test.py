@@ -62,6 +62,29 @@ class CoveragePolicyTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "not separate"):
             coverage_policy.policies({**self.policy, "bands": {}})
 
+    def test_validates_baseline_tolerances(self):
+        policy = {
+            **self.policy,
+            "baseline": {"maximum_drop": {"lines": 0.1, "functions": 0.2, "branches": 0}},
+        }
+        self.assertEqual(
+            {"lines": 0.1, "functions": 0.2, "branches": 0.0},
+            coverage_policy.baseline_tolerances(policy),
+        )
+        with self.assertRaisesRegex(ValueError, "missing metrics: branches"):
+            coverage_policy.baseline_tolerances(
+                {**self.policy, "baseline": {"maximum_drop": {"lines": 0.1, "functions": 0.1}}}
+            )
+        with self.assertRaisesRegex(ValueError, "between 0 and 100"):
+            coverage_policy.baseline_tolerances(
+                {
+                    **self.policy,
+                    "baseline": {
+                        "maximum_drop": {"lines": -0.1, "functions": 0.1, "branches": 0.1}
+                    },
+                }
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

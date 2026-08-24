@@ -161,6 +161,16 @@ also updates this file to the completed state.
 
 ## Documentation and quality coverage
 
+- [x] Enforce the measured coverage baseline in CI.
+  - Reject per-category line, function, or branch regressions exceeding the
+    policy-defined tolerance while retaining the absolute and changed-code gates.
+  - Apply changed-code thresholds only when the patch contains coverable data
+    for that metric; do not fail or label an absent metric as `NO DATA`.
+  - Record the measurement scope in the baseline so policy scope changes require
+    an explicit, reviewed regeneration.
+  - Keep baseline updates as a deliberate `--write-baseline` operation.
+  - PR: [#369](https://github.com/helly25/mbo/pull/369).
+
 - [x] Unify coverage ratings, enforcement, and presentation, adopting the
       applicable final state of
       [xff PR #639](https://github.com/helly25/xff/pull/639),
