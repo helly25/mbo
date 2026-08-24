@@ -63,9 +63,8 @@ jobs:
           # The `trunk` job runs the full `trunk check`; do not also run trunk
           # from pre-commit in CI (see the trunk-fmt hook). Likewise the
           # `clang-tidy` job owns clang-tidy: it needs a compile_commands.json
-          # this job deliberately does not build. `clang-tidy` is `stages:
-          # [manual]` today, so it is already absent here; naming it keeps that
-          # true when the hook is promoted to an automatic gate.
+          # this job deliberately does not build. Skip it here to avoid running
+          # the same enforcing gate without its required compilation database.
           SKIP: trunk-fmt,clang-tidy
       - uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
@@ -73,9 +72,8 @@ jobs:
   clang-tidy:
     needs: [trunk, pre-commit]
     runs-on: ubuntu-latest
-    # Note there is deliberately no job-level `continue-on-error`: building the
-    # compile DB must gate, so a broken extractor/toolchain fails this job. Only
-    # the findings themselves are tolerated, at the step below.
+    # There is deliberately no job-level `continue-on-error`: the compilation
+    # database, toolchain, parsing, and clang-tidy findings all gate the change.
     steps:
       - uses: actions/checkout@v6
         with:
@@ -88,13 +86,10 @@ jobs:
           python-version: "3.13"
 
       - name: Select the scope to lint
-        # clang-tidy costs ~50s per translation unit here, so linting all 81
-        # sources takes ~24 minutes even though pre-commit already spreads them
-        # over every core. On a branch, lint only what the branch changed; `main`
-        # still gets the whole tree after merge.
-        # Known gap: editing only a header changes findings in the sources that
-        # include it, and none of those are in the branch's changed-file set. The
-        # post-merge run on `main` is what catches that.
+        # clang-tidy costs ~50s per translation unit here, so linting all sources
+        # is reserved for main and changes that can affect many compilation
+        # units. tools/clang_tidy_scope.py promotes headers, generated-header
+        # templates, and .bzl changes from this branch scope to a full sweep.
         run: |
           set -euo pipefail
           if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
@@ -102,9 +97,19 @@ jobs:
             echo "Linting the whole tree (on main)."
           else
             git fetch --no-tags --quiet origin main
-            echo "CLANG_TIDY_SCOPE=--from-ref origin/main --to-ref HEAD" >>"${GITHUB_ENV}"
-            echo "Linting sources changed against origin/main:"
-            git diff --name-only origin/main...HEAD -- '*.cc' '*.cpp' '*.cxx' | sed 's/^/  /'
+            WIDE_CHANGES="$(git diff --name-only origin/main...HEAD -- \
+              '*.h' '*.hh' '*.hpp' '*.hxx' '*.inc' '*.ipp' '*.h.in' '*.bzl')"
+            if [ -n "${WIDE_CHANGES}" ]; then
+              echo "CLANG_TIDY_SCOPE=--all-files" >>"${GITHUB_ENV}"
+              echo "Linting the whole tree because these compilation-wide files changed:"
+              echo "${WIDE_CHANGES}" | sed 's/^/  /'
+            else
+              echo "CLANG_TIDY_SCOPE=--from-ref origin/main --to-ref HEAD" >>"${GITHUB_ENV}"
+              echo "Linting translation units changed against origin/main:"
+              git diff --name-only origin/main...HEAD -- \
+              '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' '*.inc' '*.ipp' '*.h.in' '*.bzl' |
+                sed 's/^/  /'
+            fi
           fi
 
       # Disk cache only (compiled action outputs). The output root is not cached:

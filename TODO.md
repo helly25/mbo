@@ -130,6 +130,13 @@ also updates this file to the completed state.
   - Push only the newly created tag instead of every local tag.
   - Cover exact lookup and selective publication with temporary repositories.
   - PR: [#366](https://github.com/helly25/mbo/pull/366).
+- [x] Cover header-only and compilation-rule changes with clang-tidy.
+  - Keep changed translation-unit runs focused.
+  - Promote project header, generated-header template, and `.bzl` changes to a
+    full first-party translation-unit sweep.
+  - Derive that sweep from the compilation database and test scope selection.
+  - Describe the local and CI checks consistently as enforcing gates.
+  - PR: [#368](https://github.com/helly25/mbo/pull/368).
 - [x] Avoid an unnecessary Bazel configuration switch while generating the
       clang-tidy compilation database.
   - Build the extractor with the same `clang-tidy` configuration used by its
