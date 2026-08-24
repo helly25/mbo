@@ -79,6 +79,12 @@ also updates this file to the completed state.
   - Protect the exact `gh` command sequence with a fake-client integration
     test.
   - PR: [#367](https://github.com/helly25/mbo/pull/367).
+- [x] Publish only the requested release tag.
+  - Detect an existing version with an exact ref lookup rather than substring
+    matching.
+  - Push only the newly created tag instead of every local tag.
+  - Cover exact lookup and selective publication with temporary repositories.
+  - PR: [#366](https://github.com/helly25/mbo/pull/366).
 - [x] Avoid an unnecessary Bazel configuration switch while generating the
       clang-tidy compilation database.
   - Build the extractor with the same `clang-tidy` configuration used by its
