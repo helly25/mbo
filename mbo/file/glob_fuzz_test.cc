@@ -25,16 +25,23 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const std::string_view pattern(reinterpret_cast<const char*>(data), size);
   static constexpr std::array kBoolOptions = std::to_array<bool>({false, true});
-  for (const bool allow_star_star : kBoolOptions) {
-    for (const bool allow_ranges : kBoolOptions) {
-      const mbo::file::Glob2Re2Options options{
-          .allow_star_star = allow_star_star,
-          .allow_ranges = allow_ranges,
-      };
-      (void)mbo::file::file_internal::Glob2Re2Expression(pattern, options);
-      (void)mbo::file::file_internal::Glob2Re2(pattern, options);
-      (void)mbo::file::file_internal::GlobSplitParts(pattern, options);
-      (void)mbo::file::file_internal::GlobSplit(pattern, options);
+  static constexpr std::array kSyntaxes{
+      mbo::file::GlobSyntax::kGlob,
+      mbo::file::GlobSyntax::kShGlob,
+  };
+  for (const mbo::file::GlobSyntax syntax : kSyntaxes) {
+    for (const bool allow_star_star : kBoolOptions) {
+      for (const bool allow_ranges : kBoolOptions) {
+        const mbo::file::Glob2Re2Options options{
+            .syntax = syntax,
+            .allow_star_star = allow_star_star,
+            .allow_ranges = allow_ranges,
+        };
+        (void)mbo::file::Glob2Re2Expression(pattern, options);
+        (void)mbo::file::Glob2Re2(pattern, options);
+        (void)mbo::file::file_internal::GlobSplitParts(pattern, options);
+        (void)mbo::file::file_internal::GlobSplit(pattern, options);
+      }
     }
   }
   return 0;

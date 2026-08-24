@@ -122,10 +122,10 @@ also updates this file to the completed state.
 - Define full-line comments and retain comment characters within values.
 - PR: [#370](https://github.com/helly25/mbo/pull/370).
 
-- [ ] Provide the canonical fast, locale-independent, RE2-native GLOB and
+- [x] Provide the canonical fast, locale-independent, RE2-native GLOB and
       SHGLOB implementation for mbo and xff.
   - Implement the complete contract and acceptance criteria in
-    [`mbo/file/GLOB.md`](mbo/file/GLOB.md) in this single PR.
+    [`mbo/file/README.md`](mbo/file/README.md) in this single PR.
   - Keep component wildcards and bracket expressions within one path component,
     and make complete-component `**` match zero or more directory levels.
   - Expose the translator publicly so xff can replace its parallel parser in one

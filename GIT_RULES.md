@@ -37,6 +37,40 @@ Required checks are specific to the pull-request context recognized by repositor
 to transplant, reuse, spoof, or substitute checks from another pull request or commit, even when
 the Git trees are identical.
 
+## Synchronization before work and validation
+
+Synchronization is a prerequisite, not a publishing step to defer until other work is complete.
+The local worktree and the remote pull-request branch are separate states; proving that the local
+`HEAD` contains the base does not prove that the pull request is current.
+
+Before starting or resuming work on a pull request:
+
+1. Fetch the current base branch and the pull request's remote head.
+2. Read the pull request state from GitHub and determine whether GitHub considers it out of date.
+3. Verify separately that the local branch contains the current base and that the remote
+   pull-request head contains the current base.
+4. If either branch is behind, synchronize locally and push that synchronization immediately.
+5. Confirm from GitHub that the pull request is current before doing further implementation work or
+   starting validation.
+
+Do not postpone pushing an already-created synchronization commit while waiting for unrelated edits,
+formatting, tests, or commits. A clean synchronization push is independently useful and must happen
+first. Uncommitted work may remain in the worktree while the existing synchronization commit is
+pushed; it is not a reason to leave the remote pull request stale.
+
+Validation is authoritative only when all of the following are true:
+
+- the tested tree contains the current base branch;
+- the corresponding commit is pushed as the pull request's remote head;
+- GitHub recognizes that head and does not report the branch as out of date;
+- no later synchronization, rebase, merge, conflict resolution, or implementation change has
+  changed the tested tree.
+
+Local tests on an unpushed or out-of-date pull-request head may be useful while developing, but they
+must never be reported as final validation, used to delay synchronization, or counted toward
+readiness. If the base advances before completion, stop treating earlier results as authoritative,
+synchronize and push first, then rerun the affected validation on the new tree.
+
 Before mutating a pull request that is already ready, verify that the action cannot invalidate its
 approval or required checks. If it can, the mutation is prohibited unless it is needed to fix a
 demonstrated failure or conflict and the user explicitly authorizes that consequence.

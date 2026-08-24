@@ -15,6 +15,7 @@
 
 #include "mbo/file/glob.h"
 
+#include <array>
 #include <cstddef>
 #include <filesystem>
 #include <memory>
@@ -22,6 +23,8 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
+#include <vector>
 
 #include "absl/algorithm/container.h"
 #include "absl/status/status.h"
@@ -47,184 +50,151 @@ namespace fs = std::filesystem;
 namespace mbo::file {
 namespace {
 
-MBO_ALWAYS_INLINE absl::Status ValidateCharacterClass(std::string_view text) {
-  if (text.empty()) {
+using CharacterSet = std::array<bool, 256>;
+
+void AddCharacterClass(std::string_view name, CharacterSet& chars) {
+  for (std::size_t value = 0; value < 128; ++value) {
+    const unsigned char chr = static_cast<unsigned char>(value);
+    const bool alpha = ('a' <= chr && chr <= 'z') || ('A' <= chr && chr <= 'Z');
+    const bool digit = '0' <= chr && chr <= '9';
+    const bool graph = 0x21 <= chr && chr <= 0x7e;
+    const bool match =
+        name == "ascii" || (name == "alnum" && (alpha || digit)) || (name == "alpha" && alpha)
+        || (name == "blank" && (chr == ' ' || chr == '\t')) || (name == "cntrl" && (chr < 0x20 || chr == 0x7f))
+        || (name == "digit" && digit) || (name == "graph" && graph) || (name == "lower" && 'a' <= chr && chr <= 'z')
+        || (name == "print" && 0x20 <= chr && chr <= 0x7e) || (name == "punct" && graph && !alpha && !digit)
+        || (name == "space" && (chr == ' ' || ('\t' <= chr && chr <= '\r')))
+        || (name == "upper" && 'A' <= chr && chr <= 'Z') || (name == "word" && (alpha || digit || chr == '_'))
+        || (name == "xdigit" && (digit || ('a' <= chr && chr <= 'f') || ('A' <= chr && chr <= 'F')));
+    chars[chr] = chars[chr] || match;
+  }
+}
+
+absl::Status ValidateCharacterClass(std::string_view name) {
+  static constexpr std::array<std::string_view, 14> kNames{
+      "alnum", "alpha", "ascii", "blank", "cntrl", "digit", "graph",
+      "lower", "print", "punct", "space", "upper", "word",  "xdigit",
+  };
+  if (name.empty()) {
     return absl::InvalidArgumentError("Invalid empty character-class name.");
   }
-  if (!absl::c_all_of(text, [](char chr) { return absl::ascii_isalpha(chr); })) {
-    return absl::InvalidArgumentError(absl::StrFormat("Invalid character-class name '%s'.", text));
+  if (!absl::c_linear_search(kNames, name)) {
+    return absl::InvalidArgumentError(absl::StrFormat("Unsupported character-class name '%s'.", name));
   }
   return absl::OkStatus();
 }
 
-MBO_ALWAYS_INLINE absl::Status MaybeCharacterClass(std::string_view& glob_pattern, std::string& re2_pattern) {
-  if (!glob_pattern.starts_with("[:")) {
-    re2_pattern += glob_pattern.front();
-    glob_pattern.remove_prefix(1);
-    return absl::OkStatus();
-  }
-  std::size_t end = glob_pattern.find(":]", 2);
-  if (end == std::string_view::npos) {
-    return absl::InvalidArgumentError("Unterminated character-class.");
-  }
-  MBO_RETURN_IF_ERROR(ValidateCharacterClass(glob_pattern.substr(2, end - 2)));
-  ++end;
-  absl::StrAppend(&re2_pattern, glob_pattern.substr(0, end));
-  glob_pattern.remove_prefix(end);
-  return absl::OkStatus();
-}
-
-// Find the initial part of the range and return whether the reange is negative.
-// Handles special case characters at the beginning.
-MBO_ALWAYS_INLINE bool GlobFindRangePrefix(std::string_view& pattern, std::string& re2_pattern) {
-  if (pattern.starts_with("[!]")) {
-    absl::StrAppend(&re2_pattern, "[^/\\]");
-    pattern.remove_prefix(3);
-    return true;
-  } else if (pattern.starts_with("[!")) {
-    absl::StrAppend(&re2_pattern, "[^/");
-    pattern.remove_prefix(2);
-    return true;
-  } else if (pattern.starts_with("[]")) {
-    absl::StrAppend(&re2_pattern, "[\\]");
-    pattern.remove_prefix(2);
-  } else if (pattern.starts_with("[^")) {
-    absl::StrAppend(&re2_pattern, "[\\^");
-    pattern.remove_prefix(2);
-  } else {
-    absl::StrAppend(&re2_pattern, "[");
-    pattern.remove_prefix(1);
-  }
-  return false;
-}
-
-// `pattern` is non-empty and normalized, so every escape has a successor.
-void TakeNextChar(std::string_view& pattern, std::string& token) {
-  token.clear();
-  if (pattern.front() != '\\') {
-    token += pattern.front();
-    pattern.remove_prefix(1);
-    return;
-  }
-  token.append(pattern.substr(0, 2));
-  pattern.remove_prefix(2);
-}
-
-void AppendPositiveRangeWithoutSlash(
-    std::string_view first_token,
-    char first,
-    std::string_view last_token,
-    char last,
-    std::string& re2_pattern) {
-  if (first < '/') {
-    re2_pattern += first_token;
-    if (first != '.') {
-      re2_pattern += "-.";
-    }
-  }
-  if (last > '/') {
-    re2_pattern += '0';
-    if (last != '0') {
-      re2_pattern += '-';
-      re2_pattern += last_token;
-    }
-  }
-}
-
-struct GlobRangeState {
-  bool negative;
-  std::size_t pos = 0;
-  std::string last_token;
-  std::size_t last_output_start;
-};
-
-void ConsumeRangeToken(std::string_view& pattern, std::string& re2_pattern, GlobRangeState& state) {
-  std::string token;
-  TakeNextChar(pattern, token);
-  state.last_output_start = re2_pattern.size();
-  state.last_token = token;
-  if (token.back() != '/') {
-    re2_pattern += token;
-  }
-}
-
-absl::StatusOr<bool> ConsumeRangeDash(std::string_view& pattern, std::string& re2_pattern, GlobRangeState& state) {
-  pattern.remove_prefix(1);
+absl::StatusOr<unsigned char> TakeRangeCharacter(std::string_view& pattern) {
   if (pattern.empty()) {
     return absl::InvalidArgumentError("Unterminated range expression.");
   }
-  if (pattern.front() == ']') {
-    re2_pattern += "-]";
+  if (pattern.front() != '\\') {
+    const unsigned char result = static_cast<unsigned char>(pattern.front());
     pattern.remove_prefix(1);
-    return true;
+    return result;
   }
-  std::string token;
-  TakeNextChar(pattern, token);
-  if (state.pos == 1) {
-    re2_pattern += '-';
-    state.last_output_start = re2_pattern.size();
-    state.last_token = token;
-    if (token.back() != '/') {
-      re2_pattern += token;
-    }
-    return false;
+  if (pattern.size() == 1) {
+    return absl::InvalidArgumentError("No character left to escape at end of pattern.");
   }
-  const char last = token.back();
-  const char first = state.last_token.back();
-  const bool crosses_slash = !state.negative && first < last && first <= '/' && '/' <= last;
-  if (crosses_slash) {
-    re2_pattern.erase(state.last_output_start);
-    AppendPositiveRangeWithoutSlash(state.last_token, first, token, last, re2_pattern);
-  } else {
-    re2_pattern += '-';
-    if (state.negative || token.back() != '/') {
-      re2_pattern += token;
-    }
-  }
-  const bool last_emitted = crosses_slash ? last > '/' : state.negative || token.back() != '/';
-  state.last_output_start = re2_pattern.size() - (last_emitted ? token.size() : 0);
-  state.last_token = token;
-  return false;
+  const unsigned char result = static_cast<unsigned char>(pattern[1]);
+  pattern.remove_prefix(2);
+  return result;
 }
 
-// Find the range pattern end (including ']') and remove it from pattern.
-// Convert it into a RE2 pattern and append that to `re2_pattern`.
-MBO_ALWAYS_INLINE absl::Status GlobFindRange(std::string_view& pattern, std::string& re2_pattern) {
-  GlobRangeState state{
-      .negative = GlobFindRangePrefix(pattern, re2_pattern),
-      .last_output_start = re2_pattern.size(),
-  };
-  while (!pattern.empty()) {
-    ++state.pos;
-    const char chr = pattern.front();
-    switch (chr) {
-      default: {
-        ConsumeRangeToken(pattern, re2_pattern, state);
-        continue;
-      }
-      case '/':
-        pattern.remove_prefix(1);
-        state.last_output_start = re2_pattern.size();
-        state.last_token = "/";
-        continue;
-      case '-': {
-        MBO_ASSIGN_OR_RETURN(const bool finished, ConsumeRangeDash(pattern, re2_pattern, state));
-        if (finished) {
-          return absl::OkStatus();
-        }
-        continue;
-      }
-      case '[': {
-        MBO_RETURN_IF_ERROR(MaybeCharacterClass(pattern, re2_pattern));
-        continue;
-      }
-      case ']':
-        re2_pattern += chr;
-        pattern.remove_prefix(1);
-        return absl::OkStatus();
+void AppendRangeCharacter(std::string& output, unsigned char chr) {
+  if (chr < 0x20 || chr >= 0x7f) {
+    absl::StrAppendFormat(&output, "\\x%02x", chr);
+  } else {
+    if (chr == '\\' || chr == ']' || chr == '-' || chr == '^') {
+      output += '\\';
     }
+    output += static_cast<char>(chr);
   }
-  return absl::InvalidArgumentError("Unterminated range expression.");
+}
+
+void AppendCharacterSet(const CharacterSet& chars, bool negative, std::string& output) {
+  output += negative ? "[^" : "[";
+  for (std::size_t first = 0; first < chars.size();) {
+    if (!chars[first]) {
+      ++first;
+      continue;
+    }
+    std::size_t last = first;
+    while (last + 1 < chars.size() && chars[last + 1]) {
+      ++last;
+    }
+    AppendRangeCharacter(output, static_cast<unsigned char>(first));
+    if (last >= first + 2) {
+      output += '-';
+      AppendRangeCharacter(output, static_cast<unsigned char>(last));
+    } else if (last == first + 1) {
+      AppendRangeCharacter(output, static_cast<unsigned char>(last));
+    }
+    first = last + 1;
+  }
+  output += ']';
+}
+
+absl::Status GlobFindRange(std::string_view& pattern, std::string& re2_pattern) {
+  pattern.remove_prefix(1);
+  bool negative = false;
+  if (pattern.starts_with('!')) {
+    negative = true;
+    pattern.remove_prefix(1);
+  }
+  CharacterSet chars{};
+  bool any = false;
+  if (pattern.starts_with(']')) {
+    chars[static_cast<unsigned char>(']')] = true;
+    pattern.remove_prefix(1);
+    any = true;
+  }
+  while (!pattern.empty() && !pattern.starts_with(']')) {
+    if (pattern.starts_with("[.") || pattern.starts_with("[=")) {
+      return absl::InvalidArgumentError("Locale collating symbols and equivalence classes are unsupported.");
+    }
+    if (pattern.starts_with("[:")) {
+      const std::size_t end = pattern.find(":]", 2);
+      if (end == std::string_view::npos) {
+        return absl::InvalidArgumentError("Unterminated character-class.");
+      }
+      const std::string_view name = pattern.substr(2, end - 2);
+      MBO_RETURN_IF_ERROR(ValidateCharacterClass(name));
+      AddCharacterClass(name, chars);
+      pattern.remove_prefix(end + 2);
+      any = true;
+      continue;
+    }
+    MBO_ASSIGN_OR_RETURN(const unsigned char first, TakeRangeCharacter(pattern));
+    if (pattern.starts_with('-') && pattern.size() > 1 && pattern[1] != ']') {
+      pattern.remove_prefix(1);
+      MBO_ASSIGN_OR_RETURN(const unsigned char last, TakeRangeCharacter(pattern));
+      if (last < first) {
+        return absl::InvalidArgumentError(absl::StrFormat("Descending range '%c-%c' is unsupported.", first, last));
+      }
+      for (std::size_t chr = first; chr <= last; ++chr) {
+        chars[chr] = true;
+      }
+    } else {
+      chars[first] = true;
+    }
+    any = true;
+  }
+  if (pattern.empty()) {
+    return absl::InvalidArgumentError("Unterminated range expression.");
+  }
+  pattern.remove_prefix(1);
+  if (!any) {
+    return absl::InvalidArgumentError("Empty range expression.");
+  }
+  chars[static_cast<unsigned char>('/')] = false;
+  if (negative) {
+    chars[static_cast<unsigned char>('/')] = true;
+  } else if (!absl::c_any_of(chars, [](bool value) { return value; })) {
+    return absl::InvalidArgumentError("Range expression matches only the path separator.");
+  }
+  AppendCharacterSet(chars, negative, re2_pattern);
+  return absl::OkStatus();
 }
 
 struct GlobData : mbo::types::Extend<GlobData> {
@@ -367,31 +337,122 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
 }
 
 MBO_ALWAYS_INLINE void Glob2Re2ExpressionImplStar(std::string& re2_pattern, std::string_view& pattern) {
-  // Check for '**' if allowed, remove '**' or '*' otherwise and drop all following '*'.
-  // Normalize also changed '**' to '*' if `!options.allow_star_star`.
-  if (!pattern.starts_with("**")) {
-    pattern.remove_prefix(1);
+  std::size_t stars = 0;
+  while (stars < pattern.size() && pattern[stars] == '*') {
+    ++stars;
+  }
+  const bool complete_component = stars >= 2 && (re2_pattern.empty() || re2_pattern.ends_with('/'))
+                                  && (stars == pattern.size() || pattern[stars] == '/');
+  if (!complete_component) {
+    pattern.remove_prefix(stars);
     absl::StrAppend(&re2_pattern, "[^/]*");
     return;
   }
-  pattern.remove_prefix(2);
-  if (re2_pattern.ends_with('/') && (pattern.starts_with('/') || pattern.empty())) {
-    // We have '/\*\*(/|$)' so the preceding '/'s are optional.
-    re2_pattern.pop_back();  // Drop the last '/'.
-    absl::StrAppend(&re2_pattern, "(/.+)?");
-    return;
-  }
-  if (re2_pattern.empty() && pattern.starts_with('/')) {
-    // We have '^\*\*(/|$)'
-    pattern.remove_prefix(1);  // The next '/'
-    if (pattern.starts_with("**/") || pattern == "**") {
-      absl::StrAppend(&re2_pattern, "(.+/)+");
-    } else {
-      absl::StrAppend(&re2_pattern, "(.+/)?");
+  pattern.remove_prefix(stars);
+  if (re2_pattern.ends_with('/')) {
+    if (pattern.empty()) {
+      absl::StrAppend(&re2_pattern, ".*");
+      return;
+    }
+    re2_pattern.pop_back();
+    absl::StrAppend(&re2_pattern, "(?:/[^/]+)*");
+    if (pattern.starts_with('/')) {
+      re2_pattern += '/';
+      pattern.remove_prefix(1);
     }
     return;
   }
-  absl::StrAppend(&re2_pattern, ".*");
+  if (pattern.starts_with('/')) {
+    absl::StrAppend(&re2_pattern, "(?:[^/]+/)*");
+    pattern.remove_prefix(1);
+  } else {
+    absl::StrAppend(&re2_pattern, ".*");
+  }
+}
+
+void AppendLiteral(std::string& re2_pattern, char chr) {
+  constexpr std::string_view kRe2Metacharacters = R"(.+*?()|[]{}^$\)";
+  if (kRe2Metacharacters.find(chr) != std::string_view::npos) {
+    re2_pattern += '\\';
+  }
+  re2_pattern += chr;
+}
+
+void SkipRange(std::string_view pattern, std::size_t& pos) {
+  ++pos;
+  if (pos < pattern.size() && pattern[pos] == '!') {
+    ++pos;
+  }
+  if (pos < pattern.size() && pattern[pos] == ']') {
+    ++pos;
+  }
+  while (pos < pattern.size() && pattern[pos] != ']') {
+    if (pattern[pos] == '\\' && pos + 1 < pattern.size()) {
+      pos += 2;
+    } else if (pattern[pos] == '[' && pos + 1 < pattern.size() && pattern[pos + 1] == ':') {
+      const std::size_t end = pattern.find(":]", pos + 2);
+      pos = end == std::string_view::npos ? pattern.size() : end + 2;
+    } else {
+      ++pos;
+    }
+  }
+  if (pos < pattern.size()) {
+    ++pos;
+  }
+}
+
+absl::StatusOr<std::string> Glob2Re2ExpressionImpl(std::string_view pattern, const Glob2Re2Options& options);
+
+absl::StatusOr<bool> AppendBraceGroup(
+    std::string& re2_pattern,
+    std::string_view pattern,
+    std::size_t& pos,
+    const Glob2Re2Options& options) {
+  std::vector<std::pair<std::size_t, std::size_t>> alternatives;
+  std::size_t start = pos + 1;
+  std::size_t scan = start;
+  std::size_t depth = 0;
+  bool saw_comma = false;
+  while (scan < pattern.size()) {
+    if (pattern[scan] == '\\' && scan + 1 < pattern.size()) {
+      scan += 2;
+    } else if (pattern[scan] == '[') {
+      SkipRange(pattern, scan);
+    } else if (pattern[scan] == '{') {
+      ++depth;
+      ++scan;
+    } else if (pattern[scan] == '}' && depth != 0) {
+      --depth;
+      ++scan;
+    } else if (pattern[scan] == '}') {
+      if (!saw_comma) {
+        return false;
+      }
+      alternatives.emplace_back(start, scan);
+      re2_pattern += "(?:";
+      for (std::size_t idx = 0; idx < alternatives.size(); ++idx) {
+        if (idx != 0) {
+          re2_pattern += '|';
+        }
+        MBO_ASSIGN_OR_RETURN(
+            std::string alternative,
+            Glob2Re2ExpressionImpl(
+                pattern.substr(alternatives[idx].first, alternatives[idx].second - alternatives[idx].first), options));
+        re2_pattern += alternative;
+      }
+      re2_pattern += ')';
+      pos = scan + 1;
+      return true;
+    } else if (pattern[scan] == ',' && depth == 0) {
+      alternatives.emplace_back(start, scan);
+      start = scan + 1;
+      saw_comma = true;
+      ++scan;
+    } else {
+      ++scan;
+    }
+  }
+  return false;
 }
 
 MBO_ALWAYS_INLINE absl::StatusOr<std::string> Glob2Re2ExpressionImpl(
@@ -400,6 +461,10 @@ MBO_ALWAYS_INLINE absl::StatusOr<std::string> Glob2Re2ExpressionImpl(
   std::string re2_pattern;
   re2_pattern.reserve(pattern.size() * 2);
   while (!pattern.empty()) {
+    if (pattern.starts_with("!(")) {
+      return absl::InvalidArgumentError(
+          "Negative extglob is unsupported because RE2 cannot express subexpression complement.");
+    }
     const char chr = pattern.front();
     switch (chr) {
       default:
@@ -408,7 +473,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<std::string> Glob2Re2ExpressionImpl(
         continue;
       case '\\':
         // if (pattern.size() < 2) { already handled
-        absl::StrAppend(&re2_pattern, pattern.substr(0, 2));
+        AppendLiteral(re2_pattern, pattern[1]);
         pattern.remove_prefix(2);
         continue;
       case '*': {
@@ -420,12 +485,23 @@ MBO_ALWAYS_INLINE absl::StatusOr<std::string> Glob2Re2ExpressionImpl(
         pattern.remove_prefix(1);
         continue;
       case '{':
+        if (options.syntax == GlobSyntax::kShGlob) {
+          std::size_t pos = 0;
+          MBO_ASSIGN_OR_RETURN(const bool consumed, AppendBraceGroup(re2_pattern, pattern, pos, options));
+          if (consumed) {
+            pattern.remove_prefix(pos);
+            continue;
+          }
+        }
+        [[fallthrough]];
       case '}':
       case '(':
       case ')':
       case '|':
       case '+':
       case '.':
+      case '^':
+      case '$':
         // Characters that need to be escaped since they are literal in rglob but special in re2.
         re2_pattern += '\\';
         re2_pattern += chr;
@@ -475,6 +551,8 @@ absl::StatusOr<GlobParts> GlobSplitParts(std::string_view pattern, const Glob2Re
   };
 }
 
+}  // namespace file_internal
+
 absl::StatusOr<std::string> Glob2Re2Expression(std::string_view pattern, const Glob2Re2Options& re2_convert_options) {
   MBO_MOVE_TO_OR_RETURN(GlobNormalizeStr(pattern, re2_convert_options), const std::string normalized_pattern);
   return Glob2Re2ExpressionImpl(normalized_pattern, re2_convert_options);
@@ -490,6 +568,8 @@ absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(
   }
   return re2;
 }
+
+namespace file_internal {
 
 absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options) {
   MBO_MOVE_TO_OR_RETURN(GlobNormalizeData(pattern, options), const GlobData data);
@@ -617,7 +697,7 @@ absl::Status Glob(
     const Glob2Re2Options& re2_convert_options,
     const GlobOptions& options,
     const GlobEntryFunc& func) {
-  MBO_MOVE_TO_OR_RETURN(file_internal::Glob2Re2(pattern, re2_convert_options), const std::unique_ptr<const RE2> regex);
+  MBO_MOVE_TO_OR_RETURN(Glob2Re2(pattern, re2_convert_options), const std::unique_ptr<const RE2> regex);
   return GlobRe2(root, *regex, options, func);
 }
 
