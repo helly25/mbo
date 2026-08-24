@@ -110,6 +110,7 @@ bzl_library(
 
 cc_test(
     name = "mope_lib_test",
+    size = "small",
     srcs = ["mope_test.cc"],
     deps = [
         ":ini_cc",

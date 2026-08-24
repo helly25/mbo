@@ -40,12 +40,36 @@ cc_library(
 
 cc_test(
     name = "json_test",
+    size = "small",
     srcs = ["json_test.cc"],
     deps = [
         ":json_cc",
         "//mbo/testing:matchers_cc",
         "//mbo/types:typed_view_cc",
         "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# Verifies that throwing operations supplied by exception-enabled consumers
+# propagate through Json construction.
+cc_test(
+    name = "json_exception_test",
+    size = "small",
+    srcs = ["json_exception_test.cc"],
+    # Clang on Darwin cannot unwind caught exceptions when ASan and UBSan are
+    # combined. Keep ASan, but omit UBSan instrumentation for this narrow test.
+    copts = [
+        "-fexceptions",
+        "-fno-sanitize=undefined",
+    ],
+    # Exception-enabled compilation adds unwind branches to every inline Json
+    # template instantiated by this test, including unrelated comparators. The
+    # compatibility test remains in every ordinary matrix but must not distort
+    # the production coverage report.
+    tags = ["no-coverage"],
+    deps = [
+        ":json_cc",
         "@googletest//:gtest_main",
     ],
 )

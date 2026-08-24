@@ -21,6 +21,20 @@ also updates this file to the completed state.
   - Remove the redundant self-reference and its pointer-sized overhead.
   - Instantiate customizations and throwing construction in tests.
   - PR: [#363](https://github.com/helly25/mbo/pull/363).
+- [x] Let allocating `Json` operations propagate failures.
+  - Remove unconditional `noexcept` from generic and string construction.
+  - Remove unconditional `noexcept` from object property access that may
+    allocate or invoke the configured throwing requirement handler.
+  - Exercise a throwing consumer string conversion in an exception-enabled
+    compatibility test.
+  - Keep runtime struct metadata initialization non-throwing by using guarded
+    indexing instead of a redundant throwing bounds check.
+  - PR: [#364](https://github.com/helly25/mbo/pull/364).
+- [x] Make mutable `Json::at(property)` lookup-only.
+  - Preserve insertion semantics in `operator[]`.
+  - Require `at()` properties to exist for both mutable and const objects.
+  - Verify missing lookup fails without changing the object.
+  - PR: [#365](https://github.com/helly25/mbo/pull/365).
 - [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.
@@ -143,6 +157,12 @@ also updates this file to the completed state.
   - Derive that sweep from the compilation database and test scope selection.
   - Describe the local and CI checks consistently as enforcing gates.
   - PR: [#368](https://github.com/helly25/mbo/pull/368).
+- [x] Make Bazel test scheduling classes explicit and proportional.
+  - Mark quick unit, CLI, golden-file, fuzz-regression, and digest-verification
+    tests `small` while retaining `medium` for the measured long-running hash suite.
+  - Give project test macros a documented `small` default.
+  - Enforce explicit sizing on direct test rules in pre-commit.
+  - PR: [#376](https://github.com/helly25/mbo/pull/376).
 - [x] Avoid an unnecessary Bazel configuration switch while generating the
       clang-tidy compilation database.
   - Build the extractor with the same `clang-tidy` configuration used by its
@@ -173,6 +193,11 @@ also updates this file to the completed state.
   - Preserve stable pull-request coverage destinations without relying on the
     synthetic merge commit's API association.
   - PR: [#372](https://github.com/helly25/mbo/pull/372).
+- [x] Give every GitHub Actions workflow only the token permissions it needs.
+  - Replace blanket `read-all` grants with explicit read scopes.
+  - Default the privileged coverage publisher to no access and retain its
+    narrow job-level publishing permissions.
+  - PR: [#373](https://github.com/helly25/mbo/pull/373).
 - [x] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.

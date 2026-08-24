@@ -15,7 +15,10 @@
 
 name: Reusable Test Runner
 
-permissions: read-all
+permissions:
+  contents: read
+  # The coverage target fallback associates a commit with its pull request.
+  pull-requests: read
 
 on:
   workflow_call:
@@ -297,7 +300,7 @@ jobs:
           bazel ${BAZEL_INIT} coverage ${BAZEL_ARGS} //... \
             --combined_report=lcov \
             --instrumentation_filter='^//mbo/.*' \
-            --test_tag_filters=-lfs,-fuzz-test
+            --test_tag_filters=-lfs,-fuzz-test,-no-coverage
           cp "$(bazel ${BAZEL_INIT} info output_path)/_coverage/_coverage_report.dat" coverage.lcov
 
           coverage_page="${{ inputs.coverage_target }}"

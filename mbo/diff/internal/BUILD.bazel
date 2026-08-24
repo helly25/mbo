@@ -94,6 +94,7 @@ cc_library(
 
 cc_test(
     name = "diff_internal_test",
+    size = "small",
     srcs = ["diff_internal_test.cc"],
     deps = [
         ":chunk_cc",

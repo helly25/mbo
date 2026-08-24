@@ -90,6 +90,7 @@ cc_test(
 
 cc_test(
     name = "runfiles_dir_test",
+    size = "small",
     srcs = ["runfiles_dir_test.cc"],
     data = ["runfiles_dir.h"],
     deps = [

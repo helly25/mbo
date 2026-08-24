@@ -32,10 +32,9 @@
 #include "mbo/types/typed_view.h"
 
 // NOLINTBEGIN(*-magic-*,*-avoid-unchecked-container-access)
-// The subscript operators ARE the API under test here: Json::at() delegates to
-// operator[], so rewriting these calls would only stop testing what they test.
-// Neither overload can go out of range - the property one inserts, the index one
-// bounds-checks via MBO_CONFIG_REQUIRE.
+// The subscript operators are the API under test here. The property overload
+// deliberately inserts, while indexed access bounds-checks through
+// MBO_CONFIG_REQUIRE.
 
 namespace mbo::json {
 namespace {
@@ -189,6 +188,9 @@ TEST_F(JsonTest, ContainerModifiersAndAccessors) {
   object.emplace("two", 2);
   EXPECT_THAT(object.contains("one"), true);
   EXPECT_THAT(object.at("one"), 1);
+  EXPECT_DEATH(static_cast<void>(object.at("missing")), "Property not present");
+  EXPECT_THAT(object.contains("missing"), false);
+  EXPECT_THAT(object, SizeIs(2));
   EXPECT_THAT(object.erase("missing"), 0);
   EXPECT_THAT(object.erase("one"), 1);
   EXPECT_THAT(object.contains("one"), false);
