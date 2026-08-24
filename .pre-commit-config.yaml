@@ -135,6 +135,12 @@ repos:
         language: system
         entry: tools/check_cc_library_tested.py
         files: ^.*/(BUILD\.bazel|BUILD)$
+      - id: explicit-test-sizes
+        name: direct Bazel tests declare their size
+        description: Keep test scheduling classes explicit; project macros provide documented defaults.
+        language: python
+        entry: tools/check_test_sizes.py
+        files: ^.*/(BUILD\.bazel|BUILD)$
       - id: headers-claimed
         name: every header is claimed by its package BUILD file
         description: |
