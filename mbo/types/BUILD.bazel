@@ -359,6 +359,7 @@ cc_test(
 # not violate Required's always-engaged invariant.
 cc_test(
     name = "required_exception_test",
+    size = "small",
     srcs = ["required_exception_test.cc"],
     # Clang on Darwin cannot unwind caught exceptions when ASan and UBSan are
     # combined. Keep ASan, but omit UBSan instrumentation for this narrow test.
