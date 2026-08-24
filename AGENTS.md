@@ -5,6 +5,34 @@ changes and explanations for human maintainers, and use automation to enforce me
 [`STYLE_CPP.md`](STYLE_CPP.md) and [`STYLE_SH.md`](STYLE_SH.md) are canonical for their languages;
 [`CONTRIBUTING.md`](CONTRIBUTING.md) describes the contribution flow.
 
+## Git and pull-request operations
+
+[`GIT_RULES.md`](GIT_RULES.md) is canonical for branch management, pull-request readiness, merge
+ordering, dependency-graph planning, CI monitoring, and failure recovery.
+
+Before performing any state-changing Git or GitHub operation, read `GIT_RULES.md` completely and
+follow it. State-changing operations include commits, pushes, rebases, branch rewrites, retargeting,
+merges, auto-merge changes, CI reruns, and CI cancellation.
+
+For four or fewer in-scope pull requests, the primary agent may apply `GIT_RULES.md` directly.
+
+For more than four in-scope pull requests, delegate merge orchestration to one dedicated sub-agent.
+That sub-agent must:
+
+- read `GIT_RULES.md` completely before acting;
+- inspect the complete pull-request graph;
+- maintain the ignored orchestration ledger required by `GIT_RULES.md`;
+- have exclusive ownership of state-changing Git and GitHub operations for the graph;
+- continue autonomously until the graph reaches a terminal state;
+- report blockers and completed merges to the primary agent.
+
+While the merge-orchestration sub-agent is active, the primary agent and all other sub-agents must
+not mutate branches, pull requests, CI runs, or merge state within its scope. They may perform
+read-only analysis or work on explicitly disjoint tasks.
+
+The primary agent remains responsible for ensuring that the orchestrator's scope is correct and
+that no competing agent performs overlapping mutations.
+
 Build and test with `bazel test //...`. Sanitizer configurations and the supported Bazel/compiler
 matrix are exercised by CI. Run `pre-commit run --all-files` before proposing repository-wide
 mechanical changes, or `pre-commit run --files FILE...` for a focused change.
