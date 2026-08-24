@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:59:17</td>
+            <td class="headerValue">2026-08-24 12:41:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -105,11 +105,11 @@
 <span id="L25"><span class="lineNum">      25</span>                 :             : </span>
 <span id="L26"><span class="lineNum">      26</span>                 :             : namespace mbo::strings {</span>
 <span id="L27"><span class="lineNum">      27</span>                 :             : </span>
-<span id="L28"><span class="lineNum">      28</span>                 :<span class="tlaGNC">          34 : inline char PopChar(std::string_view&amp; data) {</span></span>
-<span id="L29"><span class="lineNum">      29</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 34 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 34 times"> + </span>]:<span class="tlaGNC">          34 :   ABSL_CHECK(!data.empty());</span></span>
-<span id="L30"><span class="lineNum">      30</span>                 :<span class="tlaGNC">          34 :   const char result = data.front();</span></span>
-<span id="L31"><span class="lineNum">      31</span>                 :<span class="tlaGNC">          34 :   data.remove_prefix(1);</span></span>
-<span id="L32"><span class="lineNum">      32</span>                 :<span class="tlaGNC">          34 :   return result;</span></span>
+<span id="L28"><span class="lineNum">      28</span>                 :<span class="tlaGNC">          36 : inline char PopChar(std::string_view&amp; data) {</span></span>
+<span id="L29"><span class="lineNum">      29</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 36 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 36 times"> + </span>]:<span class="tlaGNC">          36 :   ABSL_CHECK(!data.empty());</span></span>
+<span id="L30"><span class="lineNum">      30</span>                 :<span class="tlaGNC">          36 :   const char result = data.front();</span></span>
+<span id="L31"><span class="lineNum">      31</span>                 :<span class="tlaGNC">          36 :   data.remove_prefix(1);</span></span>
+<span id="L32"><span class="lineNum">      32</span>                 :<span class="tlaGNC">          36 :   return result;</span></span>
 <span id="L33"><span class="lineNum">      33</span>                 :             : }</span>
 <span id="L34"><span class="lineNum">      34</span>                 :             : </span>
 <span id="L35"><span class="lineNum">      35</span>                 :             : // ParseString follows: https://en.cppreference.com/w/cpp/language/escape</span>
@@ -133,7 +133,7 @@
 <span id="L53"><span class="lineNum">      53</span>                 :             :   // It will default to ',' for `ParseStringList`.</span>
 <span id="L54"><span class="lineNum">      54</span>                 :             :   std::string_view split_at_any_of;</span>
 <span id="L55"><span class="lineNum">      55</span>                 :             : </span>
-<span id="L56"><span class="lineNum">      56</span>                 :             :   // Enables doble quotes (&quot;) which means the input is parsed until the next unescaped double quotes are</span>
+<span id="L56"><span class="lineNum">      56</span>                 :             :   // Enables double quotes (&quot;) which means the input is parsed until the next unescaped double quotes are</span>
 <span id="L57"><span class="lineNum">      57</span>                 :             :   // found. This makes it easy to write stop chars and other special characters without needing to quote them.</span>
 <span id="L58"><span class="lineNum">      58</span>                 :             :   bool enable_double_quotes = true;</span>
 <span id="L59"><span class="lineNum">      59</span>                 :             : </span>

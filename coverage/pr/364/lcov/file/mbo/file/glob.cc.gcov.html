@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:59:17</td>
+            <td class="headerValue">2026-08-24 12:41:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">93.1&nbsp;%</td>
@@ -277,7 +277,7 @@
 <span id="L195"><span class="lineNum">     195</span>                 :<span class="tlaGNC">         123 : bool AllowApendStar(std::string_view pattern, std::size_t past_last_escape, const Glob2Re2Options&amp; options) {</span></span>
 <span id="L196"><span class="lineNum">     196</span>                 :             :   // We consider whether the previous chars were stars, but they could have been escaped.</span>
 <span id="L197"><span class="lineNum">     197</span>                 :             :   // The escape char itself could be escaped, so we forward search for escape chars and drop those</span>
-<span id="L198"><span class="lineNum">     198</span>                 :             :   // nad the next charater. What remains is an unescaped sequence.</span>
+<span id="L198"><span class="lineNum">     198</span>                 :             :   // nad the next character. What remains is an unescaped sequence.</span>
 <span id="L199"><span class="lineNum">     199</span>                 :<span class="tlaGNC">         123 :   pattern.remove_prefix(past_last_escape);</span></span>
 <span id="L200"><span class="lineNum">     200</span>         [<span class="tlaGBC" title="branch 0 was taken 112 times"> + </span><span class="tlaGBC" title="branch 1 was taken 11 times"> + </span>]:<span class="tlaGNC">         123 :   if (options.allow_star_star) {</span></span>
 <span id="L201"><span class="lineNum">     201</span>                 :<span class="tlaGNC">         112 :     return !pattern.ends_with(&quot;**&quot;);</span></span>
@@ -429,7 +429,7 @@
 <span id="L343"><span class="lineNum">     343</span>                 :<span class="tlaGNC">          30 :   pattern.remove_prefix(2);</span></span>
 <span id="L344"><span class="lineNum">     344</span>   [<span class="tlaGBC" title="branch 0 was taken 10 times"> + </span><span class="tlaGBC" title="branch 1 was taken 20 times"> + </span><span class="tlaGBC" title="branch 2 was taken 7 times"> + </span><span class="tlaGBC" title="branch 3 was taken 3 times"> + </span> :<span class="tlaGNC">          30 :   if (re2_pattern.ends_with('/') &amp;&amp; (pattern.starts_with('/') || pattern.empty())) {</span></span>
 <span class="lineNum">        </span>    <span class="tlaGBC" title="branch 4 was taken 4 times"> + </span><span class="tlaGBC" title="branch 5 was taken 3 times"> + </span><span class="tlaGBC" title="branch 6 was taken 7 times"> + </span><span class="tlaGBC" title="branch 7 was taken 23 times"> + </span>]
-<span id="L345"><span class="lineNum">     345</span>                 :             :     // We have '/\*\*(/|$)' so the preceeding '/'s are optional.</span>
+<span id="L345"><span class="lineNum">     345</span>                 :             :     // We have '/\*\*(/|$)' so the preceding '/'s are optional.</span>
 <span id="L346"><span class="lineNum">     346</span>                 :<span class="tlaGNC">           7 :     re2_pattern.pop_back();  // Drop the last '/'.</span></span>
 <span id="L347"><span class="lineNum">     347</span>                 :<span class="tlaGNC">           7 :     absl::StrAppend(&amp;re2_pattern, &quot;(/.+)?&quot;);</span></span>
 <span id="L348"><span class="lineNum">     348</span>                 :<span class="tlaGNC">           7 :     return;</span></span>

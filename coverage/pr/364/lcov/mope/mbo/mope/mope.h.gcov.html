@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:59:17</td>
+            <td class="headerValue">2026-08-24 12:41:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -111,7 +111,7 @@
 <span id="L40"><span class="lineNum">      40</span>              :   // Determines whether `name` is allowed for `SetValue` and `AddSection`.</span>
 <span id="L41"><span class="lineNum">      41</span>              :   static bool IsValidName(std::string_view name);</span>
 <span id="L42"><span class="lineNum">      42</span>              : </span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">          33 :   explicit Template() = default;</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">          38 :   explicit Template() = default;</span></span>
 <span id="L44"><span class="lineNum">      44</span>              : </span>
 <span id="L45"><span class="lineNum">      45</span>              :   // Sets template variable `name` to `value`.</span>
 <span id="L46"><span class="lineNum">      46</span>              :   // The function by default only inserts new values, but if `allow_update` is true, it will also</span>
@@ -122,7 +122,7 @@
 <span id="L51"><span class="lineNum">      51</span>              :   // Add a sub-dictionary under `name`.</span>
 <span id="L52"><span class="lineNum">      52</span>              :   // The purpose of a sub-dictionary is to be filled, which can be done by calling `SetValue` or `AddSubDictionary`, on</span>
 <span id="L53"><span class="lineNum">      53</span>              :   // the returned value (so it must be used to do so).</span>
-<span id="L54"><span class="lineNum">      54</span>              :   // If the function is called repetedly with the same `name`, then each time a new dictionary for that `name` will be</span>
+<span id="L54"><span class="lineNum">      54</span>              :   // If the function is called repeatedly with the same `name`, then each time a new dictionary for that `name` will be</span>
 <span id="L55"><span class="lineNum">      55</span>              :   // added.</span>
 <span id="L56"><span class="lineNum">      56</span>              :   absl::StatusOr&lt;Template*&gt; AddSection(std::string_view name);</span>
 <span id="L57"><span class="lineNum">      57</span>              : </span>

@@ -41,12 +41,12 @@
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
-            <td class="headerCovTableEntry">133</td>
-            <td class="headerCovTableEntry">133</td>
+            <td class="headerCovTableEntry">134</td>
+            <td class="headerCovTableEntry">134</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:59:17</td>
+            <td class="headerValue">2026-08-24 12:41:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">68.2&nbsp;%</td>
@@ -498,51 +498,52 @@
 <span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="branch 5 was taken 4 times"> + </span>]
 <span id="L417"><span class="lineNum">     417</span>                 :<span class="tlaGNC">           1 :       return true;</span></span>
 <span id="L418"><span class="lineNum">     418</span>                 :             :     }</span>
-<span id="L419"><span class="lineNum">     419</span>                 :<span class="tlaGNC">           4 :     *listener &lt;&lt; &quot;Text differene:\n&quot; &lt;&lt; ::testing::internal::edit_distance::CreateUnifiedDiff(wants_lines, other_lines);</span></span>
-<span id="L420"><span class="lineNum">     420</span>                 :<span class="tlaGNC">           4 :     return false;</span></span>
-<span id="L421"><span class="lineNum">     421</span>                 :<span class="tlaGNC">           5 :   }</span></span>
-<span id="L422"><span class="lineNum">     422</span>                 :             : </span>
-<span id="L423"><span class="lineNum">     423</span>                 :<span class="tlaGNC">           1 :   void SetDropIndent(bool drop_indent = true) { options_.drop_indent = drop_indent; }</span></span>
-<span id="L424"><span class="lineNum">     424</span>                 :             : </span>
-<span id="L425"><span class="lineNum">     425</span>                 :             :  private:</span>
-<span id="L426"><span class="lineNum">     426</span>                 :             :   struct Options {</span>
-<span id="L427"><span class="lineNum">     427</span>                 :             :     bool drop_indent = false;</span>
-<span id="L428"><span class="lineNum">     428</span>                 :             :   };</span>
-<span id="L429"><span class="lineNum">     429</span>                 :             : </span>
-<span id="L430"><span class="lineNum">     430</span>                 :             :   const std::string text_;</span>
-<span id="L431"><span class="lineNum">     431</span>                 :             :   Options options_;</span>
-<span id="L432"><span class="lineNum">     432</span>                 :             : };</span>
-<span id="L433"><span class="lineNum">     433</span>                 :             : </span>
-<span id="L434"><span class="lineNum">     434</span>                 :             : }  // namespace testing_internal</span>
-<span id="L435"><span class="lineNum">     435</span>                 :             : </span>
-<span id="L436"><span class="lineNum">     436</span>                 :             : using PolymorphicEqualsTextMatcher = ::testing::PolymorphicMatcher&lt;testing_internal::EqualsTextMatcher&gt;;</span>
-<span id="L437"><span class="lineNum">     437</span>                 :             : </span>
-<span id="L438"><span class="lineNum">     438</span>                 :             : // Matcher that compares text line by line using unified diff.</span>
-<span id="L439"><span class="lineNum">     439</span>                 :             : // Can be wrapped with `WithDropIndent`.</span>
-<span id="L440"><span class="lineNum">     440</span>                 :<span class="tlaGNC">          38 : inline PolymorphicEqualsTextMatcher EqualsText(std::string_view text) {</span></span>
-<span id="L441"><span class="lineNum">     441</span>                 :<span class="tlaGNC">          38 :   return ::testing::MakePolymorphicMatcher(testing_internal::EqualsTextMatcher(text));</span></span>
-<span id="L442"><span class="lineNum">     442</span>                 :             : }</span>
-<span id="L443"><span class="lineNum">     443</span>                 :             : </span>
-<span id="L444"><span class="lineNum">     444</span>                 :             : // Matcher that compares text line by line using unified diff.</span>
-<span id="L445"><span class="lineNum">     445</span>                 :             : // Can be wrapped with `WithDropIndent`.</span>
-<span id="L446"><span class="lineNum">     446</span>                 :             : template&lt;std::size_t N&gt;</span>
-<span id="L447"><span class="lineNum">     447</span>                 :             : inline PolymorphicEqualsTextMatcher EqualsText(const char text[N]) {  // NOLINT(*-avoid-c-arrays)</span>
-<span id="L448"><span class="lineNum">     448</span>                 :             :   return ::testing::MakePolymorphicMatcher(testing_internal::EqualsTextMatcher(text));</span>
-<span id="L449"><span class="lineNum">     449</span>                 :             : }</span>
-<span id="L450"><span class="lineNum">     450</span>                 :             : </span>
-<span id="L451"><span class="lineNum">     451</span>                 :             : // Modifies `EqualsText` so that the provided `text` has its indents stripped, see `mbo::strings::DropIndent`.</span>
-<span id="L452"><span class="lineNum">     452</span>                 :             : // The value argument is kepts as is. If its indent should be dropped than that must be done manually, e.g.:</span>
-<span id="L453"><span class="lineNum">     453</span>                 :             : // ```c++</span>
-<span id="L454"><span class="lineNum">     454</span>                 :             : // EXPECT_THAT(DropIndent(text), WithDropIndent(EqualsText(golden)));</span>
-<span id="L455"><span class="lineNum">     455</span>                 :             : // ```</span>
-<span id="L456"><span class="lineNum">     456</span>                 :<span class="tlaGNC">           1 : inline PolymorphicEqualsTextMatcher WithDropIndent(PolymorphicEqualsTextMatcher&amp;&amp; matcher) {</span></span>
-<span id="L457"><span class="lineNum">     457</span>                 :<span class="tlaGNC">           1 :   matcher.mutable_impl().SetDropIndent();</span></span>
-<span id="L458"><span class="lineNum">     458</span>                 :<span class="tlaGNC">           1 :   return std::move(matcher);</span></span>
-<span id="L459"><span class="lineNum">     459</span>                 :             : }</span>
-<span id="L460"><span class="lineNum">     460</span>                 :             : </span>
-<span id="L461"><span class="lineNum">     461</span>                 :             : }  // namespace mbo::testing</span>
-<span id="L462"><span class="lineNum">     462</span>                 :             : </span>
-<span id="L463"><span class="lineNum">     463</span>                 :             : #endif  // MBO_TESTING_MATCHERS_H_</span>
+<span id="L419"><span class="lineNum">     419</span>                 :<span class="tlaGNC">           4 :     *listener &lt;&lt; &quot;Text difference:\n&quot;</span></span>
+<span id="L420"><span class="lineNum">     420</span>                 :<span class="tlaGNC">           4 :               &lt;&lt; ::testing::internal::edit_distance::CreateUnifiedDiff(wants_lines, other_lines);</span></span>
+<span id="L421"><span class="lineNum">     421</span>                 :<span class="tlaGNC">           4 :     return false;</span></span>
+<span id="L422"><span class="lineNum">     422</span>                 :<span class="tlaGNC">           5 :   }</span></span>
+<span id="L423"><span class="lineNum">     423</span>                 :             : </span>
+<span id="L424"><span class="lineNum">     424</span>                 :<span class="tlaGNC">           1 :   void SetDropIndent(bool drop_indent = true) { options_.drop_indent = drop_indent; }</span></span>
+<span id="L425"><span class="lineNum">     425</span>                 :             : </span>
+<span id="L426"><span class="lineNum">     426</span>                 :             :  private:</span>
+<span id="L427"><span class="lineNum">     427</span>                 :             :   struct Options {</span>
+<span id="L428"><span class="lineNum">     428</span>                 :             :     bool drop_indent = false;</span>
+<span id="L429"><span class="lineNum">     429</span>                 :             :   };</span>
+<span id="L430"><span class="lineNum">     430</span>                 :             : </span>
+<span id="L431"><span class="lineNum">     431</span>                 :             :   const std::string text_;</span>
+<span id="L432"><span class="lineNum">     432</span>                 :             :   Options options_;</span>
+<span id="L433"><span class="lineNum">     433</span>                 :             : };</span>
+<span id="L434"><span class="lineNum">     434</span>                 :             : </span>
+<span id="L435"><span class="lineNum">     435</span>                 :             : }  // namespace testing_internal</span>
+<span id="L436"><span class="lineNum">     436</span>                 :             : </span>
+<span id="L437"><span class="lineNum">     437</span>                 :             : using PolymorphicEqualsTextMatcher = ::testing::PolymorphicMatcher&lt;testing_internal::EqualsTextMatcher&gt;;</span>
+<span id="L438"><span class="lineNum">     438</span>                 :             : </span>
+<span id="L439"><span class="lineNum">     439</span>                 :             : // Matcher that compares text line by line using unified diff.</span>
+<span id="L440"><span class="lineNum">     440</span>                 :             : // Can be wrapped with `WithDropIndent`.</span>
+<span id="L441"><span class="lineNum">     441</span>                 :<span class="tlaGNC">          38 : inline PolymorphicEqualsTextMatcher EqualsText(std::string_view text) {</span></span>
+<span id="L442"><span class="lineNum">     442</span>                 :<span class="tlaGNC">          38 :   return ::testing::MakePolymorphicMatcher(testing_internal::EqualsTextMatcher(text));</span></span>
+<span id="L443"><span class="lineNum">     443</span>                 :             : }</span>
+<span id="L444"><span class="lineNum">     444</span>                 :             : </span>
+<span id="L445"><span class="lineNum">     445</span>                 :             : // Matcher that compares text line by line using unified diff.</span>
+<span id="L446"><span class="lineNum">     446</span>                 :             : // Can be wrapped with `WithDropIndent`.</span>
+<span id="L447"><span class="lineNum">     447</span>                 :             : template&lt;std::size_t N&gt;</span>
+<span id="L448"><span class="lineNum">     448</span>                 :             : inline PolymorphicEqualsTextMatcher EqualsText(const char text[N]) {  // NOLINT(*-avoid-c-arrays)</span>
+<span id="L449"><span class="lineNum">     449</span>                 :             :   return ::testing::MakePolymorphicMatcher(testing_internal::EqualsTextMatcher(text));</span>
+<span id="L450"><span class="lineNum">     450</span>                 :             : }</span>
+<span id="L451"><span class="lineNum">     451</span>                 :             : </span>
+<span id="L452"><span class="lineNum">     452</span>                 :             : // Modifies `EqualsText` so that the provided `text` has its indents stripped, see `mbo::strings::DropIndent`.</span>
+<span id="L453"><span class="lineNum">     453</span>                 :             : // The value argument is kepts as is. If its indent should be dropped than that must be done manually, e.g.:</span>
+<span id="L454"><span class="lineNum">     454</span>                 :             : // ```c++</span>
+<span id="L455"><span class="lineNum">     455</span>                 :             : // EXPECT_THAT(DropIndent(text), WithDropIndent(EqualsText(golden)));</span>
+<span id="L456"><span class="lineNum">     456</span>                 :             : // ```</span>
+<span id="L457"><span class="lineNum">     457</span>                 :<span class="tlaGNC">           1 : inline PolymorphicEqualsTextMatcher WithDropIndent(PolymorphicEqualsTextMatcher&amp;&amp; matcher) {</span></span>
+<span id="L458"><span class="lineNum">     458</span>                 :<span class="tlaGNC">           1 :   matcher.mutable_impl().SetDropIndent();</span></span>
+<span id="L459"><span class="lineNum">     459</span>                 :<span class="tlaGNC">           1 :   return std::move(matcher);</span></span>
+<span id="L460"><span class="lineNum">     460</span>                 :             : }</span>
+<span id="L461"><span class="lineNum">     461</span>                 :             : </span>
+<span id="L462"><span class="lineNum">     462</span>                 :             : }  // namespace mbo::testing</span>
+<span id="L463"><span class="lineNum">     463</span>                 :             : </span>
+<span id="L464"><span class="lineNum">     464</span>                 :             : #endif  // MBO_TESTING_MATCHERS_H_</span>
         </pre>
               </td>
             </tr>

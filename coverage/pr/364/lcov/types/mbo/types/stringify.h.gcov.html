@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:59:17</td>
+            <td class="headerValue">2026-08-24 12:41:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">97.5&nbsp;%</td>
@@ -150,8 +150,8 @@
 <span id="L70"><span class="lineNum">      70</span>                 :             : //</span>
 <span id="L71"><span class="lineNum">      71</span>                 :             : // However, the objects support sparness, that is the data is grouped into several aspects that can</span>
 <span id="L72"><span class="lineNum">      72</span>                 :             : // each be unset (nullopt), a const reference or actual materialized data. That enables fast</span>
-<span id="L73"><span class="lineNum">      73</span>                 :             : // creation and copying beyond the size. Nontheless, the data is large and will impact CPU caches.</span>
-<span id="L74"><span class="lineNum">      74</span>                 :             : // So creating the options upfront and not specializing structs as much as neccessary is best.</span>
+<span id="L73"><span class="lineNum">      73</span>                 :             : // creation and copying beyond the size. Nonetheless, the data is large and will impact CPU caches.</span>
+<span id="L74"><span class="lineNum">      74</span>                 :             : // So creating the options upfront and not specializing structs as much as necessary is best.</span>
 <span id="L75"><span class="lineNum">      75</span>                 :             : //</span>
 <span id="L76"><span class="lineNum">      76</span>                 :             : // The implicit constructor create objects that are fully unset, meaning all fields are nullopt.</span>
 <span id="L77"><span class="lineNum">      77</span>                 :             : // The `Stringify` class provides pre-determined named constexpr factories (e.g. example 3).</span>
@@ -195,7 +195,7 @@
 <span id="L115"><span class="lineNum">     115</span>                 :             :     std::string_view message_suffix;</span>
 <span id="L116"><span class="lineNum">     116</span>                 :             : </span>
 <span id="L117"><span class="lineNum">     117</span>                 :             :     std::string_view field_indent;                // Indent for fields.</span>
-<span id="L118"><span class="lineNum">     118</span>                 :             :     std::string_view key_value_separator = &quot;: &quot;;  // Seperator between key and value.</span>
+<span id="L118"><span class="lineNum">     118</span>                 :             :     std::string_view key_value_separator = &quot;: &quot;;  // Separator between key and value.</span>
 <span id="L119"><span class="lineNum">     119</span>                 :             :     std::string_view field_separator = &quot;, &quot;;      // Separator between two field (in front of field).</span>
 <span id="L120"><span class="lineNum">     120</span>                 :             : </span>
 <span id="L121"><span class="lineNum">     121</span>                 :             :     std::string_view pointer_prefix = &quot;*{&quot;;   // Prefix for pointer types.</span>
@@ -663,7 +663,7 @@
 <span id="L578"><span class="lineNum">     578</span>                 :             : // Whether Stringify should automatically take affect if `T` is used as a sub field in a Stringify invocation.</span>
 <span id="L579"><span class="lineNum">     579</span>                 :             : // Otherwise the subfield needs its own support for printing (e.g. Abseil stringify support).</span>
 <span id="L580"><span class="lineNum">     580</span>                 :             : //</span>
-<span id="L581"><span class="lineNum">     581</span>                 :             : // Note that this takes precendence and thus disables Abseil stringify support in `Stringify`.</span>
+<span id="L581"><span class="lineNum">     581</span>                 :             : // Note that this takes precedence and thus disables Abseil stringify support in `Stringify`.</span>
 <span id="L582"><span class="lineNum">     582</span>                 :             : //</span>
 <span id="L583"><span class="lineNum">     583</span>                 :             : // This gets triggered by:</span>
 <span id="L584"><span class="lineNum">     584</span>                 :             : // * Presence of a type named `MboTypesStringifySupport`,</span>
@@ -680,7 +680,7 @@
 <span id="L595"><span class="lineNum">     595</span>                 :             : </span>
 <span id="L596"><span class="lineNum">     596</span>                 :             : enum class StringifyNameHandling {</span>
 <span id="L597"><span class="lineNum">     597</span>                 :             :   kOverwrite = 0,  // Use the provided names to override automatically determined names.</span>
-<span id="L598"><span class="lineNum">     598</span>                 :             :   kVerify = 1,     // Verify that the provided name matches the detrmined if possible.</span>
+<span id="L598"><span class="lineNum">     598</span>                 :             :   kVerify = 1,     // Verify that the provided name matches the determined if possible.</span>
 <span id="L599"><span class="lineNum">     599</span>                 :             : };</span>
 <span id="L600"><span class="lineNum">     600</span>                 :             : </span>
 <span id="L601"><span class="lineNum">     601</span>                 :             : template&lt;typename T, typename ObjectType = types_internal::AnyType&gt;</span>
@@ -696,7 +696,7 @@
 <span id="L611"><span class="lineNum">     611</span>                 :             : // like `WithFieldNames` does. However, all concrete calls will verify their</span>
 <span id="L612"><span class="lineNum">     612</span>                 :             : // factual object type.</span>
 <span id="L613"><span class="lineNum">     613</span>                 :             : //</span>
-<span id="L614"><span class="lineNum">     614</span>                 :             : // Read more about producing `StringifyOptions` in the documnetation for</span>
+<span id="L614"><span class="lineNum">     614</span>                 :             : // Read more about producing `StringifyOptions` in the documentation for</span>
 <span id="L615"><span class="lineNum">     615</span>                 :             : // `MboTypesStringifyOptions` and `HasMboTypesStringifyOptions`.</span>
 <span id="L616"><span class="lineNum">     616</span>                 :             : template&lt;typename T, typename ObjectType = types_internal::AnyType&gt;</span>
 <span id="L617"><span class="lineNum">     617</span>                 :             : concept IsOrCanProduceStringifyOptions =</span>
@@ -749,7 +749,7 @@
 <span id="L663"><span class="lineNum">     663</span>                 :<span class="tlaGNC">           1 :     return OptionsDefault();</span></span>
 <span id="L664"><span class="lineNum">     664</span>                 :             :   }</span>
 <span id="L665"><span class="lineNum">     665</span>                 :             : </span>
-<span id="L666"><span class="lineNum">     666</span>                 :             :   // Arbirary default value.</span>
+<span id="L666"><span class="lineNum">     666</span>                 :             :   // Arbitrary default value.</span>
 <span id="L667"><span class="lineNum">     667</span>                 :<span class="tlaGNC">         138 :   static constexpr const StringifyOptions&amp; OptionsDefault() noexcept {</span></span>
 <span id="L668"><span class="lineNum">     668</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 138 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 138 times"> + </span> :<span class="tlaGNC">         138 :     MBO_CONFIG_REQUIRE(kOptionsDefaults.AllDataSet(), &quot;Not all data set: &quot;) &lt;&lt; kOptionsDefaults.DebugStr();</span></span>
 <span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 138 times"> + </span>]

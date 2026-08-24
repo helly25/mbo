@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:59:17</td>
+            <td class="headerValue">2026-08-24 12:41:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">17.0&nbsp;%</td>
@@ -215,9 +215,9 @@
 <span id="L135"><span class="lineNum">     135</span>                 :             : // `Voidifier` types. The default types are chosen to be the most common use case and provide a good</span>
 <span id="L136"><span class="lineNum">     136</span>                 :             : // balance between functionality and storage size.</span>
 <span id="L137"><span class="lineNum">     137</span>                 :             : //</span>
-<span id="L138"><span class="lineNum">     138</span>                 :             : // The reson to use `std::string_view` for `MessageT` is that it is a non-owning type which does not</span>
+<span id="L138"><span class="lineNum">     138</span>                 :             : // The reason to use `std::string_view` for `MessageT` is that it is a non-owning type which does not</span>
 <span id="L139"><span class="lineNum">     139</span>                 :             : // require any additional storage. It is also a very common type to use for messages. That message</span>
-<span id="L140"><span class="lineNum">     140</span>                 :             : // con be a geneated `constexpr` and will be output even if the `StringStreamT` is `VoidStream`.</span>
+<span id="L140"><span class="lineNum">     140</span>                 :             : // con be a generated `constexpr` and will be output even if the `StringStreamT` is `VoidStream`.</span>
 <span id="L141"><span class="lineNum">     141</span>                 :             : // The `ScopedStream` will not take ownership of the message and will not copy it. It will only</span>
 <span id="L142"><span class="lineNum">     142</span>                 :             : // store a reference to it. The user must ensure that the message is valid for the lifetime of the</span>
 <span id="L143"><span class="lineNum">     143</span>                 :             : // `ScopedStream`.</span>

@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:59:17</td>
+            <td class="headerValue">2026-08-24 12:41:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">81.7&nbsp;%</td>
@@ -161,7 +161,7 @@
 <span id="L81"><span class="lineNum">      81</span>                 :             : // The type can be accessed as a `std::string_view` using static function `str`.</span>
 <span id="L82"><span class="lineNum">      82</span>                 :             : //</span>
 <span id="L83"><span class="lineNum">      83</span>                 :             : // Instances can be compared against anything that can be compared against a</span>
-<span id="L84"><span class="lineNum">      84</span>                 :             : // `std::string_view`. They can be (eplicitly) converted into `std::string_view`.</span>
+<span id="L84"><span class="lineNum">      84</span>                 :             : // `std::string_view`. They can be (explicitly) converted into `std::string_view`.</span>
 <span id="L85"><span class="lineNum">      85</span>                 :             : //</span>
 <span id="L86"><span class="lineNum">      86</span>                 :             : // All access functions are `static constexpr`. Using them may require disabling</span>
 <span id="L87"><span class="lineNum">      87</span>                 :             : // a lint warning (&quot;readability-static-accessed-through-instance&quot;) or access</span>
@@ -642,12 +642,12 @@
 <span id="L450"><span class="lineNum">     450</span>                 :             : };</span>
 <span id="L451"><span class="lineNum">     451</span>                 :             : </span>
 <span id="L452"><span class="lineNum">     452</span>                 :             : #if !defined(__clang__) &amp;&amp; !defined(__GNUC__)</span>
-<span id="L453"><span class="lineNum">     453</span>                 :             : // This helper is neccessary for some compilers, e.g. MSVC.</span>
+<span id="L453"><span class="lineNum">     453</span>                 :             : // This helper is necessary for some compilers, e.g. MSVC.</span>
 <span id="L454"><span class="lineNum">     454</span>                 :             : // It is not needed for Clang, GCC or compilers derived from these such as ICC.</span>
-<span id="L455"><span class="lineNum">     455</span>                 :             : // This is not default availabel as it introduces a type that has a public</span>
-<span id="L456"><span class="lineNum">     456</span>                 :             : // conversion constructor. This cannot be prevented with a freind declaration</span>
+<span id="L455"><span class="lineNum">     455</span>                 :             : // This is not default available as it introduces a type that has a public</span>
+<span id="L456"><span class="lineNum">     456</span>                 :             : // conversion constructor. This cannot be prevented with a friend declaration</span>
 <span id="L457"><span class="lineNum">     457</span>                 :             : // as the type will be initiated by the compiler as a template parameter, and</span>
-<span id="L458"><span class="lineNum">     458</span>                 :             : // therefor declaring the `operator&quot;&quot; _ts` as a friend is not enough.</span>
+<span id="L458"><span class="lineNum">     458</span>                 :             : // therefore declaring the `operator&quot;&quot; _ts` as a friend is not enough.</span>
 <span id="L459"><span class="lineNum">     459</span>                 :             : template&lt;std::size_t N&gt;</span>
 <span id="L460"><span class="lineNum">     460</span>                 :             : struct MakeTstringLiteralHelper {</span>
 <span id="L461"><span class="lineNum">     461</span>                 :             :   MakeTstringLiteralHelper() = delete;</span>

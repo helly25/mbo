@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 01:59:17</td>
+            <td class="headerValue">2026-08-24 12:41:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">97.5&nbsp;%</td>
@@ -91,7 +91,7 @@
 <span id="L20"><span class="lineNum">      20</span>              : // * Printable (default)</span>
 <span id="L21"><span class="lineNum">      21</span>              : //</span>
 <span id="L22"><span class="lineNum">      22</span>              : //   * Provides method `std::string ToString()` which generates a string</span>
-<span id="L23"><span class="lineNum">      23</span>              : //     represenation of the fields of the extended class as `&quot;{value, value}&quot;`.</span>
+<span id="L23"><span class="lineNum">      23</span>              : //     representation of the fields of the extended class as `&quot;{value, value}&quot;`.</span>
 <span id="L24"><span class="lineNum">      24</span>              : //   * This is a default extender.</span>
 <span id="L25"><span class="lineNum">      25</span>              : //   * Requires `AbslStringify`</span>
 <span id="L26"><span class="lineNum">      26</span>              : //</span>
@@ -254,7 +254,7 @@
 <span id="L183"><span class="lineNum">     183</span>              :   // comparisons for the intended type `T`. So we cannot simply default the</span>
 <span id="L184"><span class="lineNum">     184</span>              :   // operator.</span>
 <span id="L185"><span class="lineNum">     185</span>              :   // Also provide backing `==` and `&lt;` operators.</span>
-<span id="L186"><span class="lineNum">     186</span>              :   // Further this has to be consistend so all provided operators are on type 'T'</span>
+<span id="L186"><span class="lineNum">     186</span>              :   // Further this has to be consistent so all provided operators are on type 'T'</span>
 <span id="L187"><span class="lineNum">     187</span>              :   // and implemented as friends. Otherwise this would trigger warning: ISO C++20</span>
 <span id="L188"><span class="lineNum">     188</span>              :   // considers use of overloaded operator '==' (with operand types 'const</span>
 <span id="L189"><span class="lineNum">     189</span>              :   // TestComparable' and 'const TestComparable') to be ambiguous despite there</span>
@@ -345,17 +345,17 @@
 <span id="L274"><span class="lineNum">     274</span>              : // Once presnet, the compiler will no longer generate code to fetch field names.</span>
 <span id="L275"><span class="lineNum">     275</span>              : //</span>
 <span id="L276"><span class="lineNum">     276</span>              : // Note that even if field names are disabled using the above type injection,</span>
-<span id="L277"><span class="lineNum">     277</span>              : // supporting field names is still manually possible, and thus indepedent of</span>
+<span id="L277"><span class="lineNum">     277</span>              : // supporting field names is still manually possible, and thus independent of</span>
 <span id="L278"><span class="lineNum">     278</span>              : // compiler support if necessary using `StringifyOptions`, see below.</span>
 <span id="L279"><span class="lineNum">     279</span>              : //</span>
 <span id="L280"><span class="lineNum">     280</span>              : // Field names are automatically provided if the active compiler supports this</span>
-<span id="L281"><span class="lineNum">     281</span>              : // (e.g. Clang). In absence (or to override them) the field names can be provied</span>
+<span id="L281"><span class="lineNum">     281</span>              : // (e.g. Clang). In absence (or to override them) the field names can be provided</span>
 <span id="L282"><span class="lineNum">     282</span>              : // using the ADL extension point `void MboTypesStringifyFieldNames(const Type&amp;)`.</span>
 <span id="L283"><span class="lineNum">     283</span>              : //</span>
 <span id="L284"><span class="lineNum">     284</span>              : // The implementation allows for complex formatting control by implementing the</span>
 <span id="L285"><span class="lineNum">     285</span>              : // ADL fiend method  `StringifyOptions(self, field_index, field_name)`</span>
 <span id="L286"><span class="lineNum">     286</span>              : // which must return `struct mbo::types::StringifyOptions`. That struct</span>
-<span id="L287"><span class="lineNum">     287</span>              : // contains the full documenation. While the function must technically be static</span>
+<span id="L287"><span class="lineNum">     287</span>              : // contains the full documentation. While the function must technically be static</span>
 <span id="L288"><span class="lineNum">     288</span>              : // its first parameter is the object itself. Not that the correct type for</span>
 <span id="L289"><span class="lineNum">     289</span>              : // the first parameter `self` in the absence of C++23 is `Type` as provided by</span>
 <span id="L290"><span class="lineNum">     290</span>              : // `Extend`.</span>
