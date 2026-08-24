@@ -235,8 +235,7 @@ class StructMeta<T, true, false> final {
       std::string_view name = {},
       ...) noexcept {
     if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent == "  ") {
-      fields[field_index++] = {
-          // NOLINT(*-avoid-unchecked-container-access): guarded above.
+      fields.at(field_index++) = {
           .name = name,
           .type = type,
       };
