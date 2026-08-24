@@ -44,6 +44,7 @@ cc_library(
 
 cc_test(
     name = "compare_test",
+    size = "small",
     srcs = ["compare_test.cc"],
     deps = [
         ":compare_cc",
@@ -53,6 +54,7 @@ cc_test(
 
 cc_test(
     name = "variant_test",
+    size = "small",
     srcs = ["variant_test.cc"],
     deps = [
         ":variant_cc",
@@ -143,17 +145,66 @@ cc_library(
     name = "no_destruct_cc",
     hdrs = ["no_destruct.h"],
     visibility = ["//visibility:public"],
+    deps = [
+        "@abseil-cpp//absl/hash",
+        "@abseil-cpp//absl/strings:str_format",
+    ],
 )
 
 cc_test(
     name = "no_destruct_test",
+    size = "small",
     srcs = ["no_destruct_test.cc"],
     deps = [
         ":extend_cc",
         ":extender_cc",
         ":no_destruct_cc",
         ":traits_cc",
+        "@abseil-cpp//absl/hash",
         "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/strings",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# Verifies that throwing operations supplied by exception-enabled consumers
+# propagate through NoDestruct construction.
+cc_test(
+    name = "no_destruct_exception_test",
+    size = "small",
+    srcs = ["no_destruct_exception_test.cc"],
+    # Clang on Darwin cannot unwind caught exceptions when ASan and UBSan are
+    # combined. Keep ASan, but omit UBSan instrumentation for this narrow test.
+    copts = [
+        "-fexceptions",
+        "-fno-sanitize=undefined",
+    ],
+    deps = [
+        ":no_destruct_cc",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "string_or_view_cc",
+    hdrs = ["string_or_view.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@abseil-cpp//absl/hash",
+        "@abseil-cpp//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "string_or_view_test",
+    size = "small",
+    srcs = ["string_or_view_test.cc"],
+    deps = [
+        ":string_or_view_cc",
+        "@abseil-cpp//absl/hash",
+        "@abseil-cpp//absl/hash:hash_testing",
+        "@abseil-cpp//absl/strings:str_format",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
@@ -180,6 +231,7 @@ cc_library(
 
 cc_test(
     name = "container_proxy_test",
+    size = "small",
     srcs = ["container_proxy_test.cc"],
     deps = [
         ":container_proxy_cc",
@@ -189,6 +241,7 @@ cc_test(
 
 cc_test(
     name = "opaque_test",
+    size = "small",
     srcs = ["opaque_test.cc"],
     deps = [
         ":opaque_cc",
@@ -212,6 +265,7 @@ cc_library(
 
 cc_test(
     name = "optional_data_or_ref_test",
+    size = "small",
     srcs = ["optional_data_or_ref_test.cc"],
     deps = [
         ":optional_data_or_ref_cc",
@@ -223,6 +277,7 @@ cc_test(
 
 cc_test(
     name = "optional_data_or_ref_exception_test",
+    size = "small",
     srcs = ["optional_data_or_ref_exception_test.cc"],
     # mbo itself remains exception-free. This target alone enables exceptions
     # to verify that the public template safely propagates a consumer T's throw.
@@ -254,6 +309,7 @@ cc_library(
 
 cc_test(
     name = "optional_ref_test",
+    size = "small",
     srcs = ["optional_ref_test.cc"],
     deps = [
         ":optional_ref_cc",
@@ -271,6 +327,7 @@ cc_library(
 
 cc_test(
     name = "ref_wrap_test",
+    size = "small",
     srcs = ["ref_wrap_test.cc"],
     deps = [
         ":ref_wrap_cc",
@@ -290,10 +347,29 @@ cc_library(
 
 cc_test(
     name = "required_test",
+    size = "small",
     srcs = ["required_test.cc"],
     deps = [
         ":required_cc",
         "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# Verifies that throwing operations supplied by exception-enabled consumers do
+# not violate Required's always-engaged invariant.
+cc_test(
+    name = "required_exception_test",
+    size = "small",
+    srcs = ["required_exception_test.cc"],
+    # Clang on Darwin cannot unwind caught exceptions when ASan and UBSan are
+    # combined. Keep ASan, but omit UBSan instrumentation for this narrow test.
+    copts = [
+        "-fexceptions",
+        "-fno-sanitize=undefined",
+    ],
+    deps = [
+        ":required_cc",
         "@googletest//:gtest_main",
     ],
 )
@@ -378,6 +454,7 @@ cc_library(
 
 cc_test(
     name = "template_search_test",
+    size = "small",
     srcs = ["template_search_test.cc"],
     deps = [
         ":template_search_cc",
@@ -472,6 +549,7 @@ cc_library(
 
 cc_test(
     name = "typed_view_test",
+    size = "small",
     srcs = ["typed_view_test.cc"],
     deps = [
         ":typed_view_cc",

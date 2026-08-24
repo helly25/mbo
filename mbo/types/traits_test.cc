@@ -203,7 +203,7 @@ TEST_F(TraitsTest, IsBracesContructible) {
   EXPECT_THAT((IsBracesConstructibleV<Empty>), true);
   EXPECT_THAT((IsBracesConstructibleV<Empty, AnyType>), false);
 
-  EXPECT_THAT((IsBracesConstructibleV<Base1>), true) << "Default contruction";
+  EXPECT_THAT((IsBracesConstructibleV<Base1>), true) << "Default construction";
   EXPECT_THAT((IsBracesConstructibleV<Base1, AnyType>), true);
   EXPECT_THAT((IsBracesConstructibleV<Base1, AnyBaseType<void>>), false);
   EXPECT_THAT((IsBracesConstructibleV<Base1, AnyBaseType<Base1>>), false);
@@ -212,7 +212,7 @@ TEST_F(TraitsTest, IsBracesContructible) {
   EXPECT_THAT((IsBracesConstructibleV<Base1, std::string>), false);
   EXPECT_THAT((IsBracesConstructibleV<Base1, int, void>), false);
 
-  EXPECT_THAT((IsBracesConstructibleV<Base2>), true) << "Default contruction";
+  EXPECT_THAT((IsBracesConstructibleV<Base2>), true) << "Default construction";
   EXPECT_THAT((IsBracesConstructibleV<Base2, AnyType>), true);
   EXPECT_THAT((IsBracesConstructibleV<Base2, int>), true);
   EXPECT_THAT((IsBracesConstructibleV<Base2, int, int>), true);

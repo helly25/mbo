@@ -233,7 +233,7 @@ class StructMeta<T, true, false> final {
       std::string_view indent = {},
       std::string_view type = {},
       std::string_view name = {},
-      ...) {
+      ...) noexcept {
     if (field_index < fields.size() && format.starts_with("%s%s %s =") && indent == "  ") {
       fields.at(field_index++) = {
           .name = name,
@@ -243,7 +243,7 @@ class StructMeta<T, true, false> final {
     return 0;
   }
 
-  static void Init(const T* ptr, FieldData& fields, std::size_t& field_index) {
+  static void Init(const T* ptr, FieldData& fields, std::size_t& field_index) noexcept {
     __builtin_dump_struct(ptr, &DumpStructVisitor, fields, field_index);  // NOLINT(*-vararg)
   }
 

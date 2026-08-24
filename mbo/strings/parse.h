@@ -53,7 +53,7 @@ struct ParseOptions {
   // It will default to ',' for `ParseStringList`.
   std::string_view split_at_any_of;
 
-  // Enables doble quotes (") which means the input is parsed until the next unescaped double quotes are
+  // Enables double quotes (") which means the input is parsed until the next unescaped double quotes are
   // found. This makes it easy to write stop chars and other special characters without needing to quote them.
   bool enable_double_quotes = true;
 

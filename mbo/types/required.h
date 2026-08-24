@@ -18,6 +18,8 @@
 
 #include <compare>   // IWYU pragma: keep
 #include <concepts>  // IWYU pragma: keep
+#include <memory>
+#include <type_traits>
 #include <utility>
 
 #include "absl/hash/hash.h"
@@ -25,6 +27,19 @@
 #include "mbo/types/traits.h"  // IWYU pragma: keep
 
 namespace mbo::types {
+
+template<typename T>
+class Required;
+
+namespace types_internal {
+
+template<typename T>
+struct IsRequired : std::false_type {};
+
+template<typename T>
+struct IsRequired<Required<T>> : std::true_type {};
+
+}  // namespace types_internal
 
 // Template class `Required<T>` is a wrapper around a type `T`. The value can be
 // replaced without using assign or move-assign operators. Instead the wrapper
@@ -40,6 +55,10 @@ namespace mbo::types {
 //
 // The wrapper is not implemented itself as a wrapper or specialization of STL
 // type `std::optional` due to its overhead.
+//
+// `emplace` constructs its replacement before destroying the current value.
+// Since `Required` has no empty state, replacement is available only when `T`
+// can then be moved into place without throwing.
 //
 // Example:
 // ```
@@ -86,17 +105,21 @@ class Required {
   requires(ConstructibleFrom<T, Args...>)
   constexpr explicit Required(std::in_place_t /*unused*/, Args&&... args) : value_(std::forward<Args>(args)...) {}
 
-  constexpr Required& emplace(T v) {  // NOLINT(readability-identifier-naming)
-    value_.~T();
-    new (&value_) T(std::move(v));
+  constexpr Required& emplace(T v) noexcept(std::is_nothrow_move_constructible_v<T>)  // NOLINT(*-identifier-naming)
+  requires(std::is_nothrow_move_constructible_v<T>)
+  {
+    std::destroy_at(std::addressof(value_));
+    std::construct_at(std::addressof(value_), std::move(v));
     return *this;
   }
 
   template<typename... Args>
-  requires(ConstructibleFrom<T, Args...>)
-  constexpr Required& emplace(Args&&... args) {  // NOLINT(readability-identifier-naming)
-    value_.~T();
-    new (&value_) T(std::forward<Args>(args)...);
+  requires(ConstructibleFrom<T, Args...> && std::is_nothrow_move_constructible_v<T>)
+  constexpr Required& emplace(Args&&... args)  // NOLINT(readability-identifier-naming)
+      noexcept(std::is_nothrow_constructible_v<T, Args...>) {
+    T replacement(std::forward<Args>(args)...);
+    std::destroy_at(std::addressof(value_));
+    std::construct_at(std::addressof(value_), std::move(replacement));
     return *this;
   }
 
@@ -116,25 +139,21 @@ class Required {
 
   constexpr operator const T &() const noexcept { return value_; }  // NOLINT(*-explicit-*)
 
-  template<std::three_way_comparable_with<T> U>
-  constexpr auto operator<=>(const Required<U>& other) const noexcept {
-    if (value_ == other) {
-      return decltype(value_ <=> other)::equivalent;
-    }
-    return value_ <=> other.value_;
+  template<typename U>
+  requires(std::three_way_comparable_with<T, U>)
+  constexpr auto operator<=>(const Required<U>& other) const noexcept(noexcept(value_ <=> *other)) {
+    return value_ <=> *other;
   }
 
-  template<std::three_way_comparable_with<T> U>
-  constexpr auto operator<=>(const U& other) const noexcept {
-    if (value_ == other) {
-      return decltype(value_ <=> other)::equivalent;
-    }
+  template<typename U>
+  requires(!types_internal::IsRequired<std::remove_cvref_t<U>>::value && std::three_way_comparable_with<T, U>)
+  constexpr auto operator<=>(const U& other) const noexcept(noexcept(value_ <=> other)) {
     return value_ <=> other;
   }
 
   template<typename H>
   friend H AbslHashValue(H hash, const Required<T>& v) {
-    return H::combine(std::move(hash), absl::HashOf<>(*v.value_));
+    return H::combine(std::move(hash), v.value_);
   }
 
   template<typename Sink>

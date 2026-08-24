@@ -35,6 +35,7 @@ cc_library(
 
 cc_test(
     name = "checksum_test",
+    size = "small",
     srcs = ["checksum_test.cc"],
     deps = [
         ":checksum_cc",
@@ -71,6 +72,7 @@ cc_library(
 
 cc_test(
     name = "digest_test",
+    size = "small",
     srcs = ["digest_test.cc"],
     deps = [
         ":digest_cc",
@@ -96,6 +98,7 @@ cc_binary(
 
 bashtest(
     name = "digest_cli_sh_test",
+    size = "small",
     srcs = ["digest_cli_sh_test.sh"],
     data = [":digest"] + glob(["testdata/digest_cli_sh_test/**"]),
 )

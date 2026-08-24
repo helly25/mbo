@@ -7,6 +7,34 @@ also updates this file to the completed state.
 
 ## Correctness
 
+- [x] Make `Required<T>` replacement and generic operations correct.
+  - Construct replacement values before destroying the current value so a
+    throwing user constructor leaves the wrapper unchanged.
+  - Require non-throwing relocation for replacement without assignment or
+    nullable storage.
+  - Fix hashing and heterogeneous wrapper comparison when instantiated.
+  - Derive comparison exception specifications from the wrapped operation.
+  - PR: [#362](https://github.com/helly25/mbo/pull/362).
+- [x] Make `NoDestruct<T>` construction and customizations correct.
+  - Derive constructor exception specifications from construction of `T`.
+  - Hash and stringify the stored value rather than the backing union.
+  - Remove the redundant self-reference and its pointer-sized overhead.
+  - Instantiate customizations and throwing construction in tests.
+  - PR: [#363](https://github.com/helly25/mbo/pull/363).
+- [x] Let allocating `Json` operations propagate failures.
+  - Remove unconditional `noexcept` from generic and string construction.
+  - Remove unconditional `noexcept` from object property access that may
+    allocate or invoke the configured throwing requirement handler.
+  - Exercise a throwing consumer string conversion in an exception-enabled
+    compatibility test.
+  - Keep runtime struct metadata initialization non-throwing by using guarded
+    indexing instead of a redundant throwing bounds check.
+  - PR: [#364](https://github.com/helly25/mbo/pull/364).
+- [x] Make mutable `Json::at(property)` lookup-only.
+  - Preserve insertion semantics in `operator[]`.
+  - Require `at()` properties to exist for both mutable and const objects.
+  - Verify missing lookup fails without changing the object.
+  - PR: [#365](https://github.com/helly25/mbo/pull/365).
 - [x] Make `OptionalDataOrRef` lifetime and exception handling safe.
   - Preserve its null, owned-data, and borrowed-reference states with automatic
     lifetime management.
@@ -41,7 +69,7 @@ also updates this file to the completed state.
 
 ## API additions
 
-- [ ] Add `mbo::StringOrView`, a read-only owning-or-borrowing string wrapper.
+- [x] Add `mbo::StringOrView`, a read-only owning-or-borrowing string wrapper.
   - Add `mbo/types/string_or_view.h` with default-empty, owning `std::string`,
     borrowing `std::string_view`, and borrowing string-literal construction.
     Avoid ambiguous or accidentally unsafe runtime `const char*` construction.
@@ -67,8 +95,32 @@ also updates this file to the completed state.
     or stable registry/context/database views without forcing allocation. A
     later xff dependency-update PR can replace its local `FieldValue` after an
     mbo release contains this type.
+  - PR: [#377](https://github.com/helly25/mbo/pull/377).
+- [x] Complete the read-only string interface and ecosystem integration for
+      `mbo::StringOrView`.
+  - Provide the full non-mutating `std::string_view`-style surface, including
+    element access, iterators, size/capacity queries, copying, substrings,
+    comparisons, search, and prefix/suffix/containment queries.
+  - Preserve the ownership model: operations must not expose mutable storage or
+    make a borrowed value appear owned, and returned views retain the documented
+    lifetime constraints.
+  - Integrate with Abseil formatting and hashing through `AbslStringify` and
+    `AbslHashValue`.
+  - Integrate with standard-library text output, formatting, and hashing where
+    the supported C++ versions provide the necessary customization points.
+  - Test parity against `std::string_view`, embedded NUL handling, heterogeneous
+    formatting and hashing, constexpr use, and owned versus borrowed values.
+  - PR: [#378](https://github.com/helly25/mbo/pull/378).
 
 ## File API robustness and portability
+
+ - [x] Add strict INI parsing with line-numbered diagnostics.
+  - Make file reads reject malformed group headers, missing separators, empty
+    keys, and duplicate keys.
+  - Preserve the historical behavior behind an explicit permissive API and a
+    compatibility `Parse()` spelling.
+   - Define full-line comments and retain comment characters within values.
+   - PR: [#370](https://github.com/helly25/mbo/pull/370).
 
 - [x] Keep glob ranges within a single path component.
   - Preserve exact `[/]` as a normalized path separator.
@@ -98,6 +150,25 @@ also updates this file to the completed state.
   - Protect the exact `gh` command sequence with a fake-client integration
     test.
   - PR: [#367](https://github.com/helly25/mbo/pull/367).
+- [x] Publish only the requested release tag.
+  - Detect an existing version with an exact ref lookup rather than substring
+    matching.
+  - Push only the newly created tag instead of every local tag.
+  - Cover exact lookup and selective publication with temporary repositories.
+  - PR: [#366](https://github.com/helly25/mbo/pull/366).
+- [x] Cover header-only and compilation-rule changes with clang-tidy.
+  - Keep changed translation-unit runs focused.
+  - Promote project header, generated-header template, and `.bzl` changes to a
+    full first-party translation-unit sweep.
+  - Derive that sweep from the compilation database and test scope selection.
+  - Describe the local and CI checks consistently as enforcing gates.
+  - PR: [#368](https://github.com/helly25/mbo/pull/368).
+- [x] Make Bazel test scheduling classes explicit and proportional.
+  - Mark quick unit, CLI, golden-file, fuzz-regression, and digest-verification
+    tests `small` while retaining `medium` for the measured long-running hash suite.
+  - Give project test macros a documented `small` default.
+  - Enforce explicit sizing on direct test rules in pre-commit.
+  - PR: [#376](https://github.com/helly25/mbo/pull/376).
 - [x] Avoid an unnecessary Bazel configuration switch while generating the
       clang-tidy compilation database.
   - Build the extractor with the same `clang-tidy` configuration used by its
@@ -118,6 +189,21 @@ also updates this file to the completed state.
   - Prefer readable version references and require a documented reason for any
     commit-SHA pin.
   - PR: [#333](https://github.com/helly25/mbo/pull/333).
+- [x] Cancel validation runs superseded by a newer commit.
+  - Use one concurrency group per pull request or ref.
+  - Preserve every `main` and release run as a durable integration record.
+  - PR: [#374](https://github.com/helly25/mbo/pull/374).
+- [x] Validate changes in pull-request context, including contributions from forks.
+  - Run branch validation for pull requests and pushes to `main`, avoiding a
+    duplicate full matrix for same-repository pull requests.
+  - Preserve stable pull-request coverage destinations without relying on the
+    synthetic merge commit's API association.
+  - PR: [#372](https://github.com/helly25/mbo/pull/372).
+- [x] Give every GitHub Actions workflow only the token permissions it needs.
+  - Replace blanket `read-all` grants with explicit read scopes.
+  - Default the privileged coverage publisher to no access and retain its
+    narrow job-level publishing permissions.
+  - PR: [#373](https://github.com/helly25/mbo/pull/373).
 - [x] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.
@@ -125,6 +211,21 @@ also updates this file to the completed state.
 
 ## Documentation and quality coverage
 
+- [x] Enforce the measured coverage baseline in CI.
+  - Reject per-category line, function, or branch regressions exceeding the
+    policy-defined tolerance while retaining the absolute and changed-code gates.
+  - Apply changed-code thresholds only when the patch contains coverable data
+    for that metric; do not fail or label an absent metric as `NO DATA`.
+  - Record the measurement scope in the baseline so policy scope changes require
+    an explicit, reviewed regeneration.
+  - Keep baseline updates as a deliberate `--write-baseline` operation.
+  - PR: [#369](https://github.com/helly25/mbo/pull/369).
+
+- [x] Enforce spelling in C and C++ sources as well as Markdown.
+  - Use pre-commit file-type classification rather than a duplicated extension
+    expression.
+  - Correct existing public-comment findings instead of adding broad ignores.
+  - PR: [#375](https://github.com/helly25/mbo/pull/375).
 - [x] Unify coverage ratings, enforcement, and presentation, adopting the
       applicable final state of
       [xff PR #639](https://github.com/helly25/xff/pull/639),

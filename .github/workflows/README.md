@@ -18,11 +18,11 @@ GitHub Pages:
 - `https://helly25.github.io/mbo/coverage/pr<NUMBER>/` is replaced by each successful run associated
   with that pull request.
 
-[`coverage_pages.yml`](coverage_pages.yml) is a separate `workflow_run` publisher so branch code
-never receives `contents: write`, `pages: write`, or an OIDC token. mbo tests branch pushes rather
-than `pull_request` events, and GitHub can also omit the pull-request array when a run is retried, so
-the trusted publisher resolves every non-main commit through GitHub's commit-to-PR API. A branch
-without an associated pull request remains artifact-only.
+[`coverage_pages.yml`](coverage_pages.yml) is a separate `workflow_run` publisher so pull-request
+code never receives `contents: write`, `pages: write`, or an OIDC token. Pull-request runs carry
+their review number directly. GitHub can omit that association when a run is retried, so the trusted
+publisher falls back to resolving the commit through GitHub's commit-to-PR API. A branch without an
+associated pull request remains artifact-only.
 
 The complete retained site lives on the generated `coverage-pages` branch; each serialized
 publisher replaces only its selected directory before deploying the whole site. That branch is the

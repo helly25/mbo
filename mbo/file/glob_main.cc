@@ -46,7 +46,7 @@ ABSL_FLAG(
     bool,
     re2,
     false,
-    "Whether to use re2 regular exressions. This program uses Google's Re2: "
+    "Whether to use re2 regular expressions. This program uses Google's Re2: "
     "https://github.com/google/re2/wiki/Syntax.");
 ABSL_FLAG(bool, recurse_match, true, "Whether to recurse into matches.");
 ABSL_FLAG(bool, size, false, "Whether to show file sizes.");

@@ -36,6 +36,7 @@ cc_library(
 
 cc_test(
     name = "ini_file_test",
+    size = "small",
     srcs = ["ini_file_test.cc"],
     data = glob([
         "tests/*.golden",

@@ -83,7 +83,7 @@ struct AggregateHasNonEmptyBaseRaw : AggregateHasBaseRaw<T, true> {};
 template<typename T>
 struct AggregateHasNonEmptyBaseImpl : AggregateHasNonEmptyBaseRaw<std::remove_cvref_t<T>> {};
 
-// Crude aproximation of whether a `T` has a non empty base struct/class.
+// Crude approximation of whether a `T` has a non empty base struct/class.
 //
 // NOTE: The behavior is undefined when using this on non aggregate types.
 template<typename T>
@@ -98,7 +98,7 @@ constexpr bool kMboTypesDecomposeCountUseOverloadSet = true;
 #define MBO_TYPES_DECOMPOSE_COUNT_USE_OVERLOAD_SET 1
 
 // ----------------------------------------------------
-// This version implements the somewhat known Overloadset solution with additioanl identification of
+// This version implements the somewhat known Overloadset solution with additional identification of
 // non admissible types. This works well for Clang compilers but fails to compile (even) in GCC 14.
 // For the GCC issue refer to: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=92402
 // For the basic mechanism see: https://godbolt.org/z/Ejada5YEE
@@ -189,7 +189,7 @@ constexpr bool kMboTypesDecomposeCountUseOverloadSet = false;
 //
 // Unlike Clang 16, GCC does not understand `decltype` of a lmbda performing
 // structured-bindings, e.g.: `decltype([]() { const auto& [a0] = T(); }`.
-// GCC further has a bug with primary lamda expressions in a decltype:
+// GCC further has a bug with primary lambda expressions in a decltype:
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=92402
 //
 // Thus GCC needs to count initializers and fields and base classes.
@@ -214,7 +214,7 @@ concept IsAggregateInitializable = IsAggregate<T> && requires { T{std::declval<A
 template<IsAggregate T, typename Indices>
 struct IsAggregateInitializableFromIndices;
 
-// Attemp initialization: Simply try any type for all Indices.
+// Attempt initialization: Simply try any type for all Indices.
 //
 // The alternative is to already consider a number of base types in the front and then all non base
 // types (aka the fields). This has the disadvantage that it effectively prevents `BinarySearch`

@@ -15,7 +15,7 @@
 
 """Macro `verify_digest_test`: verify committed files against saved digests."""
 
-def verify_digest_test(name, *, algorithm = "sha256", digests = {}, checksums = {}, **kwargs):
+def verify_digest_test(name, *, algorithm = "sha256", digests = {}, checksums = {}, size = "small", **kwargs):
     """Fail a test if any file's digest no longer matches its saved value.
 
     A file may only change when its saved digest is updated in the same commit,
@@ -39,6 +39,7 @@ def verify_digest_test(name, *, algorithm = "sha256", digests = {}, checksums = 
                    name, default `sha256`); must match how the digests were made.
         digests:   Dict mapping each file to its checksum sidecar file.
         checksums: Dict mapping each file to its expected hex digest (inline).
+        size:      Bazel test size; local digest verification is small by default.
         **kwargs:  Passed through to the underlying test rule (tags, etc.).
     """
     if not digests and not checksums:
@@ -49,6 +50,7 @@ def verify_digest_test(name, *, algorithm = "sha256", digests = {}, checksums = 
         sidecar_files = list(digests.keys()),
         sidecars = list(digests.values()),
         checksums = checksums,
+        size = size,
         **kwargs
     )
 

@@ -322,7 +322,7 @@ class Json {
   explicit Json(std::nullopt_t /*value*/) noexcept : data_{std::nullopt} {}
 
   template<ConvertibleToJson Value>
-  explicit Json(Value&& value) noexcept : data_{std::nullopt} {
+  explicit Json(Value&& value) : data_{std::nullopt} {
     *this = std::forward<Value>(value);
   }
 
@@ -341,7 +341,7 @@ class Json {
     return *this;
   }
 
-  explicit Json(std::string_view value) noexcept : data_{std::nullopt} { data_.emplace<std::string>(value); }
+  explicit Json(std::string_view value) : data_{std::nullopt} { data_.emplace<std::string>(value); }
 
   explicit operator bool() const noexcept { return !IsNull(); }
 
@@ -511,7 +511,7 @@ class Json {
     return (*std::get<Array>(data_))[index];
   }
 
-  Json& operator[](std::string_view property) noexcept {
+  Json& operator[](std::string_view property) {
     MakeObject();
     auto [it, inserted] = std::get<Object>(data_).emplace(property, nullptr);
     if (inserted) {
@@ -520,7 +520,7 @@ class Json {
     return *it->second;
   }
 
-  const Json& operator[](std::string_view property) const noexcept {
+  const Json& operator[](std::string_view property) const {
     MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");
     MBO_CONFIG_REQUIRE(contains(property), "Property not present:") << "'" << property << "'.";
     return *(std::get<Object>(data_)).at(property);
@@ -530,7 +530,13 @@ class Json {
 
   const Json& at(std::size_t index) const { return (*this)[index]; }
 
-  Json& at(std::string_view property) { return (*this)[property]; }
+  Json& at(std::string_view property) {
+    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");  // LCOV_EXCL_BR_LINE: fatal path is covered by death tests.
+    MBO_CONFIG_REQUIRE(                                   // LCOV_EXCL_BR_LINE: fatal path is covered by death tests.
+        contains(property), "Property not present:")
+        << "'" << property << "'.";  // LCOV_EXCL_LINE: death-test subprocess profiles are not merged.
+    return *std::get<Object>(data_).at(property);
+  }
 
   const Json& at(std::string_view property) const { return (*this)[property]; }
 

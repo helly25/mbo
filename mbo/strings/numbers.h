@@ -30,7 +30,7 @@ namespace mbo::strings {
 template<std::integral T>
 requires(sizeof(T) <= 8)
 unsigned BigNumberLen(T v) {
-  // We could compute this for smller numbers as:
+  // We could compute this for smaller numbers as:
   //   len = 1 + static_cast<unsigned>(std::log10(std::abs(v)));
   //   return (v < 0 ? 1 : 0) + len + std::floor((len - 1) / 3);
   // But:

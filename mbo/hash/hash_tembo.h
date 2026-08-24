@@ -284,7 +284,7 @@ MBO_FORCE_INLINE constexpr uint64_t GetHash64(std::string_view str, uint64_t see
 
   constexpr uint64_t kLoopBaseConstIndex = 0;
   constexpr uint64_t kIfLadderConstIndex = kLoopBaseConstIndex + kNumLanes;
-  constexpr uint64_t kLoopInitConstIndex = kIfLadderConstIndex + kNumLanes;  // Might be unsued (kSecretLoopInit)
+  constexpr uint64_t kLoopInitConstIndex = kIfLadderConstIndex + kNumLanes;  // Might be unused (kSecretLoopInit)
 
   // Bulk window of `kNumLanes` lanes each 16 bytes, so 4 lanes * 16 bytes = 64 bytes.
   // Controls the number of registers we need and unltimately whether we get full ILP or run into register starvation.

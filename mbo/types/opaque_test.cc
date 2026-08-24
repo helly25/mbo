@@ -59,7 +59,7 @@ struct Proxy : ContainerProxy<Data<Container>, Container, &Data<Container>::GetD
 // Access through the proxy means accessing the `std::vector` that is wrapped in a `std::unique_ptr`.
 using ProxyVectorString = Proxy<std::vector<std::string>>;
 
-// Access works the same way if the container is a `std::list` since vector and list both suppport the functions that
+// Access works the same way if the container is a `std::list` since vector and list both support the functions that
 // the test below needs.
 using ProxyListString = Proxy<std::list<std::string>>;
 
@@ -68,7 +68,7 @@ using ProxyListString = Proxy<std::list<std::string>>;
 using OpaqueVectorString = OpaqueContainer<std::vector<std::string>>;
 
 // The use of the `StringWrap` as the `value_type` for the `std::vector` prevents the container from working as the
-// `element_type` in a `std::unique_ptr`. That is becasue the `StringWrap` type is forward declared and hence when the
+// `element_type` in a `std::unique_ptr`. That is because the `StringWrap` type is forward declared and hence when the
 // `std::unique_ptr` gets declared, it fails to see the required destructor; or more precisely the delete operation
 // of the `std::unique_ptr` would trigger the deletion of the `std::vector` which in turn would trigger the deletion of
 // all elements. But those are not fully defined, and so their size is unknown and so they cannot be deleted. However,

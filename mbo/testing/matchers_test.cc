@@ -409,7 +409,7 @@ TEST_F(MatcherTest, EqualsText) {
   EXPECT_THAT("abc", Not(EqualsText("")));
   EXPECT_THAT("abc", EqualsText("abc"));
   EXPECT_THAT(MatchAndExplain(EqualsText("a\nb\nc"), "a\nb\nc"), Pair(true, ""));
-  EXPECT_THAT(MatchAndExplain(EqualsText("a\nb\nc"), "a\nX\nc"), Pair(false, R"(Text differene:
+  EXPECT_THAT(MatchAndExplain(EqualsText("a\nb\nc"), "a\nX\nc"), Pair(false, R"(Text difference:
 @@ -1,3 +1,3 @@
  a
 -b
@@ -417,7 +417,7 @@ TEST_F(MatcherTest, EqualsText) {
  c
 )"));
   EXPECT_THAT(MatchAndExplain(EqualsText("a\nb\nc"), "a\nX\nc"), Pair(false, WithDropIndent(EqualsText(R"(
-    Text differene:
+    Text difference:
     @@ -1,3 +1,3 @@
      a
     -b

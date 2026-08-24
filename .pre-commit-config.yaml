@@ -41,7 +41,18 @@ repos:
     rev: v2.4.3
     hooks:
       - id: codespell
-        files: "[.]md$"
+        types_or: [c, c++, markdown]
+        # `ND` is the Myers complexity term, `abd` is deliberate hash input,
+        # `FileTest` is a GoogleTest fixture type, and `whats` is byte-exact
+        # input from the official BLAKE3 test vectors.
+        args: ["--ignore-words-list=abd,filetest,nd,whats"]
+      - id: codespell
+        name: codespell C++ templates
+        # `.mope` is a project-specific C++ template extension, so identify
+        # that source explicitly while standard files use pre-commit types.
+        files: "[.]mope$"
+        types: [text]
+        args: ["--ignore-words-list=abd,filetest,nd,whats"]
 
   - repo: local
     hooks:
@@ -123,6 +134,12 @@ repos:
           in the tool's _ALLOWLIST with their reason. Pure BUILD-file parsing: no bazel needed.
         language: system
         entry: tools/check_cc_library_tested.py
+        files: ^.*/(BUILD\.bazel|BUILD)$
+      - id: explicit-test-sizes
+        name: direct Bazel tests declare their size
+        description: Keep test scheduling classes explicit; project macros provide documented defaults.
+        language: python
+        entry: tools/check_test_sizes.py
         files: ^.*/(BUILD\.bazel|BUILD)$
       - id: headers-claimed
         name: every header is claimed by its package BUILD file
@@ -276,8 +293,14 @@ repos:
           * To run `pre-commit` without this hook, run `SKIP="clang-tidy" pre-commit`.
         language: script
         entry: tools/clang_tidy.sh
-        types_or: [c++]
-        files: \.(cc|cpp|cxx)$
+        types: [file]
+        files: (\.(cc|cpp|cxx|h|hh|hpp|hxx|inc|ipp|bzl)$|\.h\.in$)
+      - id: clang-tidy-scope-test
+        name: Test clang-tidy scope selection
+        language: system
+        entry: python3 -m unittest tools/clang_tidy_scope_test.py
+        files: ^tools/clang_tidy_scope(_test)?\.py$
+        pass_filenames: false
       - id: trunk-fmt
         name: trunk fmt
         description: |

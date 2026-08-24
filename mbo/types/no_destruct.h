@@ -16,8 +16,9 @@
 #ifndef MBO_TYPES_NO_DESTRUCT_H_
 #define MBO_TYPES_NO_DESTRUCT_H_
 
-#include <array>
+#include <initializer_list>
 #include <memory>  // IWYU pragma: keep
+#include <type_traits>
 #include <utility>
 
 #include "absl/hash/hash.h"
@@ -25,7 +26,7 @@
 
 namespace mbo::types {
 
-// NOLINTBEGIN(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
+// NOLINTBEGIN(*-pro-type-union-access)
 // NoDestruct holds its value in a union precisely so the destructor is never
 // run; accessing the member is the point of the type.
 
@@ -55,30 +56,33 @@ class NoDestruct final {
 
     constexpr ~Data() noexcept {}
 
-    constexpr Data(const Data&) noexcept = default;
-    constexpr Data& operator=(const Data&) noexcept = default;
-    constexpr Data(Data&&) noexcept = default;
-    constexpr Data& operator=(Data&&) noexcept = default;
+    Data(const Data&) = delete;
+    Data& operator=(const Data&) = delete;
+    Data(Data&&) = delete;
+    Data& operator=(Data&&) = delete;
 
     None none;
     T value;
   };
 
  public:
-  constexpr NoDestruct() noexcept : data_(buf_) { std::construct_at(const_cast<T*>(&data_.value)); }
+  constexpr NoDestruct() noexcept(std::is_nothrow_default_constructible_v<T>) {
+    std::construct_at(std::addressof(data_.value));
+  }
 
-  constexpr explicit NoDestruct(T arg) noexcept : data_(buf_) {
-    std::construct_at(const_cast<T*>(&data_.value), std::move(arg));
+  constexpr explicit NoDestruct(T arg) noexcept(std::is_nothrow_move_constructible_v<T>) {
+    std::construct_at(std::addressof(data_.value), std::move(arg));
   }
 
   template<typename... Args>
-  constexpr explicit NoDestruct(Args&&... args) noexcept : data_(buf_) {
-    std::construct_at(const_cast<T*>(&data_.value), std::forward<Args>(args)...);
+  constexpr explicit NoDestruct(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) {
+    std::construct_at(std::addressof(data_.value), std::forward<Args>(args)...);
   }
 
   template<typename U>
-  constexpr NoDestruct(const std::initializer_list<U>& args) noexcept : data_(buf_) {
-    std::construct_at(const_cast<T*>(&data_.value), args);
+  constexpr NoDestruct(const std::initializer_list<U>& args) noexcept(
+      std::is_nothrow_constructible_v<T, const std::initializer_list<U>&>) {
+    std::construct_at(std::addressof(data_.value), args);
   }
 
   constexpr ~NoDestruct() noexcept = default;
@@ -102,22 +106,21 @@ class NoDestruct final {
 
   template<typename H>
   friend H AbslHashValue(H hash, const NoDestruct<T>& v) {
-    return H::combine(std::move(hash), absl::HashOf<>(*v.data_));
+    return H::combine(std::move(hash), v.Get());
   }
 
   template<typename Sink>
   friend void AbslStringify(Sink& sink, const NoDestruct<T>& v) {
-    absl::Format(&sink, "%v", v.data_);
+    absl::Format(&sink, "%v", v.Get());
   }
 
  private:
-  Data buf_ = {};  // NOLINT(*-avoid-c-arrays)
-  Data& data_;
+  Data data_ = {};
 };
 
 // NOLINTEND(*-pro-type-member-init)
 
-// NOLINTEND(*-pro-type-union-access,*-pro-bounds-constant-array-index,*-pro-bounds-pointer-arithmetic,*-no-array-decay,*-array-to-pointer-decay)
+// NOLINTEND(*-pro-type-union-access)
 
 }  // namespace mbo::types
 

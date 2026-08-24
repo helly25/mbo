@@ -41,6 +41,7 @@ def diff_test(
         minimal = False,
         regex_replace_lhs = "",
         regex_replace_rhs = "",
+        size = "small",
         show_chunk_headers = True,
         skip_left_deletions = False,
         strip_comments = "",
@@ -71,6 +72,7 @@ def diff_test(
         minimal:                  Guarantee minimal 'myers' diffs (disables its cost cap).
         regex_replace_lhs:        Regular expression and replacement for left side:  <sep><regex><sep><replace><sep>.
         regex_replace_rhs:        Regular expression and replacement for right side: <sep><regex><sep><replace><sep>.
+        size:                     Bazel test size; these file comparisons are small by default.
         show_chunk_headers:       Whether to show the chunk headers.
         skip_left_deletions:      Ignore left deletions.
         strip_comments:           Strip out anything starting from `strip_comments`.
@@ -104,6 +106,7 @@ def diff_test(
         minimal = minimal,
         regex_replace_lhs = regex_replace_lhs,
         regex_replace_rhs = regex_replace_rhs,
+        size = size,
         show_chunk_headers = show_chunk_headers,
         skip_left_deletions = skip_left_deletions,
         strip_comments = strip_comments,

@@ -103,7 +103,7 @@ TEST_F(LimitedOrderedTest, ConstexprRequireSortedInputThrows) {
     try {
       // Passing the value list direvtly into the constructor of `LimitedOrdered` results in a compile time exception.
       // That exception cannot be tested here, so the values are being passed at run-time using a vector. That allows
-      // to catch and examine the excption.
+      // to catch and examine the exception.
       DoTestConstexprRequireSortedInputThrows();
     } catch (const std::runtime_error& error) {
       caught = true;

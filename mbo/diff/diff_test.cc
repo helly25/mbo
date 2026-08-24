@@ -357,7 +357,7 @@ TEST_F(DiffTest, Multi1) {
     +a
     +b
   )txt"))));
-  // Context_size = 1 is the mosty the same as context_size = 2:
+  // Context_size = 1 is the mostly the same as context_size = 2:
   // Skip the first/last line, rest of the diff is the same.
   EXPECT_THAT(
       Diff(

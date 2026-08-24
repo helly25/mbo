@@ -434,6 +434,15 @@ substitute for a committed test. Tests use GoogleTest + GoogleMock with these co
   `struct FooTest : ::testing::Test {};` is preferred, so shared setup has a home.
 - One behaviour per test; name the test for the behaviour it asserts.
 
+### Bazel test sizing
+
+- Every direct Bazel test rule declares `size` explicitly so scheduling and timeout
+  expectations are reviewable. Project test macros may provide a documented default.
+- Use `size = "small"` for quick unit, golden-file, CLI smoke, fuzz-regression, and
+  digest-verification tests. Reserve `medium` or larger sizes for measured runtime needs;
+  do not leave a fast test in Bazel's implicit `medium` class.
+- `tools/check_test_sizes.py` enforces the direct-rule declaration mechanically.
+
 ### Assertions: gmock matchers, never comparison macros
 
 - Assert with **`EXPECT_THAT` / `ASSERT_THAT` + a matcher**, never a GoogleTest comparison macro.

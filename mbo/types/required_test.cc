@@ -29,6 +29,7 @@ namespace {
 using ::testing::Ge;
 using ::testing::IsEmpty;
 using ::testing::Le;
+using ::testing::Ne;
 using ::testing::Not;
 using ::testing::Pair;
 
@@ -84,6 +85,24 @@ TEST_F(RequiredTest, Compare) {
   EXPECT_THAT(req >= val, false);
   EXPECT_THAT(req < val, true);
   EXPECT_THAT(req > val, false);
+}
+
+TEST_F(RequiredTest, CompareDifferentWrapperTypes) {
+  const Required<int> lhs(25);
+  const Required<long> equal(25);    // NOLINT(google-runtime-int)
+  const Required<long> greater(33);  // NOLINT(google-runtime-int)
+  const Required<long> smaller(11);  // NOLINT(google-runtime-int)
+
+  EXPECT_THAT(lhs <=> equal, std::strong_ordering::equal);
+  EXPECT_THAT(lhs <=> greater, std::strong_ordering::less);
+  EXPECT_THAT(lhs <=> smaller, std::strong_ordering::greater);
+}
+
+TEST_F(RequiredTest, HashesWrappedValue) {
+  const Required<std::string> req("Good Morning America!");
+
+  EXPECT_THAT(absl::HashOf(req), absl::HashOf(*req));
+  EXPECT_THAT(absl::HashOf(req), Ne(absl::HashOf(std::string("Good Evening Germany!"))));
 }
 
 TEST_F(RequiredTest, Pair) {
