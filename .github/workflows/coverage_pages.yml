@@ -27,8 +27,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      # mbo tests branch pushes rather than pull_request events. Resolve every non-main commit
-      # through GitHub's commit-to-PR association; a branch without a PR keeps its downloadable
+      # Pull-request workflow runs carry their review identity directly. Keep a commit-association
+      # fallback for older runs and other callers; a branch without a PR keeps its downloadable
       # artifact but does not claim a public PR URL.
       - name: Select the report destination
         id: target
@@ -36,6 +36,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
           WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
         run: |
           set -euo pipefail
@@ -44,7 +45,10 @@ jobs:
           elif [ "${HEAD_BRANCH}" = "main" ]; then
             target="main"
           else
-            pr_number="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}/pulls" --jq '.[0].number // empty')"
+            pr_number="${PR_NUMBER}"
+            if [[ ! "${pr_number}" =~ ^[1-9][0-9]*$ ]]; then
+              pr_number="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}/pulls" --jq '.[0].number // empty')"
+            fi
             if [[ ! "${pr_number}" =~ ^[1-9][0-9]*$ ]]; then
               echo "No pull request owns ${HEAD_SHA}; retaining only the run artifact."
               echo "publish=false" >>"${GITHUB_OUTPUT}"

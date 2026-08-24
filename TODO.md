@@ -167,6 +167,12 @@ also updates this file to the completed state.
   - Use one concurrency group per pull request or ref.
   - Preserve every `main` and release run as a durable integration record.
   - PR: [#374](https://github.com/helly25/mbo/pull/374).
+- [x] Validate changes in pull-request context, including contributions from forks.
+  - Run branch validation for pull requests and pushes to `main`, avoiding a
+    duplicate full matrix for same-repository pull requests.
+  - Preserve stable pull-request coverage destinations without relying on the
+    synthetic merge commit's API association.
+  - PR: [#372](https://github.com/helly25/mbo/pull/372).
 - [x] Replace `mktemp -u` in release preparation with a safely created
       temporary resource and cleanup trap.
   - Exercise the release archive preparation path locally.

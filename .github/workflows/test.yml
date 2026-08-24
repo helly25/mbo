@@ -291,6 +291,7 @@ jobs:
         if: inputs.bazel_config == 'coverage'
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
           bazel ${BAZEL_INIT} coverage ${BAZEL_ARGS} //... \
@@ -302,7 +303,11 @@ jobs:
           coverage_page="${{ inputs.coverage_target }}"
           if [ -z "${coverage_page}" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
             coverage_page="main"
+          elif [ -z "${coverage_page}" ] && [ "${GITHUB_EVENT_NAME}" = "pull_request" ] &&
+            [[ "${PR_NUMBER}" =~ ^[1-9][0-9]*$ ]]; then
+            coverage_page="pr/${PR_NUMBER}"
           elif [ -z "${coverage_page}" ]; then
+            # Preserve a useful fallback for other workflow_call consumers.
             pr_number="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" --jq '.[0].number // empty')"
             if [[ "${pr_number}" =~ ^[1-9][0-9]*$ ]]; then
               coverage_page="pr/${pr_number}"
