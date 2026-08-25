@@ -176,20 +176,20 @@ TEST_F(GlobTest, Glob2Re2Pattern) {
 }
 
 TEST_F(GlobTest, ShGlobBraceAlternatives) {
-  const Glob2Re2Options kShGlob{.syntax = GlobSyntax::kShGlob};
-  EXPECT_THAT(Glob2Re2Expression("*.{cc,h}", kShGlob), IsOkAndHolds("[^/]*\\.(?:cc|h)"));
-  EXPECT_THAT(Glob2Re2Expression("{a,{b,c}d}", kShGlob), IsOkAndHolds("(?:a|(?:b|c)d)"));
-  EXPECT_THAT(Glob2Re2Expression("{a,,b}", kShGlob), IsOkAndHolds("(?:a||b)"));
-  EXPECT_THAT(Glob2Re2Expression("{src,test}/**/x", kShGlob), IsOkAndHolds("(?:src|test)(?:/[^/]+)*/x"));
-  EXPECT_THAT(Glob2Re2Expression("{a}", kShGlob), IsOkAndHolds("\\{a\\}"));
+  const Glob2Re2Options k_sh_glob{.syntax = GlobSyntax::kShGlob};
+  EXPECT_THAT(Glob2Re2Expression("*.{cc,h}", k_sh_glob), IsOkAndHolds("[^/]*\\.(?:cc|h)"));
+  EXPECT_THAT(Glob2Re2Expression("{a,{b,c}d}", k_sh_glob), IsOkAndHolds("(?:a|(?:b|c)d)"));
+  EXPECT_THAT(Glob2Re2Expression("{a,,b}", k_sh_glob), IsOkAndHolds("(?:a||b)"));
+  EXPECT_THAT(Glob2Re2Expression("{src,test}/**/x", k_sh_glob), IsOkAndHolds("(?:src|test)(?:/[^/]+)*/x"));
+  EXPECT_THAT(Glob2Re2Expression("{a}", k_sh_glob), IsOkAndHolds("\\{a\\}"));
   EXPECT_THAT(Glob2Re2Expression("*.{cc,h}"), IsOkAndHolds("[^/]*\\.\\{cc,h\\}"));
-  EXPECT_THAT(Glob2Re2Expression("{[!,}],tail}", kShGlob), IsOkAndHolds("(?:[^,/}]|tail)"));
-  EXPECT_THAT(Glob2Re2Expression("{[]},],tail}", kShGlob), IsOkAndHolds("(?:[,\\]}]|tail)"));
-  EXPECT_THAT(Glob2Re2Expression("{[[:alpha:],}],tail}", kShGlob), IsOkAndHolds("(?:[,A-Za-z}]|tail)"));
-  EXPECT_THAT(Glob2Re2Expression(R"({[a\,}],tail})", kShGlob), IsOkAndHolds("(?:[,a}]|tail)"));
-  EXPECT_THAT(Glob2Re2Expression(R"({left\,middle,right})", kShGlob), IsOkAndHolds("(?:left,middle|right)"));
-  EXPECT_THAT(Glob2Re2Expression(R"({left\}middle,right})", kShGlob), IsOkAndHolds("(?:left\\}middle|right)"));
-  EXPECT_THAT(Glob2Re2Expression("a{bc", kShGlob), IsOkAndHolds("a\\{bc"));
+  EXPECT_THAT(Glob2Re2Expression("{[!,}],tail}", k_sh_glob), IsOkAndHolds("(?:[^,/}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression("{[]},],tail}", k_sh_glob), IsOkAndHolds("(?:[,\\]}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression("{[[:alpha:],}],tail}", k_sh_glob), IsOkAndHolds("(?:[,A-Za-z}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression(R"({[a\,}],tail})", k_sh_glob), IsOkAndHolds("(?:[,a}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression(R"({left\,middle,right})", k_sh_glob), IsOkAndHolds("(?:left,middle|right)"));
+  EXPECT_THAT(Glob2Re2Expression(R"({left\}middle,right})", k_sh_glob), IsOkAndHolds("(?:left\\}middle|right)"));
+  EXPECT_THAT(Glob2Re2Expression("a{bc", k_sh_glob), IsOkAndHolds("a\\{bc"));
 }
 
 TEST_F(GlobTest, Glob2Re2PatternErrors) {
