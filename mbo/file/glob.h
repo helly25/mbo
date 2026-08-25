@@ -30,6 +30,12 @@
 
 namespace mbo::file {
 
+// Selects whether braces are literals or nested shell-style alternatives.
+enum class GlobSyntax {
+  kGlob,
+  kShGlob,
+};
+
 struct GlobOptions {
   // Whether to apply pattern matching to the path part relative to the given root or to just the
   // full entry path. In other words, if true, then the entries will generally be prefixed with the
@@ -40,7 +46,7 @@ struct GlobOptions {
   bool use_rel_path : 1 = false;
 
   // By default the globbing is done in recursive fashion. But that can be disabled in which case
-  // only the given root directory will be iteratoed.
+  // only the given root directory will be iterated.
   // This is only useful if '**' is not meant to actually be recursive and thus allows fast testing.
   bool recursive : 1 = true;
 
@@ -52,11 +58,32 @@ struct GlobOptions {
 };
 
 struct Glob2Re2Options {
+  // `kGlob` leaves braces literal; `kShGlob` translates `{a,b}` to an RE2 alternative.
+  GlobSyntax syntax = GlobSyntax::kGlob;
+
+  // Enables complete-component `**`. Embedded star runs remain component-local.
   bool allow_star_star : 1 = true;
+
+  // Enables bracket expressions and locale-independent RE2 ASCII named classes.
   bool allow_ranges : 1 = true;
 
   RE2::Options re2_options;
 };
+
+// Converts the locale-independent mbo path-glob syntax into an RE2 expression.
+//
+// `*`, `?`, and bracket expressions never consume '/'. A complete-component `**` crosses path
+// components: middle `foo/**/bar` permits zero or more components, while trailing `foo/**` matches
+// descendants and not `foo` itself. Embedded star runs reduce to component-local `*`.
+//
+// Bracket expressions support literals, ascending ranges, leading `!` negation, and RE2's named
+// ASCII classes. They always exclude '/'; exact `[/]` is retained as a compatibility spelling for
+// a separator. Locale collation/equivalence and general negative extglob are unsupported.
+// `GlobSyntax::kShGlob` additionally enables nested brace alternatives with empty alternatives.
+absl::StatusOr<std::string> Glob2Re2Expression(std::string_view pattern, const Glob2Re2Options& options = {});
+
+// Compiles `Glob2Re2Expression(pattern, options)` as an RE2 instance.
+absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(std::string_view pattern, const Glob2Re2Options& options = {});
 
 struct RootAndPattern : mbo::types::Extend<RootAndPattern> {
   std::string root;
@@ -73,35 +100,13 @@ struct GlobParts : mbo::types::Extend<GlobParts> {
 
 // Split a glob expression into its path and filename components.
 //
-// The function is "incomplete" in its ability to identify ranges that can accept slashes.
-// - while a range `[/]` is normalized to a single `/` and handled as such,
-// - any other range that can accept a slash can either be a path or file name component. Those cases will
-//   be reported as just a path component with the `mixed = true`.
+// The exact range `[/]` is normalized to a path separator. All other positive
+// and negative ranges exclude '/', so they remain within one path component.
 absl::StatusOr<GlobParts> GlobSplitParts(std::string_view pattern, const Glob2Re2Options& options = {});
 
-// Convert `pattern` into a RE2 expression.
-// Supported syntax:
-// - '*' -> '[^/]*'
-// - '?' -> '[^/]'
-// - '**' -> '.*' which requires `options.allow_star_star` and allows '/'.
-//   The generated pattern changes if enclosed in '/' or by pattern start/end to either
-//   '(/.+)?' or '(.+/)?'
-//   That is, the sequence '**/**' will not enforce a directory level. If that is required, then '*/**' or similar has
-//   to be used where the single '*' cannot match a '/' but the presence of a '/' requires a directory level.
-// - Ranges (requires `options.allow_ranges`):
-//   - '[...]': '...' may not be empty. The result is a matching positive range.
-//   - '[!...]': '...' may not be empty. The result is a matching negative range.
-//   - '[]]' -> '[\\]]' which matches the ']'.
-//   - '[!]]' -> '[^\\]]' which matches everything but ']'.
-//   - ranges may incorrectly match against '/' as that is not handled.
-// Character classes (Posix extension):
-//   Character classes are translated directly. However, they require to be supported in RE2 as
-//   documented in https://github.com/google/re2/wiki/Syntax.
-absl::StatusOr<std::string> Glob2Re2Expression(std::string_view pattern, const Glob2Re2Options& options = {});
-
-// Convert `pattern` into a RE2 instance.
-// See `Glob2Re2Expression` for supported syntax.
-absl::StatusOr<std::unique_ptr<const RE2>> Glob2Re2(std::string_view pattern, const Glob2Re2Options& options = {});
+// Compatibility imports for existing internal callers. New consumers use the public API above.
+using ::mbo::file::Glob2Re2;
+using ::mbo::file::Glob2Re2Expression;
 
 absl::StatusOr<RootAndPattern> GlobSplit(std::string_view pattern, const Glob2Re2Options& options = {});
 

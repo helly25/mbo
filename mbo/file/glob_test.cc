@@ -57,6 +57,18 @@ using ::testing::NotNull;
 using ::testing::UnorderedElementsAreArray;
 
 struct GlobTest : ::testing::Test {
+  static void Glob2Re2OnlyMatch(
+      std::string_view glob_pattern,
+      std::string_view text,
+      bool expected = true,
+      const std::source_location sloc = std::source_location::current()) {
+    SCOPED_TRACE(absl::StrCat(
+        "\n", sloc.file_name(), ":", sloc.line(), "\n  Pattern: '", glob_pattern, "'\n  Text: '", text, "'"));
+    MBO_ASSERT_OK_AND_MOVE_TO(Glob2Re2(glob_pattern), const std::unique_ptr<const RE2> re2_pattern);
+    ASSERT_THAT(re2_pattern, NotNull());
+    EXPECT_THAT(re2::RE2::FullMatch(text, *re2_pattern), expected);
+  }
+
   static void Glob2Re2Match(
       std::string_view glob_pattern,
       std::string_view text,
@@ -68,7 +80,7 @@ struct GlobTest : ::testing::Test {
     ASSERT_THAT(re2_pattern, NotNull());
     EXPECT_THAT(re2::RE2::FullMatch(text, *re2_pattern), expected);
 #ifdef TEST_FNMATCH
-    EXPECT_THAT(fnmatch(std::string(glob_pattern).c_str(), std::string(text).c_str(), 0) == 0, expected);
+    EXPECT_THAT(fnmatch(std::string(glob_pattern).c_str(), std::string(text).c_str(), FNM_PATHNAME) == 0, expected);
 #endif  // TEST_FNMATCH
   }
 
@@ -95,10 +107,10 @@ TEST_F(GlobTest, Glob2Re2Pattern) {
   EXPECT_THAT(Glob2Re2Expression("***"), IsOkAndHolds(".*"));
   EXPECT_THAT(Glob2Re2Expression("****"), IsOkAndHolds(".*"));
   EXPECT_THAT(Glob2Re2Expression("*****"), IsOkAndHolds(".*"));
-  EXPECT_THAT(Glob2Re2Expression("**/**"), IsOkAndHolds("(.+/)+.*"));
-  EXPECT_THAT(Glob2Re2Expression("**/**/"), IsOkAndHolds("(.+/)+.*"));
-  EXPECT_THAT(Glob2Re2Expression("/**/**"), IsOkAndHolds("(/.+)?(/.+)?"));
-  EXPECT_THAT(Glob2Re2Expression("/**/**/"), IsOkAndHolds("(/.+)?(/.+)?"));
+  EXPECT_THAT(Glob2Re2Expression("**/**"), IsOkAndHolds("(?:[^/]+/)*[^/]*"));
+  EXPECT_THAT(Glob2Re2Expression("**/**/"), IsOkAndHolds("(?:[^/]+/)*[^/]*"));
+  EXPECT_THAT(Glob2Re2Expression("/**/**"), IsOkAndHolds("(?:/[^/]+)*/.*"));
+  EXPECT_THAT(Glob2Re2Expression("/**/**/"), IsOkAndHolds("(?:/[^/]+)*/.*"));
   EXPECT_THAT(Glob2Re2Expression("*/*"), IsOkAndHolds("[^/]*/[^/]*"));
   EXPECT_THAT(Glob2Re2Expression("**", {.allow_star_star = false}), IsOkAndHolds("[^/]*"));
   EXPECT_THAT(Glob2Re2Expression("***", {.allow_star_star = false}), IsOkAndHolds("[^/]*"));
@@ -110,20 +122,40 @@ TEST_F(GlobTest, Glob2Re2Pattern) {
   EXPECT_THAT(Glob2Re2Expression("/"), IsOkAndHolds("/"));
   EXPECT_THAT(Glob2Re2Expression("\\\\"), IsOkAndHolds("\\\\"));
   EXPECT_THAT(Glob2Re2Expression("a\\\\b"), IsOkAndHolds("a\\\\b"));
-  EXPECT_THAT(Glob2Re2Expression("*/*****?/"), IsOkAndHolds("[^/]*/.*[^/]"));
-  EXPECT_THAT(Glob2Re2Expression("/*/*****?/"), IsOkAndHolds("/[^/]*/.*[^/]"));
-  EXPECT_THAT(Glob2Re2Expression("**/abc/**"), IsOkAndHolds("(.+/)?abc(/.+)?"));
-  EXPECT_THAT(Glob2Re2Expression("abc/**"), IsOkAndHolds("abc(/.+)?"));
-  EXPECT_THAT(Glob2Re2Expression("**/abc"), IsOkAndHolds("(.+/)?abc"));
+  EXPECT_THAT(Glob2Re2Expression("*/*****?/"), IsOkAndHolds("[^/]*/[^/]*[^/]"));
+  EXPECT_THAT(Glob2Re2Expression("/*/*****?/"), IsOkAndHolds("/[^/]*/[^/]*[^/]"));
+  EXPECT_THAT(Glob2Re2Expression("**/abc/**"), IsOkAndHolds("(?:[^/]+/)*abc/.*"));
+  EXPECT_THAT(Glob2Re2Expression("foo/**/bar"), IsOkAndHolds("foo(?:/[^/]+)*/bar"));
+  EXPECT_THAT(Glob2Re2Expression("foo/*/bar"), IsOkAndHolds("foo/[^/]*/bar"));
+  EXPECT_THAT(Glob2Re2Expression("abc/**"), IsOkAndHolds("abc/.*"));
+  EXPECT_THAT(Glob2Re2Expression("**/abc"), IsOkAndHolds("(?:[^/]+/)*abc"));
   EXPECT_THAT(Glob2Re2Expression("[]]"), IsOkAndHolds("[\\]]"));
-  EXPECT_THAT(Glob2Re2Expression("[!]]"), IsOkAndHolds("[^\\]]"));
+  EXPECT_THAT(Glob2Re2Expression("[/]"), IsOkAndHolds("/"));
+  EXPECT_THAT(Glob2Re2Expression("[!]]"), IsOkAndHolds("[^/\\]]"));
+  EXPECT_THAT(Glob2Re2Expression("[!a]"), IsOkAndHolds("[^/a]"));
+  EXPECT_THAT(Glob2Re2Expression("[a/]"), IsOkAndHolds("[a]"));
+  EXPECT_THAT(Glob2Re2Expression("[a\\/]"), IsOkAndHolds("[a]"));
+  EXPECT_THAT(Glob2Re2Expression("[.-1]"), IsOkAndHolds("[.01]"));
+  EXPECT_THAT(Glob2Re2Expression("[*-1]"), IsOkAndHolds("[*-.01]"));
+  EXPECT_THAT(Glob2Re2Expression("[.-0]"), IsOkAndHolds("[.0]"));
+  EXPECT_THAT(Glob2Re2Expression("[/-1]"), IsOkAndHolds("[01]"));
+  EXPECT_THAT(Glob2Re2Expression("[.-/]"), IsOkAndHolds("[.]"));
+  EXPECT_THAT(Glob2Re2Expression("[-/]"), IsOkAndHolds("[\\-]"));
+  EXPECT_THAT(Glob2Re2Expression("[a\\-]"), IsOkAndHolds("[\\-a]"));
+  EXPECT_THAT(Glob2Re2Expression("[!a/]"), IsOkAndHolds("[^/a]"));
+  EXPECT_THAT(Glob2Re2Expression("[a-z]"), IsOkAndHolds("[a-z]"));
   EXPECT_THAT(Glob2Re2Expression("[:]"), IsOkAndHolds("[:]"));
   EXPECT_THAT(Glob2Re2Expression("[:]"), IsOkAndHolds("[:]"));
-  EXPECT_THAT(Glob2Re2Expression("[[:alnum:]]"), IsOkAndHolds("[[:alnum:]]"));
-  EXPECT_THAT(Glob2Re2Expression("[[:alpha:][:digit:]]"), IsOkAndHolds("[[:alpha:][:digit:]]"));
-  EXPECT_THAT(Glob2Re2Expression("/**file/**/.*[.](cc|h)"), IsOkAndHolds("/.*file(/.+)?/\\.[^/]*[.]\\(cc\\|h\\)"));
+  EXPECT_THAT(Glob2Re2Expression("[[:alnum:]]"), IsOkAndHolds("[0-9A-Za-z]"));
+  EXPECT_THAT(Glob2Re2Expression("[[:alpha:][:digit:]]"), IsOkAndHolds("[0-9A-Za-z]"));
+  EXPECT_THAT(Glob2Re2Expression("[[:ascii:]]"), IsOkAndHolds("[\\x00-.0-\\x7f]"));
+  EXPECT_THAT(Glob2Re2Expression("[[:graph:]]"), IsOkAndHolds("[!-.0-~]"));
+  EXPECT_THAT(Glob2Re2Expression("[[:print:]]"), IsOkAndHolds("[ -.0-~]"));
+  EXPECT_THAT(Glob2Re2Expression("[[:punct:]]"), IsOkAndHolds("[!-.:-@[-`{-~]"));
+  EXPECT_THAT(
+      Glob2Re2Expression("/**file/**/.*[.](cc|h)"), IsOkAndHolds("/[^/]*file(?:/[^/]+)*/\\.[^/]*[.]\\(cc\\|h\\)"));
   EXPECT_THAT(Glob2Re2Expression("ftp://foo"), IsOkAndHolds("ftp://foo"));
-  EXPECT_THAT(Glob2Re2Expression("ftp\\://foo"), IsOkAndHolds("ftp\\:/foo"));
+  EXPECT_THAT(Glob2Re2Expression("ftp\\://foo"), IsOkAndHolds("ftp:/foo"));
   EXPECT_THAT(Glob2Re2Expression("foo/bar"), IsOkAndHolds("foo/bar"));
   EXPECT_THAT(Glob2Re2Expression("foo//bar"), IsOkAndHolds("foo/bar"));
   EXPECT_THAT(Glob2Re2Expression("foo\\/bar"), IsOkAndHolds("foo/bar"));
@@ -131,16 +163,33 @@ TEST_F(GlobTest, Glob2Re2Pattern) {
   EXPECT_THAT(Glob2Re2Expression("foo/\\//bar"), IsOkAndHolds("foo/bar"));
   EXPECT_THAT(Glob2Re2Expression("foo\\*bar"), IsOkAndHolds("foo\\*bar"));
   EXPECT_THAT(Glob2Re2Expression("foo\\**bar"), IsOkAndHolds("foo\\*[^/]*bar"));
-  EXPECT_THAT(Glob2Re2Expression("foo\\***bar"), IsOkAndHolds("foo\\*.*bar"));
-  EXPECT_THAT(Glob2Re2Expression("foo\\****bar"), IsOkAndHolds("foo\\*.*bar"));
+  EXPECT_THAT(Glob2Re2Expression("foo\\***bar"), IsOkAndHolds("foo\\*[^/]*bar"));
+  EXPECT_THAT(Glob2Re2Expression("foo\\****bar"), IsOkAndHolds("foo\\*[^/]*bar"));
   EXPECT_THAT(Glob2Re2Expression("foo\\*bar", {.allow_star_star = false}), IsOkAndHolds("foo\\*bar"));
   EXPECT_THAT(Glob2Re2Expression("foo\\**bar", {.allow_star_star = false}), IsOkAndHolds("foo\\*[^/]*bar"));
   EXPECT_THAT(Glob2Re2Expression("foo\\***bar", {.allow_star_star = false}), IsOkAndHolds("foo\\*[^/]*bar"));
   EXPECT_THAT(Glob2Re2Expression("foo\\****bar", {.allow_star_star = false}), IsOkAndHolds("foo\\*[^/]*bar"));
   EXPECT_THAT(Glob2Re2Expression("foo\\\\*bar"), IsOkAndHolds("foo\\\\[^/]*bar"));
-  EXPECT_THAT(Glob2Re2Expression("foo\\\\**bar"), IsOkAndHolds("foo\\\\.*bar"));
-  EXPECT_THAT(Glob2Re2Expression("foo\\\\***bar"), IsOkAndHolds("foo\\\\.*bar"));
-  EXPECT_THAT(Glob2Re2Expression("foo\\\\****bar"), IsOkAndHolds("foo\\\\.*bar"));
+  EXPECT_THAT(Glob2Re2Expression("foo\\\\**bar"), IsOkAndHolds("foo\\\\[^/]*bar"));
+  EXPECT_THAT(Glob2Re2Expression("foo\\\\***bar"), IsOkAndHolds("foo\\\\[^/]*bar"));
+  EXPECT_THAT(Glob2Re2Expression("foo\\\\****bar"), IsOkAndHolds("foo\\\\[^/]*bar"));
+}
+
+TEST_F(GlobTest, ShGlobBraceAlternatives) {
+  const Glob2Re2Options k_sh_glob{.syntax = GlobSyntax::kShGlob};
+  EXPECT_THAT(Glob2Re2Expression("*.{cc,h}", k_sh_glob), IsOkAndHolds("[^/]*\\.(?:cc|h)"));
+  EXPECT_THAT(Glob2Re2Expression("{a,{b,c}d}", k_sh_glob), IsOkAndHolds("(?:a|(?:b|c)d)"));
+  EXPECT_THAT(Glob2Re2Expression("{a,,b}", k_sh_glob), IsOkAndHolds("(?:a||b)"));
+  EXPECT_THAT(Glob2Re2Expression("{src,test}/**/x", k_sh_glob), IsOkAndHolds("(?:src|test)(?:/[^/]+)*/x"));
+  EXPECT_THAT(Glob2Re2Expression("{a}", k_sh_glob), IsOkAndHolds("\\{a\\}"));
+  EXPECT_THAT(Glob2Re2Expression("*.{cc,h}"), IsOkAndHolds("[^/]*\\.\\{cc,h\\}"));
+  EXPECT_THAT(Glob2Re2Expression("{[!,}],tail}", k_sh_glob), IsOkAndHolds("(?:[^,/}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression("{[]},],tail}", k_sh_glob), IsOkAndHolds("(?:[,\\]}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression("{[[:alpha:],}],tail}", k_sh_glob), IsOkAndHolds("(?:[,A-Za-z}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression(R"({[a\,}],tail})", k_sh_glob), IsOkAndHolds("(?:[,a}]|tail)"));
+  EXPECT_THAT(Glob2Re2Expression(R"({left\,middle,right})", k_sh_glob), IsOkAndHolds("(?:left,middle|right)"));
+  EXPECT_THAT(Glob2Re2Expression(R"({left\}middle,right})", k_sh_glob), IsOkAndHolds("(?:left\\}middle|right)"));
+  EXPECT_THAT(Glob2Re2Expression("a{bc", k_sh_glob), IsOkAndHolds("a\\{bc"));
 }
 
 TEST_F(GlobTest, Glob2Re2PatternErrors) {
@@ -157,6 +206,7 @@ TEST_F(GlobTest, Glob2Re2PatternErrors) {
   EXPECT_THAT(Glob2Re2Expression("[\\"), no_char_to_escape);
   EXPECT_THAT(Glob2Re2Expression("[a\\"), no_char_to_escape);
   EXPECT_THAT(Glob2Re2Expression("[!a\\"), no_char_to_escape);
+  EXPECT_THAT(Glob2Re2Expression("[a-\\"), no_char_to_escape);
   const auto unterminated_char_class = StatusIs(absl::StatusCode::kInvalidArgument, "Unterminated character-class.");
   EXPECT_THAT(Glob2Re2Expression("[[:]"), unterminated_char_class);
   EXPECT_THAT(Glob2Re2Expression("[[:]]"), unterminated_char_class);
@@ -165,7 +215,23 @@ TEST_F(GlobTest, Glob2Re2PatternErrors) {
   EXPECT_THAT(Glob2Re2Expression("[[::]]"), empty_character_class);
   EXPECT_THAT(Glob2Re2Expression("[[::]][[:alpha:]]"), empty_character_class);
   EXPECT_THAT(
-      Glob2Re2Expression("[[:::]]"), StatusIs(absl::StatusCode::kInvalidArgument, "Invalid character-class name ':'."));
+      Glob2Re2Expression("[[:::]]"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "Unsupported character-class name ':'."));
+  const auto unsupported_locale =
+      StatusIs(absl::StatusCode::kInvalidArgument, "Locale collating symbols and equivalence classes are unsupported.");
+  EXPECT_THAT(Glob2Re2Expression("[[.ch.]]"), unsupported_locale);
+  EXPECT_THAT(Glob2Re2Expression("[[=a=]]"), unsupported_locale);
+  EXPECT_THAT(
+      Glob2Re2Expression("!(foo|bar)"),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          "Negative extglob is unsupported because RE2 cannot express subexpression complement."));
+  EXPECT_THAT(
+      Glob2Re2Expression("[z-a]"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "Descending range 'z-a' is unsupported."));
+  EXPECT_THAT(
+      Glob2Re2Expression("[\\/]"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "Range expression matches only the path separator."));
   const Glob2Re2Options disable_ranges{.allow_ranges = false};
   constexpr std::array<std::string_view, 6> kRangeIssues{
       "[]", "[!]", "[[:]", "[[:]]", "[[::]]", "[[::]][[:alpha:]]",
@@ -176,12 +242,40 @@ TEST_F(GlobTest, Glob2Re2PatternErrors) {
 }
 
 TEST_F(GlobTest, Glob2Re2) {
+  Glob2Re2OnlyMatch("foo/**/bar", "foo/bar");
+  Glob2Re2OnlyMatch("foo/**/bar", "foo/a/bar");
+  Glob2Re2OnlyMatch("foo/**/bar", "foo/a/b/bar");
+  Glob2Re2Match("foo/*/bar", "foo/bar", false);
+  Glob2Re2Match("foo/*/bar", "foo/a/bar");
+  Glob2Re2Match("foo/*/bar", "foo/a/b/bar", false);
   Glob2Re2Match("[]]", "]");
   Glob2Re2Match("[]]", "x", false);
   Glob2Re2Match("[]]", "", false);
   Glob2Re2Match("[!]]", "]", false);
   Glob2Re2Match("[!]]", "", false);
   Glob2Re2Match("[!]]", "x");
+  Glob2Re2Match("[!a]", "/", false);
+  Glob2Re2Match("[!a]", "b");
+  Glob2Re2Match("[a/]", "/", false);
+  Glob2Re2Match("[a/]", "a");
+  Glob2Re2Match("[a\\/]", "/", false);
+  Glob2Re2Match("[.-1]", "/", false);
+  Glob2Re2Match("[.-1]", ".");
+  Glob2Re2Match("[.-1]", "0");
+  Glob2Re2Match("[.-1]", "1");
+  Glob2Re2Match("[*-1]", "*");
+  Glob2Re2Match("[*-1]", "/", false);
+  Glob2Re2Match("[*-1]", "1");
+  Glob2Re2Match("[.-0]", ".");
+  Glob2Re2Match("[.-0]", "/", false);
+  Glob2Re2Match("[.-0]", "0");
+  Glob2Re2Match("[-/]", "-");
+  Glob2Re2Match("[-/]", "/", false);
+  Glob2Re2Match("[a\\-]", "-");
+  Glob2Re2Match("[!a/]", "/", false);
+  Glob2Re2Match("[a-z]", "m");
+  Glob2Re2Match("[![:alpha:]]", "/", false);
+  Glob2Re2Match("[![:alpha:]]", "1");
   Glob2Re2Match("[!]]", "]", false);
   Glob2Re2Match("[!]]", "x]", false);
   Glob2Re2Match("[!]]", "!]", false);
@@ -191,6 +285,36 @@ TEST_F(GlobTest, Glob2Re2) {
   Glob2Re2Match("[[:alpha:][:digit:]]", "0");
   Glob2Re2Match("[[:alpha:][:digit:]]", "!", false);
   Glob2Re2Match("[[:alpha:]![:digit:]]", "!");
+  Glob2Re2Match("[[:ascii:]]", "/", false);
+  Glob2Re2Match("[[:graph:]]", "/", false);
+  Glob2Re2Match("[[:print:]]", "/", false);
+  Glob2Re2Match("[[:punct:]]", "/", false);
+  Glob2Re2Match("[![:ascii:]]", "/", false);
+}
+
+TEST_F(GlobTest, AllNamedCharacterClassesAreLocaleIndependentAndComponentLocal) {
+  static constexpr std::array<std::pair<std::string_view, std::string_view>, 14> kCases{{
+      {"alnum", "A"},
+      {"alpha", "z"},
+      {"ascii", "\x01"},
+      {"blank", "\t"},
+      {"cntrl", "\n"},
+      {"digit", "7"},
+      {"graph", "!"},
+      {"lower", "m"},
+      {"print", " "},
+      {"punct", "!"},
+      {"space", "\r"},
+      {"upper", "Q"},
+      {"word", "_"},
+      {"xdigit", "F"},
+  }};
+  for (const auto& [name, matching] : kCases) {
+    const std::string pattern = absl::StrCat("[[:", name, ":]]");
+    SCOPED_TRACE(pattern);
+    Glob2Re2OnlyMatch(pattern, matching);
+    Glob2Re2OnlyMatch(pattern, "/", false);
+  }
 }
 
 MATCHER_P3(HasParts, path_matcher, file_matcher, is_mixed, "") {
@@ -218,27 +342,28 @@ TEST_F(GlobTest, GlobSplitParts) {
 }
 
 TEST_F(GlobTest, GlobSplitPartsWithRanges) {
+  EXPECT_THAT(GlobSplitParts("[a-"), StatusIs(absl::StatusCode::kInvalidArgument, "Unterminated range expression."));
   EXPECT_THAT(GlobSplitParts("a[/]b/[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplitParts("a[/]b/[-/]c"), IsOkAndHolds(HasParts("a/b/[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]b/[-/]c"), IsOkAndHolds(HasParts("a/b", "[-/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b/[!/]c"), IsOkAndHolds(HasParts("a/b", "[!/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b/[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b/[-/]/c"), IsOkAndHolds(HasParts("a/b/[-/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b/[!/]/c"), IsOkAndHolds(HasParts("a/b/[!/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b/[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplitParts("a[/]/b/[-/]c"), IsOkAndHolds(HasParts("a/b/[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b/[-/]c"), IsOkAndHolds(HasParts("a/b", "[-/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b/[!/]c"), IsOkAndHolds(HasParts("a/b", "[!/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b/[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b/[-/]/c"), IsOkAndHolds(HasParts("a/b/[-/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b/[!/]/c"), IsOkAndHolds(HasParts("a/b/[!/]", "c", false)));
 
   EXPECT_THAT(GlobSplitParts("a[/]b[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplitParts("a[/]b[-/]c"), IsOkAndHolds(HasParts("a/b[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]b[-/]c"), IsOkAndHolds(HasParts("a", "b[-/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b[!/]c"), IsOkAndHolds(HasParts("a", "b[!/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b[-/]/c"), IsOkAndHolds(HasParts("a/b[-/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]b[!/]/c"), IsOkAndHolds(HasParts("a/b[!/]", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b[/]c"), IsOkAndHolds(HasParts("a/b", "c", false)));
-  EXPECT_THAT(GlobSplitParts("a[/]/b[-/]c"), IsOkAndHolds(HasParts("a/b[-/]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a[/]/b[-/]c"), IsOkAndHolds(HasParts("a", "b[-/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b[!/]c"), IsOkAndHolds(HasParts("a", "b[!/]c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b[/]/c"), IsOkAndHolds(HasParts("a/b", "c", false)));
   EXPECT_THAT(GlobSplitParts("a[/]/b[-/]/c"), IsOkAndHolds(HasParts("a/b[-/]", "c", false)));
@@ -246,7 +371,7 @@ TEST_F(GlobTest, GlobSplitPartsWithRanges) {
 
   EXPECT_THAT(GlobSplitParts("a/b[-1]c"), IsOkAndHolds(HasParts("a", "b[-1]c", false)));
   EXPECT_THAT(GlobSplitParts("a/b[.-]c"), IsOkAndHolds(HasParts("a", "b[.-]c", false)));
-  EXPECT_THAT(GlobSplitParts("a/b[.-1]c"), IsOkAndHolds(HasParts("a/b[.-1]c", "", true)));
+  EXPECT_THAT(GlobSplitParts("a/b[.-1]c"), IsOkAndHolds(HasParts("a", "b[.-1]c", false)));
   EXPECT_THAT(GlobSplitParts("a/b[0-1]c"), IsOkAndHolds(HasParts("a", "b[0-1]c", false)));
 }
 

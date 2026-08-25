@@ -31,6 +31,23 @@ namespace mbo::types {
 template<typename Rhs, typename Lhs>
 concept AssignableTo = std::assignable_from<Lhs, Rhs>;
 
+// An optional non-owning reference with explicit rebinding.
+//
+// Unlike `std::optional<std::reference_wrapper<T>>`, assigning a value writes through the
+// referenced object; it does not rebind the reference. Use `set_ref()` to rebind and `reset()` to
+// disengage. Copy and move assignment are deleted so rebinding cannot happen implicitly. Use
+// `OptionalRef<const T>` for an immutable referenced object.
+//
+// Example:
+//
+// ```c++
+// int first = 1;
+// int second = 2;
+// OptionalRef<int> ref = first;
+// ref = 3;             // Assigns first; ref still refers to first.
+// ref.set_ref(second);  // Explicitly rebinds ref to second.
+// ref.reset();          // Disengages ref.
+// ```
 template<typename T>
 requires(!std::is_reference_v<T>)
 class OptionalRef {
