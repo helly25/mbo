@@ -19,6 +19,7 @@
 #include <string_view>
 #include <utility>
 
+#include "absl/status/status.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/testing/status.h"
@@ -27,6 +28,7 @@ namespace mbo::strings {
 namespace {
 
 using ::mbo::testing::IsOkAndHolds;
+using ::mbo::testing::StatusIs;
 using ::testing::Pair;
 
 struct StripTest : public ::testing::Test {};
@@ -86,6 +88,16 @@ TEST_F(StripTest, Parsed) {
   EXPECT_THAT(StripParsedComments("1#\n'2 #' #\n3#", {.parse = { .stop_at_any_of = "#", .remove_quotes = false}, .strip_trailing_whitespace = false}), IsOkAndHolds("1\n'2 #' \n3"));
   EXPECT_THAT(StripParsedComments("1#\n'2 #' #\n3#", {.parse = { .stop_at_any_of = "#", .remove_quotes = false }}), IsOkAndHolds("1\n'2 #'\n3"));
   // clang-format on
+}
+
+TEST_F(StripTest, ParsedCommentsReportMalformedQuotedInput) {
+  static constexpr StripParsedCommentArgs kArgs{.parse = {.stop_at_any_of = "#"}};
+  EXPECT_THAT(
+      StripParsedLineComments("'unterminated", kArgs),
+      StatusIs(absl::StatusCode::kInvalidArgument, "Cannot parse input."));
+  EXPECT_THAT(
+      StripParsedComments("good\n'unterminated\nnot visited", kArgs),
+      StatusIs(absl::StatusCode::kInvalidArgument, "Cannot parse input."));
 }
 
 }  // namespace

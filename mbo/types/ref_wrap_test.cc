@@ -17,6 +17,8 @@
 
 #include <utility>
 
+#include "absl/hash/hash.h"
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -130,6 +132,17 @@ TEST_F(RefWrapTest, Pair) {
   EXPECT_THAT(*ref, Pair(data.first, data.second));
   EXPECT_THAT(ref->first, data.first);
   EXPECT_THAT(ref->second, data.second);
+}
+
+TEST_F(RefWrapTest, SameObjectComparisonStringificationAndHashing) {
+  int value = 25;
+  const RefWrap<int> ref(value);
+  const RefWrap<int> same(value);
+
+  EXPECT_THAT(ref <=> value, std::strong_ordering::equivalent);
+  EXPECT_THAT(ref <=> same, std::strong_ordering::equivalent);
+  EXPECT_THAT(absl::StrCat(ref), "25");
+  EXPECT_THAT(absl::HashOf(ref), absl::HashOf(same));
 }
 
 // NOLINTEND(*-magic-numbers)

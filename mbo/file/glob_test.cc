@@ -458,6 +458,15 @@ struct GlobFileTest : GlobTest {
   static std::filesystem::path root_glob_test;
 };
 
+TEST_F(GlobFileTest, StatusOrOverloadsPropagateInputFailures) {
+  const absl::Status failure = absl::InvalidArgumentError("invalid test input");
+  EXPECT_THAT(CreateFileSystemEntries(failure, {}), StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(
+      Glob(
+          absl::StatusOr<RootAndPattern>(failure), {}, {}, [](const GlobEntry&) { return GlobEntryAction::kContinue; }),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 std::filesystem::path GlobFileTest::root_glob_test;
 
 TEST_F(GlobFileTest, GlobStopImmediately) {

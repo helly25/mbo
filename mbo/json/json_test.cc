@@ -196,6 +196,9 @@ TEST_F(JsonTest, ContainerModifiersAndAccessors) {
   EXPECT_THAT(object.contains("one"), false);
   EXPECT_THAT(object.erase("two"), 1);
   EXPECT_THAT(object, IsEmpty());
+  object["again"] = 3;
+  object.clear();
+  EXPECT_THAT(object, IsEmpty());
 
   Json scalar{1};
   EXPECT_THAT(static_cast<bool>(scalar), true);
@@ -373,8 +376,16 @@ TEST_F(JsonTest, ValueIteratorAssignment) {
   auto object_values = object.values();
   moved_it = object_values.begin();
   EXPECT_THAT(*moved_it, 3);
+  EXPECT_THAT(moved_it->IsNumber(), true);
+  Json::value_iterator previous_object = moved_it++;
+  EXPECT_THAT(*previous_object, 3);
+  EXPECT_THAT(moved_it, object_values.end());
   const_it = moved_it;
-  EXPECT_THAT(*const_it, 3);
+  EXPECT_THAT(const_it, object_values.end());
+
+  auto previous_array = mutable_it++;
+  EXPECT_THAT(*previous_array, 1);
+  EXPECT_THAT(*mutable_it, 2);
 }
 
 }  // namespace

@@ -64,6 +64,15 @@ TEST_F(FileTest, SetContents) {
   EXPECT_OK(SetContents(tmp_file.string(), "foo"));
 }
 
+TEST_F(FileTest, FileOperationsReportMissingAndInvalidPaths) {
+  const fs::path missing = JoinPaths(tmp_dir, "missing.txt");
+  EXPECT_THAT(SetContents(tmp_dir, "content"), StatusIs(absl::StatusCode::kUnknown, HasSubstr("Unable to open file")));
+  EXPECT_THAT(Readable(missing), StatusIs(absl::StatusCode::kNotFound, HasSubstr("File does not exist")));
+  EXPECT_THAT(GetContents(missing), StatusIs(absl::StatusCode::kNotFound, HasSubstr("Unable to read file")));
+  EXPECT_THAT(GetMaxLines(missing, 1), StatusIs(absl::StatusCode::kNotFound, HasSubstr("Unable to read file")));
+  EXPECT_THAT(GetMTime(missing), StatusIs(absl::StatusCode::kNotFound, HasSubstr("File error")));
+}
+
 TEST_F(FileTest, SetGetContentsWithZero) {
   const fs::path tmp_file = JoinPaths(tmp_dir, "foo.txt");
   EXPECT_THAT(SetContents(tmp_file.string(), "foo\0bar"), IsOk());

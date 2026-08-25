@@ -230,6 +230,15 @@ TEST_F(MopeTest, RangeRejectsSectionOperands) {
   EXPECT_THAT(tpl.Expand(output).code(), absl::StatusCode::kInvalidArgument);
 }
 
+TEST_F(MopeTest, RangeRejectsMissingOperandsAndDuplicateActiveNames) {
+  const Template tpl;
+  std::string missing("{{#index=missing;3}}{{index}}{{/index}}");
+  EXPECT_THAT(tpl.Expand(missing).code(), absl::StatusCode::kNotFound);
+
+  std::string duplicate("{{#index=1;1}}{{#index=1;1}}{{index}}{{/index}}{{/index}}");
+  EXPECT_THAT(tpl.Expand(duplicate).code(), absl::StatusCode::kInvalidArgument);
+}
+
 TEST_F(MopeTest, ConfiguredListExpandsValuesAndAJoiner) {
   constexpr std::string_view kInput = R"({{#item=["one","two"];" / "}}{{item}}{{/item}})";
   const Template tpl;
@@ -259,6 +268,15 @@ TEST_F(MopeTest, ConfiguredListRejectsMalformedInputAndNameConflicts) {
   EXPECT_THAT(conflicting.Expand(conflict).code(), absl::StatusCode::kInvalidArgument);
 }
 
+TEST_F(MopeTest, ConfiguredListRejectsMalformedJoinersAndMissingReferences) {
+  const Template tpl;
+  std::string malformed("{{#item=[one,two]trailing}}{{item}}{{/item}}");
+  EXPECT_THAT(tpl.Expand(malformed).code(), absl::StatusCode::kInvalidArgument);
+
+  std::string missing("{{#item=[one,two];missing}}{{item}}{{/item}}");
+  EXPECT_THAT(tpl.Expand(missing).code(), absl::StatusCode::kNotFound);
+}
+
 TEST_F(MopeTest, EmptyAndUnknownSectionConfigurations) {
   constexpr std::string_view kEmptyInput = "before{{#item=}}content{{/item}}after";
   constexpr std::string_view kUnknownInput = "{{#item=unknown}}content{{/item}}";
@@ -277,6 +295,13 @@ TEST_F(MopeTest, ControlTagCannotOverrideATemplateValue) {
   ASSERT_THAT(tpl.SetValue("name", "existing"), absl::OkStatus());
   std::string output(kInput);
   EXPECT_THAT(tpl.Expand(output).code(), absl::StatusCode::kInvalidArgument);
+}
+
+TEST_F(MopeTest, ValueTagCannotRenderASectionDictionary) {
+  Template tpl;
+  ASSERT_THAT(tpl.AddSection("item").ok(), IsTrue());
+  std::string output("{{item}}");
+  EXPECT_THAT(tpl.Expand(output).code(), absl::StatusCode::kUnimplemented);
 }
 
 TEST_F(MopeTest, ReadIniToTemlateLoadsRootValues) {

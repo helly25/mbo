@@ -22,6 +22,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/hash/hash.h"
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/testing/matchers.h"
@@ -35,6 +37,7 @@ using ::mbo::testing::IsNullopt;
 using ::testing::Contains;
 using ::testing::ElementsAre;
 using ::testing::Eq;
+using ::testing::IsFalse;
 using ::testing::Not;
 
 struct OptionalDataOrRefTest : ::testing::Test {};
@@ -385,6 +388,17 @@ TEST_F(OptionalDataOrRefTest, NulloptAssignmentReturnsSelf) {
   OptionalDataOrRef<int>& result = (ref = std::nullopt);
   EXPECT_THAT(std::addressof(result), Eq(std::addressof(ref)));
   EXPECT_THAT(ref.HoldsNullopt(), true);
+}
+
+TEST_F(OptionalDataOrRefTest, StringificationAndHashingReflectPresenceAndValue) {
+  const OptionalDataOrRef<int> empty;
+  const OptionalDataOrRef<int> value(42);
+  const OptionalDataOrRef<int> same(42);
+
+  EXPECT_THAT(absl::StrCat(empty), "std::nullopt");
+  EXPECT_THAT(absl::StrCat(value), "42");
+  EXPECT_THAT(absl::HashOf(empty) == absl::HashOf(value), IsFalse());
+  EXPECT_THAT(absl::HashOf(value), absl::HashOf(same));
 }
 
 // NOLINTEND(*-magic-numbers)

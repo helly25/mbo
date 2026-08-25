@@ -46,6 +46,15 @@ TEST_F(RunfilesDirTest, ResolvesAWorkspaceRootedLabel) {
   EXPECT_THAT(fs::exists(dir), IsTrue()) << dir;
 }
 
+TEST_F(RunfilesDirTest, ResolvesAnExplicitRepositoryLabel) {
+  // NOLINTNEXTLINE(concurrency-mt-unsafe): Bazel defines this immutable test environment value.
+  const char* workspace = std::getenv("TEST_WORKSPACE");
+  ASSERT_THAT(workspace != nullptr, IsTrue());
+  const std::string label = "@" + std::string(workspace) + "//mbo/testing:runfiles_dir.h";
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string dir, RunfilesDir(label));
+  EXPECT_THAT(fs::exists(dir), IsTrue()) << dir;
+}
+
 TEST_F(RunfilesDirTest, LabelColonBecomesASlash) {
   MBO_ASSERT_OK_AND_ASSIGN(const std::string by_label, RunfilesDir("//mbo/testing:runfiles_dir.h"));
   MBO_ASSERT_OK_AND_ASSIGN(const std::string by_path, RunfilesDir("mbo/testing/runfiles_dir.h"));
@@ -68,6 +77,7 @@ TEST_F(RunfilesDirTest, TwoArgumentFormMatchesTheOneArgumentForm) {
   MBO_ASSERT_OK_AND_ASSIGN(const std::string two_arg, RunfilesDir(workspace, "mbo/testing/runfiles_dir.h"));
   MBO_ASSERT_OK_AND_ASSIGN(const std::string one_arg, RunfilesDir("mbo/testing/runfiles_dir.h"));
   EXPECT_THAT(two_arg, one_arg);
+  EXPECT_THAT(RunfilesDirOrDie(workspace, "mbo/testing/runfiles_dir.h"), one_arg);
 }
 
 }  // namespace

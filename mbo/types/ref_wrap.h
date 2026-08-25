@@ -19,11 +19,25 @@
 #include <compare>   // IWYU pragma: keep
 #include <concepts>  // IWYU pragma: keep
 #include <cstddef>
+#include <type_traits>
 
 #include "absl/hash/hash.h"
 #include "absl/strings/str_format.h"
 
 namespace mbo::types {
+
+template<typename T>
+class RefWrap;
+
+namespace types_internal {
+
+template<typename T>
+struct IsRefWrap : std::false_type {};
+
+template<typename T>
+struct IsRefWrap<RefWrap<T>> : std::true_type {};
+
+}  // namespace types_internal
 
 // Template class `RefWrap<T>` is a reference wrapper for a type `T`. It has
 // similar goals to `std::reference_wrapper` or GSL's `not_null`. However, the
@@ -90,7 +104,8 @@ class RefWrap final {
     return *ptr_ <=> *other.ptr_;
   }
 
-  template<std::three_way_comparable_with<T> U>
+  template<typename U>
+  requires(!types_internal::IsRefWrap<std::remove_cvref_t<U>>::value && std::three_way_comparable_with<U, T>)
   constexpr auto operator<=>(const U& other) const noexcept {
     if (ptr_ == &other) {
       return decltype(*ptr_ <=> other)::equivalent;
