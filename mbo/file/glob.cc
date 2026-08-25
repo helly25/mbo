@@ -30,6 +30,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "mbo/status/status_macros.h"
@@ -54,7 +55,7 @@ using CharacterSet = std::array<bool, 256>;
 
 void AddCharacterClass(std::string_view name, CharacterSet& chars) {
   for (std::size_t value = 0; value < 128; ++value) {
-    const unsigned char chr = static_cast<unsigned char>(value);
+    const auto chr = static_cast<unsigned char>(value);
     const bool alpha = ('a' <= chr && chr <= 'z') || ('A' <= chr && chr <= 'Z');
     const bool digit = '0' <= chr && chr <= '9';
     const bool graph = 0x21 <= chr && chr <= 0x7e;
@@ -66,7 +67,7 @@ void AddCharacterClass(std::string_view name, CharacterSet& chars) {
         || (name == "space" && (chr == ' ' || ('\t' <= chr && chr <= '\r')))
         || (name == "upper" && 'A' <= chr && chr <= 'Z') || (name == "word" && (alpha || digit || chr == '_'))
         || (name == "xdigit" && (digit || ('a' <= chr && chr <= 'f') || ('A' <= chr && chr <= 'F')));
-    chars[chr] = chars[chr] || match;
+    chars.at(chr) = chars.at(chr) || match;
   }
 }
 
@@ -87,14 +88,14 @@ absl::Status ValidateCharacterClass(std::string_view name) {
 absl::StatusOr<unsigned char> TakeRangeCharacter(std::string_view& pattern) {
   // Callers only enter with a member available; a trailing escape is diagnosed below.
   if (pattern.front() != '\\') {
-    const unsigned char result = static_cast<unsigned char>(pattern.front());
+    const auto result = static_cast<unsigned char>(pattern.front());
     pattern.remove_prefix(1);
     return result;
   }
   if (pattern.size() == 1) {
     return absl::InvalidArgumentError("No character left to escape at end of pattern.");
   }
-  const unsigned char result = static_cast<unsigned char>(pattern[1]);
+  const auto result = static_cast<unsigned char>(pattern.at(1));
   pattern.remove_prefix(2);
   return result;
 }
@@ -113,12 +114,12 @@ void AppendRangeCharacter(std::string& output, unsigned char chr) {
 void AppendCharacterSet(const CharacterSet& chars, bool negative, std::string& output) {
   output += negative ? "[^" : "[";
   for (std::size_t first = 0; first < chars.size();) {
-    if (!chars[first]) {
+    if (!chars.at(first)) {
       ++first;
       continue;
     }
     std::size_t last = first;
-    while (last + 1 < chars.size() && chars[last + 1]) {
+    while (last + 1 < chars.size() && chars.at(last + 1)) {
       ++last;
     }
     AppendRangeCharacter(output, static_cast<unsigned char>(first));
@@ -133,6 +134,8 @@ void AppendCharacterSet(const CharacterSet& chars, bool negative, std::string& o
   output += ']';
 }
 
+// The parser necessarily branches for POSIX members, ranges, negation, and diagnostics.
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 absl::Status GlobFindRange(std::string_view& pattern, std::string& re2_pattern) {
   pattern.remove_prefix(1);
   bool negative = false;
@@ -142,7 +145,7 @@ absl::Status GlobFindRange(std::string_view& pattern, std::string& re2_pattern) 
   }
   CharacterSet chars{};
   if (pattern.starts_with(']')) {
-    chars[static_cast<unsigned char>(']')] = true;
+    chars.at(static_cast<unsigned char>(']')) = true;
     pattern.remove_prefix(1);
   }
   while (!pattern.empty() && !pattern.starts_with(']')) {
@@ -161,26 +164,26 @@ absl::Status GlobFindRange(std::string_view& pattern, std::string& re2_pattern) 
       continue;
     }
     MBO_ASSIGN_OR_RETURN(const unsigned char first, TakeRangeCharacter(pattern));
-    if (pattern.starts_with('-') && pattern.size() > 1 && pattern[1] != ']') {
+    if (pattern.starts_with('-') && pattern.size() > 1 && pattern.at(1) != ']') {
       pattern.remove_prefix(1);
       MBO_ASSIGN_OR_RETURN(const unsigned char last, TakeRangeCharacter(pattern));
       if (last < first) {
         return absl::InvalidArgumentError(absl::StrFormat("Descending range '%c-%c' is unsupported.", first, last));
       }
       for (std::size_t chr = first; chr <= last; ++chr) {
-        chars[chr] = true;
+        chars.at(chr) = true;
       }
     } else {
-      chars[first] = true;
+      chars.at(first) = true;
     }
   }
   if (pattern.empty()) {
     return absl::InvalidArgumentError("Unterminated range expression.");
   }
   pattern.remove_prefix(1);
-  chars[static_cast<unsigned char>('/')] = false;
+  chars.at(static_cast<unsigned char>('/')) = false;
   if (negative) {
-    chars[static_cast<unsigned char>('/')] = true;
+    chars.at(static_cast<unsigned char>('/')) = true;
   } else if (!absl::c_any_of(chars, [](bool value) { return value; })) {
     return absl::InvalidArgumentError("Range expression matches only the path separator.");
   }
@@ -329,11 +332,11 @@ MBO_ALWAYS_INLINE absl::StatusOr<GlobData> GlobNormalizeData(
 
 MBO_ALWAYS_INLINE void Glob2Re2ExpressionImplStar(std::string& re2_pattern, std::string_view& pattern) {
   std::size_t stars = 0;
-  while (stars < pattern.size() && pattern[stars] == '*') {
+  while (stars < pattern.size() && pattern.at(stars) == '*') {
     ++stars;
   }
   const bool complete_component = stars >= 2 && (re2_pattern.empty() || re2_pattern.ends_with('/'))
-                                  && (stars == pattern.size() || pattern[stars] == '/');
+                                  && (stars == pattern.size() || pattern.at(stars) == '/');
   if (!complete_component) {
     pattern.remove_prefix(stars);
     absl::StrAppend(&re2_pattern, "[^/]*");
@@ -363,7 +366,7 @@ MBO_ALWAYS_INLINE void Glob2Re2ExpressionImplStar(std::string& re2_pattern, std:
 
 void AppendLiteral(std::string& re2_pattern, char chr) {
   constexpr std::string_view kRe2Metacharacters = R"(.+*?()|[]{}^$\)";
-  if (kRe2Metacharacters.find(chr) != std::string_view::npos) {
+  if (absl::StrContains(kRe2Metacharacters, chr)) {
     re2_pattern += '\\';
   }
   re2_pattern += chr;
@@ -371,16 +374,16 @@ void AppendLiteral(std::string& re2_pattern, char chr) {
 
 void SkipRange(std::string_view pattern, std::size_t& pos) {
   ++pos;
-  if (pos < pattern.size() && pattern[pos] == '!') {
+  if (pos < pattern.size() && pattern.at(pos) == '!') {
     ++pos;
   }
-  if (pos < pattern.size() && pattern[pos] == ']') {
+  if (pos < pattern.size() && pattern.at(pos) == ']') {
     ++pos;
   }
-  while (pos < pattern.size() && pattern[pos] != ']') {
-    if (pattern[pos] == '\\' && pos + 1 < pattern.size()) {
+  while (pos < pattern.size() && pattern.at(pos) != ']') {
+    if (pattern.at(pos) == '\\' && pos + 1 < pattern.size()) {
       pos += 2;
-    } else if (pattern[pos] == '[' && pos + 1 < pattern.size() && pattern[pos + 1] == ':') {
+    } else if (pattern.at(pos) == '[' && pos + 1 < pattern.size() && pattern.at(pos + 1) == ':') {
       const std::size_t end = pattern.find(":]", pos + 2);
       pos = end == std::string_view::npos ? pattern.size() : end + 2;
     } else {
@@ -405,17 +408,17 @@ absl::StatusOr<bool> AppendBraceGroup(
   std::size_t depth = 0;
   bool saw_comma = false;
   while (scan < pattern.size()) {
-    if (pattern[scan] == '\\' && scan + 1 < pattern.size()) {
+    if (pattern.at(scan) == '\\' && scan + 1 < pattern.size()) {
       scan += 2;
-    } else if (pattern[scan] == '[') {
+    } else if (pattern.at(scan) == '[') {
       SkipRange(pattern, scan);
-    } else if (pattern[scan] == '{') {
+    } else if (pattern.at(scan) == '{') {
       ++depth;
       ++scan;
-    } else if (pattern[scan] == '}' && depth != 0) {
+    } else if (pattern.at(scan) == '}' && depth != 0) {
       --depth;
       ++scan;
-    } else if (pattern[scan] == '}') {
+    } else if (pattern.at(scan) == '}') {
       if (!saw_comma) {
         return false;
       }
@@ -426,15 +429,16 @@ absl::StatusOr<bool> AppendBraceGroup(
           re2_pattern += '|';
         }
         MBO_ASSIGN_OR_RETURN(
-            std::string alternative,
+            const std::string alternative,
             Glob2Re2ExpressionImpl(
-                pattern.substr(alternatives[idx].first, alternatives[idx].second - alternatives[idx].first), options));
+                pattern.substr(alternatives.at(idx).first, alternatives.at(idx).second - alternatives.at(idx).first),
+                options));
         re2_pattern += alternative;
       }
       re2_pattern += ')';
       pos = scan + 1;
       return true;
-    } else if (pattern[scan] == ',' && depth == 0) {
+    } else if (pattern.at(scan) == ',' && depth == 0) {
       alternatives.emplace_back(start, scan);
       start = scan + 1;
       saw_comma = true;
@@ -464,7 +468,7 @@ MBO_ALWAYS_INLINE absl::StatusOr<std::string> Glob2Re2ExpressionImpl(
         continue;
       case '\\':
         // if (pattern.size() < 2) { already handled
-        AppendLiteral(re2_pattern, pattern[1]);
+        AppendLiteral(re2_pattern, pattern.at(1));
         pattern.remove_prefix(2);
         continue;
       case '*': {
