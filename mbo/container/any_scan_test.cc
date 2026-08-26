@@ -241,10 +241,14 @@ TEST_F(AnyScanTest, InitializerList) {
 
 template<typename T>
 std::vector<T> MoveTester(AnyScan<T> scan) {
+  const std::size_t expected_size = scan.size();
+  const bool expected_empty = scan.empty();
   std::vector<T> result;
   for (typename AnyScan<T>::iterator it = scan.begin(); it != scan.end(); ++it) {
     result.emplace_back(std::move(*it));
   }
+  EXPECT_THAT(result, SizeIs(expected_size));
+  EXPECT_THAT(result.empty(), expected_empty);
   return result;
 }
 
@@ -265,7 +269,10 @@ struct ConvertingScanTest : public AnyScanTest {};
 template<typename T>
 std::vector<std::remove_cvref_t<T>> ConvTester(
     const ConvertingScan<T>& scan) {  // NOLINT(portability-std-allocator-const
-  return {scan.begin(), scan.end()};
+  std::vector<std::remove_cvref_t<T>> result{scan.begin(), scan.end()};
+  EXPECT_THAT(result, SizeIs(scan.size()));
+  EXPECT_THAT(result.empty(), scan.empty());
+  return result;
 }
 
 TEST_F(ConvertingScanTest, CallFunctionPairOfStringsWithMap) {

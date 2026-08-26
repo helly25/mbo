@@ -228,8 +228,7 @@ constexpr int kExitTrouble = 2;
 // Builds the diff options from the command-line flags. Split out of `Diff` so
 // that reading the inputs and reporting the result stay legible next to the
 // flag validation and the two option-building lambdas.
-Diff::Options MakeDiffOptions() {
-  const std::string strip_comments = absl::GetFlag(FLAGS_strip_comments);
+Diff::Options MakeDiffOptions(const std::string& strip_comments) {
   const std::optional<Diff::Options::Algorithm> algorithm =
       Diff::Options::ParseAlgorithmFlag(absl::GetFlag(FLAGS_algorithm));
   ABSL_QCHECK(algorithm) << "Unknown algorithm";
@@ -302,7 +301,10 @@ int Diff(std::string_view lhs_name, std::string_view rhs_name) {
   if (!rhs.ok()) {
     return kExitTrouble;
   }
-  const Diff::Options diff_options = MakeDiffOptions();
+  // StripCommentArgs and ParseOptions hold string_views. Keep the flag value
+  // alive until FileDiff has finished consuming the options built from it.
+  const std::string strip_comments = absl::GetFlag(FLAGS_strip_comments);
+  const Diff::Options diff_options = MakeDiffOptions(strip_comments);
   const auto result = Diff::FileDiff(*lhs, *rhs, diff_options);
   if (!result.ok()) {
     ABSL_LOG(ERROR) << "ERROR: " << result.status();

@@ -45,7 +45,9 @@ namespace {
 using ::mbo::strings::DropIndent;
 using ::mbo::strings::DropIndentAndSplit;
 using ::mbo::testing::IsOkAndHolds;
+using ::mbo::testing::StatusIs;
 using ::testing::ElementsAreArray;
+using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Lt;
 using ::testing::Not;
@@ -137,6 +139,14 @@ class DiffTest : public ::testing::Test {
     return absl::StrCat(absl::StrJoin(result, "\n"), "\n");
   }
 };
+
+TEST_F(DiffTest, RejectsAnUnknownAlgorithmValue) {
+  Diff::Options options;
+  options.algorithm = static_cast<Diff::Options::Algorithm>(999);
+  EXPECT_THAT(
+      mbo::diff::Diff::FileDiff({}, {}, options),
+      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("Unknown algorithm")));
+}
 
 TEST_F(DiffTest, Empty) {
   EXPECT_THAT(Diff({}, {}), IsOkAndHolds(IsEmpty()));

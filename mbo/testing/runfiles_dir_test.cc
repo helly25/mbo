@@ -30,6 +30,7 @@
 namespace mbo::testing {
 namespace {
 
+using ::testing::EndsWith;
 using ::testing::IsTrue;
 
 namespace fs = std::filesystem;
@@ -58,6 +59,11 @@ TEST_F(RunfilesDirTest, ResolvesAnExplicitRepositoryLabel) {
 TEST_F(RunfilesDirTest, ResolvesAnExternalRepositoryThroughTheRepoMapping) {
   MBO_ASSERT_OK_AND_ASSIGN(const std::string dir, RunfilesDir("@googletest//:LICENSE"));
   EXPECT_THAT(fs::exists(dir), IsTrue()) << dir;
+}
+
+TEST_F(RunfilesDirTest, PreservesRlocationFallbackForAnUnmappedRepositoryName) {
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string dir, RunfilesDir("not_a_real_repository", "mbo/testing/runfiles_dir.h"));
+  EXPECT_THAT(dir, EndsWith("mbo/testing/runfiles_dir.h"));
 }
 
 TEST_F(RunfilesDirTest, LabelColonBecomesASlash) {
