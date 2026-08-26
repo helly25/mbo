@@ -58,11 +58,40 @@ function test::exit_codes_follow_posix_diff() {
   "${DIFF}" "${LHS}" "${RHS}" >/dev/null 2>&1 || rc=$?
   [[ ${rc} == 1 ]] || die "Expected exit code 1 for differing files, got ${rc}."
   rc=0
+  "${DIFF}" "${BASHTEST_TMPDIR}/does-not-exist.txt" "${RHS}" >/dev/null 2>&1 || rc=$?
+  [[ ${rc} == 2 ]] || die "Expected exit code 2 for an unreadable left input, got ${rc}."
+  rc=0
   "${DIFF}" "${LHS}" "${BASHTEST_TMPDIR}/does-not-exist.txt" >/dev/null 2>&1 || rc=$?
   [[ ${rc} == 2 ]] || die "Expected exit code 2 for an unreadable input, got ${rc}."
   rc=0
   "${DIFF}" "${LHS}" >/dev/null 2>&1 || rc=$?
   [[ ${rc} == 2 ]] || die "Expected exit code 2 for bad usage, got ${rc}."
+}
+
+function test::input_filter_flags_can_remove_non_semantic_differences() {
+  local comments_lhs="${BASHTEST_TMPDIR}/comments.lhs.txt"
+  local comments_rhs="${BASHTEST_TMPDIR}/comments.rhs.txt"
+  printf 'value\n# left\n' >"${comments_lhs}"
+  printf 'value\n# right\n' >"${comments_rhs}"
+  "${DIFF}" --strip_comments='#' --nostrip_parsed_comments "${comments_lhs}" "${comments_rhs}" \
+    >"${TEST_TMPDIR}/comments.out" \
+    || die "Expected raw comment stripping to make the inputs equal."
+  [[ -s ${TEST_TMPDIR}/comments.out ]] && die "Expected no diff after raw comment stripping."
+
+  printf '"value # data"\n# left\n' >"${comments_lhs}"
+  printf '"value # data"\n# right\n' >"${comments_rhs}"
+  "${DIFF}" --strip_comments='#' --strip_parsed_comments "${comments_lhs}" "${comments_rhs}" \
+    >"${TEST_TMPDIR}/parsed-comments.out" \
+    || die "Expected parsed comment stripping to make the inputs equal."
+  [[ -s ${TEST_TMPDIR}/parsed-comments.out ]] && die "Expected no diff after parsed comment stripping."
+
+  printf 'keep\nignore left\n' >"${comments_lhs}"
+  printf 'keep\nignore right\n' >"${comments_rhs}"
+  "${DIFF}" --ignore_matching_lines='^ignore ' "${comments_lhs}" "${comments_rhs}" \
+    >"${TEST_TMPDIR}/ignored-lines.out" \
+    || die "Expected matching-line filtering to make the inputs equal."
+  [[ -s ${TEST_TMPDIR}/ignored-lines.out ]] && die "Expected no diff after matching-line filtering."
+  return 0
 }
 
 function test::unified_alias_selects_unified_format() {

@@ -191,9 +191,9 @@ class OptionalRef {
   template<typename H>
   friend constexpr H AbslHashValue(H hash, const OptionalRef<T>& v) {
     if (v.has_value()) {
-      return H::combine(std::move(hash), absl::HashOf<>(v.value()));
+      return H::combine(std::move(hash), true, v.value());
     } else {
-      return H::combine(std::move(hash), absl::HashOf<>(std::nullopt));
+      return H::combine(std::move(hash), false);
     }
   }
 

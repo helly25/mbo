@@ -25,6 +25,7 @@
 namespace mbo::log {
 
 using ::testing::AllOf;
+using ::testing::EndsWith;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::MatchesRegex;
@@ -55,6 +56,15 @@ TEST_F(ScopedStreamTest, TestOut) {
       out.str(),
       MatchesRegex(
           R"rx(^\[[^\]]*/scoped_stream_test.cc:[0-9]+\] @.*void mbo::log.*::ScopedStreamTest_TestOut_Test::TestBody\(\) : HereWeGo!\n$)rx"));
+}
+
+TEST_F(ScopedStreamTest, EmptyOutputOmitsTheMessageSeparator) {
+  std::stringstream out;
+  {
+    const auto str = ScopedStream(std::source_location::current(), out);
+    EXPECT_THAT(GetStr(str), IsEmpty());
+  }
+  EXPECT_THAT(out.str(), AllOf(Not(HasSubstr(" : ")), EndsWith("\n")));
 }
 
 TEST_F(ScopedStreamTest, TestVoid) {

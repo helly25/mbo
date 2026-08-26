@@ -674,6 +674,12 @@ TEST_F(LimitedVectorTest, Insert2) {
 
 TEST_F(LimitedVectorTest, Insert3) {
   {
+    LimitedVector<int, 3> result{1, 2};
+    const std::array<int, 0> empty{};
+    EXPECT_THAT(result.insert(result.begin() + 1, empty.begin(), empty.end()), result.begin() + 1);
+    EXPECT_THAT(result, ElementsAre(1, 2));
+  }
+  {
     static constexpr auto kData = [] {
       LimitedVector<int, 6> result{};
       result.insert(result.begin(), std::initializer_list<int>{11});

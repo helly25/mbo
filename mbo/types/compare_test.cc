@@ -128,6 +128,13 @@ TEST_F(CompareTest, CompareScalarUnsignedAboveSignedMaxIsGreater) {
   EXPECT_THAT(CompareScalar(kIntMax + 1, std::numeric_limits<std::int32_t>::max()), std::strong_ordering::greater);
 }
 
+TEST_F(CompareTest, CompareScalarMixedSignednessWithinRangeComparesNormally) {
+  EXPECT_THAT(CompareScalar(1, 2U), std::strong_ordering::less);
+  EXPECT_THAT(CompareScalar(2U, 1), std::strong_ordering::greater);
+  EXPECT_THAT(CompareScalar(2, 2U), std::strong_ordering::equal);
+  EXPECT_THAT(CompareScalar(2U, 2), std::strong_ordering::equal);
+}
+
 TEST_F(CompareTest, CompareScalarSameSignednessCompesNormally) {
   EXPECT_THAT(CompareScalar(1, 2), std::strong_ordering::less);
   EXPECT_THAT(CompareScalar(2U, 1U), std::strong_ordering::greater);

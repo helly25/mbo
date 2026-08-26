@@ -143,7 +143,9 @@ class Json {
 
     value_iterator_t(const mutable_iterator& other) noexcept
     requires std::same_as<value_iterator_t, const_iterator>
-        : it_(other.it_) {}
+    {
+      std::visit([this](const auto& iterator) { it_ = iterator; }, other.it_);
+    }
 
     value_iterator_t& operator=(const mutable_iterator& other) noexcept
     requires std::same_as<value_iterator_t, const_iterator>
@@ -154,7 +156,9 @@ class Json {
 
     value_iterator_t(mutable_iterator&& other) noexcept
     requires std::same_as<value_iterator_t, const_iterator>
-        : it_(other.it_) {}
+    {
+      std::visit([this](auto&& iterator) { it_ = std::forward<decltype(iterator)>(iterator); }, std::move(other.it_));
+    }
 
     value_iterator_t& operator=(mutable_iterator&& other) noexcept
     requires std::same_as<value_iterator_t, const_iterator>

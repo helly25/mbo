@@ -19,6 +19,7 @@
 #include <functional>
 #include <iterator>
 #include <ranges>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -349,6 +350,12 @@ TEST_F(TStringTest, Concat) {
   EXPECT_THAT((tstring<'a'>() + tstring<'.'>() + tstring<'b'>()), (tstring<'a', '.', 'b'>()));
   EXPECT_THAT("a"_ts + "."_ts + "b"_ts, "a.b"_ts);
   EXPECT_THAT("a"_ts + ""_ts + "."_ts + ""_ts + "b"_ts + ""_ts, "a.b"_ts);
+}
+
+TEST_F(TStringTest, StreamsItsStringValue) {
+  std::ostringstream out;
+  out << "streamed"_ts;
+  EXPECT_THAT(out.str(), "streamed");
 }
 
 static constexpr const char kGsv0[]{""};

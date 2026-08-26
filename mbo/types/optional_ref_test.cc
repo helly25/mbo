@@ -15,6 +15,13 @@
 
 #include "mbo/types/optional_ref.h"
 
+#include <compare>
+#include <optional>
+#include <set>
+#include <string>
+
+#include "absl/hash/hash.h"
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/testing/matchers.h"
@@ -27,6 +34,8 @@ namespace {
 using ::mbo::testing::IsNullopt;
 using ::testing::Contains;
 using ::testing::ElementsAre;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
 
 struct OptionalRefTest : ::testing::Test {};
@@ -72,6 +81,56 @@ TEST_F(OptionalRefTest, Compare) {
   EXPECT_THAT(refs, ElementsAre(IsNullopt(), 25, 33));
   EXPECT_THAT(refs, Contains(std::nullopt));
   EXPECT_THAT(refs, ElementsAre(std::nullopt, 25, 33));
+}
+
+TEST_F(OptionalRefTest, ComparisonDistinguishesEmptyAndReferencedValues) {
+  int one = 1;
+  int two = 2;
+  const OptionalRef<int> empty;
+  const OptionalRef<int> also_empty;
+  const OptionalRef<int> first(one);
+  const OptionalRef<int> same(one);
+  const OptionalRef<int> second(two);
+
+  EXPECT_THAT(empty == also_empty, IsTrue());
+  EXPECT_THAT(empty == first, IsFalse());
+  EXPECT_THAT(first == same, IsTrue());
+  EXPECT_THAT(first == second, IsFalse());
+  EXPECT_THAT(empty < first, IsTrue());
+  EXPECT_THAT(first < empty, IsFalse());
+  EXPECT_THAT(first < second, IsTrue());
+  EXPECT_THAT(empty <=> also_empty, std::strong_ordering::equal);
+  EXPECT_THAT(empty <=> first, std::strong_ordering::less);
+  EXPECT_THAT(first <=> second, std::strong_ordering::less);
+}
+
+TEST_F(OptionalRefTest, ComparisonWithValuesAndNulloptPreservesOptionalOrdering) {
+  int value = 7;
+  const OptionalRef<int> empty;
+  const OptionalRef<int> ref(value);
+
+  EXPECT_THAT(empty == std::nullopt, IsTrue());
+  EXPECT_THAT(ref == std::nullopt, IsFalse());
+  EXPECT_THAT(empty <=> std::nullopt, std::strong_ordering::equal);
+  EXPECT_THAT(ref <=> std::nullopt, std::strong_ordering::greater);
+  EXPECT_THAT(empty == value, IsFalse());
+  EXPECT_THAT(ref == value, IsTrue());
+  EXPECT_THAT(empty < value, IsTrue());
+  EXPECT_THAT(ref < value, IsFalse());
+  EXPECT_THAT(empty <=> value, std::strong_ordering::less);
+  EXPECT_THAT(ref <=> value, std::strong_ordering::equal);
+}
+
+TEST_F(OptionalRefTest, StringificationAndHashingReflectPresenceAndValue) {
+  int value = 11;
+  const OptionalRef<int> empty;
+  const OptionalRef<int> ref(value);
+  const OptionalRef<int> same(value);
+
+  EXPECT_THAT(absl::StrCat(empty), "std::nullopt");
+  EXPECT_THAT(absl::StrCat(ref), "11");
+  EXPECT_THAT(absl::HashOf(empty) == absl::HashOf(ref), IsFalse());
+  EXPECT_THAT(absl::HashOf(ref), absl::HashOf(same));
 }
 
 // NOLINTEND(*-magic-numbers)

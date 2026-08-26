@@ -55,6 +55,8 @@ namespace {
 
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::Pair;
 using ::testing::Pointee;
@@ -100,6 +102,18 @@ TEST_F(AnyScanTest, TestInitializerList) {
   EXPECT_THAT(Tester<const int>(MakeAnyScan(data)), ElementsAre(1, 2, 3));
   EXPECT_THAT(Tester<const int>(MakeAnyScan(data)), Not(IsEmpty()));
   EXPECT_THAT(Tester<const int>(MakeAnyScan(data)), SizeIs(3));
+}
+
+TEST_F(AnyScanTest, ReferenceIteratorsCompareByPosition) {
+  std::array<int, 3> data{1, 2, 3};
+  AnyScan<int> scan(MakeAnyScan(data));
+  auto first = scan.begin();
+  auto same = scan.begin();
+  auto second = scan.begin();
+  ++second;
+
+  EXPECT_THAT(first == same, IsTrue());
+  EXPECT_THAT(first == second, IsFalse());
 }
 
 TEST_F(ConstScanTest, TestInitializerList) {
@@ -241,10 +255,14 @@ TEST_F(AnyScanTest, InitializerList) {
 
 template<typename T>
 std::vector<T> MoveTester(AnyScan<T> scan) {
+  const std::size_t expected_size = scan.size();
+  const bool expected_empty = scan.empty();
   std::vector<T> result;
   for (typename AnyScan<T>::iterator it = scan.begin(); it != scan.end(); ++it) {
     result.emplace_back(std::move(*it));
   }
+  EXPECT_THAT(result, SizeIs(expected_size));
+  EXPECT_THAT(result.empty(), expected_empty);
   return result;
 }
 
@@ -265,7 +283,10 @@ struct ConvertingScanTest : public AnyScanTest {};
 template<typename T>
 std::vector<std::remove_cvref_t<T>> ConvTester(
     const ConvertingScan<T>& scan) {  // NOLINT(portability-std-allocator-const
-  return {scan.begin(), scan.end()};
+  std::vector<std::remove_cvref_t<T>> result{scan.begin(), scan.end()};
+  EXPECT_THAT(result, SizeIs(scan.size()));
+  EXPECT_THAT(result.empty(), scan.empty());
+  return result;
 }
 
 TEST_F(ConvertingScanTest, CallFunctionPairOfStringsWithMap) {
@@ -293,6 +314,15 @@ TEST_F(ConvertingScanTest, CallFunctionWithConversion) {
     const std::array<std::string_view, 3> data{{"foo", "bar", "baz"}};
     EXPECT_THAT(ConvTester<std::string_view>(MakeConvertingScan(data)), ElementsAre("foo", "bar", "baz"));
   }
+}
+
+TEST_F(ConvertingScanTest, IteratorsOnlyCompareEqualToThemselves) {
+  const std::array<std::string_view, 2> data{{"foo", "bar"}};
+  const ConvertingScan<std::string> scan = MakeConvertingScan(data);
+  auto first = scan.begin();
+  const auto same_position = scan.begin();
+  EXPECT_THAT(first == first, IsTrue());
+  EXPECT_THAT(first == same_position, IsFalse());
 }
 
 TEST_F(ConvertingScanTest, InitializerList) {

@@ -91,8 +91,14 @@ TEST_F(ParseTest, ParseStringHex) {
       StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex C++23 sequence."));
 }
 
+TEST_F(ParseTest, ParseStringSimpleAndCustomEscapes) {
+  EXPECT_THAT(
+      ParseString({}, R"(\?\'\"\\\a\b\f\n\r\t\v)"), IsOkAndHolds(Pair(std::string_view("?'\"\\\a\b\f\n\r\t\v"), "")));
+  static constexpr ParseOptions kCustom{.custom_escapes = "@"};
+  EXPECT_THAT(ParseString(kCustom, R"(\@)"), IsOkAndHolds(Pair("@", "")));
+}
+
 TEST_F(ParseTest, ParseStringStopAtAnyOf) {
-  ASSERT_THAT(ParseOptions().stop_at_any_of, IsEmpty());
   ASSERT_THAT(ParseOptions().stop_at_any_of, IsEmpty());
   ASSERT_THAT(ParseOptions().split_at_any_of, IsEmpty());
   static constexpr ParseOptions kOpts{.stop_at_any_of = ".,"};
@@ -204,7 +210,12 @@ TEST_F(ParseTest, ParseStringErrors) {
       ParseString({}, "\\o{}"),
       StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad octal C++23 sequence."));
   EXPECT_THAT(
+      ParseString({}, "\\o{12"),
+      StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad octal C++23 sequence."));
+  EXPECT_THAT(
       ParseString({}, "\\x"), StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex sequence."));
+  EXPECT_THAT(
+      ParseString({}, "\\xz"), StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex sequence."));
   EXPECT_THAT(
       ParseString({}, "\\x{"),
       StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex C++23 sequence."));

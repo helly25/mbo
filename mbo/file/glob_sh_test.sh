@@ -105,6 +105,31 @@ function test::re2() {
   [[ ${output} != *"file1"* ]] || die "RE2 unexpectedly found file1: ${output}"
 }
 
+function test::hidden_entries_links_and_fifo() {
+  local special_dir
+  special_dir="$(mktemp -d)"
+  mkdir -p "${special_dir}/.hidden_dir"
+  touch "${special_dir}/.hidden_dir/visible.txt"
+  touch "${special_dir}/.hidden_file"
+  touch "${special_dir}/visible.txt"
+  ln -s "visible.txt" "${special_dir}/visible.link"
+  mkfifo "${special_dir}/visible.fifo"
+
+  local default_output
+  default_output="$("${GLOB}" "${special_dir}" --nodotdir --nodotfile --type)"
+  [[ $'\n'${default_output}$'\n' != *$'\nd .hidden_dir\n'* ]] || die "Hidden directory was not filtered: ${default_output}"
+  [[ $'\n'${default_output}$'\n' != *$'\nf .hidden_file\n'* ]] || die "Hidden file was not filtered: ${default_output}"
+  [[ ${default_output} == *"l visible.link"* ]] || die "Symlink type was not reported: ${default_output}"
+  [[ ${default_output} == *"p visible.fifo"* ]] || die "FIFO type was not reported: ${default_output}"
+
+  local complete_output
+  complete_output="$("${GLOB}" "${special_dir}" --dotdir --dotfile --sum_extensions --type)"
+  [[ ${complete_output} == *"d .hidden_dir"* ]] || die "Hidden directory was not included: ${complete_output}"
+  [[ ${complete_output} == *"f .hidden_file"* ]] || die "Hidden file was not included: ${complete_output}"
+  [[ ${complete_output} == *"FileExt(.txt):"* ]] || die "Extension summary was not reported: ${complete_output}"
+  [[ ${complete_output} == *"FileExt(.hidden_file):"* ]] || die "Dot-file summary was not reported: ${complete_output}"
+}
+
 function test::rejects_bad_argument_counts() {
   if "${GLOB}" >/dev/null 2>&1; then
     die "glob without a pattern unexpectedly succeeded"

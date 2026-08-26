@@ -27,24 +27,26 @@ namespace {
 using ::mbo::testing::IsOk;
 using ::mbo::testing::StatusHasPayload;
 using ::mbo::testing::StatusIs;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 
 struct StatusBuilderTest : ::testing::Test {};
 
 TEST_F(StatusBuilderTest, Status) {
   EXPECT_THAT(StatusBuilder(), IsOk());
-  EXPECT_TRUE(StatusBuilder().ok());
+  EXPECT_THAT(StatusBuilder().ok(), IsTrue());
   EXPECT_THAT(StatusBuilder(absl::OkStatus()), IsOk());
-  EXPECT_TRUE(StatusBuilder(absl::OkStatus()).ok());
+  EXPECT_THAT(StatusBuilder(absl::OkStatus()).ok(), IsTrue());
   EXPECT_THAT(StatusBuilder(absl::CancelledError()), StatusIs(absl::StatusCode::kCancelled));
-  EXPECT_FALSE(StatusBuilder(absl::CancelledError()).ok());
+  EXPECT_THAT(StatusBuilder(absl::CancelledError()).ok(), IsFalse());
 }
 
 TEST_F(StatusBuilderTest, StatusOr) {
   using StatusOr = absl::StatusOr<int>;
   EXPECT_THAT(StatusBuilder(StatusOr(1)), IsOk());
-  EXPECT_TRUE(StatusBuilder(StatusOr(1)).ok());
+  EXPECT_THAT(StatusBuilder(StatusOr(1)).ok(), IsTrue());
   EXPECT_THAT(StatusBuilder(StatusOr(absl::CancelledError())), StatusIs(absl::StatusCode::kCancelled));
-  EXPECT_FALSE(StatusBuilder(StatusOr(absl::CancelledError())).ok());
+  EXPECT_THAT(StatusBuilder(StatusOr(absl::CancelledError())).ok(), IsFalse());
 }
 
 TEST_F(StatusBuilderTest, Message) {
@@ -53,8 +55,14 @@ TEST_F(StatusBuilderTest, Message) {
 }
 
 TEST_F(StatusBuilderTest, SetAppend) {
-  const auto error = StatusBuilder(absl::CancelledError("<Error>")).SetAppend() << "<Message>";
+  const auto error = StatusBuilder(absl::CancelledError("<Error>")).SetAppend().SetAppend() << "<Message>";
   EXPECT_THAT(error, StatusIs(absl::StatusCode::kCancelled, "<Error><Message>"));
+}
+
+TEST_F(StatusBuilderTest, OperationsOnOkStatusRemainNoOps) {
+  StatusBuilder builder(absl::OkStatus());
+  builder.SetAppend().SetPayload("url", "content");
+  EXPECT_THAT(absl::Status(builder), IsOk());
 }
 
 TEST_F(StatusBuilderTest, SetPrepend) {

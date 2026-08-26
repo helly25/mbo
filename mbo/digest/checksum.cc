@@ -23,6 +23,7 @@
 namespace mbo::digest::internal {
 
 std::optional<ChecksumLine> ParseChecksumLine(std::string_view line, std::size_t hex_length) {
+  // The suffix must contain two marker characters and a non-empty filename.
   if (hex_length > line.size() || line.size() - hex_length < 3 || line.at(hex_length) != ' '
       || (line.at(hex_length + 1) != ' ' && line.at(hex_length + 1) != '*')) {
     return std::nullopt;
@@ -34,9 +35,6 @@ std::optional<ChecksumLine> ParseChecksumLine(std::string_view line, std::size_t
     }
   }
   const std::string_view file_name = line.substr(hex_length + 2);
-  if (file_name.empty()) {
-    return std::nullopt;
-  }
   return ChecksumLine{.hex = hex, .file_name = file_name};
 }
 

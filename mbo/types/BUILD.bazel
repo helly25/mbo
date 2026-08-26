@@ -270,6 +270,8 @@ cc_test(
     deps = [
         ":optional_data_or_ref_cc",
         "//mbo/testing:matchers_cc",
+        "@abseil-cpp//absl/hash",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
@@ -314,6 +316,8 @@ cc_test(
     deps = [
         ":optional_ref_cc",
         "//mbo/testing:matchers_cc",
+        "@abseil-cpp//absl/hash",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
@@ -331,6 +335,8 @@ cc_test(
     srcs = ["ref_wrap_test.cc"],
     deps = [
         ":ref_wrap_cc",
+        "@abseil-cpp//absl/hash",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
@@ -351,6 +357,7 @@ cc_test(
     srcs = ["required_test.cc"],
     deps = [
         ":required_cc",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],

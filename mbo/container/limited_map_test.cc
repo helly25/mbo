@@ -152,6 +152,7 @@ TEST_F(LimitedMapTest, MakeInitArgBasics) {
   EXPECT_THAT(test.find(5) - test.begin(), 2);
   EXPECT_THAT(test.find(0), test.end());
   EXPECT_THAT(test.emplace(0, 0), Pair(test.begin(), true));
+  EXPECT_THAT(test.emplace(0, 100), Pair(test.begin(), false));
   EXPECT_THAT(test, SizeIs(4));
   EXPECT_THAT(test, ElementsAre(Pair(0, 0), Pair(1, 11), Pair(3, 33), Pair(5, 55)));
   EXPECT_THAT(test.find(2), test.end());
@@ -229,7 +230,8 @@ TEST_F(LimitedMapTest, Update) {
   // NOLINTNEXTLINE(*-avoid-unchecked-container-access)
   test["4"] = "eeee";
   EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
-  test.at("0") = "zero";
+  const std::string exact_key{"0"};
+  test.at(exact_key) = "zero";
   EXPECT_THAT(test, ElementsAre(Pair("0", "zero"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
   EXPECT_THAT(test, CapacityIs(Gt(test.size())));
   // NOLINTNEXTLINE(*-avoid-unchecked-container-access)
@@ -405,8 +407,10 @@ TEST_F(LimitedMapTest, Contains) {
   EXPECT_THAT(kTest.contains(0), true);
   EXPECT_THAT(kTest.contains(4), false);
   EXPECT_THAT(kTest.contains_all(std::vector<int>{1, 2}), true);
+  EXPECT_THAT(kTest.contains_all(std::initializer_list<int>{}), true);
   EXPECT_THAT(kTest.contains_all({1, 5}), false);
   EXPECT_THAT(kTest.contains_any(std::vector<int>{5, 2}), true);
+  EXPECT_THAT(kTest.contains_any({5, 2}), true);
   EXPECT_THAT(kTest.contains_any({4, 5}), false);
 }
 

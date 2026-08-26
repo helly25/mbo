@@ -15,6 +15,7 @@
 
 #include "mbo/types/optional_data_or_ref.h"
 
+#include <compare>
 #include <concepts>  // IWYU pragma: keep
 #include <optional>
 #include <set>
@@ -22,6 +23,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/hash/hash.h"
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mbo/testing/matchers.h"
@@ -35,6 +38,8 @@ using ::mbo::testing::IsNullopt;
 using ::testing::Contains;
 using ::testing::ElementsAre;
 using ::testing::Eq;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
 
 struct OptionalDataOrRefTest : ::testing::Test {};
@@ -279,6 +284,23 @@ TEST_F(OptionalDataOrRefTest, Compare) {
   EXPECT_THAT(refs, ElementsAre(std::nullopt, Eq(25), Eq(33)));
 }
 
+TEST_F(OptionalDataOrRefTest, ComparisonDistinguishesPresenceAndValue) {
+  const OptionalDataOrRef<int> empty;
+  const OptionalDataOrRef<int> also_empty;
+  const OptionalDataOrRef<int> one(1);
+  const OptionalDataOrRef<int> same(1);
+  const OptionalDataOrRef<int> two(2);
+
+  EXPECT_THAT(empty == also_empty, IsTrue());
+  EXPECT_THAT(empty == one, IsFalse());
+  EXPECT_THAT(one == same, IsTrue());
+  EXPECT_THAT(one == two, IsFalse());
+  EXPECT_THAT(empty <=> also_empty, Eq(std::strong_ordering::equal));
+  EXPECT_THAT(empty <=> one, Eq(std::strong_ordering::less));
+  EXPECT_THAT(one <=> two, Eq(std::strong_ordering::less));
+  EXPECT_THAT(empty == 1, IsFalse());
+}
+
 TEST_F(OptionalDataOrRefTest, ConsRef) {
   // NOLINTNEXTLINE(misc-const-correctness): the test exercises the mutable type; const changes what is under test.
   OptionalDataOrConstRef<int> ref(42);
@@ -385,6 +407,17 @@ TEST_F(OptionalDataOrRefTest, NulloptAssignmentReturnsSelf) {
   OptionalDataOrRef<int>& result = (ref = std::nullopt);
   EXPECT_THAT(std::addressof(result), Eq(std::addressof(ref)));
   EXPECT_THAT(ref.HoldsNullopt(), true);
+}
+
+TEST_F(OptionalDataOrRefTest, StringificationAndHashingReflectPresenceAndValue) {
+  const OptionalDataOrRef<int> empty;
+  const OptionalDataOrRef<int> value(42);
+  const OptionalDataOrRef<int> same(42);
+
+  EXPECT_THAT(absl::StrCat(empty), "std::nullopt");
+  EXPECT_THAT(absl::StrCat(value), "42");
+  EXPECT_THAT(absl::HashOf(empty) == absl::HashOf(value), IsFalse());
+  EXPECT_THAT(absl::HashOf(value), absl::HashOf(same));
 }
 
 // NOLINTEND(*-magic-numbers)

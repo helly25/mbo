@@ -18,6 +18,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -103,6 +104,7 @@ TEST_F(RequiredTest, HashesWrappedValue) {
 
   EXPECT_THAT(absl::HashOf(req), absl::HashOf(*req));
   EXPECT_THAT(absl::HashOf(req), Ne(absl::HashOf(std::string("Good Evening Germany!"))));
+  EXPECT_THAT(absl::StrCat(req), "Good Morning America!");
 }
 
 TEST_F(RequiredTest, Pair) {

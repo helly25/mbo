@@ -295,9 +295,9 @@ class OptionalDataOrRef {
   template<typename H>
   friend constexpr H AbslHashValue(H hash, const OptionalDataOrRef<T, RefT>& v) {
     if (v.has_value()) {
-      return H::combine(std::move(hash), absl::HashOf<>(v.value()));
+      return H::combine(std::move(hash), true, v.value());
     } else {
-      return H::combine(std::move(hash), absl::HashOf<>(std::nullopt));
+      return H::combine(std::move(hash), false);
     }
   }
 

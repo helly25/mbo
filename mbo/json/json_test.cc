@@ -196,6 +196,9 @@ TEST_F(JsonTest, ContainerModifiersAndAccessors) {
   EXPECT_THAT(object.contains("one"), false);
   EXPECT_THAT(object.erase("two"), 1);
   EXPECT_THAT(object, IsEmpty());
+  object["again"] = 3;
+  object.clear();
+  EXPECT_THAT(object, IsEmpty());
 
   Json scalar{1};
   EXPECT_THAT(static_cast<bool>(scalar), true);
@@ -367,14 +370,30 @@ TEST_F(JsonTest, ValueIteratorAssignment) {
   Json::const_value_iterator moved_const_it;
   moved_const_it = array.values().begin();
   EXPECT_THAT(*moved_const_it, 1);
+  const Json::const_value_iterator copied_const_it{mutable_it};
+  EXPECT_THAT(*copied_const_it, 1);
+  const Json::const_value_iterator constructed_moved_const_it{Json::value_iterator{array_values.begin()}};
+  EXPECT_THAT(*constructed_moved_const_it, 1);
 
   Json object;
   object["value"] = 3;
   auto object_values = object.values();
   moved_it = object_values.begin();
   EXPECT_THAT(*moved_it, 3);
+  EXPECT_THAT(moved_it->IsNumber(), true);
+  const Json::value_iterator previous_object = moved_it++;
+  EXPECT_THAT(*previous_object, 3);
+  EXPECT_THAT(moved_it, object_values.end());
+  const Json::const_value_iterator copied_object_const_it{previous_object};
+  EXPECT_THAT(*copied_object_const_it, 3);
+  const Json::const_value_iterator constructed_moved_object_const_it{Json::value_iterator{object_values.begin()}};
+  EXPECT_THAT(*constructed_moved_object_const_it, 3);
   const_it = moved_it;
-  EXPECT_THAT(*const_it, 3);
+  EXPECT_THAT(const_it, object_values.end());
+
+  auto previous_array = mutable_it++;
+  EXPECT_THAT(*previous_array, 1);
+  EXPECT_THAT(*mutable_it, 2);
 }
 
 }  // namespace

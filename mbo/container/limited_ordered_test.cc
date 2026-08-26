@@ -89,6 +89,14 @@ TEST_F(LimitedOrderedTest, ConstexprRequireSortedInput) {
   EXPECT_THAT(kTest, ElementsAre(1, 2, 3));
 }
 
+TEST_F(LimitedOrderedTest, RuntimeRequireSortedInput) {
+  constexpr auto kOptions = LimitedOptions<3, LimitedOptionsFlag::kRequireSortedInput>{};
+  const volatile int first = 1;
+  const std::vector<int> values{first, 2, 3};
+  const LimitedOrdered<int, int, int, kOptions> test(values.begin(), values.end());
+  EXPECT_THAT(test, ElementsAre(1, 2, 3));
+}
+
 void DoTestConstexprRequireSortedInputThrows() {
   constexpr auto kOptions = LimitedOptions<3, LimitedOptionsFlag::kRequireSortedInput>{};
   const std::vector<int> v{1, 3, 2};

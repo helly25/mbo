@@ -130,5 +130,17 @@ TEST_F(ArtefactTest, ReadMaxLinesWithZeroReturnsNothing) {
   EXPECT_THAT(artefact.data, IsEmpty());
 }
 
+TEST_F(ArtefactTest, ReadMaxLinesReportsAMissingFile) {
+  const auto artefact = Artefact::ReadMaxLines((tmp_dir / "does_not_exist.txt").string(), 1);
+  EXPECT_THAT(artefact.ok(), IsFalse());
+}
+
+TEST_F(ArtefactTest, ReadMaxLinesCanSkipTheModificationTime) {
+  const std::string path = Write("untimed.txt", "a\nb\n");
+  MBO_ASSERT_OK_AND_ASSIGN(const Artefact artefact, Artefact::ReadMaxLines(path, 1, {.skip_time = true}));
+  EXPECT_THAT(artefact.data, "a\n");
+  EXPECT_THAT(artefact.time, absl::UnixEpoch());
+}
+
 }  // namespace
 }  // namespace mbo::file

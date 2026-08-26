@@ -31,6 +31,7 @@ namespace {
 // NOLINTBEGIN(*-magic-numbers,*-named-parameter)
 
 using ::mbo::testing::EqualsText;
+using ::mbo::types::SetStringifyOstreamOptions;
 using ::mbo::types::SetStringifyOstreamOutputMode;
 using ::mbo::types::Stringify;
 using ::mbo::types::types_internal::kStructNameSupport;
@@ -80,6 +81,13 @@ TEST_F(StringifyOstreamTest, OStream) {
     std::stringstream os;
     os << TestStruct{};
     EXPECT_THAT(os.str(), R"({.one: 11, .two: 25})");
+  }
+  {
+    SetStringifyOstreamOptions(Stringify::OptionsJson());
+    std::stringstream os;
+    os << TestStruct{};
+    EXPECT_THAT(os.str(), "{\"one\":11,\"two\":25}\n");
+    SetStringifyOstreamOutputMode(Stringify::OutputMode::kDefault);
   }
 }
 
