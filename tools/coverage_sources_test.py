@@ -101,6 +101,28 @@ class CoverageSourcesTest(unittest.TestCase):
                     workspace,
                 )
 
+    def test_applies_standalone_branch_merge_marker_to_function_declaration(self):
+        policy = {"categories": {"file": {"include": ["mbo/file/**"]}}}
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory) / "workspace"
+            source = workspace / "mbo/file/file.h"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "// LCOV_MERGE_BR_LINE 1: template instances\n"
+                "template<typename T>\n"
+                "bool function(T value) {\n"
+            )
+
+            actual = coverage_sources.grouped(
+                "SF:mbo/file/file.h\n"
+                "BRDA:2,0,0,1\nBRDA:2,0,1,0\nBRF:2\nBRH:1\nend_of_record\n",
+                policy,
+                Path(directory) / "grouped",
+                workspace,
+            )
+
+            self.assertIn("BRDA:2,0,0,1\nBRF:1\nBRH:1", actual)
+
 
 if __name__ == "__main__":
     unittest.main()

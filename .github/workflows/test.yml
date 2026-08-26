@@ -303,6 +303,22 @@ jobs:
             --test_tag_filters=-lfs,-fuzz-test,-no-coverage
           cp "$(bazel ${BAZEL_INIT} info output_path)/_coverage/_coverage_report.dat" coverage.lcov
 
+          # Fatal requirements normally terminate the process before it can
+          # flush coverage. Exercise those same production paths under the
+          # supported exception policy and merge their observations into the
+          # exception-free library's primary report.
+          bazel ${BAZEL_INIT} coverage ${BAZEL_ARGS} \
+            --//mbo/config:require_throws=true \
+            //mbo/json:json_require_exceptions_test \
+            --combined_report=lcov \
+            --instrumentation_filter='^//mbo/json/.*'
+          cp "$(bazel ${BAZEL_INIT} info output_path)/_coverage/_coverage_report.dat" coverage-exceptions.lcov
+          lcov \
+            --add-tracefile coverage.lcov \
+            --add-tracefile coverage-exceptions.lcov \
+            --output-file coverage-merged.lcov
+          mv coverage-merged.lcov coverage.lcov
+
           coverage_page="${{ inputs.coverage_target }}"
           if [ -z "${coverage_page}" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
             coverage_page="main"

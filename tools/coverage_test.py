@@ -239,6 +239,30 @@ class CoverageTest(unittest.TestCase):
 
             self.assertEqual([(1, True), (1, True)], files["mbo/a.cc"].branches)
 
+    def test_parse_applies_standalone_branch_merge_marker_to_function_declaration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "mbo/a.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "// LCOV_MERGE_BR_LINE 1: template instances\n"
+                "template<typename T>\n"
+                "bool function(\n"
+                "    T value) {\n"
+                "  return value;\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            report = root / "coverage.lcov"
+            report.write_text(
+                "SF:mbo/a.cc\nBRDA:3,0,0,1\nBRDA:3,0,1,0\nend_of_record\n",
+                encoding="utf-8",
+            )
+
+            files = coverage_tool.parse_lcov(report, root)
+
+            self.assertEqual([(3, True)], files["mbo/a.cc"].branches)
+
     def test_parse_rejects_an_invalid_template_branch_merge_width(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

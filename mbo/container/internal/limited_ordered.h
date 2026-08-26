@@ -714,7 +714,8 @@ class [[nodiscard]] LimitedOrdered {
     return values_[pos].data;
   }
 
-  MBO_FORCE_INLINE constexpr iterator find(const Key& key) {  // LCOV_EXCL_BR_LINE: GCC specialization entries.
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
+  MBO_FORCE_INLINE constexpr iterator find(const Key& key) {
     if constexpr (kOptimizeIndexOf) {
       const std::size_t pos = index_of(key);
       return pos == npos ? end() : iterator(&values_[pos]);
@@ -724,8 +725,8 @@ class [[nodiscard]] LimitedOrdered {
     }
   }
 
-  MBO_FORCE_INLINE constexpr const_iterator find(
-      const Key& key) const {  // LCOV_EXCL_BR_LINE: GCC specialization entries.
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
+  MBO_FORCE_INLINE constexpr const_iterator find(const Key& key) const {
     if constexpr (kOptimizeIndexOf) {
       const std::size_t pos = index_of(key);
       return pos == npos ? end() : const_iterator(&values_[pos]);
@@ -735,7 +736,8 @@ class [[nodiscard]] LimitedOrdered {
     }
   }
 
-  MBO_FORCE_INLINE constexpr bool contains(const Key& key) const {  // LCOV_EXCL_BR_LINE: GCC specialization entries.
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
+  MBO_FORCE_INLINE constexpr bool contains(const Key& key) const {
     if constexpr (kOptimizeIndexOf) {
       return index_of(key) != npos;
     } else {
@@ -749,7 +751,8 @@ class [[nodiscard]] LimitedOrdered {
 
   template<typename K>
   requires(kIsForeignKey<K>)
-  MBO_FORCE_INLINE constexpr iterator find(const K& key) {  // LCOV_EXCL_BR_LINE: GCC specialization entries.
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
+  MBO_FORCE_INLINE constexpr iterator find(const K& key) {
     if constexpr (kOptimizeIndexOf) {
       const std::size_t pos = index_of(key);
       return pos == npos ? end() : iterator(&values_[pos]);
@@ -761,8 +764,8 @@ class [[nodiscard]] LimitedOrdered {
 
   template<typename K>
   requires(kIsForeignKey<K>)
-  MBO_FORCE_INLINE constexpr const_iterator find(
-      const K& key) const {  // LCOV_EXCL_BR_LINE: GCC specialization entries.
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
+  MBO_FORCE_INLINE constexpr const_iterator find(const K& key) const {
     if constexpr (kOptimizeIndexOf) {
       const std::size_t pos = index_of(key);
       return pos == npos ? end() : const_iterator(&values_[pos]);
@@ -774,7 +777,8 @@ class [[nodiscard]] LimitedOrdered {
 
   template<typename K>
   requires(kIsForeignKey<K>)
-  MBO_FORCE_INLINE constexpr bool contains(const K& key) const {  // LCOV_EXCL_BR_LINE: GCC specialization entries.
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
+  MBO_FORCE_INLINE constexpr bool contains(const K& key) const {
     if constexpr (kOptimizeIndexOf) {
       return index_of(key) != npos;
     } else {

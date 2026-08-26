@@ -73,3 +73,27 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+# Exercises Json precondition failures in-process so coverage data is flushed.
+# This target exists only in the exception-enabled configuration and is invoked
+# by the supplemental coverage pass.
+cc_test(
+    name = "json_require_exceptions_test",
+    size = "small",
+    srcs = ["json_require_exceptions_test.cc"],
+    # Including json.h instantiates unrelated noexcept templates containing
+    # configurable requirements. This target does not exercise those paths;
+    # their exception specifications require a separate API audit.
+    copts = [
+        "-fexceptions",
+        "-Wno-exceptions",
+    ],
+    target_compatible_with = select({
+        "//mbo/config:require_throws_enabled": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    deps = [
+        ":json_cc",
+        "@googletest//:gtest_main",
+    ],
+)

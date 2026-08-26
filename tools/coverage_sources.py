@@ -34,6 +34,24 @@ def _function_markers(source_lines: list[str]) -> tuple[set[int], dict[int, int]
     return excluded, merged
 
 
+def _branch_merge_markers(source_lines: list[str]) -> dict[int, int]:
+    """Maps instrumented lines to their logical branch width."""
+    result: dict[int, int] = {}
+    for index, source_line in enumerate(source_lines):
+        match = re.search(r"LCOV_MERGE_BR_LINE\s+(\d+)", source_line)
+        if not match:
+            continue
+        width = int(match.group(1))
+        result[index + 1] = width
+        if not source_line.lstrip().startswith("//"):
+            continue
+        for continuation in range(index + 1, len(source_lines)):
+            result[continuation + 1] = width
+            if "{" in source_lines[continuation]:
+                break
+    return result
+
+
 def _normalize_record(record: str, source: Path) -> str:
     """Applies source coverage directives to one raw LCOV record."""
     source_lines = source.read_text(encoding="utf-8").splitlines()
@@ -48,11 +66,7 @@ def _normalize_record(record: str, source: Path) -> str:
         if "LCOV_EXCL_BR_LINE" in line
     }
     excluded_functions, merged_functions = _function_markers(source_lines)
-    merged_branches = {
-        number: int(match.group(1))
-        for number, line in enumerate(source_lines, start=1)
-        if (match := re.search(r"LCOV_MERGE_BR_LINE\s+(\d+)", line))
-    }
+    merged_branches = _branch_merge_markers(source_lines)
 
     raw_lines = record.splitlines()
     headers = [
