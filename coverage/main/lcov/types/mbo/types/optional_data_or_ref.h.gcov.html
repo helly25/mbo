@@ -40,27 +40,27 @@
             <td class="headerValue">mbo production coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">90.9&nbsp;%</td>
-            <td class="headerCovTableEntry">110</td>
-            <td class="headerCovTableEntry">100</td>
+            <td class="headerCovTableEntryHi">98.2&nbsp;%</td>
+            <td class="headerCovTableEntry">114</td>
+            <td class="headerCovTableEntry">112</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-25 23:20:23</td>
+            <td class="headerValue">2026-08-26 06:39:22</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryMed">90.1&nbsp;%</td>
-            <td class="headerCovTableEntry">272</td>
-            <td class="headerCovTableEntry">245</td>
+            <td class="headerCovTableEntryMed">90.5&nbsp;%</td>
+            <td class="headerCovTableEntry">273</td>
+            <td class="headerCovTableEntry">247</td>
           </tr>
           <tr>
             <td></td>
             <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryMed">77.3&nbsp;%</td>
-            <td class="headerCovTableEntry">66</td>
-            <td class="headerCovTableEntry">51</td>
+            <td class="headerCovTableEntryHi">85.3&nbsp;%</td>
+            <td class="headerCovTableEntry">68</td>
+            <td class="headerCovTableEntry">58</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -232,15 +232,15 @@
 <span id="L151"><span class="lineNum">     151</span>                 :<span class="tlaGNC">        2479 :     return *this;</span></span>
 <span id="L152"><span class="lineNum">     152</span>                 :             :   }</span>
 <span id="L153"><span class="lineNum">     153</span>                 :             : </span>
-<span id="L154"><span class="lineNum">     154</span>                 :<span class="tlaGNC">        5105 :   constexpr explicit operator bool() const noexcept { return has_value(); }</span></span>
+<span id="L154"><span class="lineNum">     154</span>                 :<span class="tlaGNC">        5147 :   constexpr explicit operator bool() const noexcept { return has_value(); }</span></span>
 <span id="L155"><span class="lineNum">     155</span>                 :             : </span>
-<span id="L156"><span class="lineNum">     156</span>   [<span class="tlaGBC" title="branch 0 was taken 470 times"> + </span><span class="tlaGBC" title="branch 1 was taken 12438 times"> + </span><span class="tlaGBC" title="branch 2 was taken 261 times"> + </span><span class="tlaGBC" title="branch 3 was taken 209 times"> + </span>]:<span class="tlaGNC">       12908 :   constexpr bool has_value() const noexcept { return HoldsData() || HoldsReference(); }</span></span>
+<span id="L156"><span class="lineNum">     156</span>   [<span class="tlaGBC" title="branch 0 was taken 481 times"> + </span><span class="tlaGBC" title="branch 1 was taken 12524 times"> + </span><span class="tlaGBC" title="branch 2 was taken 261 times"> + </span><span class="tlaGBC" title="branch 3 was taken 220 times"> + </span>]:<span class="tlaGNC">       13005 :   constexpr bool has_value() const noexcept { return HoldsData() || HoldsReference(); }</span></span>
 <span id="L157"><span class="lineNum">     157</span>                 :             : </span>
-<span id="L158"><span class="lineNum">     158</span>                 :<span class="tlaGNC">       22521 :   constexpr bool HoldsData() const noexcept { return data_.index() == kDataIndex; }</span></span>
+<span id="L158"><span class="lineNum">     158</span>                 :<span class="tlaGNC">       22644 :   constexpr bool HoldsData() const noexcept { return data_.index() == kDataIndex; }</span></span>
 <span id="L159"><span class="lineNum">     159</span>                 :             : </span>
 <span id="L160"><span class="lineNum">     160</span>                 :<span class="tlaGNC">          32 :   constexpr bool HoldsNullopt() const noexcept { return !has_value(); }</span></span>
 <span id="L161"><span class="lineNum">     161</span>                 :             : </span>
-<span id="L162"><span class="lineNum">     162</span>                 :<span class="tlaGNC">        1339 :   constexpr bool HoldsReference() const noexcept { return data_.index() == kRefIndex; }</span></span>
+<span id="L162"><span class="lineNum">     162</span>                 :<span class="tlaGNC">        1350 :   constexpr bool HoldsReference() const noexcept { return data_.index() == kRefIndex; }</span></span>
 <span id="L163"><span class="lineNum">     163</span>                 :             : </span>
 <span id="L164"><span class="lineNum">     164</span>                 :<span class="tlaGNC">           8 :   constexpr reference value() noexcept {</span></span>
 <span id="L165"><span class="lineNum">     165</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 8 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 8 times"> + </span> :<span class="tlaGNC">           8 :     MBO_CONFIG_REQUIRE(has_value(), &quot;No value set for: &quot;) &lt;&lt; mbo::log::DemangleV(*this);</span></span>
@@ -248,10 +248,10 @@
 <span id="L166"><span class="lineNum">     166</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           8 :     return HoldsData() ? Data() : Reference();</span></span>
 <span id="L167"><span class="lineNum">     167</span>                 :             :   }</span>
 <span id="L168"><span class="lineNum">     168</span>                 :             : </span>
-<span id="L169"><span class="lineNum">     169</span>                 :<span class="tlaGNC">        6085 :   constexpr const_reference value() const noexcept {</span></span>
-<span id="L170"><span class="lineNum">     170</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 6085 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 6085 times"> + </span> :<span class="tlaGNC">        6085 :     MBO_CONFIG_REQUIRE(has_value(), &quot;No value set for: &quot;) &lt;&lt; mbo::log::DemangleV(*this);</span></span>
-<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 6085 times"> + </span>]
-<span id="L171"><span class="lineNum">     171</span>         [<span class="tlaGBC" title="branch 0 was taken 6006 times"> + </span><span class="tlaGBC" title="branch 1 was taken 79 times"> + </span>]:<span class="tlaGNC">        6085 :     return HoldsData() ? Data() : Reference();</span></span>
+<span id="L169"><span class="lineNum">     169</span>                 :<span class="tlaGNC">        6111 :   constexpr const_reference value() const noexcept {</span></span>
+<span id="L170"><span class="lineNum">     170</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 6111 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 6111 times"> + </span> :<span class="tlaGNC">        6111 :     MBO_CONFIG_REQUIRE(has_value(), &quot;No value set for: &quot;) &lt;&lt; mbo::log::DemangleV(*this);</span></span>
+<span class="lineNum">        </span>          <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 6111 times"> + </span>]
+<span id="L171"><span class="lineNum">     171</span>         [<span class="tlaGBC" title="branch 0 was taken 6032 times"> + </span><span class="tlaGBC" title="branch 1 was taken 79 times"> + </span>]:<span class="tlaGNC">        6111 :     return HoldsData() ? Data() : Reference();</span></span>
 <span id="L172"><span class="lineNum">     172</span>                 :             :   }</span>
 <span id="L173"><span class="lineNum">     173</span>                 :             : </span>
 <span id="L174"><span class="lineNum">     174</span>                 :             : #if __cplusplus &gt;= 202'302L</span>
@@ -270,7 +270,7 @@
 <span id="L187"><span class="lineNum">     187</span>                 :             :   // must sit on the line immediately above the declaration - a rationale placed</span>
 <span id="L188"><span class="lineNum">     188</span>                 :             :   // between it and the declaration would bind it to the comment instead.</span>
 <span id="L189"><span class="lineNum">     189</span>                 :             :   // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)</span>
-<span id="L190"><span class="lineNum">     190</span>         [<span class="tlaGBC" title="branch 0 was taken 630 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">         630 :   constexpr const_reference get(const T&amp; defaults) const noexcept { return has_value() ? value() : defaults; }</span></span>
+<span id="L190"><span class="lineNum">     190</span>         [<span class="tlaGBC" title="branch 0 was taken 633 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">         633 :   constexpr const_reference get(const T&amp; defaults) const noexcept { return has_value() ? value() : defaults; }</span></span>
 <span id="L191"><span class="lineNum">     191</span>                 :             : </span>
 <span id="L192"><span class="lineNum">     192</span>                 :             :   // Returns a reference to existing data or created data. If the object:</span>
 <span id="L193"><span class="lineNum">     193</span>                 :             :   // * is `std::nullopt`, then a default value will be emplace and is reference returned.</span>
@@ -293,22 +293,22 @@
 <span id="L210"><span class="lineNum">     210</span>                 :             : </span>
 <span id="L211"><span class="lineNum">     211</span>                 :<span class="tlaGNC">           2 :   constexpr reference operator*() noexcept { return value(); }</span></span>
 <span id="L212"><span class="lineNum">     212</span>                 :             : </span>
-<span id="L213"><span class="lineNum">     213</span>                 :<span class="tlaGNC">        1538 :   constexpr const_reference operator*() const noexcept { return value(); }</span></span>
+<span id="L213"><span class="lineNum">     213</span>                 :<span class="tlaGNC">        1543 :   constexpr const_reference operator*() const noexcept { return value(); }</span></span>
 <span id="L214"><span class="lineNum">     214</span>                 :             : </span>
 <span id="L215"><span class="lineNum">     215</span>                 :<span class="tlaGNC">           1 :   constexpr pointer operator-&gt;() noexcept { return &amp;value(); }</span></span>
 <span id="L216"><span class="lineNum">     216</span>                 :             : </span>
-<span id="L217"><span class="lineNum">     217</span>                 :<span class="tlaGNC">        3878 :   constexpr const_pointer operator-&gt;() const noexcept { return &amp;value(); }</span></span>
+<span id="L217"><span class="lineNum">     217</span>                 :<span class="tlaGNC">        3886 :   constexpr const_pointer operator-&gt;() const noexcept { return &amp;value(); }</span></span>
 <span id="L218"><span class="lineNum">     218</span>                 :             : </span>
 <span id="L219"><span class="lineNum">     219</span>                 :             :   template&lt;std::equality_comparable_with&lt;T&gt; U = T, typename RefU = U&gt;</span>
-<span id="L220"><span class="lineNum">     220</span>                 :<span class="tlaGNC">           8 :   constexpr bool operator==(const OptionalDataOrRef&lt;U, RefU&gt;&amp; rhs) const</span></span>
+<span id="L220"><span class="lineNum">     220</span>                 :<span class="tlaGNC">          12 :   constexpr bool operator==(const OptionalDataOrRef&lt;U, RefU&gt;&amp; rhs) const</span></span>
 <span id="L221"><span class="lineNum">     221</span>                 :             :       noexcept(noexcept(std::declval&lt;const T&amp;&gt;() == std::declval&lt;const U&amp;&gt;())) {</span>
-<span id="L222"><span class="lineNum">     222</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">           8 :     if (has_value() != rhs.has_value()) {</span></span>
-<span id="L223"><span class="lineNum">     223</span>                 :<span class="tlaGNC">           2 :       return false;</span></span>
+<span id="L222"><span class="lineNum">     222</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 9 times"> + </span>]:<span class="tlaGNC">          12 :     if (has_value() != rhs.has_value()) {</span></span>
+<span id="L223"><span class="lineNum">     223</span>                 :<span class="tlaGNC">           3 :       return false;</span></span>
 <span id="L224"><span class="lineNum">     224</span>                 :             :     }</span>
-<span id="L225"><span class="lineNum">     225</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           6 :     if (!has_value()) {</span></span>
-<span id="L226"><span class="lineNum">     226</span>                 :<span class="tlaGNC">           6 :       return true;</span></span>
+<span id="L225"><span class="lineNum">     225</span>         [<span class="tlaGBC" title="branch 0 was taken 7 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           9 :     if (!has_value()) {</span></span>
+<span id="L226"><span class="lineNum">     226</span>                 :<span class="tlaGNC">           7 :       return true;</span></span>
 <span id="L227"><span class="lineNum">     227</span>                 :             :     }</span>
-<span id="L228"><span class="lineNum">     228</span>                 :<span class="tlaUNC">           0 :     return value() == rhs.value();</span></span>
+<span id="L228"><span class="lineNum">     228</span>                 :<span class="tlaGNC">           2 :     return value() == rhs.value();</span></span>
 <span id="L229"><span class="lineNum">     229</span>                 :             :   }</span>
 <span id="L230"><span class="lineNum">     230</span>                 :             : </span>
 <span id="L231"><span class="lineNum">     231</span>                 :             :   template&lt;std::totally_ordered_with&lt;T&gt; U = T, typename RefU = U&gt;</span>
@@ -324,17 +324,17 @@
 <span id="L241"><span class="lineNum">     241</span>                 :             :   }</span>
 <span id="L242"><span class="lineNum">     242</span>                 :             : </span>
 <span id="L243"><span class="lineNum">     243</span>                 :             :   template&lt;std::three_way_comparable_with&lt;T&gt; U = T, typename RefU = U&gt;</span>
-<span id="L244"><span class="lineNum">     244</span>                 :<span class="tlaGNC">           5 :   constexpr auto operator&lt;=&gt;(const OptionalDataOrRef&lt;U, RefU&gt;&amp; rhs) const</span></span>
+<span id="L244"><span class="lineNum">     244</span>                 :<span class="tlaGNC">           8 :   constexpr auto operator&lt;=&gt;(const OptionalDataOrRef&lt;U, RefU&gt;&amp; rhs) const</span></span>
 <span id="L245"><span class="lineNum">     245</span>                 :             :       noexcept(noexcept(std::declval&lt;const T&amp;&gt;() &lt;=&gt; std::declval&lt;const U&amp;&gt;())) {</span>
 <span id="L246"><span class="lineNum">     246</span>                 :             :     using Result = decltype(std::declval&lt;const T&amp;&gt;() &lt;=&gt; std::declval&lt;const U&amp;&gt;());</span>
-<span id="L247"><span class="lineNum">     247</span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           5 :     if (Result result = has_value() &lt;=&gt; rhs.has_value(); result != Result::equal) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 2 times"> + </span><span class="tlaGBC" title="branch 5 was taken 3 times"> + </span>]
-<span id="L248"><span class="lineNum">     248</span>                 :<span class="tlaGNC">           2 :       return result;</span></span>
+<span id="L247"><span class="lineNum">     247</span>   [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span><span class="tlaGBC" title="branch 2 was taken 3 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           8 :     if (Result result = has_value() &lt;=&gt; rhs.has_value(); result != Result::equal) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 3 times"> + </span><span class="tlaGBC" title="branch 5 was taken 5 times"> + </span>]
+<span id="L248"><span class="lineNum">     248</span>                 :<span class="tlaGNC">           3 :       return result;</span></span>
 <span id="L249"><span class="lineNum">     249</span>                 :             :     }</span>
-<span id="L250"><span class="lineNum">     250</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           3 :     if (!has_value()) {</span></span>
-<span id="L251"><span class="lineNum">     251</span>                 :<span class="tlaUNC">           0 :       return Result::equal;</span></span>
+<span id="L250"><span class="lineNum">     250</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           5 :     if (!has_value()) {</span></span>
+<span id="L251"><span class="lineNum">     251</span>                 :<span class="tlaGNC">           1 :       return Result::equal;</span></span>
 <span id="L252"><span class="lineNum">     252</span>                 :             :     }</span>
-<span id="L253"><span class="lineNum">     253</span>   [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">           3 :     return value() &lt;=&gt; rhs.value();</span></span>
+<span id="L253"><span class="lineNum">     253</span>   [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">           4 :     return value() &lt;=&gt; rhs.value();</span></span>
 <span id="L254"><span class="lineNum">     254</span>                 :             :   }</span>
 <span id="L255"><span class="lineNum">     255</span>                 :             : </span>
 <span id="L256"><span class="lineNum">     256</span>                 :<span class="tlaGNC">          17 :   constexpr bool operator==(std::nullopt_t /*unused*/) const noexcept { return !has_value(); }</span></span>
@@ -350,9 +350,9 @@
 <span id="L266"><span class="lineNum">     266</span>                 :             : </span>
 <span id="L267"><span class="lineNum">     267</span>                 :             :   template&lt;typename U = T&gt;</span>
 <span id="L268"><span class="lineNum">     268</span>                 :             :   requires(!std::same_as&lt;U, OptionalDataOrRef&lt;T, RefT&gt;&gt; &amp;&amp; std::equality_comparable_with&lt;T, U&gt;)</span>
-<span id="L269"><span class="lineNum">     269</span>                 :<span class="tlaGNC">          33 :   constexpr bool operator==(const U&amp; other) const noexcept(noexcept(std::declval&lt;const T&amp;&gt;() == other)) {</span></span>
-<span id="L270"><span class="lineNum">     270</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 33 times"> + </span>]:<span class="tlaGNC">          33 :     if (!has_value()) {</span></span>
-<span id="L271"><span class="lineNum">     271</span>                 :<span class="tlaUNC">           0 :       return false;</span></span>
+<span id="L269"><span class="lineNum">     269</span>                 :<span class="tlaGNC">          34 :   constexpr bool operator==(const U&amp; other) const noexcept(noexcept(std::declval&lt;const T&amp;&gt;() == other)) {</span></span>
+<span id="L270"><span class="lineNum">     270</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 33 times"> + </span>]:<span class="tlaGNC">          34 :     if (!has_value()) {</span></span>
+<span id="L271"><span class="lineNum">     271</span>                 :<span class="tlaGNC">           1 :       return false;</span></span>
 <span id="L272"><span class="lineNum">     272</span>                 :             :     }</span>
 <span id="L273"><span class="lineNum">     273</span>                 :<span class="tlaGNC">          33 :     return value() == other;</span></span>
 <span id="L274"><span class="lineNum">     274</span>                 :             :   }</span>
@@ -377,22 +377,22 @@
 <span id="L293"><span class="lineNum">     293</span>                 :             :   }</span>
 <span id="L294"><span class="lineNum">     294</span>                 :             : </span>
 <span id="L295"><span class="lineNum">     295</span>                 :             :   template&lt;typename H&gt;</span>
-<span id="L296"><span class="lineNum">     296</span>                 :             :   friend constexpr H AbslHashValue(H hash, const OptionalDataOrRef&lt;T, RefT&gt;&amp; v) {</span>
-<span id="L297"><span class="lineNum">     297</span>                 :             :     if (v.has_value()) {</span>
-<span id="L298"><span class="lineNum">     298</span>                 :             :       return H::combine(std::move(hash), absl::HashOf&lt;&gt;(v.value()));</span>
+<span id="L296"><span class="lineNum">     296</span>                 :<span class="tlaGNC">           4 :   friend constexpr H AbslHashValue(H hash, const OptionalDataOrRef&lt;T, RefT&gt;&amp; v) {</span></span>
+<span id="L297"><span class="lineNum">     297</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :     if (v.has_value()) {</span></span>
+<span id="L298"><span class="lineNum">     298</span>                 :<span class="tlaGNC">           3 :       return H::combine(std::move(hash), true, v.value());</span></span>
 <span id="L299"><span class="lineNum">     299</span>                 :             :     } else {</span>
-<span id="L300"><span class="lineNum">     300</span>                 :             :       return H::combine(std::move(hash), absl::HashOf&lt;&gt;(std::nullopt));</span>
+<span id="L300"><span class="lineNum">     300</span>                 :<span class="tlaGNC">           1 :       return H::combine(std::move(hash), false);</span></span>
 <span id="L301"><span class="lineNum">     301</span>                 :             :     }</span>
 <span id="L302"><span class="lineNum">     302</span>                 :             :   }</span>
 <span id="L303"><span class="lineNum">     303</span>                 :             : </span>
 <span id="L304"><span class="lineNum">     304</span>                 :             :   template&lt;typename Sink&gt;</span>
-<span id="L305"><span class="lineNum">     305</span>                 :<span class="tlaUNC">           0 :   friend constexpr void AbslStringify(Sink&amp; sink, const OptionalDataOrRef&lt;T, RefT&gt;&amp; v) {</span></span>
-<span id="L306"><span class="lineNum">     306</span>         [<span class="tlaUNC" title="branch 0 was not executed"> # </span><span class="tlaUNC" title="branch 1 was not executed"> # </span>]:<span class="tlaUNC">           0 :     if (v.has_value()) {</span></span>
-<span id="L307"><span class="lineNum">     307</span>                 :<span class="tlaUNC">           0 :       absl::Format(&amp;sink, &quot;%v&quot;, v.value());</span></span>
+<span id="L305"><span class="lineNum">     305</span>                 :<span class="tlaGNC">           2 :   friend constexpr void AbslStringify(Sink&amp; sink, const OptionalDataOrRef&lt;T, RefT&gt;&amp; v) {</span></span>
+<span id="L306"><span class="lineNum">     306</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :     if (v.has_value()) {</span></span>
+<span id="L307"><span class="lineNum">     307</span>                 :<span class="tlaGNC">           1 :       absl::Format(&amp;sink, &quot;%v&quot;, v.value());</span></span>
 <span id="L308"><span class="lineNum">     308</span>                 :             :     } else {</span>
-<span id="L309"><span class="lineNum">     309</span>                 :<span class="tlaUNC">           0 :       absl::Format(&amp;sink, &quot;std::nullopt&quot;);</span></span>
+<span id="L309"><span class="lineNum">     309</span>                 :<span class="tlaGNC">           1 :       absl::Format(&amp;sink, &quot;std::nullopt&quot;);</span></span>
 <span id="L310"><span class="lineNum">     310</span>                 :             :     }</span>
-<span id="L311"><span class="lineNum">     311</span>                 :<span class="tlaUNC">           0 :   }</span></span>
+<span id="L311"><span class="lineNum">     311</span>                 :<span class="tlaGNC">           2 :   }</span></span>
 <span id="L312"><span class="lineNum">     312</span>                 :             : </span>
 <span id="L313"><span class="lineNum">     313</span>                 :             :  private:</span>
 <span id="L314"><span class="lineNum">     314</span>                 :             :   static constexpr std::size_t kNullIndex = 0;</span>
@@ -401,7 +401,7 @@
 <span id="L317"><span class="lineNum">     317</span>                 :             : </span>
 <span id="L318"><span class="lineNum">     318</span>                 :<span class="tlaGNC">        1949 :   constexpr T&amp; Data() noexcept { return std::get&lt;kDataIndex&gt;(data_); }</span></span>
 <span id="L319"><span class="lineNum">     319</span>                 :             : </span>
-<span id="L320"><span class="lineNum">     320</span>                 :<span class="tlaGNC">        6713 :   constexpr const T&amp; Data() const noexcept { return std::get&lt;kDataIndex&gt;(data_); }</span></span>
+<span id="L320"><span class="lineNum">     320</span>                 :<span class="tlaGNC">        6739 :   constexpr const T&amp; Data() const noexcept { return std::get&lt;kDataIndex&gt;(data_); }</span></span>
 <span id="L321"><span class="lineNum">     321</span>                 :             : </span>
 <span id="L322"><span class="lineNum">     322</span>                 :<span class="tlaGNC">         219 :   constexpr reference Reference() const noexcept { return std::get&lt;kRefIndex&gt;(data_).get(); }</span></span>
 <span id="L323"><span class="lineNum">     323</span>                 :             : </span>

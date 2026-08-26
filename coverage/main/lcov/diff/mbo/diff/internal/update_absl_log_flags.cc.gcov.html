@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-25 23:20:23</td>
+            <td class="headerValue">2026-08-26 06:39:22</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -109,23 +109,23 @@
 <span id="L29"><span class="lineNum">      29</span>                 :             : </span>
 <span id="L30"><span class="lineNum">      30</span>                 :             : namespace mbo::diff::diff_internal {</span>
 <span id="L31"><span class="lineNum">      31</span>                 :             : </span>
-<span id="L32"><span class="lineNum">      32</span>                 :<span class="tlaGNC">          32 : void UpdateAbslLogFlags() {</span></span>
+<span id="L32"><span class="lineNum">      32</span>                 :<span class="tlaGNC">          36 : void UpdateAbslLogFlags() {</span></span>
 <span id="L33"><span class="lineNum">      33</span>                 :             :   // Unfortunately we cannot call `absl::InitializeLog()` as `IsIntialized()`</span>
 <span id="L34"><span class="lineNum">      34</span>                 :             :   // cannot be called to prevent duplicate initialization which triggers</span>
 <span id="L35"><span class="lineNum">      35</span>                 :             :   // `absl::log_internal::SetTimeZone() has already been called`.</span>
 <span id="L36"><span class="lineNum">      36</span>                 :             :   {</span>
-<span id="L37"><span class="lineNum">      37</span>                 :<span class="tlaGNC">          32 :     const absl::CommandLineFlag* flag = absl::FindCommandLineFlag(&quot;minloglevel&quot;);</span></span>
-<span id="L38"><span class="lineNum">      38</span>         [<span class="tlaGBC" title="branch 0 was taken 32 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          32 :     if (flag-&gt;CurrentValue() == flag-&gt;DefaultValue()) {</span></span>
-<span id="L39"><span class="lineNum">      39</span>                 :<span class="tlaGNC">          32 :       absl::SetFlag(&amp;FLAGS_minloglevel, 1);</span></span>
+<span id="L37"><span class="lineNum">      37</span>                 :<span class="tlaGNC">          36 :     const absl::CommandLineFlag* flag = absl::FindCommandLineFlag(&quot;minloglevel&quot;);</span></span>
+<span id="L38"><span class="lineNum">      38</span>         [<span class="tlaGBC" title="branch 0 was taken 36 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          36 :     if (flag-&gt;CurrentValue() == flag-&gt;DefaultValue()) {</span></span>
+<span id="L39"><span class="lineNum">      39</span>                 :<span class="tlaGNC">          36 :       absl::SetFlag(&amp;FLAGS_minloglevel, 1);</span></span>
 <span id="L40"><span class="lineNum">      40</span>                 :             :     }</span>
 <span id="L41"><span class="lineNum">      41</span>                 :             :   }</span>
 <span id="L42"><span class="lineNum">      42</span>                 :             :   {</span>
-<span id="L43"><span class="lineNum">      43</span>                 :<span class="tlaGNC">          32 :     const absl::CommandLineFlag* flag = absl::FindCommandLineFlag(&quot;stderrthreshold&quot;);</span></span>
-<span id="L44"><span class="lineNum">      44</span>         [<span class="tlaGBC" title="branch 0 was taken 32 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          32 :     if (flag-&gt;CurrentValue() == flag-&gt;DefaultValue()) {</span></span>
-<span id="L45"><span class="lineNum">      45</span>                 :<span class="tlaGNC">          32 :       absl::SetFlag(&amp;FLAGS_stderrthreshold, 1);</span></span>
+<span id="L43"><span class="lineNum">      43</span>                 :<span class="tlaGNC">          36 :     const absl::CommandLineFlag* flag = absl::FindCommandLineFlag(&quot;stderrthreshold&quot;);</span></span>
+<span id="L44"><span class="lineNum">      44</span>         [<span class="tlaGBC" title="branch 0 was taken 36 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">          36 :     if (flag-&gt;CurrentValue() == flag-&gt;DefaultValue()) {</span></span>
+<span id="L45"><span class="lineNum">      45</span>                 :<span class="tlaGNC">          36 :       absl::SetFlag(&amp;FLAGS_stderrthreshold, 1);</span></span>
 <span id="L46"><span class="lineNum">      46</span>                 :             :     }</span>
 <span id="L47"><span class="lineNum">      47</span>                 :             :   }</span>
-<span id="L48"><span class="lineNum">      48</span>                 :<span class="tlaGNC">          32 : }</span></span>
+<span id="L48"><span class="lineNum">      48</span>                 :<span class="tlaGNC">          36 : }</span></span>
 <span id="L49"><span class="lineNum">      49</span>                 :             : </span>
 <span id="L50"><span class="lineNum">      50</span>                 :             : }  // namespace mbo::diff::diff_internal</span>
         </pre>

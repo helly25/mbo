@@ -40,13 +40,13 @@
             <td class="headerValue">mbo production coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">95.3&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">43</td>
-            <td class="headerCovTableEntry">41</td>
+            <td class="headerCovTableEntry">43</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-25 23:20:23</td>
+            <td class="headerValue">2026-08-26 06:39:22</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">61.7&nbsp;%</td>
@@ -58,9 +58,9 @@
             <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryMed">76.3&nbsp;%</td>
+            <td class="headerCovTableEntryHi">89.5&nbsp;%</td>
             <td class="headerCovTableEntry">76</td>
-            <td class="headerCovTableEntry">58</td>
+            <td class="headerCovTableEntry">68</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -129,7 +129,7 @@
 <span id="L49"><span class="lineNum">      49</span>                 :             :   constexpr CompareLess(CompareLess&amp;&amp;) noexcept = default;</span>
 <span id="L50"><span class="lineNum">      50</span>                 :             :   constexpr CompareLess&amp; operator=(CompareLess&amp;&amp;) noexcept = default;</span>
 <span id="L51"><span class="lineNum">      51</span>                 :             : </span>
-<span id="L52"><span class="lineNum">      52</span>   [<span class="tlaGBC" title="branch 0 was taken 18807 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2463 times"> + </span><span class="tlaGBC" title="branch 2 was taken 18395 times"> + </span><span class="tlaGBC" title="branch 3 was taken 412 times"> + </span>]:<span class="tlaGNC">       21570 :   constexpr auto Compare(const value_type&amp; lhs, const value_type&amp; rhs) const noexcept { return lhs &lt;=&gt; rhs; }</span></span>
+<span id="L52"><span class="lineNum">      52</span>   [<span class="tlaGBC" title="branch 0 was taken 18807 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2463 times"> + </span><span class="tlaGBC" title="branch 2 was taken 18395 times"> + </span><span class="tlaGBC" title="branch 3 was taken 412 times"> + </span>]:<span class="tlaGNC">       21594 :   constexpr auto Compare(const value_type&amp; lhs, const value_type&amp; rhs) const noexcept { return lhs &lt;=&gt; rhs; }</span></span>
 <span id="L53"><span class="lineNum">      53</span>                 :             : </span>
 <span id="L54"><span class="lineNum">      54</span>                 :             :   template&lt;std::three_way_comparable_with&lt;value_type&gt; other_type&gt;</span>
 <span id="L55"><span class="lineNum">      55</span>                 :             :   requires(!std::same_as&lt;std::remove_cvref_t&lt;value_type&gt;, std::remove_cvref_t&lt;other_type&gt;&gt;)</span>
@@ -143,7 +143,7 @@
 <span id="L63"><span class="lineNum">      63</span>   [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 3 times"> + </span><span class="tlaGBC" title="branch 2 was taken 5 times"> + </span><span class="tlaGBC" title="branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">          11 :     return lhs &lt;=&gt; rhs;</span></span>
 <span id="L64"><span class="lineNum">      64</span>                 :             :   }</span>
 <span id="L65"><span class="lineNum">      65</span>                 :             : </span>
-<span id="L66"><span class="lineNum">      66</span>   [<span class="tlaGBC" title="branch 0 was taken 1032423 times"> + </span><span class="tlaGBC" title="branch 1 was taken 245064 times"> + </span><span class="tlaGBC" title="branch 2 was taken 398452 times"> + </span><span class="tlaGBC" title="branch 3 was taken 633971 times"> + </span>]:<span class="tlaGNC">     1277515 :   constexpr bool operator()(const value_type&amp; lhs, const value_type&amp; rhs) const noexcept { return (lhs &lt;=&gt; rhs) &lt; 0; }</span></span>
+<span id="L66"><span class="lineNum">      66</span>   [<span class="tlaGBC" title="branch 0 was taken 1032494 times"> + </span><span class="tlaGBC" title="branch 1 was taken 245073 times"> + </span><span class="tlaGBC" title="branch 2 was taken 398461 times"> + </span><span class="tlaGBC" title="branch 3 was taken 634033 times"> + </span>]:<span class="tlaGNC">     1277595 :   constexpr bool operator()(const value_type&amp; lhs, const value_type&amp; rhs) const noexcept { return (lhs &lt;=&gt; rhs) &lt; 0; }</span></span>
 <span id="L67"><span class="lineNum">      67</span>                 :             : </span>
 <span id="L68"><span class="lineNum">      68</span>                 :             :   template&lt;std::three_way_comparable_with&lt;value_type&gt; other_type&gt;</span>
 <span id="L69"><span class="lineNum">      69</span>                 :             :   requires(!std::same_as&lt;std::remove_cvref_t&lt;value_type&gt;, std::remove_cvref_t&lt;other_type&gt;&gt;)</span>
@@ -198,7 +198,7 @@
 <span id="L117"><span class="lineNum">     117</span>                 :             : </span>
 <span id="L118"><span class="lineNum">     118</span>                 :             : // Compares two values that are scalar-numbers (including float/double and pointers, excluding references).</span>
 <span id="L119"><span class="lineNum">     119</span>                 :             : template&lt;IsScalar Lhs, IsScalar Rhs&gt;</span>
-<span id="L120"><span class="lineNum">     120</span>                 :<span class="tlaGNC">          76 : inline std::strong_ordering CompareScalar(Lhs lhs, Rhs rhs) {</span></span>
+<span id="L120"><span class="lineNum">     120</span>                 :<span class="tlaGNC">          86 : inline std::strong_ordering CompareScalar(Lhs lhs, Rhs rhs) {</span></span>
 <span id="L121"><span class="lineNum">     121</span>                 :             :   if constexpr (std::same_as&lt;Lhs, Rhs&gt;) {</span>
 <span id="L122"><span class="lineNum">     122</span>                 :             :     if constexpr (std::floating_point&lt;Lhs&gt;) {</span>
 <span id="L123"><span class="lineNum">     123</span>                 :<span class="tlaGNC">           2 :       return CompareFloat(lhs, rhs);</span></span>
@@ -212,22 +212,22 @@
 <span id="L131"><span class="lineNum">     131</span>                 :             :     } else if constexpr (std::same_as&lt;bool, Lhs&gt; || std::same_as&lt;bool, Rhs&gt;) {</span>
 <span id="L132"><span class="lineNum">     132</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">           2 :       return static_cast&lt;bool&gt;(lhs) &lt;=&gt; static_cast&lt;bool&gt;(rhs);</span></span>
 <span id="L133"><span class="lineNum">     133</span>                 :             :     } else if constexpr (std::is_signed_v&lt;Lhs&gt; == std::is_signed_v&lt;Rhs&gt;) {</span>
-<span id="L134"><span class="lineNum">     134</span>   [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 30 times"> + </span><span class="tlaGBC" title="branch 2 was taken 3 times"> + </span><span class="tlaGBC" title="branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">          36 :       return lhs &lt;=&gt; rhs;</span></span>
+<span id="L134"><span class="lineNum">     134</span>   [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 36 times"> + </span><span class="tlaGBC" title="branch 2 was taken 3 times"> + </span><span class="tlaGBC" title="branch 3 was taken 3 times"> + </span>]:<span class="tlaGNC">          42 :       return lhs &lt;=&gt; rhs;</span></span>
 <span id="L135"><span class="lineNum">     135</span>                 :             :     } else if constexpr (std::is_signed_v&lt;Lhs&gt;) {</span>
-<span id="L136"><span class="lineNum">     136</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           6 :       if (lhs &lt; 0 || rhs &gt; std::numeric_limits&lt;Lhs&gt;::max()) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 6 times"> + </span><span class="tlaUNC" title="branch 5 was not taken"> - </span>]
+<span id="L136"><span class="lineNum">     136</span>   [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">           8 :       if (lhs &lt; 0 || rhs &gt; std::numeric_limits&lt;Lhs&gt;::max()) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 6 times"> + </span><span class="tlaGBC" title="branch 5 was taken 2 times"> + </span>]
 <span id="L137"><span class="lineNum">     137</span>                 :<span class="tlaGNC">           6 :         return std::strong_ordering::less;</span></span>
 <span id="L138"><span class="lineNum">     138</span>                 :             :       } else {</span>
 <span id="L139"><span class="lineNum">     139</span>                 :             :         using Common = std::common_type_t&lt;Lhs, Rhs&gt;;</span>
-<span id="L140"><span class="lineNum">     140</span>   [<span class="tlaUNC" title="branch 0 was not executed"> # </span><span class="tlaUNC" title="branch 1 was not executed"> # </span><span class="tlaUNC" title="branch 2 was not executed"> # </span><span class="tlaUNC" title="branch 3 was not executed"> # </span>]:<span class="tlaUNC">           0 :         return static_cast&lt;Common&gt;(lhs) &lt;=&gt; static_cast&lt;Common&gt;(rhs);</span></span>
+<span id="L140"><span class="lineNum">     140</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">           2 :         return static_cast&lt;Common&gt;(lhs) &lt;=&gt; static_cast&lt;Common&gt;(rhs);</span></span>
 <span id="L141"><span class="lineNum">     141</span>                 :             :       }</span>
 <span id="L142"><span class="lineNum">     142</span>                 :             :     } else {  // Rhs is signed</span>
-<span id="L143"><span class="lineNum">     143</span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           3 :       if (rhs &lt; 0 || lhs &gt; std::numeric_limits&lt;Rhs&gt;::max()) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 3 times"> + </span><span class="tlaUNC" title="branch 5 was not taken"> - </span>]
+<span id="L143"><span class="lineNum">     143</span>   [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">           5 :       if (rhs &lt; 0 || lhs &gt; std::numeric_limits&lt;Rhs&gt;::max()) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 3 times"> + </span><span class="tlaGBC" title="branch 5 was taken 2 times"> + </span>]
 <span id="L144"><span class="lineNum">     144</span>                 :<span class="tlaGNC">           3 :         return std::strong_ordering::greater;</span></span>
 <span id="L145"><span class="lineNum">     145</span>                 :             :       } else {</span>
 <span id="L146"><span class="lineNum">     146</span>                 :             :         using Common = std::common_type_t&lt;Lhs, Rhs&gt;;</span>
-<span id="L147"><span class="lineNum">     147</span>   [<span class="tlaUNC" title="branch 0 was not executed"> # </span><span class="tlaUNC" title="branch 1 was not executed"> # </span><span class="tlaUNC" title="branch 2 was not executed"> # </span><span class="tlaUNC" title="branch 3 was not executed"> # </span>]:<span class="tlaUNC">           0 :         return static_cast&lt;Common&gt;(lhs) &lt;=&gt; static_cast&lt;Common&gt;(rhs);</span></span>
+<span id="L147"><span class="lineNum">     147</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :         return static_cast&lt;Common&gt;(lhs) &lt;=&gt; static_cast&lt;Common&gt;(rhs);</span></span>
 <span id="L148"><span class="lineNum">     148</span>                 :             :       }</span>
 <span id="L149"><span class="lineNum">     149</span>                 :             :     }</span>
 <span id="L150"><span class="lineNum">     150</span>                 :             :   }</span>
@@ -235,8 +235,8 @@
 <span id="L152"><span class="lineNum">     152</span>                 :             : </span>
 <span id="L153"><span class="lineNum">     153</span>                 :             : // Compares two values that are scalar-numbers (including foat/double, excluding pointers and references).</span>
 <span id="L154"><span class="lineNum">     154</span>                 :             : template&lt;IsArithmetic Lhs, IsArithmetic Rhs&gt;</span>
-<span id="L155"><span class="lineNum">     155</span>                 :<span class="tlaGNC">          59 : inline std::strong_ordering CompareArithmetic(Lhs lhs, Rhs rhs) {</span></span>
-<span id="L156"><span class="lineNum">     156</span>                 :<span class="tlaGNC">          59 :   return CompareScalar(lhs, rhs);</span></span>
+<span id="L155"><span class="lineNum">     155</span>                 :<span class="tlaGNC">          65 : inline std::strong_ordering CompareArithmetic(Lhs lhs, Rhs rhs) {</span></span>
+<span id="L156"><span class="lineNum">     156</span>                 :<span class="tlaGNC">          65 :   return CompareScalar(lhs, rhs);</span></span>
 <span id="L157"><span class="lineNum">     157</span>                 :             : }</span>
 <span id="L158"><span class="lineNum">     158</span>                 :             : </span>
 <span id="L159"><span class="lineNum">     159</span>                 :             : // Compares two values that are integral-numbers (no float/double, no pointers, no references).</span>

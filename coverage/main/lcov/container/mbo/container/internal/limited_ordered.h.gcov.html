@@ -40,27 +40,27 @@
             <td class="headerValue">mbo production coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">92.5&nbsp;%</td>
+            <td class="headerCovTableEntryHi">94.3&nbsp;%</td>
             <td class="headerCovTableEntry">280</td>
-            <td class="headerCovTableEntry">259</td>
+            <td class="headerCovTableEntry">264</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-25 23:20:23</td>
+            <td class="headerValue">2026-08-26 06:39:22</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">94.7&nbsp;%</td>
             <td class="headerCovTableEntry">5366</td>
-            <td class="headerCovTableEntry">5079</td>
+            <td class="headerCovTableEntry">5082</td>
           </tr>
           <tr>
             <td></td>
             <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryLo">59.5&nbsp;%</td>
+            <td class="headerCovTableEntryLo">59.6&nbsp;%</td>
             <td class="headerCovTableEntry">11573</td>
-            <td class="headerCovTableEntry">6887</td>
+            <td class="headerCovTableEntry">6892</td>
           </tr>
                   <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -221,12 +221,12 @@
 <span id="L141"><span class="lineNum">     141</span>                 :             : </span>
 <span id="L142"><span class="lineNum">     142</span>                 :             :   struct ValueCompare {</span>
 <span id="L143"><span class="lineNum">     143</span>                 :             :     // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)</span>
-<span id="L144"><span class="lineNum">     144</span>                 :<span class="tlaGNC">         240 :     MBO_ALWAYS_INLINE static constexpr const Key&amp; GetKey(const Key&amp; key) noexcept { return key; }</span></span>
+<span id="L144"><span class="lineNum">     144</span>                 :<span class="tlaGNC">         318 :     MBO_ALWAYS_INLINE static constexpr const Key&amp; GetKey(const Key&amp; key) noexcept { return key; }</span></span>
 <span id="L145"><span class="lineNum">     145</span>                 :             : </span>
 <span id="L146"><span class="lineNum">     146</span>                 :             :     MBO_ALWAYS_INLINE static constexpr const Key&amp; GetKey(const value_type&amp; val) noexcept</span>
 <span id="L147"><span class="lineNum">     147</span>                 :             :     requires(!kKeyOnly)</span>
 <span id="L148"><span class="lineNum">     148</span>                 :             :     {</span>
-<span id="L149"><span class="lineNum">     149</span>                 :<span class="tlaGNC">         600 :       return val.first;</span></span>
+<span id="L149"><span class="lineNum">     149</span>                 :<span class="tlaGNC">         678 :       return val.first;</span></span>
 <span id="L150"><span class="lineNum">     150</span>                 :             :     }</span>
 <span id="L151"><span class="lineNum">     151</span>                 :             : </span>
 <span id="L152"><span class="lineNum">     152</span>                 :             :     MBO_ALWAYS_INLINE static constexpr const Key&amp; GetKey(const Data&amp; data) noexcept {</span>
@@ -272,8 +272,8 @@
 <span id="L192"><span class="lineNum">     192</span>                 :             : </span>
 <span id="L193"><span class="lineNum">     193</span>                 :             :     template&lt;typename L, typename R&gt;</span>
 <span id="L194"><span class="lineNum">     194</span>                 :             :     requires(kComparableSide&lt;L&gt; &amp;&amp; kComparableSide&lt;R&gt;)</span>
-<span id="L195"><span class="lineNum">     195</span>                 :<span class="tlaGNC">         600 :     MBO_FORCE_INLINE constexpr bool operator()(const L&amp; lhs, const R&amp; rhs) const noexcept {</span></span>
-<span id="L196"><span class="lineNum">     196</span>                 :<span class="tlaGNC">        1800 :       return key_comp(GetKey(lhs), GetKey(rhs));</span></span>
+<span id="L195"><span class="lineNum">     195</span>                 :<span class="tlaGNC">         678 :     MBO_FORCE_INLINE constexpr bool operator()(const L&amp; lhs, const R&amp; rhs) const noexcept {</span></span>
+<span id="L196"><span class="lineNum">     196</span>                 :<span class="tlaGNC">        2034 :       return key_comp(GetKey(lhs), GetKey(rhs));</span></span>
 <span id="L197"><span class="lineNum">     197</span>                 :             :     }</span>
 <span id="L198"><span class="lineNum">     198</span>                 :             : </span>
 <span id="L199"><span class="lineNum">     199</span>                 :             :     const key_compare key_comp;</span>
@@ -294,17 +294,17 @@
 <span id="L214"><span class="lineNum">     214</span>                 :             : </span>
 <span id="L215"><span class="lineNum">     215</span>                 :             :     constexpr const_iterator() noexcept : pos_(nullptr) {}  // Needed for STL</span>
 <span id="L216"><span class="lineNum">     216</span>                 :             : </span>
-<span id="L217"><span class="lineNum">     217</span>                 :<span class="tlaGNC">     1300309 :     MBO_ALWAYS_INLINE constexpr explicit const_iterator(const Data* pos) noexcept : pos_(pos) {}</span></span>
+<span id="L217"><span class="lineNum">     217</span>                 :<span class="tlaGNC">     1300363 :     MBO_ALWAYS_INLINE constexpr explicit const_iterator(const Data* pos) noexcept : pos_(pos) {}</span></span>
 <span id="L218"><span class="lineNum">     218</span>                 :             : </span>
 <span id="L219"><span class="lineNum">     219</span>                 :             :     MBO_ALWAYS_INLINE constexpr explicit operator reference() const noexcept { return pos_-&gt;data; }</span>
 <span id="L220"><span class="lineNum">     220</span>                 :             : </span>
-<span id="L221"><span class="lineNum">     221</span>                 :<span class="tlaGNC">     1795602 :     MBO_ALWAYS_INLINE constexpr reference operator*() const noexcept { return pos_-&gt;data; }</span></span>
+<span id="L221"><span class="lineNum">     221</span>                 :<span class="tlaGNC">     1795680 :     MBO_ALWAYS_INLINE constexpr reference operator*() const noexcept { return pos_-&gt;data; }</span></span>
 <span id="L222"><span class="lineNum">     222</span>                 :             : </span>
-<span id="L223"><span class="lineNum">     223</span>                 :<span class="tlaGNC">         593 :     MBO_ALWAYS_INLINE constexpr pointer operator-&gt;() const noexcept { return &amp;pos_-&gt;data; }</span></span>
+<span id="L223"><span class="lineNum">     223</span>                 :<span class="tlaGNC">         617 :     MBO_ALWAYS_INLINE constexpr pointer operator-&gt;() const noexcept { return &amp;pos_-&gt;data; }</span></span>
 <span id="L224"><span class="lineNum">     224</span>                 :             : </span>
-<span id="L225"><span class="lineNum">     225</span>                 :<span class="tlaGNC">      457518 :     constexpr const_iterator&amp; operator++() noexcept {</span></span>
-<span id="L226"><span class="lineNum">     226</span>                 :<span class="tlaGNC">      457518 :       ++pos_;  // NOLINT(*-pointer-arithmetic)</span></span>
-<span id="L227"><span class="lineNum">     227</span>                 :<span class="tlaGNC">      457518 :       return *this;</span></span>
+<span id="L225"><span class="lineNum">     225</span>                 :<span class="tlaGNC">      457530 :     constexpr const_iterator&amp; operator++() noexcept {</span></span>
+<span id="L226"><span class="lineNum">     226</span>                 :<span class="tlaGNC">      457530 :       ++pos_;  // NOLINT(*-pointer-arithmetic)</span></span>
+<span id="L227"><span class="lineNum">     227</span>                 :<span class="tlaGNC">      457530 :       return *this;</span></span>
 <span id="L228"><span class="lineNum">     228</span>                 :             :     }</span>
 <span id="L229"><span class="lineNum">     229</span>                 :             : </span>
 <span id="L230"><span class="lineNum">     230</span>                 :<span class="tlaGNC">          12 :     constexpr const_iterator&amp; operator--() noexcept {</span></span>
@@ -324,9 +324,9 @@
 <span id="L244"><span class="lineNum">     244</span>                 :             :       return it;</span>
 <span id="L245"><span class="lineNum">     245</span>                 :             :     }</span>
 <span id="L246"><span class="lineNum">     246</span>                 :             : </span>
-<span id="L247"><span class="lineNum">     247</span>                 :<span class="tlaGNC">     1714253 :     constexpr const_iterator&amp; operator+=(difference_type ofs) noexcept {</span></span>
-<span id="L248"><span class="lineNum">     248</span>                 :<span class="tlaGNC">     1714253 :       pos_ += ofs;</span></span>
-<span id="L249"><span class="lineNum">     249</span>                 :<span class="tlaGNC">     1714253 :       return *this;</span></span>
+<span id="L247"><span class="lineNum">     247</span>                 :<span class="tlaGNC">     1714328 :     constexpr const_iterator&amp; operator+=(difference_type ofs) noexcept {</span></span>
+<span id="L248"><span class="lineNum">     248</span>                 :<span class="tlaGNC">     1714328 :       pos_ += ofs;</span></span>
+<span id="L249"><span class="lineNum">     249</span>                 :<span class="tlaGNC">     1714328 :       return *this;</span></span>
 <span id="L250"><span class="lineNum">     250</span>                 :             :     }</span>
 <span id="L251"><span class="lineNum">     251</span>                 :             : </span>
 <span id="L252"><span class="lineNum">     252</span>                 :             :     constexpr const_iterator&amp; operator-=(difference_type ofs) noexcept {</span>
@@ -338,8 +338,8 @@
 <span id="L258"><span class="lineNum">     258</span>                 :             :       return pos_[ofs].data;  // NOLINT(*-pointer-arithmetic)</span>
 <span id="L259"><span class="lineNum">     259</span>                 :             :     }</span>
 <span id="L260"><span class="lineNum">     260</span>                 :             : </span>
-<span id="L261"><span class="lineNum">     261</span>                 :<span class="tlaGNC">      568563 :     friend constexpr difference_type operator-(const_iterator lhs, const_iterator rhs) noexcept {</span></span>
-<span id="L262"><span class="lineNum">     262</span>                 :<span class="tlaGNC">      568563 :       return lhs.pos_ - rhs.pos_;</span></span>
+<span id="L261"><span class="lineNum">     261</span>                 :<span class="tlaGNC">      568578 :     friend constexpr difference_type operator-(const_iterator lhs, const_iterator rhs) noexcept {</span></span>
+<span id="L262"><span class="lineNum">     262</span>                 :<span class="tlaGNC">      568578 :       return lhs.pos_ - rhs.pos_;</span></span>
 <span id="L263"><span class="lineNum">     263</span>                 :             :     }</span>
 <span id="L264"><span class="lineNum">     264</span>                 :             : </span>
 <span id="L265"><span class="lineNum">     265</span>                 :             :     friend constexpr difference_type operator+(const_iterator lhs, const_iterator rhs) noexcept {</span>
@@ -371,7 +371,7 @@
 <span id="L291"><span class="lineNum">     291</span>                 :             :     }</span>
 <span id="L292"><span class="lineNum">     292</span>                 :             : </span>
 <span id="L293"><span class="lineNum">     293</span>                 :             :     MBO_ALWAYS_INLINE friend constexpr bool operator==(const_iterator lhs, const_iterator rhs) noexcept {</span>
-<span id="L294"><span class="lineNum">     294</span>                 :<span class="tlaGNC">      407759 :       return lhs.pos_ == rhs.pos_;</span></span>
+<span id="L294"><span class="lineNum">     294</span>                 :<span class="tlaGNC">      407773 :       return lhs.pos_ == rhs.pos_;</span></span>
 <span id="L295"><span class="lineNum">     295</span>                 :             :     }</span>
 <span id="L296"><span class="lineNum">     296</span>                 :             : </span>
 <span id="L297"><span class="lineNum">     297</span>                 :             :    private:</span>
@@ -389,11 +389,11 @@
 <span id="L309"><span class="lineNum">     309</span>                 :             : </span>
 <span id="L310"><span class="lineNum">     310</span>                 :             :     constexpr iterator() noexcept : pos_(nullptr) {}  // Needed for STL</span>
 <span id="L311"><span class="lineNum">     311</span>                 :             : </span>
-<span id="L312"><span class="lineNum">     312</span>                 :<span class="tlaGNC">      664826 :     MBO_ALWAYS_INLINE constexpr explicit iterator(Data* pos) noexcept : pos_(pos) {}</span></span>
+<span id="L312"><span class="lineNum">     312</span>                 :<span class="tlaGNC">      664830 :     MBO_ALWAYS_INLINE constexpr explicit iterator(Data* pos) noexcept : pos_(pos) {}</span></span>
 <span id="L313"><span class="lineNum">     313</span>                 :             : </span>
 <span id="L314"><span class="lineNum">     314</span>                 :             :     MBO_ALWAYS_INLINE constexpr explicit operator reference() const noexcept { return pos_-&gt;data; }</span>
 <span id="L315"><span class="lineNum">     315</span>                 :             : </span>
-<span id="L316"><span class="lineNum">     316</span>                 :<span class="tlaGNC">      447687 :     MBO_ALWAYS_INLINE constexpr reference operator*() const noexcept { return pos_-&gt;data; }</span></span>
+<span id="L316"><span class="lineNum">     316</span>                 :<span class="tlaGNC">      447691 :     MBO_ALWAYS_INLINE constexpr reference operator*() const noexcept { return pos_-&gt;data; }</span></span>
 <span id="L317"><span class="lineNum">     317</span>                 :             : </span>
 <span id="L318"><span class="lineNum">     318</span>                 :<span class="tlaGNC">           6 :     MBO_ALWAYS_INLINE constexpr pointer operator-&gt;() const noexcept { return &amp;pos_-&gt;data; }</span></span>
 <span id="L319"><span class="lineNum">     319</span>                 :             : </span>
@@ -421,9 +421,9 @@
 <span id="L341"><span class="lineNum">     341</span>                 :             :       return it;</span>
 <span id="L342"><span class="lineNum">     342</span>                 :             :     }</span>
 <span id="L343"><span class="lineNum">     343</span>                 :             : </span>
-<span id="L344"><span class="lineNum">     344</span>                 :<span class="tlaGNC">      442618 :     constexpr iterator&amp; operator+=(difference_type ofs) noexcept {</span></span>
-<span id="L345"><span class="lineNum">     345</span>                 :<span class="tlaGNC">      442618 :       pos_ += ofs;</span></span>
-<span id="L346"><span class="lineNum">     346</span>                 :<span class="tlaGNC">      442618 :       return *this;</span></span>
+<span id="L344"><span class="lineNum">     344</span>                 :<span class="tlaGNC">      442621 :     constexpr iterator&amp; operator+=(difference_type ofs) noexcept {</span></span>
+<span id="L345"><span class="lineNum">     345</span>                 :<span class="tlaGNC">      442621 :       pos_ += ofs;</span></span>
+<span id="L346"><span class="lineNum">     346</span>                 :<span class="tlaGNC">      442621 :       return *this;</span></span>
 <span id="L347"><span class="lineNum">     347</span>                 :             :     }</span>
 <span id="L348"><span class="lineNum">     348</span>                 :             : </span>
 <span id="L349"><span class="lineNum">     349</span>                 :             :     constexpr iterator&amp; operator-=(difference_type ofs) noexcept {</span>
@@ -435,7 +435,7 @@
 <span id="L355"><span class="lineNum">     355</span>                 :             :       return pos_[ofs].data;  // NOLINT(*-pointer-arithmetic)</span>
 <span id="L356"><span class="lineNum">     356</span>                 :             :     }</span>
 <span id="L357"><span class="lineNum">     357</span>                 :             : </span>
-<span id="L358"><span class="lineNum">     358</span>                 :<span class="tlaGNC">       88354 :     friend constexpr difference_type operator-(iterator lhs, iterator rhs) noexcept { return lhs.pos_ - rhs.pos_; }</span></span>
+<span id="L358"><span class="lineNum">     358</span>                 :<span class="tlaGNC">       88355 :     friend constexpr difference_type operator-(iterator lhs, iterator rhs) noexcept { return lhs.pos_ - rhs.pos_; }</span></span>
 <span id="L359"><span class="lineNum">     359</span>                 :             : </span>
 <span id="L360"><span class="lineNum">     360</span>                 :             :     friend constexpr difference_type operator+(iterator lhs, iterator rhs) noexcept { return lhs.pos_ + rhs.pos_; }</span>
 <span id="L361"><span class="lineNum">     361</span>                 :             : </span>
@@ -951,7 +951,7 @@
 <span id="L376"><span class="lineNum">     376</span>                 :             :     }</span>
 <span id="L377"><span class="lineNum">     377</span>                 :             : </span>
 <span id="L378"><span class="lineNum">     378</span>                 :             :     MBO_ALWAYS_INLINE friend constexpr bool operator==(iterator lhs, iterator rhs) noexcept {</span>
-<span id="L379"><span class="lineNum">     379</span>                 :<span class="tlaGNC">      255052 :       return lhs.pos_ == rhs.pos_;</span></span>
+<span id="L379"><span class="lineNum">     379</span>                 :<span class="tlaGNC">      255054 :       return lhs.pos_ == rhs.pos_;</span></span>
 <span id="L380"><span class="lineNum">     380</span>                 :             :     }</span>
 <span id="L381"><span class="lineNum">     381</span>                 :             : </span>
 <span id="L382"><span class="lineNum">     382</span>                 :             :    private:</span>
@@ -974,11 +974,11 @@
 <span id="L399"><span class="lineNum">     399</span>                 :             :   requires(Options::Has(LimitedOptionsFlag::kEmptyDestructor))</span>
 <span id="L400"><span class="lineNum">     400</span>                 :             :   = default;</span>
 <span id="L401"><span class="lineNum">     401</span>                 :             : </span>
-<span id="L402"><span class="lineNum">     402</span>                 :<span class="tlaGNC">         565 :   constexpr ~LimitedOrdered() noexcept</span></span>
+<span id="L402"><span class="lineNum">     402</span>                 :<span class="tlaGNC">         566 :   constexpr ~LimitedOrdered() noexcept</span></span>
 <span id="L403"><span class="lineNum">     403</span>                 :             :   requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) &amp;&amp; std::is_trivially_destructible_v&lt;RawValue&gt;)</span>
 <span id="L404"><span class="lineNum">     404</span>                 :             :   {</span>
-<span id="L405"><span class="lineNum">     405</span>                 :<span class="tlaGNC">         565 :     clear();</span></span>
-<span id="L406"><span class="lineNum">     406</span>                 :<span class="tlaGNC">         565 :   }</span></span>
+<span id="L405"><span class="lineNum">     405</span>                 :<span class="tlaGNC">         566 :     clear();</span></span>
+<span id="L406"><span class="lineNum">     406</span>                 :<span class="tlaGNC">         566 :   }</span></span>
 <span id="L407"><span class="lineNum">     407</span>                 :             : </span>
 <span id="L408"><span class="lineNum">     408</span>                 :<span class="tlaGNC">          64 :   ~LimitedOrdered() noexcept</span></span>
 <span id="L409"><span class="lineNum">     409</span>                 :             :   requires(!Options::Has(LimitedOptionsFlag::kEmptyDestructor) &amp;&amp; !std::is_trivially_destructible_v&lt;RawValue&gt;)</span>
@@ -1027,20 +1027,20 @@
 <span id="L452"><span class="lineNum">     452</span>                 :             : </span>
 <span id="L453"><span class="lineNum">     453</span>                 :             :   template&lt;std::forward_iterator It&gt;</span>
 <span id="L454"><span class="lineNum">     454</span>                 :             :   requires types::ConstructibleFrom&lt;RawValue, mbo::types::ForwardIteratorValueType&lt;It&gt;&gt;</span>
-<span id="L455"><span class="lineNum">     455</span>                 :<span class="tlaGNC">          15 :   constexpr LimitedOrdered(It first, It last, const Compare&amp; key_comp = Compare()) noexcept(!kRequireThrows)</span></span>
-<span id="L456"><span class="lineNum">     456</span>                 :<span class="tlaGNC">          15 :       : key_comp_(key_comp) {</span></span>
+<span id="L455"><span class="lineNum">     455</span>                 :<span class="tlaGNC">          16 :   constexpr LimitedOrdered(It first, It last, const Compare&amp; key_comp = Compare()) noexcept(!kRequireThrows)</span></span>
+<span id="L456"><span class="lineNum">     456</span>                 :<span class="tlaGNC">          16 :       : key_comp_(key_comp) {</span></span>
 <span id="L457"><span class="lineNum">     457</span>                 :             :     if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {</span>
-<span id="L458"><span class="lineNum">     458</span>   [<span class="tlaUNC" title="branch 0 was not executed"> # </span><span class="tlaUNC" title="branch 1 was not executed"> # </span><span class="tlaUNC" title="branch 2 was not executed"> # </span><span class="tlaUNC" title="branch 3 was not executed"> # </span>]:<span class="tlaUNC">           0 :       MBO_CONFIG_REQUIRE(std::is_sorted(first, last, key_comp_), &quot;Flag `kRequireSortedInput` violated.&quot;);</span></span>
+<span id="L458"><span class="lineNum">     458</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :       MBO_CONFIG_REQUIRE(std::is_sorted(first, last, key_comp_), &quot;Flag `kRequireSortedInput` violated.&quot;);</span></span>
 <span id="L459"><span class="lineNum">     459</span>                 :             :     }</span>
-<span id="L460"><span class="lineNum">     460</span>         [<span class="tlaGBC" title="branch 0 was taken 44 times"> + </span><span class="tlaGBC" title="branch 1 was taken 15 times"> + </span>]:<span class="tlaGNC">          61 :     while (first &lt; last) {</span></span>
+<span id="L460"><span class="lineNum">     460</span>         [<span class="tlaGBC" title="branch 0 was taken 47 times"> + </span><span class="tlaGBC" title="branch 1 was taken 16 times"> + </span>]:<span class="tlaGNC">          65 :     while (first &lt; last) {</span></span>
 <span id="L461"><span class="lineNum">     461</span>                 :             :       if constexpr (Options::Has(LimitedOptionsFlag::kRequireSortedInput)) {</span>
-<span id="L462"><span class="lineNum">     462</span>                 :<span class="tlaUNC">           0 :         std::construct_at(const_cast&lt;RawValue*&gt;(&amp;values_[size_++].data), *first);</span></span>
+<span id="L462"><span class="lineNum">     462</span>                 :<span class="tlaGNC">           3 :         std::construct_at(const_cast&lt;RawValue*&gt;(&amp;values_[size_++].data), *first);</span></span>
 <span id="L463"><span class="lineNum">     463</span>                 :             :       } else {</span>
 <span id="L464"><span class="lineNum">     464</span>                 :<span class="tlaGNC">          44 :         emplace(*first);</span></span>
 <span id="L465"><span class="lineNum">     465</span>                 :             :       }</span>
-<span id="L466"><span class="lineNum">     466</span>                 :<span class="tlaGNC">          44 :       ++first;</span></span>
+<span id="L466"><span class="lineNum">     466</span>                 :<span class="tlaGNC">          47 :       ++first;</span></span>
 <span id="L467"><span class="lineNum">     467</span>                 :             :     }</span>
-<span id="L468"><span class="lineNum">     468</span>                 :<span class="tlaGNC">          15 :   }</span></span>
+<span id="L468"><span class="lineNum">     468</span>                 :<span class="tlaGNC">          16 :   }</span></span>
 <span id="L469"><span class="lineNum">     469</span>                 :             : </span>
 <span id="L470"><span class="lineNum">     470</span>                 :<span class="tlaGNC">           5 :   constexpr LimitedOrdered(const std::initializer_list&lt;value_type&gt;&amp; list, const Compare&amp; key_comp = Compare()) noexcept</span></span>
 <span id="L471"><span class="lineNum">     471</span>                 :<span class="tlaGNC">           5 :       : LimitedOrdered(list.begin(), list.end(), key_comp) {}</span></span>
@@ -1095,12 +1095,12 @@
 <span id="L520"><span class="lineNum">     520</span>                 :             : </span>
 <span id="L521"><span class="lineNum">     521</span>                 :             :   // Find and search: lower_bound, upper_bound, equal_range, find, contains, count</span>
 <span id="L522"><span class="lineNum">     522</span>                 :             : </span>
-<span id="L523"><span class="lineNum">     523</span>                 :<span class="tlaGNC">       88340 :   MBO_FORCE_INLINE constexpr iterator lower_bound(const Key&amp; key) {</span></span>
-<span id="L524"><span class="lineNum">     524</span>                 :<span class="tlaGNC">       88340 :     return std::lower_bound(begin(), end(), key, val_comp_);</span></span>
+<span id="L523"><span class="lineNum">     523</span>                 :<span class="tlaGNC">       88341 :   MBO_FORCE_INLINE constexpr iterator lower_bound(const Key&amp; key) {</span></span>
+<span id="L524"><span class="lineNum">     524</span>                 :<span class="tlaGNC">       88341 :     return std::lower_bound(begin(), end(), key, val_comp_);</span></span>
 <span id="L525"><span class="lineNum">     525</span>                 :             :   }</span>
 <span id="L526"><span class="lineNum">     526</span>                 :             : </span>
-<span id="L527"><span class="lineNum">     527</span>                 :<span class="tlaGNC">      323445 :   MBO_FORCE_INLINE constexpr const_iterator lower_bound(const Key&amp; key) const {</span></span>
-<span id="L528"><span class="lineNum">     528</span>                 :<span class="tlaGNC">      323445 :     return std::lower_bound(begin(), end(), key, val_comp_);</span></span>
+<span id="L527"><span class="lineNum">     527</span>                 :<span class="tlaGNC">      323460 :   MBO_FORCE_INLINE constexpr const_iterator lower_bound(const Key&amp; key) const {</span></span>
+<span id="L528"><span class="lineNum">     528</span>                 :<span class="tlaGNC">      323460 :     return std::lower_bound(begin(), end(), key, val_comp_);</span></span>
 <span id="L529"><span class="lineNum">     529</span>                 :             :   }</span>
 <span id="L530"><span class="lineNum">     530</span>                 :             : </span>
 <span id="L531"><span class="lineNum">     531</span>                 :             :   MBO_FORCE_INLINE constexpr iterator upper_bound(const Key&amp; key) {</span>
@@ -1174,7 +1174,7 @@
 <span id="L599"><span class="lineNum">     599</span>                 :             :       }                                                                    \</span>
 <span id="L600"><span class="lineNum">     600</span>                 :             :     }                                                                      \</span>
 <span id="L601"><span class="lineNum">     601</span>                 :             :     [[fallthrough]]</span>
-<span id="L602"><span class="lineNum">     602</span>                 :<span class="tlaGNC">        3378 :     switch (size_) {  // LCOV_EXCL_BR_LINE: GCC attributes every generated unrolled case edge to this line.</span></span>
+<span id="L602"><span class="lineNum">     602</span>                 :<span class="tlaGNC">        3387 :     switch (size_) {  // LCOV_EXCL_BR_LINE: GCC attributes every generated unrolled case edge to this line.</span></span>
 <span class="lineNum">        </span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaUNC" title="branch 6 was not taken"> - </span><span class="tlaUNC" title="branch 7 was not taken"> - </span><span class="tlaUNC" title="branch 8 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 9 was not taken"> - </span><span class="tlaUNC" title="branch 10 was not taken"> - </span><span class="tlaUNC" title="branch 11 was not taken"> - </span><span class="tlaUNC" title="branch 12 was not taken"> - </span><span class="tlaUNC" title="branch 13 was not taken"> - </span> 
@@ -2105,7 +2105,7 @@
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 349 was taken 5 times"> + </span><span class="tlaUNC" title="branch 350 was not taken"> - </span><span class="tlaGBC" title="branch 351 was taken 1 time"> + </span><span class="tlaUNC" title="branch 352 was not taken"> - </span><span class="tlaUNC" title="branch 353 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 354 was not taken"> - </span><span class="tlaUNC" title="branch 355 was not taken"> - </span><span class="tlaGBC" title="branch 356 was taken 1 time"> + </span><span class="tlaGBC" title="branch 357 was taken 6 times"> + </span><span class="tlaUNC" title="branch 358 was not taken"> - </span> 
 <span class="lineNum">        </span>             <span class="tlaGBC" title="branch 359 was taken 1 time"> + </span>]
-<span id="L630"><span class="lineNum">     630</span>                 :<span class="tlaGNC">        4145 :       MBO_CASE_LIMITED_POS_COMP(4);</span></span>
+<span id="L630"><span class="lineNum">     630</span>                 :<span class="tlaGNC">        4143 :       MBO_CASE_LIMITED_POS_COMP(4);</span></span>
 <span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 13 times"> + </span><span class="tlaGBC" title="branch 1 was taken 114 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 12 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 13 times"> + </span><span class="tlaGBC" title="branch 5 was taken 115 times"> + </span><span class="tlaGBC" title="branch 6 was taken 1 time"> + </span><span class="tlaGBC" title="branch 7 was taken 12 times"> + </span><span class="tlaGBC" title="branch 8 was taken 12 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 99 times"> + </span><span class="tlaGBC" title="branch 10 was taken 1 time"> + </span><span class="tlaGBC" title="branch 11 was taken 11 times"> + </span><span class="tlaGBC" title="branch 12 was taken 14 times"> + </span><span class="tlaGBC" title="branch 13 was taken 104 times"> + </span> 
@@ -2187,12 +2187,12 @@
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 389 was not taken"> - </span><span class="tlaUNC" title="branch 390 was not taken"> - </span><span class="tlaUNC" title="branch 391 was not taken"> - </span><span class="tlaGBC" title="branch 392 was taken 2 times"> + </span><span class="tlaGBC" title="branch 393 was taken 5 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 394 was taken 1 time"> + </span><span class="tlaGBC" title="branch 395 was taken 1 time"> + </span><span class="tlaUNC" title="branch 396 was not taken"> - </span><span class="tlaUNC" title="branch 397 was not taken"> - </span><span class="tlaUNC" title="branch 398 was not taken"> - </span> 
 <span class="lineNum">        </span>             <span class="tlaUNC" title="branch 399 was not taken"> - </span>]
-<span id="L631"><span class="lineNum">     631</span>                 :<span class="tlaGNC">        4587 :       MBO_CASE_LIMITED_POS_COMP(3);</span></span>
-<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 15 times"> + </span><span class="tlaGBC" title="branch 1 was taken 151 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 14 times"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 25 times"> + </span><span class="tlaGBC" title="branch 5 was taken 141 times"> + </span><span class="tlaGBC" title="branch 6 was taken 1 time"> + </span><span class="tlaGBC" title="branch 7 was taken 24 times"> + </span><span class="tlaGBC" title="branch 8 was taken 15 times"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 137 times"> + </span><span class="tlaGBC" title="branch 10 was taken 1 time"> + </span><span class="tlaGBC" title="branch 11 was taken 14 times"> + </span><span class="tlaGBC" title="branch 12 was taken 13 times"> + </span><span class="tlaGBC" title="branch 13 was taken 102 times"> + </span> 
+<span id="L631"><span class="lineNum">     631</span>                 :<span class="tlaGNC">        4596 :       MBO_CASE_LIMITED_POS_COMP(3);</span></span>
+<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 15 times"> + </span><span class="tlaGBC" title="branch 1 was taken 154 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 14 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 28 times"> + </span><span class="tlaGBC" title="branch 5 was taken 141 times"> + </span><span class="tlaGBC" title="branch 6 was taken 1 time"> + </span><span class="tlaGBC" title="branch 7 was taken 27 times"> + </span><span class="tlaGBC" title="branch 8 was taken 15 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 140 times"> + </span><span class="tlaGBC" title="branch 10 was taken 1 time"> + </span><span class="tlaGBC" title="branch 11 was taken 14 times"> + </span><span class="tlaGBC" title="branch 12 was taken 13 times"> + </span><span class="tlaGBC" title="branch 13 was taken 102 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 14 was taken 1 time"> + </span><span class="tlaGBC" title="branch 15 was taken 12 times"> + </span><span class="tlaGBC" title="branch 16 was taken 12 times"> + </span><span class="tlaGBC" title="branch 17 was taken 88 times"> + </span><span class="tlaGBC" title="branch 18 was taken 1 time"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="branch 19 was taken 11 times"> + </span><span class="tlaGBC" title="branch 20 was taken 17 times"> + </span><span class="tlaGBC" title="branch 21 was taken 93 times"> + </span><span class="tlaGBC" title="branch 22 was taken 6 times"> + </span><span class="tlaGBC" title="branch 23 was taken 11 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 19 was taken 11 times"> + </span><span class="tlaGBC" title="branch 20 was taken 18 times"> + </span><span class="tlaGBC" title="branch 21 was taken 94 times"> + </span><span class="tlaGBC" title="branch 22 was taken 7 times"> + </span><span class="tlaGBC" title="branch 23 was taken 11 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 24 was taken 13 times"> + </span><span class="tlaGBC" title="branch 25 was taken 79 times"> + </span><span class="tlaGBC" title="branch 26 was taken 2 times"> + </span><span class="tlaGBC" title="branch 27 was taken 11 times"> + </span><span class="tlaGBC" title="branch 28 was taken 11 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 29 was taken 75 times"> + </span><span class="tlaGBC" title="branch 30 was taken 1 time"> + </span><span class="tlaGBC" title="branch 31 was taken 10 times"> + </span><span class="tlaGBC" title="branch 32 was taken 10 times"> + </span><span class="tlaGBC" title="branch 33 was taken 63 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 34 was taken 1 time"> + </span><span class="tlaGBC" title="branch 35 was taken 9 times"> + </span><span class="tlaGBC" title="branch 36 was taken 10 times"> + </span><span class="tlaGBC" title="branch 37 was taken 63 times"> + </span><span class="tlaGBC" title="branch 38 was taken 1 time"> + </span> 
@@ -2282,12 +2282,12 @@
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 454 was not taken"> - </span><span class="tlaUNC" title="branch 455 was not taken"> - </span><span class="tlaUNC" title="branch 456 was not taken"> - </span><span class="tlaUNC" title="branch 457 was not taken"> - </span><span class="tlaUNC" title="branch 458 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 459 was not taken"> - </span><span class="tlaUNC" title="branch 460 was not taken"> - </span><span class="tlaUNC" title="branch 461 was not taken"> - </span><span class="tlaUNC" title="branch 462 was not taken"> - </span><span class="tlaUNC" title="branch 463 was not taken"> - </span> 
 <span class="lineNum">        </span>    <span class="tlaUNC" title="branch 464 was not taken"> - </span><span class="tlaUNC" title="branch 465 was not taken"> - </span><span class="tlaUNC" title="branch 466 was not taken"> - </span><span class="tlaUNC" title="branch 467 was not taken"> - </span>]
-<span id="L632"><span class="lineNum">     632</span>                 :<span class="tlaGNC">        4869 :       MBO_CASE_LIMITED_POS_COMP(2);</span></span>
-<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 30 times"> + </span><span class="tlaGBC" title="branch 1 was taken 138 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 29 times"> + </span> 
+<span id="L632"><span class="lineNum">     632</span>                 :<span class="tlaGNC">        4874 :       MBO_CASE_LIMITED_POS_COMP(2);</span></span>
+<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 30 times"> + </span><span class="tlaGBC" title="branch 1 was taken 141 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 29 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 24 times"> + </span><span class="tlaGBC" title="branch 5 was taken 135 times"> + </span><span class="tlaGBC" title="branch 6 was taken 2 times"> + </span><span class="tlaGBC" title="branch 7 was taken 22 times"> + </span><span class="tlaGBC" title="branch 8 was taken 23 times"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 130 times"> + </span><span class="tlaGBC" title="branch 10 was taken 1 time"> + </span><span class="tlaGBC" title="branch 11 was taken 22 times"> + </span><span class="tlaGBC" title="branch 12 was taken 14 times"> + </span><span class="tlaGBC" title="branch 13 was taken 104 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 133 times"> + </span><span class="tlaGBC" title="branch 10 was taken 1 time"> + </span><span class="tlaGBC" title="branch 11 was taken 22 times"> + </span><span class="tlaGBC" title="branch 12 was taken 14 times"> + </span><span class="tlaGBC" title="branch 13 was taken 104 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 14 was taken 1 time"> + </span><span class="tlaGBC" title="branch 15 was taken 13 times"> + </span><span class="tlaGBC" title="branch 16 was taken 13 times"> + </span><span class="tlaGBC" title="branch 17 was taken 90 times"> + </span><span class="tlaGBC" title="branch 18 was taken 1 time"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="branch 19 was taken 12 times"> + </span><span class="tlaGBC" title="branch 20 was taken 15 times"> + </span><span class="tlaGBC" title="branch 21 was taken 93 times"> + </span><span class="tlaGBC" title="branch 22 was taken 1 time"> + </span><span class="tlaGBC" title="branch 23 was taken 14 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 19 was taken 12 times"> + </span><span class="tlaGBC" title="branch 20 was taken 16 times"> + </span><span class="tlaGBC" title="branch 21 was taken 93 times"> + </span><span class="tlaGBC" title="branch 22 was taken 1 time"> + </span><span class="tlaGBC" title="branch 23 was taken 15 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 24 was taken 16 times"> + </span><span class="tlaGBC" title="branch 25 was taken 85 times"> + </span><span class="tlaGBC" title="branch 26 was taken 1 time"> + </span><span class="tlaGBC" title="branch 27 was taken 15 times"> + </span><span class="tlaGBC" title="branch 28 was taken 14 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 29 was taken 80 times"> + </span><span class="tlaGBC" title="branch 30 was taken 2 times"> + </span><span class="tlaGBC" title="branch 31 was taken 12 times"> + </span><span class="tlaGBC" title="branch 32 was taken 11 times"> + </span><span class="tlaGBC" title="branch 33 was taken 66 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 34 was taken 1 time"> + </span><span class="tlaGBC" title="branch 35 was taken 10 times"> + </span><span class="tlaGBC" title="branch 36 was taken 11 times"> + </span><span class="tlaGBC" title="branch 37 was taken 66 times"> + </span><span class="tlaGBC" title="branch 38 was taken 1 time"> + </span> 
@@ -2384,10 +2384,10 @@
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 489 was taken 1 time"> + </span><span class="tlaUNC" title="branch 490 was not taken"> - </span><span class="tlaUNC" title="branch 491 was not taken"> - </span><span class="tlaGBC" title="branch 492 was taken 1 time"> + </span><span class="tlaUNC" title="branch 493 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 494 was not taken"> - </span><span class="tlaGBC" title="branch 495 was taken 1 time"> + </span><span class="tlaGBC" title="branch 496 was taken 1 time"> + </span><span class="tlaUNC" title="branch 497 was not taken"> - </span><span class="tlaGBC" title="branch 498 was taken 1 time"> + </span> 
 <span class="lineNum">        </span>             <span class="tlaUNC" title="branch 499 was not taken"> - </span>]
-<span id="L633"><span class="lineNum">     633</span>                 :<span class="tlaGNC">        5011 :       MBO_CASE_LIMITED_POS_COMP(1);</span></span>
-<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 17 times"> + </span><span class="tlaGBC" title="branch 1 was taken 139 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 16 times"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 24 times"> + </span><span class="tlaGBC" title="branch 5 was taken 130 times"> + </span><span class="tlaGBC" title="branch 6 was taken 1 time"> + </span><span class="tlaGBC" title="branch 7 was taken 23 times"> + </span><span class="tlaGBC" title="branch 8 was taken 28 times"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 117 times"> + </span><span class="tlaGBC" title="branch 10 was taken 1 time"> + </span><span class="tlaGBC" title="branch 11 was taken 27 times"> + </span><span class="tlaGBC" title="branch 12 was taken 15 times"> + </span><span class="tlaGBC" title="branch 13 was taken 106 times"> + </span> 
+<span id="L633"><span class="lineNum">     633</span>                 :<span class="tlaGNC">        5015 :       MBO_CASE_LIMITED_POS_COMP(1);</span></span>
+<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 17 times"> + </span><span class="tlaGBC" title="branch 1 was taken 142 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 16 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 24 times"> + </span><span class="tlaGBC" title="branch 5 was taken 130 times"> + </span><span class="tlaGBC" title="branch 6 was taken 1 time"> + </span><span class="tlaGBC" title="branch 7 was taken 23 times"> + </span><span class="tlaGBC" title="branch 8 was taken 31 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 117 times"> + </span><span class="tlaGBC" title="branch 10 was taken 1 time"> + </span><span class="tlaGBC" title="branch 11 was taken 30 times"> + </span><span class="tlaGBC" title="branch 12 was taken 15 times"> + </span><span class="tlaGBC" title="branch 13 was taken 106 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 14 was taken 1 time"> + </span><span class="tlaGBC" title="branch 15 was taken 14 times"> + </span><span class="tlaGBC" title="branch 16 was taken 16 times"> + </span><span class="tlaGBC" title="branch 17 was taken 91 times"> + </span><span class="tlaGBC" title="branch 18 was taken 2 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 19 was taken 14 times"> + </span><span class="tlaGBC" title="branch 20 was taken 15 times"> + </span><span class="tlaGBC" title="branch 21 was taken 92 times"> + </span><span class="tlaGBC" title="branch 22 was taken 2 times"> + </span><span class="tlaGBC" title="branch 23 was taken 13 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 24 was taken 15 times"> + </span><span class="tlaGBC" title="branch 25 was taken 79 times"> + </span><span class="tlaGBC" title="branch 26 was taken 1 time"> + </span><span class="tlaGBC" title="branch 27 was taken 14 times"> + </span><span class="tlaGBC" title="branch 28 was taken 17 times"> + </span> 
@@ -2492,8 +2492,8 @@
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 519 was taken 1 time"> + </span><span class="tlaUNC" title="branch 520 was not taken"> - </span><span class="tlaGBC" title="branch 521 was taken 1 time"> + </span><span class="tlaUNC" title="branch 522 was not taken"> - </span><span class="tlaUNC" title="branch 523 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 524 was not taken"> - </span><span class="tlaUNC" title="branch 525 was not taken"> - </span><span class="tlaUNC" title="branch 526 was not taken"> - </span><span class="tlaUNC" title="branch 527 was not taken"> - </span><span class="tlaUNC" title="branch 528 was not taken"> - </span> 
 <span class="lineNum">        </span>       <span class="tlaUNC" title="branch 529 was not taken"> - </span><span class="tlaUNC" title="branch 530 was not taken"> - </span><span class="tlaUNC" title="branch 531 was not taken"> - </span>]
-<span id="L634"><span class="lineNum">     634</span>                 :<span class="tlaGNC">        5066 :       MBO_CASE_LIMITED_POS_COMP(0);</span></span>
-<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 35 times"> + </span><span class="tlaGBC" title="branch 1 was taken 121 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 33 times"> + </span> 
+<span id="L634"><span class="lineNum">     634</span>                 :<span class="tlaGNC">        5067 :       MBO_CASE_LIMITED_POS_COMP(0);</span></span>
+<span class="lineNum">        </span>   [<span class="tlaGBC" title="branch 0 was taken 38 times"> + </span><span class="tlaGBC" title="branch 1 was taken 121 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 36 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 4 was taken 27 times"> + </span><span class="tlaGBC" title="branch 5 was taken 120 times"> + </span><span class="tlaGBC" title="branch 6 was taken 4 times"> + </span><span class="tlaGBC" title="branch 7 was taken 23 times"> + </span><span class="tlaGBC" title="branch 8 was taken 26 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 9 was taken 107 times"> + </span><span class="tlaGBC" title="branch 10 was taken 2 times"> + </span><span class="tlaGBC" title="branch 11 was taken 24 times"> + </span><span class="tlaGBC" title="branch 12 was taken 17 times"> + </span><span class="tlaGBC" title="branch 13 was taken 105 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 14 was taken 1 time"> + </span><span class="tlaGBC" title="branch 15 was taken 16 times"> + </span><span class="tlaGBC" title="branch 16 was taken 15 times"> + </span><span class="tlaGBC" title="branch 17 was taken 91 times"> + </span><span class="tlaGBC" title="branch 18 was taken 1 time"> + </span> 
@@ -3060,50 +3060,50 @@
 <span id="L713"><span class="lineNum">     713</span>                 :<span class="tlaGNC">           4 :     return values_[pos].data;</span></span>
 <span id="L714"><span class="lineNum">     714</span>                 :             :   }</span>
 <span id="L715"><span class="lineNum">     715</span>                 :             : </span>
-<span id="L716"><span class="lineNum">     716</span>                 :<span class="tlaGNC">      166649 :   MBO_FORCE_INLINE constexpr iterator find(const Key&amp; key) {</span></span>
+<span id="L716"><span class="lineNum">     716</span>                 :<span class="tlaGNC">      166650 :   MBO_FORCE_INLINE constexpr iterator find(const Key&amp; key) {</span></span>
 <span class="lineNum">        </span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaUNC" title="branch 6 was not taken"> - </span><span class="tlaUNC" title="branch 7 was not taken"> - </span><span class="tlaUNC" title="branch 8 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 9 was not taken"> - </span><span class="tlaUNC" title="branch 10 was not taken"> - </span><span class="tlaUNC" title="branch 11 was not taken"> - </span><span class="tlaUNC" title="branch 12 was not taken"> - </span><span class="tlaUNC" title="branch 13 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 14 was not taken"> - </span><span class="tlaUNC" title="branch 15 was not taken"> - </span><span class="tlaGBC" title="branch 16 was taken 34 times"> + </span><span class="tlaGBC" title="branch 17 was taken 66 times"> + </span><span class="tlaGBC" title="branch 18 was taken 96 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 19 was taken 124 times"> + </span><span class="tlaGBC" title="branch 20 was taken 150 times"> + </span><span class="tlaGBC" title="branch 21 was taken 174 times"> + </span><span class="tlaGBC" title="branch 22 was taken 196 times"> + </span><span class="tlaGBC" title="branch 23 was taken 216 times"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="branch 24 was taken 234 times"> + </span><span class="tlaGBC" title="branch 25 was taken 264 times"> + </span><span class="tlaGBC" title="branch 26 was taken 266 times"> + </span><span class="tlaGBC" title="branch 27 was taken 278 times"> + </span><span class="tlaGBC" title="branch 28 was taken 288 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 24 was taken 234 times"> + </span><span class="tlaGBC" title="branch 25 was taken 264 times"> + </span><span class="tlaGBC" title="branch 26 was taken 266 times"> + </span><span class="tlaGBC" title="branch 27 was taken 279 times"> + </span><span class="tlaGBC" title="branch 28 was taken 288 times"> + </span> 
 <span class="lineNum">        </span>    <span class="tlaGBC" title="branch 29 was taken 313 times"> + </span><span class="tlaGBC" title="branch 30 was taken 307 times"> + </span><span class="tlaGBC" title="branch 31 was taken 306 times"> + </span><span class="tlaGBC" title="branch 32 was taken 1 time"> + </span>]
 <span id="L717"><span class="lineNum">     717</span>                 :             :     if constexpr (kOptimizeIndexOf) {</span>
-<span id="L718"><span class="lineNum">     718</span>                 :<span class="tlaGNC">       83349 :       const std::size_t pos = index_of(key);</span></span>
-<span id="L719"><span class="lineNum">     719</span>         [<span class="tlaGBC" title="branch 0 was taken 41666 times"> + </span><span class="tlaGBC" title="branch 1 was taken 41683 times"> + </span>]:<span class="tlaGNC">      125032 :       return pos == npos ? end() : iterator(&amp;values_[pos]);</span></span>
+<span id="L718"><span class="lineNum">     718</span>                 :<span class="tlaGNC">       83350 :       const std::size_t pos = index_of(key);</span></span>
+<span id="L719"><span class="lineNum">     719</span>         [<span class="tlaGBC" title="branch 0 was taken 41666 times"> + </span><span class="tlaGBC" title="branch 1 was taken 41684 times"> + </span>]:<span class="tlaGNC">      125034 :       return pos == npos ? end() : iterator(&amp;values_[pos]);</span></span>
 <span id="L720"><span class="lineNum">     720</span>                 :             :     } else {  // Not kOptimizeIndexOf</span>
 <span id="L721"><span class="lineNum">     721</span>                 :<span class="tlaGNC">       83300 :       const iterator it = lower_bound(key);</span></span>
 <span id="L722"><span class="lineNum">     722</span>   [<span class="tlaGBC" title="branch 0 was taken 80850 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2450 times"> + </span><span class="tlaGBC" title="branch 2 was taken 39200 times"> + </span><span class="tlaGBC" title="branch 3 was taken 41650 times"> + </span>]:<span class="tlaGNC">      247450 :       return it == end() || key_comp_(key, GetKey(*it)) ? end() : it;</span></span>
 <span id="L723"><span class="lineNum">     723</span>                 :             :     }</span>
 <span id="L724"><span class="lineNum">     724</span>                 :             :   }</span>
 <span id="L725"><span class="lineNum">     725</span>                 :             : </span>
-<span id="L726"><span class="lineNum">     726</span>                 :<span class="tlaGNC">         116 :   MBO_FORCE_INLINE constexpr const_iterator find(const Key&amp; key) const {</span></span>
+<span id="L726"><span class="lineNum">     726</span>                 :<span class="tlaGNC">         125 :   MBO_FORCE_INLINE constexpr const_iterator find(const Key&amp; key) const {</span></span>
 <span class="lineNum">        </span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaUNC" title="branch 6 was not taken"> - </span><span class="tlaUNC" title="branch 7 was not taken"> - </span><span class="tlaUNC" title="branch 8 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 9 was not taken"> - </span><span class="tlaUNC" title="branch 10 was not taken"> - </span><span class="tlaUNC" title="branch 11 was not taken"> - </span><span class="tlaUNC" title="branch 12 was not taken"> - </span><span class="tlaUNC" title="branch 13 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 14 was not taken"> - </span><span class="tlaUNC" title="branch 15 was not taken"> - </span><span class="tlaUNC" title="branch 16 was not taken"> - </span><span class="tlaUNC" title="branch 17 was not taken"> - </span><span class="tlaUNC" title="branch 18 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 19 was not taken"> - </span><span class="tlaUNC" title="branch 20 was not taken"> - </span><span class="tlaUNC" title="branch 21 was not taken"> - </span><span class="tlaUNC" title="branch 22 was not taken"> - </span><span class="tlaUNC" title="branch 23 was not taken"> - </span> 
-<span class="lineNum">        </span> <span class="tlaUNC" title="branch 24 was not taken"> - </span><span class="tlaUNC" title="branch 25 was not taken"> - </span><span class="tlaUNC" title="branch 26 was not taken"> - </span><span class="tlaUNC" title="branch 27 was not taken"> - </span><span class="tlaGBC" title="branch 28 was taken 106 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaUNC" title="branch 24 was not taken"> - </span><span class="tlaUNC" title="branch 25 was not taken"> - </span><span class="tlaUNC" title="branch 26 was not taken"> - </span><span class="tlaUNC" title="branch 27 was not taken"> - </span><span class="tlaGBC" title="branch 28 was taken 115 times"> + </span> 
 <span class="lineNum">        </span>    <span class="tlaGBC" title="branch 29 was taken 10 times"> + </span><span class="tlaUNC" title="branch 30 was not taken"> - </span><span class="tlaUNC" title="branch 31 was not taken"> - </span><span class="tlaUNC" title="branch 32 was not taken"> - </span>]
 <span id="L727"><span class="lineNum">     727</span>                 :             :     if constexpr (kOptimizeIndexOf) {</span>
-<span id="L728"><span class="lineNum">     728</span>                 :<span class="tlaGNC">         116 :       const std::size_t pos = index_of(key);</span></span>
-<span id="L729"><span class="lineNum">     729</span>         [<span class="tlaGBC" title="branch 0 was taken 11 times"> + </span><span class="tlaGBC" title="branch 1 was taken 105 times"> + </span>]:<span class="tlaGNC">         221 :       return pos == npos ? end() : const_iterator(&amp;values_[pos]);</span></span>
+<span id="L728"><span class="lineNum">     728</span>                 :<span class="tlaGNC">         125 :       const std::size_t pos = index_of(key);</span></span>
+<span id="L729"><span class="lineNum">     729</span>         [<span class="tlaGBC" title="branch 0 was taken 11 times"> + </span><span class="tlaGBC" title="branch 1 was taken 114 times"> + </span>]:<span class="tlaGNC">         239 :       return pos == npos ? end() : const_iterator(&amp;values_[pos]);</span></span>
 <span id="L730"><span class="lineNum">     730</span>                 :             :     } else {  // Not kOptimizeIndexOf</span>
 <span id="L731"><span class="lineNum">     731</span>                 :             :       const const_iterator it = lower_bound(key);</span>
 <span id="L732"><span class="lineNum">     732</span>                 :             :       return it == end() || key_comp_(key, GetKey(*it)) ? end() : it;</span>
 <span id="L733"><span class="lineNum">     733</span>                 :             :     }</span>
 <span id="L734"><span class="lineNum">     734</span>                 :             :   }</span>
 <span id="L735"><span class="lineNum">     735</span>                 :             : </span>
-<span id="L736"><span class="lineNum">     736</span>                 :<span class="tlaGNC">      166620 :   MBO_FORCE_INLINE constexpr bool contains(const Key&amp; key) const {</span></span>
+<span id="L736"><span class="lineNum">     736</span>                 :<span class="tlaGNC">      166622 :   MBO_FORCE_INLINE constexpr bool contains(const Key&amp; key) const {</span></span>
 <span class="lineNum">        </span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaUNC" title="branch 6 was not taken"> - </span><span class="tlaUNC" title="branch 7 was not taken"> - </span><span class="tlaUNC" title="branch 8 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 9 was not taken"> - </span><span class="tlaUNC" title="branch 10 was not taken"> - </span><span class="tlaUNC" title="branch 11 was not taken"> - </span><span class="tlaUNC" title="branch 12 was not taken"> - </span><span class="tlaUNC" title="branch 13 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 14 was not taken"> - </span><span class="tlaUNC" title="branch 15 was not taken"> - </span><span class="tlaGBC" title="branch 16 was taken 34 times"> + </span><span class="tlaGBC" title="branch 17 was taken 66 times"> + </span><span class="tlaGBC" title="branch 18 was taken 96 times"> + </span> 
 <span class="lineNum">        </span> <span class="tlaGBC" title="branch 19 was taken 124 times"> + </span><span class="tlaGBC" title="branch 20 was taken 150 times"> + </span><span class="tlaGBC" title="branch 21 was taken 174 times"> + </span><span class="tlaGBC" title="branch 22 was taken 196 times"> + </span><span class="tlaGBC" title="branch 23 was taken 216 times"> + </span> 
-<span class="lineNum">        </span> <span class="tlaGBC" title="branch 24 was taken 234 times"> + </span><span class="tlaGBC" title="branch 25 was taken 250 times"> + </span><span class="tlaGBC" title="branch 26 was taken 264 times"> + </span><span class="tlaGBC" title="branch 27 was taken 276 times"> + </span><span class="tlaGBC" title="branch 28 was taken 306 times"> + </span> 
+<span class="lineNum">        </span> <span class="tlaGBC" title="branch 24 was taken 234 times"> + </span><span class="tlaGBC" title="branch 25 was taken 250 times"> + </span><span class="tlaGBC" title="branch 26 was taken 264 times"> + </span><span class="tlaGBC" title="branch 27 was taken 276 times"> + </span><span class="tlaGBC" title="branch 28 was taken 308 times"> + </span> 
 <span class="lineNum">        </span>    <span class="tlaGBC" title="branch 29 was taken 294 times"> + </span><span class="tlaGBC" title="branch 30 was taken 300 times"> + </span><span class="tlaGBC" title="branch 31 was taken 304 times"> + </span><span class="tlaUNC" title="branch 32 was not taken"> - </span>]
 <span id="L737"><span class="lineNum">     737</span>                 :             :     if constexpr (kOptimizeIndexOf) {</span>
-<span id="L738"><span class="lineNum">     738</span>                 :<span class="tlaGNC">       83320 :       return index_of(key) != npos;</span></span>
+<span id="L738"><span class="lineNum">     738</span>                 :<span class="tlaGNC">       83322 :       return index_of(key) != npos;</span></span>
 <span id="L739"><span class="lineNum">     739</span>                 :             :     } else {</span>
 <span id="L740"><span class="lineNum">     740</span>                 :<span class="tlaGNC">       83300 :       return std::binary_search(begin(), end(), key, val_comp_);</span></span>
 <span id="L741"><span class="lineNum">     741</span>                 :             :     }</span>
@@ -3115,17 +3115,17 @@
 <span id="L747"><span class="lineNum">     747</span>                 :             : </span>
 <span id="L748"><span class="lineNum">     748</span>                 :             :   template&lt;typename K&gt;</span>
 <span id="L749"><span class="lineNum">     749</span>                 :             :   requires(kIsForeignKey&lt;K&gt;)</span>
-<span id="L750"><span class="lineNum">     750</span>                 :<span class="tlaGNC">          11 :   MBO_FORCE_INLINE constexpr iterator find(const K&amp; key) {</span></span>
+<span id="L750"><span class="lineNum">     750</span>                 :<span class="tlaGNC">          10 :   MBO_FORCE_INLINE constexpr iterator find(const K&amp; key) {</span></span>
 <span class="lineNum">        </span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaUNC" title="branch 6 was not taken"> - </span><span class="tlaUNC" title="branch 7 was not taken"> - </span><span class="tlaUNC" title="branch 8 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 9 was not taken"> - </span><span class="tlaUNC" title="branch 10 was not taken"> - </span><span class="tlaUNC" title="branch 11 was not taken"> - </span><span class="tlaUNC" title="branch 12 was not taken"> - </span><span class="tlaUNC" title="branch 13 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 14 was not taken"> - </span><span class="tlaUNC" title="branch 15 was not taken"> - </span><span class="tlaUNC" title="branch 16 was not taken"> - </span><span class="tlaUNC" title="branch 17 was not taken"> - </span><span class="tlaUNC" title="branch 18 was not taken"> - </span> 
 <span class="lineNum">        </span> <span class="tlaUNC" title="branch 19 was not taken"> - </span><span class="tlaUNC" title="branch 20 was not taken"> - </span><span class="tlaUNC" title="branch 21 was not taken"> - </span><span class="tlaUNC" title="branch 22 was not taken"> - </span><span class="tlaUNC" title="branch 23 was not taken"> - </span> 
-<span class="lineNum">        </span> <span class="tlaUNC" title="branch 24 was not taken"> - </span><span class="tlaUNC" title="branch 25 was not taken"> - </span><span class="tlaUNC" title="branch 26 was not taken"> - </span><span class="tlaGBC" title="branch 27 was taken 1 time"> + </span><span class="tlaUNC" title="branch 28 was not taken"> - </span> 
+<span class="lineNum">        </span> <span class="tlaUNC" title="branch 24 was not taken"> - </span><span class="tlaUNC" title="branch 25 was not taken"> - </span><span class="tlaUNC" title="branch 26 was not taken"> - </span><span class="tlaUNC" title="branch 27 was not taken"> - </span><span class="tlaUNC" title="branch 28 was not taken"> - </span> 
 <span class="lineNum">        </span>    <span class="tlaGBC" title="branch 29 was taken 5 times"> + </span><span class="tlaGBC" title="branch 30 was taken 5 times"> + </span><span class="tlaUNC" title="branch 31 was not taken"> - </span><span class="tlaUNC" title="branch 32 was not taken"> - </span>]
 <span id="L751"><span class="lineNum">     751</span>                 :             :     if constexpr (kOptimizeIndexOf) {</span>
-<span id="L752"><span class="lineNum">     752</span>                 :<span class="tlaGNC">          11 :       const std::size_t pos = index_of(key);</span></span>
-<span id="L753"><span class="lineNum">     753</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">          16 :       return pos == npos ? end() : iterator(&amp;values_[pos]);</span></span>
+<span id="L752"><span class="lineNum">     752</span>                 :<span class="tlaGNC">          10 :       const std::size_t pos = index_of(key);</span></span>
+<span id="L753"><span class="lineNum">     753</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">          14 :       return pos == npos ? end() : iterator(&amp;values_[pos]);</span></span>
 <span id="L754"><span class="lineNum">     754</span>                 :             :     } else {</span>
 <span id="L755"><span class="lineNum">     755</span>                 :             :       const iterator it = lower_bound(key);</span>
 <span id="L756"><span class="lineNum">     756</span>                 :             :       return it == end() || val_comp_(key, *it) ? end() : it;</span>
@@ -3185,13 +3185,13 @@
 <span id="L796"><span class="lineNum">     796</span>                 :             :   // Performs contains-all-of functionality (not part of STL).</span>
 <span id="L797"><span class="lineNum">     797</span>                 :             :   template&lt;typename U&gt;</span>
 <span id="L798"><span class="lineNum">     798</span>                 :             :   requires(std::equality_comparable_with&lt;Key, U&gt; || kIsForeignKey&lt;U&gt;)</span>
-<span id="L799"><span class="lineNum">     799</span>                 :<span class="tlaGNC">           2 :   constexpr bool contains_all(const std::initializer_list&lt;U&gt;&amp; other) const {</span></span>
-<span id="L800"><span class="lineNum">     800</span>         [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span>]:<span class="tlaGNC">           4 :     for (auto it = other.begin(); it != other.end(); ++it) {</span></span>
+<span id="L799"><span class="lineNum">     799</span>                 :<span class="tlaGNC">           3 :   constexpr bool contains_all(const std::initializer_list&lt;U&gt;&amp; other) const {</span></span>
+<span id="L800"><span class="lineNum">     800</span>         [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           5 :     for (auto it = other.begin(); it != other.end(); ++it) {</span></span>
 <span id="L801"><span class="lineNum">     801</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           4 :       if (!contains(*it)) {</span></span>
 <span id="L802"><span class="lineNum">     802</span>                 :<span class="tlaGNC">           2 :         return false;</span></span>
 <span id="L803"><span class="lineNum">     803</span>                 :             :       }</span>
 <span id="L804"><span class="lineNum">     804</span>                 :             :     }</span>
-<span id="L805"><span class="lineNum">     805</span>                 :<span class="tlaUNC">           0 :     return true;</span></span>
+<span id="L805"><span class="lineNum">     805</span>                 :<span class="tlaGNC">           1 :     return true;</span></span>
 <span id="L806"><span class="lineNum">     806</span>                 :             :   }</span>
 <span id="L807"><span class="lineNum">     807</span>                 :             : </span>
 <span id="L808"><span class="lineNum">     808</span>                 :             :   // Performs contains-any-of functionality (not part of STL).</span>
@@ -3211,10 +3211,10 @@
 <span id="L822"><span class="lineNum">     822</span>                 :             :   // Performs contains-any-of functionality (not part of STL).</span>
 <span id="L823"><span class="lineNum">     823</span>                 :             :   template&lt;typename U&gt;</span>
 <span id="L824"><span class="lineNum">     824</span>                 :             :   requires(std::equality_comparable_with&lt;Key, U&gt; || kIsForeignKey&lt;U&gt;)</span>
-<span id="L825"><span class="lineNum">     825</span>                 :<span class="tlaGNC">           2 :   constexpr bool contains_any(const std::initializer_list&lt;U&gt;&amp; other) const {</span></span>
-<span id="L826"><span class="lineNum">     826</span>         [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           6 :     for (auto it = other.begin(); it != other.end(); ++it) {</span></span>
-<span id="L827"><span class="lineNum">     827</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           4 :       if (contains(*it)) {</span></span>
-<span id="L828"><span class="lineNum">     828</span>                 :<span class="tlaUNC">           0 :         return true;</span></span>
+<span id="L825"><span class="lineNum">     825</span>                 :<span class="tlaGNC">           3 :   constexpr bool contains_any(const std::initializer_list&lt;U&gt;&amp; other) const {</span></span>
+<span id="L826"><span class="lineNum">     826</span>         [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           8 :     for (auto it = other.begin(); it != other.end(); ++it) {</span></span>
+<span id="L827"><span class="lineNum">     827</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           6 :       if (contains(*it)) {</span></span>
+<span id="L828"><span class="lineNum">     828</span>                 :<span class="tlaGNC">           1 :         return true;</span></span>
 <span id="L829"><span class="lineNum">     829</span>                 :             :       }</span>
 <span id="L830"><span class="lineNum">     830</span>                 :             :     }</span>
 <span id="L831"><span class="lineNum">     831</span>                 :<span class="tlaGNC">           2 :     return false;</span></span>
@@ -3254,11 +3254,11 @@
 <span id="L865"><span class="lineNum">     865</span>                 :             : </span>
 <span id="L866"><span class="lineNum">     866</span>                 :             :   // Modification: clear, swap, emplace, insert</span>
 <span id="L867"><span class="lineNum">     867</span>                 :             : </span>
-<span id="L868"><span class="lineNum">     868</span>                 :<span class="tlaGNC">         637 :   constexpr void clear() noexcept {</span></span>
-<span id="L869"><span class="lineNum">     869</span>         [<span class="tlaGBC" title="branch 0 was taken 550 times"> + </span><span class="tlaGBC" title="branch 1 was taken 637 times"> + </span>]:<span class="tlaGNC">        1187 :     while (size_ &gt; 0) {</span></span>
-<span id="L870"><span class="lineNum">     870</span>                 :<span class="tlaGNC">         550 :       std::destroy_at(&amp;values_[--size_].data);</span></span>
+<span id="L868"><span class="lineNum">     868</span>                 :<span class="tlaGNC">         638 :   constexpr void clear() noexcept {</span></span>
+<span id="L869"><span class="lineNum">     869</span>         [<span class="tlaGBC" title="branch 0 was taken 553 times"> + </span><span class="tlaGBC" title="branch 1 was taken 638 times"> + </span>]:<span class="tlaGNC">        1191 :     while (size_ &gt; 0) {</span></span>
+<span id="L870"><span class="lineNum">     870</span>                 :<span class="tlaGNC">         553 :       std::destroy_at(&amp;values_[--size_].data);</span></span>
 <span id="L871"><span class="lineNum">     871</span>                 :             :     }</span>
-<span id="L872"><span class="lineNum">     872</span>                 :<span class="tlaGNC">         637 :   }</span></span>
+<span id="L872"><span class="lineNum">     872</span>                 :<span class="tlaGNC">         638 :   }</span></span>
 <span id="L873"><span class="lineNum">     873</span>                 :             : </span>
 <span id="L874"><span class="lineNum">     874</span>                 :             :   template&lt;</span>
 <span id="L875"><span class="lineNum">     875</span>                 :             :       types::ConstructibleInto&lt;Key&gt; OK,</span>
@@ -3291,12 +3291,12 @@
 <span id="L901"><span class="lineNum">     901</span>                 :<span class="tlaGNC">           8 :   }</span></span>
 <span id="L902"><span class="lineNum">     902</span>                 :             : </span>
 <span id="L903"><span class="lineNum">     903</span>                 :             :   template&lt;typename... Args&gt;</span>
-<span id="L904"><span class="lineNum">     904</span>                 :<span class="tlaGNC">        5035 :   constexpr std::pair&lt;iterator, bool&gt; emplace(Args&amp;&amp;... args) noexcept(!kRequireThrows) {</span></span>
-<span id="L905"><span class="lineNum">     905</span>                 :<span class="tlaGNC">        5035 :     const RawValue new_val(std::forward&lt;Args&gt;(args)...);</span></span>
-<span id="L906"><span class="lineNum">     906</span>                 :<span class="tlaGNC">        5035 :     const iterator dst = lower_bound(GetKey(new_val));</span></span>
-<span id="L907"><span class="lineNum">     907</span>   [<span class="tlaGBC" title="branch 0 was taken 16 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5019 times"> + </span><span class="tlaGBC" title="branch 2 was taken 16 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">       10102 :     if (dst != end() &amp;&amp; !key_comp_(GetKey(*dst), GetKey(new_val)) &amp;&amp; !key_comp_(GetKey(new_val), GetKey(*dst))) {</span></span>
-<span class="lineNum">        </span>    <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 16 times"> + </span><span class="tlaUNC" title="branch 6 was not taken"> - </span><span class="tlaGBC" title="branch 7 was taken 5035 times"> + </span>]
-<span id="L908"><span class="lineNum">     908</span>                 :<span class="tlaUNC">           0 :       return std::make_pair(dst, false);</span></span>
+<span id="L904"><span class="lineNum">     904</span>                 :<span class="tlaGNC">        5036 :   constexpr std::pair&lt;iterator, bool&gt; emplace(Args&amp;&amp;... args) noexcept(!kRequireThrows) {</span></span>
+<span id="L905"><span class="lineNum">     905</span>                 :<span class="tlaGNC">        5036 :     const RawValue new_val(std::forward&lt;Args&gt;(args)...);</span></span>
+<span id="L906"><span class="lineNum">     906</span>                 :<span class="tlaGNC">        5036 :     const iterator dst = lower_bound(GetKey(new_val));</span></span>
+<span id="L907"><span class="lineNum">     907</span>   [<span class="tlaGBC" title="branch 0 was taken 17 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5019 times"> + </span><span class="tlaGBC" title="branch 2 was taken 17 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">       10106 :     if (dst != end() &amp;&amp; !key_comp_(GetKey(*dst), GetKey(new_val)) &amp;&amp; !key_comp_(GetKey(new_val), GetKey(*dst))) {</span></span>
+<span class="lineNum">        </span>    <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="branch 5 was taken 16 times"> + </span><span class="tlaGBC" title="branch 6 was taken 1 time"> + </span><span class="tlaGBC" title="branch 7 was taken 5035 times"> + </span>]
+<span id="L908"><span class="lineNum">     908</span>                 :<span class="tlaGNC">           1 :       return std::make_pair(dst, false);</span></span>
 <span id="L909"><span class="lineNum">     909</span>                 :             :     }</span>
 <span id="L910"><span class="lineNum">     910</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 5035 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 5035 times"> + </span>]:<span class="tlaGNC">        5035 :     MBO_CONFIG_REQUIRE(size_ &lt; Capacity, &quot;Called `emplace` at capacity.&quot;);</span></span>
 <span id="L911"><span class="lineNum">     911</span>         [<span class="tlaGBC" title="branch 0 was taken 26 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5035 times"> + </span>]:<span class="tlaGNC">       10096 :     for (iterator next = end(); next &gt; dst; --next) {</span></span>
@@ -3505,15 +3505,15 @@
 <span id="L1112"><span class="lineNum">    1112</span>                 :             : </span>
 <span id="L1113"><span class="lineNum">    1113</span>                 :             :   // NOLINTBEGIN(readability-container-data-pointer)</span>
 <span id="L1114"><span class="lineNum">    1114</span>                 :             : </span>
-<span id="L1115"><span class="lineNum">    1115</span>                 :<span class="tlaGNC">       98222 :   constexpr iterator begin() noexcept { return iterator(&amp;values_[0]); }</span></span>
+<span id="L1115"><span class="lineNum">    1115</span>                 :<span class="tlaGNC">       98224 :   constexpr iterator begin() noexcept { return iterator(&amp;values_[0]); }</span></span>
 <span id="L1116"><span class="lineNum">    1116</span>                 :             : </span>
-<span id="L1117"><span class="lineNum">    1117</span>                 :<span class="tlaGNC">      568870 :   constexpr const_iterator begin() const noexcept { return const_iterator(&amp;values_[0]); }</span></span>
+<span id="L1117"><span class="lineNum">    1117</span>                 :<span class="tlaGNC">      568886 :   constexpr const_iterator begin() const noexcept { return const_iterator(&amp;values_[0]); }</span></span>
 <span id="L1118"><span class="lineNum">    1118</span>                 :             : </span>
 <span id="L1119"><span class="lineNum">    1119</span>                 :             :   constexpr const_iterator cbegin() const noexcept { return const_iterator(&amp;values_[0]); }</span>
 <span id="L1120"><span class="lineNum">    1120</span>                 :             : </span>
-<span id="L1121"><span class="lineNum">    1121</span>                 :<span class="tlaGNC">      524879 :   MBO_FORCE_INLINE constexpr iterator end() noexcept { return iterator(&amp;values_[size_]); }</span></span>
+<span id="L1121"><span class="lineNum">    1121</span>                 :<span class="tlaGNC">      524881 :   MBO_FORCE_INLINE constexpr iterator end() noexcept { return iterator(&amp;values_[size_]); }</span></span>
 <span id="L1122"><span class="lineNum">    1122</span>                 :             : </span>
-<span id="L1123"><span class="lineNum">    1123</span>                 :<span class="tlaGNC">      731333 :   MBO_FORCE_INLINE constexpr const_iterator end() const noexcept { return const_iterator(&amp;values_[size_]); }</span></span>
+<span id="L1123"><span class="lineNum">    1123</span>                 :<span class="tlaGNC">      731362 :   MBO_FORCE_INLINE constexpr const_iterator end() const noexcept { return const_iterator(&amp;values_[size_]); }</span></span>
 <span id="L1124"><span class="lineNum">    1124</span>                 :             : </span>
 <span id="L1125"><span class="lineNum">    1125</span>                 :             :   MBO_FORCE_INLINE constexpr const_iterator cend() const noexcept { return const_iterator(&amp;values_[size_]); }</span>
 <span id="L1126"><span class="lineNum">    1126</span>                 :             : </span>
@@ -3551,10 +3551,10 @@
 <span id="L1158"><span class="lineNum">    1158</span>                 :             :   // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)</span>
 <span id="L1159"><span class="lineNum">    1159</span>                 :<span class="tlaGNC">      445774 :   static constexpr const Key&amp; GetKey(const Key&amp; key) noexcept { return key; }</span></span>
 <span id="L1160"><span class="lineNum">    1160</span>                 :             : </span>
-<span id="L1161"><span class="lineNum">    1161</span>                 :<span class="tlaGNC">         504 :   static constexpr const Key&amp; GetKey(const Value&amp; val) noexcept</span></span>
+<span id="L1161"><span class="lineNum">    1161</span>                 :<span class="tlaGNC">         538 :   static constexpr const Key&amp; GetKey(const Value&amp; val) noexcept</span></span>
 <span id="L1162"><span class="lineNum">    1162</span>                 :             :   requires(!kKeyOnly)</span>
 <span id="L1163"><span class="lineNum">    1163</span>                 :             :   {</span>
-<span id="L1164"><span class="lineNum">    1164</span>                 :<span class="tlaGNC">         504 :     return val.first;</span></span>
+<span id="L1164"><span class="lineNum">    1164</span>                 :<span class="tlaGNC">         538 :     return val.first;</span></span>
 <span id="L1165"><span class="lineNum">    1165</span>                 :             :   }</span>
 <span id="L1166"><span class="lineNum">    1166</span>                 :             : </span>
 <span id="L1167"><span class="lineNum">    1167</span>                 :             :   MBO_ALWAYS_INLINE static constexpr const Key&amp; GetKey(const Data&amp; data) noexcept {</span>

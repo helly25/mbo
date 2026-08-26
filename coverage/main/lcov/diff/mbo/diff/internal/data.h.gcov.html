@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-25 23:20:23</td>
+            <td class="headerValue">2026-08-26 06:39:22</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -116,7 +116,7 @@
 <span id="L36"><span class="lineNum">      36</span>                 :             :   };</span>
 <span id="L37"><span class="lineNum">      37</span>                 :             : </span>
 <span id="L38"><span class="lineNum">      38</span>                 :             :   Data() = delete;</span>
-<span id="L39"><span class="lineNum">      39</span>                 :<span class="tlaGNC">         345 :   ~Data() = default;</span></span>
+<span id="L39"><span class="lineNum">      39</span>                 :<span class="tlaGNC">         351 :   ~Data() = default;</span></span>
 <span id="L40"><span class="lineNum">      40</span>                 :             : </span>
 <span id="L41"><span class="lineNum">      41</span>                 :             :   Data(</span>
 <span id="L42"><span class="lineNum">      42</span>                 :             :       const DiffOptions&amp; options,</span>
@@ -129,22 +129,22 @@
 <span id="L49"><span class="lineNum">      49</span>                 :             :   Data&amp; operator=(Data&amp;&amp;) = delete;</span>
 <span id="L50"><span class="lineNum">      50</span>                 :             : </span>
 <span id="L51"><span class="lineNum">      51</span>                 :             :   // NOLINTNEXTLINE(*-avoid-unchecked-container-access): Done() guards; hot line fetch.</span>
-<span id="L52"><span class="lineNum">      52</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5483 times"> + </span>]:<span class="tlaGNC">        5484 :   std::string_view Next() noexcept { return Done() ? &quot;&quot; : text_[idx_++].line; }</span></span>
+<span id="L52"><span class="lineNum">      52</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5495 times"> + </span>]:<span class="tlaGNC">        5496 :   std::string_view Next() noexcept { return Done() ? &quot;&quot; : text_[idx_++].line; }</span></span>
 <span id="L53"><span class="lineNum">      53</span>                 :             : </span>
 <span id="L54"><span class="lineNum">      54</span>                 :             :   // NOLINTNEXTLINE(*-avoid-unchecked-container-access): Done() guards; hot line fetch.</span>
-<span id="L55"><span class="lineNum">      55</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 4301 times"> + </span>]:<span class="tlaGNC">        4301 :   std::string_view Line() const noexcept { return Done() ? &quot;&quot; : text_[idx_].line; }</span></span>
+<span id="L55"><span class="lineNum">      55</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 4307 times"> + </span>]:<span class="tlaGNC">        4307 :   std::string_view Line() const noexcept { return Done() ? &quot;&quot; : text_[idx_].line; }</span></span>
 <span id="L56"><span class="lineNum">      56</span>                 :             : </span>
-<span id="L57"><span class="lineNum">      57</span>                 :<span class="tlaGNC">        5880 :   const LineCache&amp; GetCache(std::size_t ofs) const noexcept {</span></span>
-<span id="L58"><span class="lineNum">      58</span>                 :<span class="tlaGNC">        5880 :     ofs += idx_;</span></span>
-<span id="L59"><span class="lineNum">      59</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 5880 times"> + </span>]:<span class="tlaGNC">        5880 :     ABSL_CHECK_LT(ofs, Size());</span></span>
-<span id="L60"><span class="lineNum">      60</span>                 :<span class="tlaGNC">        5880 :     return text_.at(ofs);</span></span>
+<span id="L57"><span class="lineNum">      57</span>                 :<span class="tlaGNC">        5892 :   const LineCache&amp; GetCache(std::size_t ofs) const noexcept {</span></span>
+<span id="L58"><span class="lineNum">      58</span>                 :<span class="tlaGNC">        5892 :     ofs += idx_;</span></span>
+<span id="L59"><span class="lineNum">      59</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 5892 times"> + </span>]:<span class="tlaGNC">        5892 :     ABSL_CHECK_LT(ofs, Size());</span></span>
+<span id="L60"><span class="lineNum">      60</span>                 :<span class="tlaGNC">        5892 :     return text_.at(ofs);</span></span>
 <span id="L61"><span class="lineNum">      61</span>                 :             :   }</span>
 <span id="L62"><span class="lineNum">      62</span>                 :             : </span>
-<span id="L63"><span class="lineNum">      63</span>                 :<span class="tlaGNC">        8649 :   std::size_t Idx() const noexcept { return idx_; }</span></span>
+<span id="L63"><span class="lineNum">      63</span>                 :<span class="tlaGNC">        8661 :   std::size_t Idx() const noexcept { return idx_; }</span></span>
 <span id="L64"><span class="lineNum">      64</span>                 :             : </span>
-<span id="L65"><span class="lineNum">      65</span>                 :<span class="tlaGNC">       22883 :   std::size_t Size() const noexcept { return text_.size(); }</span></span>
+<span id="L65"><span class="lineNum">      65</span>                 :<span class="tlaGNC">       22949 :   std::size_t Size() const noexcept { return text_.size(); }</span></span>
 <span id="L66"><span class="lineNum">      66</span>                 :             : </span>
-<span id="L67"><span class="lineNum">      67</span>                 :<span class="tlaGNC">       10841 :   bool Done() const noexcept { return idx_ &gt;= Size(); }</span></span>
+<span id="L67"><span class="lineNum">      67</span>                 :<span class="tlaGNC">       10865 :   bool Done() const noexcept { return idx_ &gt;= Size(); }</span></span>
 <span id="L68"><span class="lineNum">      68</span>                 :             : </span>
 <span id="L69"><span class="lineNum">      69</span>                 :<span class="tlaGNC">         349 :   bool Done(std::size_t ofs) const noexcept { return idx_ + ofs &gt;= Size(); }</span></span>
 <span id="L70"><span class="lineNum">      70</span>                 :             : </span>

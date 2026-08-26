@@ -40,18 +40,18 @@
             <td class="headerValue">mbo production coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryMed">88.9&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">27</td>
-            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntry">27</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-25 23:20:23</td>
+            <td class="headerValue">2026-08-26 06:39:22</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryMed">93.5&nbsp;%</td>
-            <td class="headerCovTableEntry">31</td>
-            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntryMed">93.8&nbsp;%</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntry">30</td>
           </tr>
           <tr>
             <td></td>
@@ -237,9 +237,9 @@
 <span id="L157"><span class="lineNum">     157</span>                 :             :   }</span>
 <span id="L158"><span class="lineNum">     158</span>                 :             : </span>
 <span id="L159"><span class="lineNum">     159</span>                 :             :   template&lt;typename Sink&gt;</span>
-<span id="L160"><span class="lineNum">     160</span>                 :<span class="tlaUNC">           0 :   friend void AbslStringify(Sink&amp; sink, const Required&lt;T&gt;&amp; v) {</span></span>
-<span id="L161"><span class="lineNum">     161</span>                 :<span class="tlaUNC">           0 :     absl::Format(&amp;sink, &quot;%v&quot;, v.value_);</span></span>
-<span id="L162"><span class="lineNum">     162</span>                 :<span class="tlaUNC">           0 :   }</span></span>
+<span id="L160"><span class="lineNum">     160</span>                 :<span class="tlaGNC">           1 :   friend void AbslStringify(Sink&amp; sink, const Required&lt;T&gt;&amp; v) {</span></span>
+<span id="L161"><span class="lineNum">     161</span>                 :<span class="tlaGNC">           1 :     absl::Format(&amp;sink, &quot;%v&quot;, v.value_);</span></span>
+<span id="L162"><span class="lineNum">     162</span>                 :<span class="tlaGNC">           1 :   }</span></span>
 <span id="L163"><span class="lineNum">     163</span>                 :             : </span>
 <span id="L164"><span class="lineNum">     164</span>                 :             :  private:</span>
 <span id="L165"><span class="lineNum">     165</span>                 :             :   T value_;</span>

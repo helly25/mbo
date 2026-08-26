@@ -40,13 +40,13 @@
             <td class="headerValue">mbo production coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">94.5&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">73</td>
-            <td class="headerCovTableEntry">69</td>
+            <td class="headerCovTableEntry">73</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-25 23:20:23</td>
+            <td class="headerValue">2026-08-26 06:39:22</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">98.5&nbsp;%</td>
@@ -58,9 +58,9 @@
             <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryMed">80.4&nbsp;%</td>
+            <td class="headerCovTableEntryHi">84.8&nbsp;%</td>
             <td class="headerCovTableEntry">46</td>
-            <td class="headerCovTableEntry">37</td>
+            <td class="headerCovTableEntry">39</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -232,10 +232,10 @@
 <span id="L152"><span class="lineNum">     152</span>                 :             : </span>
 <span id="L153"><span class="lineNum">     153</span>                 :             :   // Find and search: at, [], lower_bound, upper_bound, equal_range, find, contains, count</span>
 <span id="L154"><span class="lineNum">     154</span>                 :             : </span>
-<span id="L155"><span class="lineNum">     155</span>                 :<span class="tlaUNC">           0 :   constexpr Value&amp; at(const Key&amp; key) {</span></span>
-<span id="L156"><span class="lineNum">     156</span>                 :<span class="tlaUNC">           0 :     auto it = find(key);</span></span>
-<span id="L157"><span class="lineNum">     157</span>   [<span class="tlaUNC" title="branch 0 was not executed"> # </span><span class="tlaUNC" title="branch 1 was not executed"> # </span><span class="tlaUNC" title="branch 2 was not executed"> # </span><span class="tlaUNC" title="branch 3 was not executed"> # </span>]:<span class="tlaUNC">           0 :     MBO_CONFIG_REQUIRE(it != end(), &quot;Out of range&quot;);</span></span>
-<span id="L158"><span class="lineNum">     158</span>                 :<span class="tlaUNC">           0 :     return it-&gt;second;</span></span>
+<span id="L155"><span class="lineNum">     155</span>                 :<span class="tlaGNC">           1 :   constexpr Value&amp; at(const Key&amp; key) {</span></span>
+<span id="L156"><span class="lineNum">     156</span>                 :<span class="tlaGNC">           1 :     auto it = find(key);</span></span>
+<span id="L157"><span class="lineNum">     157</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :     MBO_CONFIG_REQUIRE(it != end(), &quot;Out of range&quot;);</span></span>
+<span id="L158"><span class="lineNum">     158</span>                 :<span class="tlaGNC">           1 :     return it-&gt;second;</span></span>
 <span id="L159"><span class="lineNum">     159</span>                 :             :   }</span>
 <span id="L160"><span class="lineNum">     160</span>                 :             : </span>
 <span id="L161"><span class="lineNum">     161</span>                 :             :   constexpr const Value&amp; at(const Key&amp; key) const {</span>
@@ -252,10 +252,10 @@
 <span id="L172"><span class="lineNum">     172</span>                 :             :   // `find`/`count`/`contains` but no heterogeneous `operator[]`.</span>
 <span id="L173"><span class="lineNum">     173</span>                 :             :   template&lt;typename K&gt;</span>
 <span id="L174"><span class="lineNum">     174</span>                 :             :   requires(LimitedBase::template kIsForeignKey&lt;K&gt;)</span>
-<span id="L175"><span class="lineNum">     175</span>                 :<span class="tlaGNC">           2 :   constexpr Value&amp; at(const K&amp; key) {</span></span>
-<span id="L176"><span class="lineNum">     176</span>                 :<span class="tlaGNC">           2 :     auto it = find(key);</span></span>
-<span id="L177"><span class="lineNum">     177</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">           4 :     MBO_CONFIG_REQUIRE(it != end(), &quot;Out of range&quot;);</span></span>
-<span id="L178"><span class="lineNum">     178</span>                 :<span class="tlaGNC">           2 :     return it-&gt;second;</span></span>
+<span id="L175"><span class="lineNum">     175</span>                 :<span class="tlaGNC">           1 :   constexpr Value&amp; at(const K&amp; key) {</span></span>
+<span id="L176"><span class="lineNum">     176</span>                 :<span class="tlaGNC">           1 :     auto it = find(key);</span></span>
+<span id="L177"><span class="lineNum">     177</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :     MBO_CONFIG_REQUIRE(it != end(), &quot;Out of range&quot;);</span></span>
+<span id="L178"><span class="lineNum">     178</span>                 :<span class="tlaGNC">           1 :     return it-&gt;second;</span></span>
 <span id="L179"><span class="lineNum">     179</span>                 :             :   }</span>
 <span id="L180"><span class="lineNum">     180</span>                 :             : </span>
 <span id="L181"><span class="lineNum">     181</span>                 :             :   template&lt;typename K&gt;</span>

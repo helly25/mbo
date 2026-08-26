@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-25 23:20:23</td>
+            <td class="headerValue">2026-08-26 06:39:22</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">97.5&nbsp;%</td>
@@ -262,11 +262,11 @@
 <span id="L191"><span class="lineNum">     191</span>              :   // The core problem stems from synthesized operators interfering with finding</span>
 <span id="L192"><span class="lineNum">     192</span>              :   // the best candidate. Also see:</span>
 <span id="L193"><span class="lineNum">     193</span>              :   // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2468r2.html</span>
-<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">         407 :   friend auto operator&lt;=&gt;(const T&amp; lhs, const T&amp; rhs) { return lhs.ToTuple() &lt;=&gt; rhs.ToTuple(); }</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">         502 :   friend auto operator&lt;=&gt;(const T&amp; lhs, const T&amp; rhs) { return lhs.ToTuple() &lt;=&gt; rhs.ToTuple(); }</span></span>
 <span id="L195"><span class="lineNum">     195</span>              : </span>
 <span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC">          26 :   friend bool operator==(const T&amp; lhs, const T&amp; rhs) { return lhs.ToTuple() == rhs.ToTuple(); }</span></span>
 <span id="L197"><span class="lineNum">     197</span>              : </span>
-<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">         383 :   friend bool operator&lt;(const T&amp; lhs, const T&amp; rhs) { return lhs.ToTuple() &lt; rhs.ToTuple(); }</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">         478 :   friend bool operator&lt;(const T&amp; lhs, const T&amp; rhs) { return lhs.ToTuple() &lt; rhs.ToTuple(); }</span></span>
 <span id="L199"><span class="lineNum">     199</span>              : </span>
 <span id="L200"><span class="lineNum">     200</span>              :   // Define operator `&lt;=&gt;` on `const T&amp;` and another type.</span>
 <span id="L201"><span class="lineNum">     201</span>              :   template&lt;typename Other, typename = decltype(StructToTuple(std::declval&lt;const Other&amp;&gt;()))&gt;</span>
