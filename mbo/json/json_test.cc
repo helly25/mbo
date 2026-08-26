@@ -381,7 +381,7 @@ TEST_F(JsonTest, ValueIteratorAssignment) {
   moved_it = object_values.begin();
   EXPECT_THAT(*moved_it, 3);
   EXPECT_THAT(moved_it->IsNumber(), true);
-  Json::value_iterator previous_object = moved_it++;
+  const Json::value_iterator previous_object = moved_it++;
   EXPECT_THAT(*previous_object, 3);
   EXPECT_THAT(moved_it, object_values.end());
   const Json::const_value_iterator copied_object_const_it{previous_object};

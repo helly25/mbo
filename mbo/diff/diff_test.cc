@@ -142,6 +142,7 @@ class DiffTest : public ::testing::Test {
 
 TEST_F(DiffTest, RejectsAnUnknownAlgorithmValue) {
   Diff::Options options;
+  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange): This test verifies invalid input.
   options.algorithm = static_cast<Diff::Options::Algorithm>(999);
   EXPECT_THAT(
       mbo::diff::Diff::FileDiff({}, {}, options),
