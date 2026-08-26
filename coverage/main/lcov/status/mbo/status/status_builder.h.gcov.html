@@ -46,12 +46,12 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-24 22:22:38</td>
+            <td class="headerValue">2026-08-25 23:20:23</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryMed">90.5&nbsp;%</td>
-            <td class="headerCovTableEntry">21</td>
-            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryMed">90.0&nbsp;%</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntry">18</td>
           </tr>
           <tr>
             <td></td>
@@ -131,7 +131,7 @@
 <span id="L51"><span class="lineNum">      51</span>         [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 45 times"> + </span>]:<span class="tlaGNC">          49 :       : data_(status.ok() ? nullptr : std::unique_ptr&lt;Data&gt;(new Data{.status = std::move(status)})) {}</span></span>
 <span id="L52"><span class="lineNum">      52</span>                 :             : </span>
 <span id="L53"><span class="lineNum">      53</span>                 :             :   template&lt;typename T&gt;</span>
-<span id="L54"><span class="lineNum">      54</span>                 :<span class="tlaGNC">          13 :   explicit StatusBuilder(const absl::StatusOr&lt;T&gt;&amp; status) : StatusBuilder(status.status()) {}</span></span>
+<span id="L54"><span class="lineNum">      54</span>                 :<span class="tlaGNC">           2 :   explicit StatusBuilder(const absl::StatusOr&lt;T&gt;&amp; status) : StatusBuilder(status.status()) {}</span></span>
 <span id="L55"><span class="lineNum">      55</span>                 :             : </span>
 <span id="L56"><span class="lineNum">      56</span>                 :             :   template&lt;typename T&gt;</span>
 <span id="L57"><span class="lineNum">      57</span>                 :<span class="tlaGNC">           4 :   explicit StatusBuilder(absl::StatusOr&lt;T&gt;&amp;&amp; status) : StatusBuilder(std::move(status).status()) {}</span></span>
