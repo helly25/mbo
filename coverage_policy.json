@@ -6,8 +6,8 @@
     "mbo/**/*_test.cc",
     "mbo/**/*_test.h"
   ],
-  "minimum": { "lines": 88, "functions": 80, "branches": 60 },
-  "target": { "lines": 90, "functions": 95, "branches": 82 },
+  "minimum": { "lines": 90, "functions": 90, "branches": 75 },
+  "target": { "lines": 94, "functions": 95, "branches": 82 },
   "enforce": "medium",
   "baseline": {
     "maximum_drop": { "lines": 0.1, "functions": 0.1, "branches": 0.1 }
@@ -23,24 +23,12 @@
     "digest": { "include": ["mbo/digest/**"] },
     "file": { "include": ["mbo/file/**"] },
     "hash": { "include": ["mbo/hash/**"] },
-    "json": {
-      "include": ["mbo/json/**"],
-      "target": { "functions": 92 },
-      "reason": "Use a 92% high function band while generated variant cross-products are normalized."
-    },
+    "json": { "include": ["mbo/json/**"] },
     "log": { "include": ["mbo/log/**"] },
-    "mope": {
-      "include": ["mbo/mope/**"],
-      "target": { "functions": 92 },
-      "reason": "Use the permitted 92% high function band for this small command-line module."
-    },
+    "mope": { "include": ["mbo/mope/**"] },
     "status": { "include": ["mbo/status/**"] },
     "strings": { "include": ["mbo/strings/**"] },
     "testing": { "include": ["mbo/testing/**"] },
-    "types": {
-      "include": ["mbo/types/**"],
-      "target": { "functions": 92 },
-      "reason": "Use a 92% high function band while template specializations are normalized."
-    }
+    "types": { "include": ["mbo/types/**"] }
   }
 }
