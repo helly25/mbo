@@ -210,7 +210,7 @@ TEST_F(ParseTest, ParseStringErrors) {
       ParseString({}, "\\o{}"),
       StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad octal C++23 sequence."));
   EXPECT_THAT(
-      ParseString({}, "\\o{1"),
+      ParseString({}, "\\o{12"),
       StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad octal C++23 sequence."));
   EXPECT_THAT(
       ParseString({}, "\\x"), StatusIs(absl::StatusCode::kInvalidArgument, "ParseString input has bad hex sequence."));
