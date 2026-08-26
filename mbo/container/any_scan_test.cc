@@ -316,6 +316,15 @@ TEST_F(ConvertingScanTest, CallFunctionWithConversion) {
   }
 }
 
+TEST_F(ConvertingScanTest, IteratorsOnlyCompareEqualToThemselves) {
+  const std::array<std::string_view, 2> data{{"foo", "bar"}};
+  const ConvertingScan<std::string> scan = MakeConvertingScan(data);
+  auto first = scan.begin();
+  const auto same_position = scan.begin();
+  EXPECT_THAT(first == first, IsTrue());
+  EXPECT_THAT(first == same_position, IsFalse());
+}
+
 TEST_F(ConvertingScanTest, InitializerList) {
   EXPECT_THAT(ConvTester<std::string_view>({"foo", "bar"}), ElementsAre("foo", "bar"));
   EXPECT_THAT(ConvTester<std::string>({"foo", "bar"}), ElementsAre("foo", "bar"));
