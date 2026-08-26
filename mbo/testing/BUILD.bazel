@@ -92,7 +92,10 @@ cc_test(
     name = "runfiles_dir_test",
     size = "small",
     srcs = ["runfiles_dir_test.cc"],
-    data = ["runfiles_dir.h"],
+    data = [
+        "runfiles_dir.h",
+        "@googletest//:LICENSE",
+    ],
     deps = [
         ":runfiles_dir_cc",
         ":status_cc",

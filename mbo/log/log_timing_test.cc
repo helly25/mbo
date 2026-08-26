@@ -57,6 +57,7 @@ TEST_F(StripFunctionNameTest, Empty) {
 }
 
 TEST_F(StripFunctionNameTest, Simple) {
+  EXPECT_THAT(StripFunctionName("already stripped"), "already stripped");
   EXPECT_THAT(StripFunctionName("auto foo()"), "foo");
   EXPECT_THAT(StripFunctionName("auto foo(int, int)"), "foo");
 }

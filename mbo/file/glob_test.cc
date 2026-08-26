@@ -53,6 +53,7 @@ using ::mbo::testing::IsOk;
 using ::mbo::testing::IsOkAndHolds;
 using ::mbo::testing::StatusIs;
 using ::testing::AnyOf;
+using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::UnorderedElementsAreArray;
 
@@ -465,6 +466,31 @@ TEST_F(GlobFileTest, StatusOrOverloadsPropagateInputFailures) {
       Glob(
           absl::StatusOr<RootAndPattern>(failure), {}, {}, [](const GlobEntry&) { return GlobEntryAction::kContinue; }),
       StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(GlobFileTest, GlobEntryReportsItsSelectedPathAndRegularFileSize) {
+  const std::filesystem::path file = root_glob_test / ".sized";
+  std::ofstream output(file, std::ios::binary);
+  output << "abc";
+  output.close();
+  ASSERT_THAT(static_cast<bool>(output), IsTrue());
+
+  const GlobEntry absolute{
+      .rel_path = std::nullopt,
+      .entry = std::filesystem::directory_entry(file),
+      .depth = 0,
+  };
+  EXPECT_THAT(absolute.MaybeRelativePath(), file);
+  EXPECT_THAT(absolute.FileSize(), 3);
+
+  const GlobEntry relative{
+      .rel_path = std::filesystem::path(".sized"),
+      .entry = std::filesystem::directory_entry(root_glob_test / "dir"),
+      .depth = 1,
+  };
+  EXPECT_THAT(relative.MaybeRelativePath(), std::filesystem::path(".sized"));
+  EXPECT_THAT(relative.FileSize(), 0);
+  EXPECT_THAT(std::filesystem::remove(file), IsTrue());
 }
 
 std::filesystem::path GlobFileTest::root_glob_test;

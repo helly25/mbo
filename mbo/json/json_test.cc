@@ -370,6 +370,10 @@ TEST_F(JsonTest, ValueIteratorAssignment) {
   Json::const_value_iterator moved_const_it;
   moved_const_it = array.values().begin();
   EXPECT_THAT(*moved_const_it, 1);
+  const Json::const_value_iterator copied_const_it{mutable_it};
+  EXPECT_THAT(*copied_const_it, 1);
+  const Json::const_value_iterator constructed_moved_const_it{Json::value_iterator{array_values.begin()}};
+  EXPECT_THAT(*constructed_moved_const_it, 1);
 
   Json object;
   object["value"] = 3;
@@ -380,6 +384,10 @@ TEST_F(JsonTest, ValueIteratorAssignment) {
   Json::value_iterator previous_object = moved_it++;
   EXPECT_THAT(*previous_object, 3);
   EXPECT_THAT(moved_it, object_values.end());
+  const Json::const_value_iterator copied_object_const_it{previous_object};
+  EXPECT_THAT(*copied_object_const_it, 3);
+  const Json::const_value_iterator constructed_moved_object_const_it{Json::value_iterator{object_values.begin()}};
+  EXPECT_THAT(*constructed_moved_object_const_it, 3);
   const_it = moved_it;
   EXPECT_THAT(const_it, object_values.end());
 

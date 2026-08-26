@@ -55,6 +55,11 @@ TEST_F(RunfilesDirTest, ResolvesAnExplicitRepositoryLabel) {
   EXPECT_THAT(fs::exists(dir), IsTrue()) << dir;
 }
 
+TEST_F(RunfilesDirTest, ResolvesAnExternalRepositoryThroughTheRepoMapping) {
+  MBO_ASSERT_OK_AND_ASSIGN(const std::string dir, RunfilesDir("@googletest//:LICENSE"));
+  EXPECT_THAT(fs::exists(dir), IsTrue()) << dir;
+}
+
 TEST_F(RunfilesDirTest, LabelColonBecomesASlash) {
   MBO_ASSERT_OK_AND_ASSIGN(const std::string by_label, RunfilesDir("//mbo/testing:runfiles_dir.h"));
   MBO_ASSERT_OK_AND_ASSIGN(const std::string by_path, RunfilesDir("mbo/testing/runfiles_dir.h"));

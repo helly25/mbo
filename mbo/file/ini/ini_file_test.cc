@@ -38,6 +38,7 @@
 namespace mbo::file {
 namespace {
 
+using ::mbo::testing::IsOkAndHolds;
 using ::mbo::testing::StatusIs;
 using ::testing::Eq;
 using ::testing::Gt;
@@ -120,11 +121,19 @@ TEST_F(IniFileTest, ParseStrictRejectsMalformedInputWithLineNumbers) {
 }
 
 TEST_F(IniFileTest, PermissiveParserRetainsLegacyMalformedInputBehavior) {
-  const IniFile explicit_permissive = IniFile::ParsePermissive("key=first\nkey=second\nmissing\n");
+  const IniFile explicit_permissive =
+      IniFile::ParsePermissive("# comment\nkey=first\nkey=second\nmissing\n[group]\n; comment\nchild=value\n");
   const IniFile compatibility = IniFile::Parse("key=first\nkey=second\n");
 
   EXPECT_THAT(explicit_permissive.GetKeyOrDefault({.group = "", .key = "key"}), Eq("second"));
   EXPECT_THAT(explicit_permissive.GetKeyOrDefault({.group = "", .key = "missing"}), IsEmpty());
+  EXPECT_THAT(explicit_permissive.GetKeyOrStatus({.group = "group", .key = "child"}), IsOkAndHolds("value"));
+  EXPECT_THAT(
+      explicit_permissive.GetKeyOrStatus({.group = "absent", .key = "child"}),
+      StatusIs(absl::StatusCode::kNotFound, HasSubstr("Group [absent] not found")));
+  EXPECT_THAT(
+      explicit_permissive.GetKeyOrStatus({.group = "group", .key = "absent"}),
+      StatusIs(absl::StatusCode::kNotFound, HasSubstr("has no key 'absent'")));
   EXPECT_THAT(compatibility.GetKeyOrDefault({.group = "", .key = "key"}), Eq("second"));
 }
 
