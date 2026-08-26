@@ -49,8 +49,10 @@ class MonoIsOkMatcherImpl : public ::testing::MatcherInterface<T> {
  public:
   MonoIsOkMatcherImpl() = default;
 
+  // LCOV_MERGE_FUNC_LINE: repeated for every supported status-bearing type.
   void DescribeTo(std::ostream* os) const override { *os << "is OK"; }
 
+  // LCOV_MERGE_FUNC_LINE: repeated for every supported status-bearing type.
   void DescribeNegationTo(std::ostream* os) const override { *os << "is not OK"; }
 
   bool MatchAndExplain(T actual_value, ::testing::MatchResultListener* result) const override {
@@ -86,11 +88,13 @@ class IsOkAndHoldsMatcherImpl : public ::testing::MatcherInterface<StatusOrType>
   requires(!std::is_same_v<InnerMatcher, IsOkAndHoldsMatcherImpl>)
       : inner_matcher_(::testing::SafeMatcherCast<const value_type&>(std::forward<InnerMatcher>(inner_matcher))) {}
 
+  // LCOV_MERGE_FUNC_LINE: repeated for every StatusOr value and matcher type.
   void DescribeTo(std::ostream* os) const override {
     *os << "is OK and has a value that ";
     inner_matcher_.DescribeTo(os);
   }
 
+  // LCOV_MERGE_FUNC_LINE: repeated for every StatusOr value and matcher type.
   void DescribeNegationTo(std::ostream* os) const override {
     *os << "isn't OK or has a value that ";
     inner_matcher_.DescribeNegationTo(os);

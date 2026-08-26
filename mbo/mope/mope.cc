@@ -62,8 +62,10 @@ std::pair<std::size_t, std::size_t> ExpandWhiteSpace(
 
 }  // namespace
 
+// LCOV_EXCL_FUNC_LINE: Only instantiated by fatal ABSL_CHECK_EQ diagnostics.
 template<typename Sink>
 void AbslStringify(Sink& sink, Template::TagType value) {
+  // LCOV_EXCL_FUNC_LINE: Fatal subprocess profiles cannot flush.
   absl::Format(&sink, "%s", [value] {
     switch (value) {
       case Template::TagType::kValue: return "TagType::Value";

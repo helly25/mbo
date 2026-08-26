@@ -73,9 +73,13 @@ def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCover
         }
         excluded_functions: set[int] = set()
         merged_function_groups: dict[int, int] = {}
+        merged_branch_groups: dict[int, int] = {}
         for index, line in enumerate(source_lines):
             exclude = "LCOV_EXCL_FUNC_LINE" in line
             merge = "LCOV_MERGE_FUNC_LINE" in line
+            branch_merge = re.search(r"LCOV_MERGE_BR_LINE\s+(\d+)", line)
+            if branch_merge:
+                merged_branch_groups[index + 1] = int(branch_merge.group(1))
             if not exclude and not merge:
                 continue
             for continuation in range(index, len(source_lines)):
@@ -96,7 +100,26 @@ def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCover
             else:
                 ordinary_functions.append((line, hits))
         data.functions = ordinary_functions + sorted(merged_hits.items())
-        data.branches = [(line, taken) for line, taken in data.branches if line not in excluded_branches]
+        ordinary_branches: list[tuple[int, bool]] = []
+        branches_by_line: dict[int, list[bool]] = defaultdict(list)
+        for line, taken in data.branches:
+            if line in excluded_branches:
+                continue
+            if line in merged_branch_groups:
+                branches_by_line[line].append(taken)
+            else:
+                ordinary_branches.append((line, taken))
+        for line, branches in sorted(branches_by_line.items()):
+            width = merged_branch_groups[line]
+            if width <= 0 or len(branches) % width:
+                raise ValueError(
+                    f"{name}:{line}: LCOV_MERGE_BR_LINE {width} cannot merge "
+                    f"{len(branches)} branch records"
+                )
+            ordinary_branches.extend(
+                (line, any(branches[index::width])) for index in range(width)
+            )
+        data.branches = ordinary_branches
     return result
 
 

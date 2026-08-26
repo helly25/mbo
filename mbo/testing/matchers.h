@@ -55,6 +55,7 @@ template<typename A, typename B>
 struct IsStdPair<std::pair<A, B>> : std::true_type {};
 
 template<typename L, typename R>
+// LCOV_MERGE_FUNC_LINE: repeated for every matched element type.
 constexpr bool ElementEqual(const L& lhs, const R& rhs) {
   if constexpr (HasEqualityWith<L, R>) {
     return lhs == rhs;
@@ -91,8 +92,10 @@ class IsElementOfMatcher {
     Impl(Container container, std::string_view positive_lead, std::string_view negative_lead)
         : container_(std::move(container)), positive_lead_(positive_lead), negative_lead_(negative_lead) {}
 
+    // LCOV_MERGE_FUNC_LINE: repeated for every matched container type.
     void DescribeTo(::std::ostream* os) const override { DescribeContents(*os, positive_lead_); }
 
+    // LCOV_MERGE_FUNC_LINE: repeated for every matched container type.
     void DescribeNegationTo(::std::ostream* os) const override { DescribeContents(*os, negative_lead_); }
 
     bool MatchAndExplain(Value value, ::testing::MatchResultListener* listener) const override {
@@ -110,6 +113,7 @@ class IsElementOfMatcher {
     }
 
    private:
+    // LCOV_MERGE_FUNC_LINE: repeated for every matched container type.
     void DescribeContents(::std::ostream& os, std::string_view lead) const {
       os << lead << " {";
       bool first = true;
@@ -307,11 +311,13 @@ class WhenTransformedByMatcher {
         : transformer_(transformer),
           container_matcher_(::testing::MatcherCast<TransformedContainerType>(container_matcher)) {}
 
+    // LCOV_MERGE_FUNC_LINE: repeated for every transformer specialization.
     void DescribeTo(::std::ostream* os) const override {
       *os << "when transformed ";
       container_matcher_.DescribeTo(os);
     }
 
+    // LCOV_MERGE_FUNC_LINE: repeated for every transformer specialization.
     void DescribeNegationTo(::std::ostream* os) const override {
       *os << "when transformed ";
       container_matcher_.DescribeNegationTo(os);

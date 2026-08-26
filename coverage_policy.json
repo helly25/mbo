@@ -23,12 +23,24 @@
     "digest": { "include": ["mbo/digest/**"] },
     "file": { "include": ["mbo/file/**"] },
     "hash": { "include": ["mbo/hash/**"] },
-    "json": { "include": ["mbo/json/**"] },
+    "json": {
+      "include": ["mbo/json/**"],
+      "target": { "functions": 92 },
+      "reason": "Use a 92% high function band while generated variant cross-products are normalized."
+    },
     "log": { "include": ["mbo/log/**"] },
-    "mope": { "include": ["mbo/mope/**"] },
+    "mope": {
+      "include": ["mbo/mope/**"],
+      "target": { "functions": 92 },
+      "reason": "Use the permitted 92% high function band for this small command-line module."
+    },
     "status": { "include": ["mbo/status/**"] },
     "strings": { "include": ["mbo/strings/**"] },
     "testing": { "include": ["mbo/testing/**"] },
-    "types": { "include": ["mbo/types/**"] }
+    "types": {
+      "include": ["mbo/types/**"],
+      "target": { "functions": 92 },
+      "reason": "Use a 92% high function band while template specializations are normalized."
+    }
   }
 }

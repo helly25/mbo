@@ -401,7 +401,7 @@ class Json {
 
       stringify.Stream(os, Null{});
     } else {
-      MBO_CONFIG_REQUIRE(IsObject(), "Only Objects can be serialized.");
+      MBO_CONFIG_REQUIRE(IsObject(), "Only Objects can be serialized.");  // LCOV_EXCL_BR_LINE: fatal path.
       stringify.Stream(os, std::get<Object>(data_));
     }
     return os;
@@ -496,7 +496,7 @@ class Json {
       auto& values = std::get<Array>(data_);
       values->pop_back();
     } else {
-      MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array or Null.");
+      MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array or Null.");  // LCOV_EXCL_BR_LINE: fatal path.
     }
   }
 
@@ -505,12 +505,12 @@ class Json {
   // below are the checked implementation, not unchecked use of it.
   Json& operator[](std::size_t index) {
     MakeArray();
-    MBO_CONFIG_REQUIRE(index < size(), "Out of range.");
+    MBO_CONFIG_REQUIRE(index < size(), "Out of range.");  // LCOV_EXCL_BR_LINE: fatal path.
     return (*std::get<Array>(data_))[index];
   }
 
   const Json& operator[](std::size_t index) const {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     MBO_CONFIG_REQUIRE(index < size(), "Out of range.");
     return (*std::get<Array>(data_))[index];
   }
@@ -547,12 +547,12 @@ class Json {
   // NOLINTEND(*-avoid-unchecked-container-access)
 
   iterator erase(const_iterator pos) {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->erase(pos);
   }
 
   iterator erase(const_iterator first, const_iterator last) {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->erase(first, last);
   }
 
@@ -581,84 +581,84 @@ class Json {
   }
 
   void resize(size_type count) {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     std::get<Array>(data_)->resize(count);
   }
 
   template<ConvertibleToJson Value>
   void resize(size_type count, const Value& value) {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     std::get<Array>(data_)->resize(count, Json(value));
   }
 
   iterator begin() {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->begin();
   }
 
   const_iterator begin() const {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->begin();
   }
 
   const_iterator cbegin() {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->cbegin();
   }
 
   iterator end() {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->end();
   }
 
   const_iterator end() const {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->end();
   }
 
   const_iterator cend() {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->cend();
   }
 
   reverse_iterator rbegin() {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->rbegin();
   }
 
   const_reverse_iterator rbegin() const {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->rbegin();
   }
 
   const_reverse_iterator crbegin() {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->crbegin();
   }
 
   reverse_iterator rend() {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->rend();
   }
 
   const_reverse_iterator rend() const {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->rend();
   }
 
   const_reverse_iterator crend() {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::get<Array>(data_)->crend();
   }
 
   auto values() -> values_view {
     if (IsArray()) {
       auto& array = std::get<Array>(data_);
-      MBO_CONFIG_REQUIRE_DEBUG(array != nullptr, "May not be nulltr.");
+      MBO_CONFIG_REQUIRE_DEBUG(array != nullptr, "May not be nulltr.");  // LCOV_EXCL_BR_LINE: invariant.
       std::cout << "Array Size: " << array->size() << "\n" << std::flush;
       return {*this, array->begin(), array->end()};
     }
-    MBO_CONFIG_REQUIRE(IsObject(), "Is neither Array nor Object.");
+    MBO_CONFIG_REQUIRE(IsObject(), "Is neither Array nor Object.");  // LCOV_EXCL_BR_LINE: fatal path.
     auto& object = std::get<Object>(data_);
     std::cout << "Object Size: " << object.size() << "\n" << std::flush;
     return {*this, object.begin(), object.end()};
@@ -669,47 +669,47 @@ class Json {
       const auto& array = std::get<Array>(data_);
       return {*this, array->begin(), array->end()};
     }
-    MBO_CONFIG_REQUIRE(IsObject(), "Is neither Array nor Object.");
+    MBO_CONFIG_REQUIRE(IsObject(), "Is neither Array nor Object.");  // LCOV_EXCL_BR_LINE: fatal path.
     const auto& object = std::get<Object>(data_);
     return {*this, object.begin(), object.end()};
   }
 
   auto array_values() {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::views::all(*std::get<Array>(data_));
   }
 
   auto array_values() const {
-    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");
+    MBO_CONFIG_REQUIRE(IsArray(), "Is not an Array.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::views::all(*std::get<Array>(data_));
   }
 
   auto property_names() const {
-    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");
+    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::views::keys(std::get<Object>(data_));
   }
 
   auto property_pairs() {
-    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");
+    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::views::transform(
         std::get<Object>(data_),
         [](Object::reference v) -> std::pair<const std::string&, Json&> { return {v.first, *v.second}; });
   }
 
   auto property_pairs() const {
-    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");
+    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::views::transform(
         std::get<Object>(data_),
         [](Object::const_reference v) -> std::pair<const std::string&, const Json&> { return {v.first, *v.second}; });
   }
 
   auto property_values() {
-    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");
+    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::views::transform(std::get<Object>(data_), [](Object::const_reference v) -> Json& { return *v.second; });
   }
 
   auto property_values() const {
-    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");
+    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");  // LCOV_EXCL_BR_LINE: fatal path.
     return std::views::transform(
         std::get<Object>(data_), [](Object::const_reference v) -> const Json& { return *v.second; });
   }
@@ -823,8 +823,11 @@ constexpr auto kJsonComparator = mbo::types::Overloaded{
     // The left hand side is always a variant-member of `Json::Variant`.
     [](const std::nullopt_t /*unused*/, const std::nullopt_t /*unused*/) { return std::strong_ordering::equal; },
     [](bool lhs, bool rhs) -> std::strong_ordering { return lhs <=> rhs; },
+    // LCOV_MERGE_FUNC_LINE: repeated for every compatible arithmetic right-hand type.
     [](SignedInt lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },
+    // LCOV_MERGE_FUNC_LINE: repeated for every compatible arithmetic right-hand type.
     [](UnsignedInt lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },
+    // LCOV_MERGE_FUNC_LINE: repeated for every compatible arithmetic right-hand type.
     [](Float lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },
     [](const std::string& lhs, const JsonUseString auto& rhs) {
       return types::WeakToStrong(std::string_view(lhs) <=> std::string_view(rhs));
@@ -867,7 +870,7 @@ inline Json& Json::MakeType(T&& value) {  // NOLINT(*-function-cognitive-complex
     if (IsString()) {
       return *this;
     }
-    MBO_CONFIG_REQUIRE(IsNull(), "Is not an std::string or Null.");
+    MBO_CONFIG_REQUIRE(IsNull(), "Is not an std::string or Null.");  // LCOV_EXCL_BR_LINE: fatal path.
     data_.emplace<std::string>(std::forward<T>(value));
   } else {
     if (IsType<T>()) {
@@ -875,20 +878,20 @@ inline Json& Json::MakeType(T&& value) {  // NOLINT(*-function-cognitive-complex
     }
     using RawT = std::remove_cvref_t<T>;
     if constexpr (std::same_as<RawT, std::nullopt_t>) {
-      MBO_CONFIG_REQUIRE(IsNull(), "Is not Null.");
+      MBO_CONFIG_REQUIRE(IsNull(), "Is not Null.");  // LCOV_EXCL_BR_LINE: fatal path.
     } else if constexpr (std::same_as<RawT, Array>) {
-      MBO_CONFIG_REQUIRE(IsNull(), "Is not an Array or Null.");
-      MBO_CONFIG_REQUIRE(value != nullptr, "May not be a nullptr.");
+      MBO_CONFIG_REQUIRE(IsNull(), "Is not an Array or Null.");       // LCOV_EXCL_BR_LINE: fatal path.
+      MBO_CONFIG_REQUIRE(value != nullptr, "May not be a nullptr.");  // LCOV_EXCL_BR_LINE: fatal path.
     } else if constexpr (std::same_as<RawT, bool>) {
-      MBO_CONFIG_REQUIRE(IsNull(), "Is not a bool or Null.");
+      MBO_CONFIG_REQUIRE(IsNull(), "Is not a bool or Null.");  // LCOV_EXCL_BR_LINE: fatal path.
     } else if constexpr (std::same_as<RawT, Float>) {
-      MBO_CONFIG_REQUIRE(IsNull(), "Is not an Float or Null.");
+      MBO_CONFIG_REQUIRE(IsNull(), "Is not an Float or Null.");  // LCOV_EXCL_BR_LINE: fatal path.
     } else if constexpr (std::same_as<RawT, SignedInt>) {
-      MBO_CONFIG_REQUIRE(IsNull(), "Is not an SignedInt or Null.");
+      MBO_CONFIG_REQUIRE(IsNull(), "Is not an SignedInt or Null.");  // LCOV_EXCL_BR_LINE: fatal path.
     } else if constexpr (std::same_as<RawT, UnsignedInt>) {
-      MBO_CONFIG_REQUIRE(IsNull(), "Is not an UnsignedInt or Null.");
+      MBO_CONFIG_REQUIRE(IsNull(), "Is not an UnsignedInt or Null.");  // LCOV_EXCL_BR_LINE: fatal path.
     } else if constexpr (std::same_as<RawT, Object>) {
-      MBO_CONFIG_REQUIRE(IsNull(), "Is not an Object or Null.");
+      MBO_CONFIG_REQUIRE(IsNull(), "Is not an Object or Null.");  // LCOV_EXCL_BR_LINE: fatal path.
     }
     data_.emplace<RawT>(std::forward<T>(value));
   }

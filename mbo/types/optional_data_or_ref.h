@@ -50,6 +50,7 @@ class OptionalDataOrRef {
 
   constexpr ~OptionalDataOrRef() = default;
 
+  // LCOV_MERGE_FUNC_LINE: repeated for every stored/reference type pair.
   constexpr OptionalDataOrRef() noexcept = default;
 
   constexpr OptionalDataOrRef(std::nullopt_t /* unused */) noexcept {}  // NOLINT(*-explicit-*)
@@ -135,12 +136,14 @@ class OptionalDataOrRef {
     return *this;
   }
 
+  // LCOV_MERGE_FUNC_LINE: repeated for every stored/reference type pair.
   constexpr OptionalDataOrRef& set_ref(reference v) noexcept {
     data_.template emplace<kRefIndex>(std::ref(v));
     return *this;
   }
 
   template<typename... Args>
+  // LCOV_MERGE_FUNC_LINE: repeated for every stored/reference type pair.
   constexpr OptionalDataOrRef& emplace(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
   requires(ConstructibleFrom<T, Args...>)
   {
@@ -166,6 +169,7 @@ class OptionalDataOrRef {
     return HoldsData() ? Data() : Reference();
   }
 
+  // LCOV_MERGE_FUNC_LINE: repeated for every stored/reference type pair.
   constexpr const_reference value() const noexcept {
     MBO_CONFIG_REQUIRE(has_value(), "No value set for: ") << mbo::log::DemangleV(*this);
     return HoldsData() ? Data() : Reference();
@@ -302,6 +306,7 @@ class OptionalDataOrRef {
   }
 
   template<typename Sink>
+  // LCOV_MERGE_FUNC_LINE: repeated for every sink and stored/reference type pair.
   friend constexpr void AbslStringify(Sink& sink, const OptionalDataOrRef<T, RefT>& v) {
     if (v.has_value()) {
       absl::Format(&sink, "%v", v.value());
@@ -317,8 +322,10 @@ class OptionalDataOrRef {
 
   constexpr T& Data() noexcept { return std::get<kDataIndex>(data_); }
 
+  // LCOV_MERGE_FUNC_LINE: repeated for every stored/reference type pair.
   constexpr const T& Data() const noexcept { return std::get<kDataIndex>(data_); }
 
+  // LCOV_MERGE_FUNC_LINE: repeated for every stored/reference type pair.
   constexpr reference Reference() const noexcept { return std::get<kRefIndex>(data_).get(); }
 
   constexpr void CopyFrom(const OptionalDataOrRef& other) noexcept(std::is_nothrow_copy_constructible_v<T>)

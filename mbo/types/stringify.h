@@ -665,25 +665,33 @@ class Stringify {
 
   // Arbitrary default value.
   static constexpr const StringifyOptions& OptionsDefault() noexcept {
-    MBO_CONFIG_REQUIRE(kOptionsDefaults.AllDataSet(), "Not all data set: ") << kOptionsDefaults.DebugStr();
+    MBO_CONFIG_REQUIRE(  // LCOV_EXCL_BR_LINE: compile-time invariant.
+        kOptionsDefaults.AllDataSet(), "Not all data set: ")
+        << kOptionsDefaults.DebugStr();
     return kOptionsDefaults;
   }
 
   // Formatting control that disables all fields.
   static constexpr const StringifyOptions& OptionsDisabled() noexcept {
-    MBO_CONFIG_REQUIRE(kOptionsDisabled.AllDataSet(), "Not all data set: ") << kOptionsDisabled.DebugStr();
+    MBO_CONFIG_REQUIRE(  // LCOV_EXCL_BR_LINE: compile-time invariant.
+        kOptionsDisabled.AllDataSet(), "Not all data set: ")
+        << kOptionsDisabled.DebugStr();
     return kOptionsDisabled;
   }
 
   // Formatting control that mostly produces (very dense) C++ code.
   static constexpr const StringifyOptions& OptionsCpp() noexcept {
-    MBO_CONFIG_REQUIRE(kOptionsCpp.AllDataSet(), "Not all data set: ") << kOptionsCpp.DebugStr();
+    MBO_CONFIG_REQUIRE(  // LCOV_EXCL_BR_LINE: compile-time invariant.
+        kOptionsCpp.AllDataSet(), "Not all data set: ")
+        << kOptionsCpp.DebugStr();
     return kOptionsCpp;
   }
 
   // Formatting control that mostly produces multi-line formatted C++ code.
   static constexpr const StringifyOptions& OptionsCppPretty() noexcept {
-    MBO_CONFIG_REQUIRE(kOptionsCppPretty.AllDataSet(), "Not all data set: ") << kOptionsCppPretty.DebugStr();
+    MBO_CONFIG_REQUIRE(  // LCOV_EXCL_BR_LINE: compile-time invariant.
+        kOptionsCppPretty.AllDataSet(), "Not all data set: ")
+        << kOptionsCppPretty.DebugStr();
     return kOptionsCppPretty;
   }
 
@@ -695,19 +703,25 @@ class Stringify {
   // latter possibly with the `StringifyWithFieldNames` adapter. Alternatively,
   // numeric field names will be generated as a last resort.
   static constexpr const StringifyOptions& OptionsJson() noexcept {
-    MBO_CONFIG_REQUIRE(kOptionsJson.AllDataSet(), "Not all data set: ") << kOptionsJson.DebugStr();
+    MBO_CONFIG_REQUIRE(  // LCOV_EXCL_BR_LINE: compile-time invariant.
+        kOptionsJson.AllDataSet(), "Not all data set: ")
+        << kOptionsJson.DebugStr();
     return kOptionsJson;
   }
 
   // Formatting control that mostly produces single-line formatted JSON data (new-line terminated).
   static constexpr const StringifyOptions& OptionsJsonLine() noexcept {
-    MBO_CONFIG_REQUIRE(kOptionsJsonLine.AllDataSet(), "Not all data set: ") << kOptionsJsonLine.DebugStr();
+    MBO_CONFIG_REQUIRE(  // LCOV_EXCL_BR_LINE: compile-time invariant.
+        kOptionsJsonLine.AllDataSet(), "Not all data set: ")
+        << kOptionsJsonLine.DebugStr();
     return kOptionsJsonLine;
   }
 
   // Formatting control that mostly produces multi-line formatted JSON data (new-line terminated).
   static constexpr const StringifyOptions& OptionsJsonPretty() noexcept {
-    MBO_CONFIG_REQUIRE(kOptionsJsonPretty.AllDataSet(), "Not all data set: ") << kOptionsJsonPretty.DebugStr();
+    MBO_CONFIG_REQUIRE(  // LCOV_EXCL_BR_LINE: compile-time invariant.
+        kOptionsJsonPretty.AllDataSet(), "Not all data set: ")
+        << kOptionsJsonPretty.DebugStr();
     return kOptionsJsonPretty;
   }
 
@@ -955,6 +969,7 @@ class Stringify {
   };
 
   template<typename Field>
+  // LCOV_MERGE_FUNC_LINE: repeated for every field type.
   static SpecialFieldValue IsSpecial(const Field& field) {
     using RawField = std::remove_cvref_t<Field>;
     (void)field;
@@ -971,6 +986,7 @@ class Stringify {
   }
 
   template<typename T, typename Field, typename FieldNames>
+  // LCOV_MERGE_FUNC_LINE: repeated for every aggregate and field type.
   void StreamField(
       OStream& os,
       const StringifyFieldOptions& outer_options,
@@ -1039,6 +1055,7 @@ class Stringify {
   }
 
   template<typename Field>
+  // LCOV_MERGE_FUNC_LINE: repeated for every field type.
   void StreamFieldCustomCache(
       OStream& os,
       const StringifyFieldOptions& outer_options,
@@ -1072,6 +1089,7 @@ class Stringify {
   }
 
   template<typename Field>
+  // LCOV_MERGE_FUNC_LINE: repeated for every field type.
   void StreamFieldDo(
       OStream& os,
       const StringifyFieldOptions& outer_options,
@@ -1186,6 +1204,7 @@ class Stringify {
   }
 
   template<IsStringKeyedContainer C>
+  // LCOV_MERGE_FUNC_LINE: repeated for every supported container type.
   void StreamStringKeyedContainer(
       OStream& os,
       const StringifyFieldOptions& options,
@@ -1223,6 +1242,7 @@ class Stringify {
 
   template<typename C>
   requires(ContainerIsForwardIteratable<C>)
+  // LCOV_MERGE_FUNC_LINE: repeated for every supported container type.
   void StreamContainer(OStream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
     const SO::Format& format = *options.outer.format;
     os.IncContainer(format);
@@ -1244,6 +1264,7 @@ class Stringify {
   void StreamValue(OStream& os, const StringifyFieldOptions& options, const Variant& value, bool /*allow_field_names*/)
       const {
     std::visit(
+        // LCOV_MERGE_FUNC_LINE: repeated for every variant alternative.
         [&]<typename ArgT>(const ArgT& arg) {
           if constexpr (IsAggregate<ArgT> || IsStringKeyedContainer<ArgT>) {
             StreamImpl<ArgT>(os, options, arg);
@@ -1266,6 +1287,7 @@ class Stringify {
                                         || (IsAggregate<T> && !absl::HasAbslStringify<T>::value);
 
   template<typename V>  // NOLINTNEXTLINE(readability-function-cognitive-complexity)
+  // LCOV_MERGE_FUNC_LINE: repeated for every supported value type.
   void StreamValue(OStream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names) const {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
@@ -1328,6 +1350,7 @@ class Stringify {
   }
 
   template<IsPair V>
+  // LCOV_MERGE_FUNC_LINE: repeated for every pair type.
   void StreamValuePair(OStream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names) const {
     using RawV = std::remove_cvref_t<V>;
     if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyOptions<RawV>) {

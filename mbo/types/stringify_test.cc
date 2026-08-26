@@ -73,8 +73,11 @@ using ::mbo::types::types_internal::kStructNameSupport;
 using ::mbo::types::types_internal::SupportsFieldNames;
 using ::mbo::types::types_internal::SupportsFieldNamesConstexpr;
 using ::testing::ElementsAre;
+using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 
 // Matcher that checks the field name matches if field names are supported, or verifies that the
 // passed field_name is in fact empty.
@@ -130,14 +133,45 @@ StringifyTest::Tester* StringifyTest::tester = nullptr;
 
 TEST_F(StringifyTest, AllDataSet) {
   const StringifyOptions& opts = Stringify::OptionsDefault();
-  EXPECT_TRUE(opts.format.has_value());
-  EXPECT_TRUE(opts.field_control.has_value());
-  EXPECT_TRUE(opts.key_control.has_value());
-  EXPECT_TRUE(opts.key_overrides.has_value());
-  EXPECT_TRUE(opts.value_control.has_value());
-  EXPECT_TRUE(opts.value_overrides.has_value());
-  EXPECT_TRUE(opts.special.has_value());
-  EXPECT_TRUE(Stringify::OptionsDefault().AllDataSet());
+  EXPECT_THAT(opts.format.has_value(), IsTrue());
+  EXPECT_THAT(opts.field_control.has_value(), IsTrue());
+  EXPECT_THAT(opts.key_control.has_value(), IsTrue());
+  EXPECT_THAT(opts.key_overrides.has_value(), IsTrue());
+  EXPECT_THAT(opts.value_control.has_value(), IsTrue());
+  EXPECT_THAT(opts.value_overrides.has_value(), IsTrue());
+  EXPECT_THAT(opts.special.has_value(), IsTrue());
+  EXPECT_THAT(opts.AllDataSet(), IsTrue());
+
+  StringifyOptions missing = opts;
+  missing.format.reset();
+  EXPECT_THAT(missing.AllDataSet(), IsFalse());
+  missing = opts;
+  missing.field_control.reset();
+  EXPECT_THAT(missing.AllDataSet(), IsFalse());
+  missing = opts;
+  missing.key_control.reset();
+  EXPECT_THAT(missing.AllDataSet(), IsFalse());
+  missing = opts;
+  missing.key_overrides.reset();
+  EXPECT_THAT(missing.AllDataSet(), IsFalse());
+  missing = opts;
+  missing.value_control.reset();
+  EXPECT_THAT(missing.AllDataSet(), IsFalse());
+  missing = opts;
+  missing.value_overrides.reset();
+  EXPECT_THAT(missing.AllDataSet(), IsFalse());
+  missing = opts;
+  missing.special.reset();
+  EXPECT_THAT(missing.AllDataSet(), IsFalse());
+}
+
+TEST_F(StringifyTest, OptionsAsSelectsRequestedMode) {
+  EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kDefault), Eq(&Stringify::OptionsDefault()));
+  EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kCpp), Eq(&Stringify::OptionsCpp()));
+  EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kCppPretty), Eq(&Stringify::OptionsCppPretty()));
+  EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kJson), Eq(&Stringify::OptionsJson()));
+  EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kJsonLine), Eq(&Stringify::OptionsJsonLine()));
+  EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kJsonPretty), Eq(&Stringify::OptionsJsonPretty()));
 }
 
 TEST_F(StringifyTest, AllExtensionApiPointsAbsent) {
