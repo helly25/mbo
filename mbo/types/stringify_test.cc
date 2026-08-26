@@ -182,14 +182,15 @@ TEST_F(StringifyTest, StringEscapeModesControlRenderedBytes) {
   constexpr std::string_view kText = "line\n\x01";
 
   StringifyOptions options = Stringify::OptionsDefault();
+  options.key_control.as_data().key_mode = StringifyOptions::KeyMode::kNone;
   options.value_control.as_data().escape_mode = StringifyOptions::EscapeMode::kNone;
-  EXPECT_THAT(Stringify(options).ToString(Value{kText}), EqualsText("{.text: \"line\n\x01\"}"));
+  EXPECT_THAT(Stringify(options).ToString(Value{kText}), EqualsText("{\"line\n\x01\"}"));
 
   options.value_control.as_data().escape_mode = StringifyOptions::EscapeMode::kCEscape;
-  EXPECT_THAT(Stringify(options).ToString(Value{kText}), R"({.text: "line\n\001"})");
+  EXPECT_THAT(Stringify(options).ToString(Value{kText}), R"({"line\n\001"})");
 
   options.value_control.as_data().escape_mode = StringifyOptions::EscapeMode::kCHexEscape;
-  EXPECT_THAT(Stringify(options).ToString(Value{kText}), R"({.text: "line\n\x01"})");
+  EXPECT_THAT(Stringify(options).ToString(Value{kText}), R"({"line\n\x01"})");
 }
 
 TEST_F(StringifyTest, KeyModeNoneSuppressesFieldNames) {
@@ -206,6 +207,10 @@ TEST_F(StringifyTest, KeyModeNoneSuppressesFieldNames) {
 struct SameFieldOptionsValue {
   int number = 42;
 
+  friend auto MboTypesStringifyFieldNames(const SameFieldOptionsValue&) {
+    return std::array<std::string_view, 1>{"number"};
+  }
+
   friend StringifyFieldOptions MboTypesStringifyOptions(const SameFieldOptionsValue&, const StringifyFieldInfo&) {
     static const StringifyOptions kPartial{
         .key_control{StringifyOptions::KeyControl{.key_prefix = "same-"}},
@@ -216,6 +221,10 @@ struct SameFieldOptionsValue {
 
 struct DistinctFieldOptionsValue {
   int number = 42;
+
+  friend auto MboTypesStringifyFieldNames(const DistinctFieldOptionsValue&) {
+    return std::array<std::string_view, 1>{"number"};
+  }
 
   friend StringifyFieldOptions MboTypesStringifyOptions(const DistinctFieldOptionsValue&, const StringifyFieldInfo&) {
     static const StringifyOptions kOuter{
