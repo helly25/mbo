@@ -174,6 +174,65 @@ TEST_F(StringifyTest, OptionsAsSelectsRequestedMode) {
   EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kJsonPretty), Eq(&Stringify::OptionsJsonPretty()));
 }
 
+TEST_F(StringifyTest, StringEscapeModesControlRenderedBytes) {
+  struct Value {
+    std::string_view text;
+  };
+
+  constexpr std::string_view kText = "line\n\x01";
+
+  StringifyOptions options = Stringify::OptionsDefault();
+  options.value_control.as_data().escape_mode = StringifyOptions::EscapeMode::kNone;
+  EXPECT_THAT(Stringify(options).ToString(Value{kText}), EqualsText("{.text: \"line\n\x01\"}"));
+
+  options.value_control.as_data().escape_mode = StringifyOptions::EscapeMode::kCEscape;
+  EXPECT_THAT(Stringify(options).ToString(Value{kText}), R"({.text: "line\n\001"})");
+
+  options.value_control.as_data().escape_mode = StringifyOptions::EscapeMode::kCHexEscape;
+  EXPECT_THAT(Stringify(options).ToString(Value{kText}), R"({.text: "line\n\x01"})");
+}
+
+TEST_F(StringifyTest, KeyModeNoneSuppressesFieldNames) {
+  struct Value {
+    int number = 42;
+  };
+
+  StringifyOptions options = Stringify::OptionsDefault();
+  options.key_control.as_data().key_mode = StringifyOptions::KeyMode::kNone;
+
+  EXPECT_THAT(Stringify(options).ToString(Value{}), Eq("{42}"));
+}
+
+struct SameFieldOptionsValue {
+  int number = 42;
+
+  friend StringifyFieldOptions MboTypesStringifyOptions(const SameFieldOptionsValue&, const StringifyFieldInfo&) {
+    static const StringifyOptions kPartial{
+        .key_control{StringifyOptions::KeyControl{.key_prefix = "same-"}},
+    };
+    return StringifyFieldOptions{kPartial};
+  }
+};
+
+struct DistinctFieldOptionsValue {
+  int number = 42;
+
+  friend StringifyFieldOptions MboTypesStringifyOptions(const DistinctFieldOptionsValue&, const StringifyFieldInfo&) {
+    static const StringifyOptions kOuter{
+        .key_control{StringifyOptions::KeyControl{.key_prefix = "outer-"}},
+    };
+    static const StringifyOptions kInner{
+        .value_overrides{StringifyOptions::ValueOverrides{.replacement_other = "inner-value"}},
+    };
+    return StringifyFieldOptions{kOuter, kInner};
+  }
+};
+
+TEST_F(StringifyTest, FieldOptionsSupportSharedAndDistinctLayers) {
+  EXPECT_THAT(Stringify().ToString(SameFieldOptionsValue{}), Eq("{same-number: 42}"));
+  EXPECT_THAT(Stringify().ToString(DistinctFieldOptionsValue{}), Eq("{outer-number: 42}"));
+}
+
 TEST_F(StringifyTest, AllExtensionApiPointsAbsent) {
   struct TestStruct {
     int one = 11;
