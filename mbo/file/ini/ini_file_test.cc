@@ -127,6 +127,8 @@ TEST_F(IniFileTest, PermissiveParserRetainsLegacyMalformedInputBehavior) {
 
   EXPECT_THAT(explicit_permissive.GetKeyOrDefault({.group = "", .key = "key"}), Eq("second"));
   EXPECT_THAT(explicit_permissive.GetKeyOrDefault({.group = "", .key = "missing"}), IsEmpty());
+  EXPECT_THAT(explicit_permissive.GetKeyOrDefault({.group = "absent", .key = "child"}, "fallback"), "fallback");
+  EXPECT_THAT(explicit_permissive.GetKeyOrDefault({.group = "group", .key = "absent"}, "fallback"), "fallback");
   EXPECT_THAT(explicit_permissive.GetKeyOrStatus({.group = "group", .key = "child"}), IsOkAndHolds("value"));
   EXPECT_THAT(
       explicit_permissive.GetKeyOrStatus({.group = "absent", .key = "child"}),

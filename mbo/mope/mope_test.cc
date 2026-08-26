@@ -247,6 +247,15 @@ TEST_F(MopeTest, ConfiguredListExpandsValuesAndAJoiner) {
   EXPECT_THAT(output, "one / two");
 }
 
+TEST_F(MopeTest, ConfiguredListLooksUpAJoinerValue) {
+  constexpr std::string_view kInput = R"({{#item=["one","two"];join}}{{item}}{{/item}})";
+  Template tpl;
+  ASSERT_THAT(tpl.SetValue("join", " / "), absl::OkStatus());
+  std::string output(kInput);
+  ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
+  EXPECT_THAT(output, "one / two");
+}
+
 TEST_F(MopeTest, ConfiguredListRejectsASectionJoiner) {
   constexpr std::string_view kInput = R"({{#item=["one","two"];join}}{{item}}{{/item}})";
   Template tpl;
@@ -272,6 +281,9 @@ TEST_F(MopeTest, ConfiguredListRejectsMalformedJoinersAndMissingReferences) {
   const Template tpl;
   std::string malformed("{{#item=[one,two]trailing}}{{item}}{{/item}}");
   EXPECT_THAT(tpl.Expand(malformed).code(), absl::StatusCode::kInvalidArgument);
+
+  std::string malformed_literal(R"({{#item=[one,two];" / "trailing"}}{{item}}{{/item}})");
+  EXPECT_THAT(tpl.Expand(malformed_literal).code(), absl::StatusCode::kInvalidArgument);
 
   std::string missing("{{#item=[one,two];missing}}{{item}}{{/item}}");
   EXPECT_THAT(tpl.Expand(missing).code(), absl::StatusCode::kNotFound);

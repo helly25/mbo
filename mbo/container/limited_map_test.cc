@@ -229,7 +229,8 @@ TEST_F(LimitedMapTest, Update) {
   // NOLINTNEXTLINE(*-avoid-unchecked-container-access)
   test["4"] = "eeee";
   EXPECT_THAT(test, ElementsAre(Pair("0", "a"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
-  test.at("0") = "zero";
+  const std::string exact_key{"0"};
+  test.at(exact_key) = "zero";
   EXPECT_THAT(test, ElementsAre(Pair("0", "zero"), Pair("1", "bb"), Pair("2", "c"), Pair("3", "d"), Pair("4", "eeee")));
   EXPECT_THAT(test, CapacityIs(Gt(test.size())));
   // NOLINTNEXTLINE(*-avoid-unchecked-container-access)

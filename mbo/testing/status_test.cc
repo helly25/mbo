@@ -283,6 +283,13 @@ TEST_F(StatusMatcherTest, MessagesOfStatusHasPayload) {
     status.SetPayload("def", absl::Cord("content"));
     return status;
   }();
+  const absl::Status status_multiple = [] {
+    absl::Status status = absl::CancelledError();
+    status.SetPayload("alpha", absl::Cord("one"));
+    status.SetPayload("beta", absl::Cord("two"));
+    status.SetPayload("gamma", absl::Cord("three"));
+    return status;
+  }();
   {
     const ::testing::Matcher<absl::Status> matcher = StatusHasPayload();
     EXPECT_THAT(Describe(matcher), "has any payload");
@@ -328,6 +335,19 @@ TEST_F(StatusMatcherTest, MessagesOfStatusHasPayload) {
     EXPECT_THAT(
         MatchAndExplain(matcher, status_url_other), Pair(false, "which has a non-matching payload at url 'url'"));
     EXPECT_THAT(MatchAndExplain(matcher, status_abc_content), Pair(false, "which has 2 payloads"));
+  }
+  {
+    // Verify that selecting one payload remains correct when iteration continues
+    // over other payloads, regardless of their internal iteration order.
+    EXPECT_THAT(status_multiple, StatusHasPayload("alpha", "one"));
+    EXPECT_THAT(status_multiple, StatusHasPayload("beta", "two"));
+    EXPECT_THAT(status_multiple, StatusHasPayload("gamma", "three"));
+  }
+  {
+    const ::testing::Matcher<absl::Status> matcher = StatusHasPayload("url", SizeIs(9));
+    EXPECT_THAT(
+        MatchAndExplain(matcher, status_url_content),
+        Pair(false, "which has a non-matching payload at url 'url' that whose size 7 doesn't match"));
   }
 }
 
