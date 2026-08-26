@@ -470,7 +470,7 @@ class AnyScanImpl {
       if constexpr (kAccessByRef) {
         // Approximate equal address means equal iterator. That is not always correct as a container
         // might have the same element reference twice.
-        return &funcs_.curr() != &other.funcs_.curr();
+        return &funcs_.curr() == &other.funcs_.curr();
       } else {
         // Cannot take address of rvalue temp. Comparing actual values would be incorrect.
         return false;

@@ -55,6 +55,8 @@ namespace {
 
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::Pair;
 using ::testing::Pointee;
@@ -100,6 +102,18 @@ TEST_F(AnyScanTest, TestInitializerList) {
   EXPECT_THAT(Tester<const int>(MakeAnyScan(data)), ElementsAre(1, 2, 3));
   EXPECT_THAT(Tester<const int>(MakeAnyScan(data)), Not(IsEmpty()));
   EXPECT_THAT(Tester<const int>(MakeAnyScan(data)), SizeIs(3));
+}
+
+TEST_F(AnyScanTest, ReferenceIteratorsCompareByPosition) {
+  std::array<int, 3> data{1, 2, 3};
+  AnyScan<int> scan(MakeAnyScan(data));
+  auto first = scan.begin();
+  auto same = scan.begin();
+  auto second = scan.begin();
+  ++second;
+
+  EXPECT_THAT(first == same, IsTrue());
+  EXPECT_THAT(first == second, IsFalse());
 }
 
 TEST_F(ConstScanTest, TestInitializerList) {

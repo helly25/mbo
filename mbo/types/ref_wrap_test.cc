@@ -134,13 +134,16 @@ TEST_F(RefWrapTest, Pair) {
   EXPECT_THAT(ref->second, data.second);
 }
 
-TEST_F(RefWrapTest, SameObjectComparisonStringificationAndHashing) {
+TEST_F(RefWrapTest, ComparisonStringificationAndHashing) {
   int value = 25;
+  int greater = 33;
   const RefWrap<int> ref(value);
   const RefWrap<int> same(value);
+  const RefWrap<int> other(greater);
 
   EXPECT_THAT(ref <=> value, std::strong_ordering::equivalent);
   EXPECT_THAT(ref <=> same, std::strong_ordering::equivalent);
+  EXPECT_THAT(ref <=> other, std::strong_ordering::less);
   EXPECT_THAT(absl::StrCat(ref), "25");
   EXPECT_THAT(absl::HashOf(ref), absl::HashOf(same));
 }
