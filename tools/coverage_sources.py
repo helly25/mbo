@@ -146,6 +146,22 @@ def _normalize_record(record: str, source: Path) -> str:
     return "\n".join(result) + "\n"
 
 
+def normalized(report: str, workspace: Path = Path.cwd()) -> str:
+    """Returns an LCOV report with source coverage directives applied."""
+    result = []
+    for record in report.split("end_of_record\n"):
+        match = re.search(r"(?m)^SF:(.+)$", record)
+        if not match:
+            continue
+        physical = Path(match.group(1))
+        source = physical if physical.is_absolute() else workspace / physical
+        if not source.is_file() and "/mbo/" in physical.as_posix():
+            source = workspace / "mbo" / physical.as_posix().rsplit("/mbo/", 1)[1]
+        normalized_record = _normalize_record(record, source) if source.is_file() else record
+        result.append(normalized_record + "end_of_record\n")
+    return "".join(result)
+
+
 def grouped(report: str, policy: dict, source_root: Path, workspace: Path = Path.cwd()) -> str:
     """Returns selected LCOV records rooted below their one policy category."""
     includes = policy.get("include", ["mbo/**"])
@@ -179,14 +195,21 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path)
     parser.add_argument("output", type=Path)
-    parser.add_argument("--policy", type=Path, required=True)
-    parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument("--normalize-only", action="store_true")
+    parser.add_argument("--policy", type=Path)
+    parser.add_argument("--source-root", type=Path)
     args = parser.parse_args()
-    report = grouped(
-        args.input.read_text(encoding="utf-8"),
-        json.loads(args.policy.read_text(encoding="utf-8")),
-        args.source_root,
-    )
+    raw_report = args.input.read_text(encoding="utf-8")
+    if args.normalize_only:
+        report = normalized(raw_report)
+    else:
+        if args.policy is None or args.source_root is None:
+            parser.error("--policy and --source-root are required unless --normalize-only is used")
+        report = grouped(
+            raw_report,
+            json.loads(args.policy.read_text(encoding="utf-8")),
+            args.source_root,
+        )
     args.output.write_text(report, encoding="utf-8")
     return 0
 

@@ -9,6 +9,37 @@ from tools import coverage_sources
 
 
 class CoverageSourcesTest(unittest.TestCase):
+    def test_normalizes_records_without_rewriting_source_paths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            source = workspace / "mbo/container/any_scan.h"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "// LCOV_MERGE_FUNC_LINE\n"
+                "template<typename T>\n"
+                "void scan(T value) {\n"
+            )
+            report = (
+                "SF:mbo/container/any_scan.h\n"
+                "FN:2,scan_int\nFN:2,scan_long\n"
+                "FNDA:0,scan_int\nFNDA:3,scan_long\n"
+                "DA:2,3\nFNF:2\nFNH:1\nLF:1\nLH:1\nend_of_record\n"
+            )
+
+            actual = coverage_sources.normalized(report, workspace)
+
+            self.assertIn("SF:mbo/container/any_scan.h", actual)
+            self.assertIn("FN:2,__mbo_lcov_merged_function_at_line_1", actual)
+            self.assertIn("FNDA:3,__mbo_lcov_merged_function_at_line_1", actual)
+            self.assertNotIn("scan_int", actual)
+
+            relocated = report.replace(
+                "SF:mbo/container/any_scan.h",
+                "SF:/remote/runner/work/mbo/mbo/mbo/container/any_scan.h",
+            )
+            relocated_actual = coverage_sources.normalized(relocated, workspace)
+            self.assertIn("FNDA:3,__mbo_lcov_merged_function_at_line_1", relocated_actual)
+
     def test_groups_selected_sources_by_policy_category(self):
         policy = {
             "include": ["mbo/**"],
