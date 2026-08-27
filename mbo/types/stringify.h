@@ -1272,9 +1272,13 @@ class Stringify {
   static constexpr bool kUseStringify = types_internal::IsExtended<T> || HasMboTypesStringifySupport<T>
                                         || (IsAggregate<T> && !absl::HasAbslStringify<T>::value);
 
-  template<typename V>  // NOLINTNEXTLINE(readability-function-cognitive-complexity)
   // LCOV_MERGE_FUNC_LINE: repeated for every supported value type.
-  void StreamValue(OStream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names) const {
+  template<typename V>
+  void StreamValue(  // NOLINT(readability-function-cognitive-complexity)
+      OStream& os,
+      const StringifyFieldOptions& options,
+      const V& v,
+      bool allow_field_names) const {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (HasMboTypesStringifyDisable<RawV>) {
