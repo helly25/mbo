@@ -586,6 +586,10 @@ struct TestAbslStringifyValue {
 
 struct TestAbslStringifyAggregate {
   TestAbslStringifyValue value{42};
+
+  friend auto MboTypesStringifyFieldNames(const TestAbslStringifyAggregate&) {
+    return std::array<std::string_view, 1>{"value"};
+  }
 };
 
 TEST_F(StringifyTest, FallbackFormattingHonorsValueControls) {
