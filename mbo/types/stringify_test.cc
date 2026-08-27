@@ -543,6 +543,74 @@ TEST_F(StringifyTest, StaticKeyNameFunction) {
   EXPECT_THAT(Stringify().ToString(TestStructStaticKeyUseName{}), "{.One: 11, .Two: 25}");
 }
 
+struct TestStructStaticKeyFallback {
+  int one = 11;
+  int two = 25;
+
+  friend auto MboTypesStringifyFieldNames(const TestStructStaticKeyFallback&) {
+    return std::array<std::string_view, 2>{"one", "two"};
+  }
+
+  friend const StringifyOptions& MboTypesStringifyOptions(
+      const TestStructStaticKeyFallback&,
+      const StringifyFieldInfo& field) {
+    static const StringifyFieldInfoString kEmpty;
+    static const StringifyOptions kNull{
+        .key_overrides{StringifyOptions::KeyOverrides{
+            .key_use_name = static_cast<const StringifyFieldInfoString*>(nullptr),
+        }},
+    };
+    static const StringifyOptions kEmptyFunction{
+        .key_overrides{StringifyOptions::KeyOverrides{
+            .key_use_name = &kEmpty,
+        }},
+    };
+    return field.idx == 0 ? kNull : kEmptyFunction;
+  }
+};
+
+TEST_F(StringifyTest, StaticKeyNameFunctionFallsBackWhenAbsent) {
+  EXPECT_THAT(Stringify().ToString(TestStructStaticKeyFallback{}), Eq("{.one: 11, .two: 25}"));
+}
+
+struct TestAbslStringifyValue {
+  explicit TestAbslStringifyValue(int value) : value(value) {}
+
+  int value;
+
+  template<typename Sink>
+  friend void AbslStringify(Sink& sink, const TestAbslStringifyValue& v) {
+    absl::Format(&sink, "value=%d", v.value);
+  }
+};
+
+struct TestAbslStringifyAggregate {
+  TestAbslStringifyValue value{42};
+};
+
+TEST_F(StringifyTest, FallbackFormattingHonorsValueControls) {
+  StringifyOptions options = Stringify::OptionsDefault();
+  EXPECT_THAT(Stringify(options).ToString(TestAbslStringifyAggregate{}), Eq("{.value: value=42}"));
+
+  options.value_control.as_data().other_types_direct = false;
+  EXPECT_THAT(Stringify(options).ToString(TestAbslStringifyAggregate{}), Eq("{.value: value=42}"));
+
+  options.value_control.as_data().other_types_direct = true;
+  options.value_overrides.as_data().replacement_other = "replacement";
+  EXPECT_THAT(Stringify(options).ToString(TestAbslStringifyAggregate{}), Eq("{.value: replacement}"));
+}
+
+TEST_F(StringifyTest, OrderedStringKeyedContainerHonorsMaximumLength) {
+  const std::vector<std::pair<std::string_view, int>> values{{"b", 2}, {"a", 1}};
+  StringifyOptions options = Stringify::OptionsJsonLine();
+  options.special.as_data().str_keyed = StringifyOptions::StrKeyed::kFirstIsNameOrdered;
+
+  EXPECT_THAT(Stringify(options).ToString(values), Eq("{\"a\": 1, \"b\": 2}\n"));
+
+  options.value_control.as_data().container_max_len = 1;
+  EXPECT_THAT(Stringify(options).ToString(values), Eq("{\"b\": 2}\n"));
+}
+
 struct TestStructDoNotPrintFieldNames {
   int one = 11;
   std::pair<int, int> two = {25, 27};

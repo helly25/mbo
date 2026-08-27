@@ -230,6 +230,19 @@ also updates this file to the completed state.
 
 ## Documentation and quality coverage
 
+- [x] Raise line-coverage policy to a 90% minimum and 95% high target.
+  - Enforce the high rating for lines while retaining medium enforcement for
+    functions and branches.
+  - Exercise the remaining `mbo/types` branch alternatives so the module meets
+    the 82% branch target without exclusions.
+  - PR: [#382](https://github.com/helly25/mbo/pull/382).
+- [x] Keep every persisted GitHub Actions cache below 500 MiB.
+  - Stop persisting Bazel's repository cache between jobs; retain it only for
+    reuse within a job.
+  - Measure each remaining Bazel disk cache before saving and skip the upload
+    when its size is at or above the limit.
+  - PR: [#382](https://github.com/helly25/mbo/pull/382).
+
 - [x] Enforce the measured coverage baseline in CI.
   - Reject per-category line, function, or branch regressions exceeding the
     policy-defined tolerance while retaining the absolute and changed-code gates.
