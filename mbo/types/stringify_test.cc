@@ -245,11 +245,12 @@ TEST_F(StringifyTest, CharacterFormattingSupportsQuotesAndNumericOutput) {
     char value;
   };
 
-  EXPECT_THAT(Stringify().ToString(Value{'\''}), Eq(R"({.value: '\\\''})"));
-
   StringifyOptions options = Stringify::OptionsDefault();
+  options.key_control.as_data().key_mode = StringifyOptions::KeyMode::kNone;
+  EXPECT_THAT(Stringify(options).ToString(Value{'\''}), Eq(R"({'\\\''})"));
+
   options.format.as_data().char_delim = "";
-  EXPECT_THAT(Stringify(options).ToString(Value{'A'}), Eq("{.value: 65}"));
+  EXPECT_THAT(Stringify(options).ToString(Value{'A'}), Eq("{65}"));
 }
 
 TEST_F(StringifyTest, KeyModeNoneSuppressesFieldNames) {
