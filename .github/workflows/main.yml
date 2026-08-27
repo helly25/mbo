@@ -241,8 +241,25 @@ jobs:
           # on a branch, the whole tree on main.
           extra_args: clang-tidy ${{env.CLANG_TIDY_SCOPE}}
 
+      - name: Check clang-tidy Bazel disk cache size
+        if: always()
+        id: cache_size
+        run: |
+          cache_path="${HOME}/.cache/bazel_disk-cache"
+          cache_size_kib=0
+          if [[ -d "${cache_path}" ]]; then
+            cache_size_kib="$(du -sk "${cache_path}" | awk '{print $1}')"
+          fi
+          echo "Bazel disk cache: ${cache_size_kib} KiB (limit: 512000 KiB)"
+          if (( cache_size_kib >= 500 * 1024 )); then
+            echo "::warning::Not saving Bazel disk cache at or above the 500 MiB limit."
+            echo "save=false" >>"${GITHUB_OUTPUT}"
+          else
+            echo "save=true" >>"${GITHUB_OUTPUT}"
+          fi
+
       - uses: actions/cache/save@v5
-        if: always() && steps.cache_restore.outputs.cache-hit != 'true'
+        if: always() && steps.cache_restore.outputs.cache-hit != 'true' && steps.cache_size.outputs.save == 'true'
         with:
           path: "~/.cache/bazel_disk-cache"
           key: clang-tidy-${{github.ref}}-${{github.sha}}
