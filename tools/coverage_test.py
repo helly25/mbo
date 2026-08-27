@@ -218,6 +218,67 @@ class CoverageTest(unittest.TestCase):
                 coverage_tool.counts(files)["functions"],
             )
 
+    def test_parse_merges_repeated_template_branches_at_marked_source_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "mbo/a.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "return lhs || rhs;  // LCOV_MERGE_BR_LINE 2: template instances\n",
+                encoding="utf-8",
+            )
+            report = root / "coverage.lcov"
+            report.write_text(
+                "SF:mbo/a.cc\n"
+                "BRDA:1,0,0,2\nBRDA:1,0,1,0\n"
+                "BRDA:1,0,2,0\nBRDA:1,0,3,3\nend_of_record\n",
+                encoding="utf-8",
+            )
+
+            files = coverage_tool.parse_lcov(report, root)
+
+            self.assertEqual([(1, True), (1, True)], files["mbo/a.cc"].branches)
+
+    def test_parse_applies_standalone_branch_merge_marker_to_function_declaration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "mbo/a.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "// LCOV_MERGE_BR_LINE 1: template instances\n"
+                "template<typename T>\n"
+                "bool function(\n"
+                "    T value) {\n"
+                "  return value;\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            report = root / "coverage.lcov"
+            report.write_text(
+                "SF:mbo/a.cc\nBRDA:3,0,0,1\nBRDA:3,0,1,0\nend_of_record\n",
+                encoding="utf-8",
+            )
+
+            files = coverage_tool.parse_lcov(report, root)
+
+            self.assertEqual([(3, True)], files["mbo/a.cc"].branches)
+
+    def test_parse_rejects_an_invalid_template_branch_merge_width(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "mbo/a.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text("return value;  // LCOV_MERGE_BR_LINE 2\n", encoding="utf-8")
+            report = root / "coverage.lcov"
+            report.write_text(
+                "SF:mbo/a.cc\n"
+                "BRDA:1,0,0,1\nBRDA:1,0,1,0\nBRDA:1,0,2,0\nend_of_record\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "cannot merge 3 branch records"):
+                coverage_tool.parse_lcov(report, root)
+
     def test_threshold_failure(self):
         measured = {
             "overall": {

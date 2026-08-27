@@ -131,6 +131,17 @@ TEST_F(JsonTest, JsonComparisonsCoverEveryStoredKind) {
   EXPECT_THAT(object_lhs, Lt(Json{"value"}));
 }
 
+TEST_F(JsonTest, ObjectValuePointersOrderNullAndStoredValues) {
+  const std::unique_ptr<Json> null;
+  const auto one = std::make_unique<Json>(1);
+  const auto two = std::make_unique<Json>(2);
+
+  EXPECT_THAT(json_internal::operator<=>(null, null), std::strong_ordering::equal);
+  EXPECT_THAT(json_internal::operator<=>(null, one), std::strong_ordering::less);
+  EXPECT_THAT(json_internal::operator<=>(one, null), std::strong_ordering::greater);
+  EXPECT_THAT(json_internal::operator<=>(one, two), std::strong_ordering::less);
+}
+
 TEST_F(JsonTest, CopyOperationsDeepCopyArraysAndObjects) {
   Json original;
   original["array"].emplace_back(1);

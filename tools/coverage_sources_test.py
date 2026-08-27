@@ -9,6 +9,37 @@ from tools import coverage_sources
 
 
 class CoverageSourcesTest(unittest.TestCase):
+    def test_normalizes_records_without_rewriting_source_paths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            source = workspace / "mbo/container/any_scan.h"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "// LCOV_MERGE_FUNC_LINE\n"
+                "template<typename T>\n"
+                "void scan(T value) {\n"
+            )
+            report = (
+                "SF:mbo/container/any_scan.h\n"
+                "FN:2,scan_int\nFN:2,scan_long\n"
+                "FNDA:0,scan_int\nFNDA:3,scan_long\n"
+                "DA:2,3\nFNF:2\nFNH:1\nLF:1\nLH:1\nend_of_record\n"
+            )
+
+            actual = coverage_sources.normalized(report, workspace)
+
+            self.assertIn("SF:mbo/container/any_scan.h", actual)
+            self.assertIn("FN:2,__mbo_lcov_merged_function_at_line_1", actual)
+            self.assertIn("FNDA:3,__mbo_lcov_merged_function_at_line_1", actual)
+            self.assertNotIn("scan_int", actual)
+
+            relocated = report.replace(
+                "SF:mbo/container/any_scan.h",
+                "SF:/remote/runner/work/mbo/mbo/mbo/container/any_scan.h",
+            )
+            relocated_actual = coverage_sources.normalized(relocated, workspace)
+            self.assertIn("FNDA:3,__mbo_lcov_merged_function_at_line_1", relocated_actual)
+
     def test_groups_selected_sources_by_policy_category(self):
         policy = {
             "include": ["mbo/**"],
@@ -53,6 +84,75 @@ class CoverageSourcesTest(unittest.TestCase):
                     Path(directory),
                     Path(directory),
                 )
+
+    def test_applies_exclusions_and_merges_repeated_template_records(self):
+        policy = {"categories": {"file": {"include": ["mbo/file/**"]}}}
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory) / "workspace"
+            source = workspace / "mbo/file/file.h"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "int excluded() {  // LCOV_EXCL_FUNC_LINE, LCOV_EXCL_LINE\n"
+                "int shared() {  // LCOV_MERGE_FUNC_LINE\n"
+                "return true;  // LCOV_MERGE_BR_LINE 2\n"
+            )
+            report = (
+                "SF:mbo/file/file.h\n"
+                "FN:1,excluded\nFN:2,shared_int\nFN:2,shared_long\n"
+                "FNDA:0,excluded\nFNDA:3,shared_int\nFNDA:0,shared_long\nFNF:3\nFNH:1\n"
+                "BRDA:3,0,0,2\nBRDA:3,0,1,0\nBRDA:3,0,2,0\nBRDA:3,0,3,4\nBRF:4\nBRH:2\n"
+                "DA:1,0\nDA:2,3\nDA:3,3\nLF:3\nLH:2\nend_of_record\n"
+            )
+
+            actual = coverage_sources.grouped(
+                report, policy, Path(directory) / "grouped", workspace
+            )
+
+            self.assertNotIn("excluded", actual)
+            self.assertIn("FN:2,__mbo_lcov_merged_function_at_line_2", actual)
+            self.assertIn("FNDA:3,__mbo_lcov_merged_function_at_line_2", actual)
+            self.assertIn("FNF:1\nFNH:1", actual)
+            self.assertIn("BRDA:3,0,0,2\nBRDA:3,0,1,4\nBRF:2\nBRH:2", actual)
+            self.assertIn("DA:2,3\nDA:3,3\nLF:2\nLH:2", actual)
+
+    def test_rejects_an_invalid_branch_merge_width(self):
+        policy = {"categories": {"file": {"include": ["mbo/file/**"]}}}
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory) / "workspace"
+            source = workspace / "mbo/file/file.h"
+            source.parent.mkdir(parents=True)
+            source.write_text("return true;  // LCOV_MERGE_BR_LINE 2\n")
+            with self.assertRaisesRegex(ValueError, "cannot merge 3 branch records"):
+                coverage_sources.grouped(
+                    "SF:mbo/file/file.h\n"
+                    "BRDA:1,0,0,1\nBRDA:1,0,1,0\nBRDA:1,0,2,0\n"
+                    "BRF:3\nBRH:1\nend_of_record\n",
+                    policy,
+                    Path(directory) / "grouped",
+                    workspace,
+                )
+
+    def test_applies_standalone_branch_merge_marker_to_function_declaration(self):
+        policy = {"categories": {"file": {"include": ["mbo/file/**"]}}}
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory) / "workspace"
+            source = workspace / "mbo/file/file.h"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "// LCOV_MERGE_BR_LINE 1: template instances\n"
+                "template<typename T>\n"
+                "bool function(T value) {\n"
+            )
+
+            actual = coverage_sources.grouped(
+                "SF:mbo/file/file.h\n"
+                "BRDA:2,0,0,1\nBRDA:2,0,1,0\nBRF:2\nBRH:1\nend_of_record\n",
+                policy,
+                Path(directory) / "grouped",
+                workspace,
+            )
+
+            self.assertIn("BRDA:2,0,0,1\nBRF:1\nBRH:1", actual)
 
 
 if __name__ == "__main__":

@@ -117,6 +117,7 @@ std::strong_ordering CompareFloat(Double lhs, Double rhs) {
 
 // Compares two values that are scalar-numbers (including float/double and pointers, excluding references).
 template<IsScalar Lhs, IsScalar Rhs>
+// LCOV_MERGE_FUNC_LINE: repeated for every scalar type pair.
 inline std::strong_ordering CompareScalar(Lhs lhs, Rhs rhs) {
   if constexpr (std::same_as<Lhs, Rhs>) {
     if constexpr (std::floating_point<Lhs>) {
@@ -152,6 +153,7 @@ inline std::strong_ordering CompareScalar(Lhs lhs, Rhs rhs) {
 
 // Compares two values that are scalar-numbers (including foat/double, excluding pointers and references).
 template<IsArithmetic Lhs, IsArithmetic Rhs>
+// LCOV_MERGE_FUNC_LINE: repeated for every arithmetic type pair.
 inline std::strong_ordering CompareArithmetic(Lhs lhs, Rhs rhs) {
   return CompareScalar(lhs, rhs);
 }

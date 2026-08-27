@@ -324,6 +324,7 @@ class [[nodiscard]] LimitedOrdered {
       return *this;
     }
 
+    // LCOV_MERGE_FUNC_LINE: repeated for every container specialization.
     constexpr iterator& operator--() noexcept {
       --pos_;  // NOLINT(*-pointer-arithmetic)
       return *this;
@@ -368,7 +369,7 @@ class [[nodiscard]] LimitedOrdered {
     friend constexpr iterator operator+(difference_type lhs, iterator rhs) noexcept { return iterator(lhs + rhs.pos_); }
 
     MBO_ALWAYS_INLINE friend constexpr auto operator<=>(iterator lhs, iterator rhs) noexcept {
-      return lhs.pos_ <=> rhs.pos_;
+      return lhs.pos_ <=> rhs.pos_;  // LCOV_MERGE_BR_LINE 4: repeated for every iterator specialization.
     }
 
     MBO_ALWAYS_INLINE friend constexpr bool operator<(iterator lhs, iterator rhs) noexcept {
@@ -616,23 +617,23 @@ class [[nodiscard]] LimitedOrdered {
       MBO_CASE_LIMITED_POS_COMP(18);
       MBO_CASE_LIMITED_POS_COMP(17);
       MBO_CASE_LIMITED_POS_COMP(16);
-      MBO_CASE_LIMITED_POS_COMP(15);
-      MBO_CASE_LIMITED_POS_COMP(14);
-      MBO_CASE_LIMITED_POS_COMP(13);
-      MBO_CASE_LIMITED_POS_COMP(12);
-      MBO_CASE_LIMITED_POS_COMP(11);
-      MBO_CASE_LIMITED_POS_COMP(10);
-      MBO_CASE_LIMITED_POS_COMP(9);
-      MBO_CASE_LIMITED_POS_COMP(8);
-      MBO_CASE_LIMITED_POS_COMP(7);
-      MBO_CASE_LIMITED_POS_COMP(6);
-      MBO_CASE_LIMITED_POS_COMP(5);
-      MBO_CASE_LIMITED_POS_COMP(4);
-      MBO_CASE_LIMITED_POS_COMP(3);
-      MBO_CASE_LIMITED_POS_COMP(2);
-      MBO_CASE_LIMITED_POS_COMP(1);
-      MBO_CASE_LIMITED_POS_COMP(0);
-      default: break;  // Handles `size_ == 0`.
+      MBO_CASE_LIMITED_POS_COMP(15);  // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(14);  // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(13);  // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(12);  // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(11);  // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(10);  // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(9);   // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(8);   // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(7);   // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(6);   // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(5);   // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(4);   // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(3);   // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(2);   // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(1);   // LCOV_MERGE_BR_LINE 4
+      MBO_CASE_LIMITED_POS_COMP(0);   // LCOV_MERGE_BR_LINE 4
+      default: break;                 // Handles `size_ == 0`.
     }
 #undef MBO_CASE_LIMITED_POS_COMP
     return npos;
@@ -700,7 +701,7 @@ class [[nodiscard]] LimitedOrdered {
   requires(!kOptimizeIndexOf || (kOptimizeIndexOf && !kCustomIndexOfBeyondUnroll && Capacity > kUnrollMaxCapacity))
   {
     const const_iterator it = lower_bound(key);
-    return it == end() || key_comp_(key, GetKey(*it)) ? npos : it - begin();
+    return it == end() || key_comp_(key, GetKey(*it)) ? npos : it - begin();  // LCOV_MERGE_BR_LINE 4: templates.
   }
 
   MBO_FORCE_INLINE constexpr value_type& at_index(size_type pos) {
@@ -713,6 +714,7 @@ class [[nodiscard]] LimitedOrdered {
     return values_[pos].data;
   }
 
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
   MBO_FORCE_INLINE constexpr iterator find(const Key& key) {
     if constexpr (kOptimizeIndexOf) {
       const std::size_t pos = index_of(key);
@@ -723,6 +725,7 @@ class [[nodiscard]] LimitedOrdered {
     }
   }
 
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
   MBO_FORCE_INLINE constexpr const_iterator find(const Key& key) const {
     if constexpr (kOptimizeIndexOf) {
       const std::size_t pos = index_of(key);
@@ -733,6 +736,7 @@ class [[nodiscard]] LimitedOrdered {
     }
   }
 
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
   MBO_FORCE_INLINE constexpr bool contains(const Key& key) const {
     if constexpr (kOptimizeIndexOf) {
       return index_of(key) != npos;
@@ -747,6 +751,7 @@ class [[nodiscard]] LimitedOrdered {
 
   template<typename K>
   requires(kIsForeignKey<K>)
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
   MBO_FORCE_INLINE constexpr iterator find(const K& key) {
     if constexpr (kOptimizeIndexOf) {
       const std::size_t pos = index_of(key);
@@ -759,6 +764,7 @@ class [[nodiscard]] LimitedOrdered {
 
   template<typename K>
   requires(kIsForeignKey<K>)
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
   MBO_FORCE_INLINE constexpr const_iterator find(const K& key) const {
     if constexpr (kOptimizeIndexOf) {
       const std::size_t pos = index_of(key);
@@ -771,6 +777,7 @@ class [[nodiscard]] LimitedOrdered {
 
   template<typename K>
   requires(kIsForeignKey<K>)
+  // LCOV_MERGE_BR_LINE 1: GCC emits a function-entry branch for every specialization.
   MBO_FORCE_INLINE constexpr bool contains(const K& key) const {
     if constexpr (kOptimizeIndexOf) {
       return index_of(key) != npos;

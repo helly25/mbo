@@ -955,6 +955,7 @@ class Stringify {
   };
 
   template<typename Field>
+  // LCOV_MERGE_FUNC_LINE: repeated for every field type.
   static SpecialFieldValue IsSpecial(const Field& field) {
     using RawField = std::remove_cvref_t<Field>;
     (void)field;
@@ -971,6 +972,7 @@ class Stringify {
   }
 
   template<typename T, typename Field, typename FieldNames>
+  // LCOV_MERGE_FUNC_LINE: repeated for every aggregate and field type.
   void StreamField(
       OStream& os,
       const StringifyFieldOptions& outer_options,
@@ -1039,6 +1041,7 @@ class Stringify {
   }
 
   template<typename Field>
+  // LCOV_MERGE_FUNC_LINE: repeated for every field type.
   void StreamFieldCustomCache(
       OStream& os,
       const StringifyFieldOptions& outer_options,
@@ -1072,6 +1075,7 @@ class Stringify {
   }
 
   template<typename Field>
+  // LCOV_MERGE_FUNC_LINE: repeated for every field type.
   void StreamFieldDo(
       OStream& os,
       const StringifyFieldOptions& outer_options,
@@ -1186,6 +1190,7 @@ class Stringify {
   }
 
   template<IsStringKeyedContainer C>
+  // LCOV_MERGE_FUNC_LINE: repeated for every supported container type.
   void StreamStringKeyedContainer(
       OStream& os,
       const StringifyFieldOptions& options,
@@ -1223,6 +1228,7 @@ class Stringify {
 
   template<typename C>
   requires(ContainerIsForwardIteratable<C>)
+  // LCOV_MERGE_FUNC_LINE: repeated for every supported container type.
   void StreamContainer(OStream& os, const StringifyFieldOptions& options, const C& vs, bool allow_field_names) const {
     const SO::Format& format = *options.outer.format;
     os.IncContainer(format);
@@ -1244,6 +1250,7 @@ class Stringify {
   void StreamValue(OStream& os, const StringifyFieldOptions& options, const Variant& value, bool /*allow_field_names*/)
       const {
     std::visit(
+        // LCOV_MERGE_FUNC_LINE: repeated for every variant alternative.
         [&]<typename ArgT>(const ArgT& arg) {
           if constexpr (IsAggregate<ArgT> || IsStringKeyedContainer<ArgT>) {
             StreamImpl<ArgT>(os, options, arg);
@@ -1265,8 +1272,13 @@ class Stringify {
   static constexpr bool kUseStringify = types_internal::IsExtended<T> || HasMboTypesStringifySupport<T>
                                         || (IsAggregate<T> && !absl::HasAbslStringify<T>::value);
 
-  template<typename V>  // NOLINTNEXTLINE(readability-function-cognitive-complexity)
-  void StreamValue(OStream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names) const {
+  // LCOV_MERGE_FUNC_LINE: repeated for every supported value type.
+  template<typename V>
+  void StreamValue(  // NOLINT(readability-function-cognitive-complexity)
+      OStream& os,
+      const StringifyFieldOptions& options,
+      const V& v,
+      bool allow_field_names) const {
     using RawV = std::remove_cvref_t<V>;
     // IMPORTANT: ALL if-clauses must be `if constexpr`.
     if constexpr (HasMboTypesStringifyDisable<RawV>) {
@@ -1328,6 +1340,7 @@ class Stringify {
   }
 
   template<IsPair V>
+  // LCOV_MERGE_FUNC_LINE: repeated for every pair type.
   void StreamValuePair(OStream& os, const StringifyFieldOptions& options, const V& v, bool allow_field_names) const {
     using RawV = std::remove_cvref_t<V>;
     if constexpr (!HasMboTypesStringifyFieldNames<RawV> && !HasMboTypesStringifyOptions<RawV>) {

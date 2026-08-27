@@ -535,10 +535,8 @@ class Json {
   const Json& at(std::size_t index) const { return (*this)[index]; }
 
   Json& at(std::string_view property) {
-    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");  // LCOV_EXCL_BR_LINE: fatal path is covered by death tests.
-    MBO_CONFIG_REQUIRE(                                   // LCOV_EXCL_BR_LINE: fatal path is covered by death tests.
-        contains(property), "Property not present:")
-        << "'" << property << "'.";  // LCOV_EXCL_LINE: death-test subprocess profiles are not merged.
+    MBO_CONFIG_REQUIRE(IsObject(), "Is not an Object.");
+    MBO_CONFIG_REQUIRE(contains(property), "Property not present:") << "'" << property << "'.";
     return *std::get<Object>(data_).at(property);
   }
 
@@ -823,8 +821,11 @@ constexpr auto kJsonComparator = mbo::types::Overloaded{
     // The left hand side is always a variant-member of `Json::Variant`.
     [](const std::nullopt_t /*unused*/, const std::nullopt_t /*unused*/) { return std::strong_ordering::equal; },
     [](bool lhs, bool rhs) -> std::strong_ordering { return lhs <=> rhs; },
+    // LCOV_MERGE_FUNC_LINE: repeated for every compatible arithmetic right-hand type.
     [](SignedInt lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },
+    // LCOV_MERGE_FUNC_LINE: repeated for every compatible arithmetic right-hand type.
     [](UnsignedInt lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },
+    // LCOV_MERGE_FUNC_LINE: repeated for every compatible arithmetic right-hand type.
     [](Float lhs, types::IsArithmetic auto rhs) { return types::CompareArithmetic(lhs, rhs); },
     [](const std::string& lhs, const JsonUseString auto& rhs) {
       return types::WeakToStrong(std::string_view(lhs) <=> std::string_view(rhs));

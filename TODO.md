@@ -111,6 +111,19 @@ also updates this file to the completed state.
   - Test parity against `std::string_view`, embedded NUL handling, heterogeneous
     formatting and hashing, constexpr use, and owned versus borrowed values.
   - PR: [#378](https://github.com/helly25/mbo/pull/378).
+- [ ] Provide compiler-independent aggregate field names for `Stringify`.
+  - Preserve the existing `MboTypesStringifyFieldNames` extension point while
+    making automatic field-name discovery work with supported GCC builds as
+    well as Clang.
+  - Evaluate GCC-specific facilities and well-defined compile-time extraction
+    techniques; switching this feature to C++23 or newer is acceptable, but the
+    selected language mode alone must not be mistaken for a standard reflection
+    facility.
+  - Define explicit behavior for unsupported compilers and aggregates whose
+    names cannot be discovered; never silently produce different output solely
+    because CI selected another supported compiler.
+  - Verify identical C++, JSON, nested-aggregate, and explicit-name-override
+    output under the supported Clang and GCC configurations.
 
 ## File API robustness and portability
 

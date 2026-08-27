@@ -32,6 +32,12 @@ bool_flag(
     visibility = ["//visibility:private"],
 )
 
+config_setting(
+    name = "require_throws_enabled",
+    flag_values = {":require_throws": "true"},
+    visibility = ["//mbo:__subpackages__"],
+)
+
 bzl_library(
     name = "config_bzl",
     srcs = [":internal/config.bzl"],

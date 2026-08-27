@@ -33,6 +33,24 @@ def _repo_path(value: str) -> str | None:
     return None
 
 
+def _branch_merge_markers(source_lines: list[str]) -> dict[int, int]:
+    """Maps instrumented lines to their logical branch width."""
+    result: dict[int, int] = {}
+    for index, source_line in enumerate(source_lines):
+        match = re.search(r"LCOV_MERGE_BR_LINE\s+(\d+)", source_line)
+        if not match:
+            continue
+        width = int(match.group(1))
+        result[index + 1] = width
+        if not source_line.lstrip().startswith("//"):
+            continue
+        for continuation in range(index + 1, len(source_lines)):
+            result[continuation + 1] = width
+            if "{" in source_lines[continuation]:
+                break
+    return result
+
+
 def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCoverage]:
     result: dict[str, FileCoverage] = {}
     current: FileCoverage | None = None
@@ -73,6 +91,7 @@ def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCover
         }
         excluded_functions: set[int] = set()
         merged_function_groups: dict[int, int] = {}
+        merged_branch_groups = _branch_merge_markers(source_lines)
         for index, line in enumerate(source_lines):
             exclude = "LCOV_EXCL_FUNC_LINE" in line
             merge = "LCOV_MERGE_FUNC_LINE" in line
@@ -96,7 +115,26 @@ def parse_lcov(path: Path, source_root: Path = Path(".")) -> dict[str, FileCover
             else:
                 ordinary_functions.append((line, hits))
         data.functions = ordinary_functions + sorted(merged_hits.items())
-        data.branches = [(line, taken) for line, taken in data.branches if line not in excluded_branches]
+        ordinary_branches: list[tuple[int, bool]] = []
+        branches_by_line: dict[int, list[bool]] = defaultdict(list)
+        for line, taken in data.branches:
+            if line in excluded_branches:
+                continue
+            if line in merged_branch_groups:
+                branches_by_line[line].append(taken)
+            else:
+                ordinary_branches.append((line, taken))
+        for line, branches in sorted(branches_by_line.items()):
+            width = merged_branch_groups[line]
+            if width <= 0 or len(branches) % width:
+                raise ValueError(
+                    f"{name}:{line}: LCOV_MERGE_BR_LINE {width} cannot merge "
+                    f"{len(branches)} branch records"
+                )
+            ordinary_branches.extend(
+                (line, any(branches[index::width])) for index in range(width)
+            )
+        data.branches = ordinary_branches
     return result
 
 

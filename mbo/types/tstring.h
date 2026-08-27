@@ -114,6 +114,7 @@ struct tstring final {
   static constexpr size_type npos = std::string_view::npos;
 
   // Access to the underlying data as a `std::string_view`.
+  // LCOV_MERGE_FUNC_LINE: repeated for every compile-time string value.
   static constexpr std::string_view str() noexcept { return {data.data(), sizeof...(chars)}; }
 
   static constexpr const char* c_str() noexcept { return data.data(); }
@@ -124,6 +125,7 @@ struct tstring final {
   // the actual string data at run-time or the in/equality operators that are
   // performed on run-time or compile-time base on the compared to type.
   template<typename Other>
+  // LCOV_MERGE_FUNC_LINE: repeated for every compared compile-time string type.
   static constexpr bool is(const Other& /* other */) noexcept {
     return std::is_same_v<tstring, Other>;
   }
@@ -185,6 +187,7 @@ struct tstring final {
   // If the parameter `pos` or `count` cannot be provided at compile-time, then
   // the run-time alternative `str_substr(pos, count)` has to be used instead.
   template<size_type pos = 0, size_type count = npos>
+  // LCOV_MERGE_FUNC_LINE: repeated for every compile-time position and count.
   static constexpr auto substr() noexcept {
     if constexpr (pos == 0 && (count == npos || count >= num_chars)) {
       return tstring{};  // this type
@@ -196,6 +199,7 @@ struct tstring final {
       if constexpr (result_len == 0) {
         return tstring<>{};  // empty
       } else {
+        // LCOV_MERGE_FUNC_LINE: repeated for every generated index sequence.
         return [&]<size_type... Is>(std::index_sequence<Is...>) constexpr noexcept -> tstring<data[Is + pos]...> {
           return {};
         }(std::make_index_sequence<result_len>{});
@@ -353,6 +357,7 @@ struct tstring final {
   // friends since that would interfere with the operator `==` here and create
   // redefinition issues if two `tstring` types are being compared.
   template<typename Other>
+  // LCOV_MERGE_FUNC_LINE: repeated for every compared string type.
   constexpr bool operator==(const Other& other) const noexcept {
     if constexpr (std::is_same_v<tstring, Other>) {
       return true;
@@ -382,6 +387,7 @@ struct tstring final {
     return str().compare(other) <=> 0;
   }
 
+  // LCOV_MERGE_FUNC_LINE: repeated for every compile-time string value.
   friend std::ostream& operator<<(std::ostream& os, tstring /* value */) { return os << tstring::str(); }
 
   // Concatenation.

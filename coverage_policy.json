@@ -6,8 +6,8 @@
     "mbo/**/*_test.cc",
     "mbo/**/*_test.h"
   ],
-  "minimum": { "lines": 88, "functions": 80, "branches": 60 },
-  "target": { "lines": 90, "functions": 95, "branches": 82 },
+  "minimum": { "lines": 90, "functions": 90, "branches": 75 },
+  "target": { "lines": 94, "functions": 95, "branches": 82 },
   "enforce": "medium",
   "baseline": {
     "maximum_drop": { "lines": 0.1, "functions": 0.1, "branches": 0.1 }
