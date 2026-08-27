@@ -46,12 +46,12 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-27 08:54:57</td>
+            <td class="headerValue">2026-08-27 20:49:09</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
-            <td class="headerCovTableEntry">80</td>
-            <td class="headerCovTableEntry">80</td>
+            <td class="headerCovTableEntry">82</td>
+            <td class="headerCovTableEntry">82</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -111,8 +111,8 @@
 <span id="L40"><span class="lineNum">      40</span>              : // The resulting tuple is made up of references!</span>
 <span id="L41"><span class="lineNum">      41</span>              : template&lt;typename T&gt;</span>
 <span id="L42"><span class="lineNum">      42</span>              : requires CanCreateTuple&lt;std::remove_cvref_t&lt;T&gt;&gt;</span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">        2290 : inline constexpr auto StructToTuple(T&amp;&amp; v) {</span></span>
-<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">        2290 :   return types_internal::DecomposeHelper::ToTuple(std::forward&lt;T&gt;(v));</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">        2294 : inline constexpr auto StructToTuple(T&amp;&amp; v) {</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">        2294 :   return types_internal::DecomposeHelper::ToTuple(std::forward&lt;T&gt;(v));</span></span>
 <span id="L45"><span class="lineNum">      45</span>              : }</span>
 <span id="L46"><span class="lineNum">      46</span>              : </span>
 <span id="L47"><span class="lineNum">      47</span>              : namespace types_internal {</span>
@@ -202,9 +202,9 @@
             <tr>
               <th scope="row">Lines</th>
               <td class="headerValueLegL">&lt; 90%</td>
-              <td class="headerValueLegM">&ge; 90% and &lt; 94%</td>
-              <td class="headerValueLegH">&ge; 94%</td>
-              <td class="headerValueLegM">Medium</td>
+              <td class="headerValueLegM">&ge; 90% and &lt; 95%</td>
+              <td class="headerValueLegH">&ge; 95%</td>
+              <td class="headerValueLegH">High</td>
             </tr>
             <tr>
               <th scope="row">Branches</th>

@@ -3,19 +3,19 @@
   "measurements": {
     "overall": {
       "lines": {
-        "covered": 6716,
+        "covered": 6721,
         "total": 6855,
-        "percent": 97.97
+        "percent": 98.05
       },
       "functions": {
-        "covered": 10630,
-        "total": 10781,
+        "covered": 10656,
+        "total": 10807,
         "percent": 98.6
       },
       "branches": {
-        "covered": 3872,
+        "covered": 3878,
         "total": 4366,
-        "percent": 88.69
+        "percent": 88.82
       }
     },
     "container": {
@@ -207,19 +207,19 @@
     },
     "types": {
       "lines": {
-        "covered": 1017,
+        "covered": 1022,
         "total": 1033,
-        "percent": 98.45
+        "percent": 98.94
       },
       "functions": {
-        "covered": 1982,
-        "total": 1993,
-        "percent": 99.45
+        "covered": 2008,
+        "total": 2019,
+        "percent": 99.46
       },
       "branches": {
-        "covered": 394,
+        "covered": 400,
         "total": 490,
-        "percent": 80.41
+        "percent": 81.63
       }
     }
   },
@@ -292,134 +292,134 @@
   },
   "targets": {
     "overall": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "container": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "diff": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "digest": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "file": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "hash": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "json": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "log": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "mope": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "status": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "strings": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "testing": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     },
     "types": {
-      "lines": 94.0,
+      "lines": 95.0,
       "functions": 95.0,
       "branches": 82.0
     }
   },
   "enforcement": {
     "overall": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "container": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "diff": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "digest": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "file": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "hash": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "json": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "log": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "mope": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "status": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "strings": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "testing": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     },
     "types": {
-      "lines": "medium",
+      "lines": "high",
       "functions": "medium",
       "branches": "medium"
     }
