@@ -681,6 +681,48 @@ TEST_F(StringifyTest, StringKeyedContainerCanUseKeysAsFieldNames) {
   options.special.as_data().str_keyed = StringifyOptions::StrKeyed::kFirstIsName;
 
   EXPECT_THAT(Stringify(options).ToString(values), Eq("{\"b\": 2, \"a\": 1}\n"));
+
+  options.value_control.as_data().container_max_len = 1;
+  EXPECT_THAT(Stringify(options).ToString(values), Eq("{\"b\": 2}\n"));
+}
+
+struct StringKeyedContainerWithoutFieldNames {
+  using MboTypesStringifyDoNotPrintFieldNames = void;
+
+  std::vector<std::pair<std::string_view, int>> values{{"b", 2}, {"a", 1}};
+
+  friend StringifyOptions MboTypesStringifyOptions(
+      const StringKeyedContainerWithoutFieldNames&,
+      const StringifyFieldInfo& field) {
+    StringifyOptions options = field.options.inner;
+    options.special.as_data().str_keyed = StringifyOptions::StrKeyed::kFirstIsName;
+    return options;
+  }
+};
+
+TEST_F(StringifyTest, StringKeyedContainerHonorsSuppressedFieldNames) {
+  EXPECT_THAT(Stringify().ToString(StringKeyedContainerWithoutFieldNames{}), Eq("{{2, 1}}"));
+}
+
+struct PairWithCustomFieldNames {
+  std::pair<int, int> value{1, 2};
+
+  friend auto MboTypesStringifyFieldNames(const PairWithCustomFieldNames&) {
+    return std::array<std::string_view, 1>{"value"};
+  }
+};
+
+TEST_F(StringifyTest, PairCanUseCustomFieldNames) {
+  StringifyOptions options = Stringify::OptionsJsonLine();
+  options.special.as_data().pair_keys = {{"left", "right"}};
+
+  EXPECT_THAT(
+      Stringify(options).ToString(PairWithCustomFieldNames{}), Eq("{\"value\": {\"left\": 1, \"right\": 2}}\n"));
+
+  const StringifyRootOptions root_options{.root_prefix = "<", .root_suffix = ">"};
+  EXPECT_THAT(
+      Stringify(options).ToString(PairWithCustomFieldNames{}, root_options),
+      Eq("<{\"value\": {\"left\": 1, \"right\": 2}}\n>"));
 }
 
 struct TestStructDoNotPrintFieldNames {
