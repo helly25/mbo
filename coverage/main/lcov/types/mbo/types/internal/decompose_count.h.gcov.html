@@ -46,12 +46,12 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-26 06:39:22</td>
+            <td class="headerValue">2026-08-27 08:54:57</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">97.6&nbsp;%</td>
-            <td class="headerCovTableEntry">84</td>
-            <td class="headerCovTableEntry">82</td>
+            <td class="headerCovTableEntryHi">97.7&nbsp;%</td>
+            <td class="headerCovTableEntry">88</td>
+            <td class="headerCovTableEntry">86</td>
           </tr>
                   <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -1447,16 +1447,16 @@
 <span id="L1376"><span class="lineNum">    1376</span>              :   }</span>
 <span id="L1377"><span class="lineNum">    1377</span>              : </span>
 <span id="L1378"><span class="lineNum">    1378</span>              :   template&lt;typename U&gt;</span>
-<span id="L1379"><span class="lineNum">    1379</span> <span class="tlaGNC">        2281 :   static constexpr auto ToTuple(const U&amp; data) noexcept {</span></span>
+<span id="L1379"><span class="lineNum">    1379</span> <span class="tlaGNC">        2287 :   static constexpr auto ToTuple(const U&amp; data) noexcept {</span></span>
 <span id="L1380"><span class="lineNum">    1380</span>              :     using UR = std::remove_cvref_t&lt;U&gt;;</span>
-<span id="L1381"><span class="lineNum">    1381</span> <span class="tlaGNC">        2281 :     constexpr bool kIsEmptyAggregate = IsAggregate&lt;UR&gt; &amp;&amp; IsEmptyType&lt;UR&gt;;</span></span>
-<span id="L1382"><span class="lineNum">    1382</span> <span class="tlaGNC">        2281 :     constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl&lt;UR&gt;::value;</span></span>
+<span id="L1381"><span class="lineNum">    1381</span> <span class="tlaGNC">        2287 :     constexpr bool kIsEmptyAggregate = IsAggregate&lt;UR&gt; &amp;&amp; IsEmptyType&lt;UR&gt;;</span></span>
+<span id="L1382"><span class="lineNum">    1382</span> <span class="tlaGNC">        2287 :     constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl&lt;UR&gt;::value;</span></span>
 <span id="L1383"><span class="lineNum">    1383</span>              :     static_assert(kNumFields != kNotDecomposableValue);</span>
 <span id="L1384"><span class="lineNum">    1384</span>              :     if constexpr (kNumFields == 0) {</span>
 <span id="L1385"><span class="lineNum">    1385</span> <span class="tlaGNC">           1 :       return std::make_tuple();</span></span>
 <span id="L1386"><span class="lineNum">    1386</span>              :     } else if constexpr (kNumFields == 1) {</span>
-<span id="L1387"><span class="lineNum">    1387</span> <span class="tlaGNC">         953 :       const auto&amp; [a1] = data;</span></span>
-<span id="L1388"><span class="lineNum">    1388</span> <span class="tlaGNC">         953 :       return std::tie(a1);</span></span>
+<span id="L1387"><span class="lineNum">    1387</span> <span class="tlaGNC">         959 :       const auto&amp; [a1] = data;</span></span>
+<span id="L1388"><span class="lineNum">    1388</span> <span class="tlaGNC">         959 :       return std::tie(a1);</span></span>
 <span id="L1389"><span class="lineNum">    1389</span>              :     } else if constexpr (kNumFields == 2) {</span>
 <span id="L1390"><span class="lineNum">    1390</span> <span class="tlaGNC">         303 :       const auto&amp; [a1, a2] = data;</span></span>
 <span id="L1391"><span class="lineNum">    1391</span> <span class="tlaGNC">         303 :       return std::tie(a1, a2);</span></span>
@@ -1659,22 +1659,22 @@
             <tbody>
             <tr>
               <th scope="row">Lines</th>
-              <td class="headerValueLegL">&lt; 88%</td>
-              <td class="headerValueLegM">&ge; 88% and &lt; 90%</td>
-              <td class="headerValueLegH">&ge; 90%</td>
+              <td class="headerValueLegL">&lt; 90%</td>
+              <td class="headerValueLegM">&ge; 90% and &lt; 94%</td>
+              <td class="headerValueLegH">&ge; 94%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>
             <tr>
               <th scope="row">Branches</th>
-              <td class="headerValueLegL">&lt; 60%</td>
-              <td class="headerValueLegM">&ge; 60% and &lt; 82%</td>
+              <td class="headerValueLegL">&lt; 75%</td>
+              <td class="headerValueLegM">&ge; 75% and &lt; 82%</td>
               <td class="headerValueLegH">&ge; 82%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>
             <tr>
               <th scope="row">Functions</th>
-              <td class="headerValueLegL">&lt; 80%</td>
-              <td class="headerValueLegM">&ge; 80% and &lt; 95%</td>
+              <td class="headerValueLegL">&lt; 90%</td>
+              <td class="headerValueLegM">&ge; 90% and &lt; 95%</td>
               <td class="headerValueLegH">&ge; 95%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>

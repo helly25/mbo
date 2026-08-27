@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-26 06:39:22</td>
+            <td class="headerValue">2026-08-27 08:54:57</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">97.1&nbsp;%</td>
@@ -58,9 +58,9 @@
             <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryMed">66.7&nbsp;%</td>
-            <td class="headerCovTableEntry">18</td>
-            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -504,8 +504,8 @@
 <span id="L424"><span class="lineNum">     424</span>                 :             :       // out of bounds access may actually raise. So we effectively side step such exceptions.</span>
 <span id="L425"><span class="lineNum">     425</span>                 :             :       // CHECK failures abort before GCC can flush coverage counters, so only the successful guard</span>
 <span id="L426"><span class="lineNum">     426</span>                 :             :       // path can appear in LCOV. The existing iterator tests exercise that path.</span>
-<span id="L427"><span class="lineNum">     427</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 125 times"> + </span>]:<span class="tlaGNC">         125 :       ABSL_CHECK_NE(funcs_.curr, nullptr);  // NOLINT(*-missing-default-case) LCOV_EXCL_BR_LINE</span></span>
-<span id="L428"><span class="lineNum">     428</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 125 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 125 times"> + </span>]:<span class="tlaGNC">         125 :       ABSL_CHECK(funcs_.more());            // LCOV_EXCL_BR_LINE</span></span>
+<span id="L427"><span class="lineNum">     427</span>                 :<span class="tlaGNC">         125 :       ABSL_CHECK_NE(funcs_.curr, nullptr);  // NOLINT(*-missing-default-case) LCOV_EXCL_BR_LINE</span></span>
+<span id="L428"><span class="lineNum">     428</span>                 :<span class="tlaGNC">         125 :       ABSL_CHECK(funcs_.more());            // LCOV_EXCL_BR_LINE</span></span>
 <span id="L429"><span class="lineNum">     429</span>                 :<span class="tlaGNC">         125 :       return funcs_.curr();</span></span>
 <span id="L430"><span class="lineNum">     430</span>                 :             :     }</span>
 <span id="L431"><span class="lineNum">     431</span>                 :             : </span>
@@ -514,8 +514,8 @@
 <span id="L434"><span class="lineNum">     434</span>                 :             :     {</span>
 <span id="L435"><span class="lineNum">     435</span>                 :             :       // CHECK failures abort before GCC can flush coverage counters, so only the successful guard</span>
 <span id="L436"><span class="lineNum">     436</span>                 :             :       // path can appear in LCOV. The existing iterator tests exercise that path.</span>
-<span id="L437"><span class="lineNum">     437</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 50 times"> + </span>]:<span class="tlaGNC">          50 :       ABSL_CHECK_NE(funcs_.curr, nullptr);  // NOLINT(*-missing-default-case) LCOV_EXCL_BR_LINE</span></span>
-<span id="L438"><span class="lineNum">     438</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 50 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 50 times"> + </span>]:<span class="tlaGNC">          50 :       ABSL_CHECK(funcs_.more());            // LCOV_EXCL_BR_LINE</span></span>
+<span id="L437"><span class="lineNum">     437</span>                 :<span class="tlaGNC">          50 :       ABSL_CHECK_NE(funcs_.curr, nullptr);  // NOLINT(*-missing-default-case) LCOV_EXCL_BR_LINE</span></span>
+<span id="L438"><span class="lineNum">     438</span>                 :<span class="tlaGNC">          50 :       ABSL_CHECK(funcs_.more());            // LCOV_EXCL_BR_LINE</span></span>
 <span id="L439"><span class="lineNum">     439</span>                 :<span class="tlaGNC">          50 :       return value_type(funcs_.curr());</span></span>
 <span id="L440"><span class="lineNum">     440</span>                 :             :     }</span>
 <span id="L441"><span class="lineNum">     441</span>                 :             : </span>
@@ -705,22 +705,22 @@
             <tbody>
             <tr>
               <th scope="row">Lines</th>
-              <td class="headerValueLegL">&lt; 88%</td>
-              <td class="headerValueLegM">&ge; 88% and &lt; 90%</td>
-              <td class="headerValueLegH">&ge; 90%</td>
+              <td class="headerValueLegL">&lt; 90%</td>
+              <td class="headerValueLegM">&ge; 90% and &lt; 94%</td>
+              <td class="headerValueLegH">&ge; 94%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>
             <tr>
               <th scope="row">Branches</th>
-              <td class="headerValueLegL">&lt; 60%</td>
-              <td class="headerValueLegM">&ge; 60% and &lt; 82%</td>
+              <td class="headerValueLegL">&lt; 75%</td>
+              <td class="headerValueLegM">&ge; 75% and &lt; 82%</td>
               <td class="headerValueLegH">&ge; 82%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>
             <tr>
               <th scope="row">Functions</th>
-              <td class="headerValueLegL">&lt; 80%</td>
-              <td class="headerValueLegM">&ge; 80% and &lt; 95%</td>
+              <td class="headerValueLegL">&lt; 90%</td>
+              <td class="headerValueLegM">&ge; 90% and &lt; 95%</td>
               <td class="headerValueLegH">&ge; 95%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>

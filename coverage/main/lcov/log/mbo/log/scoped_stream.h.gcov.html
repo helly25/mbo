@@ -40,18 +40,18 @@
             <td class="headerValue">mbo production coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">87.1&nbsp;%</td>
-            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntryHi">96.4&nbsp;%</td>
+            <td class="headerCovTableEntry">28</td>
             <td class="headerCovTableEntry">27</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-26 06:39:22</td>
+            <td class="headerValue">2026-08-27 08:54:57</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">17.0&nbsp;%</td>
-            <td class="headerCovTableEntry">141</td>
-            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">9</td>
           </tr>
           <tr>
             <td></td>
@@ -254,11 +254,11 @@
 <span id="L174"><span class="lineNum">     174</span>                 :<span class="tlaGNC">           6 :       case ScopedStreamMode::kContinue: break;</span></span>
 <span id="L175"><span class="lineNum">     175</span>                 :             :       case ScopedStreamMode::kQuickExit: {</span>
 <span id="L176"><span class="lineNum">     176</span>                 :             :         if constexpr (std::same_as&lt;OStreamT, Voidifier&gt;) {</span>
-<span id="L177"><span class="lineNum">     177</span>                 :<span class="tlaUNC">           0 :           OutFlush(std::cerr);  // LCOV_EXCL_LINE: quick_exit prevents the coverage runtime from flushing.</span></span>
+<span id="L177"><span class="lineNum">     177</span>                 :             :           OutFlush(std::cerr);  // LCOV_EXCL_LINE: quick_exit prevents the coverage runtime from flushing.</span>
 <span id="L178"><span class="lineNum">     178</span>                 :             :         } else if constexpr (!std::same_as&lt;OStreamT, VoidStream&gt;) {</span>
-<span id="L179"><span class="lineNum">     179</span>                 :<span class="tlaUNC">           0 :           OutFlush(out_);  // LCOV_EXCL_LINE: quick_exit prevents the coverage runtime from flushing.</span></span>
+<span id="L179"><span class="lineNum">     179</span>                 :             :           OutFlush(out_);  // LCOV_EXCL_LINE: quick_exit prevents the coverage runtime from flushing.</span>
 <span id="L180"><span class="lineNum">     180</span>                 :             :         }</span>
-<span id="L181"><span class="lineNum">     181</span>                 :<span class="tlaUNC">           0 :         std::quick_exit(1);  // LCOV_EXCL_LINE: deliberately prevents normal process and coverage shutdown.</span></span>
+<span id="L181"><span class="lineNum">     181</span>                 :             :         std::quick_exit(1);  // LCOV_EXCL_LINE: deliberately prevents normal process and coverage shutdown.</span>
 <span id="L182"><span class="lineNum">     182</span>                 :             :       }</span>
 <span id="L183"><span class="lineNum">     183</span>                 :             :     }</span>
 <span id="L184"><span class="lineNum">     184</span>                 :<span class="tlaGNC">           6 :   }</span></span>
@@ -378,22 +378,22 @@
             <tbody>
             <tr>
               <th scope="row">Lines</th>
-              <td class="headerValueLegL">&lt; 88%</td>
-              <td class="headerValueLegM">&ge; 88% and &lt; 90%</td>
-              <td class="headerValueLegH">&ge; 90%</td>
+              <td class="headerValueLegL">&lt; 90%</td>
+              <td class="headerValueLegM">&ge; 90% and &lt; 94%</td>
+              <td class="headerValueLegH">&ge; 94%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>
             <tr>
               <th scope="row">Branches</th>
-              <td class="headerValueLegL">&lt; 60%</td>
-              <td class="headerValueLegM">&ge; 60% and &lt; 82%</td>
+              <td class="headerValueLegL">&lt; 75%</td>
+              <td class="headerValueLegM">&ge; 75% and &lt; 82%</td>
               <td class="headerValueLegH">&ge; 82%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>
             <tr>
               <th scope="row">Functions</th>
-              <td class="headerValueLegL">&lt; 80%</td>
-              <td class="headerValueLegM">&ge; 80% and &lt; 95%</td>
+              <td class="headerValueLegL">&lt; 90%</td>
+              <td class="headerValueLegM">&ge; 90% and &lt; 95%</td>
               <td class="headerValueLegH">&ge; 95%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>

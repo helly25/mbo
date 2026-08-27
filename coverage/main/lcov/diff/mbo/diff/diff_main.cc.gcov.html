@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-26 06:39:22</td>
+            <td class="headerValue">2026-08-27 08:54:57</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -58,9 +58,9 @@
             <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryHi">82.0&nbsp;%</td>
-            <td class="headerCovTableEntry">50</td>
-            <td class="headerCovTableEntry">41</td>
+            <td class="headerCovTableEntryHi">83.3&nbsp;%</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntry">40</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -318,7 +318,7 @@
 <span id="L237"><span class="lineNum">     237</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 32 times"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 32 times"> + </span>]:<span class="tlaGNC">          32 :   ABSL_QCHECK(output_format) &lt;&lt; &quot;Unknown format&quot;;</span></span>
 <span id="L238"><span class="lineNum">     238</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 31 times"> + </span>]:<span class="tlaGNC">          32 :   if (absl::GetFlag(FLAGS_algorithm) == &quot;unified&quot;) {</span></span>
 <span id="L239"><span class="lineNum">     239</span>                 :             :     // The CLI tests exercise both outcomes, but QCHECK failure aborts before GCC flushes counters.</span>
-<span id="L240"><span class="lineNum">     240</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     ABSL_QCHECK_EQ(output_format, Diff::Options::OutputFormat::kUnified)  // LCOV_EXCL_BR_LINE</span></span>
+<span id="L240"><span class="lineNum">     240</span>                 :<span class="tlaGNC">           1 :     ABSL_QCHECK_EQ(output_format, Diff::Options::OutputFormat::kUnified)  // LCOV_EXCL_BR_LINE</span></span>
 <span id="L241"><span class="lineNum">     241</span>                 :             :         &lt;&lt; &quot;The deprecated '--algorithm=unified' alias implies '--format=unified'.&quot;;</span>
 <span id="L242"><span class="lineNum">     242</span>                 :             :   }</span>
 <span id="L243"><span class="lineNum">     243</span>                 :             :   const std::optional&lt;Diff::Options::FileHeaderUse&gt; file_header_use =</span>
@@ -439,22 +439,22 @@
             <tbody>
             <tr>
               <th scope="row">Lines</th>
-              <td class="headerValueLegL">&lt; 88%</td>
-              <td class="headerValueLegM">&ge; 88% and &lt; 90%</td>
-              <td class="headerValueLegH">&ge; 90%</td>
+              <td class="headerValueLegL">&lt; 90%</td>
+              <td class="headerValueLegM">&ge; 90% and &lt; 94%</td>
+              <td class="headerValueLegH">&ge; 94%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>
             <tr>
               <th scope="row">Branches</th>
-              <td class="headerValueLegL">&lt; 60%</td>
-              <td class="headerValueLegM">&ge; 60% and &lt; 82%</td>
+              <td class="headerValueLegL">&lt; 75%</td>
+              <td class="headerValueLegM">&ge; 75% and &lt; 82%</td>
               <td class="headerValueLegH">&ge; 82%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>
             <tr>
               <th scope="row">Functions</th>
-              <td class="headerValueLegL">&lt; 80%</td>
-              <td class="headerValueLegM">&ge; 80% and &lt; 95%</td>
+              <td class="headerValueLegL">&lt; 90%</td>
+              <td class="headerValueLegM">&ge; 90% and &lt; 95%</td>
               <td class="headerValueLegH">&ge; 95%</td>
               <td class="headerValueLegM">Medium</td>
             </tr>
