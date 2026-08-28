@@ -242,6 +242,10 @@ also updates this file to the completed state.
   - Measure each remaining Bazel disk cache before saving and skip the upload
     when its size is at or above the limit.
   - PR: [#382](https://github.com/helly25/mbo/pull/382).
+- [x] Raise `mbo/types` branch coverage to at least 86%.
+  - Exercise meaningful branch alternatives directly without production-code changes or coverage
+    exclusions.
+  - PR: [#383](https://github.com/helly25/mbo/pull/383).
 
 - [x] Enforce the measured coverage baseline in CI.
   - Reject per-category line, function, or branch regressions exceeding the
