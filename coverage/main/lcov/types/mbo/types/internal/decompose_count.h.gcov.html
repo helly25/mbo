@@ -46,12 +46,12 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-27 20:49:09</td>
+            <td class="headerValue">2026-08-28 06:00:16</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">97.8&nbsp;%</td>
-            <td class="headerCovTableEntry">90</td>
-            <td class="headerCovTableEntry">88</td>
+            <td class="headerCovTableEntry">93</td>
+            <td class="headerCovTableEntry">91</td>
           </tr>
                   <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -1447,16 +1447,16 @@
 <span id="L1376"><span class="lineNum">    1376</span>              :   }</span>
 <span id="L1377"><span class="lineNum">    1377</span>              : </span>
 <span id="L1378"><span class="lineNum">    1378</span>              :   template&lt;typename U&gt;</span>
-<span id="L1379"><span class="lineNum">    1379</span> <span class="tlaGNC">        2291 :   static constexpr auto ToTuple(const U&amp; data) noexcept {</span></span>
+<span id="L1379"><span class="lineNum">    1379</span> <span class="tlaGNC">        2296 :   static constexpr auto ToTuple(const U&amp; data) noexcept {</span></span>
 <span id="L1380"><span class="lineNum">    1380</span>              :     using UR = std::remove_cvref_t&lt;U&gt;;</span>
-<span id="L1381"><span class="lineNum">    1381</span> <span class="tlaGNC">        2291 :     constexpr bool kIsEmptyAggregate = IsAggregate&lt;UR&gt; &amp;&amp; IsEmptyType&lt;UR&gt;;</span></span>
-<span id="L1382"><span class="lineNum">    1382</span> <span class="tlaGNC">        2291 :     constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl&lt;UR&gt;::value;</span></span>
+<span id="L1381"><span class="lineNum">    1381</span> <span class="tlaGNC">        2296 :     constexpr bool kIsEmptyAggregate = IsAggregate&lt;UR&gt; &amp;&amp; IsEmptyType&lt;UR&gt;;</span></span>
+<span id="L1382"><span class="lineNum">    1382</span> <span class="tlaGNC">        2296 :     constexpr std::size_t kNumFields = kIsEmptyAggregate ? 0 : DecomposeCountImpl&lt;UR&gt;::value;</span></span>
 <span id="L1383"><span class="lineNum">    1383</span>              :     static_assert(kNumFields != kNotDecomposableValue);</span>
 <span id="L1384"><span class="lineNum">    1384</span>              :     if constexpr (kNumFields == 0) {</span>
 <span id="L1385"><span class="lineNum">    1385</span> <span class="tlaGNC">           1 :       return std::make_tuple();</span></span>
 <span id="L1386"><span class="lineNum">    1386</span>              :     } else if constexpr (kNumFields == 1) {</span>
-<span id="L1387"><span class="lineNum">    1387</span> <span class="tlaGNC">         962 :       const auto&amp; [a1] = data;</span></span>
-<span id="L1388"><span class="lineNum">    1388</span> <span class="tlaGNC">         962 :       return std::tie(a1);</span></span>
+<span id="L1387"><span class="lineNum">    1387</span> <span class="tlaGNC">         967 :       const auto&amp; [a1] = data;</span></span>
+<span id="L1388"><span class="lineNum">    1388</span> <span class="tlaGNC">         967 :       return std::tie(a1);</span></span>
 <span id="L1389"><span class="lineNum">    1389</span>              :     } else if constexpr (kNumFields == 2) {</span>
 <span id="L1390"><span class="lineNum">    1390</span> <span class="tlaGNC">         304 :       const auto&amp; [a1, a2] = data;</span></span>
 <span id="L1391"><span class="lineNum">    1391</span> <span class="tlaGNC">         304 :       return std::tie(a1, a2);</span></span>
