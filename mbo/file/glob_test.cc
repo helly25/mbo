@@ -53,6 +53,7 @@ using ::mbo::testing::IsOk;
 using ::mbo::testing::IsOkAndHolds;
 using ::mbo::testing::StatusIs;
 using ::testing::AnyOf;
+using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::UnorderedElementsAreArray;
@@ -191,6 +192,42 @@ TEST_F(GlobTest, ShGlobBraceAlternatives) {
   EXPECT_THAT(Glob2Re2Expression(R"({left\,middle,right})", k_sh_glob), IsOkAndHolds("(?:left,middle|right)"));
   EXPECT_THAT(Glob2Re2Expression(R"({left\}middle,right})", k_sh_glob), IsOkAndHolds("(?:left\\}middle|right)"));
   EXPECT_THAT(Glob2Re2Expression("a{bc", k_sh_glob), IsOkAndHolds("a\\{bc"));
+}
+
+TEST_F(GlobTest, ShGlobBraceIntegerSequences) {
+  const Glob2Re2Options k_sh_glob{.syntax = GlobSyntax::kShGlob};
+  EXPECT_THAT(Glob2Re2Expression("file{1..3}", k_sh_glob), IsOkAndHolds("file(?:1|2|3)"));
+  EXPECT_THAT(Glob2Re2Expression("file{3..1}", k_sh_glob), IsOkAndHolds("file(?:3|2|1)"));
+  EXPECT_THAT(Glob2Re2Expression("file{-2..1}", k_sh_glob), IsOkAndHolds("file(?:-2|-1|0|1)"));
+  EXPECT_THAT(Glob2Re2Expression("file{03..1}", k_sh_glob), IsOkAndHolds("file(?:03|02|01)"));
+  EXPECT_THAT(Glob2Re2Expression("{file{1..3},other}", k_sh_glob), IsOkAndHolds("(?:file(?:1|2|3)|other)"));
+}
+
+TEST_F(GlobTest, ShGlobBraceAsciiLetterSequences) {
+  const Glob2Re2Options k_sh_glob{.syntax = GlobSyntax::kShGlob};
+  EXPECT_THAT(Glob2Re2Expression("{a..d}", k_sh_glob), IsOkAndHolds("(?:a|b|c|d)"));
+  EXPECT_THAT(Glob2Re2Expression("{D..A}", k_sh_glob), IsOkAndHolds("(?:D|C|B|A)"));
+  EXPECT_THAT(Glob2Re2Expression("{a..Z}", k_sh_glob), IsOkAndHolds("(?:a|`|_|\\^|\\]|\\\\|\\[|Z)"));
+}
+
+TEST_F(GlobTest, ShGlobBraceSequencesCompileAsWholeMatchAlternatives) {
+  const Glob2Re2Options k_sh_glob{.syntax = GlobSyntax::kShGlob};
+  MBO_ASSERT_OK_AND_MOVE_TO(Glob2Re2("part-{03..01}.{a..c}", k_sh_glob), const std::unique_ptr<const RE2> matcher);
+  ASSERT_THAT(matcher, NotNull());
+  EXPECT_THAT(RE2::FullMatch("part-03.a", *matcher), IsTrue());
+  EXPECT_THAT(RE2::FullMatch("part-01.c", *matcher), IsTrue());
+  EXPECT_THAT(RE2::FullMatch("part-3.a", *matcher), IsFalse());
+  EXPECT_THAT(RE2::FullMatch("part-00.a", *matcher), IsFalse());
+  EXPECT_THAT(RE2::FullMatch("part-02.d", *matcher), IsFalse());
+}
+
+TEST_F(GlobTest, ShGlobLeavesNonSequencesLiteralAndBoundsExpansion) {
+  const Glob2Re2Options k_sh_glob{.syntax = GlobSyntax::kShGlob};
+  EXPECT_THAT(Glob2Re2Expression("{1..x}", k_sh_glob), IsOkAndHolds("\\{1\\.\\.x\\}"));
+  EXPECT_THAT(Glob2Re2Expression("{1..2..3}", k_sh_glob), IsOkAndHolds("\\{1\\.\\.2\\.\\.3\\}"));
+  EXPECT_THAT(
+      Glob2Re2Expression("{1..10001}", k_sh_glob),
+      StatusIs(absl::StatusCode::kInvalidArgument, "Brace sequence exceeds the 10000-term limit."));
 }
 
 TEST_F(GlobTest, Glob2Re2PatternErrors) {

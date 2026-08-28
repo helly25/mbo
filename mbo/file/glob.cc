@@ -15,8 +15,10 @@
 
 #include "mbo/file/glob.h"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <optional>
@@ -31,6 +33,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/match.h"
+#include "absl/strings/numbers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "mbo/status/status_macros.h"
@@ -397,6 +400,160 @@ void SkipRange(std::string_view pattern, std::size_t& pos) {
 
 absl::StatusOr<std::string> Glob2Re2ExpressionImpl(std::string_view pattern, const Glob2Re2Options& options);
 
+constexpr std::size_t kMaxBraceSequenceTerms = 10'000;
+
+bool IsIntegerSequenceEndpoint(std::string_view endpoint) {
+  if (endpoint.starts_with('+') || endpoint.starts_with('-')) {
+    endpoint.remove_prefix(1);
+  }
+  return !endpoint.empty() && absl::c_all_of(endpoint, absl::ascii_isdigit);
+}
+
+std::size_t IntegerDigitWidth(std::string_view endpoint) {
+  if (endpoint.starts_with('+') || endpoint.starts_with('-')) {
+    endpoint.remove_prefix(1);
+  }
+  return endpoint.size();
+}
+
+bool HasLeadingZero(std::string_view endpoint) {
+  if (endpoint.starts_with('+') || endpoint.starts_with('-')) {
+    endpoint.remove_prefix(1);
+  }
+  return endpoint.size() > 1 && endpoint.starts_with('0');
+}
+
+std::string FormatSequenceInteger(std::int64_t value, std::size_t width, bool zero_pad) {
+  std::string result = std::to_string(value);
+  if (!zero_pad) {
+    return result;
+  }
+  const bool negative = result.starts_with('-');
+  const std::size_t digits = result.size() - static_cast<std::size_t>(negative);
+  if (digits >= width) {
+    return result;
+  }
+  result.insert(static_cast<std::size_t>(negative), width - digits, '0');
+  return result;
+}
+
+void AppendSequenceTerm(std::string& re2_pattern, std::string_view term, bool first) {
+  if (!first) {
+    re2_pattern += '|';
+  }
+  for (const char chr : term) {
+    AppendLiteral(re2_pattern, chr);
+  }
+}
+
+absl::StatusOr<std::string> BuildIntegerSequence(
+    std::string_view first_text,
+    std::string_view last_text,
+    std::int64_t first,
+    std::int64_t last) {
+  const bool zero_pad = HasLeadingZero(first_text) || HasLeadingZero(last_text);
+  const std::size_t width = std::max(IntegerDigitWidth(first_text), IntegerDigitWidth(last_text));
+  std::string result = "(?:";
+  std::size_t terms = 0;
+  for (std::int64_t value = first;; value += first <= last ? 1 : -1) {
+    if (terms == kMaxBraceSequenceTerms) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Brace sequence exceeds the ", kMaxBraceSequenceTerms, "-term limit."));
+    }
+    AppendSequenceTerm(result, FormatSequenceInteger(value, width, zero_pad), terms == 0);
+    ++terms;
+    if (value == last) {
+      break;
+    }
+  }
+  result += ')';
+  return result;
+}
+
+std::string BuildCharacterSequence(char first_char, char last_char) {
+  const int first = static_cast<unsigned char>(first_char);
+  const int last = static_cast<unsigned char>(last_char);
+  std::string result = "(?:";
+  std::size_t terms = 0;
+  for (int value = first;; value += first <= last ? 1 : -1) {
+    const char chr = static_cast<char>(value);
+    AppendSequenceTerm(result, std::string_view(&chr, 1), terms == 0);
+    ++terms;
+    if (value == last) {
+      break;
+    }
+  }
+  result += ')';
+  return result;
+}
+
+// A comma-less SHGLOB brace is a sequence only for two integer endpoints or two ASCII letter
+// endpoints separated by `..`. Other comma-less braces remain literal, matching shell behavior.
+absl::StatusOr<bool> AppendBraceSequence(std::string& re2_pattern, std::string_view body) {
+  const std::size_t separator = body.find("..");
+  if (separator == std::string_view::npos || body.find("..", separator + 2) != std::string_view::npos) {
+    return false;
+  }
+  const std::string_view first_text = body.substr(0, separator);
+  const std::string_view last_text = body.substr(separator + 2);
+  const bool integer_sequence = IsIntegerSequenceEndpoint(first_text) && IsIntegerSequenceEndpoint(last_text);
+  const bool character_sequence = first_text.size() == 1 && last_text.size() == 1
+                                  && absl::ascii_isalpha(first_text.front()) && absl::ascii_isalpha(last_text.front());
+  if (!integer_sequence && !character_sequence) {
+    return false;
+  }
+
+  std::int64_t first_integer = 0;
+  std::int64_t last_integer = 0;
+  if (integer_sequence
+      && (!absl::SimpleAtoi(first_text, &first_integer) || !absl::SimpleAtoi(last_text, &last_integer))) {
+    return false;
+  }
+
+  if (integer_sequence) {
+    MBO_ASSIGN_OR_RETURN(
+        const std::string sequence, BuildIntegerSequence(first_text, last_text, first_integer, last_integer));
+    re2_pattern += sequence;
+  } else {
+    re2_pattern += BuildCharacterSequence(first_text.front(), last_text.front());
+  }
+  return true;
+}
+
+absl::StatusOr<bool> AppendClosedBraceGroup(
+    std::string& re2_pattern,
+    std::string_view pattern,
+    std::size_t start,
+    std::size_t scan,
+    bool saw_comma,
+    std::vector<std::pair<std::size_t, std::size_t>>& alternatives,
+    std::size_t& pos,
+    const Glob2Re2Options& options) {
+  if (!saw_comma) {
+    MBO_ASSIGN_OR_RETURN(const bool consumed, AppendBraceSequence(re2_pattern, pattern.substr(start, scan - start)));
+    if (consumed) {
+      pos = scan + 1;
+    }
+    return consumed;
+  }
+  alternatives.emplace_back(start, scan);
+  re2_pattern += "(?:";
+  for (std::size_t idx = 0; idx < alternatives.size(); ++idx) {
+    if (idx != 0) {
+      re2_pattern += '|';
+    }
+    MBO_ASSIGN_OR_RETURN(
+        const std::string alternative,
+        Glob2Re2ExpressionImpl(
+            pattern.substr(alternatives.at(idx).first, alternatives.at(idx).second - alternatives.at(idx).first),
+            options));
+    re2_pattern += alternative;
+  }
+  re2_pattern += ')';
+  pos = scan + 1;
+  return true;
+}
+
 absl::StatusOr<bool> AppendBraceGroup(
     std::string& re2_pattern,
     std::string_view pattern,
@@ -419,25 +576,7 @@ absl::StatusOr<bool> AppendBraceGroup(
       --depth;
       ++scan;
     } else if (pattern.at(scan) == '}') {
-      if (!saw_comma) {
-        return false;
-      }
-      alternatives.emplace_back(start, scan);
-      re2_pattern += "(?:";
-      for (std::size_t idx = 0; idx < alternatives.size(); ++idx) {
-        if (idx != 0) {
-          re2_pattern += '|';
-        }
-        MBO_ASSIGN_OR_RETURN(
-            const std::string alternative,
-            Glob2Re2ExpressionImpl(
-                pattern.substr(alternatives.at(idx).first, alternatives.at(idx).second - alternatives.at(idx).first),
-                options));
-        re2_pattern += alternative;
-      }
-      re2_pattern += ')';
-      pos = scan + 1;
-      return true;
+      return AppendClosedBraceGroup(re2_pattern, pattern, start, scan, saw_comma, alternatives, pos, options);
     } else if (pattern.at(scan) == ',' && depth == 0) {
       alternatives.emplace_back(start, scan);
       start = scan + 1;

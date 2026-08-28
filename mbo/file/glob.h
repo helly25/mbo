@@ -79,7 +79,9 @@ struct Glob2Re2Options {
 // Bracket expressions support literals, ascending ranges, leading `!` negation, and RE2's named
 // ASCII classes. They always exclude '/'; exact `[/]` is retained as a compatibility spelling for
 // a separator. Locale collation/equivalence and general negative extglob are unsupported.
-// `GlobSyntax::kShGlob` additionally enables nested brace alternatives with empty alternatives.
+// `GlobSyntax::kShGlob` additionally enables nested brace alternatives with empty alternatives and
+// integer or ASCII-letter sequences such as `{1..9}`, `{09..01}`, and `{a..z}`. Integer sequences
+// preserve width when either endpoint has a leading zero and are limited to 10,000 terms.
 absl::StatusOr<std::string> Glob2Re2Expression(std::string_view pattern, const Glob2Re2Options& options = {});
 
 // Compiles `Glob2Re2Expression(pattern, options)` as an RE2 instance.
