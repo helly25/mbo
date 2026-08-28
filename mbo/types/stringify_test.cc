@@ -15,10 +15,12 @@
 
 #include "mbo/types/stringify.h"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -165,6 +167,33 @@ TEST_F(StringifyTest, AllDataSet) {
   EXPECT_THAT(missing.AllDataSet(), IsFalse());
 }
 
+TEST_F(StringifyTest, ApplyAllStopsAtEachFailedOption) {
+  for (int stop = 1; stop <= 8; ++stop) {
+    StringifyOptions options = Stringify::OptionsDefault();
+    int calls = 0;
+    const bool result = StringifyOptions::ApplyAll(options, [&calls, stop](const auto&) {
+      ++calls;
+      return calls != stop;
+    });
+    EXPECT_THAT(result, Eq(stop == 8));
+    EXPECT_THAT(calls, Eq(std::min(stop, 7)));
+  }
+}
+
+TEST_F(StringifyTest, FieldOptionsRequireBothLayers) {
+  const StringifyOptions& complete = Stringify::OptionsDefault();
+  const StringifyFieldOptions both_complete{complete, complete};
+  EXPECT_THAT(both_complete.AllDataSet(), IsTrue());
+
+  StringifyOptions missing_data = complete;
+  missing_data.format.reset();
+  const StringifyOptions& missing = missing_data;
+  const StringifyFieldOptions missing_outer{missing, complete};
+  const StringifyFieldOptions missing_inner{complete, missing};
+  EXPECT_THAT(missing_outer.AllDataSet(), IsFalse());
+  EXPECT_THAT(missing_inner.AllDataSet(), IsFalse());
+}
+
 TEST_F(StringifyTest, OptionsAsSelectsRequestedMode) {
   EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kDefault), Eq(&Stringify::OptionsDefault()));
   EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kCpp), Eq(&Stringify::OptionsCpp()));
@@ -172,6 +201,24 @@ TEST_F(StringifyTest, OptionsAsSelectsRequestedMode) {
   EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kJson), Eq(&Stringify::OptionsJson()));
   EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kJsonLine), Eq(&Stringify::OptionsJsonLine()));
   EXPECT_THAT(&Stringify::OptionsAs(Stringify::OutputMode::kJsonPretty), Eq(&Stringify::OptionsJsonPretty()));
+}
+
+TEST_F(StringifyTest, OutputModesHaveDiagnosticNames) {
+  constexpr std::array kModes{
+      Stringify::OutputMode::kDefault, Stringify::OutputMode::kCpp,      Stringify::OutputMode::kCppPretty,
+      Stringify::OutputMode::kJson,    Stringify::OutputMode::kJsonLine, Stringify::OutputMode::kJsonPretty,
+  };
+  std::ostringstream out;
+  for (const auto mode : kModes) {
+    out << mode << '\n';
+  }
+  EXPECT_THAT(out.str(), EqualsText(R"(OutpuMode::kDefault
+OutpuMode::kCpp
+OutpuMode::kCppPretty
+OutpuMode::kJson
+OutpuMode::kJsonLine
+OutpuMode::kJsonPretty
+)"));
 }
 
 TEST_F(StringifyTest, StringEscapeModesControlRenderedBytes) {
@@ -191,6 +238,19 @@ TEST_F(StringifyTest, StringEscapeModesControlRenderedBytes) {
 
   options.value_control.as_data().escape_mode = StringifyOptions::EscapeMode::kCHexEscape;
   EXPECT_THAT(Stringify(options).ToString(Value{kText}), R"({"line\n\x01"})");
+}
+
+TEST_F(StringifyTest, CharacterFormattingSupportsQuotesAndNumericOutput) {
+  struct Value {
+    char value;
+  };
+
+  StringifyOptions options = Stringify::OptionsDefault();
+  options.key_control.as_data().key_mode = StringifyOptions::KeyMode::kNone;
+  EXPECT_THAT(Stringify(options).ToString(Value{'\''}), Eq(R"({'\\\''})"));
+
+  options.format.as_data().char_delim = "";
+  EXPECT_THAT(Stringify(options).ToString(Value{'A'}), Eq("{65}"));
 }
 
 TEST_F(StringifyTest, KeyModeNoneSuppressesFieldNames) {
@@ -613,6 +673,56 @@ TEST_F(StringifyTest, OrderedStringKeyedContainerHonorsMaximumLength) {
 
   options.value_control.as_data().container_max_len = 1;
   EXPECT_THAT(Stringify(options).ToString(values), Eq("{\"b\": 2}\n"));
+}
+
+TEST_F(StringifyTest, StringKeyedContainerCanUseKeysAsFieldNames) {
+  const std::vector<std::pair<std::string_view, int>> values{{"b", 2}, {"a", 1}};
+  StringifyOptions options = Stringify::OptionsJsonLine();
+  options.special.as_data().str_keyed = StringifyOptions::StrKeyed::kFirstIsName;
+
+  EXPECT_THAT(Stringify(options).ToString(values), Eq("{\"b\": 2, \"a\": 1}\n"));
+
+  options.value_control.as_data().container_max_len = 1;
+  EXPECT_THAT(Stringify(options).ToString(values), Eq("{\"b\": 2}\n"));
+}
+
+struct StringKeyedContainerWithoutFieldNames {
+  using MboTypesStringifyDoNotPrintFieldNames = void;
+
+  std::vector<std::pair<std::string_view, int>> values{{"b", 2}, {"a", 1}};
+
+  friend StringifyOptions MboTypesStringifyOptions(
+      const StringKeyedContainerWithoutFieldNames&,
+      const StringifyFieldInfo& field) {
+    StringifyOptions options = field.options.inner;
+    options.special.as_data().str_keyed = StringifyOptions::StrKeyed::kFirstIsName;
+    return options;
+  }
+};
+
+TEST_F(StringifyTest, StringKeyedContainerHonorsSuppressedFieldNames) {
+  EXPECT_THAT(Stringify().ToString(StringKeyedContainerWithoutFieldNames{}), Eq("{{2, 1}}"));
+}
+
+struct PairWithCustomFieldNames {
+  std::pair<int, int> value{1, 2};
+
+  friend auto MboTypesStringifyFieldNames(const PairWithCustomFieldNames&) {
+    return std::array<std::string_view, 1>{"value"};
+  }
+};
+
+TEST_F(StringifyTest, PairCanUseCustomFieldNames) {
+  StringifyOptions options = Stringify::OptionsJsonLine();
+  options.special.as_data().pair_keys = {{"left", "right"}};
+
+  EXPECT_THAT(
+      Stringify(options).ToString(PairWithCustomFieldNames{}), Eq("{\"value\": {\"left\": 1, \"right\": 2}}\n"));
+
+  const StringifyRootOptions root_options{.root_prefix = "<", .root_suffix = ">"};
+  EXPECT_THAT(
+      Stringify(options).ToString(PairWithCustomFieldNames{}, root_options),
+      Eq("<{\"value\": {\"left\": 1, \"right\": 2}}\n>"));
 }
 
 struct TestStructDoNotPrintFieldNames {
@@ -1050,6 +1160,23 @@ struct TestStructNonLiteralFields {
     return StringifyWithFieldNames({"one", "two", "three"}, StringifyNameHandling::kVerify)(v, field);
   }
 };
+
+TEST_F(StringifyTest, FieldNameInjectionLeavesExhaustedListsUnchanged) {
+  const StringifyFieldInfo out_of_range{
+      .options = Stringify::OptionsDefault(),
+      .idx = 100,
+      .name = "ignored",
+  };
+
+  EXPECT_THAT(MboTypesStringifyOptions(TestStructShorten{}, out_of_range).AllDataSet(), IsTrue());
+  EXPECT_THAT(MboTypesStringifyOptions(TestStructValueReplacement{}, out_of_range).AllDataSet(), IsTrue());
+  EXPECT_THAT(MboTypesStringifyOptions(TestStructContainer{}, out_of_range).AllDataSet(), IsTrue());
+  EXPECT_THAT(MboTypesStringifyOptions(TestStructMoreContainers{}, out_of_range).AllDataSet(), IsTrue());
+  EXPECT_THAT(MboTypesStringifyOptions(TestStructContainersOfPairs{}, out_of_range).AllDataSet(), IsTrue());
+  EXPECT_THAT(MboTypesStringifyOptions(TestStructCustomNestedJsonNested{}, out_of_range).AllDataSet(), IsTrue());
+  EXPECT_THAT(MboTypesStringifyOptions(TestStructCustomNestedJson{}, out_of_range).AllDataSet(), IsTrue());
+  EXPECT_THAT(MboTypesStringifyOptions(TestStructNonLiteralFields{}, out_of_range).AllDataSet(), IsTrue());
+}
 
 TEST_F(StringifyTest, NonLiteralFields) {
   ASSERT_THAT(SupportsFieldNames<TestStructNonLiteralFields>, kStructNameSupport);
