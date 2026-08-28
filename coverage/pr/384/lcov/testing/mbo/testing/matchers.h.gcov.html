@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-28 04:42:38</td>
+            <td class="headerValue">2026-08-28 07:25:55</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -481,33 +481,33 @@
 <span id="L401"><span class="lineNum">     401</span>                 :             : </span>
 <span id="L402"><span class="lineNum">     402</span>                 :             : class EqualsTextMatcher : public ::testing::MatcherInterface&lt;std::string_view&gt; {</span>
 <span id="L403"><span class="lineNum">     403</span>                 :             :  public:</span>
-<span id="L404"><span class="lineNum">     404</span>                 :<span class="tlaGNC">         117 :   explicit EqualsTextMatcher(std::string_view text) : text_(text) {}</span></span>
+<span id="L404"><span class="lineNum">     404</span>                 :<span class="tlaGNC">         120 :   explicit EqualsTextMatcher(std::string_view text) : text_(text) {}</span></span>
 <span id="L405"><span class="lineNum">     405</span>                 :             : </span>
 <span id="L406"><span class="lineNum">     406</span>                 :<span class="tlaGNC">           1 :   void DescribeTo(::std::ostream* os) const override { *os &lt;&lt; &quot;matches text&quot;; }</span></span>
 <span id="L407"><span class="lineNum">     407</span>                 :             : </span>
 <span id="L408"><span class="lineNum">     408</span>                 :<span class="tlaGNC">           1 :   void DescribeNegationTo(::std::ostream* os) const override { *os &lt;&lt; &quot;does not match text&quot;; }</span></span>
 <span id="L409"><span class="lineNum">     409</span>                 :             : </span>
-<span id="L410"><span class="lineNum">     410</span>                 :<span class="tlaGNC">          37 :   bool MatchAndExplain(std::string_view other, ::testing::MatchResultListener* listener) const override {</span></span>
-<span id="L411"><span class="lineNum">     411</span>   [<span class="tlaGBC" title="branch 0 was taken 36 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 32 times"> + </span><span class="tlaGBC" title="branch 3 was taken 4 times"> + </span> :<span class="tlaGNC">          37 :     if (!options_.drop_indent &amp;&amp; text_ == other) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 32 times"> + </span><span class="tlaGBC" title="branch 5 was taken 5 times"> + </span>]
-<span id="L412"><span class="lineNum">     412</span>                 :<span class="tlaGNC">          32 :       return true;</span></span>
+<span id="L410"><span class="lineNum">     410</span>                 :<span class="tlaGNC">          39 :   bool MatchAndExplain(std::string_view other, ::testing::MatchResultListener* listener) const override {</span></span>
+<span id="L411"><span class="lineNum">     411</span>   [<span class="tlaGBC" title="branch 0 was taken 38 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 33 times"> + </span><span class="tlaGBC" title="branch 3 was taken 5 times"> + </span> :<span class="tlaGNC">          39 :     if (!options_.drop_indent &amp;&amp; text_ == other) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 33 times"> + </span><span class="tlaGBC" title="branch 5 was taken 6 times"> + </span>]
+<span id="L412"><span class="lineNum">     412</span>                 :<span class="tlaGNC">          33 :       return true;</span></span>
 <span id="L413"><span class="lineNum">     413</span>                 :             :     }</span>
-<span id="L414"><span class="lineNum">     414</span>                 :<span class="tlaGNC">          15 :     const auto wants_lines = [&amp;]() -&gt; std::vector&lt;std::string&gt; {</span></span>
-<span id="L415"><span class="lineNum">     415</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           5 :       if (options_.drop_indent) {</span></span>
+<span id="L414"><span class="lineNum">     414</span>                 :<span class="tlaGNC">          18 :     const auto wants_lines = [&amp;]() -&gt; std::vector&lt;std::string&gt; {</span></span>
+<span id="L415"><span class="lineNum">     415</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           6 :       if (options_.drop_indent) {</span></span>
 <span id="L416"><span class="lineNum">     416</span>                 :<span class="tlaGNC">           1 :         *listener &lt;&lt; &quot;[&quot; &lt;&lt; mbo::strings::DropIndent(text_) &lt;&lt; &quot;]\n&quot;;</span></span>
 <span id="L417"><span class="lineNum">     417</span>                 :<span class="tlaGNC">           1 :         return absl::StrSplit(mbo::strings::DropIndent(text_), '\n');</span></span>
 <span id="L418"><span class="lineNum">     418</span>                 :             :       }</span>
-<span id="L419"><span class="lineNum">     419</span>                 :<span class="tlaGNC">           4 :       return absl::StrSplit(text_, '\n');</span></span>
-<span id="L420"><span class="lineNum">     420</span>                 :<span class="tlaGNC">           5 :     }();</span></span>
-<span id="L421"><span class="lineNum">     421</span>                 :<span class="tlaGNC">           5 :     const std::vector&lt;std::string&gt; other_lines = absl::StrSplit(other, '\n');</span></span>
-<span id="L422"><span class="lineNum">     422</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           5 :     if (options_.drop_indent &amp;&amp; wants_lines == other_lines) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="branch 5 was taken 4 times"> + </span>]
+<span id="L419"><span class="lineNum">     419</span>                 :<span class="tlaGNC">           5 :       return absl::StrSplit(text_, '\n');</span></span>
+<span id="L420"><span class="lineNum">     420</span>                 :<span class="tlaGNC">           6 :     }();</span></span>
+<span id="L421"><span class="lineNum">     421</span>                 :<span class="tlaGNC">           6 :     const std::vector&lt;std::string&gt; other_lines = absl::StrSplit(other, '\n');</span></span>
+<span id="L422"><span class="lineNum">     422</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span> :<span class="tlaGNC">           6 :     if (options_.drop_indent &amp;&amp; wants_lines == other_lines) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="branch 5 was taken 5 times"> + </span>]
 <span id="L423"><span class="lineNum">     423</span>                 :<span class="tlaGNC">           1 :       return true;</span></span>
 <span id="L424"><span class="lineNum">     424</span>                 :             :     }</span>
-<span id="L425"><span class="lineNum">     425</span>                 :<span class="tlaGNC">           4 :     *listener &lt;&lt; &quot;Text difference:\n&quot;</span></span>
-<span id="L426"><span class="lineNum">     426</span>                 :<span class="tlaGNC">           4 :               &lt;&lt; ::testing::internal::edit_distance::CreateUnifiedDiff(wants_lines, other_lines);</span></span>
-<span id="L427"><span class="lineNum">     427</span>                 :<span class="tlaGNC">           4 :     return false;</span></span>
-<span id="L428"><span class="lineNum">     428</span>                 :<span class="tlaGNC">           5 :   }</span></span>
+<span id="L425"><span class="lineNum">     425</span>                 :<span class="tlaGNC">           5 :     *listener &lt;&lt; &quot;Text difference:\n&quot;</span></span>
+<span id="L426"><span class="lineNum">     426</span>                 :<span class="tlaGNC">           5 :               &lt;&lt; ::testing::internal::edit_distance::CreateUnifiedDiff(wants_lines, other_lines);</span></span>
+<span id="L427"><span class="lineNum">     427</span>                 :<span class="tlaGNC">           5 :     return false;</span></span>
+<span id="L428"><span class="lineNum">     428</span>                 :<span class="tlaGNC">           6 :   }</span></span>
 <span id="L429"><span class="lineNum">     429</span>                 :             : </span>
 <span id="L430"><span class="lineNum">     430</span>                 :<span class="tlaGNC">           1 :   void SetDropIndent(bool drop_indent = true) { options_.drop_indent = drop_indent; }</span></span>
 <span id="L431"><span class="lineNum">     431</span>                 :             : </span>
@@ -526,8 +526,8 @@
 <span id="L444"><span class="lineNum">     444</span>                 :             : </span>
 <span id="L445"><span class="lineNum">     445</span>                 :             : // Matcher that compares text line by line using unified diff.</span>
 <span id="L446"><span class="lineNum">     446</span>                 :             : // Can be wrapped with `WithDropIndent`.</span>
-<span id="L447"><span class="lineNum">     447</span>                 :<span class="tlaGNC">          39 : inline PolymorphicEqualsTextMatcher EqualsText(std::string_view text) {</span></span>
-<span id="L448"><span class="lineNum">     448</span>                 :<span class="tlaGNC">          39 :   return ::testing::MakePolymorphicMatcher(testing_internal::EqualsTextMatcher(text));</span></span>
+<span id="L447"><span class="lineNum">     447</span>                 :<span class="tlaGNC">          40 : inline PolymorphicEqualsTextMatcher EqualsText(std::string_view text) {</span></span>
+<span id="L448"><span class="lineNum">     448</span>                 :<span class="tlaGNC">          40 :   return ::testing::MakePolymorphicMatcher(testing_internal::EqualsTextMatcher(text));</span></span>
 <span id="L449"><span class="lineNum">     449</span>                 :             : }</span>
 <span id="L450"><span class="lineNum">     450</span>                 :             : </span>
 <span id="L451"><span class="lineNum">     451</span>                 :             : // Matcher that compares text line by line using unified diff.</span>
