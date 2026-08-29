@@ -1,5 +1,8 @@
 # 0.14.0
 
+- Transferred the project to `mboworks/mbo`, renamed the Bazel module to `mboworks_mbo`, and
+  migrated shell tests to `mboworks_bashtest@0.6.1`. Historical `helly25_mbo` releases remain
+  available unchanged.
 - Extended SHGLOB braces with bounded ascending and descending integer and ASCII-letter sequences,
   including signed and zero-padded integers. Expansions above 10,000 terms are rejected, and the
   optional Bash increment form remains literal.

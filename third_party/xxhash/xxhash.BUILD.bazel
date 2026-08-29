@@ -6,5 +6,5 @@ cc_library(
     hdrs = ["xxhash.h"],
     defines = ["XXH_INLINE_ALL"],
     includes = ["."],
-    visibility = ["@helly25_mbo//mbo/hash:__pkg__"],
+    visibility = ["@mboworks_mbo//mbo/hash:__pkg__"],
 )

@@ -313,7 +313,7 @@ clang-format picks a layout per line; these habits steer it toward the readable 
   exceptions. With `-fno-exceptions`, requirements always use fatal logging.
 
 Propagate errors with the macros from `mbo/status/status_macros.h`
-(`@helly25_mbo//mbo/status:status_macros_cc`), not a hand-written
+(`@mboworks_mbo//mbo/status:status_macros_cc`), not a hand-written
 `if (!x.ok()) return x.status();`.
 
 - **A "value or error" type IS `absl::StatusOr<T>`.** Do not hand-roll a struct that bundles
@@ -560,9 +560,9 @@ serialized-string comparison. See the Protocol Buffers section.
 
 ### Shell / binary-level tests
 
-- Use **helly25/bashtest** (`bazel_dep(name = "helly25_bashtest")`), not a hand-rolled
-  `sh_test`: `load("@helly25_bashtest//bashtest:bashtest.bzl", "bashtest")`, then a
-  script that `source`s `"${helly25_bashtest}"`, defines `test::name()` functions using
+- Use **mboworks/bashtest** (`bazel_dep(name = "mboworks_bashtest")`), not a hand-rolled
+  `sh_test`: `load("@mboworks_bashtest//bashtest:bashtest.bzl", "bashtest")`, then a
+  script that `source`s `"${mboworks_bashtest}"`, defines `test::name()` functions using
   the `expect_*` assertions, and ends with `test_runner`.
 - **Assert on captured output with bashtest's content matchers (>= 0.5.0), never a
   hand-rolled `grep`.** `expect_output_contains` / `expect_output_not_contains` for a

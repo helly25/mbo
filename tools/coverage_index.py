@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+# SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
 # SPDX-License-Identifier: Apache-2.0
 
 """Generate per-run and retained-site HTML coverage indexes."""
@@ -277,18 +277,18 @@ def _short_row(metadata: dict) -> str:
     target = metadata["target"]
     if target == "main":
         label = "main"
-        source = '<a href="https://github.com/helly25/mbo/tree/main">main branch</a>'
+        source = '<a href="https://github.com/mboworks/mbo/tree/main">main branch</a>'
     elif target.startswith("tag/"):
         release = target.removeprefix("tag/")
         label = f"release {release}"
         source = (
-            f'<a href="https://github.com/helly25/mbo/releases/tag/v{html.escape(release)}">'
+            f'<a href="https://github.com/mboworks/mbo/releases/tag/v{html.escape(release)}">'
             f"release v{html.escape(release)}</a>"
         )
     else:
         number = target.removeprefix("pr/")
         label = f"PR {number}"
-        source = f'<a href="https://github.com/helly25/mbo/pull/{html.escape(number)}">PR #{html.escape(number)}</a>'
+        source = f'<a href="https://github.com/mboworks/mbo/pull/{html.escape(number)}">PR #{html.escape(number)}</a>'
     source_metadata = metadata["source"]
     run_id = source_metadata["run_id"]
     if run_id == 0:  # Reports retained before metadata was introduced.
@@ -298,11 +298,11 @@ def _short_row(metadata: dict) -> str:
         timestamp = completed.astimezone(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         sha = source_metadata["head_sha"]
         commit = (
-            f'<a href="https://github.com/helly25/mbo/commit/{html.escape(sha)}">'
+            f'<a href="https://github.com/mboworks/mbo/commit/{html.escape(sha)}">'
             f"<code>{html.escape(sha[:7])}</code></a>"
         )
         attempt = source_metadata["run_attempt"]
-        run = f'<a href="https://github.com/helly25/mbo/actions/runs/{run_id}">run {run_id}</a>'
+        run = f'<a href="https://github.com/mboworks/mbo/actions/runs/{run_id}">run {run_id}</a>'
         if attempt > 1:
             run += f" (attempt {attempt})"
     values = [_percent(metadata["coverage"][metric]) for metric in _METRICS]

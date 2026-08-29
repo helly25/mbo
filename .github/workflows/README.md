@@ -14,8 +14,8 @@ The coverage cell always uploads its LCOV data, policy summary, and browsable HT
 `coverage-report` run artifact. Successful reports with a stable review identity are also served by
 GitHub Pages:
 
-- `https://helly25.github.io/mbo/coverage/main/` is replaced by each successful `main` run;
-- `https://helly25.github.io/mbo/coverage/pr<NUMBER>/` is replaced by each successful run associated
+- `https://mboworks.github.io/mbo/coverage/main/` is replaced by each successful `main` run;
+- `https://mboworks.github.io/mbo/coverage/pr<NUMBER>/` is replaced by each successful run associated
   with that pull request.
 
 [`coverage_pages.yml`](coverage_pages.yml) is a separate `workflow_run` publisher so pull-request

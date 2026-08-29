@@ -34,7 +34,7 @@ diagnostics to standard error.
 
 ## Tests and temporary files
 
-- Shell tests use `helly25_bashtest` and its expectation helpers.
+- Shell tests use `mboworks_bashtest` and its expectation helpers.
 - Put test-owned files below `${BASHTEST_TMPDIR}`. Do not add cleanup traps or `rm -rf` calls.
 - Allocate retained fixtures with `test_tmpdir name`; use `${TEST_TMPDIR}` only when a tool
   specifically requires Bazel's target-level directory.

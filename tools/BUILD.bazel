@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+# SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,30 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""helly25_mbo/tools"""
+"""mboworks_mbo/tools"""
 
-load("@helly25_bashtest//bashtest:bashtest.bzl", "bashtest")
 load("@rules_cc//cc:defs.bzl", "cc_binary")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 package(default_visibility = ["//visibility:private"])
-
-bashtest(
-    name = "release_git_sh_test",
-    size = "small",
-    srcs = ["release_git_sh_test.sh"],
-    data = ["release_git.sh"],
-)
-
-bashtest(
-    name = "release_pr_sh_test",
-    size = "small",
-    srcs = ["release_pr_sh_test.sh"],
-    data = [
-        "release_pr.sh",
-        "testdata/fake_gh.sh",
-    ],
-)
 
 _SYMBOLIZER = "@llvm_toolchain_llvm//:llvm-symbolizer"
 

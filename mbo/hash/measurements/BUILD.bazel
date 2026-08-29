@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+# SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 # whole directory is stripped from release archives (release_prep.sh EXCLUDES), so
 # nothing shipped depends on it; these targets exist only for the dev build/CI.
 
-load("@helly25_bashtest//bashtest:bashtest.bzl", "bashtest")
+load("@mboworks_bashtest//bashtest:bashtest.bzl", "bashtest")
 
 package(default_visibility = ["//visibility:private"])
 

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+# SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -76,7 +76,7 @@ def diff_test_test(
     """
     if algorithm == "unified" and format != "unified":
         fail("The deprecated algorithm = \"unified\" alias implies format = \"unified\" (got \"{}\").".format(format))
-    strip_file_header_prefix = "external/(com_)?helly25_mbo[^/]*/"
+    strip_file_header_prefix = "external/(com_)?mboworks_mbo[^/]*/"
     native.genrule(
         name = name + "_diff",
         srcs = [

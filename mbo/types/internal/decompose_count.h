@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -374,7 +374,7 @@ constexpr bool kMboTypesDecomposeCountUseOverloadSet = false;
 // ----------------------------------------------------
 
 // From
-// https://github.com/helly25/mbo/commit/03789fed711e9603170dda767b1ebe50be6df282
+// https://github.com/mboworks/mbo/commit/03789fed711e9603170dda767b1ebe50be6df282
 //
 // Unlike Clang 16, GCC does not understand `decltype` of a lmbda performing
 // structured-bindings, e.g.: `decltype([]() { const auto& [a0] = T(); }`.

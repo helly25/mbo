@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+# SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -126,7 +126,7 @@ def _diff_test_impl(ctx):
         fail("Windows not yet supported")
     else:
         test_bin = ctx.actions.declare_file(ctx.label.name + "-test.sh")
-        strip_file_header_prefix = "external/(com_)?helly25_mbo[^/]*/"
+        strip_file_header_prefix = "external/(com_)?mboworks_mbo[^/]*/"
         ctx.actions.write(
             output = test_bin,
             content = r"""#!/usr/bin/env bash

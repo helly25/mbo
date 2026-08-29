@@ -6,7 +6,7 @@ This is a **pure development dependency**: the whole `mbo/hash/measurements`
 directory is stripped from release archives (`release_prep.sh` EXCLUDES), so it is
 never part of any published/BCR offering and consumers of the library never pull
 any of it in (including any heavier plotting dependencies). It is an ordinary dev
-package of the `helly25_mbo` module - built and tested in dev/CI - and a
+package of the `mboworks_mbo` module - built and tested in dev/CI - and a
 pre-commit guard forbids anything outside it from depending on it, so the release
 strip can never leave a dangling reference.
 
