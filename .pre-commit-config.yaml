@@ -282,7 +282,8 @@ repos:
             and trunk auto-applied its build-breaking fixes. Do not re-add it to trunk.
           * Run it over everything: `pre-commit run clang-tidy --all-files`.
           * In CI the dedicated `clang-tidy` job owns this: it builds the compile DB, uploads
-            it as an artifact, and runs this hook. The main `pre-commit` job skips it.
+            it as an artifact, and invokes this same script directly so per-file progress streams
+            live. The main `pre-commit` job skips it.
           * This is now an AUTOMATIC gate: it runs on the C++ sources a commit touches, and
             `WarningsAsErrors: '*'` makes any finding fail the commit. It only reached that
             point once the tree was clean - see the `.clang-tidy` comments for which checks
@@ -296,10 +297,10 @@ repos:
         types: [file]
         files: (\.(cc|cpp|cxx|h|hh|hpp|hxx|inc|ipp|bzl)$|\.h\.in$)
       - id: clang-tidy-scope-test
-        name: Test clang-tidy scope selection
+        name: Test clang-tidy orchestration
         language: system
-        entry: python3 -m unittest tools/clang_tidy_scope_test.py
-        files: ^tools/clang_tidy_scope(_test)?\.py$
+        entry: python3 -m unittest tools/clang_tidy_compdb_test.py tools/clang_tidy_scope_test.py tools/clang_tidy_runner_test.py
+        files: ^tools/clang_tidy_(compdb|scope|runner)(_test)?\.py$
         pass_filenames: false
       - id: trunk-fmt
         name: trunk fmt

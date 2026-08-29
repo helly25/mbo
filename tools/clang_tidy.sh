@@ -129,7 +129,7 @@ done
 # every other check still applies to tests.
 readonly TEST_DISABLED_CHECKS='-readability-function-cognitive-complexity,-clang-analyzer-cplusplus.NewDeleteLeaks'
 
-PARALLELISM="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
+PARALLELISM="${CLANG_TIDY_JOBS:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)}"
 readonly PARALLELISM
 
 declare -a SOURCES=()
@@ -179,31 +179,34 @@ fi
 
 # Report only: --header-filter restricts diagnostics to this repo's own headers
 # (not the toolchain's force-included / system headers), -p points at the compile
-# DB. WarningsAsErrors in .clang-tidy makes any finding a non-zero exit.
-# Both groups must run, and a finding in either has to fail, so no `exec` here.
-STATUS=0
-# Output is teed so it can be scanned afterwards, while still streaming to the
-# user as it is produced.
+# DB. WarningsAsErrors in .clang-tidy makes any finding a non-zero exit. The
+# Python coordinator retains parallel execution but owns output serialization,
+# progress reporting, and interruption cleanup; worker diagnostics therefore
+# cannot interleave and Ctrl-C cannot leave an xargs process forest behind.
 # An explicit template, not `mktemp -t`: BSD mktemp (macOS) takes a bare prefix
 # there, while GNU mktemp (Linux, and so CI) requires the trailing X's and fails
 # with "too few X's in template". A full path template is accepted by both.
 OUTPUT="$(mktemp "${TMPDIR:-/tmp}/clang_tidy_out.XXXXXX")"
-trap 'rm -f "${OUTPUT}"' EXIT
+CDB_DIR="$(mktemp -d "${TMPDIR:-/tmp}/clang_tidy_cdb.XXXXXX")"
+trap 'rm -f "${OUTPUT}"; rm -rf "${CDB_DIR}"' EXIT
+python3 tools/clang_tidy_compdb.py compile_commands.json "${CDB_DIR}/compile_commands.json"
 
-if [ "${#SOURCES[@]}" -gt 0 ]; then
-  if ! printf '%s\0' "${SOURCES[@]}" \
-    | xargs -0 -n 1 -P "${PARALLELISM}" "${CLANG_TIDY}" --header-filter='(^|/)mbo/' -p . 2>&1 \
-    | tee -a "${OUTPUT}"; then
-    STATUS=1
-  fi
-fi
-if [ "${#TESTS[@]}" -gt 0 ]; then
-  if ! printf '%s\0' "${TESTS[@]}" \
-    | xargs -0 -n 1 -P "${PARALLELISM}" "${CLANG_TIDY}" --header-filter='(^|/)mbo/' \
-      --checks="${TEST_DISABLED_CHECKS}" -p . 2>&1 | tee -a "${OUTPUT}"; then
-    STATUS=1
-  fi
-fi
+RUNNER_ARGS=(
+  --clang-tidy "${CLANG_TIDY}"
+  --compile-database "${CDB_DIR}"
+  --jobs "${PARALLELISM}"
+  --output "${OUTPUT}"
+  "--test-disabled-checks=${TEST_DISABLED_CHECKS}"
+)
+for FILE in ${SOURCES[@]+"${SOURCES[@]}"}; do
+  RUNNER_ARGS+=(--source "${FILE}")
+done
+for FILE in ${TESTS[@]+"${TESTS[@]}"}; do
+  RUNNER_ARGS+=(--test "${FILE}")
+done
+
+STATUS=0
+python3 tools/clang_tidy_runner.py "${RUNNER_ARGS[@]}" || STATUS="${?}"
 
 # A `clang-diagnostic-error` means the translation unit did not PARSE - a missing
 # header, an unresolvable include. That is a broken environment, not a finding
