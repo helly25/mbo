@@ -43,7 +43,7 @@ class ClangTidyCompdbTest(unittest.TestCase):
         self.assertEqual(filtered, [ordinary])
         self.assertEqual(removed, 1)
 
-    def test_rejects_meaningfully_different_duplicate(self):
+    def test_deduplicates_meaningfully_different_commands(self):
         ordinary = entry("mbo/file/glob.cc", "k8-fastbuild")
         different = entry(
             "mbo/file/glob.cc",
@@ -52,8 +52,28 @@ class ClangTidyCompdbTest(unittest.TestCase):
             "-DDIFFERENT_SEMANTICS",
         )
 
-        with self.assertRaisesRegex(ValueError, "differ beyond"):
-            clang_tidy_compdb.deduplicate([ordinary, different])
+        filtered, removed = clang_tidy_compdb.deduplicate([different, ordinary])
+
+        self.assertEqual(filtered, [ordinary])
+        self.assertEqual(removed, 1)
+
+    def test_retains_first_entry_when_all_duplicates_are_fuzz_commands(self):
+        first = entry(
+            "mbo/file/glob.cc",
+            "k8-fastbuild-ST-first",
+            clang_tidy_compdb.FUZZ_DEFINE,
+        )
+        second = entry(
+            "mbo/file/glob.cc",
+            "k8-fastbuild-ST-second",
+            clang_tidy_compdb.FUZZ_DEFINE,
+            "-DDIFFERENT_SEMANTICS",
+        )
+
+        filtered, removed = clang_tidy_compdb.deduplicate([first, second])
+
+        self.assertEqual(filtered, [first])
+        self.assertEqual(removed, 1)
 
     def test_retains_unique_entries(self):
         first = entry("mbo/file/file.cc", "k8-fastbuild")
