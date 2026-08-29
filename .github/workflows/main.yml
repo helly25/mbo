@@ -111,7 +111,8 @@ jobs:
             WIDE_CHANGES="$(git diff --name-only origin/main...HEAD -- \
               '*.h' '*.hh' '*.hpp' '*.hxx' '*.inc' '*.ipp' '*.h.in' '*.bzl' \
               '.github/workflows/main.yml' '.pre-commit-config.yaml' \
-              'tools/clang_tidy.sh' 'tools/clang_tidy_runner.py' 'tools/clang_tidy_scope.py')"
+              'tools/clang_tidy.sh' 'tools/clang_tidy_compdb.py' \
+              'tools/clang_tidy_runner.py' 'tools/clang_tidy_scope.py')"
             if [ -n "${WIDE_CHANGES}" ]; then
               echo "CLANG_TIDY_SCOPE=--all-files" >>"${GITHUB_ENV}"
               git ls-files -- \

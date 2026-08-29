@@ -42,6 +42,7 @@ class ClangTidyRunnerTest(unittest.TestCase):
                     if path == "bad.cc":
                         print("bad.cc:1:1: error: finding")
                         raise SystemExit(1)
+                    print(f"{path}: routine successful output")
                     """
                 ),
                 encoding="utf-8",
@@ -56,6 +57,7 @@ class ClangTidyRunnerTest(unittest.TestCase):
                     clang_tidy_runner.Task("bad.cc"),
                 ],
                 str(executable),
+                ".",
                 2,
                 str(output),
                 stream,
@@ -70,6 +72,8 @@ class ClangTidyRunnerTest(unittest.TestCase):
             self.assertIn("FAIL bad.cc", rendered)
             self.assertIn("clang-tidy: 2 passed, 1 failed", rendered)
             self.assertIn("bad.cc:1:1: error: finding", output.read_text(encoding="utf-8"))
+            self.assertNotIn("routine successful output", rendered)
+            self.assertIn("routine successful output", output.read_text(encoding="utf-8"))
 
     def test_registry_terminates_active_children(self):
         registry = clang_tidy_runner.ProcessRegistry()

@@ -74,12 +74,13 @@ class ProcessRegistry:
 def run_task(
     task: Task,
     clang_tidy: str,
+    compile_database: str,
     registry: ProcessRegistry,
 ) -> Result:
-    command = [clang_tidy, "--header-filter=(^|/)mbo/"]
+    command = [clang_tidy, "--quiet", "--header-filter=(^|/)mbo/"]
     if task.checks:
         command.append(f"--checks={task.checks}")
-    command.extend(["-p", ".", task.path])
+    command.extend(["-p", compile_database, task.path])
     started = time.monotonic()
     process = subprocess.Popen(
         command,
@@ -109,6 +110,7 @@ def progress_line(completed: int, total: int, result: Result) -> str:
 def run_all(
     tasks: Sequence[Task],
     clang_tidy: str,
+    compile_database: str,
     jobs: int,
     output_path: str,
     stream: IO[str] = sys.stdout,
@@ -136,7 +138,10 @@ def run_all(
         with open(output_path, "w", encoding="utf-8") as output_file:
             with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
                 futures = {
-                    executor.submit(run_task, task, clang_tidy, registry): task for task in tasks
+                    executor.submit(
+                        run_task, task, clang_tidy, compile_database, registry
+                    ): task
+                    for task in tasks
                 }
                 try:
                     for completed, future in enumerate(
@@ -147,10 +152,10 @@ def run_all(
                         if result.output:
                             output_file.write(result.output)
                             output_file.flush()
-                        if result.output:
-                            print(result.output, end="", file=stream, flush=True)
                         if result.returncode != 0:
                             failed += 1
+                            if result.output:
+                                print(result.output, end="", file=stream, flush=True)
                 except KeyboardInterrupt:
                     registry.terminate_all()
                     for future in futures:
@@ -173,6 +178,7 @@ def run_all(
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--clang-tidy", required=True)
+    parser.add_argument("--compile-database", required=True)
     parser.add_argument("--jobs", type=int, default=os.cpu_count() or 1)
     parser.add_argument("--output", required=True)
     parser.add_argument("--source", action="append", default=[])
@@ -187,7 +193,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         raise SystemExit("--jobs must be at least 1")
     tasks = [Task(path) for path in args.source]
     tasks.extend(Task(path, args.test_disabled_checks) for path in args.test)
-    return run_all(tasks, args.clang_tidy, args.jobs, args.output)
+    return run_all(tasks, args.clang_tidy, args.compile_database, args.jobs, args.output)
 
 
 if __name__ == "__main__":

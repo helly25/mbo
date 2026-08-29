@@ -187,10 +187,13 @@ fi
 # there, while GNU mktemp (Linux, and so CI) requires the trailing X's and fails
 # with "too few X's in template". A full path template is accepted by both.
 OUTPUT="$(mktemp "${TMPDIR:-/tmp}/clang_tidy_out.XXXXXX")"
-trap 'rm -f "${OUTPUT}"' EXIT
+CDB_DIR="$(mktemp -d "${TMPDIR:-/tmp}/clang_tidy_cdb.XXXXXX")"
+trap 'rm -f "${OUTPUT}"; rm -rf "${CDB_DIR}"' EXIT
+python3 tools/clang_tidy_compdb.py compile_commands.json "${CDB_DIR}/compile_commands.json"
 
 RUNNER_ARGS=(
   --clang-tidy "${CLANG_TIDY}"
+  --compile-database "${CDB_DIR}"
   --jobs "${PARALLELISM}"
   --output "${OUTPUT}"
   "--test-disabled-checks=${TEST_DISABLED_CHECKS}"
