@@ -1,4 +1,4 @@
-# 0.13.3
+# 0.14.0
 
 - Extended SHGLOB braces with bounded ascending and descending integer and ASCII-letter sequences,
   including signed and zero-padded integers. Expansions above 10,000 terms are rejected, and the
