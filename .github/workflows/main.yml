@@ -102,17 +102,28 @@ jobs:
           set -euo pipefail
           if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
             echo "CLANG_TIDY_SCOPE=--all-files" >>"${GITHUB_ENV}"
+            git ls-files -- \
+              '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' '*.inc' '*.ipp' '*.h.in' '*.bzl' \
+              >.clang-tidy-inputs
             echo "Linting the whole tree (on main)."
           else
             git fetch --no-tags --quiet origin main
             WIDE_CHANGES="$(git diff --name-only origin/main...HEAD -- \
-              '*.h' '*.hh' '*.hpp' '*.hxx' '*.inc' '*.ipp' '*.h.in' '*.bzl')"
+              '*.h' '*.hh' '*.hpp' '*.hxx' '*.inc' '*.ipp' '*.h.in' '*.bzl' \
+              '.github/workflows/main.yml' '.pre-commit-config.yaml' \
+              'tools/clang_tidy.sh' 'tools/clang_tidy_runner.py' 'tools/clang_tidy_scope.py')"
             if [ -n "${WIDE_CHANGES}" ]; then
               echo "CLANG_TIDY_SCOPE=--all-files" >>"${GITHUB_ENV}"
+              git ls-files -- \
+                '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' '*.inc' '*.ipp' '*.h.in' '*.bzl' \
+                >.clang-tidy-inputs
               echo "Linting the whole tree because these compilation-wide files changed:"
               echo "${WIDE_CHANGES}" | sed 's/^/  /'
             else
               echo "CLANG_TIDY_SCOPE=--from-ref origin/main --to-ref HEAD" >>"${GITHUB_ENV}"
+              git diff --name-only origin/main...HEAD -- \
+                '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' '*.inc' '*.ipp' '*.h.in' '*.bzl' \
+                >.clang-tidy-inputs
               echo "Linting translation units changed against origin/main:"
               git diff --name-only origin/main...HEAD -- \
               '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' '*.inc' '*.ipp' '*.h.in' '*.bzl' |
@@ -234,12 +245,16 @@ jobs:
         env:
           CDB_ARTIFACT_URL: ${{steps.upload_cdb.outputs.artifact-url}}
 
-      - uses: pre-commit/action@v3.0.1
-        with:
-          # Only the clang-tidy hook: every other hook already ran in the
-          # `pre-commit` job. Scope comes from the step above: changed sources
-          # on a branch, the whole tree on main.
-          extra_args: clang-tidy ${{env.CLANG_TIDY_SCOPE}}
+      - name: Run clang-tidy with progress
+        # Invoke the same script as the pre-commit hook directly: pre-commit
+        # captures hook output, hiding progress until the process exits.
+        run: |
+          set -euo pipefail
+          FILES=()
+          while IFS= read -r file; do
+            FILES+=("${file}")
+          done <.clang-tidy-inputs
+          tools/clang_tidy.sh "${FILES[@]}"
 
       - name: Check clang-tidy Bazel disk cache size
         if: always()
