@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+# SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -193,7 +193,7 @@ cc_test(
     size = "small",
     srcs = ["hash_differential_test.cc"],
     # `manual`: depends on @xxhash_reference, which only exists when the dev
-    # module is loaded (bazelmod/dev.MODULE.bazel) - i.e. when helly25_mbo is
+    # module is loaded (bazelmod/dev.MODULE.bazel) - i.e. when mboworks_mbo is
     # the root module. Wildcards used by consumers must not analyze it; CI runs
     # it explicitly (see .github/workflows/test.yml).
     tags = [

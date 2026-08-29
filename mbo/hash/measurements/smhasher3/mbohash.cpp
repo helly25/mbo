@@ -1,6 +1,6 @@
 /*
  * mbo/hash in-house family: mumbo/jumbo (64/128) and dumbo (compact 64)
- * Copyright (C) The helly25 authors (helly25.com)
+ * Copyright (C) M. Boerger and the MBO Works authors
  *
  * Apache-2.0. This plugin includes the ACTUAL mbo/hash headers (copied into
  * mbo_include/) so SMHasher3 verifies the real implementation, not a
@@ -62,7 +62,7 @@ static void TemboHash64(const void* in, const size_t len, const seed_t seed, voi
 }
 
 //------------------------------------------------------------
-REGISTER_FAMILY(mbo_hash, $.src_url = "https://github.com/helly25/mbo", $.src_status = HashFamilyInfo::SRC_ACTIVE);
+REGISTER_FAMILY(mbo_hash, $.src_url = "https://github.com/mboworks/mbo", $.src_status = HashFamilyInfo::SRC_ACTIVE);
 
 REGISTER_HASH(
     mumbo_64,

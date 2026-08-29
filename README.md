@@ -3,7 +3,7 @@
 This C++20 library provides some general useful building blocks and integrates
 with [Google's Abseil library](https://abseil.io/).
 
-The library is tested with Clang (20+) and GCC (13+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/helly25/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/mbo/actions/workflows/main.yml).
+The library is tested with Clang (20+) and GCC (13+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/mboworks/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/mboworks/mbo/actions/workflows/main.yml).
 
 ## Library organization
 
@@ -335,13 +335,13 @@ Lint and format are driven by [Trunk](https://docs.trunk.io/cli) plus [pre-commi
 
 ### MODULES.bazel
 
-Check [Releases](https://github.com/helly25/mbo/releases) for details. All that is needed is a `bazel_dep` instruction with the correct version.
+Check [Releases](https://github.com/mboworks/mbo/releases) for details. All that is needed is a `bazel_dep` instruction with the correct version.
 
 ```starlark
-bazel_dep(name = "helly25_mbo", version = "0.0.0")
+bazel_dep(name = "mboworks_mbo", version = "0.14.0")
 ```
 
-The [Bazel-Central-Registry](https://registry.bazel.build/modules/helly25_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler - a restriction in how Bazel handles toolchains under bzlmod. To pull in the bundled toolchain, vendor `bazelmod/llvm.MODULE.bazel` as described in the release notes. Nonetheless all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
+The [Bazel-Central-Registry](https://registry.bazel.build/modules/mboworks_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler - a restriction in how Bazel handles toolchains under bzlmod. To pull in the bundled toolchain, vendor `bazelmod/llvm.MODULE.bazel` as described in the release notes. Nonetheless all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
 
 ## Presentations
 

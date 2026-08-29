@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+# SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -377,7 +377,7 @@ jobs:
             if [ -n "${coverage_page}" ]; then
               python3 tools/coverage_index.py report \
                 coverage-html/coverage-summary.json "${coverage_page}" coverage-html/index.html
-              echo "[Browse the HTML coverage report](https://helly25.github.io/mbo/coverage/${coverage_page}/)."
+              echo "[Browse the HTML coverage report](https://mboworks.github.io/mbo/coverage/${coverage_page}/)."
               echo
             fi
             echo "[Download this run's coverage artifact](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}#artifacts)."

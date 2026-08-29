@@ -34,6 +34,8 @@ jobs:
       attestations: write
     with:
       release_files: mbo-*.tar.gz
+      # Keep the GitHub release provisional until the secondary BCR
+      # publication process has completed.
       prerelease: true
       bazel_test_command: "bazel test //... --test_tag_filters=-lfs"
 

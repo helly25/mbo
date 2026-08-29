@@ -198,7 +198,7 @@ against the `hash_tool` C++ binary). `mumbo` (the default 64-bit hash) and
 likewise verified against C++; only the one-shot 64-bit form is ported (the
 native 128-bit `jumbo` and streaming stay C++-only).
 
-Call the ports from your own rules via `@helly25_mbo//mbo/hash:hash.bzl` (at load
+Call the ports from your own rules via `@mboworks_mbo//mbo/hash:hash.bzl` (at load
 time; input is a printable-ASCII string or a list of byte values `0..255`). The
 seed is an **optional** second argument: omit it and each hash uses its own
 canonical default - the same one the matching C++ `GetHash64` uses, so the
@@ -209,7 +209,7 @@ explicitly to match a specific seeded C++ call. Each returns the 64-bit hash as
 an `int`:
 
 ```starlark
-load("@helly25_mbo//mbo/hash:hash.bzl", "hash")
+load("@mboworks_mbo//mbo/hash:hash.bzl", "hash")
 
 _a = hash.mumbo("my build-time key")        # default 64-bit hash; default seed kDefaultSeed (5381)
 _b = hash.dumbo("my build-time key")        # dumbo; default seed 0
@@ -221,8 +221,8 @@ _d = hash.mumbo("my build-time key", 1234)  # explicit seed == mbo::hash::mumbo:
 
 All configuration lives on the mangle - the deterministic `hash.h` and
 `hash_extra.h` entry points have no knobs. Set the flags on the command line
-or in `.bazelrc`; prefix them with `@helly25_mbo` when the library is
-consumed as a dependency (e.g. `--@helly25_mbo//mbo/hash:mangle_seed=...`).
+or in `.bazelrc`; prefix them with `@mboworks_mbo` when the library is
+consumed as a dependency (e.g. `--@mboworks_mbo//mbo/hash:mangle_seed=...`).
 
 - `--//mbo/hash:mangle_seed` (string, default `""`): any printable-ASCII
   string - user name, release tag, date - folded together with the library

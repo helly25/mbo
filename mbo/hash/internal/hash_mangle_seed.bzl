@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+# SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,7 +71,7 @@ def mangle_constant(version, seed, buckets):
 # per build into `hash_mangle_seed_gen.h` and never committed; `hash_mangle.h`
 # errors if it is absent (no committed fallback to drift out of sync).
 _HEADER = """\
-// SPDX-FileCopyrightText: Copyright (c) The helly25 authors (helly25.com)
+// SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -106,9 +106,9 @@ namespace mbo::hash {
 // `--//mbo/hash:mangle_seed_buckets` (`0` disables the mangle - constant 0,
 // `GetHash == GetHash64`; `1` pins one stable nonzero constant across
 // releases; `N` bounds variation to `N` constants so build caches converge).
-// When the library is built as a dependency (e.g. as `helly25_mbo`), the
-// flags become `--@helly25_mbo//mbo/hash:mangle_seed` and
-// `--@helly25_mbo//mbo/hash:mangle_seed_buckets`.
+// When the library is built as a dependency (e.g. as `mboworks_mbo`), the
+// flags become `--@mboworks_mbo//mbo/hash:mangle_seed` and
+// `--@mboworks_mbo//mbo/hash:mangle_seed_buckets`.
 //
 // This header is generated per build and is not committed, so it always matches
 // the version and flags it was built with; `hash_mangle.h` requires it (a
@@ -147,7 +147,7 @@ def mangle_seed_gen(name, **kwargs):
     """Instantiates the generator with the module's own version.
 
     `native.module_version()` reads MODULE.bazel (or, for BCR consumers, the
-    resolved helly25_mbo module version) at loading time - the library knows
+    resolved mboworks_mbo module version) at loading time - the library knows
     its own version without a duplicated declaration. Overrides that strip the
     version (e.g. a bare `git_override`) fold an empty string: less rotation,
     never an error.

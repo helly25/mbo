@@ -13,9 +13,9 @@ tasks:
     build_flags:
       - "--cxxopt=-std=c++20"
     build_targets:
-      - "@helly25_mbo//mbo/container:limited_set_benchmark"
-      - "@helly25_mbo//mbo/diff:diff"
-      - "@helly25_mbo//mbo/digest:digest"
-      - "@helly25_mbo//mbo/file:glob"
-      - "@helly25_mbo//mbo/hash:hash_tool"
-      - "@helly25_mbo//mbo/mope:mope"
+      - "@mboworks_mbo//mbo/container:limited_set_benchmark"
+      - "@mboworks_mbo//mbo/diff:diff"
+      - "@mboworks_mbo//mbo/digest:digest"
+      - "@mboworks_mbo//mbo/file:glob"
+      - "@mboworks_mbo//mbo/hash:hash_tool"
+      - "@mboworks_mbo//mbo/mope:mope"

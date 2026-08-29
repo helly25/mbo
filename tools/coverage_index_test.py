@@ -170,14 +170,14 @@ class CoverageIndexTest(unittest.TestCase):
             self.assertIn("release 0.10.0", rendered)
             self.assertIn("release 0.9.0", rendered)
             self.assertIn(
-                'href="https://github.com/helly25/mbo/releases/tag/v0.10.0">release v0.10.0</a>',
+                'href="https://github.com/mboworks/mbo/releases/tag/v0.10.0">release v0.10.0</a>',
                 rendered,
             )
-            self.assertIn('href="https://github.com/helly25/mbo/pull/42">PR #42</a>', rendered)
+            self.assertIn('href="https://github.com/mboworks/mbo/pull/42">PR #42</a>', rendered)
             self.assertIn('href="pr/42/coverage-summary.json">JSON</a>', rendered)
             self.assertIn("2026-08-22 10:01:00 UTC", rendered)
-            self.assertIn('href="https://github.com/helly25/mbo/commit/abc"><code>abc</code></a>', rendered)
-            self.assertIn('href="https://github.com/helly25/mbo/actions/runs/1">run 1</a>', rendered)
+            self.assertIn('href="https://github.com/mboworks/mbo/commit/abc"><code>abc</code></a>', rendered)
+            self.assertIn('href="https://github.com/mboworks/mbo/actions/runs/1">run 1</a>', rendered)
             self.assertIn("font-variant-numeric: tabular-nums", rendered)
             self.assertLess(rendered.index('href="main/"'), rendered.index('href="tag/0.10.0/"'))
             self.assertLess(rendered.index('href="tag/0.10.0/"'), rendered.index('href="tag/0.9.0/"'))
@@ -201,7 +201,7 @@ class CoverageIndexTest(unittest.TestCase):
             "legacy",
         )
         row = coverage_index._short_row(metadata)
-        self.assertIn('href="https://github.com/helly25/mbo/pull/9">PR #9</a>', row)
+        self.assertIn('href="https://github.com/mboworks/mbo/pull/9">PR #9</a>', row)
         self.assertNotIn("actions/runs/0", row)
         self.assertNotIn("commit/legacy", row)
 

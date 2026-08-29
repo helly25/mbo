@@ -1,5 +1,5 @@
 {
-  "homepage": "https://github.com/helly25/mbo",
+  "homepage": "https://github.com/mboworks/mbo",
   "maintainers": [
     {
       "name": "helly25",
@@ -7,7 +7,7 @@
       "github": "helly25"
     }
   ],
-  "repository": ["github:helly25/mbo"],
+  "repository": ["github:mboworks/mbo"],
   "versions": [],
   "yanked_versions": {}
 }
