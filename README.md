@@ -55,10 +55,10 @@ The C++ library is organized in functional groups each residing in their own dir
     - struct `Hmac<Algo>` / class `HmacStreamer<Algo>`: HMAC (RFC 2104) over any streaming digest (HMAC-SHA3 uses rate-sized blocks per NIST).
     - function `ToHexString(digest)`: lowercase hex, matching `hexdigest()`/`sha256sum` presentation.
   - mbo/digest
-    - binary `digest`: checksum-style CLI, byte-compatible with `sha256sum`/`shasum` output; `-a`/`--algorithm` selects any library algorithm, `-c`/`--check` verifies checksum files (coreutils-interchangeable; `--quiet`, `--status`, `--ignore_missing`, `--strict`), `--reverse` swaps the columns, `-d`/`--ignore_directories` skips directories, `-` reads stdin.
+    - binary `digest`: checksum-style CLI, byte-compatible with `sha256sum`/`shasum` output; `-a`/`--algorithm` selects any library algorithm, `-c`/`--check` verifies checksum files (coreutils-interchangeable; `--quiet`, `--status`, `--ignore_missing`, `--strict`), `--reverse` swaps the columns, `--cwd` changes directory before processing, `-d`/`--ignore_directories` skips directories, and `-` reads stdin.
 - Files
   - Library docs: [mbo/file/README.md](mbo/file/README.md)
-  - `namespace mbo::files`
+  - `namespace mbo::file`
   - mbo/file:artefact_cc, mbo/file/artefact.h
     - struct `Artefact`: Holds information about a file (its data content, name, and modified time).
   - mbo/file:file_cc, mbo/file/file.h
@@ -72,13 +72,16 @@ The C++ library is organized in functional groups each residing in their own dir
     - function `Readable`: Returns whether a file is readable or an absl::Status error.
     - function `SetContents`: Writes contents to a file.
   - mbo/file:glob_cc, mbo/file/glob.h
-    - struct `Glob2Re2Options`: Control conversion of a [glob pattern](https://man7.org/linux/man-pages/man7/glob.7.html) into a [RE2 pattern](https://github.com/google/re2/wiki/Syntax).
+    - enum `GlobSyntax`: Selects literal GLOB braces or nested SHGLOB alternatives and sequences.
+    - struct `Glob2Re2Options`: Controls conversion of a [glob pattern](https://man7.org/linux/man-pages/man7/glob.7.html) into a [RE2 pattern](https://github.com/google/re2/wiki/Syntax), including complete-component `**`, bracket expressions, and GLOB/SHGLOB syntax.
     - struct `GlobEntry`: Stores data for a single globbed entry (file, dir, etc.).
-    - struct `GlobOptions`: Options for functions `Glob2Re2` and `Glob2Re2Expression`.
+    - struct `GlobOptions`: Controls recursive filesystem traversal and path presentation.
     - enum `GlobEntryAction`: Allows GlobEntryFunc to control further glob progression.
     - type `GlobEntryFunc`: Callback for acceptable glob entries.
+    - function `Glob2Re2Expression`: Translates a locale-independent GLOB or SHGLOB pattern into an RE2 expression.
+    - function `Glob2Re2`: Translates and compiles a GLOB or SHGLOB pattern as RE2.
     - function `GlobRe2`: Performs recursive glob functionality using a RE2 pattern.
-    - function `Glob`: Performs recursive glob functionality using a `fnmatch` style pattern.
+    - function `Glob`: Performs recursive glob functionality using the selected GLOB or SHGLOB syntax.
     - function `GlobSplit`: Splits a pattern into root and pattern parts.
     - program `glob`: A recursive glob, see `glob --help`.
   - mbo/file/ini:ini_file_cc, mbo/file/ini/ini_file.h
@@ -130,7 +133,6 @@ The C++ library is organized in functional groups each residing in their own dir
     - struct `VoidStream`: A suppressing output stream.
     - template struct `ScopedStream`: A scoped output stream for function location logging.
     - enum `ScopedStreamMode`: Controls how `scopedStream` handles output.
-    - macro `MBO_LOG_CHECK`: A local optimized check implementation, it only processes the log stream if its `check` is false.
 - Mope
   - `namespace mbo::mope`
   - The `MOPE` templating engine. Run `bazel run //mbo/mope -- --help` for detailed documentation.
@@ -156,6 +158,8 @@ The C++ library is organized in functional groups each residing in their own dir
     - macro `MBO_RETURN_IF_ERROR`: Macro that simplifies handling functions returning `absl::Status` or `absl::StausOr<T>`.
 - Strings
   - `namespace mbo::strings`
+  - mbo/strings:contains_cc, mbo/strings/contains.h
+    - function `Contains`: A constexpr C++20 counterpart to `absl::StrContains` for string and character needles.
   - mbo/strings:indent_cc, mbo/strings/indent.h
     - function `DropIndent`: Converts a raw-string text block as if it had no indent.
     - function `DropIndentAndSplit`: Variant of `DropIndent` that returns the result as lines.
@@ -246,6 +250,8 @@ The C++ library is organized in functional groups each residing in their own dir
     - template-type `RefWrap<T>`: similar to `std::reference_wrapper` but supports operators `->` and `*`.
   - mbo/types:required_cc, mbo/types/required.h
     - template-type `Required<T>`: similar to `RefWrap` but stores the actual type (and unlike `std::optional` cannot be reset).
+  - mbo/types:string_or_view_cc, mbo/types/string_or_view.h
+    - class `mbo::StringOrView`: Read-only text that either owns a `std::string` or borrows a `std::string_view`, with the applicable string-view interface plus stream, formatting, comparison, and hashing integration.
   - mbo/types:stringify_cc, mbo/types/stringify.h
     - class `Stringify` a utility to convert structs into strings.
     - function `StringifyWithFieldNames` a format control adapter for `Stringify`.

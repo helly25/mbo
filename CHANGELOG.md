@@ -1,5 +1,63 @@
 # 0.13.3
 
+- Extended SHGLOB braces with bounded ascending and descending integer and ASCII-letter sequences,
+  including signed and zero-padded integers. Expansions above 10,000 terms are rejected, and the
+  optional Bash increment form remains literal.
+- Replaced the previous glob translation with the canonical fast GLOB/SHGLOB implementation. It
+  provides locale-independent structural bracket parsing, positive and negated character classes,
+  precise validation, nested SHGLOB alternatives, and complete-component `**`; notably,
+  `foo/**/bar` matches `foo/bar` and any number of intervening directory levels.
+- Added `mbo::StringOrView`, a read-only string-like value that either owns a `std::string` or
+  borrows a `std::string_view`. It exposes the full applicable string/string-view interface,
+  comparisons, C++23-style `contains`/`subview`, stream and Abseil formatting, plus Abseil and
+  `std::hash` integration.
+- Fixed `OptionalDataOrRef` construction and assignment so borrowed values cannot silently become
+  dangling references; added the corresponding lifetime constraints and tests.
+- Fixed `Required` replacement and generic operations, including move-only values and converting
+  construction/assignment, while preserving its configurable failure behavior.
+- Fixed `NoDestruct` construction and its formatting/hash customizations for non-copyable and
+  explicitly constructed values.
+- Added strict INI parsing: malformed sections, missing keys, and invalid trailing content now
+  return diagnostics instead of being partially accepted.
+- Fixed JSON value-iterator assignment and made JSON's configurable requirement failures testable
+  through the exception-enabled configuration without weakening the default fatal behavior.
+- Fixed alphabetic hexadecimal escapes so the full accepted digit set is decoded correctly.
+- Fixed independently quoted option parsing: quoting one option no longer changes how subsequent
+  options are parsed.
+- Rejected truncated and structurally malformed glob ranges rather than passing altered semantics
+  to RE2.
+- Made `NormalizePath` preserve the filesystem's native character type instead of assuming narrow
+  characters.
+- Made `GetContents` report seek failures and `GetMaxLines` report read failures instead of
+  returning incomplete data as success.
+- Corrected cache-cleanup prefix matching so one branch or configuration cannot select unrelated
+  cache entries.
+- Added fuzz targets for glob conversion, string parsing, INI parsing, diff inputs/options, and
+  digest checksum parsing.
+- Added LCOV line/function/branch coverage enforcement for the overall tree, logical modules, and
+  changed code. Reports use a shared policy and baseline, publish durable per-PR HTML detail to
+  GitHub Pages, and fail with actionable uncovered-line/branch diagnostics.
+- Raised measured coverage across every core module through behavioral tests rather than production
+  exclusions: overall coverage is 98.11% lines, 98.63% functions, and 89.32% branches; every module
+  is rated `GOOD`, including `mbo/types` at 86.12% branch coverage.
+- Bounded CI cache entries below 500 MB and made cache cleanup best-effort, so cleanup API failures
+  cannot turn an otherwise successful job red.
+- Enabled UndefinedBehaviorSanitizer explicitly in the AddressSanitizer configuration.
+- Updated the compile-command extractor and reused the clang-tidy Bazel configuration, eliminating
+  an avoidable configuration switch while keeping header-only changes in clang-tidy's scope.
+- Adopted the shared contributor style guides and enforcement: matcher-based tests, named typed and
+  parameterized cases, explicit test sizes, aligned Markdown tables, and pre-commit rejection of
+  forbidden GoogleTest comparison macros and spelling errors in C++ and documentation.
+- Added repository Git orchestration rules for dependency-graph-aware autonomous PR handling,
+  synchronized-head validation, conflict resolution, and safe parent/child merge sequencing.
+- Made pull-request validation run in pull-request context, cancel superseded runs, and retain the
+  final aggregate `done` gate.
+- Hardened release automation: release bumps retain required review protection, only the requested
+  tag is published, and temporary Git indexes use a portable private directory.
+- Documented the policy of using readable GitHub Actions version tags rather than commit hashes
+  unless a concrete security or reproducibility reason requires pinning.
+- Silenced external-header warnings in exec-configuration builds without relaxing warnings for
+  first-party code.
 - Fixed `LimitedVector`'s comparison operators, which were declared over `std::size_t` capacities while the class takes `auto`: instances spelled via `MakeLimitedVector`/`LimitedOptions` or an `int` literal matched no operator at all and failed to compile.
 - Enabled `cppcoreguidelines-pro-bounds-avoid-unchecked-container-access`: unchecked `operator[]` is now a clang-tidy error. Containers that bounds-check themselves (`LimitedMap`, `LimitedVector`, `Json`) and insert-semantics maps (absl's) are excluded by class; the hash/digest kernels and other in-range-by-construction code carry scoped `NOLINT` blocks.
 - Fixed `LimitedVector` comparison operators (`==`, `<=>`, `<`), which looped to `min` of the CAPACITIES instead of the sizes: comparing partially-filled vectors read uninitialized slots (or threw in a require-throws build). Found by `pro-bounds-avoid-unchecked-container-access`.
@@ -39,8 +97,8 @@
 - Updated `mumbo` to V5 which aims at improved Instruction-level parallelism (ILP).
 - Improved publish for `hash_benchmark_report.py` which updates README.md with the latest benchmark results, charts and quality tables.
 - Added `--cwd` param to `mbo/digest` tool.
-- Added `mbo_log::ScopedStream*` helpers.
-- Added macro `MBO_LOG_CHECK`: A local optimized check implementation, it only processes the log stream if its `check` is false.
+- Added the public `mbo::log::ScopedStream` helpers. The accompanying `MBO_LOG_CHECK` experiment
+  remains package-private and is not a supported API.
 - Moved `clang-tidy` from `trunk` to the opt-in `clang-tidy` pre-commit hook (`tools/clang_tidy.sh`).
 - Fixed `.clang-tidy`: `WarningsAsErrors` never escalated findings, and a misspelled option key was dead.
 - Disabled `llvm-header-guard` and `llvm-prefer-static-over-anonymous-namespace`, which contradict `STYLE_CPP.md`.
