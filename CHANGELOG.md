@@ -2,8 +2,12 @@
 
 - Added live per-translation-unit clang-tidy progress with parallel worker counts, completion
   percentages, failure-only diagnostics, configurable concurrency, and complete interruption
-  cleanup. A fail-closed clang-tidy database removes redundant fuzz-transition commands only when
-  their semantic compiler arguments match the ordinary build.
+  cleanup. A clang-tidy-specific compilation database retains one command per source, preferring
+  an ordinary configuration when available, so repeated build configurations do not lint a file
+  more than once.
+- Updated the development LLVM override to the upstream commit that migrates its build-helper
+  dependency from `helly25_bzl@0.4.3` to `mboworks_bzl@0.5.1`; release consumers do not load the
+  development-only LLVM overlay.
 - Transferred the project to `mboworks/mbo`, renamed the Bazel module to `mboworks_mbo`, and
   migrated shell tests to `mboworks_bashtest@0.6.1`. Historical `helly25_mbo` releases remain
   available unchanged.

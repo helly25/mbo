@@ -17,12 +17,12 @@
 
 bazel_dep(name = "toolchains_llvm", version = "1.8.0")
 
-# Fork fix: upstream passes -stdlib=libc++ to compiles where it is unused (headers
-# come via -cxx-isystem), warning on every object file. See helly25/toolchains_llvm c3ac93f.
+# Pin the upstream commit that includes both the redundant -stdlib=libc++ fix and
+# the migration from helly25_bzl to mboworks_bzl.
 git_override(
     module_name = "toolchains_llvm",
-    commit = "c3ac93f5c61cb78487765d2e81e7485ad3f8bf2c",
-    remote = "https://github.com/helly25/toolchains_llvm.git",
+    commit = "3c9f3f29acce81650e63b73d13440628cb384888",
+    remote = "https://github.com/bazel-contrib/toolchains_llvm.git",
 )
 
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
