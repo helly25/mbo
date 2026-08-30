@@ -1,5 +1,7 @@
 # 0.14.0
 
+- Updated the bundled LLVM setup to the official `toolchains_llvm` 1.9.0 prerelease commit while
+  its BCR publication is pending, removing the remaining `helly25/toolchains_llvm` fork dependency.
 - Added live per-translation-unit clang-tidy progress with parallel worker counts, completion
   percentages, failure-only diagnostics, configurable concurrency, and complete interruption
   cleanup. A fail-closed clang-tidy database removes redundant fuzz-transition commands only when
@@ -80,7 +82,7 @@
 - Converted assert-status-then-dereference in the new tests to `IsOkAndHolds`/`MBO_ASSERT_OK_AND_ASSIGN`, and imported four rules from helly25/xff's style guide (`_cc` naming, per-package tests, no braced-init-list iteration, `lhs`/`rhs` comparator parameters).
 - Added tests for `hash_extra_cc`, `hash_internal_util_cc`, `mope_cc`, `ini_cc`, `runfiles_dir_cc`, `extend_cc`, `extender_cc` and `test_types_cc` - every library now has a test in its own package.
 - Added tests for all ten diff libraries: the three algorithms (`diff_direct_cc`, `diff_myers_cc`, `diff_naive_cc`), the shared plumbing (`base_diff_cc`, `chunked_diff_cc`) and the internals (`chunk_cc`, `context_cc`, `data_cc`, `output_cc`, `update_absl_log_flags_cc`).
-- Removed every `-stdlib=libc++` and every `-Wno-unused-command-line-argument` suppression: the hermetic toolchain resolves libc++ headers via `-cxx-isystem` and links libc++ explicitly, so the flag was inert (driver-confirmed) at compile and link alike; the one load-bearing copy, in upstream `toolchains_llvm`'s compile flags, is fixed at source via a `git_override` on the helly25 fork.
+- Removed every `-stdlib=libc++` and every `-Wno-unused-command-line-argument` suppression: the hermetic toolchain resolves libc++ headers via `-cxx-isystem` and links libc++ explicitly, so the flag was inert (driver-confirmed) at compile and link alike; the one formerly load-bearing upstream copy is fixed in the official `toolchains_llvm` 1.9.0 prerelease selected by `git_override` until BCR publication.
 - Removed the redundant `--cxxopt=-stdlib=libc++` from the `clang-tidy` bazel config; the hermetic toolchain already passes it, so it appeared twice and produced "unused argument" warnings.
 - Fixed `mbo::file::GetMTime` on libstdc++: it read `std::filesystem::file_clock` time as Unix seconds, but that clock's epoch is implementation-defined (2174-01-01 on libstdc++), so every file's mtime was ~148 years off on Linux.
 - Added `mbo/diff:diff_options_test`, covering every flag parser including the unknown-value paths.
