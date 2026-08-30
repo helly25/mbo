@@ -24,7 +24,7 @@ git_override(
 
 # TODO(helly25): bump once dwyu 1.x no longer drags in boost.filesystem ->
 # boost@1.83.0.bcr.4, whose MODULE.bazel fails module resolution.
-bazel_dep(name = "depend_on_what_you_use", version = "0.16.0", dev_dependency = True)
+bazel_dep(name = "depend_on_what_you_use", version = "1.1.2", dev_dependency = True)
 
 # Reference xxHash for //mbo/hash:hash_differential_test (dev/test only). Used
 # directly via http_archive because the BCR module's BUILD file predates
