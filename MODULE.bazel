@@ -32,6 +32,40 @@ bazel_dep(name = "rules_cc", version = "0.2.22")
 bazel_dep(name = "rules_fuzzing", version = "0.8.0")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 
+# These releases still declare compatibility-level-1 Abseil versions. Patch
+# their module metadata until upstream releases select compatibility level 0.
+single_version_override(
+    module_name = "rules_fuzzing",
+    version = "0.8.0",
+    patches = ["//bazelmod:rules_fuzzing-0.8.0-abseil.patch"],
+    patch_strip = 1,
+)
+
+# RE2's BCR MODULE differs from the release archive, so a source patch cannot
+# apply through single_version_override. Preserve the BCR source and integrity.
+archive_override(
+    module_name = "re2",
+    urls = ["https://github.com/google/re2/releases/download/2025-11-05/re2-2025-11-05.zip"],
+    integrity = "sha256-x7Gnp8aNLXz400PcVmVcG1qMiq3twBfbRT1MHYkTuEQ=",
+    strip_prefix = "re2-2025-11-05",
+    patches = ["//bazelmod:re2-2025-11-05-abseil.patch"],
+    patch_strip = 1,
+)
+
+single_version_override(
+    module_name = "protobuf",
+    version = "36.0.bcr.1",
+    patches = ["//bazelmod:protobuf-36.0-abseil.patch"],
+    patch_strip = 1,
+)
+
+single_version_override(
+    module_name = "rules_java",
+    version = "8.16.1",
+    patches = ["//bazelmod:rules_java-8.16.1-abseil.patch"],
+    patch_strip = 1,
+)
+
 bazel_dep(name = "abseil-cpp", version = "20260526.0")
 bazel_dep(name = "re2", version = "2025-11-05.bcr.1")
 bazel_dep(name = "googletest", version = "1.18.0.bcr.1")
