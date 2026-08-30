@@ -19,6 +19,7 @@ load(":clang_tidy_targets.bzl", "CLANG_TIDY_MANUAL_TARGETS")
 package(default_visibility = [])
 
 exports_files([
+    "boost-1.83.0-bazel8.patch",
     "dev.MODULE.bazel",
     "llvm.MODULE.bazel",
     "protobuf-36.0-abseil.patch",
