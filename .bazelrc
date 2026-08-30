@@ -36,13 +36,15 @@ common --cxxopt=-Wextra --host_cxxopt=-Wextra
 common --cxxopt=-Wno-missing-field-initializers --host_cxxopt=-Wno-missing-field-initializers
 common:clang --cxxopt=-Wno-missing-designated-field-initializers
 common:clang --host_cxxopt=-Wno-missing-designated-field-initializers
-# -Wpedantic with two carve-outs, both absl macros expanding in our TUs
-# (ABSL_FLAG's __COUNTER__; ABSL_CHECK's _Nullable). Plain `common`, not
+# -Wpedantic with carve-outs for absl macros expanding in our TUs
+# (ABSL_FLAG's __COUNTER__; ABSL_CHECK's _Nullable; integer formatting's
+# diagnose_if). Plain `common`, not
 # config-scoped: any clang - hermetic, system, bcr cells - needs them, and gcc
 # silently tolerates unknown -Wno-* flags. Our own deliberate GNU statement
 # expressions are annotated in code (__extension__ in decompose_count.h) instead.
 common --cxxopt=-Wpedantic --host_cxxopt=-Wpedantic
 common --cxxopt=-Wno-c2y-extensions --host_cxxopt=-Wno-c2y-extensions
+common --cxxopt=-Wno-gcc-compat --host_cxxopt=-Wno-gcc-compat
 common --cxxopt=-Wno-nullability-extension --host_cxxopt=-Wno-nullability-extension
 
 # Keep -Werror first-party only in both target and exec configurations:
