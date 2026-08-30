@@ -17,7 +17,7 @@
 
 module(
     name = "mboworks_mbo",
-    version = "0.14.0",
+    version = "0.14.1",
     bazel_compatibility = [">=8.0.0"],
 )
 
