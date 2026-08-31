@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-31 06:05:32</td>
+            <td class="headerValue">2026-08-31 14:27:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -533,7 +533,7 @@
 <span id="L452"><span class="lineNum">     452</span>                 :             : </span>
 <span id="L453"><span class="lineNum">     453</span>                 :             : #if !defined(EXPECT_OK)</span>
 <span id="L454"><span class="lineNum">     454</span>                 :             : # define EXPECT_OK(expr) MBO_EXPECT_OK(expr)</span>
-<span id="L455"><span class="lineNum">     455</span>                 :             : #elif __cplusplus &gt;= 202'302L</span>
+<span id="L455"><span class="lineNum">     455</span>                 :             : #elif __cplusplus &gt;= (20L * 100 + 23) * 100 + 2</span>
 <span id="L456"><span class="lineNum">     456</span>                 :             : # warning &quot;EXPECT_OK already defined&quot;</span>
 <span id="L457"><span class="lineNum">     457</span>                 :             : #endif  // !defined(EXPECT_OK)</span>
 <span id="L458"><span class="lineNum">     458</span>                 :             : </span>
@@ -542,7 +542,7 @@
 <span id="L461"><span class="lineNum">     461</span>                 :             : </span>
 <span id="L462"><span class="lineNum">     462</span>                 :             : #if !defined(ASSERT_OK)</span>
 <span id="L463"><span class="lineNum">     463</span>                 :             : # define ASSERT_OK(expr) MBO_ASSERT_OK(expr)</span>
-<span id="L464"><span class="lineNum">     464</span>                 :             : #elif __cplusplus &gt;= 202'302L</span>
+<span id="L464"><span class="lineNum">     464</span>                 :             : #elif __cplusplus &gt;= (20L * 100 + 23) * 100 + 2</span>
 <span id="L465"><span class="lineNum">     465</span>                 :             : # warning &quot;ASSERT_OK already defined&quot;</span>
 <span id="L466"><span class="lineNum">     466</span>                 :             : #endif  // !defined(ASSERT_OK)</span>
 <span id="L467"><span class="lineNum">     467</span>                 :             : </span>
@@ -576,7 +576,7 @@
 <span id="L495"><span class="lineNum">     495</span>                 :             : </span>
 <span id="L496"><span class="lineNum">     496</span>                 :             : #if !defined(ASSERT_OK_AND_ASSIGN)</span>
 <span id="L497"><span class="lineNum">     497</span>                 :             : # define ASSERT_OK_AND_ASSIGN(target, expression) MBO_ASSERT_OK_AND_ASSIGN(target, expression)</span>
-<span id="L498"><span class="lineNum">     498</span>                 :             : #elif __cplusplus &gt;= 202'302L</span>
+<span id="L498"><span class="lineNum">     498</span>                 :             : #elif __cplusplus &gt;= (20L * 100 + 23) * 100 + 2</span>
 <span id="L499"><span class="lineNum">     499</span>                 :             : # warning &quot;ASSERT_OK_AND_ASSIGN already defined&quot;</span>
 <span id="L500"><span class="lineNum">     500</span>                 :             : #endif  // !defined(ASSERT_OK_AND_ASSIGN)</span>
 <span id="L501"><span class="lineNum">     501</span>                 :             : </span>
