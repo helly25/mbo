@@ -1,3 +1,8 @@
+# 0.14.1
+
+- Switched the bundled LLVM setup from its temporary prerelease override to the published
+  `toolchains_llvm@1.9.0` Bazel Central Registry module.
+
 # 0.14.0
 
 - Updated the bundled LLVM setup to the official `toolchains_llvm` 1.9.0 prerelease commit while

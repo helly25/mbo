@@ -17,14 +17,6 @@
 
 bazel_dep(name = "toolchains_llvm", version = "1.9.0")
 
-# Use the official v1.9.0 prerelease until it is available from the BCR. The
-# override can be removed after BCR publication.
-git_override(
-    module_name = "toolchains_llvm",
-    commit = "5370e47ae9d668a3a13a2da8818a2b72c907f8e1",
-    remote = "https://github.com/bazel-contrib/toolchains_llvm.git",
-)
-
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 llvm.toolchain(
     name = "llvm_toolchain_llvm",
