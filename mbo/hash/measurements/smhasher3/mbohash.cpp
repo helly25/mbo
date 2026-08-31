@@ -1,6 +1,6 @@
 /*
  * mbo/hash in-house family: mumbo/jumbo (64/128) and dumbo (compact 64)
- * Copyright (C) M. Boerger and the MBO Works authors
+ * Copyright (C) M. Boerger, the MBO Works authors
  *
  * Apache-2.0. This plugin includes the ACTUAL mbo/hash headers (copied into
  * mbo_include/) so SMHasher3 verifies the real implementation, not a
