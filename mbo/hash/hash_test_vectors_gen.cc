@@ -34,8 +34,9 @@
 #include "mbo/hash/hash.h"
 #include "mbo/strings/indent.h"
 
-// A one-shot codegen tool: printf is the natural output.
-// NOLINTBEGIN(*-vararg,cert-err33-c,*-magic-numbers)
+// A one-shot codegen tool: printf remains portable to the macOS 11 deployment
+// target, while libc++'s std::print implementation requires macOS 13.3.
+// NOLINTBEGIN(*-vararg,cert-err33-c,*-magic-numbers,modernize-use-std-print)
 
 namespace {
 
@@ -126,4 +127,4 @@ int main() {
   return 0;
 }
 
-// NOLINTEND(*-vararg,cert-err33-c,*-magic-numbers)
+// NOLINTEND(*-vararg,cert-err33-c,*-magic-numbers,modernize-use-std-print)

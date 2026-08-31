@@ -175,7 +175,7 @@ class OptionalDataOrRef {
     return HoldsData() ? Data() : Reference();
   }
 
-#if __cplusplus >= 202'302L
+#if __cplusplus >= (20L * 100 + 23) * 100 + 2
   // Returns `value()` if `holds_value()` is true, a reference to static defaults otherwise.
   constexpr const_reference get() const noexcept
   requires std::is_default_constructible_v<T>

@@ -287,11 +287,11 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         compiler: [gcc]
-        # gcc 14 gets the full config set (asan/cpp23/opt) here, early. gcc 13 is
-        # still built (opt) later by test-bcr's ubuntu+gcc rungs, so it need not
-        # repeat in this job.
+        # GCC 14 gets the sanitizer and optimized configurations here, early.
+        # GCC 13 is still built (opt) later by test-bcr's ubuntu+gcc rungs, so
+        # it need not repeat in this job.
         gcc_version: [14]
-        bazel_config: [asan, cpp23, opt]
+        bazel_config: [asan, opt]
 
     uses: ./.github/workflows/test.yml
     with:
@@ -358,7 +358,7 @@ jobs:
         # Ladder: oldest supported (20.1.8) and the pinned default, also newest (22.1.8).
         # TODO(llvm-23): add 23.x here once released and listed in toolchains_llvm.
         llvm_version: [20.1.8, 22.1.8]
-        bazel_config: [asan, cpp23, opt]
+        bazel_config: [asan, opt]
         exclude:
           # asan runs only on the newest toolchain (both platforms); test-gcc
           # already exercises asan early (gcc 14). macOS asan must be 22.1.8
@@ -368,11 +368,6 @@ jobs:
           # consolidating asan there also drops the redundant clang-20 asan.
           - llvm_version: 20.1.8
             bazel_config: asan
-          # C++23 is used on recent compilers, so exercise cpp23 on the newest
-          # clang only; the oldest rung just proves the minimum supported LLVM
-          # still builds (opt).
-          - llvm_version: 20.1.8
-            bazel_config: cpp23
 
     uses: ./.github/workflows/test.yml
     with:

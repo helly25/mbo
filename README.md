@@ -1,6 +1,6 @@
-# MBO, a C++20 library
+# MBO, a C++23 library
 
-This C++20 library provides some general useful building blocks and integrates
+This C++23 library provides some general useful building blocks and integrates
 with [Google's Abseil library](https://abseil.io/).
 
 The library is tested with Clang (20+) and GCC (13+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/mboworks/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/mboworks/mbo/actions/workflows/main.yml).
@@ -323,7 +323,7 @@ The C++ library is organized in functional groups each residing in their own dir
 
 ## Installation and requirements
 
-This repository requires a C++20 compiler (in case of MacOS XCode 15 is needed). This is done so that newer features like `std::source_location` can be used.
+This repository requires a C++23 compiler (in case of macOS Xcode 15 is needed). This allows newer standard-library features to be used directly. Bazel 8 and newer remain supported.
 
 The project only comes with a Bazel BUILD.bazel file and can be added to other Bazel projects.
 

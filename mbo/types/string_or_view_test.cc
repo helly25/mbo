@@ -286,7 +286,7 @@ TEST_F(StringOrViewTest, SupportsStreamAndStandardFormattingWithoutLosingNulByte
   std::ostringstream out;
   out << value;
   EXPECT_THAT(out.str(), Eq(std::string{"a\0b", 3}));
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201'907L
+#if defined(__cpp_lib_format) && __cpp_lib_format >= (20L * 100 + 19) * 100 + 7
   EXPECT_THAT(std::format("{}", value), Eq(std::string{"a\0b", 3}));
 #endif
 }
