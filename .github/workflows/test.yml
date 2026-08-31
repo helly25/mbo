@@ -40,7 +40,7 @@ on:
         type: string
         default: ""
       gcc_version:
-        description: "The GCC version to use. This is only for compiler=gcc and will be ignored otherwise (e.g. 11, 12, 13)."
+        description: "The GCC version to use. This is only for compiler=gcc and will be ignored otherwise (e.g. 14)."
         type: string
         default: ""
       bazel_config:

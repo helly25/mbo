@@ -1,7 +1,7 @@
 # 0.15.0
 
-- Raised the development baseline to C++23 and GCC 14, and updated the default Bazel release to
-  9.2 while retaining Bazel 8 compatibility.
+- Raised the development baseline to C++23, GCC 14, and Clang/LLVM 22, and updated the default
+  Bazel release to 9.2 while retaining Bazel 8 compatibility.
 - Switched the bundled LLVM setup from its temporary prerelease override to the published
   `toolchains_llvm@1.9.0` Bazel Central Registry module.
 
