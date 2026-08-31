@@ -62,12 +62,12 @@ jobs:
           echo "target=${target}" >>"${GITHUB_OUTPUT}"
       # This workflow always comes from the trusted default branch. PR code never receives the
       # token that updates the retained report branch or deploys Pages.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: steps.target.outputs.publish == 'true'
         with:
           path: source
           ref: main
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: steps.target.outputs.publish == 'true'
         with:
           path: site
