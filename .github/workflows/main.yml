@@ -23,7 +23,7 @@ jobs:
   trunk:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
         with:
@@ -62,7 +62,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -83,7 +83,7 @@ jobs:
     # There is deliberately no job-level `continue-on-error`: the compilation
     # database, toolchain, parsing, and clang-tidy findings all gate the change.
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # Full history so the branch can be diffed against `main` to pick the
           # changed sources below.
@@ -378,7 +378,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Ensure every job is wired into this gate
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}

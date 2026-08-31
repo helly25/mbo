@@ -64,7 +64,7 @@ jobs:
     runs-on: ${{inputs.os}}
     continue-on-error: ${{inputs.continue-on-error}}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Fetch measurement bundles (Git LFS)
         # The `//mbo/hash/measurements:quality_sh_test` bazel test reads the
         # committed data bundles for the SMHasher3 quality tables; actions/checkout
