@@ -287,9 +287,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         compiler: [gcc]
-        # GCC 14 gets the sanitizer and optimized configurations here, early.
-        # GCC 13 is still built (opt) later by test-bcr's ubuntu+gcc rungs, so
-        # it need not repeat in this job.
+        # GCC 14 is the minimum supported GCC and gets the sanitizer and
+        # optimized configurations here, early.
         gcc_version: [14]
         bazel_config: [asan, opt]
 
@@ -319,7 +318,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-26]
         compiler: [gcc, native, clang]
-        gcc_version: [13]
+        gcc_version: [14]
         # The pinned default toolchain (see bazelmod/llvm.MODULE.bazel).
         llvm_version: [22.1.8]
         bazel_config: [opt]
