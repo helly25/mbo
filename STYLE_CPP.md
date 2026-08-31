@@ -1,6 +1,6 @@
 # C++ Style
 
-The C++ coding style for helly25 repositories. It sits on top of two
+The C++ coding style for MBO Works repositories. It sits on top of two
 machine-enforced config files and adds the human conventions below. When in doubt
 the config files win; this document explains and extends them so a contributor (or
 an AI assistant) can follow them without reverse-engineering the tooling.
