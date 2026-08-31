@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
+# SPDX-FileCopyrightText: Copyright (c) M. Boerger, the MBO Works authors
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,7 +71,7 @@ def mangle_constant(version, seed, buckets):
 # per build into `hash_mangle_seed_gen.h` and never committed; `hash_mangle.h`
 # errors if it is absent (no committed fallback to drift out of sync).
 _HEADER = """\
-// SPDX-FileCopyrightText: Copyright (c) M. Boerger and the MBO Works authors
+// SPDX-FileCopyrightText: Copyright (c) M. Boerger, the MBO Works authors
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
