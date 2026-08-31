@@ -29,14 +29,9 @@ namespace mbo::strings {
 // These have the same meaning and are constexpr, so the check is satisfied without
 // giving up compile-time evaluation.
 //
-// This is a SHIM. C++23 adds `std::string_view::contains` (P1679), which is
-// constexpr and does exactly this, so these forward to it when the standard
-// library provides it - matching how `mbo/config/config.h` and
-// `mbo/types/optional_data_or_ref.h` already gate on `__cplusplus >= 202302L`
-// rather than requiring C++23. The project baseline is C++20 (`--config=cpp23`
-// is an opt-in), and raising it is a breaking change for every consumer of the
-// bazel module, so it stays a separate decision. When the baseline does move,
-// delete this header and call `.contains()` directly.
+// C++23 provides `std::string_view::contains` (P1679), which is constexpr and
+// has exactly the required semantics. These wrappers preserve mbo's existing
+// public API while forwarding directly to the standard library.
 //
 // This header deliberately has no dependencies beyond <string_view>, so that
 // `mbo/types` can use it without creating a cycle (`mbo/strings` depends on
@@ -50,21 +45,11 @@ namespace mbo::strings {
 //     whether `str` holds an embedded NUL - it does not mean "empty needle".
 
 [[nodiscard]] constexpr bool Contains(std::string_view haystack, std::string_view needle) noexcept {
-#if defined(__cpp_lib_string_contains) && __cpp_lib_string_contains >= 202'011L
   return haystack.contains(needle);
-#else
-  // NOLINTNEXTLINE(abseil-string-find-str-contains): this IS the constexpr replacement for it.
-  return haystack.find(needle) != std::string_view::npos;
-#endif
 }
 
 [[nodiscard]] constexpr bool Contains(std::string_view haystack, char needle) noexcept {
-#if defined(__cpp_lib_string_contains) && __cpp_lib_string_contains >= 202'011L
   return haystack.contains(needle);
-#else
-  // NOLINTNEXTLINE(abseil-string-find-str-contains): this IS the constexpr replacement for it.
-  return haystack.find(needle) != std::string_view::npos;
-#endif
 }
 
 }  // namespace mbo::strings

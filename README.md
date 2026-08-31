@@ -1,9 +1,9 @@
-# MBO, a C++20 library
+# MBO, a C++23 library
 
-This C++20 library provides some general useful building blocks and integrates
+This C++23 library provides some general useful building blocks and integrates
 with [Google's Abseil library](https://abseil.io/).
 
-The library is tested with Clang (20+) and GCC (13+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/mboworks/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/mboworks/mbo/actions/workflows/main.yml).
+The library is tested with Clang (22+) and GCC (14+) on Ubuntu and MacOS (arm) using continuous integration: [![Test](https://github.com/mboworks/mbo/actions/workflows/main.yml/badge.svg)](https://github.com/mboworks/mbo/actions/workflows/main.yml).
 
 ## Library organization
 
@@ -323,7 +323,7 @@ The C++ library is organized in functional groups each residing in their own dir
 
 ## Installation and requirements
 
-This repository requires a C++20 compiler (in case of MacOS XCode 15 is needed). This is done so that newer features like `std::source_location` can be used.
+This repository requires a C++23 compiler (in case of macOS Xcode 15 is needed). This allows newer standard-library features to be used directly. Bazel 8 and newer remain supported.
 
 The project only comes with a Bazel BUILD.bazel file and can be added to other Bazel projects.
 
@@ -338,10 +338,10 @@ Lint and format are driven by [Trunk](https://docs.trunk.io/cli) plus [pre-commi
 Check [Releases](https://github.com/mboworks/mbo/releases) for details. All that is needed is a `bazel_dep` instruction with the correct version.
 
 ```starlark
-bazel_dep(name = "mboworks_mbo", version = "0.14.1")
+bazel_dep(name = "mboworks_mbo", version = "0.15.0")
 ```
 
-The [Bazel-Central-Registry](https://registry.bazel.build/modules/mboworks_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler - a restriction in how Bazel handles toolchains under bzlmod. To pull in the bundled toolchain, vendor `bazelmod/llvm.MODULE.bazel` as described in the release notes. Nonetheless all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
+The [Bazel-Central-Registry](https://registry.bazel.build/modules/mboworks_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler - a restriction in how Bazel handles toolchains under bzlmod. To pull in the bundled toolchain, vendor `bazelmod/llvm.MODULE.bazel` as described in the release notes. Current versions are tested with GCC 14+ and Clang 22+ on Ubuntu and macOS. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
 
 ## Presentations
 

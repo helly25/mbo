@@ -20,14 +20,14 @@
 # include "mbo/config/config_gen.h"  // IWYU pragma: export
 #else
 # include "mbo/config/internal/config.h.in"  // IWYU pragma: export
-# if __STDC_VERSION__ >= 202'311L
+# if __STDC_VERSION__ >= (20L * 100 + 23) * 100 + 11
 #  if !defined(IS_CLANGD)
 #   warning "The correctly generated header is not available. Falling back to template."
 #  endif  // __STDC_VERSION__ >= 202311L
 # endif   // !defined(IS_CLANGD)
 #endif
 
-#if __cplusplus >= 202'302L
+#if __cplusplus >= (20L * 100 + 23) * 100 + 2
 # define MBO_CONFIG_CONSTEXPR_23 constexpr
 #else  // __cplusplus >= 202302L
 # define MBO_CONFIG_CONSTEXPR_23

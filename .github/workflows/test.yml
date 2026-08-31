@@ -40,11 +40,11 @@ on:
         type: string
         default: ""
       gcc_version:
-        description: "The GCC version to use. This is only for compiler=gcc and will be ignored otherwise (e.g. 11, 12, 13)."
+        description: "The GCC version to use. This is only for compiler=gcc and will be ignored otherwise (e.g. 14)."
         type: string
         default: ""
       bazel_config:
-        description: "The way how Bazel should operate compilation and tests, one of (asan, coverage, cpp23, fastbuild, opt)."
+        description: "The way how Bazel should operate compilation and tests, one of (asan, coverage, fastbuild, opt)."
         type: string
         default: opt
       bazel_version:
@@ -188,14 +188,12 @@ jobs:
             fi
           elif [ "${{inputs.bazel_config}}" == "coverage" ]; then
             BAZEL_ARGS+=("-c" "dbg")
-          elif [ "${{inputs.bazel_config}}" == "cpp23" ]; then
-            BAZEL_ARGS+=("-c" "opt" "--config=cpp23")
           elif [ "${{inputs.bazel_config}}" == "fastbuild" ]; then
             BAZEL_ARGS+=("-c" "fastbuild")
           elif [ "${{inputs.bazel_config}}" == "opt" ]; then
             BAZEL_ARGS+=("-c" "opt")
           else
-            echo "::error::Matrix/Input var 'bazel_config' must be one of [asan, coverage, cpp23, fastbuild, opt]."
+            echo "::error::Matrix/Input var 'bazel_config' must be one of [asan, coverage, fastbuild, opt]."
             exit 1
           fi
           # Pin the Bazel release that bazelisk launches. bazelisk resolves the

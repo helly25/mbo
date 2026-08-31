@@ -268,7 +268,7 @@ struct std::hash<mbo::StringOrView> {
   }
 };
 
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201'907L
+#if defined(__cpp_lib_format) && __cpp_lib_format >= (20L * 100 + 19) * 100 + 7
 template<>
 struct std::formatter<mbo::StringOrView, char> : std::formatter<std::string_view, char> {
   template<typename FormatContext>
