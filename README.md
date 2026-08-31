@@ -388,7 +388,7 @@ license-scanner findings of structural similarity):
 | mbo/hash/hash_fnv1a.h      | //mbo/hash:hash_cc     | FNV-1a      | public domain                       |
 | mbo/digest/digest_blake3.h | //mbo/digest:digest_cc | BLAKE3      | CC0-1.0 OR Apache-2.0 (CC0 elected) |
 
-Everything else is original helly25 code. In particular, all algorithms
+Everything else is original MBO Works code. In particular, all algorithms
 implemented from public standards carry no upstream code and need no notices:
 SHA-1/SHA-2/SHA-3/SHAKE (FIPS 180-4 / FIPS 202), MD5 (RFC 1321), BLAKE2b
 (RFC 7693), and HMAC (RFC 2104), and the default hash algorithms (the
