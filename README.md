@@ -338,7 +338,7 @@ Lint and format are driven by [Trunk](https://docs.trunk.io/cli) plus [pre-commi
 Check [Releases](https://github.com/mboworks/mbo/releases) for details. All that is needed is a `bazel_dep` instruction with the correct version.
 
 ```starlark
-bazel_dep(name = "mboworks_mbo", version = "0.14.1")
+bazel_dep(name = "mboworks_mbo", version = "0.15.0")
 ```
 
 The [Bazel-Central-Registry](https://registry.bazel.build/modules/mboworks_mbo) installation does not provide the LLVM tools and thus does not come with its own compiler - a restriction in how Bazel handles toolchains under bzlmod. To pull in the bundled toolchain, vendor `bazelmod/llvm.MODULE.bazel` as described in the release notes. Nonetheless all versions can be compiled with GCC 11+, Clang 17+ on Ubuntu and MacOs as enforced by CI. Other platforms and compilers are likely to work as well. However, Windows lacks some of the necessary tools and the library as well as its build system mostly assume Unix-style file and path names. That unfortunately means that on Windows some code cannot even be built.
