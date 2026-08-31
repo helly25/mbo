@@ -92,7 +92,7 @@ jobs:
       # benefit (LLVM re-downloads quickly, and the symbolizer wrapper resolves via
       # runfiles so a fresh fetch location is fine). Ported from helly25/xff #409+#411.
       - name: Restore Bazel ${{inputs.bazel_config}} disk cache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         id: cache_restore
         with:
           path: "~/.cache/bazel_disk-cache"
@@ -414,7 +414,7 @@ jobs:
           fi
 
       - name: Save Bazel ${{inputs.bazel_config}} disk cache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         if: ${{!startsWith(github.ref, 'refs/tags/') && steps.cache_size.outputs.save == 'true'}}
         id: cache_save
         with:

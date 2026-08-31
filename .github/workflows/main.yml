@@ -137,7 +137,7 @@ jobs:
       # benefit. Every bazel call in this job picks the flag up via .bazelrc.user.
       - name: Route bazel to a disk cache
         run: echo "common --disk_cache=$HOME/.cache/bazel_disk-cache" > .bazelrc.user
-      - uses: actions/cache/restore@v5
+      - uses: actions/cache/restore@v6
         id: cache_restore
         with:
           path: "~/.cache/bazel_disk-cache"
@@ -274,7 +274,7 @@ jobs:
             echo "save=true" >>"${GITHUB_OUTPUT}"
           fi
 
-      - uses: actions/cache/save@v5
+      - uses: actions/cache/save@v6
         if: always() && steps.cache_restore.outputs.cache-hit != 'true' && steps.cache_size.outputs.save == 'true'
         with:
           path: "~/.cache/bazel_disk-cache"
