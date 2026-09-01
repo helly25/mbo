@@ -23,7 +23,7 @@ jobs:
   trunk:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
         with:
@@ -62,8 +62,8 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
       - uses: pre-commit/action@v3.0.1
@@ -74,7 +74,7 @@ jobs:
           # this job deliberately does not build. Skip it here to avoid running
           # the same enforcing gate without its required compilation database.
           SKIP: trunk-fmt,clang-tidy
-      - uses: pre-commit-ci/lite-action@v1.0.2
+      - uses: pre-commit-ci/lite-action@v1.1.0
         if: always()
 
   clang-tidy:
@@ -83,13 +83,13 @@ jobs:
     # There is deliberately no job-level `continue-on-error`: the compilation
     # database, toolchain, parsing, and clang-tidy findings all gate the change.
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # Full history so the branch can be diffed against `main` to pick the
           # changed sources below.
           fetch-depth: 0
       - uses: bazelbuild/setup-bazelisk@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -137,7 +137,7 @@ jobs:
       # benefit. Every bazel call in this job picks the flag up via .bazelrc.user.
       - name: Route bazel to a disk cache
         run: echo "common --disk_cache=$HOME/.cache/bazel_disk-cache" > .bazelrc.user
-      - uses: actions/cache/restore@v5
+      - uses: actions/cache/restore@v6
         id: cache_restore
         with:
           path: "~/.cache/bazel_disk-cache"
@@ -201,7 +201,7 @@ jobs:
         # commands parseable by the matching hermetic clang-tidy.
         run: ./compile_commands-update.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         # Only from `main`, which is the run that lints the whole tree: that DB
         # is the one worth keeping, to reproduce a finding locally against the
         # exact same commands and to inspect flag/toolchain drift. A branch run
@@ -274,7 +274,7 @@ jobs:
             echo "save=true" >>"${GITHUB_OUTPUT}"
           fi
 
-      - uses: actions/cache/save@v5
+      - uses: actions/cache/save@v6
         if: always() && steps.cache_restore.outputs.cache-hit != 'true' && steps.cache_size.outputs.save == 'true'
         with:
           path: "~/.cache/bazel_disk-cache"
@@ -378,7 +378,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Ensure every job is wired into this gate
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}

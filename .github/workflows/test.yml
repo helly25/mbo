@@ -64,7 +64,7 @@ jobs:
     runs-on: ${{inputs.os}}
     continue-on-error: ${{inputs.continue-on-error}}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Fetch measurement bundles (Git LFS)
         # The `//mbo/hash/measurements:quality_sh_test` bazel test reads the
         # committed data bundles for the SMHasher3 quality tables; actions/checkout
@@ -92,7 +92,7 @@ jobs:
       # benefit (LLVM re-downloads quickly, and the symbolizer wrapper resolves via
       # runfiles so a fresh fetch location is fine). Ported from helly25/xff #409+#411.
       - name: Restore Bazel ${{inputs.bazel_config}} disk cache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         id: cache_restore
         with:
           path: "~/.cache/bazel_disk-cache"
@@ -384,7 +384,7 @@ jobs:
           } >>"${GITHUB_STEP_SUMMARY}"
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always() && inputs.bazel_config == 'coverage'
         with:
           name: coverage-report
@@ -414,7 +414,7 @@ jobs:
           fi
 
       - name: Save Bazel ${{inputs.bazel_config}} disk cache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         if: ${{!startsWith(github.ref, 'refs/tags/') && steps.cache_size.outputs.save == 'true'}}
         id: cache_save
         with:
