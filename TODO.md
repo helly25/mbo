@@ -264,9 +264,9 @@ also updates this file to the completed state.
   - PR: [#375](https://github.com/mboworks/mbo/pull/375).
 - [x] Unify coverage ratings, enforcement, and presentation, adopting the
       applicable final state of
-      [xff PR #639](https://github.com/helly25/xff/pull/639),
-      [xff PR #641](https://github.com/helly25/xff/pull/641), and
-      [xff PR #642](https://github.com/helly25/xff/pull/642).
+      [xff PR #639](https://github.com/mboworks/xff/pull/639),
+      [xff PR #641](https://github.com/mboworks/xff/pull/641), and
+      [xff PR #642](https://github.com/mboworks/xff/pull/642).
   - Derive the low, medium, and high presentation bands and the independently
     selected enforced rating from one validated policy model.
   - Preserve justified per-category exceptions and expose every effective
@@ -278,11 +278,11 @@ also updates this file to the completed state.
   - PR: [#361](https://github.com/mboworks/mbo/pull/361).
 - [x] Make `coverage_policy.json` the single source of truth for enforcement
       and LCOV presentation, adopting the applicable final state of
-      [xff PR #631](https://github.com/helly25/xff/pull/631),
-      [xff PR #633](https://github.com/helly25/xff/pull/633), and the
+      [xff PR #631](https://github.com/mboworks/xff/pull/631),
+      [xff PR #633](https://github.com/mboworks/xff/pull/633), and the
       coverage-related changes from
-      [xff PR #634](https://github.com/helly25/xff/pull/634) and
-      [xff PR #636](https://github.com/helly25/xff/pull/636).
+      [xff PR #634](https://github.com/mboworks/xff/pull/634) and
+      [xff PR #636](https://github.com/mboworks/xff/pull/636).
   - Define explicit per-metric enforcement minima and health targets, and
     generate `genhtml`'s medium and high limits from them. Equal minimum and
     target values must form one pass/fail boundary without a yellow band.
@@ -303,7 +303,7 @@ also updates this file to the completed state.
   - Cover every supported length for `LoadTail` and `LoadSmall` with
     volatile-derived runtime inputs.
   - Verify both lanes and the folded result of the 128-bit multiplication helpers.
-- [x] Adopt the shared helly25 contributor and agent guidance, C++ and shell
+- [x] Adopt the shared MBO Works contributor and agent guidance, C++ and shell
       styles, and machine-enforceable style checks.
   - Adapt the final xff policy set through PR #612 to mbo's human-led workflow.
   - Keep project-specific conventions and omit xff-specific CLI rules.
