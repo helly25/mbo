@@ -66,6 +66,25 @@ single_version_override(
     patch_strip = 1,
 )
 
+# Abseil 20260817.0 still selects gloop 20260708.rc1, whose dependency on
+# compatibility-level-1 Abseil conflicts with the current level-0 release.
+# Newer gloop releases add a gRPC dependency chain that Bazel 8 cannot parse, so
+# patch only the stale dependency declaration until Abseil updates its metadata.
+single_version_override(
+    module_name = "gloop",
+    version = "20260708.rc1",
+    patches = ["//bazelmod:gloop-20260708.rc1-abseil.patch"],
+    patch_strip = 1,
+)
+
+# The gloop release above selects an older tcmalloc whose Abseil dependency has
+# the same compatibility-level mismatch. The current tcmalloc release uses the
+# level-0 Abseil line and remains compatible with Bazel 8.
+single_version_override(
+    module_name = "tcmalloc",
+    version = "0.0.0-20260818-15db23d",
+)
+
 bazel_dep(name = "abseil-cpp", version = "20260817.0")
 bazel_dep(name = "re2", version = "2025-11-05.bcr.1")
 bazel_dep(name = "googletest", version = "1.18.0.bcr.1")
