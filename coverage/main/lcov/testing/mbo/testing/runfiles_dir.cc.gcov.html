@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-09-01 06:18:47</td>
+            <td class="headerValue">2026-09-03 18:39:36</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -168,13 +168,13 @@
 <span id="L87"><span class="lineNum">      87</span>                 :             :     }</span>
 <span id="L88"><span class="lineNum">      88</span>                 :<span class="tlaGNC">           2 :     const std::string mapping_file = absl::StrCat(test_bin, &quot;/_repo_mapping&quot;);</span></span>
 <span id="L89"><span class="lineNum">      89</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           2 :     MBO_ASSIGN_OR_RETURN(const std::string mapping, mbo::file::GetContents(mapping_file));</span></span>
-<span id="L90"><span class="lineNum">      90</span>         [<span class="tlaGBC" title="branch 0 was taken 29 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">          30 :     for (const std::string_view line : absl::StrSplit(mapping, '\n')) {</span></span>
-<span id="L91"><span class="lineNum">      91</span>                 :<span class="tlaGNC">          29 :       const std::vector&lt;std::string_view&gt; parts = absl::StrSplit(line, ',', absl::AllowEmpty());</span></span>
-<span id="L92"><span class="lineNum">      92</span>   [<span class="tlaGBC" title="branch 0 was taken 28 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 27 times"> + </span> :<span class="tlaGNC">          29 :       if (parts.size() == 3 &amp;&amp; parts.at(1) == workspace) {</span></span>
-<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="branch 5 was taken 28 times"> + </span>]
+<span id="L90"><span class="lineNum">      90</span>         [<span class="tlaGBC" title="branch 0 was taken 33 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">          34 :     for (const std::string_view line : absl::StrSplit(mapping, '\n')) {</span></span>
+<span id="L91"><span class="lineNum">      91</span>                 :<span class="tlaGNC">          33 :       const std::vector&lt;std::string_view&gt; parts = absl::StrSplit(line, ',', absl::AllowEmpty());</span></span>
+<span id="L92"><span class="lineNum">      92</span>   [<span class="tlaGBC" title="branch 0 was taken 32 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 31 times"> + </span> :<span class="tlaGNC">          33 :       if (parts.size() == 3 &amp;&amp; parts.at(1) == workspace) {</span></span>
+<span class="lineNum">        </span>          <span class="tlaGBC" title="branch 4 was taken 1 time"> + </span><span class="tlaGBC" title="branch 5 was taken 32 times"> + </span>]
 <span id="L93"><span class="lineNum">      93</span>                 :<span class="tlaGNC">           1 :         return runfiles-&gt;Rlocation(mbo::file::JoinPaths(parts.at(2), source_rel));</span></span>
 <span id="L94"><span class="lineNum">      94</span>                 :             :       }</span>
-<span id="L95"><span class="lineNum">      95</span>         [<span class="tlaGBC" title="branch 0 was taken 28 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">          29 :     }</span></span>
+<span id="L95"><span class="lineNum">      95</span>         [<span class="tlaGBC" title="branch 0 was taken 32 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">          33 :     }</span></span>
 <span id="L96"><span class="lineNum">      96</span>                 :<span class="tlaGNC">           1 :     auto result = runfiles-&gt;Rlocation(mbo::file::JoinPaths(workspace, source_rel));</span></span>
 <span id="L97"><span class="lineNum">      97</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           1 :     if (result.empty()) {</span></span>
 <span id="L98"><span class="lineNum">      98</span>                 :<span class="tlaUNC">           0 :       result = runfiles-&gt;Rlocation(mbo::file::JoinPaths(workspace_env, source_rel));</span></span>
