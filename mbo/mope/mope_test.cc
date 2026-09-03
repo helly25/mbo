@@ -142,6 +142,22 @@ TEST_F(MopeTest, StandaloneSectionTagsConsumeTheirLines) {
   EXPECT_THAT(output, "before\nafter\n");
 }
 
+TEST_F(MopeTest, StandaloneSectionTagsRecognizeCarriageReturnsAndTabs) {
+  constexpr std::string_view kInput = "before\r\t{{#missing}}\rcontent\r\t{{/missing}}\rafter\r";
+  const Template tpl;
+  std::string output(kInput);
+  ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
+  EXPECT_THAT(output, "before\rafter\r");
+}
+
+TEST_F(MopeTest, InlineSectionTagsKeepTheirSurroundingLines) {
+  constexpr std::string_view kInput = "before {{#missing}}\ncontent\n{{/missing}} after\n";
+  const Template tpl;
+  std::string output(kInput);
+  ASSERT_THAT(tpl.Expand(output), absl::OkStatus());
+  EXPECT_THAT(output, "before  after\n");
+}
+
 TEST_F(MopeTest, MissingSectionsDisappearAndAnEmptyDictionaryRendersOnce) {
   constexpr std::string_view kMissingInput = "before{{#missing}}content{{/missing}}after";
   constexpr std::string_view kEmptyInput = "before{{#empty}}content{{/empty}}after";

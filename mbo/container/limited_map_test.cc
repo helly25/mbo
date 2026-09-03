@@ -266,6 +266,30 @@ TEST_F(LimitedMapTest, UpdateNonExistingThrows) {
   }
 }
 
+TEST_F(LimitedMapTest, StringAtRejectsAMissingKey) {
+  LimitedMap<std::string, int, 2> test{{{"present", 1}}};
+  if constexpr (!::mbo::config::kRequireThrows) {
+    ASSERT_DEATH((void)test.at(std::string("missing")), "Out of range");
+  } else {
+#if __cpp_exceptions
+# if !HAS_ADDRESS_SANITIZER
+    EXPECT_THAT(
+        [&]() {
+          try {
+            (void)test.at(std::string("missing"));
+          } catch (const std::out_of_range&) {
+            return true;
+          } catch (...) {
+            return false;
+          }
+          return false;
+        }(),
+        true);
+# endif  // !HAS_ADDRESS_SANITIZER
+#endif   // __cpp_exceptions
+  }
+}
+
 TEST_F(LimitedMapTest, AtIndex) {
   static constexpr auto kTest = LimitedMap<int, int, 2>{{1, 2}, {3, 4}};
   EXPECT_THAT(kTest.at_index(0), Pair(1, 2));
