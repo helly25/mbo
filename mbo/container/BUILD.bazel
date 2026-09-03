@@ -91,6 +91,28 @@ cc_test(
     ],
 )
 
+# Exercises LimitedMap precondition failures in-process so coverage data is
+# flushed. Its test skips unless the exception policy is selected; the
+# supplemental coverage pass invokes it with that policy.
+cc_test(
+    name = "limited_map_require_exceptions_test",
+    size = "small",
+    srcs = ["limited_map_require_exceptions_test.cc"],
+    copts = ["-fexceptions"] + select({
+        "@rules_cc//cc/compiler:clang": ["-Wno-exceptions"],
+        "//conditions:default": [],
+    }),
+    # Do not add exception-only compiler branches to the primary report. The
+    # supplemental pass invokes this target explicitly and overlays only
+    # matching production coverpoints.
+    tags = ["no-coverage"],
+    deps = [
+        ":limited_map_cc",
+        "//mbo/config:config_cc",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "limited_options_cc",
     hdrs = ["limited_options.h"],
