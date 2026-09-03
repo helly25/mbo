@@ -46,9 +46,6 @@ namespace mbo::log::log_internal {
 namespace {
 
 std::string_view ReverseFindSpaceSkipPastMatchingBrackets(std::string_view str) {
-  if (str.empty()) {
-    return str;
-  }
   std::string_view::size_type pos = str.length() - 1;
   std::size_t brackets = 0;
   std::size_t angles = 0;
@@ -86,9 +83,6 @@ std::string_view ReverseFindSpaceSkipPastMatchingBrackets(std::string_view str) 
 }
 
 std::string_view ReverseStripAngleBrackets(std::string_view str) {
-  if (str.empty()) {
-    return str;
-  }
   std::string_view::size_type pos = str.length() - 1;
   std::size_t angles = 0;
   for (; pos != 0; --pos) {
