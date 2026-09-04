@@ -31,3 +31,15 @@ The uncompressed JSON has SHA-256
 Google Benchmark could not read `hw.cpufrequency` or set thread affinity on macOS. Those limitations
 apply equally to the baseline and comparison runs; comparisons must use repeated samples and treat
 noise statistically rather than relying on a single timing.
+
+## Bounds-unrolling candidate
+
+`ordered_lookup_candidate.json.gz` contains the identically configured raw run from the bounds
+unrolling candidate in pull request 411. Its uncompressed SHA-256 is
+`5c7ea7391fe92d944674ac42ac4abd6d8d8b7230a397637617caa335d3ea198b`.
+
+`ordered_lookup_candidate_best3.tsv` records the baseline and candidate best-3-of-9 means for all
+648 cases. The candidate does not meet the no-regression requirement: 333 cases regress, including
+228 by more than 5% and 199 by more than 10%. Lower-bound first/middle cases at capacities 8 and 16
+show repeated large losses, with the worst measured case regressing by 151.2%. The implementation
+must not proceed on these results.
