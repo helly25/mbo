@@ -2,7 +2,7 @@
 
 `ordered_lookup_baseline.json.gz` records the benchmark-only parent result for the change proposed
 in mbo pull request 411. It contains 648 cases with nine repetitions each, built with `-c opt` on
-an Apple M3 Max and measured on 2026-09-04.
+an 18-core Apple M5 Pro (Mac17,9, 64 GB) and measured on 2026-09-04.
 
 The matrix covers `LimitedSet` and `LimitedMap`; capacities 2, 4, 8, 16, 17, and 32; ascending
 `std::less` and `CompareLess` plus descending `std::greater`; `index_of`, `lower_bound`, and
