@@ -151,7 +151,7 @@ TEST_F(LimitedSetTest, BoundsLocateInsertionEdges) {
   EXPECT_THAT(const_test.upper_bound(3), const_test.begin() + 2);
 }
 
-TEST_F(LimitedSetTest, BoundsUseStandardAlgorithmsWithoutCompareLess) {
+TEST_F(LimitedSetTest, BoundsSupportStdLess) {
   LimitedSet<int, LimitedOptions<5>{}, std::less<int>> test{1, 3, 5};
 
   EXPECT_THAT(test.lower_bound(2), test.begin() + 1);

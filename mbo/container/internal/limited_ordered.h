@@ -76,7 +76,6 @@ class [[nodiscard]] LimitedOrdered {
   static constexpr std::size_t Capacity = Options::kCapacity;
 
   static constexpr bool kOptimizeIndexOf = !Options::Has(LimitedOptionsFlag::kNoOptimizeIndexOf);
-  static constexpr bool kOptimizeBounds = kOptimizeIndexOf && mbo::types::IsCompareLess<Compare>;
   static constexpr bool kCustomIndexOfBeyondUnroll = Options::Has(LimitedOptionsFlag::kCustomIndexOfBeyondUnroll);
 
   static constexpr std::size_t kUnrollMaxCapacityLimit = 32;  // The maximum supported in code.
@@ -524,7 +523,7 @@ class [[nodiscard]] LimitedOrdered {
 
   // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   MBO_FORCE_INLINE constexpr iterator lower_bound(const Key& key) {
-    if constexpr (kOptimizeBounds && Capacity <= kUnrollMaxCapacity) {
+    if constexpr (Capacity <= kUnrollMaxCapacity) {
       return begin() + BoundIndex<false>(key);
     } else {
       return std::lower_bound(begin(), end(), key, val_comp_);
@@ -533,7 +532,7 @@ class [[nodiscard]] LimitedOrdered {
 
   // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   MBO_FORCE_INLINE constexpr const_iterator lower_bound(const Key& key) const {
-    if constexpr (kOptimizeBounds && Capacity <= kUnrollMaxCapacity) {
+    if constexpr (Capacity <= kUnrollMaxCapacity) {
       return begin() + BoundIndex<false>(key);
     } else {
       return std::lower_bound(begin(), end(), key, val_comp_);
@@ -542,7 +541,7 @@ class [[nodiscard]] LimitedOrdered {
 
   // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   MBO_FORCE_INLINE constexpr iterator upper_bound(const Key& key) {
-    if constexpr (kOptimizeBounds && Capacity <= kUnrollMaxCapacity) {
+    if constexpr (Capacity <= kUnrollMaxCapacity) {
       return begin() + BoundIndex<true>(key);
     } else {
       return std::upper_bound(begin(), end(), key, val_comp_);
@@ -551,7 +550,7 @@ class [[nodiscard]] LimitedOrdered {
 
   // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   MBO_FORCE_INLINE constexpr const_iterator upper_bound(const Key& key) const {
-    if constexpr (kOptimizeBounds && Capacity <= kUnrollMaxCapacity) {
+    if constexpr (Capacity <= kUnrollMaxCapacity) {
       return begin() + BoundIndex<true>(key);
     } else {
       return std::upper_bound(begin(), end(), key, val_comp_);
@@ -567,7 +566,7 @@ class [[nodiscard]] LimitedOrdered {
   requires(kIsForeignKey<K>)
   // LCOV_MERGE_FUNC_LINE: Count the shared function-template definition once.
   MBO_FORCE_INLINE constexpr iterator lower_bound(const K& key) {
-    if constexpr (kOptimizeBounds && Capacity <= kUnrollMaxCapacity) {
+    if constexpr (Capacity <= kUnrollMaxCapacity) {
       return begin() + BoundIndex<false>(key);
     } else {
       return std::lower_bound(begin(), end(), key, val_comp_);
@@ -578,7 +577,7 @@ class [[nodiscard]] LimitedOrdered {
   requires(kIsForeignKey<K>)
   // LCOV_MERGE_FUNC_LINE: Count the shared function-template definition once.
   MBO_FORCE_INLINE constexpr const_iterator lower_bound(const K& key) const {
-    if constexpr (kOptimizeBounds && Capacity <= kUnrollMaxCapacity) {
+    if constexpr (Capacity <= kUnrollMaxCapacity) {
       return begin() + BoundIndex<false>(key);
     } else {
       return std::lower_bound(begin(), end(), key, val_comp_);
@@ -589,7 +588,7 @@ class [[nodiscard]] LimitedOrdered {
   requires(kIsForeignKey<K>)
   // LCOV_MERGE_FUNC_LINE: Count the shared function-template definition once.
   MBO_FORCE_INLINE constexpr iterator upper_bound(const K& key) {
-    if constexpr (kOptimizeBounds && Capacity <= kUnrollMaxCapacity) {
+    if constexpr (Capacity <= kUnrollMaxCapacity) {
       return begin() + BoundIndex<true>(key);
     } else {
       return std::upper_bound(begin(), end(), key, val_comp_);
@@ -600,7 +599,7 @@ class [[nodiscard]] LimitedOrdered {
   requires(kIsForeignKey<K>)
   // LCOV_MERGE_FUNC_LINE: Count the shared function-template definition once.
   MBO_FORCE_INLINE constexpr const_iterator upper_bound(const K& key) const {
-    if constexpr (kOptimizeBounds && Capacity <= kUnrollMaxCapacity) {
+    if constexpr (Capacity <= kUnrollMaxCapacity) {
       return begin() + BoundIndex<true>(key);
     } else {
       return std::upper_bound(begin(), end(), key, val_comp_);
@@ -611,23 +610,24 @@ class [[nodiscard]] LimitedOrdered {
   // LCOV_MERGE_FUNC_LINE: Count the generated capacity specializations once.
   template<bool Upper, typename K>
   MBO_ALWAYS_INLINE constexpr std::size_t BoundIndex(const K& key) const
-  requires(kOptimizeBounds && Capacity <= kUnrollMaxCapacity)
+  requires(Capacity <= kUnrollMaxCapacity)
   {
-#define MBO_CASE_LIMITED_BOUND(POS)                                        \
-  static_assert((POS) + 1 <= kUnrollMaxCapacityLimit);                     \
-  case ((POS) + 1): {                                                      \
-    if constexpr ((POS) >= Capacity) {                                     \
-      return size_;                                                        \
-    } else {                                                               \
-      const auto comp = key_comp_.Compare(key, GetKey(values_[POS].data)); \
-      if (comp > 0 || (Upper && comp == 0)) {                              \
-        return (POS) + 1;                                                  \
-      }                                                                    \
-      if (!Upper && comp == 0) {                                           \
-        return (POS);                                                      \
-      }                                                                    \
-    }                                                                      \
-    [[fallthrough]];                                                       \
+#define MBO_CASE_LIMITED_BOUND(POS)                       \
+  static_assert((POS) + 1 <= kUnrollMaxCapacityLimit);    \
+  case ((POS) + 1): {                                     \
+    if constexpr ((POS) >= Capacity) {                    \
+      return size_;                                       \
+    } else {                                              \
+      const auto& stored_key = GetKey(values_[POS].data); \
+      if constexpr (Upper) {                              \
+        if (!key_comp_(key, stored_key)) {                \
+          return (POS) + 1;                               \
+        }                                                 \
+      } else if (key_comp_(stored_key, key)) {            \
+        return (POS) + 1;                                 \
+      }                                                   \
+    }                                                     \
+    [[fallthrough]];                                      \
   }
     switch (size_) {               // LCOV_EXCL_BR_LINE: GCC attributes generated case edges to this line.
       MBO_CASE_LIMITED_BOUND(31);  // LCOV_EXCL_LINE: above the configured unroll maximum.
