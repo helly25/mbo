@@ -46,7 +46,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-09-03 18:39:36</td>
+            <td class="headerValue">2026-09-04 06:12:02</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -58,9 +58,9 @@
             <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryHi">82.7&nbsp;%</td>
+            <td class="headerCovTableEntryHi">85.0&nbsp;%</td>
             <td class="headerCovTableEntry">266</td>
-            <td class="headerCovTableEntry">220</td>
+            <td class="headerCovTableEntry">226</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -120,27 +120,27 @@
 <span id="L40"><span class="lineNum">      40</span>                 :             : </span>
 <span id="L41"><span class="lineNum">      41</span>                 :             : // NOLINTBEGIN(misc-no-recursion)</span>
 <span id="L42"><span class="lineNum">      42</span>                 :             : </span>
-<span id="L43"><span class="lineNum">      43</span>                 :<span class="tlaGNC">          64 : std::pair&lt;std::size_t, std::size_t&gt; ExpandWhiteSpace(</span></span>
+<span id="L43"><span class="lineNum">      43</span>                 :<span class="tlaGNC">          68 : std::pair&lt;std::size_t, std::size_t&gt; ExpandWhiteSpace(</span></span>
 <span id="L44"><span class="lineNum">      44</span>                 :             :     std::string_view output,</span>
 <span id="L45"><span class="lineNum">      45</span>                 :             :     std::size_t tag_pos,</span>
 <span id="L46"><span class="lineNum">      46</span>                 :             :     std::size_t tag_len) {</span>
-<span id="L47"><span class="lineNum">      47</span>                 :<span class="tlaGNC">          64 :   std::size_t end = tag_pos + tag_len;</span></span>
+<span id="L47"><span class="lineNum">      47</span>                 :<span class="tlaGNC">          68 :   std::size_t end = tag_pos + tag_len;</span></span>
 <span id="L48"><span class="lineNum">      48</span>                 :             :   // Is the tag followed by a new-line?</span>
-<span id="L49"><span class="lineNum">      49</span>   [<span class="tlaGBC" title="branch 0 was taken 39 times"> + </span><span class="tlaGBC" title="branch 1 was taken 25 times"> + </span><span class="tlaGBC" title="branch 2 was taken 37 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">          64 :   if (end &lt; output.size() &amp;&amp; (output.at(end) == '\n' || output.at(end) == '\r')) {</span></span>
-<span class="lineNum">        </span>    <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 37 times"> + </span><span class="tlaGBC" title="branch 6 was taken 2 times"> + </span><span class="tlaGBC" title="branch 7 was taken 62 times"> + </span>]
-<span id="L50"><span class="lineNum">      50</span>                 :<span class="tlaGNC">           2 :     ++end;</span></span>
-<span id="L51"><span class="lineNum">      51</span>                 :<span class="tlaGNC">           2 :     std::size_t pos = tag_pos;</span></span>
+<span id="L49"><span class="lineNum">      49</span>   [<span class="tlaGBC" title="branch 0 was taken 43 times"> + </span><span class="tlaGBC" title="branch 1 was taken 25 times"> + </span><span class="tlaGBC" title="branch 2 was taken 40 times"> + </span><span class="tlaGBC" title="branch 3 was taken 3 times"> + </span> :<span class="tlaGNC">          68 :   if (end &lt; output.size() &amp;&amp; (output.at(end) == '\n' || output.at(end) == '\r')) {</span></span>
+<span class="lineNum">        </span>    <span class="tlaGBC" title="branch 4 was taken 2 times"> + </span><span class="tlaGBC" title="branch 5 was taken 38 times"> + </span><span class="tlaGBC" title="branch 6 was taken 5 times"> + </span><span class="tlaGBC" title="branch 7 was taken 63 times"> + </span>]
+<span id="L50"><span class="lineNum">      50</span>                 :<span class="tlaGNC">           5 :     ++end;</span></span>
+<span id="L51"><span class="lineNum">      51</span>                 :<span class="tlaGNC">           5 :     std::size_t pos = tag_pos;</span></span>
 <span id="L52"><span class="lineNum">      52</span>                 :             :     // reverse past all space</span>
-<span id="L53"><span class="lineNum">      53</span>   [<span class="tlaGBC" title="branch 0 was taken 6 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 4 times"> + </span> :<span class="tlaGNC">           6 :     while (pos &gt; 0 &amp;&amp; (output.at(pos - 1) == ' ' || output.at(pos - 1) == '\t')) {</span></span>
-<span class="lineNum">        </span>    <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaGBC" title="branch 5 was taken 2 times"> + </span><span class="tlaGBC" title="branch 6 was taken 4 times"> + </span><span class="tlaGBC" title="branch 7 was taken 2 times"> + </span>]
-<span id="L54"><span class="lineNum">      54</span>                 :<span class="tlaGNC">           4 :       --pos;</span></span>
+<span id="L53"><span class="lineNum">      53</span>   [<span class="tlaGBC" title="branch 0 was taken 12 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 7 times"> + </span><span class="tlaGBC" title="branch 3 was taken 5 times"> + </span> :<span class="tlaGNC">          12 :     while (pos &gt; 0 &amp;&amp; (output.at(pos - 1) == ' ' || output.at(pos - 1) == '\t')) {</span></span>
+<span class="lineNum">        </span>    <span class="tlaGBC" title="branch 4 was taken 2 times"> + </span><span class="tlaGBC" title="branch 5 was taken 5 times"> + </span><span class="tlaGBC" title="branch 6 was taken 7 times"> + </span><span class="tlaGBC" title="branch 7 was taken 5 times"> + </span>]
+<span id="L54"><span class="lineNum">      54</span>                 :<span class="tlaGNC">           7 :       --pos;</span></span>
 <span id="L55"><span class="lineNum">      55</span>                 :             :     }</span>
-<span id="L56"><span class="lineNum">      56</span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">           2 :     if (pos == 0 || output.at(pos - 1) == '\n' || output.at(pos - 1) == '\r') {</span></span>
-<span class="lineNum">        </span>    <span class="tlaUNC" title="branch 4 was not taken"> - </span><span class="tlaUNC" title="branch 5 was not taken"> - </span><span class="tlaGBC" title="branch 6 was taken 2 times"> + </span><span class="tlaUNC" title="branch 7 was not taken"> - </span>]
-<span id="L57"><span class="lineNum">      57</span>                 :<span class="tlaGNC">           2 :       return {pos, tag_pos - pos + tag_len + 1};</span></span>
+<span id="L56"><span class="lineNum">      56</span>   [<span class="tlaGBC" title="branch 0 was taken 5 times"> + </span><span class="tlaUNC" title="branch 1 was not taken"> - </span><span class="tlaGBC" title="branch 2 was taken 3 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span> :<span class="tlaGNC">           5 :     if (pos == 0 || output.at(pos - 1) == '\n' || output.at(pos - 1) == '\r') {</span></span>
+<span class="lineNum">        </span>    <span class="tlaGBC" title="branch 4 was taken 2 times"> + </span><span class="tlaGBC" title="branch 5 was taken 1 time"> + </span><span class="tlaGBC" title="branch 6 was taken 4 times"> + </span><span class="tlaGBC" title="branch 7 was taken 1 time"> + </span>]
+<span id="L57"><span class="lineNum">      57</span>                 :<span class="tlaGNC">           4 :       return {pos, tag_pos - pos + tag_len + 1};</span></span>
 <span id="L58"><span class="lineNum">      58</span>                 :             :     }</span>
 <span id="L59"><span class="lineNum">      59</span>                 :             :   }</span>
-<span id="L60"><span class="lineNum">      60</span>                 :<span class="tlaGNC">          62 :   return {tag_pos, tag_len};</span></span>
+<span id="L60"><span class="lineNum">      60</span>                 :<span class="tlaGNC">          64 :   return {tag_pos, tag_len};</span></span>
 <span id="L61"><span class="lineNum">      61</span>                 :             : }</span>
 <span id="L62"><span class="lineNum">      62</span>                 :             : </span>
 <span id="L63"><span class="lineNum">      63</span>                 :             : }  // namespace</span>
@@ -218,16 +218,16 @@
 <span id="L135"><span class="lineNum">     135</span>   [<span class="tlaGBC" title="branch 0 was taken 4 times"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 4 times"> + </span>]:<span class="tlaGNC">           5 :   return data_.contains(name) || ctx.data.contains(name);</span></span>
 <span id="L136"><span class="lineNum">     136</span>                 :             : }</span>
 <span id="L137"><span class="lineNum">     137</span>                 :             : </span>
-<span id="L138"><span class="lineNum">     138</span>                 :<span class="tlaGNC">          52 : const Template::Data* Template::Lookup(std::string_view name, const Context&amp; ctx) const {</span></span>
-<span id="L139"><span class="lineNum">     139</span>                 :<span class="tlaGNC">          52 :   auto data_it = data_.find(name);</span></span>
-<span id="L140"><span class="lineNum">     140</span>         [<span class="tlaGBC" title="branch 0 was taken 22 times"> + </span><span class="tlaGBC" title="branch 1 was taken 30 times"> + </span>]:<span class="tlaGNC">          52 :   if (data_it != data_.end()) {</span></span>
+<span id="L138"><span class="lineNum">     138</span>                 :<span class="tlaGNC">          54 : const Template::Data* Template::Lookup(std::string_view name, const Context&amp; ctx) const {</span></span>
+<span id="L139"><span class="lineNum">     139</span>                 :<span class="tlaGNC">          54 :   auto data_it = data_.find(name);</span></span>
+<span id="L140"><span class="lineNum">     140</span>         [<span class="tlaGBC" title="branch 0 was taken 22 times"> + </span><span class="tlaGBC" title="branch 1 was taken 32 times"> + </span>]:<span class="tlaGNC">          54 :   if (data_it != data_.end()) {</span></span>
 <span id="L141"><span class="lineNum">     141</span>                 :<span class="tlaGNC">          22 :     return &amp;data_it-&gt;second;</span></span>
 <span id="L142"><span class="lineNum">     142</span>                 :             :   }</span>
-<span id="L143"><span class="lineNum">     143</span>                 :<span class="tlaGNC">          30 :   data_it = ctx.data.find(name);</span></span>
-<span id="L144"><span class="lineNum">     144</span>         [<span class="tlaGBC" title="branch 0 was taken 24 times"> + </span><span class="tlaGBC" title="branch 1 was taken 6 times"> + </span>]:<span class="tlaGNC">          30 :   if (data_it != ctx.data.end()) {</span></span>
+<span id="L143"><span class="lineNum">     143</span>                 :<span class="tlaGNC">          32 :   data_it = ctx.data.find(name);</span></span>
+<span id="L144"><span class="lineNum">     144</span>         [<span class="tlaGBC" title="branch 0 was taken 24 times"> + </span><span class="tlaGBC" title="branch 1 was taken 8 times"> + </span>]:<span class="tlaGNC">          32 :   if (data_it != ctx.data.end()) {</span></span>
 <span id="L145"><span class="lineNum">     145</span>                 :<span class="tlaGNC">          24 :     return &amp;data_it-&gt;second;</span></span>
 <span id="L146"><span class="lineNum">     146</span>                 :             :   }</span>
-<span id="L147"><span class="lineNum">     147</span>                 :<span class="tlaGNC">           6 :   return nullptr;</span></span>
+<span id="L147"><span class="lineNum">     147</span>                 :<span class="tlaGNC">           8 :   return nullptr;</span></span>
 <span id="L148"><span class="lineNum">     148</span>                 :             : }</span>
 <span id="L149"><span class="lineNum">     149</span>                 :             : </span>
 <span id="L150"><span class="lineNum">     150</span>                 :<span class="tlaGNC">          14 : absl::Status Template::MaybeLookup(</span></span>
@@ -416,14 +416,14 @@
 <span id="L327"><span class="lineNum">     327</span>                 :<span class="tlaGNC">           2 :   return absl::OkStatus();</span></span>
 <span id="L328"><span class="lineNum">     328</span>                 :<span class="tlaGNC">           8 : }</span></span>
 <span id="L329"><span class="lineNum">     329</span>                 :             : </span>
-<span id="L330"><span class="lineNum">     330</span>                 :<span class="tlaGNC">          30 : absl::Status Template::ExpandSectionTag(const TagInfo&amp; tag, Context&amp; ctx, std::string&amp; output) const {</span></span>
+<span id="L330"><span class="lineNum">     330</span>                 :<span class="tlaGNC">          32 : absl::Status Template::ExpandSectionTag(const TagInfo&amp; tag, Context&amp; ctx, std::string&amp; output) const {</span></span>
 <span id="L331"><span class="lineNum">     331</span>                 :             :   // Parse tag config and translate into whatever that says...</span>
-<span id="L332"><span class="lineNum">     332</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 30 times"> + </span>]:<span class="tlaGNC">          30 :   ABSL_CHECK_EQ(tag.type, TagType::kSection);</span></span>
-<span id="L333"><span class="lineNum">     333</span>         [<span class="tlaGBC" title="branch 0 was taken 8 times"> + </span><span class="tlaGBC" title="branch 1 was taken 22 times"> + </span>]:<span class="tlaGNC">          30 :   if (!tag.config.has_value()) {</span></span>
-<span id="L334"><span class="lineNum">     334</span>                 :<span class="tlaGNC">           8 :     const Data* found_data_ptr = Lookup(tag.name, ctx);</span></span>
-<span id="L335"><span class="lineNum">     335</span>         [<span class="tlaGBC" title="branch 0 was taken 3 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">           8 :     if (found_data_ptr == nullptr) {</span></span>
-<span id="L336"><span class="lineNum">     336</span>                 :<span class="tlaGNC">           3 :       output.clear();</span></span>
-<span id="L337"><span class="lineNum">     337</span>                 :<span class="tlaGNC">           3 :       return absl::OkStatus();</span></span>
+<span id="L332"><span class="lineNum">     332</span>         [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 32 times"> + </span>]:<span class="tlaGNC">          32 :   ABSL_CHECK_EQ(tag.type, TagType::kSection);</span></span>
+<span id="L333"><span class="lineNum">     333</span>         [<span class="tlaGBC" title="branch 0 was taken 10 times"> + </span><span class="tlaGBC" title="branch 1 was taken 22 times"> + </span>]:<span class="tlaGNC">          32 :   if (!tag.config.has_value()) {</span></span>
+<span id="L334"><span class="lineNum">     334</span>                 :<span class="tlaGNC">          10 :     const Data* found_data_ptr = Lookup(tag.name, ctx);</span></span>
+<span id="L335"><span class="lineNum">     335</span>         [<span class="tlaGBC" title="branch 0 was taken 5 times"> + </span><span class="tlaGBC" title="branch 1 was taken 5 times"> + </span>]:<span class="tlaGNC">          10 :     if (found_data_ptr == nullptr) {</span></span>
+<span id="L336"><span class="lineNum">     336</span>                 :<span class="tlaGNC">           5 :       output.clear();</span></span>
+<span id="L337"><span class="lineNum">     337</span>                 :<span class="tlaGNC">           5 :       return absl::OkStatus();</span></span>
 <span id="L338"><span class="lineNum">     338</span>                 :             :     }</span>
 <span id="L339"><span class="lineNum">     339</span>                 :<span class="tlaGNC">           5 :     const auto* section = std::get_if&lt;TagData&lt;Section&gt;&gt;(found_data_ptr);</span></span>
 <span id="L340"><span class="lineNum">     340</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 4 times"> + </span>]:<span class="tlaGNC">           5 :     if (section == nullptr) {</span></span>
@@ -493,70 +493,70 @@
 <span id="L404"><span class="lineNum">     404</span>                 :<span class="tlaGNC">           1 :   return absl::UnimplementedError(absl::StrCat(&quot;Tag '&quot;, tag.name, &quot;' cannot be handled.&quot;));</span></span>
 <span id="L405"><span class="lineNum">     405</span>                 :             : }</span>
 <span id="L406"><span class="lineNum">     406</span>                 :             : </span>
-<span id="L407"><span class="lineNum">     407</span>                 :<span class="tlaGNC">          71 : std::optional&lt;const Template::TagInfo&gt; Template::FindAndConsumeTag(std::string_view&amp; pos) {</span></span>
+<span id="L407"><span class="lineNum">     407</span>                 :<span class="tlaGNC">          75 : std::optional&lt;const Template::TagInfo&gt; Template::FindAndConsumeTag(std::string_view&amp; pos) {</span></span>
 <span id="L408"><span class="lineNum">     408</span>                 :             :   // Grab parts as string_view. Done in a separate block so these cannot escape.</span>
 <span id="L409"><span class="lineNum">     409</span>                 :             :   // They will be invalid upon the first change of `output`.</span>
 <span id="L410"><span class="lineNum">     410</span>                 :             :   static constexpr LazyRE2 kTagRegex = {.pattern_ = &quot;({{(#?)([_a-zA-Z]\\w*)(?:([=:])((?:[^}]|[}][^}])*))?}})&quot;};</span>
-<span id="L411"><span class="lineNum">     411</span>                 :<span class="tlaGNC">          71 :   std::string_view start;</span></span>
-<span id="L412"><span class="lineNum">     412</span>                 :<span class="tlaGNC">          71 :   std::string_view type;</span></span>
-<span id="L413"><span class="lineNum">     413</span>                 :<span class="tlaGNC">          71 :   std::string_view name;</span></span>
-<span id="L414"><span class="lineNum">     414</span>                 :<span class="tlaGNC">          71 :   std::string_view has_extra;</span></span>
-<span id="L415"><span class="lineNum">     415</span>                 :<span class="tlaGNC">          71 :   std::string_view extra;</span></span>
-<span id="L416"><span class="lineNum">     416</span>         [<span class="tlaGBC" title="branch 0 was taken 7 times"> + </span><span class="tlaGBC" title="branch 1 was taken 64 times"> + </span>]:<span class="tlaGNC">          71 :   if (!RE2::FindAndConsume(&amp;pos, *kTagRegex, &amp;start, &amp;type, &amp;name, &amp;has_extra, &amp;extra)) {</span></span>
-<span id="L417"><span class="lineNum">     417</span>                 :<span class="tlaGNC">           7 :     return std::nullopt;</span></span>
+<span id="L411"><span class="lineNum">     411</span>                 :<span class="tlaGNC">          75 :   std::string_view start;</span></span>
+<span id="L412"><span class="lineNum">     412</span>                 :<span class="tlaGNC">          75 :   std::string_view type;</span></span>
+<span id="L413"><span class="lineNum">     413</span>                 :<span class="tlaGNC">          75 :   std::string_view name;</span></span>
+<span id="L414"><span class="lineNum">     414</span>                 :<span class="tlaGNC">          75 :   std::string_view has_extra;</span></span>
+<span id="L415"><span class="lineNum">     415</span>                 :<span class="tlaGNC">          75 :   std::string_view extra;</span></span>
+<span id="L416"><span class="lineNum">     416</span>         [<span class="tlaGBC" title="branch 0 was taken 9 times"> + </span><span class="tlaGBC" title="branch 1 was taken 66 times"> + </span>]:<span class="tlaGNC">          75 :   if (!RE2::FindAndConsume(&amp;pos, *kTagRegex, &amp;start, &amp;type, &amp;name, &amp;has_extra, &amp;extra)) {</span></span>
+<span id="L417"><span class="lineNum">     417</span>                 :<span class="tlaGNC">           9 :     return std::nullopt;</span></span>
 <span id="L418"><span class="lineNum">     418</span>                 :             :   }</span>
-<span id="L419"><span class="lineNum">     419</span>                 :<span class="tlaGNC">         448 :   return TagInfo{</span></span>
-<span id="L420"><span class="lineNum">     420</span>                 :<span class="tlaGNC">          64 :       .name = std::string(name),</span></span>
-<span id="L421"><span class="lineNum">     421</span>                 :<span class="tlaGNC">          64 :       .start = std::string(start),</span></span>
-<span id="L422"><span class="lineNum">     422</span>         [<span class="tlaGBC" title="branch 0 was taken 32 times"> + </span><span class="tlaGBC" title="branch 1 was taken 32 times"> + </span>]:<span class="tlaGNC">         128 :       .end = type.empty() ? &quot;&quot; : absl::StrCat(&quot;{{/&quot;, name, &quot;}}&quot;),</span></span>
-<span id="L423"><span class="lineNum">     423</span>         [<span class="tlaGBC" title="branch 0 was taken 25 times"> + </span><span class="tlaGBC" title="branch 1 was taken 39 times"> + </span>]:<span class="tlaGNC">          64 :       .config = has_extra == &quot;=&quot; ? std::optional&lt;std::string&gt;(extra) : std::nullopt,</span></span>
-<span id="L424"><span class="lineNum">     424</span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 62 times"> + </span><span class="tlaGBC" title="branch 2 was taken 32 times"> + </span><span class="tlaGBC" title="branch 3 was taken 32 times"> + </span>]:<span class="tlaGNC">         128 :       .option = has_extra == &quot;:&quot; ? std::optional&lt;std::string&gt;(extra) : std::nullopt,</span></span>
-<span id="L425"><span class="lineNum">     425</span>   [<span class="tlaGBC" title="branch 0 was taken 32 times"> + </span><span class="tlaGBC" title="branch 1 was taken 32 times"> + </span><span class="tlaGBC" title="branch 2 was taken 30 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">          64 :       .type = type.empty() ? (extra.empty() ? TagType::kValue : TagType::kControl) : TagType::kSection,</span></span>
-<span id="L426"><span class="lineNum">     426</span>                 :<span class="tlaGNC">          64 :   };</span></span>
+<span id="L419"><span class="lineNum">     419</span>                 :<span class="tlaGNC">         462 :   return TagInfo{</span></span>
+<span id="L420"><span class="lineNum">     420</span>                 :<span class="tlaGNC">          66 :       .name = std::string(name),</span></span>
+<span id="L421"><span class="lineNum">     421</span>                 :<span class="tlaGNC">          66 :       .start = std::string(start),</span></span>
+<span id="L422"><span class="lineNum">     422</span>         [<span class="tlaGBC" title="branch 0 was taken 32 times"> + </span><span class="tlaGBC" title="branch 1 was taken 34 times"> + </span>]:<span class="tlaGNC">         132 :       .end = type.empty() ? &quot;&quot; : absl::StrCat(&quot;{{/&quot;, name, &quot;}}&quot;),</span></span>
+<span id="L423"><span class="lineNum">     423</span>         [<span class="tlaGBC" title="branch 0 was taken 25 times"> + </span><span class="tlaGBC" title="branch 1 was taken 41 times"> + </span>]:<span class="tlaGNC">          66 :       .config = has_extra == &quot;=&quot; ? std::optional&lt;std::string&gt;(extra) : std::nullopt,</span></span>
+<span id="L424"><span class="lineNum">     424</span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 64 times"> + </span><span class="tlaGBC" title="branch 2 was taken 32 times"> + </span><span class="tlaGBC" title="branch 3 was taken 34 times"> + </span>]:<span class="tlaGNC">         132 :       .option = has_extra == &quot;:&quot; ? std::optional&lt;std::string&gt;(extra) : std::nullopt,</span></span>
+<span id="L425"><span class="lineNum">     425</span>   [<span class="tlaGBC" title="branch 0 was taken 32 times"> + </span><span class="tlaGBC" title="branch 1 was taken 34 times"> + </span><span class="tlaGBC" title="branch 2 was taken 30 times"> + </span><span class="tlaGBC" title="branch 3 was taken 2 times"> + </span>]:<span class="tlaGNC">          66 :       .type = type.empty() ? (extra.empty() ? TagType::kValue : TagType::kControl) : TagType::kSection,</span></span>
+<span id="L426"><span class="lineNum">     426</span>                 :<span class="tlaGNC">          66 :   };</span></span>
 <span id="L427"><span class="lineNum">     427</span>                 :             : }</span>
 <span id="L428"><span class="lineNum">     428</span>                 :             : </span>
-<span id="L429"><span class="lineNum">     429</span>                 :<span class="tlaGNC">          64 : std::pair&lt;std::size_t, std::size_t&gt; Template::MaybeExpandWhiteSpace(</span></span>
+<span id="L429"><span class="lineNum">     429</span>                 :<span class="tlaGNC">          66 : std::pair&lt;std::size_t, std::size_t&gt; Template::MaybeExpandWhiteSpace(</span></span>
 <span id="L430"><span class="lineNum">     430</span>                 :             :     std::string_view output,</span>
 <span id="L431"><span class="lineNum">     431</span>                 :             :     const TagInfo&amp; tag,</span>
 <span id="L432"><span class="lineNum">     432</span>                 :             :     std::size_t tag_pos) {</span>
-<span id="L433"><span class="lineNum">     433</span>   [<span class="tlaGBC" title="branch 0 was taken 32 times"> + </span><span class="tlaGBC" title="branch 1 was taken 32 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 30 times"> + </span>]:<span class="tlaGNC">          64 :   return tag.type == TagType::kSection || tag.config.has_value() ? ExpandWhiteSpace(output, tag_pos, tag.start.length())</span></span>
-<span id="L434"><span class="lineNum">     434</span>                 :<span class="tlaGNC">          64 :                                                                  : std::make_pair(tag_pos, tag.start.length());</span></span>
+<span id="L433"><span class="lineNum">     433</span>   [<span class="tlaGBC" title="branch 0 was taken 32 times"> + </span><span class="tlaGBC" title="branch 1 was taken 34 times"> + </span><span class="tlaGBC" title="branch 2 was taken 2 times"> + </span><span class="tlaGBC" title="branch 3 was taken 30 times"> + </span>]:<span class="tlaGNC">          66 :   return tag.type == TagType::kSection || tag.config.has_value() ? ExpandWhiteSpace(output, tag_pos, tag.start.length())</span></span>
+<span id="L434"><span class="lineNum">     434</span>                 :<span class="tlaGNC">          66 :                                                                  : std::make_pair(tag_pos, tag.start.length());</span></span>
 <span id="L435"><span class="lineNum">     435</span>                 :             : }</span>
 <span id="L436"><span class="lineNum">     436</span>                 :             : </span>
 <span id="L437"><span class="lineNum">     437</span>                 :             : // A single scan over the output that dispatches on each tag kind it meets; at 32 it is barely over</span>
 <span id="L438"><span class="lineNum">     438</span>                 :             : // the threshold, and the tag handling reads as one sequence rather than as separable steps.</span>
 <span id="L439"><span class="lineNum">     439</span>                 :             : // NOLINTNEXTLINE(readability-function-cognitive-complexity)</span>
-<span id="L440"><span class="lineNum">     440</span>                 :<span class="tlaGNC">          60 : absl::Status Template::ExpandInternal(Context&amp; ctx, std::string&amp; output) const {</span></span>
-<span id="L441"><span class="lineNum">     441</span>                 :<span class="tlaGNC">          60 :   std::string_view pos = output;</span></span>
+<span id="L440"><span class="lineNum">     440</span>                 :<span class="tlaGNC">          62 : absl::Status Template::ExpandInternal(Context&amp; ctx, std::string&amp; output) const {</span></span>
+<span id="L441"><span class="lineNum">     441</span>                 :<span class="tlaGNC">          62 :   std::string_view pos = output;</span></span>
 <span id="L442"><span class="lineNum">     442</span>                 :             :   while (true) {</span>
-<span id="L443"><span class="lineNum">     443</span>         [<span class="tlaGBC" title="branch 0 was taken 36 times"> + </span><span class="tlaGBC" title="branch 1 was taken 71 times"> + </span>]:<span class="tlaGNC">         107 :     if (pos.empty()) {</span></span>
-<span id="L444"><span class="lineNum">     444</span>                 :<span class="tlaGNC">          60 :       return absl::OkStatus();</span></span>
+<span id="L443"><span class="lineNum">     443</span>         [<span class="tlaGBC" title="branch 0 was taken 36 times"> + </span><span class="tlaGBC" title="branch 1 was taken 75 times"> + </span>]:<span class="tlaGNC">         111 :     if (pos.empty()) {</span></span>
+<span id="L444"><span class="lineNum">     444</span>                 :<span class="tlaGNC">          62 :       return absl::OkStatus();</span></span>
 <span id="L445"><span class="lineNum">     445</span>                 :             :     }</span>
-<span id="L446"><span class="lineNum">     446</span>                 :<span class="tlaGNC">          71 :     std::optional&lt;TagInfo&gt; result = FindAndConsumeTag(pos);</span></span>
-<span id="L447"><span class="lineNum">     447</span>         [<span class="tlaGBC" title="branch 0 was taken 7 times"> + </span><span class="tlaGBC" title="branch 1 was taken 64 times"> + </span>]:<span class="tlaGNC">          71 :     if (result == std::nullopt) {</span></span>
-<span id="L448"><span class="lineNum">     448</span>                 :<span class="tlaGNC">           7 :       return absl::OkStatus();</span></span>
+<span id="L446"><span class="lineNum">     446</span>                 :<span class="tlaGNC">          75 :     std::optional&lt;TagInfo&gt; result = FindAndConsumeTag(pos);</span></span>
+<span id="L447"><span class="lineNum">     447</span>         [<span class="tlaGBC" title="branch 0 was taken 9 times"> + </span><span class="tlaGBC" title="branch 1 was taken 66 times"> + </span>]:<span class="tlaGNC">          75 :     if (result == std::nullopt) {</span></span>
+<span id="L448"><span class="lineNum">     448</span>                 :<span class="tlaGNC">           9 :       return absl::OkStatus();</span></span>
 <span id="L449"><span class="lineNum">     449</span>                 :             :     }</span>
-<span id="L450"><span class="lineNum">     450</span>                 :<span class="tlaGNC">          64 :     const TagInfo tag = *std::move(result);</span></span>
-<span id="L451"><span class="lineNum">     451</span>                 :<span class="tlaGNC">          64 :     const std::size_t tag_pos = pos.data() - output.c_str() - tag.start.length();</span></span>
-<span id="L452"><span class="lineNum">     452</span>                 :<span class="tlaGNC">          64 :     const auto [replace_pos, replace_tag_len] = MaybeExpandWhiteSpace(output, tag, tag_pos);</span></span>
-<span id="L453"><span class="lineNum">     453</span>                 :<span class="tlaGNC">          64 :     std::string replace_str;</span></span>
-<span id="L454"><span class="lineNum">     454</span>                 :<span class="tlaGNC">          64 :     std::size_t replace_len = 0;</span></span>
-<span id="L455"><span class="lineNum">     455</span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 32 times"> + </span><span class="tlaGBC" title="branch 2 was taken 30 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">          64 :     switch (tag.type) {</span></span>
+<span id="L450"><span class="lineNum">     450</span>                 :<span class="tlaGNC">          66 :     const TagInfo tag = *std::move(result);</span></span>
+<span id="L451"><span class="lineNum">     451</span>                 :<span class="tlaGNC">          66 :     const std::size_t tag_pos = pos.data() - output.c_str() - tag.start.length();</span></span>
+<span id="L452"><span class="lineNum">     452</span>                 :<span class="tlaGNC">          66 :     const auto [replace_pos, replace_tag_len] = MaybeExpandWhiteSpace(output, tag, tag_pos);</span></span>
+<span id="L453"><span class="lineNum">     453</span>                 :<span class="tlaGNC">          66 :     std::string replace_str;</span></span>
+<span id="L454"><span class="lineNum">     454</span>                 :<span class="tlaGNC">          66 :     std::size_t replace_len = 0;</span></span>
+<span id="L455"><span class="lineNum">     455</span>   [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 34 times"> + </span><span class="tlaGBC" title="branch 2 was taken 30 times"> + </span><span class="tlaUNC" title="branch 3 was not taken"> - </span>]:<span class="tlaGNC">          66 :     switch (tag.type) {</span></span>
 <span id="L456"><span class="lineNum">     456</span>                 :<span class="tlaGNC">           2 :       case TagType::kControl: {</span></span>
 <span id="L457"><span class="lineNum">     457</span>                 :<span class="tlaGNC">           2 :         replace_len = replace_tag_len;</span></span>
 <span id="L458"><span class="lineNum">     458</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :         MBO_RETURN_IF_ERROR(ExpandControlTag(tag, ctx));</span></span>
 <span id="L459"><span class="lineNum">     459</span>                 :<span class="tlaGNC">           1 :         break;</span></span>
 <span id="L460"><span class="lineNum">     460</span>                 :             :       }</span>
-<span id="L461"><span class="lineNum">     461</span>                 :<span class="tlaGNC">          32 :       case TagType::kSection: {</span></span>
-<span id="L462"><span class="lineNum">     462</span>                 :<span class="tlaGNC">          32 :         const auto tag_end_pos = output.find(tag.end, replace_pos + replace_tag_len);</span></span>
-<span id="L463"><span class="lineNum">     463</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 30 times"> + </span>]:<span class="tlaGNC">          32 :         if (tag_end_pos == std::string_view::npos) {</span></span>
+<span id="L461"><span class="lineNum">     461</span>                 :<span class="tlaGNC">          34 :       case TagType::kSection: {</span></span>
+<span id="L462"><span class="lineNum">     462</span>                 :<span class="tlaGNC">          34 :         const auto tag_end_pos = output.find(tag.end, replace_pos + replace_tag_len);</span></span>
+<span id="L463"><span class="lineNum">     463</span>         [<span class="tlaGBC" title="branch 0 was taken 2 times"> + </span><span class="tlaGBC" title="branch 1 was taken 32 times"> + </span>]:<span class="tlaGNC">          34 :         if (tag_end_pos == std::string_view::npos) {</span></span>
 <span id="L464"><span class="lineNum">     464</span>                 :<span class="tlaGNC">           2 :           return absl::InvalidArgumentError(absl::StrCat(&quot;Tag name '&quot;, tag.name, &quot;' has no end tag '&quot;, tag.end, &quot;'.&quot;));</span></span>
 <span id="L465"><span class="lineNum">     465</span>                 :             :         }</span>
-<span id="L466"><span class="lineNum">     466</span>                 :<span class="tlaGNC">          30 :         const auto [replace_end, replace_end_len] = ExpandWhiteSpace(output, tag_end_pos, tag.end.length());</span></span>
-<span id="L467"><span class="lineNum">     467</span>                 :<span class="tlaGNC">          30 :         replace_len = replace_end + replace_end_len - replace_pos;  // whole replace incl. tags</span></span>
-<span id="L468"><span class="lineNum">     468</span>                 :<span class="tlaGNC">          30 :         replace_str = output.substr(replace_pos + replace_tag_len, replace_len - replace_tag_len - replace_end_len);</span></span>
-<span id="L469"><span class="lineNum">     469</span>   [<span class="tlaGBC" title="branch 0 was taken 13 times"> + </span><span class="tlaGBC" title="branch 1 was taken 17 times"> + </span><span class="tlaGBC" title="branch 2 was taken 17 times"> + </span><span class="tlaGBC" title="branch 3 was taken 13 times"> + </span>]:<span class="tlaGNC">          30 :         MBO_RETURN_IF_ERROR(ExpandSectionTag(tag, ctx, replace_str));</span></span>
-<span id="L470"><span class="lineNum">     470</span>                 :<span class="tlaGNC">          17 :         break;</span></span>
+<span id="L466"><span class="lineNum">     466</span>                 :<span class="tlaGNC">          32 :         const auto [replace_end, replace_end_len] = ExpandWhiteSpace(output, tag_end_pos, tag.end.length());</span></span>
+<span id="L467"><span class="lineNum">     467</span>                 :<span class="tlaGNC">          32 :         replace_len = replace_end + replace_end_len - replace_pos;  // whole replace incl. tags</span></span>
+<span id="L468"><span class="lineNum">     468</span>                 :<span class="tlaGNC">          32 :         replace_str = output.substr(replace_pos + replace_tag_len, replace_len - replace_tag_len - replace_end_len);</span></span>
+<span id="L469"><span class="lineNum">     469</span>   [<span class="tlaGBC" title="branch 0 was taken 13 times"> + </span><span class="tlaGBC" title="branch 1 was taken 19 times"> + </span><span class="tlaGBC" title="branch 2 was taken 19 times"> + </span><span class="tlaGBC" title="branch 3 was taken 13 times"> + </span>]:<span class="tlaGNC">          32 :         MBO_RETURN_IF_ERROR(ExpandSectionTag(tag, ctx, replace_str));</span></span>
+<span id="L470"><span class="lineNum">     470</span>                 :<span class="tlaGNC">          19 :         break;</span></span>
 <span id="L471"><span class="lineNum">     471</span>                 :             :       }</span>
 <span id="L472"><span class="lineNum">     472</span>                 :<span class="tlaGNC">          30 :       case TagType::kValue: {</span></span>
 <span id="L473"><span class="lineNum">     473</span>         [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 29 times"> + </span>]:<span class="tlaGNC">          30 :         MBO_ASSIGN_OR_RETURN(const bool replace, ExpandValueTag(tag, ctx, replace_str));</span></span>
@@ -569,19 +569,19 @@
 <span id="L480"><span class="lineNum">     480</span>                 :<span class="tlaGNC">           1 :         continue;</span></span>
 <span id="L481"><span class="lineNum">     481</span>      [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 28 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span>]:<span class="tlaGNC">          30 :       }</span></span>
 <span id="L482"><span class="lineNum">     482</span>                 :             :     }</span>
-<span id="L483"><span class="lineNum">     483</span>                 :<span class="tlaGNC">          46 :     output.erase(replace_pos, replace_len);</span></span>
-<span id="L484"><span class="lineNum">     484</span>                 :<span class="tlaGNC">          46 :     output.insert(replace_pos, replace_str);</span></span>
-<span id="L485"><span class="lineNum">     485</span>                 :<span class="tlaGNC">          46 :     pos = output;</span></span>
-<span id="L486"><span class="lineNum">     486</span>                 :<span class="tlaGNC">          46 :     pos.remove_prefix(replace_pos + replace_str.length());</span></span>
-<span id="L487"><span class="lineNum">     487</span>   [<span class="tlaGBC" title="branch 0 was taken 46 times"> + </span><span class="tlaGBC" title="branch 1 was taken 17 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 46 times"> + </span> :<span class="tlaGNC">         154 :   }</span></span>
-<span class="lineNum">        </span>    <span class="tlaGBC" title="branch 4 was taken 17 times"> + </span><span class="tlaGBC" title="branch 5 was taken 1 time"> + </span><span class="tlaGBC" title="branch 6 was taken 46 times"> + </span><span class="tlaGBC" title="branch 7 was taken 24 times"> + </span> 
+<span id="L483"><span class="lineNum">     483</span>                 :<span class="tlaGNC">          48 :     output.erase(replace_pos, replace_len);</span></span>
+<span id="L484"><span class="lineNum">     484</span>                 :<span class="tlaGNC">          48 :     output.insert(replace_pos, replace_str);</span></span>
+<span id="L485"><span class="lineNum">     485</span>                 :<span class="tlaGNC">          48 :     pos = output;</span></span>
+<span id="L486"><span class="lineNum">     486</span>                 :<span class="tlaGNC">          48 :     pos.remove_prefix(replace_pos + replace_str.length());</span></span>
+<span id="L487"><span class="lineNum">     487</span>   [<span class="tlaGBC" title="branch 0 was taken 48 times"> + </span><span class="tlaGBC" title="branch 1 was taken 17 times"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 48 times"> + </span> :<span class="tlaGNC">         160 :   }</span></span>
+<span class="lineNum">        </span>    <span class="tlaGBC" title="branch 4 was taken 17 times"> + </span><span class="tlaGBC" title="branch 5 was taken 1 time"> + </span><span class="tlaGBC" title="branch 6 was taken 48 times"> + </span><span class="tlaGBC" title="branch 7 was taken 26 times"> + </span> 
 <span class="lineNum">        </span>             <span class="tlaGBC" title="branch 8 was taken 1 time"> + </span>]
 <span id="L488"><span class="lineNum">     488</span>                 :             : }</span>
 <span id="L489"><span class="lineNum">     489</span>                 :             : </span>
-<span id="L490"><span class="lineNum">     490</span>                 :<span class="tlaGNC">          33 : absl::Status Template::Expand(std::string&amp; output) const {</span></span>
-<span id="L491"><span class="lineNum">     491</span>                 :<span class="tlaGNC">          33 :   Context ctx;</span></span>
-<span id="L492"><span class="lineNum">     492</span>                 :<span class="tlaGNC">          33 :   return ExpandInternal(ctx, output);</span></span>
-<span id="L493"><span class="lineNum">     493</span>                 :<span class="tlaGNC">          33 : }</span></span>
+<span id="L490"><span class="lineNum">     490</span>                 :<span class="tlaGNC">          35 : absl::Status Template::Expand(std::string&amp; output) const {</span></span>
+<span id="L491"><span class="lineNum">     491</span>                 :<span class="tlaGNC">          35 :   Context ctx;</span></span>
+<span id="L492"><span class="lineNum">     492</span>                 :<span class="tlaGNC">          35 :   return ExpandInternal(ctx, output);</span></span>
+<span id="L493"><span class="lineNum">     493</span>                 :<span class="tlaGNC">          35 : }</span></span>
 <span id="L494"><span class="lineNum">     494</span>                 :             : </span>
 <span id="L495"><span class="lineNum">     495</span>                 :<span class="tlaGNC">           2 : absl::Status Template::Expand(</span></span>
 <span id="L496"><span class="lineNum">     496</span>                 :             :     std::string&amp; output,</span>
@@ -622,17 +622,17 @@
             </tr>
             <tr>
               <th scope="row">Branches</th>
-              <td class="headerValueLegL">&lt; 75%</td>
-              <td class="headerValueLegM">&ge; 75% and &lt; 82%</td>
-              <td class="headerValueLegH">&ge; 82%</td>
-              <td class="headerValueLegM">Medium</td>
+              <td class="headerValueLegL">&lt; 80%</td>
+              <td class="headerValueLegM">&ge; 80% and &lt; 85%</td>
+              <td class="headerValueLegH">&ge; 85%</td>
+              <td class="headerValueLegH">High</td>
             </tr>
             <tr>
               <th scope="row">Functions</th>
               <td class="headerValueLegL">&lt; 90%</td>
               <td class="headerValueLegM">&ge; 90% and &lt; 95%</td>
               <td class="headerValueLegH">&ge; 95%</td>
-              <td class="headerValueLegM">Medium</td>
+              <td class="headerValueLegH">High</td>
             </tr>
             </tbody>
           </table>

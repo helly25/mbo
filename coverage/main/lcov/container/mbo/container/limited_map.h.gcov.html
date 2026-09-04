@@ -46,11 +46,11 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-09-03 18:39:36</td>
+            <td class="headerValue">2026-09-04 06:12:02</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">98.5&nbsp;%</td>
-            <td class="headerCovTableEntry">65</td>
+            <td class="headerCovTableEntryHi">97.0&nbsp;%</td>
+            <td class="headerCovTableEntry">66</td>
             <td class="headerCovTableEntry">64</td>
           </tr>
           <tr>
@@ -58,9 +58,9 @@
             <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntryHi">84.8&nbsp;%</td>
+            <td class="headerCovTableEntryHi">89.1&nbsp;%</td>
             <td class="headerCovTableEntry">46</td>
-            <td class="headerCovTableEntry">39</td>
+            <td class="headerCovTableEntry">41</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -155,7 +155,7 @@
 <span id="L75"><span class="lineNum">      75</span>                 :             :   using container_internal::LimitedOrdered&lt;Key, Value, std::pair&lt;const Key, Value&gt;, CapacityOrOptions, KeyComp&gt;::</span>
 <span id="L76"><span class="lineNum">      76</span>                 :             :       LimitedOrdered;</span>
 <span id="L77"><span class="lineNum">      77</span>                 :             : </span>
-<span id="L78"><span class="lineNum">      78</span>                 :<span class="tlaGNC">         201 :   constexpr ~LimitedMap() noexcept = default;</span></span>
+<span id="L78"><span class="lineNum">      78</span>                 :<span class="tlaGNC">         203 :   constexpr ~LimitedMap() noexcept = default;</span></span>
 <span id="L79"><span class="lineNum">      79</span>                 :             : </span>
 <span id="L80"><span class="lineNum">      80</span>                 :             :   constexpr LimitedMap() noexcept = default;</span>
 <span id="L81"><span class="lineNum">      81</span>                 :             : </span>
@@ -192,8 +192,8 @@
 <span id="L112"><span class="lineNum">     112</span>                 :<span class="tlaGNC">           4 :   constexpr LimitedMap(It begin, It end, const KeyComp&amp; key_comp = KeyComp()) noexcept</span></span>
 <span id="L113"><span class="lineNum">     113</span>                 :<span class="tlaGNC">           4 :       : LimitedBase(begin, end, key_comp) {}</span></span>
 <span id="L114"><span class="lineNum">     114</span>                 :             : </span>
-<span id="L115"><span class="lineNum">     115</span>                 :<span class="tlaGNC">           1 :   constexpr LimitedMap(const std::initializer_list&lt;KeyValueType&gt;&amp; list, const KeyComp&amp; key_comp = KeyComp()) noexcept</span></span>
-<span id="L116"><span class="lineNum">     116</span>                 :<span class="tlaGNC">           1 :       : LimitedBase(list, key_comp) {}</span></span>
+<span id="L115"><span class="lineNum">     115</span>                 :<span class="tlaGNC">           2 :   constexpr LimitedMap(const std::initializer_list&lt;KeyValueType&gt;&amp; list, const KeyComp&amp; key_comp = KeyComp()) noexcept</span></span>
+<span id="L116"><span class="lineNum">     116</span>                 :<span class="tlaGNC">           2 :       : LimitedBase(list, key_comp) {}</span></span>
 <span id="L117"><span class="lineNum">     117</span>                 :             : </span>
 <span id="L118"><span class="lineNum">     118</span>                 :             :   template&lt;types::ConstructibleInto&lt;KeyValueType&gt; U&gt;</span>
 <span id="L119"><span class="lineNum">     119</span>                 :             :   requires(!std::same_as&lt;U, KeyValueType&gt;)</span>
@@ -232,9 +232,9 @@
 <span id="L152"><span class="lineNum">     152</span>                 :             : </span>
 <span id="L153"><span class="lineNum">     153</span>                 :             :   // Find and search: at, [], lower_bound, upper_bound, equal_range, find, contains, count</span>
 <span id="L154"><span class="lineNum">     154</span>                 :             : </span>
-<span id="L155"><span class="lineNum">     155</span>                 :<span class="tlaGNC">           1 :   constexpr Value&amp; at(const Key&amp; key) {</span></span>
-<span id="L156"><span class="lineNum">     156</span>                 :<span class="tlaGNC">           1 :     auto it = find(key);</span></span>
-<span id="L157"><span class="lineNum">     157</span>   [<span class="tlaUNC" title="branch 0 was not taken"> - </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaUNC" title="branch 2 was not taken"> - </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :     MBO_CONFIG_REQUIRE(it != end(), &quot;Out of range&quot;);</span></span>
+<span id="L155"><span class="lineNum">     155</span>                 :<span class="tlaGNC">           2 :   constexpr Value&amp; at(const Key&amp; key) {</span></span>
+<span id="L156"><span class="lineNum">     156</span>                 :<span class="tlaGNC">           2 :     auto it = find(key);</span></span>
+<span id="L157"><span class="lineNum">     157</span>   [<span class="tlaGBC" title="branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="branch 1 was taken 1 time"> + </span><span class="tlaGBC" title="branch 2 was taken 1 time"> + </span><span class="tlaGBC" title="branch 3 was taken 1 time"> + </span>]:<span class="tlaGNC">           4 :     MBO_CONFIG_REQUIRE(it != end(), &quot;Out of range&quot;);</span></span>
 <span id="L158"><span class="lineNum">     158</span>                 :<span class="tlaGNC">           1 :     return it-&gt;second;</span></span>
 <span id="L159"><span class="lineNum">     159</span>                 :             :   }</span>
 <span id="L160"><span class="lineNum">     160</span>                 :             : </span>
@@ -515,17 +515,17 @@
             </tr>
             <tr>
               <th scope="row">Branches</th>
-              <td class="headerValueLegL">&lt; 75%</td>
-              <td class="headerValueLegM">&ge; 75% and &lt; 82%</td>
-              <td class="headerValueLegH">&ge; 82%</td>
-              <td class="headerValueLegM">Medium</td>
+              <td class="headerValueLegL">&lt; 80%</td>
+              <td class="headerValueLegM">&ge; 80% and &lt; 85%</td>
+              <td class="headerValueLegH">&ge; 85%</td>
+              <td class="headerValueLegH">High</td>
             </tr>
             <tr>
               <th scope="row">Functions</th>
               <td class="headerValueLegL">&lt; 90%</td>
               <td class="headerValueLegM">&ge; 90% and &lt; 95%</td>
               <td class="headerValueLegH">&ge; 95%</td>
-              <td class="headerValueLegM">Medium</td>
+              <td class="headerValueLegH">High</td>
             </tr>
             </tbody>
           </table>
