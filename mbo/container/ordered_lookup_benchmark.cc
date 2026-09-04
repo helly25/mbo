@@ -65,7 +65,7 @@ void OrderedLookup(benchmark::State& state) {
   const std::size_t middle = Size / 2;
   int key = [&] {
     if constexpr (Case == Scenario::kBefore) {
-      return kAscending ? -1 : static_cast<int>(Size * 2 + 1);
+      return kAscending ? -1 : static_cast<int>((Size * 2) + 1);
     }
     if constexpr (Case == Scenario::kFirst) {
       return Traits::KeyAt(data, 0);
@@ -79,7 +79,7 @@ void OrderedLookup(benchmark::State& state) {
     if constexpr (Case == Scenario::kLast) {
       return Traits::KeyAt(data, Size - 1);
     }
-    return kAscending ? static_cast<int>(Size * 2 + 1) : -1;
+    return kAscending ? static_cast<int>((Size * 2) + 1) : -1;
   }();
   benchmark::DoNotOptimize(data);
   benchmark::DoNotOptimize(key);
