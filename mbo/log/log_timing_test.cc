@@ -83,6 +83,7 @@ TEST_F(StripFunctionNameTest, UnmatchedTemplateSuffixIsPreserved) {
 TEST_F(StripFunctionNameTest, Operator) {
   EXPECT_THAT(StripFunctionName("auto Foo::operator()"), "Foo::operator()");
   EXPECT_THAT(StripFunctionName("auto Foo::operator()()"), "Foo::operator()");
+  EXPECT_THAT(StripFunctionName("auto Foo::()"), "Foo::()");
   EXPECT_THAT(
       StripFunctionName("std::function<void(bool, int)> Foo::operator()(std::function<void(bool, int))"),
       "Foo::operator()");
