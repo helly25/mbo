@@ -601,22 +601,22 @@ class [[nodiscard]] LimitedOrdered {
     }                                                                      \
     [[fallthrough]]
     switch (size_) {  // LCOV_EXCL_BR_LINE: GCC attributes every generated unrolled case edge to this line.
-      MBO_CASE_LIMITED_POS_COMP(31);
-      MBO_CASE_LIMITED_POS_COMP(30);
-      MBO_CASE_LIMITED_POS_COMP(29);
-      MBO_CASE_LIMITED_POS_COMP(28);
-      MBO_CASE_LIMITED_POS_COMP(27);
-      MBO_CASE_LIMITED_POS_COMP(26);
-      MBO_CASE_LIMITED_POS_COMP(25);
-      MBO_CASE_LIMITED_POS_COMP(24);
-      MBO_CASE_LIMITED_POS_COMP(23);
-      MBO_CASE_LIMITED_POS_COMP(22);
-      MBO_CASE_LIMITED_POS_COMP(21);
-      MBO_CASE_LIMITED_POS_COMP(20);
-      MBO_CASE_LIMITED_POS_COMP(19);
-      MBO_CASE_LIMITED_POS_COMP(18);
-      MBO_CASE_LIMITED_POS_COMP(17);
-      MBO_CASE_LIMITED_POS_COMP(16);
+      MBO_CASE_LIMITED_POS_COMP(31);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(30);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(29);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(28);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(27);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(26);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(25);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(24);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(23);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(22);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(21);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(20);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(19);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(18);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(17);  // LCOV_EXCL_LINE: above the configured unroll maximum.
+      MBO_CASE_LIMITED_POS_COMP(16);  // LCOV_EXCL_LINE: above the configured unroll maximum.
       MBO_CASE_LIMITED_POS_COMP(15);  // LCOV_MERGE_BR_LINE 4
       MBO_CASE_LIMITED_POS_COMP(14);  // LCOV_MERGE_BR_LINE 4
       MBO_CASE_LIMITED_POS_COMP(13);  // LCOV_MERGE_BR_LINE 4

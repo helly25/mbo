@@ -81,6 +81,8 @@ class LogTimingImpl final {
   };
 
   static std::string StripFunctionName(std::string_view function);
+  static std::string_view ReverseFindSpaceSkipPastMatchingBrackets(std::string_view str);
+  static std::string_view ReverseStripAngleBrackets(std::string_view str);
 
   void Log() const;
 

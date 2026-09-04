@@ -2,6 +2,8 @@
 
 - Added reproducible ordered-container microbenchmarks for exact lookup and both bounds across
   container kinds, capacities, key positions, ascending/descending order, and comparator types.
+- Restored the empty-input guards in log timing's reverse parsers, added direct regression tests,
+  and stopped counting unreachable generated `index_of` expansions as uncovered lines.
 - Raised the development baseline to C++23, GCC 14, and Clang/LLVM 22, and updated the default
   Bazel release to 9.2 while retaining Bazel 8 compatibility.
 - Switched the bundled LLVM setup from its temporary prerelease override to the published
