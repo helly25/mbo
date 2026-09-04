@@ -16,14 +16,13 @@ bazel build -c opt //mbo/container:ordered_lookup_benchmark
 bazel-bin/mbo/container/ordered_lookup_benchmark \
   --benchmark_repetitions=9 \
   --benchmark_min_time=0.005s \
-  --benchmark_report_aggregates_only=true \
   --benchmark_out=ordered_lookup_baseline.json \
   --benchmark_out_format=json
 gzip -9 ordered_lookup_baseline.json
 ```
 
 The uncompressed JSON has SHA-256
-`3f208c0cb043d44c0d30b16cd569e6d31055625ce9a7e1b74421e32a41614167`.
+`dc52c9ff0bca3dff0e586e40d265201e1173ea62aa2dc6249761a90f170c6741`.
 
 Google Benchmark could not read `hw.cpufrequency` or set thread affinity on macOS. Those limitations
 apply equally to the baseline and comparison runs; comparisons must use repeated samples and treat
