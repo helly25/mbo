@@ -48,11 +48,21 @@ using ::testing::Sequence;
 
 struct StripFunctionNameTest : ::testing::Test {
   static std::string StripFunctionName(std::string_view str) { return LogTimingImpl::StripFunctionName(str); }
+
+  static std::string_view ReverseFindSpaceSkipPastMatchingBrackets(std::string_view str) {
+    return LogTimingImpl::ReverseFindSpaceSkipPastMatchingBrackets(str);
+  }
+
+  static std::string_view ReverseStripAngleBrackets(std::string_view str) {
+    return LogTimingImpl::ReverseStripAngleBrackets(str);
+  }
 };
 
 namespace {
 
 TEST_F(StripFunctionNameTest, Empty) {
+  EXPECT_THAT(ReverseFindSpaceSkipPastMatchingBrackets(""), "");
+  EXPECT_THAT(ReverseStripAngleBrackets(""), "");
   EXPECT_THAT(StripFunctionName(""), "");
 }
 

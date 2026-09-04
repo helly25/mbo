@@ -15,6 +15,7 @@
 
 #include "mbo/container/limited_set.h"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <functional>
@@ -131,6 +132,33 @@ TEST_F(LimitedSetTest, MakeInitArgFind) {
   EXPECT_THAT(kTest.find(5) - kTest.begin(), 2);
   EXPECT_THAT(kTest.find(0), kTest.end());
   EXPECT_THAT(kTest.find(2), kTest.end());
+}
+
+TEST_F(LimitedSetTest, BoundsLocateInsertionEdges) {
+  auto test = MakeLimitedSet<5>({1, 3, 5});
+
+  EXPECT_THAT(test.lower_bound(0), test.begin());
+  EXPECT_THAT(test.upper_bound(0), test.begin());
+  EXPECT_THAT(test.lower_bound(2), test.begin() + 1);
+  EXPECT_THAT(test.upper_bound(2), test.begin() + 1);
+  EXPECT_THAT(test.lower_bound(3), test.begin() + 1);
+  EXPECT_THAT(test.upper_bound(3), test.begin() + 2);
+  EXPECT_THAT(test.lower_bound(6), test.end());
+  EXPECT_THAT(test.upper_bound(6), test.end());
+
+  const auto& const_test = test;
+  EXPECT_THAT(const_test.lower_bound(3), const_test.begin() + 1);
+  EXPECT_THAT(const_test.upper_bound(3), const_test.begin() + 2);
+}
+
+TEST_F(LimitedSetTest, BoundsUseStandardAlgorithmsWithoutCompareLess) {
+  LimitedSet<int, LimitedOptions<5>{}, std::less<int>> test{1, 3, 5};
+
+  EXPECT_THAT(test.lower_bound(2), test.begin() + 1);
+  EXPECT_THAT(test.upper_bound(3), test.begin() + 2);
+  const auto& const_test = test;
+  EXPECT_THAT(const_test.lower_bound(6), const_test.end());
+  EXPECT_THAT(const_test.upper_bound(0), const_test.begin());
 }
 
 TEST_F(LimitedSetTest, MakeInitArgBasics) {
@@ -505,6 +533,14 @@ void CompareAllTheSizesFor() {  // NOLINT(readability-function-cognitive-complex
         return data.npos;
       }();
       SCOPED_TRACE(absl::StrCat("Dropped: ", dropped, ", V: ", v, ", Expected: ", expected_pos));
+      const std::size_t expected_lower = pos < dropped ? 0 : std::min(pos - dropped, data.size());
+      const std::size_t expected_upper =
+          pos < dropped ? 0 : std::min(pos - dropped + (expected_pos == data.npos ? 0 : 1), data.size());
+      EXPECT_THAT(data.lower_bound(v) - data.begin(), expected_lower);
+      EXPECT_THAT(data.upper_bound(v) - data.begin(), expected_upper);
+      const auto& const_data = data;
+      EXPECT_THAT(const_data.lower_bound(v) - const_data.begin(), expected_lower);
+      EXPECT_THAT(const_data.upper_bound(v) - const_data.begin(), expected_upper);
       if (expected_pos == data.npos) {
         ASSERT_THAT(data.index_of(v), data.npos);
         ASSERT_FALSE(data.contains(v));
@@ -674,6 +710,9 @@ TEST_F(LimitedSetTest, TransparentLookupBoundsAndEqualRange) {
 
   EXPECT_THAT(set.lower_bound(std::string_view("bbb")), set.begin() + 1);
   EXPECT_THAT(set.upper_bound(std::string_view("bbb")), set.begin() + 2);
+  const auto& const_set = set;
+  EXPECT_THAT(const_set.lower_bound(std::string_view("bbb")), const_set.begin() + 1);
+  EXPECT_THAT(const_set.upper_bound(std::string_view("bbb")), const_set.begin() + 2);
   const auto [first, last] = set.equal_range(std::string_view("bbb"));
   EXPECT_THAT(first, set.begin() + 1);
   EXPECT_THAT(last, set.begin() + 2);
@@ -799,6 +838,8 @@ TEST_F(LimitedSetTest, CompareLessIsTransparent) {
   EXPECT_THAT(set.count(3), 1);
   EXPECT_THAT(set.find(9), set.end());
   EXPECT_THAT(set.index_of(1), 0);
+  EXPECT_THAT(set.lower_bound(2), set.begin() + 1);
+  EXPECT_THAT(set.upper_bound(2), set.begin() + 2);
   EXPECT_THAT(set.erase(2), 1);
   EXPECT_THAT(set, ElementsAre(1, 3));
 }

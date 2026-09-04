@@ -137,6 +137,23 @@ TEST_F(LimitedMapTest, MakeInitArgFind) {
   EXPECT_THAT(kTest.find(4), kTest.end());
 }
 
+TEST_F(LimitedMapTest, BoundsLocateInsertionEdges) {
+  auto test = MakeLimitedMap<5>({std::make_pair(1, 11), std::make_pair(3, 33), std::make_pair(5, 55)});
+
+  EXPECT_THAT(test.lower_bound(0), test.begin());
+  EXPECT_THAT(test.upper_bound(0), test.begin());
+  EXPECT_THAT(test.lower_bound(2), test.begin() + 1);
+  EXPECT_THAT(test.upper_bound(2), test.begin() + 1);
+  EXPECT_THAT(test.lower_bound(3), test.begin() + 1);
+  EXPECT_THAT(test.upper_bound(3), test.begin() + 2);
+  EXPECT_THAT(test.lower_bound(6), test.end());
+  EXPECT_THAT(test.upper_bound(6), test.end());
+
+  const auto& const_test = test;
+  EXPECT_THAT(const_test.lower_bound(3), const_test.begin() + 1);
+  EXPECT_THAT(const_test.upper_bound(3), const_test.begin() + 2);
+}
+
 TEST_F(LimitedMapTest, MakeInitArgBasics) {
   auto test = MakeLimitedMap<7>({std::make_pair(1, 11), std::make_pair(3, 33), std::make_pair(5, 55)});
   EXPECT_THAT(test, Not(IsEmpty()));
