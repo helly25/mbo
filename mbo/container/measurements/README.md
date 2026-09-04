@@ -9,6 +9,10 @@ The matrix covers `LimitedSet` and `LimitedMap`; capacities 2, 4, 8, 16, 17, and
 `upper_bound`; and keys before, at the first element, between middle elements, at a middle element,
 at the last element, and after the container.
 
+Each reported case is the arithmetic mean of its three lowest CPU-time samples out of the nine
+repetitions, matching this repository's established microbenchmark aggregation. The raw repetitions
+are retained so the aggregation and comparison can be reproduced.
+
 The result was produced with:
 
 ```sh
