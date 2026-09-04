@@ -521,40 +521,20 @@ class [[nodiscard]] LimitedOrdered {
 
   // Find and search: lower_bound, upper_bound, equal_range, find, contains, count
 
-  // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   MBO_FORCE_INLINE constexpr iterator lower_bound(const Key& key) {
-    if constexpr (Capacity <= kUnrollMaxCapacity) {
-      return begin() + BoundIndex<false>(key);
-    } else {
-      return std::lower_bound(begin(), end(), key, val_comp_);
-    }
+    return std::lower_bound(begin(), end(), key, val_comp_);
   }
 
-  // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   MBO_FORCE_INLINE constexpr const_iterator lower_bound(const Key& key) const {
-    if constexpr (Capacity <= kUnrollMaxCapacity) {
-      return begin() + BoundIndex<false>(key);
-    } else {
-      return std::lower_bound(begin(), end(), key, val_comp_);
-    }
+    return std::lower_bound(begin(), end(), key, val_comp_);
   }
 
-  // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   MBO_FORCE_INLINE constexpr iterator upper_bound(const Key& key) {
-    if constexpr (Capacity <= kUnrollMaxCapacity) {
-      return begin() + BoundIndex<true>(key);
-    } else {
-      return std::upper_bound(begin(), end(), key, val_comp_);
-    }
+    return std::upper_bound(begin(), end(), key, val_comp_);
   }
 
-  // LCOV_MERGE_FUNC_LINE: Count the shared class-template definition once.
   MBO_FORCE_INLINE constexpr const_iterator upper_bound(const Key& key) const {
-    if constexpr (Capacity <= kUnrollMaxCapacity) {
-      return begin() + BoundIndex<true>(key);
-    } else {
-      return std::upper_bound(begin(), end(), key, val_comp_);
-    }
+    return std::upper_bound(begin(), end(), key, val_comp_);
   }
 
   // Transparent overloads. Each is constrained on `kIsForeignKey`, so it only
@@ -564,110 +544,29 @@ class [[nodiscard]] LimitedOrdered {
 
   template<typename K>
   requires(kIsForeignKey<K>)
-  // LCOV_MERGE_FUNC_LINE: Count the shared function-template definition once.
   MBO_FORCE_INLINE constexpr iterator lower_bound(const K& key) {
-    if constexpr (Capacity <= kUnrollMaxCapacity) {
-      return begin() + BoundIndex<false>(key);
-    } else {
-      return std::lower_bound(begin(), end(), key, val_comp_);
-    }
+    return std::lower_bound(begin(), end(), key, val_comp_);
   }
 
   template<typename K>
   requires(kIsForeignKey<K>)
-  // LCOV_MERGE_FUNC_LINE: Count the shared function-template definition once.
   MBO_FORCE_INLINE constexpr const_iterator lower_bound(const K& key) const {
-    if constexpr (Capacity <= kUnrollMaxCapacity) {
-      return begin() + BoundIndex<false>(key);
-    } else {
-      return std::lower_bound(begin(), end(), key, val_comp_);
-    }
+    return std::lower_bound(begin(), end(), key, val_comp_);
   }
 
   template<typename K>
   requires(kIsForeignKey<K>)
-  // LCOV_MERGE_FUNC_LINE: Count the shared function-template definition once.
   MBO_FORCE_INLINE constexpr iterator upper_bound(const K& key) {
-    if constexpr (Capacity <= kUnrollMaxCapacity) {
-      return begin() + BoundIndex<true>(key);
-    } else {
-      return std::upper_bound(begin(), end(), key, val_comp_);
-    }
+    return std::upper_bound(begin(), end(), key, val_comp_);
   }
 
   template<typename K>
   requires(kIsForeignKey<K>)
-  // LCOV_MERGE_FUNC_LINE: Count the shared function-template definition once.
   MBO_FORCE_INLINE constexpr const_iterator upper_bound(const K& key) const {
-    if constexpr (Capacity <= kUnrollMaxCapacity) {
-      return begin() + BoundIndex<true>(key);
-    } else {
-      return std::upper_bound(begin(), end(), key, val_comp_);
-    }
+    return std::upper_bound(begin(), end(), key, val_comp_);
   }
 
   // NOLINTBEGIN(*-magic-numbers,*-macro-usage,*-function-size,readability-function-cognitive-complexity)
-  // LCOV_MERGE_FUNC_LINE: Count the generated capacity specializations once.
-  template<bool Upper, typename K>
-  MBO_ALWAYS_INLINE constexpr std::size_t BoundIndex(const K& key) const
-  requires(Capacity <= kUnrollMaxCapacity)
-  {
-#define MBO_CASE_LIMITED_BOUND(POS)                       \
-  static_assert((POS) + 1 <= kUnrollMaxCapacityLimit);    \
-  case ((POS) + 1): {                                     \
-    if constexpr ((POS) >= Capacity) {                    \
-      return size_;                                       \
-    } else {                                              \
-      const auto& stored_key = GetKey(values_[POS].data); \
-      if constexpr (Upper) {                              \
-        if (!key_comp_(key, stored_key)) {                \
-          return (POS) + 1;                               \
-        }                                                 \
-      } else if (key_comp_(stored_key, key)) {            \
-        return (POS) + 1;                                 \
-      }                                                   \
-    }                                                     \
-    [[fallthrough]];                                      \
-  }
-    switch (size_) {               // LCOV_EXCL_BR_LINE: GCC attributes generated case edges to this line.
-      MBO_CASE_LIMITED_BOUND(31);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(30);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(29);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(28);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(27);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(26);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(25);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(24);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(23);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(22);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(21);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(20);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(19);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(18);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(17);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(16);  // LCOV_EXCL_LINE: above the configured unroll maximum.
-      MBO_CASE_LIMITED_BOUND(15);  // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(14);  // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(13);  // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(12);  // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(11);  // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(10);  // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(9);   // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(8);   // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(7);   // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(6);   // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(5);   // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(4);   // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(3);   // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(2);   // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(1);   // LCOV_MERGE_BR_LINE 4
-      MBO_CASE_LIMITED_BOUND(0);   // LCOV_MERGE_BR_LINE 4
-      default: break;              // Handles `size_ == 0`.
-    }
-#undef MBO_CASE_LIMITED_BOUND
-    return 0;
-  }
-
   // Templated on the key so a transparent lookup gets the SAME dispatch - including
   // the unrolled fast path below. Routing foreign keys through `lower_bound` instead
   // would make them slower than exact keys on exactly the small containers this

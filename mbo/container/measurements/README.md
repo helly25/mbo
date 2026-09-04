@@ -43,3 +43,14 @@ unrolling candidate in pull request 411. Its uncompressed SHA-256 is
 228 by more than 5% and 199 by more than 10%. Lower-bound first/middle cases at capacities 8 and 16
 show repeated large losses, with the worst measured case regressing by 151.2%. The implementation
 must not proceed on these results.
+
+## Non-unrolled `index_of` comparison
+
+`ordered_lookup_index_disabled.json.gz` contains an identically configured run with the existing
+small-container `index_of` optimization disabled. Its uncompressed SHA-256 is
+`0e9121886b72a3944fab540be440ce14082ad43db8eb62d46b05840cb95f7c14`.
+
+For capacities 2, 4, 8, and 16, which select the optimized implementation normally, the unrolled
+implementation was faster or equal in 143 of 144 cases. Disabling it was 80.6% slower at the
+median. The only apparent loss was 1.0%, while the capacity-17 and capacity-32 controls had a
+combined median movement of 0.4%. The existing `index_of` optimization should therefore remain.
