@@ -1,5 +1,7 @@
 # 0.15.0
 
+- Added reproducible ordered-container microbenchmarks for exact lookup and both bounds across
+  container kinds, capacities, key positions, ascending/descending order, and comparator types.
 - Raised the development baseline to C++23, GCC 14, and Clang/LLVM 22, and updated the default
   Bazel release to 9.2 while retaining Bazel 8 compatibility.
 - Switched the bundled LLVM setup from its temporary prerelease override to the published

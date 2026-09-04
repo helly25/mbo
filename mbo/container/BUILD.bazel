@@ -209,6 +209,22 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "ordered_lookup_benchmark",
+    testonly = 1,
+    srcs = ["ordered_lookup_benchmark.cc"],
+    tags = [
+        "clang-tidy",
+        "manual",
+    ],
+    deps = [
+        ":limited_map_cc",
+        ":limited_set_cc",
+        "//mbo/types:compare_cc",
+        "@com_github_google_benchmark//:benchmark",
+    ],
+)
+
 cc_library(
     name = "limited_vector_cc",
     hdrs = ["limited_vector.h"],
