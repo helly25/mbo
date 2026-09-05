@@ -55,48 +55,44 @@ constexpr const T& FakeObject() noexcept {
 template<typename T, std::size_t = 0>
 struct AnyLvalue {
   template<typename U>
-    requires(!std::same_as<U, T>)
+  requires(!std::same_as<U, T>)
   constexpr operator U&() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<typename T, std::size_t = 0>
 struct AnyRvalue {
   template<typename U>
-    requires(!std::same_as<U, T>)
+  requires(!std::same_as<U, T>)
   constexpr operator U() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<typename T, std::size_t = 0>
 struct AnyLvalueNonBase {
   template<typename U>
-    requires(!std::is_base_of_v<U, T> && !std::same_as<U, T>)
+  requires(!std::is_base_of_v<U, T> && !std::same_as<U, T>)
   constexpr operator U&() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<typename T, std::size_t = 0>
 struct AnyRvalueNonBase {
   template<typename U>
-    requires(!std::is_base_of_v<U, T> && !std::same_as<U, T>)
+  requires(!std::is_base_of_v<U, T> && !std::same_as<U, T>)
   constexpr operator U() const noexcept;  // NOLINT(*-explicit-*)
 };
 
 template<typename T, std::size_t kArgCount>
-concept AggregateConstructible = (kArgCount == 0 && requires { T{}; })
-                                 || []<std::size_t kFirst, std::size_t... kRest>(
-                                        std::index_sequence<kFirst, kRest...> /*unused*/) {
-                                      if constexpr (std::is_copy_constructible_v<T>) {
-                                        return requires {
-                                          T{AnyLvalueNonBase<T, kFirst>(), AnyLvalue<T, kRest>()...};
-                                        };
-                                      } else {
-                                        return requires {
-                                          T{AnyRvalueNonBase<T, kFirst>(), AnyRvalue<T, kRest>()...};
-                                        };
-                                      }
-                                    }(std::make_index_sequence<kArgCount>());
+concept AggregateConstructible =
+    (kArgCount == 0 && requires { T{}; }) ||
+    []<std::size_t kFirst, std::size_t... kRest>(std::index_sequence<kFirst, kRest...> /*unused*/) {
+      if constexpr (std::is_copy_constructible_v<T>) {
+        return requires { T{AnyLvalueNonBase<T, kFirst>(), AnyLvalue<T, kRest>()...}; };
+      } else {
+        return requires { T{AnyRvalueNonBase<T, kFirst>(), AnyRvalue<T, kRest>()...}; };
+      }
+    }(std::make_index_sequence<kArgCount>());
 
 template<typename T, std::size_t kArgCount = 0>
-  requires std::is_aggregate_v<T>
+requires std::is_aggregate_v<T>
 consteval std::size_t CountAggregateFields() noexcept {
   if constexpr (kArgCount >= ::mbo::types::types_internal::kMaxSupportedFieldCount) {
     return ::mbo::types::types_internal::kNotDecomposableValue;
@@ -122,8 +118,8 @@ consteval std::size_t FieldCount() noexcept {
 
 template<typename T, std::size_t kIndex>
 constexpr auto FieldAddress() noexcept {
-  return std::addressof(std::get<kIndex>(
-      ::mbo::types::types_internal::DecomposeHelper::ToTuple<FieldCount<T>()>(FakeObject<T>())));
+  return std::addressof(
+      std::get<kIndex>(::mbo::types::types_internal::DecomposeHelper::ToTuple<FieldCount<T>()>(FakeObject<T>())));
 }
 
 template<auto kAddress>
@@ -213,9 +209,8 @@ consteval auto MakeFieldNames(std::index_sequence<kIndex...> /*unused*/) noexcep
 }  // namespace struct_names_gcc_internal
 
 template<typename T>
-concept SupportsFieldNames =
-    std::is_class_v<T> && !std::is_array_v<T> && !std::is_union_v<T>
-    && (IsEmptyType<T> || struct_names_gcc_internal::AllFieldsHaveAddresses<T>());
+concept SupportsFieldNames = std::is_class_v<T> && !std::is_array_v<T> && !std::is_union_v<T>
+                             && (IsEmptyType<T> || struct_names_gcc_internal::AllFieldsHaveAddresses<T>());
 
 template<typename T>
 concept SupportsFieldNamesConstexpr = SupportsFieldNames<T>;
