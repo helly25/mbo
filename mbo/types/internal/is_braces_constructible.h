@@ -42,6 +42,9 @@ struct AnyOtherType {
   constexpr operator U() const noexcept;  // NOLINT(*-explicit-*)
 };
 
+template<std::size_t kIndex, typename T>
+using AnyOtherTypeN = AnyOtherType<T>;
+
 template<std::size_t kIndex>
 using AnyTypeN = AnyType;
 

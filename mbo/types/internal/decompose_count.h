@@ -412,7 +412,7 @@ struct IsAggregateInitializableFromIndices;
 // `BinarySearch` plus `ReverseSearch`: O(log(N)) + O(N) --> O(N).
 template<IsAggregate T, std::size_t... Indices>
 struct IsAggregateInitializableFromIndices<T, std::index_sequence<Indices...>>
-    : std::bool_constant<IsAggregateInitializable<T, AnyTypeN<Indices>...>> {};
+    : std::bool_constant<IsAggregateInitializable<T, AnyOtherTypeN<Indices, T>...>> {};
 
 template<typename T, std::size_t N>
 concept IsAggregateInitializableWithNumArgs =
