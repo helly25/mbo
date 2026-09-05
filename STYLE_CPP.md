@@ -414,11 +414,11 @@ you add_ multi-threaded code, not a description of current breadth.
   leave the field unset (never call its setter) rather than setting the default.
 - **Build test protos from text, not setters**:
   `mbo::proto::ParseTextProtoOrDie(R"pb(field: 1 nested { k: "v" })pb")`
-  (`@helly25_proto//mbo/proto:parse_text_proto_cc`). The `R"pb(...)pb"` raw string is what
+  (`@mboworks_proto//mbo/proto:parse_text_proto_cc`). The `R"pb(...)pb"` raw string is what
   clang-format leaves alone, so the proto stays readable. Do not imperatively `set_` / `add_`
   your way to a fixture.
 - **Assert on protos structurally** with `mbo::proto::EqualsProto`
-  (`@helly25_proto//mbo/proto:matchers_cc`), which also accepts a text-proto string:
+  (`@mboworks_proto//mbo/proto:matchers_cc`), which also accepts a text-proto string:
   `EXPECT_THAT(msg, EqualsProto(R"pb(field: 1)pb"));`. Match a subset with
   `Partially(EqualsProto(...))`. Never compare serialized strings.
 
