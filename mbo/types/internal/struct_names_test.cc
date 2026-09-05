@@ -151,8 +151,6 @@ static_assert(SupportsFieldNamesConstexpr<NonTrivialDtor>);
 static_assert(TestGetFieldNames<NonTrivialDtor, "field"_ts>);
 # endif  // defined(__clang__)
 
-# if defined(__GNUC__) && !defined(__clang__)
-
 union DirectUnion {
   int integer;
   float floating;
@@ -160,6 +158,8 @@ union DirectUnion {
 
 static_assert(!SupportsFieldNames<DirectUnion>);
 static_assert(GetFieldNames<DirectUnion>().empty());
+
+# if defined(__GNUC__) && !defined(__clang__)
 
 struct WithUnionMember {
   DirectUnion value;
@@ -170,11 +170,13 @@ static_assert(SupportsFieldNames<WithUnionMember>);
 static_assert(TestGetFieldNames<WithUnionMember, "value"_ts, "tag"_ts>);
 
 struct WithBitField {
-  unsigned bits : 3;
   int value;
+  unsigned bits : 3;
 };
 
 static_assert(!SupportsFieldNames<WithBitField>);
+
+# endif  // defined(__GNUC__) && !defined(__clang__)
 
 TEST_F(StructNamesTest, LocalType) {
   struct Local {
@@ -185,8 +187,6 @@ TEST_F(StructNamesTest, LocalType) {
   static_assert(SupportsFieldNames<Local>);
   static_assert(TestGetFieldNames<Local, "alpha"_ts, "beta"_ts>);
 }
-
-# endif  // defined(__GNUC__) && !defined(__clang__)
 
 #else
 

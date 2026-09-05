@@ -657,7 +657,7 @@ struct DecomposeInfo final {
   static constexpr std::size_t kDecomposeCount =  // First check whether T is composable
       kDecomposable                               // format-NL
           ? (kCountBases + kCountEmptyBases == 0  // If it is, then check whether there are any bases.
-                 ? kInitializerCount
+                 ? kFieldCount
                  : kFieldCount - kCountEmptyBases)
           : NotDecomposableImpl::value;
 

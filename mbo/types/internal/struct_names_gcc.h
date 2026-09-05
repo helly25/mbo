@@ -60,6 +60,24 @@ constexpr auto FieldAddress() noexcept {
 template<auto kAddress>
 using AddressAsTemplateArgument = void;
 
+template<typename T, std::size_t kIndex>
+concept FieldHasAddress = requires { typename AddressAsTemplateArgument<FieldAddress<T, kIndex>()>; };
+
+template<typename T, std::size_t... kIndex>
+consteval bool AllFieldsHaveAddresses(std::index_sequence<kIndex...> /*unused*/) noexcept {
+  return (FieldHasAddress<T, kIndex> && ...);
+}
+
+template<typename T>
+consteval bool AllFieldsHaveAddresses() noexcept {
+  if constexpr (!::mbo::types::CanCreateTuple<T>) {
+    return false;
+  } else {
+    return AllFieldsHaveAddresses<T>(
+        std::make_index_sequence<::mbo::types::types_internal::DecomposeCountImpl<T>::value>{});
+  }
+}
+
 template<typename T, auto kAddress>
 consteval std::string_view FieldSignature() noexcept {
   return __PRETTY_FUNCTION__;
@@ -128,10 +146,8 @@ consteval auto MakeFieldNames(std::index_sequence<kIndex...> /*unused*/) noexcep
 
 template<typename T>
 concept SupportsFieldNames =
-    std::is_class_v<T> && !std::is_array_v<T> && !std::is_union_v<T> && ::mbo::types::CanCreateTuple<T>
-    && (IsEmptyType<T> || requires {
-         typename struct_names_gcc_internal::AddressAsTemplateArgument<struct_names_gcc_internal::FieldAddress<T, 0>()>;
-       });
+    std::is_class_v<T> && !std::is_array_v<T> && !std::is_union_v<T>
+    && (IsEmptyType<T> || (::mbo::types::CanCreateTuple<T> && struct_names_gcc_internal::AllFieldsHaveAddresses<T>()));
 
 template<typename T>
 concept SupportsFieldNamesConstexpr = SupportsFieldNames<T>;

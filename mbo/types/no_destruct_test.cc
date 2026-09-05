@@ -29,8 +29,6 @@
 namespace mbo::types {
 
 using ::mbo::types::Extend;
-using ::mbo::types::types_internal::kStructNameSupport;
-using ::testing::Conditional;
 using ::testing::Ge;  // NOLINT(misc-unused-using-decls)
 using ::testing::Ne;
 
@@ -80,8 +78,8 @@ TEST_F(NoDestructTest, ClangCheck) {
 #endif  // _LIBCPP_STD_VER
 
 TEST_F(NoDestructTest, Test) {
-  const auto expected_simple = Conditional(kStructNameSupport, "{.a: 25, .b: 42}", "{25, 42}");
-  const auto expected_string = Conditional(kStructNameSupport, R"({.a: "25", .b: "42"})", R"({"25", "42"})");
+  constexpr std::string_view expected_simple = "{.a: 25, .b: 42}";
+  constexpr std::string_view expected_string = R"({.a: "25", .b: "42"})";
   EXPECT_THAT(kTestSimple.Get().ToString(), expected_simple);
   EXPECT_THAT((*kTestSimple).ToString(), expected_simple);
   EXPECT_THAT(kTestSimple->ToString(), expected_simple);

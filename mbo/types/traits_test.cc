@@ -158,8 +158,6 @@ struct MadMix {
 TEST_F(TraitsTest, DecomposeMadMix) {
   ASSERT_THAT(IsAggregate<MadMix>, true);
   EXPECT_THAT(IsDecomposable<MadMix>, true);
-#if CURRENTLY_UNSUPPORTED  // TODO(helly25): Currently does not work because DecomposeCount does not consider arrays
-                           // correctly.
   EXPECT_THAT(DecomposeCountV<MadMix>, 3)
       << "  Note: With some restrictions the type can be xreated with up to 7 initializers.\n"
       << "        However C++ does not actually like it and the example results in an error:\n"
@@ -167,7 +165,6 @@ TEST_F(TraitsTest, DecomposeMadMix) {
       << "          MadMix{42, \"hallo\", '1', '2', '3', '4', '5'};\n"
       << "          error: suggest braces around initialization of subobject [-Werror,-Wmissing-braces]";
   EXPECT_THAT((MadMix{42, "hallo", {'1', '2', '3', '4', '5'}}).Print(), R"({.a=42, .b="hallo", .c={12345}})");
-#endif
 }
 
 struct StructWithStrings {
