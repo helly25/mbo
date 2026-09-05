@@ -727,7 +727,11 @@ struct TestStructNonLiteralFields : mbo::types::Extend<TestStructNonLiteralField
 
 TEST_F(ExtenderStringifyTest, NonLiteralFields) {
   ASSERT_THAT(SupportsFieldNames<TestStructNonLiteralFields>, kStructNameSupport);
+#if defined(__GNUC__) && !defined(__clang__)
+  ASSERT_TRUE(SupportsFieldNamesConstexpr<TestStructNonLiteralFields>);
+#else
   ASSERT_FALSE(SupportsFieldNamesConstexpr<TestStructNonLiteralFields>);
+#endif
   ASSERT_FALSE(HasMboTypesStringifyDoNotPrintFieldNames<TestStructNonLiteralFields>);
   ASSERT_FALSE(HasMboTypesStringifyFieldNames<TestStructNonLiteralFields>);
   ASSERT_TRUE(HasMboTypesStringifyOptions<TestStructNonLiteralFields>);

@@ -1,8 +1,8 @@
 # Aggregate reflection and field metadata
 
-This document describes mbo's current aggregate-introspection facilities, how field names feed the
-rest of the library, and the available paths for supporting field names with GCC. It also records
-the relevant non-standard reflection implementations and their practical limitations.
+This document describes mbo's aggregate-introspection facilities, how field names feed the rest of
+the library, and the compiler backends that provide field names. It also records the relevant
+non-standard reflection implementations and their practical limitations.
 
 The implementation described here is reflection in the informal, pre-C++26 sense. C++23 has no
 standard facility for enumerating the non-static data members of an arbitrary type or obtaining
@@ -15,19 +15,18 @@ mbo already separates three related capabilities:
 
 1. **Structural decomposition** determines how many fields an aggregate has and produces a tuple of
    references to them. This underpins comparison, hashing, construction, and printing.
-2. **Field-name discovery** obtains the source identifiers corresponding to those fields. Clang is
-   currently supported through `__builtin_dump_struct`; GCC currently returns no automatic names.
+2. **Field-name discovery** obtains the source identifiers corresponding to those fields. Clang uses
+   `__builtin_dump_struct`; GCC uses field addresses and compiler-signature parsing.
 3. **Field policy and presentation** decide whether and how each discovered field is used. This is
    considerably more sophisticated than merely supplying `MboTypesStringifyFieldNames`.
 
-GCC 14 can provide constexpr names for ordinary decomposable aggregates. The established technique
-uses an undefined external object, obtains the address of each field through structured binding,
+GCC 14 provides constexpr names for ordinary decomposable aggregates. The implementation uses an
+undefined external object, obtains the address of each field through structured binding,
 passes that address as a non-type template argument, and extracts the member identifier from
 `__PRETTY_FUNCTION__` or `std::source_location::function_name()`.
 
-The recommended implementation is a dedicated `struct_names_gcc.h` backend that reuses mbo's
-existing decomposition machinery. It should retain all current manual extension points and report
-unsupported field shapes through the existing concepts.
+The dedicated `struct_names_gcc.h` backend reuses mbo's existing decomposition machinery. It retains
+all manual extension points and reports unsupported field shapes through the existing concepts.
 
 ## Current mbo model
 
@@ -67,6 +66,17 @@ The public internal facade in
 For eligible literal, default-constructible types, the names are computed at compile time. A
 runtime-initialized specialization supports additional non-literal types and types without a usable
 default constructor. Types containing union members are currently excluded.
+
+### GCC field-name discovery
+
+[`mbo/types/internal/struct_names_gcc.h`](mbo/types/internal/struct_names_gcc.h) uses the address of
+each member of an undefined external object as a non-type template argument. GCC includes that
+address expression in `__PRETTY_FUNCTION__`, from which the backend extracts and stores the member
+identifier entirely at compile time. No `T` object is constructed and no field value is read.
+
+The backend validates the parser with a sentinel member and copies each extracted name into compact
+constexpr storage. Types whose fields cannot supply the required address expression, such as
+reference members and bit-fields, do not satisfy `SupportsFieldNames`.
 
 ### Field names are metadata, not the printing policy
 
@@ -117,15 +127,15 @@ The following table distinguishes automatic extraction from the broader metadata
 by some libraries. “Named union member” means an ordinary aggregate field whose type is a union; it
 does not imply discovering or safely reading the active alternative inside that union.
 
-| Implementation       | GCC names | Constexpr names              | Direct union                    | Named union member                | Bit-fields                                                    | Reference members                        | Needs real object | Configurable overrides                                          | Principal mechanism                                     |
-| -------------------- | --------- | ---------------------------- | ------------------------------- | --------------------------------- | ------------------------------------------------------------- | ---------------------------------------- | ----------------- | --------------------------------------------------------------- | ------------------------------------------------------- |
-| **mbo, current**     | No        | Yes for eligible Clang types | No                              | Currently excluded                | Dump builtin can expose names; mbo support needs tests        | Runtime path is tested                   | Sometimes         | Extensive ADL names, field policy, conversion and suppression   | Clang `__builtin_dump_struct` callback                  |
-| **Google Gloop**     | No        | No                           | No through its extension        | Possible from a valid object      | Builtin can expose names; `Unpack` may restrict traversal     | Depends on `Unpack`                      | Yes               | No field-name override found                                    | Runtime `__builtin_dump_struct`, cached after first use |
-| **Boost.PFR**        | Yes       | Yes                          | Explicitly rejected             | Yes as an opaque outer field      | No automatic access: an address cannot be formed              | Generally unsupported for names          | No                | Global parser configuration; no per-type renaming               | Fake object, address NTTP, signature parsing            |
-| **Glaze**            | Yes       | Yes                          | Not by ordinary pure reflection | Generally yes as an outer field   | Automatic address path is limited; metadata is a fallback     | Limited automatically; metadata fallback | No                | Rich `glz::meta`, explicit names, modification and rename hooks | Fake object and signatures, or explicit metadata        |
-| **reflect-cpp**      | Yes       | Yes                          | Models tagged unions instead    | Likely as an opaque outer field   | No automatic address extraction                               | Generally unsupported automatically      | No                | Rename/flatten processors, named fields and custom reflectors   | Fake object, address NTTP, function-name parsing        |
-| **field-reflection** | Yes       | Yes                          | No                              | Likely as an ordinary outer field | Type inspection may work; ordinary field access is restricted | Explicitly not field-nameable            | No                | None                                                            | Fake object/address and signature parsing               |
-| **qlibs/reflect**    | Yes       | Yes                          | Limited by aggregate visitation | Likely as an opaque outer field   | Limited by automatic aggregate visitation                     | Implementation-dependent                 | No                | Custom visitation can replace automatic visitation              | Signature parsing and aggregate visitation              |
+| Implementation       | GCC names | Constexpr names                  | Direct union                    | Named union member                       | Bit-fields                                                    | Reference members                        | Needs real object | Configurable overrides                                          | Principal mechanism                                     |
+| -------------------- | --------- | -------------------------------- | ------------------------------- | ---------------------------------------- | ------------------------------------------------------------- | ---------------------------------------- | ----------------- | --------------------------------------------------------------- | ------------------------------------------------------- |
+| **mbo**              | Yes       | Yes on GCC; eligible Clang types | No                              | GCC: opaque outer field; Clang: excluded | GCC address path rejects them; Clang support remains limited  | GCC: rejected; Clang runtime path tested | Clang only        | Extensive ADL names, field policy, conversion and suppression   | GCC signature parsing; Clang dump callback              |
+| **Google Gloop**     | No        | No                               | No through its extension        | Possible from a valid object             | Builtin can expose names; `Unpack` may restrict traversal     | Depends on `Unpack`                      | Yes               | No field-name override found                                    | Runtime `__builtin_dump_struct`, cached after first use |
+| **Boost.PFR**        | Yes       | Yes                              | Explicitly rejected             | Yes as an opaque outer field             | No automatic access: an address cannot be formed              | Generally unsupported for names          | No                | Global parser configuration; no per-type renaming               | Fake object, address NTTP, signature parsing            |
+| **Glaze**            | Yes       | Yes                              | Not by ordinary pure reflection | Generally yes as an outer field          | Automatic address path is limited; metadata is a fallback     | Limited automatically; metadata fallback | No                | Rich `glz::meta`, explicit names, modification and rename hooks | Fake object and signatures, or explicit metadata        |
+| **reflect-cpp**      | Yes       | Yes                              | Models tagged unions instead    | Likely as an opaque outer field          | No automatic address extraction                               | Generally unsupported automatically      | No                | Rename/flatten processors, named fields and custom reflectors   | Fake object, address NTTP, function-name parsing        |
+| **field-reflection** | Yes       | Yes                              | No                              | Likely as an ordinary outer field        | Type inspection may work; ordinary field access is restricted | Explicitly not field-nameable            | No                | None                                                            | Fake object/address and signature parsing               |
+| **qlibs/reflect**    | Yes       | Yes                              | Limited by aggregate visitation | Likely as an opaque outer field          | Limited by automatic aggregate visitation                     | Implementation-dependent                 | No                | Custom visitation can replace automatic visitation              | Signature parsing and aggregate visitation              |
 
 These entries describe the pre-C++26 backends relevant to mbo's GCC 14 baseline. Some projects also
 have experimental C++26 standard-reflection backends with different capabilities.
@@ -209,13 +219,13 @@ The implementations are independent enough to establish the technique as reprodu
 different parsers and workarounds also show that it remains compiler-dependent and requires focused
 compatibility tests.
 
-## Proposed GCC backend
+## GCC backend
 
-Add `mbo/types/internal/struct_names_gcc.h` and select it from `struct_names.h` when compiling with
-GCC rather than Clang. The backend can reuse `DecomposeCountImpl<T>` and `StructToTuple` instead of
+`mbo/types/internal/struct_names_gcc.h` is selected from `struct_names.h` when compiling with GCC
+rather than Clang. The backend reuses `DecomposeCountImpl<T>` and `StructToTuple` instead of
 introducing another aggregate-decomposition implementation.
 
-Conceptually, for every field index it would:
+For every field index it:
 
 1. refer to an undefined external fake object of type `T`;
 2. obtain field `I` through mbo's structured-binding tuple;
@@ -243,9 +253,9 @@ Compiler-signature formats are not standardized. The parser should therefore:
 implementation-defined. It does not remove the need for compiler-specific parsing. Using
 `__PRETTY_FUNCTION__` directly is simpler and matches mbo's explicit GCC backend boundary.
 
-### Proposed capability contract
+### Capability contract
 
-| Type shape                                 | Proposed GCC result                                        |
+| Type shape                                 | GCC result                                                 |
 | ------------------------------------------ | ---------------------------------------------------------- |
 | Ordinary decomposable aggregate            | Constexpr field names.                                     |
 | Empty aggregate                            | Supported with an empty span.                              |
