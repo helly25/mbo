@@ -1152,10 +1152,12 @@ TEST_F(StringifyTest, FieldNameInjectionLeavesExhaustedListsUnchanged) {
 
 TEST_F(StringifyTest, NonLiteralFields) {
   ASSERT_TRUE(SupportsFieldNames<TestStructNonLiteralFields>);
-#if defined(__GNUC__) && !defined(__clang__)
+#if defined(__clang__)
+  ASSERT_FALSE(SupportsFieldNamesConstexpr<TestStructNonLiteralFields>);
+#elif defined(__GNUC__)
   ASSERT_TRUE(SupportsFieldNamesConstexpr<TestStructNonLiteralFields>);
 #else
-  ASSERT_FALSE(SupportsFieldNamesConstexpr<TestStructNonLiteralFields>);
+# error Unsupported compiler
 #endif
   ASSERT_FALSE(HasMboTypesStringifyDoNotPrintFieldNames<TestStructNonLiteralFields>);
   ASSERT_FALSE(HasMboTypesStringifyFieldNames<TestStructNonLiteralFields>);
