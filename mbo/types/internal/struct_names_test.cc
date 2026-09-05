@@ -115,7 +115,6 @@ static_assert(GetFieldNames<NoDestructor>().empty());
 # endif  // defined(__clang__)
 
 struct NonTrivialConstexprDtor {  // NOLINT(*-special-member-functions)
-  constexpr NonTrivialConstexprDtor() = default;
 
   constexpr ~NonTrivialConstexprDtor() { ++field; }
 
@@ -123,13 +122,13 @@ struct NonTrivialConstexprDtor {  // NOLINT(*-special-member-functions)
 };
 
 static_assert(std::is_destructible_v<const NonTrivialConstexprDtor>);
+static_assert(std::is_aggregate_v<NonTrivialConstexprDtor>);
 static_assert(!std::is_trivially_destructible_v<NonTrivialConstexprDtor>);
 
 static_assert(SupportsFieldNames<NonTrivialConstexprDtor>);
 static_assert(TestGetFieldNames<NonTrivialConstexprDtor, "field"_ts>);
 
 struct NonTrivialDtor {  // NOLINT(*-special-member-functions)
-  constexpr NonTrivialDtor() = default;
 
   ~NonTrivialDtor() { ++field; }
 
@@ -137,6 +136,7 @@ struct NonTrivialDtor {  // NOLINT(*-special-member-functions)
 };
 
 static_assert(std::is_destructible_v<const NonTrivialDtor>);
+static_assert(std::is_aggregate_v<NonTrivialDtor>);
 static_assert(!std::is_trivially_destructible_v<NonTrivialDtor>);
 
 static_assert(SupportsFieldNames<NonTrivialDtor>);

@@ -41,6 +41,8 @@ namespace struct_names_gcc_internal {
 // runtime use consequently becomes a link error.
 template<typename T>
 struct FakeObjectStorage {
+  explicit constexpr FakeObjectStorage(const T& data) : value(data) {}
+
   T value;
   static FakeObjectStorage<T> instance;
 };
@@ -107,7 +109,7 @@ consteval std::size_t FieldCount() noexcept {
     return 0;
   } else if constexpr (::mbo::types::CanCreateTuple<T>) {
     return ::mbo::types::types_internal::DecomposeCountImpl<T>::value;
-  } else if constexpr (std::is_aggregate_v<T>) {
+  } else if constexpr (std::is_aggregate_v<T> && !std::is_trivially_destructible_v<T>) {
     return CountAggregateFields<T>();
   } else {
     return ::mbo::types::types_internal::kNotDecomposableValue;
