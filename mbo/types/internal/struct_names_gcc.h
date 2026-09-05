@@ -41,15 +41,13 @@ namespace struct_names_gcc_internal {
 // runtime use consequently becomes a link error.
 template<typename T>
 struct FakeObjectStorage {
-  const T value;
+  T value;
+  static FakeObjectStorage<T> instance;
 };
 
 template<typename T>
-extern const FakeObjectStorage<T> kFakeObject;
-
-template<typename T>
-constexpr const T& FakeObject() noexcept {
-  return kFakeObject<T>.value;
+constexpr T& FakeObject() noexcept {
+  return FakeObjectStorage<T>::instance.value;
 }
 
 template<typename T, std::size_t = 0>
