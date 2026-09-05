@@ -416,7 +416,11 @@ TEST_F(ExtendTest, StreamableWithUnion) {
       .third = 99,
   };
 
+#if defined(__GNUC__) && !defined(__clang__)
+  EXPECT_THAT(kTest.ToString(), R"({.first: 25, .second: 42, .third: 99})");
+#else
   EXPECT_THAT(kTest.ToString(), R"({25, 42, 99})");
+#endif
 }
 
 struct ComparableTest : ExtendTest {

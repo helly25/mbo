@@ -17,6 +17,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
 #include <utility>
 
@@ -68,6 +69,8 @@ static_assert(TestGetFieldNames<Two, "first"_ts, "second"_ts>);
 struct WithArray {
   int values[2];  // NOLINT(*-avoid-c-arrays): Required to exercise aggregate field-name extraction.
   int tail;
+
+  [[maybe_unused]] friend consteval std::size_t MboTypesDecomposeCount(const WithArray* /*unused*/) { return 2; }
 };
 
 static_assert(SupportsFieldNames<WithArray>);
@@ -181,7 +184,7 @@ static_assert(!SupportsFieldNames<WithBitField>);
 TEST_F(StructNamesTest, LocalType) {
   struct Local {
     int alpha;
-    long beta;
+    std::int64_t beta;
   };
 
   static_assert(SupportsFieldNames<Local>);

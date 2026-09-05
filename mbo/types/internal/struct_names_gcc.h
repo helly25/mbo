@@ -116,29 +116,25 @@ consteval std::size_t FieldCount() noexcept {
   }
 }
 
+template<typename T>
+constexpr auto FieldAddresses() noexcept {
+  return ::mbo::types::types_internal::DecomposeHelper::ToAddressTuple<FieldCount<T>()>(FakeObject<T>());
+}
+
 template<typename T, std::size_t kIndex>
 constexpr auto FieldAddress() noexcept {
-  return std::addressof(
-      std::get<kIndex>(::mbo::types::types_internal::DecomposeHelper::ToTuple<FieldCount<T>()>(FakeObject<T>())));
+  return std::get<kIndex>(FieldAddresses<T>());
 }
 
 template<auto kAddress>
 using AddressAsTemplateArgument = void;
-
-template<typename T, std::size_t kIndex>
-concept FieldHasAddress = requires { typename AddressAsTemplateArgument<FieldAddress<T, kIndex>()>; };
-
-template<typename T, std::size_t... kIndex>
-consteval bool AllFieldsHaveAddresses(std::index_sequence<kIndex...> /*unused*/) noexcept {
-  return (FieldHasAddress<T, kIndex> && ...);
-}
 
 template<typename T>
 consteval bool AllFieldsHaveAddresses() noexcept {
   if constexpr (FieldCount<T>() == ::mbo::types::types_internal::kNotDecomposableValue) {
     return false;
   } else {
-    return AllFieldsHaveAddresses<T>(std::make_index_sequence<FieldCount<T>()>{});
+    return std::tuple_size_v<decltype(FieldAddresses<T>())> == FieldCount<T>();
   }
 }
 

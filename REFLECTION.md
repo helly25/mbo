@@ -261,7 +261,7 @@ implementation-defined. It does not remove the need for compiler-specific parsin
 | Empty aggregate                            | Supported with an empty span.                              |
 | Non-default-constructible aggregate        | Supported; no construction occurs.                         |
 | Aggregate with non-literal member types    | Supported at compile time; member values are not read.     |
-| Array member                               | Expected to work; verify all supported array forms.        |
+| Array member                               | Supported with an explicit decomposition-count override.   |
 | Named field whose type is a union          | Attempt as an opaque outer field; do not inspect members.  |
 | Direct union                               | Unsupported.                                               |
 | Bit-field                                  | Unsupported automatically because no address can be taken. |
@@ -271,6 +271,23 @@ implementation-defined. It does not remove the need for compiler-specific parsin
 | Packed or unusually aligned aggregate      | Unsupported until explicitly demonstrated and tested.      |
 | Local or internal-linkage type             | Must be tested; fake-object linkage is compiler-sensitive. |
 | More fields than mbo's decomposition limit | Unsupported by the shared decomposition layer.             |
+
+GCC cannot infer structured-binding arity unambiguously for every aggregate. In particular,
+aggregate initialization flattens built-in arrays, while treating each array as one binding is
+required for field access. An ambiguous type can state its exact binding count with a hidden friend:
+
+```cpp
+struct WithArray {
+  int values[2];
+  int tail;
+
+  friend consteval std::size_t MboTypesDecomposeCount(const WithArray*) { return 2; }
+};
+```
+
+This override is shared by tuple decomposition and GCC field-name discovery. Its value must exactly
+match the number of identifiers accepted by a structured binding of the type; it is not the number
+of flattened aggregate initializers.
 
 “Expected” and “must be tested” entries are deliberately not promises. They identify the first
 spike's validation work.

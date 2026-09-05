@@ -149,6 +149,8 @@ struct MadMix {
   std::string b;
   char c[5]{};  // NOLINT(*-magic-numbers,*-avoid-c-arrays)
 
+  [[maybe_unused]] friend consteval std::size_t MboTypesDecomposeCount(const MadMix* /*unused*/) { return 3; }
+
   std::string Print() const {
     const std::string_view str(&c[0], sizeof(c));
     return absl::StrCat("{.a=", a, ", .b=\"", b, "\", .c={", str, "}}");
