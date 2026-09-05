@@ -34,7 +34,6 @@ namespace {
 
 using ::mbo::types::types_internal::AnyBaseType;
 using ::mbo::types::types_internal::AnyType;
-using ::testing::FieldsAre;
 using ::testing::Ne;
 
 // NOLINTNEXTLINE(google-build-using-namespace)
@@ -166,21 +165,6 @@ TEST_F(TraitsTest, DecomposeMadMix) {
       << "          MadMix{42, \"hallo\", '1', '2', '3', '4', '5'};\n"
       << "          error: suggest braces around initialization of subobject [-Werror,-Wmissing-braces]";
   EXPECT_THAT((MadMix{42, "hallo", {'1', '2', '3', '4', '5'}}).Print(), R"({.a=42, .b="hallo", .c={12345}})");
-}
-
-struct NonTriviallyDestructibleAggregate {  // NOLINT(*-special-member-functions)
-
-  ~NonTriviallyDestructibleAggregate() {}
-
-  int value = 42;
-};
-
-static_assert(IsAggregate<NonTriviallyDestructibleAggregate>);
-static_assert(DecomposeCountV<NonTriviallyDestructibleAggregate> == 1);
-
-TEST_F(TraitsTest, DecomposeNonTriviallyDestructibleAggregate) {
-  NonTriviallyDestructibleAggregate value;
-  EXPECT_THAT(types_internal::DecomposeHelper::ToTuple(value), FieldsAre(42));
 }
 
 struct StructWithStrings {

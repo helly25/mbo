@@ -52,9 +52,78 @@ constexpr const T& FakeObject() noexcept {
   return kFakeObject<T>.value;
 }
 
+template<typename T, std::size_t = 0>
+struct AnyLvalue {
+  template<typename U>
+    requires(!std::same_as<U, T>)
+  constexpr operator U&() const noexcept;  // NOLINT(*-explicit-*)
+};
+
+template<typename T, std::size_t = 0>
+struct AnyRvalue {
+  template<typename U>
+    requires(!std::same_as<U, T>)
+  constexpr operator U() const noexcept;  // NOLINT(*-explicit-*)
+};
+
+template<typename T, std::size_t = 0>
+struct AnyLvalueNonBase {
+  template<typename U>
+    requires(!std::is_base_of_v<U, T> && !std::same_as<U, T>)
+  constexpr operator U&() const noexcept;  // NOLINT(*-explicit-*)
+};
+
+template<typename T, std::size_t = 0>
+struct AnyRvalueNonBase {
+  template<typename U>
+    requires(!std::is_base_of_v<U, T> && !std::same_as<U, T>)
+  constexpr operator U() const noexcept;  // NOLINT(*-explicit-*)
+};
+
+template<typename T, std::size_t kArgCount>
+concept AggregateConstructible = (kArgCount == 0 && requires { T{}; })
+                                 || []<std::size_t kFirst, std::size_t... kRest>(
+                                        std::index_sequence<kFirst, kRest...> /*unused*/) {
+                                      if constexpr (std::is_copy_constructible_v<T>) {
+                                        return requires {
+                                          T{AnyLvalueNonBase<T, kFirst>(), AnyLvalue<T, kRest>()...};
+                                        };
+                                      } else {
+                                        return requires {
+                                          T{AnyRvalueNonBase<T, kFirst>(), AnyRvalue<T, kRest>()...};
+                                        };
+                                      }
+                                    }(std::make_index_sequence<kArgCount>());
+
+template<typename T, std::size_t kArgCount = 0>
+  requires std::is_aggregate_v<T>
+consteval std::size_t CountAggregateFields() noexcept {
+  if constexpr (kArgCount >= ::mbo::types::types_internal::kMaxSupportedFieldCount) {
+    return ::mbo::types::types_internal::kNotDecomposableValue;
+  } else if constexpr (AggregateConstructible<T, kArgCount> && !AggregateConstructible<T, kArgCount + 1>) {
+    return kArgCount;
+  } else {
+    return CountAggregateFields<T, kArgCount + 1>();
+  }
+}
+
+template<typename T>
+consteval std::size_t FieldCount() noexcept {
+  if constexpr (IsEmptyType<T>) {
+    return 0;
+  } else if constexpr (::mbo::types::CanCreateTuple<T>) {
+    return ::mbo::types::types_internal::DecomposeCountImpl<T>::value;
+  } else if constexpr (std::is_aggregate_v<T>) {
+    return CountAggregateFields<T>();
+  } else {
+    return ::mbo::types::types_internal::kNotDecomposableValue;
+  }
+}
+
 template<typename T, std::size_t kIndex>
 constexpr auto FieldAddress() noexcept {
-  return std::addressof(std::get<kIndex>(::mbo::types::StructToTuple(FakeObject<T>())));
+  return std::addressof(std::get<kIndex>(
+      ::mbo::types::types_internal::DecomposeHelper::ToTuple<FieldCount<T>()>(FakeObject<T>())));
 }
 
 template<auto kAddress>
@@ -70,11 +139,10 @@ consteval bool AllFieldsHaveAddresses(std::index_sequence<kIndex...> /*unused*/)
 
 template<typename T>
 consteval bool AllFieldsHaveAddresses() noexcept {
-  if constexpr (!::mbo::types::CanCreateTuple<T>) {
+  if constexpr (FieldCount<T>() == ::mbo::types::types_internal::kNotDecomposableValue) {
     return false;
   } else {
-    return AllFieldsHaveAddresses<T>(
-        std::make_index_sequence<::mbo::types::types_internal::DecomposeCountImpl<T>::value>{});
+    return AllFieldsHaveAddresses<T>(std::make_index_sequence<FieldCount<T>()>{});
   }
 }
 
@@ -147,7 +215,7 @@ consteval auto MakeFieldNames(std::index_sequence<kIndex...> /*unused*/) noexcep
 template<typename T>
 concept SupportsFieldNames =
     std::is_class_v<T> && !std::is_array_v<T> && !std::is_union_v<T>
-    && (IsEmptyType<T> || (::mbo::types::CanCreateTuple<T> && struct_names_gcc_internal::AllFieldsHaveAddresses<T>()));
+    && (IsEmptyType<T> || struct_names_gcc_internal::AllFieldsHaveAddresses<T>());
 
 template<typename T>
 concept SupportsFieldNamesConstexpr = SupportsFieldNames<T>;
@@ -160,8 +228,7 @@ class StructMeta final {
   }
 
  private:
-  static constexpr std::size_t kFieldCount =
-      IsEmptyType<T> ? 0 : ::mbo::types::types_internal::DecomposeCountImpl<T>::value;
+  static constexpr std::size_t kFieldCount = struct_names_gcc_internal::FieldCount<T>();
   inline static constexpr auto kFieldNames =
       struct_names_gcc_internal::MakeFieldNames<T>(std::make_index_sequence<kFieldCount>{});
 };
