@@ -51,7 +51,10 @@ using AnyTypeN = AnyType;
 template<typename D>
 struct AnyBaseType {
   using RawD = std::remove_cvref_t<D>;
-  template<typename T, typename = std::enable_if_t<std::is_base_of_v<std::remove_cvref_t<T>, RawD>>>
+  template<
+      typename T,
+      typename = std::enable_if_t<
+          std::is_base_of_v<std::remove_cvref_t<T>, RawD> && !std::same_as<std::remove_cvref_t<T>, RawD>>>
   constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
@@ -70,9 +73,10 @@ struct AnyTypeIf {
   using RawD = std::remove_cvref_t<D>;
   template<
       typename T,
-      typename = std::enable_if_t<                                         //
-          (kBaseOrNot == std::is_base_of_v<std::remove_cvref_t<T>, RawD>)  //
-          &&(!kBaseOrNot || !kRequireNonEmpty || (!IsEmptyType<std::remove_cvref_t<T>> && kAllowNonEmpty))>>
+      typename = std::enable_if_t<  //
+          (kBaseOrNot
+           == (std::is_base_of_v<std::remove_cvref_t<T>, RawD> && !std::same_as<std::remove_cvref_t<T>, RawD>))  //
+          && (!kBaseOrNot || !kRequireNonEmpty || (!IsEmptyType<std::remove_cvref_t<T>> && kAllowNonEmpty))>>
   constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
@@ -84,8 +88,9 @@ struct AnyEmptyBase {
   using RawD = std::remove_cvref_t<D>;
   template<
       typename T,
-      typename =
-          std::enable_if_t<std::is_base_of_v<std::remove_cvref_t<T>, RawD> && IsEmptyType<std::remove_cvref_t<T>>>>
+      typename = std::enable_if_t<
+          std::is_base_of_v<std::remove_cvref_t<T>, RawD> && !std::same_as<std::remove_cvref_t<T>, RawD>
+          && IsEmptyType<std::remove_cvref_t<T>>>>
   constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
 };
 
@@ -111,7 +116,7 @@ struct AnyBaseMaybeEmpty {
   template<
       typename T,
       typename = std::enable_if_t<
-          std::is_base_of_v<std::remove_cvref_t<T>, RawD>
+          std::is_base_of_v<std::remove_cvref_t<T>, RawD> && !std::same_as<std::remove_cvref_t<T>, RawD>
           && (kIsEmpty == IsEmptyType<std::remove_cvref_t<T>>
               || (kAllowNonEmpty && !IsEmptyType<std::remove_cvref_t<T>>))>>
   constexpr operator T() const noexcept;  // NOLINT(*-explicit-*)
